@@ -994,173 +994,9 @@ textarea {
   }
 }
 
-/* -- Control Tower Page -- */
+/* -- Control Tower Page - cleaned (now uses Tailwind) -- */
 
-.ct-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  max-width: 1200px;
-}
-
-.ct-page__header {
-  align-items: center;
-  display: flex;
-  height: 4rem;
-  justify-content: space-between;
-  padding: 0 1.5rem;
-}
-
-.ct-page__heading {
-  align-items: center;
-  display: flex;
-  gap: 0.75rem;
-}
-
-.ct-page__icon {
-  align-items: center;
-  background: #f0fdf4;
-  border-radius: 0.75rem;
-  color: #16a34a;
-  display: inline-flex;
-  flex: 0 0 auto;
-  height: 2.5rem;
-  justify-content: center;
-  width: 2.5rem;
-}
-
-.ct-page__icon-svg {
-  height: 1.25rem;
-  width: 1.25rem;
-}
-
-.ct-page__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  margin: 0 0 0.2rem;
-}
-
-.ct-page__subtitle {
-  color: #64748b;
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.ct-health-badge {
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 0.35rem 0.75rem;
-  text-transform: uppercase;
-}
-
-.ct-health-badge--ok {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.ct-health-badge--warn {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-/* KPI strip */
-.ct-kpi-strip {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-.ct-kpi-tile {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  border-top: 3px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 1rem;
-}
-
-.ct-kpi-tile--ok {
-  border-top-color: #22c55e;
-}
-
-.ct-kpi-tile--warn {
-  border-top-color: #f59e0b;
-}
-
-.ct-kpi-tile--idle {
-  border-top-color: #94a3b8;
-}
-
-.ct-kpi-tile__label {
-  color: #64748b;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.ct-kpi-tile__value {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.ct-kpi-tile__sub {
-  color: #94a3b8;
-  font-size: 0.75rem;
-}
-
-/* Domain snapshot cards */
-.ct-domains {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.ct-domain-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 1rem;
-}
-
-.ct-domain-card__title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  margin: 0 0 0.75rem;
-}
-
-.ct-domain-card__rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin: 0;
-}
-
-.ct-domain-card__row {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-}
-
-.ct-domain-card__row dt {
-  color: #64748b;
-  font-size: 0.8rem;
-}
-
-.ct-domain-card__row dd {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-/* Loading / error states */
+/* Loading / error states kept for inline usage */
 .ct-loading {
   align-items: center;
   color: #64748b;
@@ -1439,8 +1275,6 @@ textarea {
 :root[data-theme="dark"] .module-page__header,
 :root[data-theme="dark"] .card,
 :root[data-theme="dark"] .docs-panel,
-:root[data-theme="dark"] .ct-kpi-tile,
-:root[data-theme="dark"] .ct-domain-card,
 :root[data-theme="dark"] .app-settings__dropdown-menu,
 :root[data-theme="dark"] .app-settings__overview,
 :root[data-theme="dark"] .preferences-card {
@@ -1465,7 +1299,6 @@ textarea {
 :root[data-theme="dark"] .app-main,
 :root[data-theme="dark"] .content-transition,
 :root[data-theme="dark"] .module-page,
-:root[data-theme="dark"] .ct-page,
 :root[data-theme="dark"] .markdown-body,
 :root[data-theme="dark"] .card,
 :root[data-theme="dark"] .docs-panel,
@@ -1474,10 +1307,6 @@ textarea {
 :root[data-theme="dark"] .docs-section li,
 :root[data-theme="dark"] .docs-empty,
 :root[data-theme="dark"] .docs-muted,
-:root[data-theme="dark"] .ct-page__subtitle,
-:root[data-theme="dark"] .ct-kpi-tile__label,
-:root[data-theme="dark"] .ct-kpi-tile__sub,
-:root[data-theme="dark"] .ct-domain-card__row dt,
 :root[data-theme="dark"] .ct-loading,
 :root[data-theme="dark"] .preferences-card__description,
 :root[data-theme="dark"] .theme-toggle__hint {
@@ -1491,8 +1320,7 @@ textarea {
 :root[data-theme="dark"] .sidebar__line-value,
 :root[data-theme="dark"] .docs-input,
 :root[data-theme="dark"] .docs-select,
-:root[data-theme="dark"] .docs-reader-header h2,
-:root[data-theme="dark"] .ct-page__title {
+:root[data-theme="dark"] .docs-reader-header h2 {
   color: #f8fafc;
 }
 

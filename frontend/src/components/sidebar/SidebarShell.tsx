@@ -26,10 +26,13 @@ export function SidebarShell() {
   const lineRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    if (pathname.startsWith("/execution/")) setOpenSection("execution");
+        useEffect(() => {
+    if (pathname.startsWith("/execution/")) setOpenSection("execute");
     if (pathname.startsWith("/check/")) setOpenSection("check");
     if (pathname.startsWith("/improve/")) setOpenSection("improve");
+    if (pathname.startsWith("/plan/")) setOpenSection("plan");
+    if (pathname.startsWith("/myworkspace/")) setOpenSection("myworkspace");
+    if (pathname.startsWith("/standardize/")) setOpenSection("standardize");
     if (pathname.startsWith("/system/")) setOpenSection("system");
     if (pathname.startsWith("/docs/")) setOpenSection("system");
   }, [pathname, setOpenSection]);

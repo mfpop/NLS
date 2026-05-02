@@ -1,0 +1,222 @@
+﻿import { useQuery } from ""@apollo/client/react"";
+import { Monitor } from ""lucide-react"";
+import { DASHBOARD_QUERY } from ""@/graphql/system"";
+import { useDocumentTitle } from ""@/hooks"";
+import type { DashboardQueryData } from ""@/types/dashboard"";
+import { asPercent } from ""@/utils"";
+
+export function ControlTowerPage() {
+  const { data, loading, error } = useQuery<DashboardQueryData>(DASHBOARD_QUERY);
+
+  useDocumentTitle(""Control Tower - LeanSync"");
+
+  if (loading) {
+    return (
+      <div className=""flex min-h-[40vh] items-center justify-center gap-3 text-[var(--text-secondary)]"">
+        <span className=""h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"" aria-hidden=""true"" />
+        <span>Loading Control Tower...</span>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className=""p-4"">
+        <div className=""rounded-xl border border-[var(--danger)] bg-[var(--surface-2)] p-4 text-[var(--text-primary)]"">
+          <p className=""font-medium"">Unable to reach the GraphQL API. Make sure the backend is running.</p>
+          <code className=""mt-2 block text-xs"">{error?.message}</code>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    kpiSnapshot,
+    executionSnapshot,
+    improvementSnapshot,
+    manufacturingSnapshot,
+    processSnapshot,
+    health,
+  } = data;
+
+  const behindPlan = Math.max(0, 45 - (kpiSnapshot.oee * 100));
+  const outputBehind = behindPlan > 0;
+  const wipBelowBuffer = executionSnapshot.downtimeEventsLast24h > 3;
+  const noBottleneck = !kpiSnapshot.bottleneckResourceCode;
+  const cycleTimeZero = kpiSnapshot.leadTimeMinutes === 0;
+  const qualityZero = kpiSnapshot.oee === 0;
+
+  return (
+    <div className=""ct-main-container"">
+      {/* Header bar */}
+      <header className=""doc-header h-16"">
+        <div className=""doc-title-group"">
+          <div className=""doc-icon"">
+            <Monitor />
+          </div>
+          <div>
+            <h1 className=""doc-header-title"">Control Tower</h1>
+            <p className=""doc-header-subtitle"">Live operational overview — All Lines</p>
+          </div>
+        </div>
+        <span className=""flex-none rounded-full border border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--accent)]"">{health}</span>
+      </header>
+
+      {/* Main grid */}
+      <div className=""ct-content"">
+        {/* Left column */}
+        <div className=""ct-left-column"">
+          {/* Alert bar */}
+          {outputBehind && (
+            <div className=""ct-alert-bar"">
+              <p>Output behind plan ({Math.round(behindPlan)} units) — flow at risk</p>
+              <button>Investigate</button>
+            </div>
+          )}
+
+          {/* Alerts line */}
+          <div className=""ct-alerts"">
+            <span>⚠ {executionSnapshot.activeCycles > 0 ? $ + {executionSnapshot.activeCycles} active cycles : ""No active cycles""}</span>
+          </div>
+
+          {/* Priority actions */}
+          <div className=""ct-priority-block"">
+            {outputBehind && (
+              <div className=""ct-priority-card critical"">
+                <div>
+                  <strong>Output behind plan ({Math.round(behindPlan)} units)</strong>
+                  <span>Shift impact · Action required</span>
+                </div>
+                <button>Review KPI</button>
+              </div>
+            )}
+            {wipBelowBuffer && (
+              <div className=""ct-priority-card warning"">
+                <div>
+                  <strong>WIP below buffer minimum</strong>
+                  <span>Flow starvation risk</span>
+                </div>
+                <button>Start walk</button>
+              </div>
+            )}
+            {improvementSnapshot.gembaWalksThisWeek === 0 && (
+              <div className=""ct-priority-card info"">
+                <div>
+                  <strong>Gemba walk not logged today</strong>
+                  <span>Standard work missing</span>
+                </div>
+                <button>Start walk</button>
+              </div>
+            )}
+          </div>
+
+          {/* KPI block */}
+          <div className=""ct-kpi-block"">
+            <div className={""ct-kpi-card"" + (kpiSnapshot.oee < 0.8 ? "" highlight"" : """")}>
+              {asPercent(kpiSnapshot.oee)}
+            </div>
+            <div className=""ct-kpi-card"">
+              {kpiSnapshot.leadTimeMinutes.toFixed(1)} min
+            </div>
+            <div className={""ct-kpi-card"" + (executionSnapshot.activeCycles > 0 ? "" highlight"" : """")}>
+              {executionSnapshot.activeCycles} / {manufacturingSnapshot.resourceCount || 1}
+            </div>
+            <div className=""ct-kpi-card"">
+              {improvementSnapshot.openKaizens}
+            </div>
+            <div className=""ct-kpi-card"">
+              {kpiSnapshot.bottleneckResourceCode || ""—""}
+            </div>
+            <div className={""ct-kpi-card"" + (kpiSnapshot.oee === 0 ? "" highlight"" : """")}>
+              {asPercent(kpiSnapshot.oee)}
+            </div>
+          </div>
+
+          {/* Problems block (fills remaining height) */}
+          <div className=""ct-problems-block"">
+            <div className=""ct-problems-card"">
+              <div className=""ct-problem-group"">
+                {outputBehind && (
+                  <div className=""ct-problem-section"">
+                    <div className=""ct-problem-row"">
+                      <strong>Output behind plan ({Math.round(behindPlan)} units)</strong>
+                      <span>Impact: delivery risk · Owner: Production</span>
+                    </div>
+                  </div>
+                )}
+                {wipBelowBuffer && (
+                  <div className=""ct-problem-section"">
+                    <div className=""ct-problem-row"">
+                      <strong>WIP below buffer (0 / 9 u)</strong>
+                      <span>Flow starvation risk</span>
+                    </div>
+                  </div>
+                )}
+                {noBottleneck && (
+                  <div className=""ct-problem-section"">
+                    <div className=""ct-problem-row"">
+                      <strong>No bottleneck detected</strong>
+                      <span>Possible stop or missing data</span>
+                    </div>
+                  </div>
+                )}
+                {cycleTimeZero && (
+                  <div className=""ct-problem-section"">
+                    <div className=""ct-problem-row"">
+                      <strong>Cycle time = 0s</strong>
+                      <span>Machine stopped or data issue</span>
+                    </div>
+                  </div>
+                )}
+                {qualityZero && (
+                  <div className=""ct-problem-section"">
+                    <div className=""ct-problem-row"">
+                      <strong>Quality = 0%</strong>
+                      <span>Check inspection system</span>
+                    </div>
+                  </div>
+                )}
+                {!outputBehind && !wipBelowBuffer && !noBottleneck && !cycleTimeZero && !qualityZero && (
+                  <div className=""ct-problem-section"">
+                    <div className=""ct-problem-row"">
+                      <strong>All systems nominal</strong>
+                      <span>No active problems detected</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right column — My Work */}
+        <div className=""ct-my-work"">
+          <div className=""ct-section"">
+            <h4>OVERDUE</h4>
+            <div className=""ct-task"">
+              {improvementSnapshot.openKaizens > 0
+                ? $ + {improvementSnapshot.openKaizens} open kaizen(s)
+                : ""No overdue items""}
+            </div>
+          </div>
+          <div className=""ct-section"">
+            <h4>IN PROGRESS</h4>
+            <div className=""ct-task"">
+              {executionSnapshot.activeCycles > 0
+                ? $ + {executionSnapshot.activeCycles} active production cycle(s)
+                : ""No active cycles""}
+            </div>
+          </div>
+          <div className=""ct-section"">
+            <h4>NEXT</h4>
+            <div className=""ct-task"">
+              {improvementSnapshot.gembaWalksThisWeek === 0
+                ? ""Log today's Gemba walk""
+                : ""Gemba walk completed""}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

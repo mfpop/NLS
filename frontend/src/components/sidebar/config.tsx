@@ -7,7 +7,7 @@ import {
   Cog,
   Database,
   Footprints,
-  GitBranch,
+  LayoutDashboard,
   ListChecks,
   Monitor,
   PanelTop,
@@ -16,6 +16,18 @@ import {
   Sparkles,
   TrendingUp,
   Play,
+  ClipboardList,
+  FileText,
+  BarChart3,
+  Workflow,
+  ScrollText,
+  Search,
+  ClipboardCheck,
+  Lightbulb,
+  Award,
+  Ruler,
+  FileSpreadsheet,
+  RefreshCw,
 } from "./icons";
 
 export interface SidebarLeafItem {
@@ -36,7 +48,7 @@ export type SidebarSectionItem = SidebarLeafItem | SidebarGroupItem;
 
 export interface SidebarSection {
   type: "section";
-  id: "execution" | "check" | "improve" | "system";
+  id: "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system";
   label: string;
   icon: LucideIcon;
   items: SidebarSectionItem[];
@@ -63,13 +75,33 @@ export const sidebarEntries: SidebarEntry[] = [
   },
   {
     type: "section",
-    id: "execution",
-    label: "Execution",
+    id: "myworkspace",
+    label: "My Workspace",
+    icon: LayoutDashboard,
+    items: [
+      { type: "item", label: "Personal Dashboard", to: "/myworkspace/dashboard", icon: LayoutDashboard },
+      { type: "item", label: "My Tasks", to: "/myworkspace/tasks", icon: ListChecks },
+    ],
+  },
+  {
+    type: "section",
+    id: "plan",
+    label: "Plan",
+    icon: ClipboardList,
+    items: [
+      { type: "item", label: "Production Plan", to: "/plan/production-plan", icon: FileText },
+      { type: "item", label: "Capacity Planning", to: "/plan/capacity", icon: BarChart3 },
+      { type: "item", label: "Value Stream Map", to: "/execution/vsm", icon: Workflow },
+    ],
+  },
+  {
+    type: "section",
+    id: "execute",
+    label: "Execute",
     icon: Play,
     items: [
       { type: "item", label: "Line Performance", to: "/execution/line-performance", icon: Activity },
       { type: "item", label: "Live Shopfloor", to: "/execution/live-shopfloor", icon: PanelTop },
-      { type: "item", label: "VSM", to: "/execution/vsm", icon: GitBranch },
       { type: "item", label: "Daily Gemba Walk", to: "/execution/daily-gemba-walk", icon: Footprints },
     ],
   },
@@ -77,10 +109,12 @@ export const sidebarEntries: SidebarEntry[] = [
     type: "section",
     id: "check",
     label: "Check",
-    icon: ShieldCheck,
+    icon: Search,
     items: [
       { type: "item", label: "Problems", to: "/check/problems", icon: CircleAlert },
       { type: "item", label: "Actions", to: "/check/actions", icon: ListChecks },
+      { type: "item", label: "Audits", to: "/check/audits", icon: ClipboardCheck },
+      { type: "item", label: "Quality Control", to: "/check/quality", icon: ShieldCheck },
     ],
   },
   {
@@ -90,7 +124,20 @@ export const sidebarEntries: SidebarEntry[] = [
     icon: TrendingUp,
     items: [
       { type: "item", label: "Kaizen", to: "/improve/kaizen", icon: Sparkles },
+      { type: "item", label: "Continuous Improvement", to: "/improve/continuous-improvement", icon: RefreshCw },
+      { type: "item", label: "Suggestions", to: "/improve/suggestions", icon: Lightbulb },
+    ],
+  },
+  {
+    type: "section",
+    id: "standardize",
+    label: "Standardize",
+    icon: Ruler,
+    items: [
       { type: "item", label: "Standard Work", to: "/improve/standard-work", icon: BookOpen },
+      { type: "item", label: "Procedures", to: "/standardize/procedures", icon: ScrollText },
+      { type: "item", label: "Templates", to: "/standardize/templates", icon: FileSpreadsheet },
+      { type: "item", label: "Best Practices", to: "/standardize/best-practices", icon: Award },
     ],
   },
   {

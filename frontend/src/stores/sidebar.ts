@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SidebarSectionId = "execution" | "check" | "improve" | "system" | null;
+export type SidebarSectionId = "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system" | null;
 
 interface SidebarState {
   openSection: SidebarSectionId;
@@ -8,6 +8,7 @@ interface SidebarState {
 }
 
 export const useSidebarStore = create<SidebarState>((set) => ({
-  openSection: "execution",
+  openSection: null,
   setOpenSection: (section) => set({ openSection: section }),
 }));
+

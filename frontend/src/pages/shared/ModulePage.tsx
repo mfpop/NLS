@@ -8,8 +8,8 @@ interface ModulePageProps {
 
 export function ModulePage({ title, description, icon }: ModulePageProps) {
   return (
-    <section className="p-6">
-      <header className="flex items-start gap-4 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 shadow-sm">
+    <section className="p-0 m-0">
+      <header className="flex items-center gap-4 border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 shadow-sm h-16">
         <div className="inline-flex h-12 w-12 flex-none items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">{icon}</div>
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">{title}</h1>
@@ -19,3 +19,5 @@ export function ModulePage({ title, description, icon }: ModulePageProps) {
     </section>
   );
 }
+
+

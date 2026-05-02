@@ -47,6 +47,12 @@ const UserPreferencesPage = lazy(() =>
 const SignOutPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.SignOutPage }))
 );
+const MyDashboardPage = lazy(() =>
+  import("@/pages/myworkspace").then((module) => ({ default: module.MyDashboardPage }))
+);
+const MyTasksPage = lazy(() =>
+  import("@/pages/myworkspace").then((module) => ({ default: module.MyTasksPage }))
+);
 const DocumentationCenter = lazy(() =>
   import("@/pages/DocumentationCenter").then((module) => ({ default: module.DocumentationCenter }))
 );
@@ -64,6 +70,8 @@ export function AppRoutes() {
       <Routes>
         <Route element={<AppShell />}>
           <Route index element={<ControlTowerPage />} />
+          <Route path="myworkspace/dashboard" element={<MyDashboardPage />} />
+          <Route path="myworkspace/tasks" element={<MyTasksPage />} />
           <Route path="execution/line-performance" element={<LinePerformancePage />} />
           <Route path="execution/live-shopfloor" element={<LiveShopfloorPage />} />
           <Route path="execution/vsm" element={<VsmPage />} />

@@ -1,0 +1,6 @@
+"""Domain constants for the manufacturing app."""
+
+PLANT_CODE_PREFIX = "PLT"
+DEPARTMENT_CODE_PREFIX = "DEP"
+RESOURCE_GROUP_CODE_PREFIX = "RG"
+RESOURCE_CODE_PREFIX = "RES"

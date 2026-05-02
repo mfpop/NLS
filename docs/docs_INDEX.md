@@ -1,0 +1,22 @@
+# DOCS INDEX
+
+## Core Documents
+- README.md → Entry point
+- DOMAIN_CONSTITUTION.md → Laws
+- DOMAIN_SPEC.md → Code model
+- DOMAIN_HANDBOOK.md → Concepts
+
+## Developer Docs
+- CONTRIBUTING.md
+- DEVELOPER_ONBOARDING.md
+- ARCHITECTURE.md
+
+## Domain Docs
+- DOMAIN_GLOSSARY.md
+- VSM_GLOSSARY.md
+
+## Advanced
+- DOMAIN_EVENTS_REFERENCE.md
+- KPI_ENGINE_GUIDE.md
+- VSM_DIAGRAMS_ADVANCED.md
+- DIAGRAMS.md

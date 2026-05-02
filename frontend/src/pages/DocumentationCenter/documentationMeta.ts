@@ -153,17 +153,19 @@ export const DOC_META: Record<string, DocumentationMeta> = {
 export const STATUS_FILTERS = ["All", "Canonical", "Reference", "Draft", "Needs Review", "Deprecated"] as const;
 
 export function statusClassName(status: string): string {
+  const base = "status-badge";
+
   switch (status) {
     case "Canonical":
-      return "doc-status doc-status--canonical";
+      return base + " status-badge--canonical";
     case "Reference":
-      return "doc-status doc-status--reference";
+      return base + " status-badge--reference";
     case "Draft":
-      return "doc-status doc-status--draft";
+      return base + " status-badge--draft";
     case "Needs Review":
-      return "doc-status doc-status--review";
+      return base + " status-badge--review";
     default:
-      return "doc-status doc-status--deprecated";
+      return base + " status-badge--deprecated";
   }
 }
 

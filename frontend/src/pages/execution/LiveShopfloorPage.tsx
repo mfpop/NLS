@@ -6,7 +6,7 @@ export function LiveShopfloorPage() {
     <ModulePage
       title="Live Shopfloor"
       description="Monitor the live shopfloor status, operator activity, and current production conditions in real time."
-      icon={<PanelTop className="module-page__icon-svg" />}
+      icon={<PanelTop className="h-5 w-5" />}
     />
   );
 }

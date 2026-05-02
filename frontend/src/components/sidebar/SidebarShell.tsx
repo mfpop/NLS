@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { BrandHeader } from "@/components/BrandHeader";
 import { useSidebarStore } from "@/stores/sidebar";
+import type { SidebarSectionItem } from "./config";
 import { sidebarEntries, productionLines } from "./config";
 import { ChevronDown, MoreVertical, User, LogOut, Settings } from "./icons";
 
@@ -20,6 +21,7 @@ export function SidebarShell() {
   const setOpenSection = useSidebarStore((state) => state.setOpenSection);
   const [isLineOpen, setIsLineOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({});
   const [selectedLine, setSelectedLine] = useState(productionLines[0]);
   const lineRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
@@ -29,6 +31,7 @@ export function SidebarShell() {
     if (pathname.startsWith("/check/")) setOpenSection("check");
     if (pathname.startsWith("/improve/")) setOpenSection("improve");
     if (pathname.startsWith("/system/")) setOpenSection("system");
+    if (pathname.startsWith("/docs/")) setOpenSection("system");
   }, [pathname, setOpenSection]);
 
   useEffect(() => {
@@ -49,6 +52,67 @@ export function SidebarShell() {
   const selectedLineLabel = useMemo(() => {
     return selectedLine.length > 18 ? selectedLine.slice(0, 18) + "..." : selectedLine;
   }, [selectedLine]);
+
+  const hasActivePath = (item: SidebarSectionItem): boolean => {
+    if (item.type === "item") {
+      return pathname === item.to || pathname.startsWith(item.to + "/");
+    }
+
+    return item.items.some((child) => hasActivePath(child));
+  };
+
+  const renderSectionItem = (item: SidebarSectionItem, keyPath: string, depth = 0): ReactNode => {
+    if (item.type === "item") {
+      const ItemIcon = item.icon;
+      return (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) =>
+            "sidebar-row sidebar-row--nav sidebar-row--submenu-item" + (isActive ? " sidebar-row--active" : "")
+          }
+          style={{ paddingLeft: `${0.75 + depth * 0.7}rem` }}
+        >
+          <ItemIcon className="sidebar-icon" />
+          <span>{item.label}</span>
+        </NavLink>
+      );
+    }
+
+    const GroupIcon = item.icon;
+
+    const isActiveBranch = hasActivePath(item);
+    const isOpen = openNestedGroups[keyPath] ?? isActiveBranch;
+
+    return (
+      <div key={keyPath} className="sidebar__submenu-group">
+        <button
+          type="button"
+          className="sidebar-row sidebar-row--submenu-label sidebar-row--submenu-group-btn"
+          style={{ paddingLeft: `${0.75 + depth * 0.7}rem` }}
+          aria-expanded={isOpen}
+          onClick={() =>
+            setOpenNestedGroups((previous) => ({
+              ...previous,
+              [keyPath]: !isOpen,
+            }))
+          }
+        >
+          <span className="sidebar__section-main">
+            <GroupIcon className="sidebar-icon" />
+            <span>{item.label}</span>
+          </span>
+          <ChevronDown className={"sidebar__section-chevron " + (isOpen ? "sidebar__section-chevron--open" : "")} />
+        </button>
+
+        <div className={"sidebar__submenu-group-children " + (isOpen ? "sidebar__submenu-group-children--open" : "sidebar__submenu-group-children--closed")}>
+          <div className="sidebar__submenu-group-items">
+            {item.items.map((childItem, index) => renderSectionItem(childItem, `${keyPath}.${index}`, depth + 1))}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <aside className="sidebar" aria-label="Application sidebar">
@@ -139,19 +203,7 @@ export function SidebarShell() {
                   </button>
 
                   <div className={"sidebar__submenu " + (isOpen ? "sidebar__submenu--open" : "sidebar__submenu--closed")}>
-                    {entry.items.map((item) => {
-                      const ItemIcon = item.icon;
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          className={({ isActive }) => "sidebar-row sidebar-row--nav" + (isActive ? " sidebar-row--active" : "")}
-                        >
-                          <ItemIcon className="sidebar-icon" />
-                          <span>{item.label}</span>
-                        </NavLink>
-                      );
-                    })}
+                    {entry.items.map((item, index) => renderSectionItem(item, `${entry.id}.${index}`))}
                   </div>
                 </div>
               );

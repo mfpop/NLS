@@ -25,12 +25,21 @@ export interface SidebarLeafItem {
   icon: LucideIcon;
 }
 
+export interface SidebarGroupItem {
+  type: "group";
+  label: string;
+  icon: LucideIcon;
+  items: SidebarSectionItem[];
+}
+
+export type SidebarSectionItem = SidebarLeafItem | SidebarGroupItem;
+
 export interface SidebarSection {
   type: "section";
   id: "execution" | "check" | "improve" | "system";
   label: string;
   icon: LucideIcon;
-  items: SidebarLeafItem[];
+  items: SidebarSectionItem[];
 }
 
 export type SidebarEntry = SidebarLeafItem | SidebarSection;
@@ -92,7 +101,25 @@ export const sidebarEntries: SidebarEntry[] = [
     items: [
       { type: "item", label: "Data Management", to: "/system/data-management", icon: Database },
       { type: "item", label: "Application Settings", to: "/system/application-settings", icon: Cog },
-      { type: "item", label: "Documentation Center", to: "/docs", icon: BookMarked },
+      {
+        type: "group",
+        label: "Documentation Center",
+        icon: BookMarked,
+        items: [
+          { type: "item", label: "Setup Reference", to: "/docs/setup", icon: BookOpen },
+          {
+            type: "group",
+            label: "Core Documentation",
+            icon: BookMarked,
+            items: [
+              { type: "item", label: "Architecture", to: "/docs/core/architecture", icon: BookOpen },
+              { type: "item", label: "Domain Spec", to: "/docs/core/domain-spec", icon: BookOpen },
+              { type: "item", label: "Domain Constitution", to: "/docs/core/domain-constitution", icon: BookOpen },
+              { type: "item", label: "Diagrams", to: "/docs/core/diagrams", icon: BookOpen },
+            ],
+          },
+        ],
+      },
     ],
   },
 ];

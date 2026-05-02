@@ -78,7 +78,10 @@ export function AppRoutes() {
           <Route path="system/preferences" element={<UserPreferencesPage />} />
           <Route path="system/sign-out" element={<SignOutPage />} />
           <Route path="status" element={<GraphqlStatusPage />} />
-          <Route path="docs" element={<DocumentationCenter />} />
+          <Route path="docs" element={<Navigate to="/docs/setup" replace />} />
+          <Route path="docs/core" element={<DocumentationCenter />} />
+          <Route path="docs/core/:docSlug" element={<DocumentationCenter />} />
+          <Route path="docs/setup" element={<DocumentationCenter />} />
           <Route path="home" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>

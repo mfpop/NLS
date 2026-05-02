@@ -6,7 +6,7 @@ export function KaizenPage() {
     <ModulePage
       title="Kaizen"
       description="Coordinate structured improvement work and keep small-step change visible to the line."
-      icon={<Sparkles className="module-page__icon-svg" />}
+      icon={<Sparkles className="h-5 w-5" />}
     />
   );
 }

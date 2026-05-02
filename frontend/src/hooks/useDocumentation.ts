@@ -28,20 +28,17 @@ export function useDocumentation() {
   const files = filesQuery.data?.documentationFiles ?? [];
 
   useEffect(() => {
-    if (selectedName || files.length === 0) {
-      return;
-    }
-
-    setSelectedName(files[0].name);
-  }, [files, selectedName]);
-
-  useEffect(() => {
     if (!selectedName || contentCache[selectedName]) {
       return;
     }
 
+    const existsInLibrary = files.some((file) => file.name === selectedName);
+    if (!existsInLibrary) {
+      return;
+    }
+
     loadFile({ variables: { name: selectedName } });
-  }, [contentCache, loadFile, selectedName]);
+  }, [contentCache, files, loadFile, selectedName]);
 
   useEffect(() => {
     if (!fileQuery.data?.documentationFile) {

@@ -6,7 +6,7 @@ export function SignOutPage() {
     <ModulePage
       title="Sign Out"
       description="Confirm sign out and end your current session securely from this workstation."
-      icon={<LogOut className="module-page__icon-svg" />}
+      icon={<LogOut className="h-5 w-5" />}
     />
   );
 }

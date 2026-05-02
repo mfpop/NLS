@@ -6,7 +6,7 @@ export function ProblemsPage() {
     <ModulePage
       title="Problems"
       description="Surface abnormalities, blockers, and deviations that require immediate production attention."
-      icon={<CircleAlert className="module-page__icon-svg" />}
+      icon={<CircleAlert className="h-5 w-5" />}
     />
   );
 }

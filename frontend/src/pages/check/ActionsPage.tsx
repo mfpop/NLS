@@ -6,7 +6,7 @@ export function ActionsPage() {
     <ModulePage
       title="Actions"
       description="Review active actions, assign owners, and follow through on response plans without leaving the flow."
-      icon={<ListChecks className="module-page__icon-svg" />}
+      icon={<ListChecks className="h-5 w-5" />}
     />
   );
 }

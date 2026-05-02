@@ -6,7 +6,7 @@ export function StandardWorkPage() {
     <ModulePage
       title="Standard Work"
       description="Maintain operating standards, update sequence clarity, and keep execution aligned to the current best method."
-      icon={<BookOpen className="module-page__icon-svg" />}
+      icon={<BookOpen className="h-5 w-5" />}
     />
   );
 }

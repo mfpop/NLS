@@ -6,7 +6,7 @@ export function VsmPage() {
     <ModulePage
       title="VSM"
       description="Review value stream flow, queue buildup, and lead-time signals across the active production path."
-      icon={<GitBranch className="module-page__icon-svg" />}
+      icon={<GitBranch className="h-5 w-5" />}
     />
   );
 }

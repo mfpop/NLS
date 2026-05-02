@@ -6,7 +6,7 @@ export function UserProfilePage() {
     <ModulePage
       title="Profile"
       description="View and manage your personal details, role information, and account profile settings."
-      icon={<User className="module-page__icon-svg" />}
+      icon={<User className="h-5 w-5" />}
     />
   );
 }

@@ -161,18 +161,18 @@ export function SidebarShell() {
 
         <div className="sidebar__bottom" ref={profileRef}>
           <div className={"sidebar__profile-actions " + (isProfileOpen ? "sidebar__profile-actions--open" : "sidebar__profile-actions--closed")}>
-            <button type="button" className="sidebar-row sidebar-row--nav">
+            <NavLink to="/system/profile" className="sidebar-row sidebar-row--nav" onClick={() => setIsProfileOpen(false)}>
               <User className="sidebar-icon" />
               <span>Profile</span>
-            </button>
-            <button type="button" className="sidebar-row sidebar-row--nav">
+            </NavLink>
+            <NavLink to="/system/preferences" className="sidebar-row sidebar-row--nav" onClick={() => setIsProfileOpen(false)}>
               <Settings className="sidebar-icon" />
               <span>Settings</span>
-            </button>
-            <button type="button" className="sidebar-row sidebar-row--nav sidebar-row--danger">
+            </NavLink>
+            <NavLink to="/system/sign-out" className="sidebar-row sidebar-row--nav sidebar-row--danger" onClick={() => setIsProfileOpen(false)}>
               <LogOut className="sidebar-icon" />
               <span>Sign out</span>
-            </button>
+            </NavLink>
           </div>
 
           <button

@@ -38,6 +38,15 @@ const DataManagementPage = lazy(() =>
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ApplicationSettingsPage }))
 );
+const UserProfilePage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.UserProfilePage }))
+);
+const UserPreferencesPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.UserPreferencesPage }))
+);
+const SignOutPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.SignOutPage }))
+);
 const DocumentationCenter = lazy(() =>
   import("@/pages/DocumentationCenter").then((module) => ({ default: module.DocumentationCenter }))
 );
@@ -65,6 +74,9 @@ export function AppRoutes() {
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
           <Route path="system/data-management" element={<DataManagementPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
+          <Route path="system/profile" element={<UserProfilePage />} />
+          <Route path="system/preferences" element={<UserPreferencesPage />} />
+          <Route path="system/sign-out" element={<SignOutPage />} />
           <Route path="status" element={<GraphqlStatusPage />} />
           <Route path="docs" element={<DocumentationCenter />} />
           <Route path="home" element={<Navigate to="/" replace />} />

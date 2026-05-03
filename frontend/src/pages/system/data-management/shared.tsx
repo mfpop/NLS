@@ -1,9 +1,9 @@
-import { useState, type ReactNode, type FormEvent } from "react";
+﻿import { useState, type ReactNode, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ExternalLink, Search, X, AlertTriangle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 
-/* ── Breadcrumbs ── */
+/* •••••• Breadcrumbs •••••• */
 
 interface Crumb { label: string; to?: string; }
 
@@ -21,7 +21,7 @@ export function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
   );
 }
 
-/* ── Context Bar ── */
+/* •••••• Context Bar •••••• */
 
 interface ContextSegment { label: string; to?: string; }
 
@@ -39,7 +39,7 @@ export function ContextBar({ segments }: { segments: ContextSegment[] }) {
   );
 }
 
-/* ── Search Input ── */
+/* •••••• Search Input •••••• */
 
 interface SearchBarProps { value: string; onChange: (value: string) => void; placeholder?: string; }
 
@@ -53,7 +53,7 @@ export function SearchBar({ value, onChange, placeholder = "Search..." }: Search
   );
 }
 
-/* ── Filter Tabs ── */
+/* •••••• Filter Tabs •••••• */
 
 interface FilterTab { label: string; value: string; }
 
@@ -67,7 +67,7 @@ export function FilterBar<T extends string>({ tabs, active, onChange }: { tabs: 
   );
 }
 
-/* ── Empty State ── */
+/* •••••• Empty State •••••• */
 
 interface EmptyStateProps { icon: ReactNode; title: string; description: string; action?: { label: string; onClick: () => void }; }
 
@@ -82,14 +82,14 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   );
 }
 
-/* ── Status Badge ── */
+/* •••••• Status Badge •••••• */
 
 export function StatusBadge({ status }: { status: string }) {
   const isActive = status === "active";
   return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{status}</span>;
 }
 
-/* ── OPERATIONAL: Resource Status Badge ── */
+/* •••••• OPERATIONAL: Resource Status Badge •••••• */
 
 export function ResourceStatusBadge({ status }: { status: "Running" | "Idle" | "Down" | "Maintenance" }) {
   const styles: Record<string, string> = {
@@ -112,7 +112,7 @@ export function ResourceStatusBadge({ status }: { status: "Running" | "Idle" | "
   );
 }
 
-/* ── OPERATIONAL: Load Bar ── */
+/* •••••• OPERATIONAL: Load Bar •••••• */
 
 export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" }) {
   const overload = pct > 100;
@@ -131,13 +131,13 @@ export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" 
   );
 }
 
-/* ── Primary Action (single visible action) ── */
+/* •••••• Primary Action (single visible action) •••••• */
 
 export function PrimaryAction({ onClick }: { onClick?: () => void }) {
-  return <button type="button" onClick={onClick} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors active:scale-[0.97]">Open →</button>;
+  return <button type="button" onClick={onClick} className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors active:scale-[0.97]">Open •••</button>;
 }
 
-/* ── Secondary Actions Dropdown ── */
+/* •••••• Secondary Actions Dropdown •••••• */
 
 interface SecondaryAction { label: string; icon?: ReactNode; onClick?: () => void; }
 
@@ -145,13 +145,13 @@ export function ActionsDropdown({ actions }: { actions: SecondaryAction[] }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50 transition-colors active:scale-[0.97]">•••</button>
+      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 transition-colors active:scale-[0.97]">•••••••••</button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
             {actions.map((a, i) => (
-              <button key={i} type="button" onClick={() => { a.onClick?.(); setOpen(false); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 transition-colors">{a.icon}{a.label}</button>
+              <button key={i} type="button" onClick={() => { a.onClick?.(); setOpen(false); }} className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">{a.icon}{a.label}</button>
             ))}
           </div>
         </>
@@ -160,13 +160,13 @@ export function ActionsDropdown({ actions }: { actions: SecondaryAction[] }) {
   );
 }
 
-/* ── Bulk Checkbox ── */
+/* •••••• Bulk Checkbox •••••• */
 
 export function BulkCheckbox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-slate-300 cursor-pointer" onClick={(e) => e.stopPropagation()} />;
 }
 
-/* ── Data Management Sub-Header Navigation ── */
+/* •••••• Data Management Sub-Header Navigation •••••• */
 
 const dmNavItems = [
   { label: "Structure",  path: "/system/data-management/structure" },
@@ -204,7 +204,7 @@ export function DataManagementNav({ currentPath }: { currentPath?: string }) {
   );
 }
 
-/* ── Alert Banner ── */
+/* •••••• Alert Banner •••••• */
 
 export function AlertBanner({ message, cta, ctaOnClick }: { message: string; cta?: string; ctaOnClick?: () => void }) {
   if (!message) return null;
@@ -212,12 +212,12 @@ export function AlertBanner({ message, cta, ctaOnClick }: { message: string; cta
     <div className="mb-3 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
       <AlertTriangle className="h-4 w-4 shrink-0" />
       <span className="flex-1">{message}</span>
-      {cta && ctaOnClick && <button type="button" onClick={ctaOnClick} className="ml-auto rounded-md border border-red-200 bg-white px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-100 transition-colors active:scale-[0.97]">{cta} →</button>}
+      {cta && ctaOnClick && <button type="button" onClick={ctaOnClick} className="ml-auto rounded-md border border-red-200 bg-white px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-100 transition-colors active:scale-[0.97]">{cta} •••</button>}
     </div>
   );
 }
 
-/* ── Info Banner ── */
+/* •••••• Info Banner •••••• */
 
 export function InfoBanner({ message }: { message: string }) {
   if (!message) return null;
@@ -229,7 +229,7 @@ export function InfoBanner({ message }: { message: string }) {
   );
 }
 
-/* ── Smart Control Tower Link ── */
+/* •••••• Smart Control Tower Link •••••• */
 
 export function SmartControlTowerLink({ plant, line, department, resource }: { plant?: string; line?: string; department?: string; resource?: string }) {
   const navigate = useNavigate();
@@ -246,7 +246,7 @@ export function SmartControlTowerLink({ plant, line, department, resource }: { p
   );
 }
 
-/* ── CRUD Modal ── */
+/* •••••• CRUD Modal •••••• */
 
 interface CrudModalField {
   key: string;
@@ -274,7 +274,7 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
       <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
           <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xs font-medium">✕</button>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xs font-medium">•••</button>
         </div>
         <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSave(); }} className="p-4 space-y-3">
           {fields.map((f) => (
@@ -309,7 +309,7 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
   );
 }
 
-/* ── Confirm Dialog ── */
+/* •••••• Confirm Dialog •••••• */
 
 export function ConfirmDialog({ open, onClose, title, message, onConfirm, confirmLabel = "Delete", danger = true }: {
   open: boolean;
@@ -336,7 +336,7 @@ export function ConfirmDialog({ open, onClose, title, message, onConfirm, confir
   );
 }
 
-/* ── Global Search ── */
+/* •••••• Global Search •••••• */
 
 interface GlobalSearchResult { type: "Plant" | "Department" | "Group" | "Resource" | "Table"; label: string; subtitle: string; to: string; }
 
@@ -344,20 +344,20 @@ export function GlobalSearchDialog({ open, onClose }: { open: boolean; onClose: 
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const allResults: GlobalSearchResult[] = [
-    { type: "Plant", label: "Main Plant", subtitle: "Building A · 3 lines · 72% load", to: "/system/data-management/plant/P001" },
-    { type: "Plant", label: "Secondary Plant", subtitle: "Building B · 2 lines · 45% load", to: "/system/data-management/plant/P002" },
-    { type: "Plant", label: "Warehouse Plant", subtitle: "Warehouse 1 · 1 line (inactive)", to: "/system/data-management/plant/P003" },
-    { type: "Department", label: "Assembly", subtitle: "Main Plant · 14 resources · 78% util", to: "/system/data-management/departments/D001" },
-    { type: "Department", label: "Machining", subtitle: "Main Plant · 10 resources · 92% util", to: "/system/data-management/departments/D002" },
-    { type: "Department", label: "Quality Control", subtitle: "Main Plant · 8 resources · 55% util", to: "/system/data-management/departments/D003" },
-    { type: "Group", label: "Line Operators", subtitle: "Assembly · 28 members · 12 resources", to: "/system/data-management/resource-groups/RG001" },
-    { type: "Group", label: "Setup Technicians", subtitle: "Machining · 12 members · 6 resources", to: "/system/data-management/resource-groups/RG002" },
-    { type: "Group", label: "Quality Inspectors", subtitle: "QC · 8 members · 5 resources", to: "/system/data-management/resource-groups/RG003" },
-    { type: "Resource", label: "Welding Station 2", subtitle: "Workstation · WS-002 · Running", to: "/system/data-management/resources/RES-WELD-02" },
-    { type: "Resource", label: "CNC Mill 1", subtitle: "Machine · CNC-MILL-01 · Running", to: "/system/data-management/resources/RES-CNC-01" },
-    { type: "Resource", label: "QC Gate 1", subtitle: "Inspection Station · QC-GATE-01 · Idle", to: "/system/data-management/resources/RES-QC-01" },
-    { type: "Resource", label: "Forklift 3", subtitle: "Material Handling · FORKLIFT-03 · Running", to: "/system/data-management/resources/RES-FORK-03" },
-    { type: "Resource", label: "CNC Lathe 1", subtitle: "Machine · CNC-LATHE-01 · Down", to: "/system/data-management/resources/RES-LATHE-01" },
+    { type: "Plant", label: "Main Plant", subtitle: "Building A Â· 3 lines Â· 72% load", to: "/system/data-management/plant/P001" },
+    { type: "Plant", label: "Secondary Plant", subtitle: "Building B Â· 2 lines Â· 45% load", to: "/system/data-management/plant/P002" },
+    { type: "Plant", label: "Warehouse Plant", subtitle: "Warehouse 1 Â· 1 line (inactive)", to: "/system/data-management/plant/P003" },
+    { type: "Department", label: "Assembly", subtitle: "Main Plant Â· 14 resources Â· 78% util", to: "/system/data-management/departments/D001" },
+    { type: "Department", label: "Machining", subtitle: "Main Plant Â· 10 resources Â· 92% util", to: "/system/data-management/departments/D002" },
+    { type: "Department", label: "Quality Control", subtitle: "Main Plant Â· 8 resources Â· 55% util", to: "/system/data-management/departments/D003" },
+    { type: "Group", label: "Line Operators", subtitle: "Assembly Â· 28 members Â· 12 resources", to: "/system/data-management/resource-groups/RG001" },
+    { type: "Group", label: "Setup Technicians", subtitle: "Machining Â· 12 members Â· 6 resources", to: "/system/data-management/resource-groups/RG002" },
+    { type: "Group", label: "Quality Inspectors", subtitle: "QC Â· 8 members Â· 5 resources", to: "/system/data-management/resource-groups/RG003" },
+    { type: "Resource", label: "Welding Station 2", subtitle: "Workstation Â· WS-002 Â· Running", to: "/system/data-management/resources/RES-WELD-02" },
+    { type: "Resource", label: "CNC Mill 1", subtitle: "Machine Â· CNC-MILL-01 Â· Running", to: "/system/data-management/resources/RES-CNC-01" },
+    { type: "Resource", label: "QC Gate 1", subtitle: "Inspection Station Â· QC-GATE-01 Â· Idle", to: "/system/data-management/resources/RES-QC-01" },
+    { type: "Resource", label: "Forklift 3", subtitle: "Material Handling Â· FORKLIFT-03 Â· Running", to: "/system/data-management/resources/RES-FORK-03" },
+    { type: "Resource", label: "CNC Lathe 1", subtitle: "Machine Â· CNC-LATHE-01 Â· Down", to: "/system/data-management/resources/RES-LATHE-01" },
     { type: "Table", label: "Shift Patterns", subtitle: "3 entries", to: "/system/data-management/references/T001" },
     { type: "Table", label: "Machine Types", subtitle: "12 entries", to: "/system/data-management/references/T002" },
     { type: "Table", label: "Material Categories", subtitle: "24 entries", to: "/system/data-management/references/T003" },

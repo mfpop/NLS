@@ -179,13 +179,9 @@ export function DepartmentsPage() {
               return (
                 <div
                   key={dept.id}
-                  className={`group cursor-pointer rounded-xl border bg-white px-3 py-2.5 transition-all hover:border-slate-300 hover:shadow-sm active:scale-[0.99] ${
+                  className={`group rounded-xl border bg-white px-3 py-2.5 transition-all hover:border-slate-300 hover:shadow-sm ${
                     isSelected ? "border-blue-300 ring-1 ring-blue-200" : "border-slate-200"
                   }`}
-                  onClick={() => navigate(`/system/data-management/departments/${dept.id}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/data-management/departments/${dept.id}`); }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">

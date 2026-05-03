@@ -38,6 +38,9 @@ const DataManagementPage = lazy(() =>
 const PlantStructurePage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.PlantStructurePage }))
 );
+const PlantDetailPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.PlantDetailPage }))
+);
 const DepartmentsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.DepartmentsPage }))
 );
@@ -105,7 +108,7 @@ export function AppRoutes() {
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
           <Route path="system/data-management" element={<DataManagementPage />} />
                     <Route path="system/data-management/plant" element={<PlantStructurePage />} />
-          <Route path="system/data-management/plant/:plantId" element={<PlantStructurePage />} />
+                    <Route path="system/data-management/plant/:plantId" element={<PlantDetailPage />} />
           <Route path="system/data-management/departments" element={<DepartmentsPage />} />
           <Route path="system/data-management/departments/:deptId" element={<DepartmentsPage />} />
           <Route path="system/data-management/resource-groups" element={<ResourceGroupsPage />} />

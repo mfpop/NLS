@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, MoreHorizontal, Eye, Pencil, GitBranch } from "lucide-react";
+import { Users, Pencil, GitBranch, Cpu, ExternalLink } from "lucide-react";
 import {
-  Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge, QuickAction,
-  BulkCheckbox, StructureShortcuts, ControlTowerLink
+  Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge,
+  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
 } from "./shared";
 
 interface ResourceGroup {
@@ -14,15 +14,17 @@ interface ResourceGroup {
   leader: string;
   status: "active" | "inactive";
   linkedLines: string[];
+  department: string;
+  resources: number;
   plantName: string;
 }
 
 const groups: ResourceGroup[] = [
-  { id: "RG001", name: "Line Operators", type: "Production", members: 28, leader: "Tom Wilson", status: "active", linkedLines: ["Line A", "Line B"], plantName: "Main Plant" },
-  { id: "RG002", name: "Setup Technicians", type: "Support", members: 12, leader: "Lisa Park", status: "active", linkedLines: ["Line A"], plantName: "Main Plant" },
-  { id: "RG003", name: "Quality Inspectors", type: "Quality", members: 8, leader: "James Lee", status: "active", linkedLines: ["Line A", "Line B", "Line C"], plantName: "Main Plant" },
-  { id: "RG004", name: "Material Handlers", type: "Logistics", members: 15, leader: "Maria Santos", status: "active", linkedLines: ["Line A", "Line B"], plantName: "Secondary Plant" },
-  { id: "RG005", name: "Shift Supervisors", type: "Management", members: 6, leader: "Robert Chen", status: "active", linkedLines: ["Line A", "Line B", "Line C"], plantName: "Secondary Plant" },
+  { id: "RG001", name: "Line Operators", type: "Production", members: 28, leader: "Tom Wilson", status: "active", linkedLines: ["C2-Cylinder Assembly", "Line A", "Line B"], department: "Assembly", resources: 12, plantName: "Main Plant" },
+  { id: "RG002", name: "Setup Technicians", type: "Support", members: 12, leader: "Lisa Park", status: "active", linkedLines: ["C2-Cylinder Assembly", "Line B"], department: "Machining", resources: 6, plantName: "Main Plant" },
+  { id: "RG003", name: "Quality Inspectors", type: "Quality", members: 8, leader: "James Lee", status: "active", linkedLines: ["C2-Cylinder Assembly", "Line C"], department: "Quality Control", resources: 5, plantName: "Main Plant" },
+  { id: "RG004", name: "Material Handlers", type: "Logistics", members: 15, leader: "Maria Santos", status: "active", linkedLines: ["Line A", "Line B", "Shared"], department: "Logistics", resources: 8, plantName: "Secondary Plant" },
+  { id: "RG005", name: "Shift Supervisors", type: "Management", members: 6, leader: "Robert Chen", status: "active", linkedLines: ["All Lines"], department: "Management", resources: 3, plantName: "Secondary Plant" },
 ];
 
 const FILTERS = [
@@ -58,17 +60,17 @@ export function ResourceGroupsPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
-      <header className="flex shrink-0 items-center gap-4 border-b border-[var(--border-soft)] bg-[var(--surface-1)] px-5 py-3">
+      <header className="flex shrink-0 items-center gap-4 border-b border-(--border-soft) bg-(--surface-1) px-5 py-3">
         <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-violet-50 text-violet-600">
           <Users className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">Resource Groups</h1>
-          <p className="text-xs text-[var(--text-secondary)]">Define teams and assign leaders to production groups.</p>
+          <h1 className="text-base font-semibold tracking-tight text-(--text-primary)">Resource Groups</h1>
+          <p className="text-xs text-(--text-secondary)">Define teams, assign leaders, and link resources to production groups.</p>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto bg-[var(--page-bg)] p-4">
+      <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Resource Groups" }]} />
         <ContextBar segments={[{ label: "All Plants" }]} />
         <StructureShortcuts />
@@ -131,9 +133,13 @@ export function ResourceGroupsPage() {
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400">
                           <span>{group.plantName}</span>
                           <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span>Dept: {group.department}</span>
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
                           <span>Leader: {group.leader}</span>
                           <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
                           <span>{group.members} member(s)</span>
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span>{group.resources} resource(s)</span>
                           {group.linkedLines.length > 0 && (
                             <>
                               <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
@@ -143,14 +149,14 @@ export function ResourceGroupsPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="hidden items-center gap-1.5 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <QuickAction label="View Members" icon={<Eye className="h-3.5 w-3.5" />} onClick={() => navigate(`/system/data-management/resource-groups/${group.id}`)} />
-                      <QuickAction label="Edit" icon={<Pencil className="h-3.5 w-3.5" />} />
-                      <QuickAction label="Link to Line" icon={<GitBranch className="h-3.5 w-3.5" />} />
-                      <ControlTowerLink plantName={group.plantName} />
-                      <button type="button" className="rounded-lg border border-slate-200 bg-white px-1.5 py-1.5 text-slate-400 hover:text-slate-600 transition-colors active:scale-[0.97]" aria-label="More actions">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
+                      <PrimaryAction onClick={() => navigate(`/system/data-management/resource-groups/${group.id}`)} />
+                      <ActionsDropdown actions={[
+                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
+                        { label: "Link to Line", icon: <GitBranch className="h-3 w-3" />, onClick: () => {} },
+                        { label: "View Resources", icon: <Cpu className="h-3 w-3" />, onClick: () => navigate("/system/data-management/resources") },
+                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(group.plantName)}&department=${encodeURIComponent(group.department)}`) },
+                      ]} />
                     </div>
                   </div>
                 </div>

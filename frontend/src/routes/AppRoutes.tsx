@@ -44,11 +44,17 @@ const DepartmentsPage = lazy(() =>
 const ResourceGroupsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ResourceGroupsPage }))
 );
+const ResourcesPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.ResourcesPage }))
+);
 const ReferencesPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ReferencesPage }))
 );
 const StructurePage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.StructurePage }))
+);
+const ProductionLinesPage = lazy(() =>
+  import("@/pages/system/data-management/ProductionLinesPage").then((module) => ({ default: module.ProductionLinesPage }))
 );
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ApplicationSettingsPage }))
@@ -103,10 +109,14 @@ export function AppRoutes() {
           <Route path="system/data-management/departments" element={<DepartmentsPage />} />
           <Route path="system/data-management/departments/:deptId" element={<DepartmentsPage />} />
           <Route path="system/data-management/resource-groups" element={<ResourceGroupsPage />} />
-          <Route path="system/data-management/resource-groups/:groupId" element={<ResourceGroupsPage />} />
-                    <Route path="system/data-management/references" element={<ReferencesPage />} />
+                    <Route path="system/data-management/resource-groups/:groupId" element={<ResourceGroupsPage />} />
+          <Route path="system/data-management/resources" element={<ResourcesPage />} />
+          <Route path="system/data-management/resources/:resourceId" element={<ResourcesPage />} />
+          <Route path="system/data-management/references" element={<ReferencesPage />} />
           <Route path="system/data-management/references/:tableId" element={<ReferencesPage />} />
           <Route path="system/data-management/structure" element={<StructurePage />} />
+          <Route path="system/data-management/production-lines" element={<ProductionLinesPage />} />
+          <Route path="system/data-management/production-lines/:lineId" element={<ProductionLinesPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />

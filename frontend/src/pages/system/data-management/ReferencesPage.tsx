@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Database, MoreHorizontal, Eye, Pencil, Download } from "lucide-react";
+import { Database, Pencil, Download } from "lucide-react";
 import {
-  Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge, QuickAction,
-  BulkCheckbox, StructureShortcuts
+  Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge,
+  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
 } from "./shared";
 
 interface ReferenceTable {
@@ -55,17 +55,17 @@ export function ReferencesPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
-      <header className="flex shrink-0 items-center gap-4 border-b border-[var(--border-soft)] bg-[var(--surface-1)] px-5 py-3">
+      <header className="flex shrink-0 items-center gap-4 border-b border-(--border-soft) bg-(--surface-1) px-5 py-3">
         <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-sky-50 text-sky-600">
           <Database className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">Reference Tables</h1>
-          <p className="text-xs text-[var(--text-secondary)]">Lookup tables, taxonomies, and configuration data.</p>
+          <h1 className="text-base font-semibold tracking-tight text-(--text-primary)">Reference Tables</h1>
+          <p className="text-xs text-(--text-secondary)">Lookup tables, taxonomies, and configuration data.</p>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto bg-[var(--page-bg)] p-4">
+      <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Reference Tables" }]} />
         <StructureShortcuts />
 
@@ -126,17 +126,16 @@ export function ReferencesPage() {
                           <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
                           <span>Updated {table.updated}</span>
                           <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
-                          <span className="truncate max-w-[200px]">{table.description}</span>
+                          <span className="truncate max-w-50">{table.description}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="hidden items-center gap-1.5 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <QuickAction label="View Data" icon={<Eye className="h-3.5 w-3.5" />} onClick={() => navigate(`/system/data-management/references/${table.id}`)} />
-                      <QuickAction label="Edit" icon={<Pencil className="h-3.5 w-3.5" />} />
-                      <QuickAction label="Export" icon={<Download className="h-3.5 w-3.5" />} />
-                      <button type="button" className="rounded-lg border border-slate-200 bg-white px-1.5 py-1.5 text-slate-400 hover:text-slate-600 transition-colors active:scale-[0.97]" aria-label="More actions">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
+                      <PrimaryAction onClick={() => navigate(`/system/data-management/references/${table.id}`)} />
+                      <ActionsDropdown actions={[
+                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
+                        { label: "Export", icon: <Download className="h-3 w-3" />, onClick: () => {} },
+                      ]} />
                     </div>
                   </div>
                 </div>

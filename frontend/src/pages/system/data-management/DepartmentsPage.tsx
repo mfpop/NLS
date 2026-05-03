@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Layers, MoreHorizontal, Eye, Pencil, Users } from "lucide-react";
+import { Building2, Layers, Pencil, Users, Cpu, ExternalLink } from "lucide-react";
 import {
-  Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge, QuickAction,
-  BulkCheckbox, StructureShortcuts, ControlTowerLink
+  Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge,
+  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
 } from "./shared";
 
 interface Department {
@@ -13,17 +13,19 @@ interface Department {
   manager: string;
   employees: number;
   groups: number;
+  resources: number;
+  lines: string[];
   status: "active" | "inactive";
   plantId: string;
   plantName: string;
 }
 
 const departments: Department[] = [
-  { id: "D001", name: "Assembly", code: "ASM", manager: "John Smith", employees: 45, groups: 3, status: "active", plantId: "P001", plantName: "Main Plant" },
-  { id: "D002", name: "Machining", code: "MCH", manager: "Sarah Chen", employees: 32, groups: 2, status: "active", plantId: "P001", plantName: "Main Plant" },
-  { id: "D003", name: "Quality Control", code: "QC", manager: "Mike Brown", employees: 18, groups: 2, status: "active", plantId: "P001", plantName: "Main Plant" },
-  { id: "D004", name: "Logistics", code: "LOG", manager: "Ana Garcia", employees: 22, groups: 3, status: "active", plantId: "P002", plantName: "Secondary Plant" },
-  { id: "D005", name: "Maintenance", code: "MTN", manager: "David Kim", employees: 14, groups: 1, status: "inactive", plantId: "P002", plantName: "Secondary Plant" },
+  { id: "D001", name: "Assembly", code: "ASM", manager: "John Smith", employees: 45, groups: 3, resources: 14, lines: ["C2-Cylinder Assembly", "Line A", "Line B"], status: "active", plantId: "P001", plantName: "Main Plant" },
+  { id: "D002", name: "Machining", code: "MCH", manager: "Sarah Chen", employees: 32, groups: 2, resources: 10, lines: ["C2-Cylinder Assembly", "Line B"], status: "active", plantId: "P001", plantName: "Main Plant" },
+  { id: "D003", name: "Quality Control", code: "QC", manager: "Mike Brown", employees: 18, groups: 2, resources: 8, lines: ["C2-Cylinder Assembly", "Line C"], status: "active", plantId: "P001", plantName: "Main Plant" },
+  { id: "D004", name: "Logistics", code: "LOG", manager: "Ana Garcia", employees: 22, groups: 3, resources: 12, lines: ["Line A", "Line B", "Shared"], status: "active", plantId: "P002", plantName: "Secondary Plant" },
+  { id: "D005", name: "Maintenance", code: "MTN", manager: "David Kim", employees: 14, groups: 1, resources: 4, lines: ["All Lines"], status: "inactive", plantId: "P002", plantName: "Secondary Plant" },
 ];
 
 const FILTERS = [
@@ -59,17 +61,17 @@ export function DepartmentsPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
-      <header className="flex shrink-0 items-center gap-4 border-b border-[var(--border-soft)] bg-[var(--surface-1)] px-5 py-3">
+      <header className="flex shrink-0 items-center gap-4 border-b border-(--border-soft) bg-(--surface-1) px-5 py-3">
         <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
           <Layers className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">Departments</h1>
-          <p className="text-xs text-[var(--text-secondary)]">Organize departments across your plants.</p>
+          <h1 className="text-base font-semibold tracking-tight text-(--text-primary)">Departments</h1>
+          <p className="text-xs text-(--text-secondary)">Organize departments, production lines, and resource groups across your plants.</p>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto bg-[var(--page-bg)] p-4">
+      <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Departments" }]} />
         <ContextBar segments={[{ label: "All Plants" }]} />
         <StructureShortcuts />
@@ -140,17 +142,21 @@ export function DepartmentsPage() {
                           <span>{dept.employees} employees</span>
                           <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
                           <span>{dept.groups} group(s)</span>
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span>{dept.resources} resource(s)</span>
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span>Lines: {dept.lines.join(", ")}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="hidden items-center gap-1.5 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <QuickAction label="View Groups" icon={<Eye className="h-3.5 w-3.5" />} onClick={() => navigate(`/system/data-management/departments/${dept.id}`)} />
-                      <QuickAction label="Edit" icon={<Pencil className="h-3.5 w-3.5" />} />
-                      <QuickAction label="Assign Groups" icon={<Users className="h-3.5 w-3.5" />} />
-                      <ControlTowerLink plantName={dept.plantName} />
-                      <button type="button" className="rounded-lg border border-slate-200 bg-white px-1.5 py-1.5 text-slate-400 hover:text-slate-600 transition-colors active:scale-[0.97]" aria-label="More actions">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
+                      <PrimaryAction onClick={() => navigate(`/system/data-management/departments/${dept.id}`)} />
+                      <ActionsDropdown actions={[
+                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
+                        { label: "Assign Groups", icon: <Users className="h-3 w-3" />, onClick: () => {} },
+                        { label: "View Resources", icon: <Cpu className="h-3 w-3" />, onClick: () => navigate("/system/data-management/resources") },
+                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(dept.plantName)}&department=${encodeURIComponent(dept.name)}`) },
+                      ]} />
                     </div>
                   </div>
                 </div>

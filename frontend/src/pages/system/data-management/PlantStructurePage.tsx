@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Factory, MoreHorizontal, Eye, Pencil, GitBranch } from "lucide-react";
+import { Building2, Factory, Pencil, GitBranch, Cpu, ExternalLink } from "lucide-react";
 import {
-  Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge, QuickAction,
-  ControlTowerLink, BulkCheckbox, StructureShortcuts
+  Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge,
+  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
 } from "./shared";
 
 interface Plant {
@@ -14,12 +14,13 @@ interface Plant {
   lines: number;
   departments: number;
   groups: number;
+  resources: number;
 }
 
 const plants: Plant[] = [
-  { id: "P001", name: "Main Plant", location: "Building A", status: "active", lines: 3, departments: 4, groups: 8 },
-  { id: "P002", name: "Secondary Plant", location: "Building B", status: "active", lines: 2, departments: 3, groups: 5 },
-  { id: "P003", name: "Warehouse Plant", location: "Warehouse 1", status: "inactive", lines: 1, departments: 1, groups: 2 },
+  { id: "P001", name: "Main Plant", location: "Building A", status: "active", lines: 3, departments: 4, groups: 8, resources: 42 },
+  { id: "P002", name: "Secondary Plant", location: "Building B", status: "active", lines: 2, departments: 3, groups: 5, resources: 18 },
+  { id: "P003", name: "Warehouse Plant", location: "Warehouse 1", status: "inactive", lines: 1, departments: 1, groups: 2, resources: 6 },
 ];
 
 const FILTERS = [
@@ -56,18 +57,18 @@ export function PlantStructurePage() {
   return (
     <div className="flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
       {/* Header */}
-      <header className="flex shrink-0 items-center gap-4 border-b border-[var(--border-soft)] bg-[var(--surface-1)] px-5 py-3">
+      <header className="flex shrink-0 items-center gap-4 border-b border-(--border-soft) bg-(--surface-1) px-5 py-3">
         <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-50 text-blue-600">
           <Building2 className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">Plant Structure</h1>
-          <p className="text-xs text-[var(--text-secondary)]">Configure plants, lines, and resource groups.</p>
+          <h1 className="text-base font-semibold tracking-tight text-(--text-primary)">Plant Structure</h1>
+          <p className="text-xs text-(--text-secondary)">Configure plants, production lines, departments, resource groups, and resources.</p>
         </div>
       </header>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto bg-[var(--page-bg)] p-4">
+      <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Plant Structure" }]} />
         <StructureShortcuts />
 
@@ -144,21 +145,19 @@ export function PlantStructurePage() {
                           <span>{plant.departments} dept(s)</span>
                           <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
                           <span>{plant.groups} group(s)</span>
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span>{plant.resources} resource(s)</span>
                         </div>
                       </div>
                     </div>
-                    <div className="hidden items-center gap-1.5 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <QuickAction label="View Structure" icon={<Eye className="h-3.5 w-3.5" />} onClick={() => navigate(`/system/data-management/plant/${plant.id}`)} />
-                      <QuickAction label="Edit" icon={<Pencil className="h-3.5 w-3.5" />} />
-                      <QuickAction label="Manage Lines" icon={<GitBranch className="h-3.5 w-3.5" />} />
-                      <ControlTowerLink plantName={plant.name} />
-                      <button
-                        type="button"
-                        className="rounded-lg border border-slate-200 bg-white px-1.5 py-1.5 text-slate-400 hover:text-slate-600 transition-colors active:scale-[0.97]"
-                        aria-label="More actions"
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
+                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
+                      <PrimaryAction onClick={() => navigate(`/system/data-management/plant/${plant.id}`)} />
+                      <ActionsDropdown actions={[
+                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
+                        { label: "Manage Lines", icon: <GitBranch className="h-3 w-3" />, onClick: () => {} },
+                        { label: "View Resources", icon: <Cpu className="h-3 w-3" />, onClick: () => navigate("/system/data-management/resources") },
+                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`) },
+                      ]} />
                     </div>
                   </div>
                 </div>

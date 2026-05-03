@@ -35,6 +35,21 @@ const StandardWorkPage = lazy(() =>
 const DataManagementPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.DataManagementPage }))
 );
+const PlantStructurePage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.PlantStructurePage }))
+);
+const DepartmentsPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.DepartmentsPage }))
+);
+const ResourceGroupsPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.ResourceGroupsPage }))
+);
+const ReferencesPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.ReferencesPage }))
+);
+const StructurePage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.StructurePage }))
+);
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ApplicationSettingsPage }))
 );
@@ -69,7 +84,9 @@ export function AppRoutes() {
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<ControlTowerPage />} />
+                    <Route index element={<ControlTowerPage />} />
+          <Route path="control-tower" element={<ControlTowerPage />} />
+          <Route path="home" element={<Navigate to="/control-tower" replace />} />
           <Route path="myworkspace/dashboard" element={<MyDashboardPage />} />
           <Route path="myworkspace/tasks" element={<MyTasksPage />} />
           <Route path="execution/line-performance" element={<LinePerformancePage />} />
@@ -81,6 +98,15 @@ export function AppRoutes() {
           <Route path="improve/kaizen" element={<KaizenPage />} />
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
           <Route path="system/data-management" element={<DataManagementPage />} />
+                    <Route path="system/data-management/plant" element={<PlantStructurePage />} />
+          <Route path="system/data-management/plant/:plantId" element={<PlantStructurePage />} />
+          <Route path="system/data-management/departments" element={<DepartmentsPage />} />
+          <Route path="system/data-management/departments/:deptId" element={<DepartmentsPage />} />
+          <Route path="system/data-management/resource-groups" element={<ResourceGroupsPage />} />
+          <Route path="system/data-management/resource-groups/:groupId" element={<ResourceGroupsPage />} />
+                    <Route path="system/data-management/references" element={<ReferencesPage />} />
+          <Route path="system/data-management/references/:tableId" element={<ReferencesPage />} />
+          <Route path="system/data-management/structure" element={<StructurePage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />
@@ -90,7 +116,6 @@ export function AppRoutes() {
           <Route path="docs/core" element={<DocumentationCenter />} />
           <Route path="docs/core/:docSlug" element={<DocumentationCenter />} />
           <Route path="docs/setup" element={<DocumentationCenter />} />
-          <Route path="home" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

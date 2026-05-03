@@ -66,6 +66,17 @@ export const productionLines = [
   "Steps Assembly",
 ];
 
+export interface PlantEntry {
+  name: string;
+  lines: string[];
+}
+
+export const plants: PlantEntry[] = [
+  { name: "Main Plant", lines: ["C2-Cylinder Assembly", "STB Units Line", "C2 Units Line"] },
+  { name: "Secondary Plant", lines: ["Harnesses Line", "Pipes Line"] },
+  { name: "Warehouse Plant", lines: ["Kitting Line", "Steps Assembly"] },
+];
+
 export const sidebarEntries: SidebarEntry[] = [
   {
     type: "item",

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, Database, Factory, Layers, Package, Search, Users, GitBranch, Cpu, AlertTriangle, BarChart3, Activity } from "lucide-react";
 import { GlobalSearchDialog, InfoBanner } from "./data-management/shared";
 
-const forms = [
+const structureMenu = [
   { label: "Plant Structure",     icon: Factory,   href: "/system/data-management/plant" },
   { label: "Production Lines",    icon: GitBranch, href: "/system/data-management/production-lines" },
   { label: "Departments",         icon: Layers,    href: "/system/data-management/departments" },
@@ -47,17 +47,17 @@ export function DataManagementPage() {
           <div className="relative">
             <button type="button" className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors" onClick={() => setOpen(!open)} aria-expanded={open}>
               <Layers className="h-4 w-4" />
-              Forms
+              Structure
               <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
             </button>
             {open && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
                 <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
-                  {forms.map((form) => (
-                    <Link key={form.href} to={form.href} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors" onClick={() => setOpen(false)}>
-                      <form.icon className="h-4 w-4 text-slate-400" />
-                      {form.label}
+                  {structureMenu.map((item) => (
+                    <Link key={item.href} to={item.href} className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors" onClick={() => setOpen(false)}>
+                      <item.icon className="h-4 w-4 text-slate-400" />
+                      {item.label}
                     </Link>
                   ))}
                 </div>
@@ -90,14 +90,14 @@ export function DataManagementPage() {
         <div className="mb-6">
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Production Structure</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {forms.slice(0, 6).map((form) => (
-              <Link key={form.href} to={form.href}
+            {structureMenu.slice(0, 6).map((item) => (
+              <Link key={item.href} to={item.href}
                 className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 transition-all hover:border-slate-300 hover:shadow-sm active:scale-[0.98]"
               >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-500">
-                  <form.icon className="h-4 w-4" />
+                  <item.icon className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-medium text-slate-800">{form.label}</span>
+                <span className="text-sm font-medium text-slate-800">{item.label}</span>
               </Link>
             ))}
           </div>

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, ExternalLink, Search, X, AlertTriangle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -167,7 +167,6 @@ export function BulkCheckbox({ checked, onChange }: { checked: boolean; onChange
 }
 
 /* ── Data Management Sub-Header Navigation ── */
-/* Full-width nav bar between header and content. Renders nav chips. */
 
 const dmNavItems = [
   { label: "Structure",  path: "/system/data-management/structure" },
@@ -177,7 +176,33 @@ const dmNavItems = [
 ];
 
 export function DataManagementNav({ currentPath }: { currentPath?: string }) {
-  const
+  const navigate = useNavigate();
+  return (
+    <nav
+      className="flex shrink-0 items-center gap-1 border-b border-(--border-soft) bg-slate-50 dark:bg-slate-900/40 px-5 h-10"
+      aria-label="Data Management sections"
+    >
+      {dmNavItems.map((item) => {
+        const isActive = currentPath === item.path ||
+          (currentPath && currentPath.startsWith(item.path));
+        return (
+          <button
+            key={item.path}
+            type="button"
+            onClick={() => navigate(item.path)}
+            className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+              isActive
+                ? "text-[var(--accent)] font-semibold"
+                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            }`}
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
 
 /* ── Alert Banner ── */
 
@@ -204,7 +229,7 @@ export function InfoBanner({ message }: { message: string }) {
   );
 }
 
-/* ── Smart Control Tower Link (passes filters) ── */
+/* ── Smart Control Tower Link ── */
 
 export function SmartControlTowerLink({ plant, line, department, resource }: { plant?: string; line?: string; department?: string; resource?: string }) {
   const navigate = useNavigate();
@@ -218,6 +243,96 @@ export function SmartControlTowerLink({ plant, line, department, resource }: { p
       <ExternalLink className="h-3 w-3" />
       CT
     </button>
+  );
+}
+
+/* ── CRUD Modal ── */
+
+interface CrudModalField {
+  key: string;
+  label: string;
+  type?: "text" | "select" | "textarea";
+  options?: { label: string; value: string }[];
+  required?: boolean;
+  placeholder?: string;
+}
+
+export function CrudModal({ open, onClose, title, fields, values, onChange, onSave, onDelete }: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  fields: CrudModalField[];
+  values: Record<string, string>;
+  onChange: (key: string, value: string) => void;
+  onSave: () => void;
+  onDelete?: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <>
+      <div className="fixed inset-0 z-30 bg-black/20" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xs font-medium">✕</button>
+        </div>
+        <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSave(); }} className="p-4 space-y-3">
+          {fields.map((f) => (
+            <div key={f.key}>
+              <label className="mb-1 block text-xs font-medium text-slate-600">{f.label}{f.required && <span className="text-red-500 ml-0.5">*</span>}</label>
+              {f.type === "select" && f.options ? (
+                <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300">
+                  <option value="">Select...</option>
+                  {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              ) : f.type === "textarea" ? (
+                <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 min-h-[60px]" />
+              ) : (
+                <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300" />
+              )}
+            </div>
+          ))}
+          <div className="flex items-center justify-between pt-2">
+            <div>
+              {onDelete && (
+                <button type="button" onClick={onDelete} className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">Delete</button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+              <button type="submit" className="rounded-lg bg-slate-800 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 transition-colors">Save</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+}
+
+/* ── Confirm Dialog ── */
+
+export function ConfirmDialog({ open, onClose, title, message, onConfirm, confirmLabel = "Delete", danger = true }: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  confirmLabel?: string;
+  danger?: boolean;
+}) {
+  if (!open) return null;
+  return (
+    <>
+      <div className="fixed inset-0 z-30 bg-black/20" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white shadow-xl p-4">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <p className="mt-2 text-xs text-slate-500">{message}</p>
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+          <button type="button" onClick={() => { onConfirm(); onClose(); }} className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors ${danger ? "bg-red-600 hover:bg-red-500" : "bg-slate-800 hover:bg-slate-700"}`}>{confirmLabel}</button>
+        </div>
+      </div>
+    </>
   );
 }
 

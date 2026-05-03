@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Cpu, GitBranch, Monitor, Wrench, Truck, ClipboardCheck, Pencil, ExternalLink } from "lucide-react";
 import {
   Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState,
-  BulkCheckbox, StructureShortcuts, ResourceStatusBadge, LoadBar,
+  BulkCheckbox, DataManagementNav, ResourceStatusBadge, LoadBar,
   PrimaryAction, ActionsDropdown, AlertBanner
 } from "./shared";
 
@@ -55,6 +55,7 @@ const typeStyles: Record<ResType, { icon: any; bg: string; badge: string }> = {
 
 export function ResourcesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -97,11 +98,11 @@ export function ResourcesPage() {
         </div>
       </header>
 
+      <DataManagementNav currentPath={location.pathname} />
+
       <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Resources" }]} />
         <ContextBar segments={[{ label: "All Resources" }]} />
-        <StructureShortcuts />
-
         {downResources.length > 0 && (
           <AlertBanner
             message={`${downResources.length} resource(s) down - affecting flow`}

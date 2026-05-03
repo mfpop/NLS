@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Database, Pencil, Download } from "lucide-react";
 import {
   Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge,
-  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
+  BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown
 } from "./shared";
 
 interface ReferenceTable {
@@ -32,6 +32,7 @@ const FILTERS = [
 
 export function ReferencesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -65,10 +66,10 @@ export function ReferencesPage() {
         </div>
       </header>
 
+      <DataManagementNav currentPath={location.pathname} />
+
       <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Reference Tables" }]} />
-        <StructureShortcuts />
-
         <div className="mb-3 flex items-center gap-3">
           <SearchBar value={search} onChange={setSearch} placeholder="Search tables..." />
           <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />

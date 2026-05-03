@@ -287,6 +287,58 @@ textarea {
 .sidebar__line-item-check {
   margin-left: 0.5rem;
 }
+.sidebar__line-item--plant {
+  font-weight: 600;
+  padding-left: 0.75rem;
+}
+
+.sidebar__line-item--expand-toggle {
+  padding-left: 1.25rem;
+  font-size: 11px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.sidebar__line-item--expand-toggle:hover {
+  color: #374151;
+}
+
+.sidebar__line-item--child {
+  padding-left: 2rem;
+  font-size: 12px;
+}
+
+.sidebar__line-item-text--muted {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+.sidebar__line-item-text--indent {
+  padding-left: 0.25rem;
+}
+
+.sidebar__line-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.25rem 0.75rem;
+}
+
+.sidebar__chevron--small {
+  width: 12px;
+  height: 12px;
+}
+
+:root[data-theme="dark"] .sidebar__line-item--expand-toggle {
+  color: #9ca3af;
+}
+:root[data-theme="dark"] .sidebar__line-item--expand-toggle:hover {
+  color: #d1d5db;
+}
+:root[data-theme="dark"] .sidebar__line-divider {
+  background: #374151;
+}
 
 .sidebar__line-list::-webkit-scrollbar {
   width: 6px;

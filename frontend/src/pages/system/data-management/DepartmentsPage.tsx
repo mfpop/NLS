@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Building2, Layers, Pencil, Users, Cpu, ExternalLink } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Building2, Layers, Pencil, Users, Cpu, ExternalLink, Trash2 } from "lucide-react";
 import {
   Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge,
-  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
+  BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown,
+  CrudModal, ConfirmDialog
 } from "./shared";
 
 interface Department {
@@ -20,7 +21,9 @@ interface Department {
   plantName: string;
 }
 
-const departments: Department[] = [
+let nextDeptId = 6;
+
+const initialDepartments: Department[] = [
   { id: "D001", name: "Assembly", code: "ASM", manager: "John Smith", employees: 45, groups: 3, resources: 14, lines: ["C2-Cylinder Assembly", "Line A", "Line B"], status: "active", plantId: "P001", plantName: "Main Plant" },
   { id: "D002", name: "Machining", code: "MCH", manager: "Sarah Chen", employees: 32, groups: 2, resources: 10, lines: ["C2-Cylinder Assembly", "Line B"], status: "active", plantId: "P001", plantName: "Main Plant" },
   { id: "D003", name: "Quality Control", code: "QC", manager: "Mike Brown", employees: 18, groups: 2, resources: 8, lines: ["C2-Cylinder Assembly", "Line C"], status: "active", plantId: "P001", plantName: "Main Plant" },
@@ -34,11 +37,72 @@ const FILTERS = [
   { label: "Inactive", value: "inactive" },
 ];
 
+const modalFields = [
+  { key: "name", label: "Department Name", required: true, placeholder: "e.g. Assembly" },
+  { key: "code", label: "Code", required: true, placeholder: "e.g. ASM" },
+  { key: "manager", label: "Manager", placeholder: "e.g. John Smith" },
+  { key: "employees", label: "Employees", placeholder: "e.g. 45" },
+  { key: "status", label: "Status", type: "select" as const, options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+];
+
 export function DepartmentsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<Record<string, string>>({});
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm({ name: "", code: "", manager: "", employees: "", status: "active" });
+    setModalOpen(true);
+  };
+
+  const openEdit = (d: Department) => {
+    setEditingId(d.id);
+    setForm({ name: d.name, code: d.code, manager: d.manager, employees: String(d.employees), status: d.status });
+    setModalOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name?.trim() || !form.code?.trim()) return;
+    if (editingId) {
+      setDepartments((prev) => prev.map((d) => d.id === editingId ? {
+        ...d, name: form.name, code: form.code, manager: form.manager || d.manager,
+        employees: parseInt(form.employees) || 0, status: form.status as "active" | "inactive"
+      } : d));
+    } else {
+      const newId = `D${String(nextDeptId++).padStart(3, "0")}`;
+      setDepartments((prev) => [...prev, {
+        id: newId, name: form.name, code: form.code, manager: form.manager || "", employees: parseInt(form.employees) || 0,
+        groups: 0, resources: 0, lines: [], status: form.status as "active" | "inactive", plantId: "P001", plantName: "Main Plant"
+      }]);
+    }
+    setModalOpen(false);
+  };
+
+  const confirmDelete = () => {
+    if (editingId) {
+      setDepartments((prev) => prev.filter((d) => d.id !== editingId));
+      setSelected((prev) => { const next = new Set(prev); next.delete(editingId); return next; });
+    }
+    setConfirmOpen(false);
+    setModalOpen(false);
+  };
+
+  const bulkActivate = () => {
+    setDepartments((prev) => prev.map((d) => selected.has(d.id) ? { ...d, status: "active" as const } : d));
+    setSelected(new Set());
+  };
+  const bulkDeactivate = () => {
+    setDepartments((prev) => prev.map((d) => selected.has(d.id) ? { ...d, status: "inactive" as const } : d));
+    setSelected(new Set());
+  };
 
   const filtered = departments.filter((d) => {
     if (filter !== "all" && d.status !== filter) return false;
@@ -71,17 +135,18 @@ export function DepartmentsPage() {
         </div>
       </header>
 
+      <DataManagementNav currentPath={location.pathname} />
+
       <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Departments" }]} />
         <ContextBar segments={[{ label: "All Plants" }]} />
-        <StructureShortcuts />
 
         <div className="mb-3 flex items-center gap-3">
           <SearchBar value={search} onChange={setSearch} placeholder="Search departments..." />
           <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
           <div className="ml-auto flex items-center gap-2">
             {selected.size > 0 && <span className="text-xs text-slate-500">{selected.size} selected</span>}
-            <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors active:scale-[0.97]">
+            <button onClick={openAdd} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors active:scale-[0.97]">
               + Add Department
             </button>
           </div>
@@ -93,9 +158,9 @@ export function DepartmentsPage() {
             <span className="text-blue-400">|</span>
             <button className="hover:underline">Assign manager</button>
             <span className="text-blue-400">|</span>
-            <button className="hover:underline">Activate</button>
+            <button onClick={bulkActivate} className="hover:underline">Activate</button>
             <span className="text-blue-400">|</span>
-            <button className="hover:underline">Deactivate</button>
+            <button onClick={bulkDeactivate} className="hover:underline">Deactivate</button>
             <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-blue-500 hover:text-blue-700 font-medium">Clear</button>
           </div>
         )}
@@ -105,7 +170,7 @@ export function DepartmentsPage() {
             icon={<Layers className="h-6 w-6" />}
             title={search ? "No departments match your search" : "No departments configured"}
             description="Create departments and assign managers."
-            action={{ label: "+ Add Department", onClick: () => {} }}
+            action={{ label: "+ Add Department", onClick: openAdd }}
           />
         ) : (
           <div className="space-y-2">
@@ -152,7 +217,8 @@ export function DepartmentsPage() {
                     <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
                       <PrimaryAction onClick={() => navigate(`/system/data-management/departments/${dept.id}`)} />
                       <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
+                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => openEdit(dept) },
+                        { label: "Delete", icon: <Trash2 className="h-3 w-3" />, onClick: () => { setEditingId(dept.id); setConfirmOpen(true); } },
                         { label: "Assign Groups", icon: <Users className="h-3 w-3" />, onClick: () => {} },
                         { label: "View Resources", icon: <Cpu className="h-3 w-3" />, onClick: () => navigate("/system/data-management/resources") },
                         { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(dept.plantName)}&department=${encodeURIComponent(dept.name)}`) },
@@ -173,6 +239,8 @@ export function DepartmentsPage() {
           </label>
         </div>
       </div>
+      <CrudModal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Department" : "Add Department"} fields={modalFields} values={form} onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))} onSave={handleSave} onDelete={editingId ? () => { setConfirmOpen(true); } : undefined} />
+      <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Delete Department" message={`Are you sure you want to delete "${departments.find(d => d.id === editingId)?.name}"? This action cannot be undone.`} onConfirm={confirmDelete} />
     </div>
   );
 }

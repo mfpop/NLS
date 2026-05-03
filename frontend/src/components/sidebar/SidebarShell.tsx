@@ -3,8 +3,8 @@ import { NavLink, useLocation } from "react-router-dom";
 import { BrandHeader } from "@/components/BrandHeader";
 import { useSidebarStore } from "@/stores/sidebar";
 import type { SidebarSectionItem } from "./config";
-import { sidebarEntries, productionLines } from "./config";
-import { ChevronDown, MoreVertical, User, LogOut, Settings } from "./icons";
+import { sidebarEntries, plants } from "./config";
+import { ChevronDown, MoreVertical, User, LogOut, Settings, ChevronRight } from "./icons";
 
 function initialsFromName(name: string) {
   return name
@@ -22,7 +22,9 @@ export function SidebarShell() {
   const [isLineOpen, setIsLineOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({});
-  const [selectedLine, setSelectedLine] = useState(productionLines[0]);
+  const [selectedPlant, setSelectedPlant] = useState(plants[0].name);
+  const [selectedLine, setSelectedLine] = useState(plants[0].lines[0]);
+  const [selectedPlantExpanded, setSelectedPlantExpanded] = useState(false);
   const lineRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
 
@@ -52,9 +54,12 @@ export function SidebarShell() {
     return () => document.removeEventListener("click", handleDocumentClick);
   }, []);
 
-  const selectedLineLabel = useMemo(() => {
-    return selectedLine.length > 18 ? selectedLine.slice(0, 18) + "..." : selectedLine;
-  }, [selectedLine]);
+    const selectedLineLabel = useMemo(() => {
+    const plant = plants.find((p) => p.name === selectedPlant);
+    const plantPrefix = plant ? plant.name.slice(0, 12) + (plant.name.length > 12 ? "…" : "") : "";
+    const lineTrimmed = selectedLine.length > 14 ? selectedLine.slice(0, 14) + "…" : selectedLine;
+    return plant ? `${plantPrefix} / ${lineTrimmed}` : lineTrimmed;
+  }, [selectedPlant, selectedLine]);
 
   const hasActivePath = (item: SidebarSectionItem): boolean => {
     if (item.type === "item") {
@@ -123,7 +128,7 @@ export function SidebarShell() {
 
       <div className="sidebar__content">
         <div className="sidebar__main">
-          <div className="sidebar__line-block" ref={lineRef}>
+                    <div className="sidebar__line-block" ref={lineRef}>
             <button
               type="button"
               className={"sidebar__line-trigger " + (isLineOpen ? "sidebar__line-trigger--open" : "")}
@@ -134,7 +139,7 @@ export function SidebarShell() {
               aria-expanded={isLineOpen}
             >
               <div className="sidebar__line-copy">
-                <div className="sidebar__line-label">Production Line</div>
+                <div className="sidebar__line-label">Plant / Line</div>
                 <div className="sidebar__line-value">{selectedLineLabel}</div>
               </div>
               <ChevronDown className={"sidebar__chevron " + (isLineOpen ? "sidebar__chevron--rotated" : "")} />
@@ -143,24 +148,73 @@ export function SidebarShell() {
             <div className={"sidebar__line-dropdown-wrap " + (isLineOpen ? "sidebar__line-dropdown-wrap--open" : "sidebar__line-dropdown-wrap--closed")}>
               <div className="sidebar__line-dropdown">
                 <div className="sidebar__line-list">
-                  {productionLines.map((line) => {
-                    const isSelected = line === selectedLine;
+                  {plants.map((plant) => {
+                    const isPlantExpanded = selectedPlantExpanded && selectedPlant === plant.name;
+                    const isPlantSelected = selectedPlant === plant.name;
                     return (
-                      <button
-                        key={line}
-                        type="button"
-                        className={"sidebar__line-item " + (isSelected ? "sidebar__line-item--selected" : "")}
-                        onClick={() => {
-                          setSelectedLine(line);
-                          setIsLineOpen(false);
-                        }}
-                      >
-                        <span className="sidebar__line-item-dot" />
-                        <span className="sidebar__line-item-text">{line}</span>
-                        {isSelected ? <span className="sidebar__line-item-check">✓</span> : null}
-                      </button>
+                      <div key={plant.name}>
+                        <button
+                          type="button"
+                          className={"sidebar__line-item sidebar__line-item--plant " + (isPlantSelected ? "sidebar__line-item--selected" : "")}
+                          onClick={() => {
+                            setSelectedPlant(plant.name);
+                            setSelectedLine(plant.lines[0]);
+                            setSelectedPlantExpanded(false);
+                            setIsLineOpen(false);
+                          }}
+                        >
+                          <span className="sidebar__line-item-dot" />
+                          <span className="sidebar__line-item-text">{plant.name}</span>
+                          {isPlantSelected ? <span className="sidebar__line-item-check">✓</span> : null}
+                        </button>
+                        <button
+                          type="button"
+                          className="sidebar__line-item sidebar__line-item--expand-toggle"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPlant(plant.name);
+                            setSelectedPlantExpanded(!isPlantExpanded);
+                          }}
+                        >
+                          <ChevronRight className={"sidebar__chevron sidebar__chevron--small " + (isPlantExpanded ? "sidebar__chevron--rotated" : "")} />
+                          <span className="sidebar__line-item-text sidebar__line-item-text--muted">Lines</span>
+                        </button>
+                        {isPlantExpanded && plant.lines.map((line) => {
+                          const isLineSelected = selectedPlant === plant.name && selectedLine === line;
+                          return (
+                            <button
+                              key={line}
+                              type="button"
+                              className={"sidebar__line-item sidebar__line-item--child " + (isLineSelected ? "sidebar__line-item--selected" : "")}
+                              onClick={() => {
+                                setSelectedPlant(plant.name);
+                                setSelectedLine(line);
+                                setIsLineOpen(false);
+                                setSelectedPlantExpanded(false);
+                              }}
+                            >
+                              <span className="sidebar__line-item-text sidebar__line-item-text--indent">{line}</span>
+                              {isLineSelected ? <span className="sidebar__line-item-check">✓</span> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
                     );
                   })}
+                  <div className="sidebar__line-divider" />
+                  <button
+                    type="button"
+                    className={"sidebar__line-item " + (selectedLine === "All Lines" ? "sidebar__line-item--selected" : "")}
+                    onClick={() => {
+                      setSelectedPlant("");
+                      setSelectedLine("All Lines");
+                      setIsLineOpen(false);
+                      setSelectedPlantExpanded(false);
+                    }}
+                  >
+                    <span className="sidebar__line-item-text">All Lines</span>
+                    {selectedLine === "All Lines" ? <span className="sidebar__line-item-check">✓</span> : null}
+                  </button>
                 </div>
                 <div className="sidebar__line-fade" aria-hidden="true" />
               </div>

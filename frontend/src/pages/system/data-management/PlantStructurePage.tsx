@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Building2, Factory, Pencil, GitBranch, Cpu, ExternalLink } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Building2, Factory, Pencil, GitBranch, Cpu, ExternalLink, Trash2 } from "lucide-react";
 import {
   Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge,
-  BulkCheckbox, StructureShortcuts, PrimaryAction, ActionsDropdown
+  BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown,
+  CrudModal, ConfirmDialog
 } from "./shared";
 
 interface Plant {
@@ -17,7 +18,9 @@ interface Plant {
   resources: number;
 }
 
-const plants: Plant[] = [
+let nextId = 4;
+
+const initialPlants: Plant[] = [
   { id: "P001", name: "Main Plant", location: "Building A", status: "active", lines: 3, departments: 4, groups: 8, resources: 42 },
   { id: "P002", name: "Secondary Plant", location: "Building B", status: "active", lines: 2, departments: 3, groups: 5, resources: 18 },
   { id: "P003", name: "Warehouse Plant", location: "Warehouse 1", status: "inactive", lines: 1, departments: 1, groups: 2, resources: 6 },
@@ -29,11 +32,69 @@ const FILTERS = [
   { label: "Inactive", value: "inactive" },
 ];
 
+const modalFields = [
+  { key: "name", label: "Plant Name", required: true, placeholder: "e.g. Main Plant" },
+  { key: "location", label: "Location", required: true, placeholder: "e.g. Building A" },
+  { key: "status", label: "Status", type: "select" as const, options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+];
+
 export function PlantStructurePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [plants, setPlants] = useState<Plant[]>(initialPlants);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<Record<string, string>>({});
+
+  const openAdd = () => {
+    setEditingId(null);
+    setForm({ name: "", location: "", status: "active" });
+    setModalOpen(true);
+  };
+
+  const openEdit = (plant: Plant) => {
+    setEditingId(plant.id);
+    setForm({ name: plant.name, location: plant.location, status: plant.status });
+    setModalOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name?.trim() || !form.location?.trim()) return;
+    if (editingId) {
+      setPlants((prev) => prev.map((p) => p.id === editingId ? { ...p, name: form.name, location: form.location, status: form.status as "active" | "inactive" } : p));
+    } else {
+      const newId = `P${String(nextId++).padStart(3, "0")}`;
+      setPlants((prev) => [...prev, { id: newId, name: form.name, location: form.location, status: form.status as "active" | "inactive", lines: 0, departments: 0, groups: 0, resources: 0 }]);
+    }
+    setModalOpen(false);
+  };
+
+  const handleDelete = (id: string) => {
+    setEditingId(id);
+    setConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (editingId) {
+      setPlants((prev) => prev.filter((p) => p.id !== editingId));
+      setSelected((prev) => { const next = new Set(prev); next.delete(editingId); return next; });
+    }
+    setConfirmOpen(false);
+    setModalOpen(false);
+  };
+
+  const bulkActivate = () => {
+    setPlants((prev) => prev.map((p) => selected.has(p.id) ? { ...p, status: "active" as const } : p));
+    setSelected(new Set());
+  };
+  const bulkDeactivate = () => {
+    setPlants((prev) => prev.map((p) => selected.has(p.id) ? { ...p, status: "inactive" as const } : p));
+    setSelected(new Set());
+  };
 
   const filtered = plants.filter((p) => {
     if (filter !== "all" && p.status !== filter) return false;
@@ -67,10 +128,11 @@ export function PlantStructurePage() {
         </div>
       </header>
 
+      <DataManagementNav currentPath={location.pathname} />
+
       {/* Body */}
       <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Plant Structure" }]} />
-        <StructureShortcuts />
 
         {/* Toolbar */}
         <div className="mb-3 flex items-center gap-3">
@@ -80,7 +142,7 @@ export function PlantStructurePage() {
             {selected.size > 0 && (
               <span className="text-xs text-slate-500">{selected.size} selected</span>
             )}
-            <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors active:scale-[0.97]">
+            <button onClick={openAdd} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors active:scale-[0.97]">
               + Add Plant
             </button>
           </div>
@@ -93,9 +155,9 @@ export function PlantStructurePage() {
             <span className="text-blue-400">|</span>
             <button className="hover:underline">Assign to line</button>
             <span className="text-blue-400">|</span>
-            <button className="hover:underline">Activate</button>
+            <button onClick={bulkActivate} className="hover:underline">Activate</button>
             <span className="text-blue-400">|</span>
-            <button className="hover:underline">Deactivate</button>
+            <button onClick={bulkDeactivate} className="hover:underline">Deactivate</button>
             <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-blue-500 hover:text-blue-700 font-medium">
               Clear
             </button>
@@ -108,7 +170,7 @@ export function PlantStructurePage() {
             icon={<Building2 className="h-6 w-6" />}
             title={search ? "No plants match your search" : "No plants configured"}
             description="Add your first plant to start modeling your production structure."
-            action={{ label: "+ Add Plant", onClick: () => {} }}
+            action={{ label: "+ Add Plant", onClick: openAdd }}
           />
         ) : (
           <div className="space-y-2">
@@ -153,8 +215,9 @@ export function PlantStructurePage() {
                     <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
                       <PrimaryAction onClick={() => navigate(`/system/data-management/plant/${plant.id}`)} />
                       <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
-                        { label: "Manage Lines", icon: <GitBranch className="h-3 w-3" />, onClick: () => {} },
+                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => openEdit(plant) },
+                        { label: "Delete", icon: <Trash2 className="h-3 w-3" />, onClick: () => handleDelete(plant.id) },
+                        { label: "Manage Lines", icon: <GitBranch className="h-3 w-3" />, onClick: () => navigate("/system/data-management/production-lines") },
                         { label: "View Resources", icon: <Cpu className="h-3 w-3" />, onClick: () => navigate("/system/data-management/resources") },
                         { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`) },
                       ]} />
@@ -179,6 +242,8 @@ export function PlantStructurePage() {
           </label>
         </div>
       </div>
+      <CrudModal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Plant" : "Add Plant"} fields={modalFields} values={form} onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))} onSave={handleSave} onDelete={editingId ? () => handleDelete(editingId) : undefined} />
+      <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Delete Plant" message={`Are you sure you want to delete "${plants.find(p => p.id === editingId)?.name}"? This action cannot be undone.`} onConfirm={confirmDelete} />
     </div>
   );
 }

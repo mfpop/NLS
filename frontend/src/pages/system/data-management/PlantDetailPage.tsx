@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Building2, Factory, GitBranch, Cpu, Users, Layers, Globe, MapPin, Clock, FileText, ChevronLeft, ExternalLink, Trash2, X } from "lucide-react";
+import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
 
 export interface PlantDetail {
@@ -25,7 +26,23 @@ export const initialPlantDetails: PlantDetail[] = [
   { id: "P003", name: "Warehouse Plant", code: "WP-01", status: "inactive", building: "Warehouse 1", address: "789 Logistics Ave, Chicago, IL 60601", timezone: "America/Chicago (CST)", calendar: "Standard 5-day Week", notes: "Storage and kitting facility. Currently inactive pending reconfiguration.", lines: 1, departments: 1, groups: 2, resources: 6 },
 ];
 
-let globalPlants: PlantDetail[] = [...initialPlantDetails];
+const STORAGE_KEY = "lmd_plant_data";
+
+function loadFromStorage(): PlantDetail[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as PlantDetail[];
+  } catch { /* ignore */ }
+  return [...initialPlantDetails];
+}
+
+function saveToStorage(plants: PlantDetail[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(plants));
+  } catch { /* ignore */ }
+}
+
+let globalPlants: PlantDetail[] = loadFromStorage();
 let listeners: Array<() => void> = [];
 
 export function subscribePlantChanges(fn: () => void) {
@@ -34,6 +51,7 @@ export function subscribePlantChanges(fn: () => void) {
 }
 
 export function notifyPlantChanges() {
+  saveToStorage(globalPlants);
   listeners.forEach((fn) => fn());
 }
 
@@ -56,19 +74,13 @@ export function PlantDetailPage() {
 
   if (!plant) {
     return (
-
-
-
-
       <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
         <header className={`flex h-16 shrink-0 items-center gap-3 border-b px-6 ${theme.header}`}>
           <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxBlue}`}>
             <Building2 className="h-5 w-5 stroke-current" />
           </div>
-
           <h1 className={`text-sm font-semibold ${theme.textPrimary}`}>Plant Not Found</h1>
         </header>
-
         <div className={`flex-1 flex items-center justify-center text-xs ${theme.textSecondary}`}>Plant "{plantId}" does not exist.</div>
       </div>
     );
@@ -82,38 +94,29 @@ export function PlantDetailPage() {
   };
 
   return (
-
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      {/* ═══════ LAYER 1: HEADER ═══════ */}
-
-      <header className={`flex h-16 shrink-0 items-center justify-between border-b px-6 ${theme.header}`}>
+      {/* HEADER */}
+      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "56px" }}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/system/data-management/plant")}
-
-            className={`rounded-lg p-1.5 transition-colors ${theme.buttonGhost}`}
+            className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
             aria-label="Back"
           >
-
             <ChevronLeft className="h-4 w-4 stroke-current" />
           </button>
-
-
           <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
             <Factory className="h-5 w-5 stroke-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-
               <h1 className={`text-sm font-semibold ${theme.textPrimary}`}>{plant.name}</h1>
               {plant.status === "active" ? (
-
                 <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${theme.badgeActive}`}>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   Active
                 </span>
               ) : (
-
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${theme.badgeInactive}`}>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
                   Inactive
@@ -124,7 +127,7 @@ export function PlantDetailPage() {
           </div>
         </div>
         <button
-          onClick={() => navigate("/system/data-management")}
+          onClick={() => navigate("/system/data-management/plant")}
           className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${theme.buttonGhost}`}
         >
           <X className="h-4 w-4" />
@@ -132,7 +135,7 @@ export function PlantDetailPage() {
         </button>
       </header>
 
-      {/* ═══════ LAYER 2: CONTENT ═══════ */}
+      {/* CONTENT */}
       <div className={`flex-1 overflow-y-auto ${theme.page} px-6 py-5`}>
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* General Information */}
@@ -182,7 +185,7 @@ export function PlantDetailPage() {
         </div>
 
         {/* Delete section */}
-        <div className={`mt-6 flex items-center justify-between rounded-xl px-4 py-3 ${theme.dangerPanel}`}>
+        <div className="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/30 px-4 py-3">
           <div>
             <p className="text-xs font-medium text-red-600 dark:text-red-400">Delete this plant</p>
             <p className="text-[11px] text-red-500 dark:text-red-500">This action cannot be undone. All associated data will be removed.</p>
@@ -197,22 +200,13 @@ export function PlantDetailPage() {
         </div>
       </div>
 
-      {/* Confirm delete dialog */}
-      {confirmDelete && (
-        <>
-          <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={() => setConfirmDelete(false)} />
-          <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border p-4 shadow-xl ${theme.modal}`}>
-            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>Delete Plant</h3>
-            <p className={`mt-2 text-xs ${theme.textSecondary}`}>Are you sure you want to delete "{plant.name}"? This action cannot be undone.</p>
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button onClick={() => setConfirmDelete(false)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
-              <button onClick={handleDelete}
-                className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 transition-colors">Delete</button>
-            </div>
-          </div>
-        </>
-      )}
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="Delete Plant"
+        message={`Are you sure you want to delete "${plant.name}"? This action cannot be undone.`}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

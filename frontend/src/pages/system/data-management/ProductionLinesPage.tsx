@@ -92,17 +92,13 @@ export function ProductionLinesPage() {
 
         {/* Bulk actions */}
         {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
-            <span className="font-medium">{selected.size} line(s) selected</span>
-            <span className="text-blue-400">|</span>
-            <button className="hover:underline">Assign model</button>
-            <span className="text-blue-400">|</span>
-            <button className="hover:underline">Change shift pattern</button>
-            <span className="text-blue-400">|</span>
-            <button className="hover:underline">Activate</button>
-            <span className="text-blue-400">|</span>
-            <button className="hover:underline">Deactivate</button>
-            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-blue-500 hover:text-blue-700 font-medium">Clear</button>
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 px-3 py-2 text-xs">
+            <span className="font-medium text-slate-900 dark:text-slate-100">{selected.size} line(s) selected</span>
+            <span className="text-slate-400 dark:text-slate-500">|</span>
+            <button className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">Activate</button>
+            <span className="text-slate-400 dark:text-slate-500">|</span>
+            <button className="text-xs text-amber-600 hover:underline dark:text-amber-400">Deactivate</button>
+            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Clear</button>
           </div>
         )}
 

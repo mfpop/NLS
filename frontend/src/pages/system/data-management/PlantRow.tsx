@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Factory, ExternalLink, GitBranch, MoreHorizontal, Pencil, ToggleLeft, ToggleRight, Eye } from "lucide-react";
+import { Factory, ExternalLink, GitBranch, Pencil, ToggleLeft, ToggleRight, Eye } from "lucide-react";
 import type { Plant } from "@/types/plant";
 import { theme } from "../../../styles/themeTokens";
+import { ActionsDropdown } from "./shared";
 
 interface PlantRowProps {
   plant: Plant;
@@ -13,18 +13,6 @@ interface PlantRowProps {
 
 export function PlantRow({ plant, isSelected, onToggleSelect, onToggleStatus }: PlantRowProps) {
   const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
 
   return (
     <div className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm ${
@@ -74,40 +62,17 @@ export function PlantRow({ plant, isSelected, onToggleSelect, onToggleStatus }: 
       {/* Actions */}
       <div className="flex items-center gap-1">
         <button type="button" onClick={() => navigate("/system/data-management/plant/" + plant.id)}
-          className={`inline-flex items-center gap-1.5 ${theme.buttonDetails} text-xs font-medium transition-colors active:scale-[0.97]`}>
+          className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors active:scale-[0.97] inline-flex items-center gap-1.5">
           <Eye className="h-3.5 w-3.5 stroke-current" />
           Details
         </button>
-        <div ref={menuRef} className="relative">
-          <button type="button" onClick={() => setMenuOpen(!menuOpen)}
-            className={`inline-flex items-center justify-center ${theme.buttonIcon} transition-colors active:scale-[0.97]`}>
-            <MoreHorizontal className="h-4 w-4 stroke-current" />
-          </button>
-          {menuOpen && (
-            <div className={`absolute right-0 top-full z-20 mt-1 w-52 rounded-xl border py-1 shadow-lg ${theme.dropdown}`}>
-              <DropdownItem icon={Pencil} label="Edit" onClick={() => { setMenuOpen(false); navigate("/system/data-management/plant/" + plant.id); }} />
-              <DropdownItem icon={plant.status === "active" ? ToggleLeft : ToggleRight}
-                label={plant.status === "active" ? "Disable" : "Activate"}
-                onClick={() => { setMenuOpen(false); onToggleStatus(); }} />
-              <div className="mx-2 my-1 border-t border-slate-200 dark:border-slate-700" />
-              <DropdownItem icon={GitBranch} label="Go to Production Lines" onClick={() => { setMenuOpen(false); navigate("/system/data-management/production-lines"); }} />
-              <DropdownItem icon={ExternalLink} label="View in Control Tower" onClick={() => { setMenuOpen(false); navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`); }} />
-            </div>
-          )}
-        </div>
+        <ActionsDropdown actions={[
+          { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/plant/" + plant.id) },
+          { label: plant.status === "active" ? "Disable" : "Activate", icon: plant.status === "active" ? <ToggleLeft className="h-3 w-3 stroke-current" /> : <ToggleRight className="h-3 w-3 stroke-current" />, onClick: () => { onToggleStatus(); } },
+          { label: "Go to Production Lines", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/production-lines") },
+          { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`) },
+        ]} />
       </div>
     </div>
-  );
-}
-
-/* ── Dropdown item ── */
-
-function DropdownItem({ icon: Icon, label, onClick }: { icon: any; label: string; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick}
-      className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors ${theme.textPrimary} ${theme.interactiveRow}`}>
-      <Icon className={`h-3.5 w-3.5 ${theme.iconSubtle}`} />
-      {label}
-    </button>
   );
 }

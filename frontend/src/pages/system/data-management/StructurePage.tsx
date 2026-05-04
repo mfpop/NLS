@@ -120,8 +120,9 @@ function TreeNodeRow({ node, depth = 0 }: { node: TreeNode; depth?: number }) {
         </div>
         {node.loadPct !== undefined && <LoadBar pct={node.loadPct} />}
         {node.to && (
-          <button type="button" onClick={(e) => { e.stopPropagation(); navigate(node.to!); }} className={`shrink-0 rounded-lg border px-2 py-1 text-[10px] font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
-            Open
+          <button type="button" onClick={(e) => { e.stopPropagation(); navigate(node.to!); }}
+            className="shrink-0 h-9 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors active:scale-[0.97]">
+            Details
           </button>
         )}
       </div>
@@ -147,7 +148,7 @@ export function StructurePage() {
           <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Full Structure View</h1>
           <p className={`text-xs ${theme.textSecondary}`}>Hierarchical view with live load, utilization, and bottleneck detection.</p>
         </div>
-        <button type="button" onClick={() => navigate("/system/data-management/plant")} className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
+        <button type="button" onClick={() => navigate("/system/data-management/structure")} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors">
           Back to Plants
         </button>
       </header>

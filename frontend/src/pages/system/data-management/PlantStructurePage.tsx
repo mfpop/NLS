@@ -1,99 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { type PlantDetail, getGlobalPlants, subscribePlantChanges, notifyPlantChanges } from "./PlantDetailPage";
-import { Building2, Factory, Cpu, ExternalLink, Trash2, Pencil, X, Plus, GitBranch, MoreHorizontal } from "lucide-react";
-import { ActionsDropdown } from "./shared";
-import { theme } from "../../../styles/themeTokens";
-
-/* ── Inline Modal & Confirm ── */
-
-interface CrudModalField {
-  key: string;
-  label: string;
-  type?: "text" | "select" | "textarea";
-  options?: { label: string; value: string }[];
-  required?: boolean;
-  placeholder?: string;
-}
-
-function CrudModal({ open, onClose, title, fields, values, onChange, onSave, onDelete }: {
-  open: boolean; onClose: () => void; title: string;
-  fields: CrudModalField[]; values: Record<string, string>;
-  onChange: (key: string, value: string) => void;
-  onSave: () => void; onDelete?: () => void;
-}) {
-  if (!open) return null;
-  return (
-    <>
-      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={onClose} />
-      <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border shadow-xl ${theme.modal}`}>
-        <div className={`flex items-center justify-between border-b px-4 py-3 ${theme.subHeader}`}>
-          <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
-          <button type="button" onClick={onClose} className={`${theme.textMuted} ${theme.link} text-xs font-medium`}>
-            <X className="h-4 w-4 stroke-current" />
-          </button>
-        </div>
-        <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="space-y-3 p-4">
-          {fields.map((f) => (
-            <div key={f.key}>
-              <label className={`mb-1 block text-xs font-medium ${theme.textSecondary}`}>
-                {f.label}{f.required && <span className="ml-0.5 text-red-500">*</span>}
-              </label>
-              {f.type === "select" && f.options ? (
-                <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)}
-                  className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
-                  <option value="">Select...</option>
-                  {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              ) : f.type === "textarea" ? (
-                <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className={`min-h-[60px] w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
-              ) : (
-                <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
-              )}
-            </div>
-          ))}
-          <div className="flex items-center justify-between pt-2">
-            <div>
-              {onDelete && (
-                <button type="button" onClick={onDelete}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonDanger}`}>Delete</button>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={onClose}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
-              <button type="submit"
-                className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-white transition-colors shadow-sm ${theme.buttonPrimary}`}>Save</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </>
-  );
-}
-
-function ConfirmDialog({ open, onClose, title, message, onConfirm }: {
-  open: boolean; onClose: () => void; title: string; message: string; onConfirm: () => void;
-}) {
-  if (!open) return null;
-  return (
-    <>
-      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={onClose} />
-      <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border shadow-xl p-4 ${theme.modal}`}>
-        <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
-        <p className={`mt-2 text-xs ${theme.textSecondary}`}>{message}</p>
-        <div className="mt-4 flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
-          <button type="button" onClick={() => { onConfirm(); onClose(); }}
-            className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors ${theme.buttonDangerSolid}`}>Delete</button>
-        </div>
-      </div>
-    </>
-  );
-}
+import { Building2, Factory, Cpu, ExternalLink, Trash2, Pencil, X, Plus, GitBranch, Search } from "lucide-react";
+import {
+  CrudModal, ConfirmDialog, ActionsDropdown
+} from "./shared";
+import {
+  type PlantDetail, getGlobalPlants, subscribePlantChanges, notifyPlantChanges
+} from "./PlantDetailPage";
 
 /* ── Constants ── */
 
@@ -103,57 +16,69 @@ const FILTERS = [
   { label: "Inactive", value: "inactive" },
 ];
 
-const modalFields: CrudModalField[] = [
-  { key: "name", label: "Plant Name", required: true, placeholder: "e.g. Main Plant" },
-  { key: "code", label: "Plant Code", required: true, placeholder: "e.g. MP-01" },
-  { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
-  { key: "building", label: "Building / Site", placeholder: "e.g. Building A" },
-  { key: "address", label: "Address / Location", placeholder: "e.g. 123 Industrial Blvd" },
-  { key: "timezone", label: "Timezone", placeholder: "e.g. America/Detroit (EST)" },
-  { key: "calendar", label: "Default Calendar / Schedule", placeholder: "e.g. Standard 5-day Week" },
-  { key: "notes", label: "Description / Notes", type: "textarea", placeholder: "e.g. Primary assembly facility..." },
+const TIMEZONE_OPTIONS = [
+  { label: "America/Detroit (EST)", value: "America/Detroit (EST)" },
+  { label: "America/New_York (EST)", value: "America/New_York (EST)" },
+  { label: "America/Chicago (CST)", value: "America/Chicago (CST)" },
+  { label: "America/Denver (MST)", value: "America/Denver (MST)" },
+  { label: "America/Los_Angeles (PST)", value: "America/Los_Angeles (PST)" },
+  { label: "America/Anchorage (AKST)", value: "America/Anchorage (AKST)" },
+  { label: "Pacific/Honolulu (HST)", value: "Pacific/Honolulu (HST)" },
+  { label: "America/Toronto (EST)", value: "America/Toronto (EST)" },
+  { label: "America/Vancouver (PST)", value: "America/Vancouver (PST)" },
+  { label: "America/Mexico_City (CST)", value: "America/Mexico_City (CST)" },
+  { label: "America/Monterrey (CST)", value: "America/Monterrey (CST)" },
+  { label: "America/Tijuana (PST)", value: "America/Tijuana (PST)" },
+  { label: "America/Sao_Paulo (BRT)", value: "America/Sao_Paulo (BRT)" },
+  { label: "Europe/London (GMT)", value: "Europe/London (GMT)" },
+  { label: "Europe/Berlin (CET)", value: "Europe/Berlin (CET)" },
+  { label: "Europe/Paris (CET)", value: "Europe/Paris (CET)" },
+  { label: "Europe/Madrid (CET)", value: "Europe/Madrid (CET)" },
+  { label: "Europe/Rome (CET)", value: "Europe/Rome (CET)" },
+  { label: "Europe/Stockholm (CET)", value: "Europe/Stockholm (CET)" },
+  { label: "Europe/Warsaw (CET)", value: "Europe/Warsaw (CET)" },
+  { label: "Europe/Moscow (MSK)", value: "Europe/Moscow (MSK)" },
+  { label: "Europe/Istanbul (TRT)", value: "Europe/Istanbul (TRT)" },
+  { label: "Asia/Dubai (GST)", value: "Asia/Dubai (GST)" },
+  { label: "Asia/Kolkata (IST)", value: "Asia/Kolkata (IST)" },
+  { label: "Asia/Shanghai (CST)", value: "Asia/Shanghai (CST)" },
+  { label: "Asia/Singapore (SGT)", value: "Asia/Singapore (SGT)" },
+  { label: "Asia/Tokyo (JST)", value: "Asia/Tokyo (JST)" },
+  { label: "Asia/Seoul (KST)", value: "Asia/Seoul (KST)" },
+  { label: "Australia/Sydney (AEDT)", value: "Australia/Sydney (AEDT)" },
+  { label: "Australia/Melbourne (AEDT)", value: "Australia/Melbourne (AEDT)" },
+  { label: "Pacific/Auckland (NZDT)", value: "Pacific/Auckland (NZDT)" },
+  { label: "UTC", value: "UTC" },
 ];
 
-interface PlantSummary {
-  id: string; name: string; code: string; building: string; status: "active" | "inactive";
-  lines: number; departments: number; groups: number; resources: number;
-}
-
-function toSummary(p: PlantDetail): PlantSummary {
-  return { id: p.id, name: p.name, code: p.code, building: p.building, status: p.status, lines: p.lines, departments: p.departments, groups: p.groups, resources: p.resources };
-}
-
-function BulkCheckbox({ checked, onChange }: { checked: boolean; onChange: () => void }) {
-  return (
-    <input type="checkbox" checked={checked} onChange={onChange}
-      className="h-4 w-4 rounded border-slate-300 text-slate-700 focus:ring-emerald-500/40 cursor-pointer dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300"
-      onClick={(e) => e.stopPropagation()} />
-  );
-}
+const modalFields = [
+  { key: "name", label: "Plant Name", required: true, placeholder: "e.g. Main Plant" },
+  { key: "code", label: "Plant Code", required: true, placeholder: "e.g. MP-01" },
+  { key: "status", label: "Status", type: "select" as const, options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+  { key: "building", label: "Building / Site", placeholder: "e.g. Building A" },
+  { key: "address", label: "Address / Location", placeholder: "e.g. 123 Industrial Blvd" },
+  { key: "timezone", label: "Timezone", type: "select" as const, options: TIMEZONE_OPTIONS },
+  { key: "calendar", label: "Default Calendar / Schedule", placeholder: "e.g. Standard 5-day Week" },
+  { key: "notes", label: "Description / Notes", type: "textarea" as const, placeholder: "e.g. Primary assembly facility..." },
+];
 
 /* ── Component ── */
 
 export function PlantStructurePage() {
   const navigate = useNavigate();
-
-  const [rev, setRev] = useState(0);
   const [plants, setPlants] = useState<PlantDetail[]>(() => getGlobalPlants());
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
 
+  // Subscribe to plant data changes
   useState(() => {
-    const unsub = subscribePlantChanges(() => {
-      setPlants([...getGlobalPlants()]);
-      setRev((r) => r + 1);
-    });
+    const unsub = subscribePlantChanges(() => setPlants([...getGlobalPlants()]));
     return unsub;
   });
-  const displayPlants = rev >= 0 ? getGlobalPlants() : plants;
 
   const openAdd = () => {
     setEditingId(null);
@@ -163,7 +88,11 @@ export function PlantStructurePage() {
 
   const openEdit = (plant: PlantDetail) => {
     setEditingId(plant.id);
-    setForm({ name: plant.name, code: plant.code, status: plant.status, building: plant.building, address: plant.address, timezone: plant.timezone, calendar: plant.calendar, notes: plant.notes });
+    setForm({
+      name: plant.name, code: plant.code, status: plant.status,
+      building: plant.building, address: plant.address, timezone: plant.timezone,
+      calendar: plant.calendar, notes: plant.notes,
+    });
     setModalOpen(true);
   };
 
@@ -172,17 +101,31 @@ export function PlantStructurePage() {
     const local = getGlobalPlants();
     if (editingId) {
       const idx = local.findIndex((p) => p.id === editingId);
-      if (idx >= 0) local[idx] = { ...local[idx], name: form.name, code: form.code, status: form.status as "active" | "inactive", building: form.building || "", address: form.address || "", timezone: form.timezone || "", calendar: form.calendar || "", notes: form.notes || "" };
+      if (idx >= 0) {
+        local[idx] = {
+          ...local[idx],
+          name: form.name, code: form.code,
+          status: form.status as "active" | "inactive",
+          building: form.building || "", address: form.address || "",
+          timezone: form.timezone || "", calendar: form.calendar || "",
+          notes: form.notes || "",
+        };
+      }
     } else {
       const maxId = local.reduce((max, p) => Math.max(max, parseInt(p.id.slice(1)) || 0), 0);
       const newId = `P${String(maxId + 1).padStart(3, "0")}`;
-      local.push({ id: newId, name: form.name, code: form.code, status: form.status as "active" | "inactive", building: form.building || "", address: form.address || "", timezone: form.timezone || "", calendar: form.calendar || "", notes: form.notes || "", lines: 0, departments: 0, groups: 0, resources: 0 });
+      local.push({
+        id: newId, name: form.name, code: form.code,
+        status: form.status as "active" | "inactive",
+        building: form.building || "", address: form.address || "",
+        timezone: form.timezone || "", calendar: form.calendar || "",
+        notes: form.notes || "",
+        lines: 0, departments: 0, groups: 0, resources: 0,
+      });
     }
     notifyPlantChanges();
     setModalOpen(false);
   };
-
-  const handleDelete = (id: string) => { setEditingId(id); setConfirmOpen(true); };
 
   const confirmDelete = () => {
     if (editingId) {
@@ -190,86 +133,65 @@ export function PlantStructurePage() {
       const idx = local.findIndex((p) => p.id === editingId);
       if (idx >= 0) local.splice(idx, 1);
       notifyPlantChanges();
-      setSelected((prev) => { const next = new Set(prev); next.delete(editingId); return next; });
     }
     setConfirmOpen(false);
     setModalOpen(false);
   };
 
-  const bulkActivate = () => {
-    const local = getGlobalPlants();
-    local.forEach((p) => { if (selected.has(p.id)) p.status = "active"; });
-    notifyPlantChanges();
-    setSelected(new Set());
-  };
-
-  const bulkDeactivate = () => {
-    const local = getGlobalPlants();
-    local.forEach((p) => { if (selected.has(p.id)) p.status = "inactive"; });
-    notifyPlantChanges();
-    setSelected(new Set());
-  };
-
-  const filtered = displayPlants.filter((p) => {
+  const filtered = plants.filter((p) => {
     if (filter !== "all" && p.status !== filter) return false;
-    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) && !p.building.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
-  const allSelected = filtered.length > 0 && selected.size === filtered.length;
-
-  const toggleAll = () => {
-    if (allSelected) setSelected(new Set());
-    else setSelected(new Set(filtered.map((p) => p.id)));
-  };
-
-  const toggleOne = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelected(next);
-  };
-
-  const currentPlant = editingId ? displayPlants.find((p) => p.id === editingId) : undefined;
+  const currentPlant = editingId ? plants.find((p) => p.id === editingId) : undefined;
 
   return (
-    <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      {/* ═══════ LAYER 1: HEADER ═══════ */}
-      <header className={`flex shrink-0 items-center justify-between ${theme.header} px-5 py-3`}>
+    <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
+      {/* ── HEADER ── */}
+      <header className="flex shrink-0 items-center justify-between bg-white border-b border-slate-200 px-5 py-3">
         <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+          <div className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
             <Building2 className="h-5 w-5 stroke-current" />
           </div>
           <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Plant Structure</h1>
-            <p className={`text-xs ${theme.textSecondary}`}>Configure plants, locations, and defaults.</p>
+            <h1 className="text-base font-semibold tracking-tight text-slate-900">Plant Structure</h1>
+            <p className="text-xs text-slate-500">Configure plants, locations, and defaults.</p>
           </div>
         </div>
         <button
           onClick={() => navigate("/system/data-management")}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium ${theme.buttonGhost}`}
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
         >
-          <X className="h-4 w-4 stroke-current" />
+          <X className="w-4 h-4 stroke-current" />
           Close
         </button>
       </header>
 
-      {/* ═══════ LAYER 2: ACTION BAR ═══════ */}
-      <div className={`flex shrink-0 items-center justify-between ${theme.actionBar} px-5 py-3`}>
+      {/* ── ACTION BAR ── */}
+      <div className="flex shrink-0 items-center justify-between bg-white border-b border-slate-200 px-5 py-3">
         <div className="flex items-center gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search plants..."
-            className={`h-10 w-[320px] rounded-xl border px-3 text-xs ${theme.input} ${theme.focusRing}`}
-          />
+          {/* Search */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 stroke-current" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search plants..."
+              className="h-10 w-[320px] rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+            />
+          </div>
+          {/* Filter tabs */}
           <div className="flex items-center gap-1">
             {FILTERS.map((f) => (
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
-                  filter === f.value ? theme.tabActive : theme.tabInactive
+                className={`h-8 rounded-md px-3 text-xs font-medium transition-all duration-150 ${
+                  filter === f.value
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-500 hover:text-slate-700"
                 }`}
               >
                 {f.label}
@@ -277,125 +199,99 @@ export function PlantStructurePage() {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {selected.size > 0 && (
-            <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>
-          )}
-          <button
-            onClick={openAdd}
-            className={`inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-xs font-semibold shadow-sm transition-colors active:scale-[0.97] ${theme.buttonPrimary}`}
-          >
-            <Plus className="h-4 w-4 stroke-current" />
-            Add Plant
-          </button>
-        </div>
+        <button
+          onClick={openAdd}
+          className="inline-flex items-center gap-1.5 h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all duration-150 shadow-sm"
+        >
+          <Plus className="h-4 w-4 stroke-current" />
+          Add Plant
+        </button>
       </div>
 
-      {/* ═══════ LAYER 2b: BULK ACTION BAR ═══════ */}
-      {selected.size > 0 && (
-        <div className={`flex items-center gap-2 ${theme.bulkBar} px-5 py-2`}>
-          <span className={`text-xs font-medium ${theme.textPrimary}`}>{selected.size} plant(s) selected</span>
-          <span className={`${theme.textMuted}`}>|</span>
-          <button onClick={bulkActivate} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">Activate</button>
-          <span className={`${theme.textMuted}`}>|</span>
-          <button onClick={bulkDeactivate} className="text-xs text-amber-600 hover:underline dark:text-amber-400">Deactivate</button>
-          <button onClick={() => setSelected(new Set())} className={`ml-auto text-xs font-medium ${theme.textSecondary} ${theme.link}`}>Clear</button>
-        </div>
-      )}
-
-      {/* ═══════ LAYER 3: CONTENT ═══════ */}
-      <div className={`flex-1 overflow-y-auto ${theme.page} p-5`}>
+      {/* ── CONTENT ── */}
+      <div className="flex-1 overflow-y-auto bg-slate-100 p-5">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-xl ${theme.iconBoxSubtle}`}>
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 text-slate-500">
               <Building2 className="h-6 w-6 stroke-current" />
             </div>
-            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
+            <h3 className="text-sm font-semibold text-slate-900">
               {search ? "No plants match your search" : "No plants configured"}
             </h3>
-            <p className={`mt-1 text-xs ${theme.textSecondary}`}>Add your first plant to start modeling your production structure.</p>
-            <button onClick={openAdd} className={`mt-4 inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors active:scale-[0.97] ${theme.buttonPrimary}`}>
-              <Plus className="h-3.5 w-3.5 stroke-current" />
+            <p className="mt-1 text-xs text-slate-500">Add your first plant to start modeling your production structure.</p>
+            <button onClick={openAdd} className="mt-4 inline-flex items-center gap-1.5 h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all duration-150 shadow-sm">
+              <Plus className="h-4 w-4 stroke-current" />
               Add Plant
             </button>
           </div>
         ) : (
-          <>
-            <div className="space-y-3">
-              {filtered.map((plant) => {
-                const s = toSummary(plant);
-                const isSelected = selected.has(s.id);
-                return (
-                  <div
-                    key={s.id}
-                    className={`flex items-center gap-3 rounded-xl border px-3 py-3 transition-all hover:shadow-sm ${
-                      isSelected ? theme.rowSelected : theme.row
-                    } ${theme.cardHover}`}
-                  >
-                    <BulkCheckbox checked={isSelected} onChange={() => toggleOne(s.id)} />
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                      <Factory className="h-4.5 w-4.5 stroke-current" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-semibold ${theme.textPrimary}`}>{s.name}</span>
-                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${theme.codeBadge}`}>{s.code}</span>
-                        {s.status === "active" ? (
-                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${theme.badgeActive}`}>
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${theme.badgeInactive}`}>
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
-                            Inactive
-                          </span>
-                        )}
-                        <span className={`text-xs ${theme.textMuted}`}>ID: {s.id}</span>
-                      </div>
-                      <div className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${theme.textSecondary}`}>
-                        <span>{s.building}</span>
-                        <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                        <span>{s.lines} line(s)</span>
-                        <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                        <span>{s.departments} dept(s)</span>
-                        <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                        <span>{s.groups} group(s)</span>
-                        <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                        <span>{s.resources} resource(s)</span>
-                      </div>
-                    </div>
-                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => navigate("/system/data-management/plant/" + s.id)}
-                        className={`inline-flex items-center gap-1.5 ${theme.buttonDetails} text-xs font-medium transition-colors active:scale-[0.97]`}
-                      >
-                        Details
-                      </button>
-                      <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => openEdit(plant) },
-                        { label: "Delete", icon: <Trash2 className="h-3 w-3 stroke-current" />, onClick: () => handleDelete(s.id) },
-                        { label: "Manage Lines", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/production-lines") },
-                        { label: "View Resources", icon: <Cpu className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/resources") },
-                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate("/control-tower?plant=" + encodeURIComponent(s.name)) },
-                      ]} />
-                    </div>
+          <div className="space-y-2">
+            {filtered.map((plant) => (
+              <div
+                key={plant.id}
+                className="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-3 transition-all duration-150 hover:shadow-sm"
+              >
+                {/* Icon */}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                  <Factory className="h-5 w-5 stroke-current" />
+                </div>
+
+                {/* Content */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-sm font-semibold text-slate-900">{plant.name}</span>
+                    <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-slate-100 text-slate-500">{plant.code}</span>
+                    {plant.status === "active" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
+                        Inactive
+                      </span>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-            <div className={`mt-3 flex items-center justify-between text-xs ${theme.textMuted}`}>
-              <span>{filtered.length} of {displayPlants.length} plant(s)</span>
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input type="checkbox" checked={allSelected} onChange={toggleAll}
-                  className={`h-3.5 w-3.5 rounded ${theme.checkbox}`} />
-                Select all
-              </label>
-            </div>
-          </>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-slate-400">
+                    <span>{plant.building}</span>
+                    <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                    <span>{plant.lines} line(s)</span>
+                    <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                    <span>{plant.departments} dept(s)</span>
+                    <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                    <span>{plant.groups} group(s)</span>
+                    <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                    <span>{plant.resources} resource(s)</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => navigate("/system/data-management/plant/" + plant.id)}
+                    className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-100 transition-all duration-150"
+                  >
+                    Details
+                  </button>
+                  <ActionsDropdown
+                    buttonClass="w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 inline-flex items-center justify-center"
+                    actions={[
+                      { label: "Edit", icon: <Pencil className="w-4 h-4 stroke-current" />, onClick: () => openEdit(plant) },
+                      { label: "Delete", icon: <Trash2 className="w-4 h-4 stroke-current" />, onClick: () => { setEditingId(plant.id); setConfirmOpen(true); }, danger: true },
+                      { label: "Manage Lines", icon: <GitBranch className="w-4 h-4 stroke-current" />, onClick: () => navigate("/system/data-management/production-lines") },
+                      { label: "View Resources", icon: <Cpu className="w-4 h-4 stroke-current" />, onClick: () => navigate("/system/data-management/resources") },
+                      { label: "View in Control Tower", icon: <ExternalLink className="w-4 h-4 stroke-current" />, onClick: () => navigate("/control-tower?plant=" + encodeURIComponent(plant.name)) },
+                    ]}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
+      {/* ── MODALS ── */}
       <CrudModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -404,7 +300,7 @@ export function PlantStructurePage() {
         values={form}
         onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))}
         onSave={handleSave}
-        onDelete={editingId ? () => handleDelete(editingId) : undefined}
+        onDelete={editingId ? () => { setConfirmOpen(true); } : undefined}
       />
       <ConfirmDialog
         open={confirmOpen}

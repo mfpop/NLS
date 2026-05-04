@@ -147,22 +147,20 @@ export function DepartmentsPage() {
           <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
           <div className="ml-auto flex items-center gap-2">
             {selected.size > 0 && <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>}
-            <button onClick={openAdd} className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
+            <button onClick={openAdd} className="rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition-colors active:scale-[0.97] shadow-sm">
               + Add Department
             </button>
           </div>
         </div>
 
         {selected.size > 0 && (
-          <div className={`mb-3 flex items-center gap-2 rounded-lg border ${theme.bulkBar} px-3 py-2 text-xs`}>
-            <span className={`font-medium ${theme.textPrimary}`}>{selected.size} dept(s) selected</span>
-            <span className={theme.textMuted}>|</span>
-            <button className="text-xs text-blue-600 hover:underline dark:text-blue-400">Assign manager</button>
-            <span className={theme.textMuted}>|</span>
-            <button onClick={bulkActivate} className="text-xs text-blue-600 hover:underline dark:text-blue-400">Activate</button>
-            <span className={theme.textMuted}>|</span>
-            <button onClick={bulkDeactivate} className="text-xs text-blue-600 hover:underline dark:text-blue-400">Deactivate</button>
-            <button type="button" onClick={() => setSelected(new Set())} className={`ml-auto font-medium ${theme.textSecondary} ${theme.link}`}>Clear</button>
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 px-3 py-2 text-xs">
+            <span className="font-medium text-slate-900 dark:text-slate-100">{selected.size} dept(s) selected</span>
+            <span className="text-slate-400 dark:text-slate-500">|</span>
+            <button onClick={bulkActivate} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">Activate</button>
+            <span className="text-slate-400 dark:text-slate-500">|</span>
+            <button onClick={bulkDeactivate} className="text-xs text-amber-600 hover:underline dark:text-amber-400">Deactivate</button>
+            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Clear</button>
           </div>
         )}
 
@@ -180,7 +178,7 @@ export function DepartmentsPage() {
               return (
                 <div
                   key={dept.id}
-                  className={`group rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm ${
+                  className={`group rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm active:scale-[0.99] ${
                     isSelected ? theme.rowSelected : theme.row
                   } ${theme.cardHover}`}
                 >
@@ -196,7 +194,7 @@ export function DepartmentsPage() {
                           <span className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${theme.codeBadge}`}>{dept.code}</span>
                           <StatusBadge status={dept.status} />
                         </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${theme.textSecondary}">
+                        <div className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${theme.textSecondary}`}>
                           <span>{dept.plantName}</span>
                           <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
                           <span>Manager: {dept.manager}</span>
@@ -215,7 +213,7 @@ export function DepartmentsPage() {
                       <PrimaryAction onClick={() => navigate(`/system/data-management/departments/${dept.id}`)} />
                       <ActionsDropdown actions={[
                         { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => openEdit(dept) },
-                        { label: "Delete", icon: <Trash2 className="h-3 w-3 stroke-current" />, onClick: () => { setEditingId(dept.id); setConfirmOpen(true); } },
+                        { label: "Delete", icon: <Trash2 className="h-3 w-3 stroke-current" />, onClick: () => { setEditingId(dept.id); setConfirmOpen(true); }, danger: true },
                         { label: "Assign Groups", icon: <Users className="h-3 w-3 stroke-current" />, onClick: () => {} },
                         { label: "View Resources", icon: <Cpu className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/resources") },
                         { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(dept.plantName)}&department=${encodeURIComponent(dept.name)}`) },

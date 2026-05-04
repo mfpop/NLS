@@ -139,25 +139,36 @@ export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" 
 /* •••••• Primary Action (single visible action) •••••• */
 
 export function PrimaryAction({ onClick }: { onClick?: () => void }) {
-
-  return <button type="button" onClick={onClick} className={`${theme.buttonDetails} text-xs font-medium transition-colors active:scale-[0.97]`}>Open</button>;
+  return <button type="button" onClick={onClick}
+    className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors active:scale-[0.97]">Details</button>;
 }
 
 /* •••••• Secondary Actions Dropdown •••••• */
 
-interface SecondaryAction { label: string; icon?: ReactNode; onClick?: () => void; }
+interface SecondaryAction { label: string; icon?: ReactNode; onClick?: () => void; danger?: boolean; }
 
-export function ActionsDropdown({ actions }: { actions: SecondaryAction[] }) {
+export function ActionsDropdown({ actions, buttonClass }: { actions: SecondaryAction[]; buttonClass?: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className={`rounded-lg border px-2 py-1.5 text-[11px] font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>•••••••••</button>
+      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className={buttonClass ?? "w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 inline-flex items-center justify-center"}>
+        <MoreHorizontal className="w-4 h-4 stroke-current" />
+      </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className={`absolute right-0 top-full z-20 mt-1 w-44 rounded-lg border py-1 shadow-lg ${theme.dropdown}`} onClick={(e) => e.stopPropagation()}>
+          <div className="absolute right-0 top-full z-20 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg p-1 opacity-100 scale-100 transition-all duration-150 origin-top-right" onClick={(e) => e.stopPropagation()}>
             {actions.map((a, i) => (
-              <button key={i} type="button" onClick={() => { a.onClick?.(); setOpen(false); }} className={`flex w-full items-center gap-2 px-3 py-1.5 text-xs transition-colors ${theme.textSecondary} ${theme.interactiveRow}`}>{a.icon}{a.label}</button>
+              <button key={i} type="button"
+                onClick={() => { a.onClick?.(); setOpen(false); }}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md transition-all duration-150 ${
+                  a.danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-red-500" : "text-slate-500"}`}>{a.icon}</span>}
+                {a.label}
+              </button>
             ))}
           </div>
         </>
@@ -217,7 +228,7 @@ export function AlertBanner({ message, cta, ctaOnClick }: { message: string; cta
   return (
     <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${theme.errorBanner}`}>
       <AlertTriangle className="h-4 w-4 shrink-0 stroke-current" />
-      {cta && ctaOnClick && <button type="button" onClick={ctaOnClick} className={`ml-auto rounded-md border px-2 py-1 text-[10px] font-medium transition-colors active:scale-[0.97] ${theme.buttonDanger}`}>{cta} •••</button>}
+      {cta && ctaOnClick && <button type="button" onClick={ctaOnClick} className={`ml-auto rounded-md border px-2 py-1 text-[10px] font-medium transition-colors active:scale-[0.97] ${theme.buttonDanger}`}>{cta}</button>}
     </div>
   );
 }
@@ -275,37 +286,47 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
   if (!open) return null;
   return (
     <>
-      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={onClose} />
-      <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border shadow-xl ${theme.modal}`}>
-        <div className={`flex items-center justify-between border-b px-4 py-3 ${theme.subHeader}`}>
-          <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
-          <button type="button" onClick={onClose} className={`${theme.textMuted} ${theme.link} text-xs font-medium`}>•••</button>
+      <div className="fixed inset-0 z-30 bg-slate-950/40" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 z-40 w-[480px] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-200 p-6 shadow-xl">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <X className="h-4 w-4 stroke-current" />
+          </button>
         </div>
-        <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSave(); }} className="p-4 space-y-3">
+        <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSave(); }} className="space-y-4">
           {fields.map((f) => (
             <div key={f.key}>
-              <label className={`mb-1 block text-xs font-medium ${theme.textSecondary}`}>{f.label}{f.required && <span className="text-red-500 ml-0.5">*</span>}</label>
+              <label className="mb-1 block text-sm text-slate-500">{f.label}{f.required && <span className="text-red-500 ml-0.5">*</span>}</label>
               {f.type === "select" && f.options ? (
-                <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
-                  <option value="">Select...</option>
-                  {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
+                <div className="relative">
+                  <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)}
+                    className="w-full h-10 rounded-lg border border-slate-400 bg-white px-3 pr-10 text-sm text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer">
+                    <option value="">Select...</option>
+                    {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                  <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                  </svg>
+                </div>
               ) : f.type === "textarea" ? (
-                <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder} className={`min-h-[60px] w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
+                <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
+                  className="min-h-[60px] w-full h-10 rounded-lg border border-slate-400 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
               ) : (
-                <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder} className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
+                <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
+                  className="w-full h-10 rounded-lg border border-slate-400 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
               )}
             </div>
           ))}
           <div className="flex items-center justify-between pt-2">
             <div>
               {onDelete && (
-                <button type="button" onClick={onDelete} className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonDanger}`}>Delete</button>
+                <button type="button" onClick={onDelete} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-150">Delete</button>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={onClose} className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
-              <button type="submit" className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-white transition-colors ${theme.buttonPrimary}`}>Save</button>
+              <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150">Cancel</button>
+              <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-all duration-150 shadow-sm">Save</button>
             </div>
           </div>
         </form>
@@ -328,13 +349,16 @@ export function ConfirmDialog({ open, onClose, title, message, onConfirm, confir
   if (!open) return null;
   return (
     <>
-      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={onClose} />
-      <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border shadow-xl p-4 ${theme.modal}`}>
-        <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
-        <p className={`mt-2 text-xs ${theme.textSecondary}`}>{message}</p>
+      <div className="fixed inset-0 z-30 bg-slate-950/40" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xl">
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <p className="mt-2 text-xs text-slate-500">{message}</p>
         <div className="mt-4 flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose} className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
-          <button type="button" onClick={() => { onConfirm(); onClose(); }} className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors ${danger ? theme.buttonDangerSolid : theme.buttonPrimary}`}>{confirmLabel}</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150">Cancel</button>
+          <button type="button" onClick={() => { onConfirm(); onClose(); }}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-all duration-150 ${
+              danger ? "bg-red-600 hover:bg-red-500" : "bg-emerald-600 hover:bg-emerald-700"
+            }`}>{confirmLabel}</button>
         </div>
       </div>
     </>

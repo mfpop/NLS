@@ -161,7 +161,7 @@ export function PlantStructurePage() {
         </div>
         <button
           onClick={() => navigate("/system/data-management")}
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-all duration-150 ease-in-out"
         >
           <X className="w-4 h-4 stroke-current" />
           Close
@@ -188,7 +188,7 @@ export function PlantStructurePage() {
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
-                className={`h-8 rounded-md px-3 text-xs font-medium transition-all duration-150 ${
+                className={`h-8 rounded-md px-3 text-xs font-medium transition-all duration-150 ease-in-out ${
                   filter === f.value
                     ? "bg-slate-900 text-white"
                     : "text-slate-500 hover:text-slate-700"
@@ -201,7 +201,7 @@ export function PlantStructurePage() {
         </div>
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-1.5 h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all duration-150 shadow-sm"
+          className="inline-flex items-center gap-1.5 h-10 rounded-lg bg-slate-800 px-4 text-sm font-semibold text-white hover:bg-slate-700 transition-all duration-150 ease-in-out shadow-sm"
         >
           <Plus className="h-4 w-4 stroke-current" />
           Add Plant
@@ -219,7 +219,7 @@ export function PlantStructurePage() {
               {search ? "No plants match your search" : "No plants configured"}
             </h3>
             <p className="mt-1 text-xs text-slate-500">Add your first plant to start modeling your production structure.</p>
-            <button onClick={openAdd} className="mt-4 inline-flex items-center gap-1.5 h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all duration-150 shadow-sm">
+            <button onClick={openAdd} className="mt-4 inline-flex items-center gap-1.5 h-10 rounded-lg bg-slate-800 px-4 text-sm font-semibold text-white hover:bg-slate-700 transition-all duration-150 ease-in-out shadow-sm">
               <Plus className="h-4 w-4 stroke-current" />
               Add Plant
             </button>
@@ -232,7 +232,7 @@ export function PlantStructurePage() {
                 className="group flex items-center gap-4 bg-white border border-slate-200 rounded-xl px-4 py-3 transition-all duration-150 hover:shadow-sm"
               >
                 {/* Icon */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50/70 text-emerald-600">
                   <Factory className="h-5 w-5 stroke-current" />
                 </div>
 
@@ -270,7 +270,7 @@ export function PlantStructurePage() {
                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => navigate("/system/data-management/plant/" + plant.id)}
-                    className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-700 hover:bg-slate-100 transition-all duration-150"
+                    className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 ease-in-out"
                   >
                     Details
                   </button>
@@ -305,8 +305,8 @@ export function PlantStructurePage() {
       <ConfirmDialog
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        title="Delete Plant"
-        message={`Are you sure you want to delete "${currentPlant?.name ?? editingId}"? This action cannot be undone.`}
+        title={`Delete plant ${currentPlant?.name ?? editingId}?`}
+        message={`This will not delete related data, but will deactivate structure.`}
         onConfirm={confirmDelete}
       />
     </div>

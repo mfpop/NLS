@@ -140,7 +140,7 @@ export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" 
 
 export function PrimaryAction({ onClick }: { onClick?: () => void }) {
   return <button type="button" onClick={onClick}
-    className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors active:scale-[0.97]">Details</button>;
+    className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-medium transition-all duration-150 ease-in-out active:scale-[0.97]">Details</button>;
 }
 
 /* •••••• Secondary Actions Dropdown •••••• */
@@ -149,27 +149,35 @@ interface SecondaryAction { label: string; icon?: ReactNode; onClick?: () => voi
 
 export function ActionsDropdown({ actions, buttonClass }: { actions: SecondaryAction[]; buttonClass?: string }) {
   const [open, setOpen] = useState(false);
+  // Insert separators: after each danger action that is followed by a non-danger action
+  const renderedItems: ReactNode[] = [];
+  actions.forEach((a, i) => {
+    if (i > 0 && !a.danger && actions[i - 1].danger) {
+      renderedItems.push(<div key={`sep-${i}`} className="my-1 border-t border-slate-100" />);
+    }
+    renderedItems.push(
+      <button key={i} type="button"
+        onClick={() => { a.onClick?.(); setOpen(false); }}
+        className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm whitespace-nowrap rounded-md transition-all duration-150 ease-in-out ${
+          a.danger ? "text-red-500 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100"
+        }`}
+      >
+        {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-red-400" : "text-slate-500"}`}>{a.icon}</span>}
+        {a.label}
+      </button>
+    );
+  });
   return (
     <div className="relative">
       <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className={buttonClass ?? "w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 inline-flex items-center justify-center"}>
+        className={buttonClass ?? "w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 ease-in-out inline-flex items-center justify-center"}>
         <MoreHorizontal className="w-4 h-4 stroke-current" />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg p-1 opacity-100 scale-100 transition-all duration-150 origin-top-right" onClick={(e) => e.stopPropagation()}>
-            {actions.map((a, i) => (
-              <button key={i} type="button"
-                onClick={() => { a.onClick?.(); setOpen(false); }}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-sm rounded-md transition-all duration-150 ${
-                  a.danger ? "text-red-600 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-red-500" : "text-slate-500"}`}>{a.icon}</span>}
-                {a.label}
-              </button>
-            ))}
+          <div className="absolute right-0 top-full z-20 mt-1 w-[240px] bg-white border border-slate-200 rounded-xl shadow-lg p-1" onClick={(e) => e.stopPropagation()}>
+            {renderedItems}
           </div>
         </>
       )}
@@ -287,10 +295,10 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
   return (
     <>
       <div className="fixed inset-0 z-30 bg-slate-950/40" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-[480px] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-200 p-6 shadow-xl">
+      <div className="fixed left-1/2 top-1/2 z-40 w-[480px] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-100 p-6 shadow-md">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-all duration-150 ease-in-out">
             <X className="h-4 w-4 stroke-current" />
           </button>
         </div>
@@ -301,7 +309,7 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
               {f.type === "select" && f.options ? (
                 <div className="relative">
                   <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)}
-                    className="w-full h-10 rounded-lg border border-slate-400 bg-white px-3 pr-10 text-sm text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all cursor-pointer">
+                    className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 pr-10 text-sm text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all duration-150 ease-in-out cursor-pointer">
                     <option value="">Select...</option>
                     {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
@@ -311,22 +319,22 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
                 </div>
               ) : f.type === "textarea" ? (
                 <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className="min-h-[60px] w-full h-10 rounded-lg border border-slate-400 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                  className="min-h-[60px] w-full h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all duration-150 ease-in-out" />
               ) : (
                 <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className="w-full h-10 rounded-lg border border-slate-400 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" />
+                  className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all duration-150 ease-in-out" />
               )}
             </div>
           ))}
           <div className="flex items-center justify-between pt-2">
             <div>
               {onDelete && (
-                <button type="button" onClick={onDelete} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-150">Delete</button>
+                <button type="button" onClick={onDelete} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-all duration-150 ease-in-out">Delete</button>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150">Cancel</button>
-              <button type="submit" className="rounded-lg bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-all duration-150 shadow-sm">Save</button>
+              <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150 ease-in-out">Cancel</button>
+              <button type="submit" className="rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-all duration-150 ease-in-out shadow-sm">Save</button>
             </div>
           </div>
         </form>
@@ -350,14 +358,14 @@ export function ConfirmDialog({ open, onClose, title, message, onConfirm, confir
   return (
     <>
       <div className="fixed inset-0 z-30 bg-slate-950/40" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xl">
+      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-100 p-5 shadow-md">
         <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
         <p className="mt-2 text-xs text-slate-500">{message}</p>
         <div className="mt-4 flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150">Cancel</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150 ease-in-out">Cancel</button>
           <button type="button" onClick={() => { onConfirm(); onClose(); }}
-            className={`rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-all duration-150 ${
-              danger ? "bg-red-600 hover:bg-red-500" : "bg-emerald-600 hover:bg-emerald-700"
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-all duration-150 ease-in-out ${
+              danger ? "bg-red-600 hover:bg-red-500" : "bg-emerald-500 hover:bg-emerald-600"
             }`}>{confirmLabel}</button>
         </div>
       </div>

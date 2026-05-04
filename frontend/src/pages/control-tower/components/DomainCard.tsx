@@ -16,10 +16,7 @@ export function DomainCard({ title, rows }: DomainCardProps) {
             <dd className={`font-semibold ${theme.textPrimary}`}>{row.value}</dd>
           </div>
         ))}
-      </dl>
-    </article>
-  );
-}
+            </dl>
     </article>
   );
 }

@@ -101,19 +101,7 @@ export const sidebarEntries: SidebarEntry[] = [
     icon: ClipboardList,
     items: [
       { type: "item", label: "Production Plan", to: "/plan/production-plan", icon: FileText },
-      { type: "item", label: "Capacity Planning", to: "/plan/capacity", icon: BarChart3 },
-      { type: "item", label: "Value Stream Map", to: "/execution/vsm", icon: Workflow },
-    ],
-  },
-  {
-    type: "section",
-    id: "execute",
-    label: "Execute",
-    icon: Play,
-    items: [
-      { type: "item", label: "Line Performance", to: "/execution/line-performance", icon: Activity },
-      { type: "item", label: "Live Shopfloor", to: "/execution/live-shopfloor", icon: PanelTop },
-      { type: "item", label: "Daily Gemba Walk", to: "/execution/daily-gemba-walk", icon: Footprints },
+
     ],
   },
   {

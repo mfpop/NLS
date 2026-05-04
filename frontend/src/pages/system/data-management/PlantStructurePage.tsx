@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { type PlantDetail, getGlobalPlants, subscribePlantChanges, notifyPlantChanges } from "./PlantDetailPage";
-import { Building2, Factory, Cpu, ExternalLink, Trash2, Pencil, X, Plus, GitBranch } from "lucide-react";
+import { Building2, Factory, Cpu, ExternalLink, Trash2, Pencil, X, Plus, GitBranch, MoreHorizontal } from "lucide-react";
 import { ActionsDropdown } from "./shared";
+import { theme } from "../../../styles/themeTokens";
 
 /* ── Inline Modal & Confirm ── */
 
@@ -24,30 +25,32 @@ function CrudModal({ open, onClose, title, fields, values, onChange, onSave, onD
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-black/20" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
-          <button type="button" onClick={onClose} className="text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">✕</button>
+      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={onClose} />
+      <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border shadow-xl ${theme.modal}`}>
+        <div className={`flex items-center justify-between border-b px-4 py-3 ${theme.subHeader}`}>
+          <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
+          <button type="button" onClick={onClose} className={`${theme.textMuted} ${theme.link} text-xs font-medium`}>
+            <X className="h-4 w-4 stroke-current" />
+          </button>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="space-y-3 p-4">
           {fields.map((f) => (
             <div key={f.key}>
-              <label className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400">
+              <label className={`mb-1 block text-xs font-medium ${theme.textSecondary}`}>
                 {f.label}{f.required && <span className="ml-0.5 text-red-500">*</span>}
               </label>
               {f.type === "select" && f.options ? (
                 <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100">
+                  className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
                   <option value="">Select...</option>
                   {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               ) : f.type === "textarea" ? (
                 <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className="w-full min-h-[60px] rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500" />
+                  className={`min-h-[60px] w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
               ) : (
                 <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500" />
+                  className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
               )}
             </div>
           ))}
@@ -55,14 +58,14 @@ function CrudModal({ open, onClose, title, fields, values, onChange, onSave, onD
             <div>
               {onDelete && (
                 <button type="button" onClick={onDelete}
-                  className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-slate-800 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors">Delete</button>
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonDanger}`}>Delete</button>
               )}
             </div>
             <div className="flex items-center gap-2">
               <button type="button" onClick={onClose}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
               <button type="submit"
-                className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition-colors shadow-sm">Save</button>
+                className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-white transition-colors shadow-sm ${theme.buttonPrimary}`}>Save</button>
             </div>
           </div>
         </form>
@@ -77,15 +80,15 @@ function ConfirmDialog({ open, onClose, title, message, onConfirm }: {
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-black/20" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{message}</p>
+      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={onClose} />
+      <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border shadow-xl p-4 ${theme.modal}`}>
+        <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
+        <p className={`mt-2 text-xs ${theme.textSecondary}`}>{message}</p>
         <div className="mt-4 flex items-center justify-end gap-2">
           <button type="button" onClick={onClose}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
           <button type="button" onClick={() => { onConfirm(); onClose(); }}
-            className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 transition-colors">Delete</button>
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors ${theme.buttonDangerSolid}`}>Delete</button>
         </div>
       </div>
     </>

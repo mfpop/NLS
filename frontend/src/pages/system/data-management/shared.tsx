@@ -1,6 +1,6 @@
 ﻿import { useState, type ReactNode, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, ExternalLink, Search, X, AlertTriangle, Info } from "lucide-react";
+import { MoreHorizontal, ChevronRight, ExternalLink, Search, X, AlertTriangle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
 
@@ -139,7 +139,8 @@ export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" 
 /* •••••• Primary Action (single visible action) •••••• */
 
 export function PrimaryAction({ onClick }: { onClick?: () => void }) {
-  return <button type="button" onClick={onClick} className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>Open •••</button>;
+
+  return <button type="button" onClick={onClick} className={`${theme.buttonDetails} text-xs font-medium transition-colors active:scale-[0.97]`}>Open</button>;
 }
 
 /* •••••• Secondary Actions Dropdown •••••• */
@@ -216,7 +217,6 @@ export function AlertBanner({ message, cta, ctaOnClick }: { message: string; cta
   return (
     <div className={`mb-3 flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${theme.errorBanner}`}>
       <AlertTriangle className="h-4 w-4 shrink-0 stroke-current" />
-      <span className="flex-1">{message}</span>
       {cta && ctaOnClick && <button type="button" onClick={ctaOnClick} className={`ml-auto rounded-md border px-2 py-1 text-[10px] font-medium transition-colors active:scale-[0.97] ${theme.buttonDanger}`}>{cta} •••</button>}
     </div>
   );

@@ -74,14 +74,14 @@ export function PlantRow({ plant, isSelected, onToggleSelect, onToggleStatus }: 
       {/* Actions */}
       <div className="flex items-center gap-1">
         <button type="button" onClick={() => navigate("/system/data-management/plant/" + plant.id)}
-          className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
-          <Eye className="h-3 w-3" />
+          className={`inline-flex items-center gap-1.5 ${theme.buttonDetails} text-xs font-medium transition-colors active:scale-[0.97]`}>
+          <Eye className="h-3.5 w-3.5 stroke-current" />
           Details
         </button>
         <div ref={menuRef} className="relative">
           <button type="button" onClick={() => setMenuOpen(!menuOpen)}
-            className={`rounded-lg p-1.5 transition-colors ${theme.buttonGhost}`}>
-            <MoreHorizontal className="h-4 w-4" />
+            className={`inline-flex items-center justify-center ${theme.buttonIcon} transition-colors active:scale-[0.97]`}>
+            <MoreHorizontal className="h-4 w-4 stroke-current" />
           </button>
           {menuOpen && (
             <div className={`absolute right-0 top-full z-20 mt-1 w-52 rounded-xl border py-1 shadow-lg ${theme.dropdown}`}>

@@ -6,6 +6,7 @@ import {
   BulkCheckbox, DataManagementNav, ResourceStatusBadge, LoadBar,
   PrimaryAction, ActionsDropdown, AlertBanner
 } from "./shared";
+import { theme } from "../../../styles/themeTokens";
 
 type OpStatus = "Running" | "Idle" | "Down" | "Maintenance";
 type ResType = "Machine" | "Workstation" | "Inspection Station" | "Material Handling" | "Tool";
@@ -46,11 +47,11 @@ const FILTERS = [
 ];
 
 const typeStyles: Record<ResType, { icon: any; bg: string; badge: string }> = {
-  Machine: { icon: <Cpu className="h-4.5 w-4.5" />, bg: "bg-blue-50 text-blue-600", badge: "bg-blue-100 text-blue-700" },
-  Workstation: { icon: <Monitor className="h-4.5 w-4.5" />, bg: "bg-teal-50 text-teal-600", badge: "bg-teal-100 text-teal-700" },
-  "Inspection Station": { icon: <ClipboardCheck className="h-4.5 w-4.5" />, bg: "bg-orange-50 text-orange-600", badge: "bg-orange-100 text-orange-700" },
-  "Material Handling": { icon: <Truck className="h-4.5 w-4.5" />, bg: "bg-yellow-50 text-yellow-600", badge: "bg-yellow-100 text-yellow-700" },
-  Tool: { icon: <Wrench className="h-4.5 w-4.5" />, bg: "bg-purple-50 text-purple-600", badge: "bg-purple-100 text-purple-700" },
+  Machine: { icon: <Cpu className="h-4.5 w-4.5 stroke-current" />, bg: "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400", badge: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" },
+  Workstation: { icon: <Monitor className="h-4.5 w-4.5 stroke-current" />, bg: "bg-teal-100 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400", badge: "bg-teal-100 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400" },
+  "Inspection Station": { icon: <ClipboardCheck className="h-4.5 w-4.5 stroke-current" />, bg: "bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400", badge: "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400" },
+  "Material Handling": { icon: <Truck className="h-4.5 w-4.5 stroke-current" />, bg: "bg-yellow-100 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-400" },
+  Tool: { icon: <Wrench className="h-4.5 w-4.5 stroke-current" />, bg: "bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400", badge: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400" },
 };
 
 export function ResourcesPage() {
@@ -81,26 +82,26 @@ export function ResourcesPage() {
   const downResources = resources.filter((r) => r.opStatus === "Down");
 
   return (
-    <div className="flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
-      <header className="flex shrink-0 items-center gap-4 border-b border-(--border-soft) bg-(--surface-1) px-5 py-3">
-        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-          <Cpu className="h-5 w-5" />
+    <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
+      <header className={`flex shrink-0 items-center gap-4 border-b px-5 py-3 ${theme.header}`}>
+        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+          <Cpu className="h-5 w-5 stroke-current" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base font-semibold tracking-tight text-(--text-primary)">Resources</h1>
-                      <p className="text-xs text-(--text-secondary)">Manage machines, workstations, cells, tools, and production resources with live operational status.</p>
+          <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Resources</h1>
+          <p className={`text-xs ${theme.textSecondary}`}>Manage machines, workstations, cells, tools, and production resources with live operational status.</p>
         </div>
         <div className="flex items-center gap-1.5 text-[10px]">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /><span className="text-slate-500">Running</span>
-          <span className="inline-block h-2 w-2 rounded-full bg-slate-400" /><span className="text-slate-500">Idle</span>
-          <span className="inline-block h-2 w-2 rounded-full bg-red-500" /><span className="text-slate-500">Down</span>
-          <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /><span className="text-slate-500">Maint</span>
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /><span className={`${theme.textSecondary}`}>Running</span>
+          <span className="inline-block h-2 w-2 rounded-full bg-slate-400" /><span className={`${theme.textSecondary}`}>Idle</span>
+          <span className="inline-block h-2 w-2 rounded-full bg-red-500" /><span className={`${theme.textSecondary}`}>Down</span>
+          <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /><span className={`${theme.textSecondary}`}>Maint</span>
         </div>
       </header>
 
       <DataManagementNav currentPath={location.pathname} />
 
-      <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
+      <div className={`flex-1 overflow-y-auto ${theme.page} p-4`}>
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Resources" }]} />
         <ContextBar segments={[{ label: "All Resources" }]} />
         {downResources.length > 0 && (
@@ -115,13 +116,13 @@ export function ResourcesPage() {
           <SearchBar value={search} onChange={setSearch} placeholder="Search resources, machines, workstations..." />
           <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
           <div className="ml-auto flex items-center gap-2">
-            {selected.size > 0 && <span className="text-xs text-slate-500">{selected.size} selected</span>}
-            <button className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors active:scale-[0.97]">+ Add Resource</button>
+            {selected.size > 0 && <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>}
+            <button className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>+ Add Resource</button>
           </div>
         </div>
 
         {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
             <span className="font-medium">{selected.size} resource(s) selected</span>
             <span className="text-blue-400">|</span>
             <button className="hover:underline">Assign to group</button>
@@ -136,7 +137,7 @@ export function ResourcesPage() {
         )}
 
         {filtered.length === 0 ? (
-          <EmptyState icon={<Cpu className="h-6 w-6" />} title={search ? "No resources match your search" : "No resources configured"} description="Add machines, workstations, tools, and production resources." action={{ label: "+ Add Resource", onClick: () => {} }} />
+          <EmptyState icon={<Cpu className="h-6 w-6 stroke-current" />} title={search ? "No resources match your search" : "No resources configured"} description="Add machines, workstations, tools, and production resources." action={{ label: "+ Add Resource", onClick: () => {} }} />
         ) : (
           <div className="space-y-2">
             {filtered.map((res) => {
@@ -146,7 +147,7 @@ export function ResourcesPage() {
               return (
                 <div
                   key={res.id}
-                  className={`group cursor-pointer rounded-xl border bg-white px-3 py-2.5 transition-all hover:border-slate-300 hover:shadow-sm active:scale-[0.99] ${isSelected ? "border-blue-300 ring-1 ring-blue-200" : isBottleneck ? "border-l-4 border-l-red-400 border-slate-200" : "border-slate-200"}`}
+                  className={`group cursor-pointer rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm active:scale-[0.99] ${isSelected ? theme.rowSelected : isBottleneck ? `border-l-4 border-l-red-400 ${theme.row}` : theme.row} ${theme.cardHover}`}
                   onClick={() => navigate(`/system/data-management/resources/${res.id}`)}
                   role="button" tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/data-management/resources/${res.id}`); }}
@@ -157,22 +158,22 @@ export function ResourcesPage() {
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${ts.bg}`}>{ts.icon}</div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-900">{res.name}</span>
+                          <span className={`text-sm font-semibold ${theme.textPrimary}`}>{res.name}</span>
                           <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${ts.badge}`}>{res.type}</span>
                           <ResourceStatusBadge status={res.opStatus} />
-                          {isBottleneck && <span className="text-[10px] font-bold text-red-600">BOTTLENECK</span>}
+                          {isBottleneck && <span className="text-[10px] font-bold text-red-600 dark:text-red-400">BOTTLENECK</span>}
                         </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400">
-                          <span className="font-mono text-[10px] text-slate-500">{res.code}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                          <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">{res.code}</span>
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Flow: {res.flowPosition}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Group: {res.groupName}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Line: {res.lineName}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Shift: {res.shift}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Last: {res.lastActivity}</span>
                         </div>
                       </div>
@@ -181,10 +182,10 @@ export function ResourcesPage() {
                       <LoadBar pct={res.utilization} />
                       <PrimaryAction onClick={() => navigate(`/system/data-management/resources/${res.id}`)} />
                       <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => {} },
-                        { label: "Assign to group", icon: <ExternalLink className="h-3 w-3" />, onClick: () => {} },
-                        { label: "View in VSM", icon: <GitBranch className="h-3 w-3" />, onClick: () => navigate(`/execution/vsm?resource=${res.id}`) },
-                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?resource=${encodeURIComponent(res.name)}&plant=${encodeURIComponent(res.plantName)}&line=${encodeURIComponent(res.lineName)}`) },
+                        { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => {} },
+                        { label: "Assign to group", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => {} },
+                        { label: "View in VSM", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/execution/vsm?resource=${res.id}`) },
+                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?resource=${encodeURIComponent(res.name)}&plant=${encodeURIComponent(res.plantName)}&line=${encodeURIComponent(res.lineName)}`) },
                       ]} />
                     </div>
                   </div>
@@ -194,10 +195,10 @@ export function ResourcesPage() {
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
+        <div className={`mt-3 flex items-center justify-between text-[11px] ${theme.textMuted}`}>
           <span>{filtered.length} of {resources.length} resource(s) · {resources.filter(r => r.opStatus === "Running").length} running · {resources.filter(r => r.opStatus === "Down").length} down</span>
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 text-slate-700" />
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300" />
             Select all
           </label>
         </div>

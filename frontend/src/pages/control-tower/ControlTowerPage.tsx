@@ -1,4 +1,5 @@
 ﻿import { Monitor } from "lucide-react";
+import { theme } from "../../styles/themeTokens";
 
 /* ── Sample data ── */
 const controlTowerData = {
@@ -85,18 +86,18 @@ const BTN = "rounded-lg border px-3 py-1.5 text-xs font-medium focus-visible:out
 /* Button styles by severity */
 function sevBtn(sev: string) {
   switch (sev) {
-    case "critical": return `${BTN} border-red-300 bg-red-50 text-red-700 hover:bg-red-100 focus-visible:ring-red-300`;
-    case "warning":  return `${BTN} border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-50 focus-visible:ring-amber-200`;
-    default:         return `${BTN} border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-slate-300`;
+    case "critical": return `${BTN} ${theme.buttonCriticalSoft} ${theme.focusRingCritical}`;
+    case "warning":  return `${BTN} ${theme.buttonWarningSoft} ${theme.focusRingWarning}`;
+    default:         return `${BTN} ${theme.buttonSecondary} ${theme.focusRing}`;
   }
 }
 
 /* Badges — clean, readable, uppercase */
 function sevBadge(sev: string) {
   switch (sev) {
-    case "critical": return "bg-red-100 text-red-600";
-    case "warning":  return "bg-amber-100 text-amber-600";
-    default:         return "bg-slate-100 text-slate-600";
+    case "critical": return theme.badgeCritical;
+    case "warning":  return theme.badgeWarning;
+    default:         return theme.badgeInactive;
   }
 }
 
@@ -104,7 +105,7 @@ function sevBadge(sev: string) {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+    <div className={`mb-1.5 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>
       {children}
     </div>
   );
@@ -115,7 +116,7 @@ function ActionButton({ label, className }: { label: string; className?: string 
     <button
       className={
         "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 transition-colors " +
-        (className ?? "border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus-visible:ring-slate-300")
+        (className ?? `${theme.buttonSecondary} ${theme.focusRing}`)
       }
       aria-label={label}
     >
@@ -130,21 +131,21 @@ export function ControlTowerPage() {
   const { primaryAlert, alerts, priorityActions, kpis, problems, myWork } = controlTowerData;
 
   return (
-    <div className="ct-page flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
+        <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
       {/* ── HEADER ── */}
-      <header className="flex shrink-0 items-center justify-between border-b border-[var(--border-soft)] bg-[var(--surface-1)] px-5 py-3">
+      <header className={`flex shrink-0 items-center justify-between border-b px-5 py-3 ${theme.header}`}>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
-            <Monitor className="h-5 w-5" />
+          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
+            <Monitor className="h-5 w-5 stroke-current" />
           </div>
           <div>
             <div className="flex items-center gap-10">
-              <h1 className="text-lg font-bold tracking-tight leading-none text-[var(--text-primary)]">Control Tower</h1>
+              <h1 className={`text-lg font-bold tracking-tight leading-none ${theme.textPrimary}`}>Control Tower</h1>
               <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold leading-none text-amber-700">
                 At risk
               </span>
             </div>
-            <p className="mt-0.5 text-sm text-[var(--text-secondary)]">
+            <p className={`mt-0.5 text-sm ${theme.textSecondary}`}>
               Live priorities, KPI risk, and supervisor actions
             </p>
           </div>
@@ -158,7 +159,7 @@ export function ControlTowerPage() {
       </header>
 
       {/* ── BODY ── */}
-      <div className="flex min-h-0 flex-1 overflow-hidden bg-[var(--page-bg)]">
+      <div className={`flex min-h-0 flex-1 overflow-hidden ${theme.page}`}>
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden">
           {/* ════ LEFT COLUMN ════ */}
           <div className="flex min-h-0 flex-col gap-3 overflow-y-auto lg:overflow-hidden">
@@ -167,7 +168,7 @@ export function ControlTowerPage() {
               <div className="ct-alert-bar flex h-11 items-center justify-between gap-3 rounded-lg border border-red-200 border-l-[3px] border-l-red-600 bg-red-50/70 px-3">
                 <div className="flex items-center gap-2.5">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[11px] font-bold text-white" aria-hidden="true">!</span>
-                  <p className="text-sm font-medium text-slate-900">{primaryAlert.message}</p>
+                  <p className={`text-sm font-medium ${theme.textPrimary}`}>{primaryAlert.message}</p>
                 </div>
                 <button
                   className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-red-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:ring-offset-2 transition-colors"
@@ -182,22 +183,22 @@ export function ControlTowerPage() {
             {alerts.count > 0 && (
               <section className="ct-section">
                 <SectionLabel>Alerts</SectionLabel>
-                <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
+                <div className={`flex items-center justify-between rounded-lg border px-3 py-2 ${theme.card}`}>
                   <div className="flex items-center gap-2">
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
                       {alerts.count}
                     </span>
-                    <span className="text-sm text-slate-500">{alerts.count} warnings active</span>
+                    <span className={`text-sm ${theme.textSecondary}`}>{alerts.count} warnings active</span>
                   </div>
                   <div className="hidden sm:flex gap-1.5">
                     {["Downtime", "Quality", "Flow", "Schedule"].map((tag) => (
-                      <span key={tag} className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      <span key={tag} className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${theme.chip}`}>
                         {tag}
                       </span>
                     ))}
                   </div>
                   <button
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 transition-colors"
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary} ${theme.focusRing}`}
                     aria-label="View all alerts"
                   >
                     View
@@ -215,13 +216,13 @@ export function ControlTowerPage() {
                     key={i}
                     className={
                       "ct-priority-card flex items-center justify-between gap-2 rounded-lg border border-l-[3px] px-3 py-2.5 " +
-                      "border-slate-200 bg-white " +
+                      `${theme.panelNeutral} ` +
                       sevBorder(a.severity)
                     }
                   >
                     <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-sm font-medium text-slate-900">{a.title}</span>
-                      <span className="text-xs text-slate-400">{a.meta}</span>
+                      <span className={`text-sm font-medium ${theme.textPrimary}`}>{a.title}</span>
+                      <span className={`text-xs ${theme.textMuted}`}>{a.meta}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span className={"rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide " + sevBadge(a.severity)}>
@@ -245,26 +246,26 @@ export function ControlTowerPage() {
                       "ct-kpi-card flex flex-col justify-center gap-y-0.5 rounded-lg border px-3 py-2 " +
                       (kpi.highlight
                         ? "ct-kpi-highlight border-amber-200 bg-amber-50/70"
-                        : "border-slate-200 bg-white")
+                        : theme.card)
                     }
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium leading-tight tracking-[0.05em] text-slate-500">{kpi.label}</span>
+                      <span className={`text-[11px] font-medium leading-tight tracking-[0.05em] ${theme.textSecondary}`}>{kpi.label}</span>
                       {kpi.highlight && (
                         <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-600">
                           At risk
                         </span>
                       )}
                     </div>
-                    <div className="text-lg font-semibold leading-none text-slate-900">{kpi.value}</div>
-                    <div className="text-[10px] leading-tight text-slate-400">{kpi.sub || "\u00a0"}</div>
+                    <div className={`text-lg font-semibold leading-none ${theme.textPrimary}`}>{kpi.value}</div>
+                    <div className={`text-[10px] leading-tight ${theme.textMuted}`}>{kpi.sub || "\u00a0"}</div>
                   </div>
                 ))}
               </div>
             </section>
             <section className="ct-section flex min-h-0 flex-1 flex-col">
               <SectionLabel>Problems</SectionLabel>
-              <div className="min-h-0 flex-1 rounded-lg border border-slate-200 bg-white">
+              <div className={`min-h-0 flex-1 rounded-lg border ${theme.card}`}>
                 <div className="h-full overflow-y-auto p-2.5">
                   {(() => {
                     let lastGroup = "";
@@ -274,25 +275,25 @@ export function ControlTowerPage() {
                       return (
                         <div key={i} className={showGroup && i > 0 ? "mt-2.5" : ""}>
                           {showGroup && (
-                            <div className="flex items-center gap-2 pb-1">
-                              <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">{p.group}</span>
-                              <span className="flex-1 border-t border-slate-100" />
+                                                        <div className="flex items-center gap-2 pb-1">
+                              <span className={`text-[10px] font-semibold uppercase tracking-wide ${theme.textSecondary}`}>{p.group}</span>
+                              <span className="flex-1 border-t border-slate-200 dark:border-slate-700" />
                             </div>
                           )}
                           <div
                             className={
-                              "rounded-lg border border-slate-100 border-l-[3px] bg-white px-3 py-3 " +
+                              "rounded-lg border border-slate-200 dark:border-slate-800 border-l-[3px] px-3 py-3 " +
                               "mb-2 last:mb-0 " +
                               sevBorder(p.severity)
                             }
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-sm font-medium text-slate-900">{p.title}</span>
+                              <span className={`text-sm font-medium ${theme.textPrimary}`}>{p.title}</span>
                               <span className={"shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide " + sevBadge(p.severity)}>
                                 {p.severity}
                               </span>
                             </div>
-                            <span className="text-xs text-slate-400">{p.meta}</span>
+                            <span className={`text-xs ${theme.textMuted}`}>{p.meta}</span>
                           </div>
                         </div>
                       );
@@ -306,7 +307,7 @@ export function ControlTowerPage() {
           {/* ════ RIGHT COLUMN — MY WORK ════ */}
           <aside className="ct-section flex min-h-0 flex-col max-lg:hidden">
             <SectionLabel>My Work</SectionLabel>
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2.5">
+            <div className={`min-h-0 flex-1 overflow-y-auto rounded-lg border p-2.5 ${theme.card}`}>
               {/* OVERDUE */}
               {myWork.overdue.length > 0 && (
                 <div className="mb-3">
@@ -314,17 +315,17 @@ export function ControlTowerPage() {
                     <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-red-100 text-[10px] font-bold text-red-700">
                       {myWork.overdue.length}
                     </span>
-                    <h4 className="text-[10px] font-medium uppercase tracking-wider text-slate-600">Overdue</h4>
+                    <h4 className={`text-[10px] font-medium uppercase tracking-wider ${theme.textSecondary}`}>Overdue</h4>
                   </div>
                   {myWork.overdue.map((t, i) => (
-                    <div key={i} className="ct-task-card mb-2 rounded-lg border border-red-100 border-l-[3px] border-l-red-600 bg-white px-2.5 py-2">
+                    <div key={i} className={`ct-task-card mb-2 rounded-lg border border-l-[3px] border-l-red-600 px-2.5 py-2 ${theme.card}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-slate-900">{t.title}</div>
-                          <div className="text-xs text-slate-400">{t.meta}</div>
+                          <div className={`text-sm font-medium ${theme.textPrimary}`}>{t.title}</div>
+                          <div className={`text-xs ${theme.textMuted}`}>{t.meta}</div>
                         </div>
                         <button
-                          className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 transition-colors"
+                          className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary} ${theme.focusRing}`}
                           aria-label={"Open " + t.title}
                         >
                           {t.action}
@@ -342,14 +343,14 @@ export function ControlTowerPage() {
                     <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-700">
                       {myWork.inProgress.length}
                     </span>
-                    <h4 className="text-[10px] font-medium uppercase tracking-wider text-slate-600">In Progress</h4>
+                    <h4 className={`text-[10px] font-medium uppercase tracking-wider ${theme.textSecondary}`}>In Progress</h4>
                   </div>
                   {myWork.inProgress.map((t, i) => (
-                    <div key={i} className="ct-task-card mb-2 rounded-lg border border-amber-100 border-l-[3px] border-l-amber-500 bg-white px-2.5 py-2">
+                    <div key={i} className={`ct-task-card mb-2 rounded-lg border border-l-[3px] border-l-amber-500 px-2.5 py-2 ${theme.card}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-slate-900">{t.title}</div>
-                          <div className="text-xs text-slate-400">{t.meta}</div>
+                          <div className={`text-sm font-medium ${theme.textPrimary}`}>{t.title}</div>
+                          <div className={`text-xs ${theme.textMuted}`}>{t.meta}</div>
                         </div>
                         <button
                           className="shrink-0 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 transition-colors"
@@ -367,17 +368,17 @@ export function ControlTowerPage() {
               {myWork.next.length > 0 && (
                 <div>
                   <div className="mb-1.5 flex items-center gap-2">
-                    <h4 className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Next</h4>
+                    <h4 className={`text-[10px] font-medium uppercase tracking-wider ${theme.textSecondary}`}>Next</h4>
                   </div>
                   {myWork.next.map((t, i) => (
-                    <div key={i} className="mb-2 rounded-lg border border-slate-200 border-l-[3px] border-l-slate-400 bg-white px-2.5 py-2">
+                    <div key={i} className={`mb-2 rounded-lg border border-l-[3px] border-l-slate-400 px-2.5 py-2 ${theme.card}`}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-slate-900">{t.title}</div>
-                          <div className="text-xs text-slate-400">{t.meta}</div>
+                          <div className={`text-sm font-medium ${theme.textPrimary}`}>{t.title}</div>
+                          <div className={`text-xs ${theme.textMuted}`}>{t.meta}</div>
                         </div>
                         <button
-                          className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 transition-colors"
+                          className={`shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary} ${theme.focusRing}`}
                           aria-label={"Start " + t.title}
                         >
                           {t.action}

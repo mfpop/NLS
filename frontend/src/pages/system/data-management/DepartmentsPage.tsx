@@ -6,6 +6,7 @@ import {
   BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown,
   CrudModal, ConfirmDialog
 } from "./shared";
+import { theme } from "../../../styles/themeTokens";
 
 interface Department {
   id: string;
@@ -124,20 +125,20 @@ export function DepartmentsPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden" style={{ minHeight: 0 }}>
-      <header className="flex shrink-0 items-center gap-4 border-b border-(--border-soft) bg-(--surface-1) px-5 py-3">
-        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-          <Layers className="h-5 w-5" />
+    <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
+      <header className={`flex shrink-0 items-center gap-4 border-b px-5 py-3 ${theme.header}`}>
+        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+          <Layers className="h-5 w-5 stroke-current" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-base font-semibold tracking-tight text-(--text-primary)">Departments</h1>
-          <p className="text-xs text-(--text-secondary)">Organize departments, production lines, and resource groups across your plants.</p>
+          <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Departments</h1>
+          <p className={`text-xs ${theme.textSecondary}`}>Organize departments, production lines, and resource groups across your plants.</p>
         </div>
       </header>
 
       <DataManagementNav currentPath={location.pathname} />
 
-      <div className="flex-1 overflow-y-auto bg-(--page-bg) p-4">
+      <div className={`flex-1 overflow-y-auto ${theme.page} p-4`}>
         <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Departments" }]} />
         <ContextBar segments={[{ label: "All Plants" }]} />
 
@@ -145,15 +146,15 @@ export function DepartmentsPage() {
           <SearchBar value={search} onChange={setSearch} placeholder="Search departments..." />
           <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
           <div className="ml-auto flex items-center gap-2">
-            {selected.size > 0 && <span className="text-xs text-slate-500">{selected.size} selected</span>}
-            <button onClick={openAdd} className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors active:scale-[0.97]">
+            {selected.size > 0 && <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>}
+            <button onClick={openAdd} className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
               + Add Department
             </button>
           </div>
         </div>
 
         {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
             <span className="font-medium">{selected.size} dept(s) selected</span>
             <span className="text-blue-400">|</span>
             <button className="hover:underline">Assign manager</button>
@@ -167,7 +168,7 @@ export function DepartmentsPage() {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon={<Layers className="h-6 w-6" />}
+            icon={<Layers className="h-6 w-6 stroke-current" />}
             title={search ? "No departments match your search" : "No departments configured"}
             description="Create departments and assign managers."
             action={{ label: "+ Add Department", onClick: openAdd }}
@@ -179,33 +180,33 @@ export function DepartmentsPage() {
               return (
                 <div
                   key={dept.id}
-                  className={`group rounded-xl border bg-white px-3 py-2.5 transition-all hover:border-slate-300 hover:shadow-sm ${
-                    isSelected ? "border-blue-300 ring-1 ring-blue-200" : "border-slate-200"
-                  }`}
+                  className={`group rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm ${
+                    isSelected ? theme.rowSelected : theme.row
+                  } ${theme.cardHover}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                       <BulkCheckbox checked={isSelected} onChange={() => toggleOne(dept.id)} />
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                        <Building2 className="h-4.5 w-4.5" />
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                        <Building2 className="h-4.5 w-4.5 stroke-current" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-900">{dept.name}</span>
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500">{dept.code}</span>
+                          <span className={`text-sm font-semibold ${theme.textPrimary}`}>{dept.name}</span>
+                          <span className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">{dept.code}</span>
                           <StatusBadge status={dept.status} />
                         </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400 dark:text-slate-500">
                           <span>{dept.plantName}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Manager: {dept.manager}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>{dept.employees} employees</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>{dept.groups} group(s)</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>{dept.resources} resource(s)</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300" />
+                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
                           <span>Lines: {dept.lines.join(", ")}</span>
                         </div>
                       </div>
@@ -213,11 +214,11 @@ export function DepartmentsPage() {
                     <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
                       <PrimaryAction onClick={() => navigate(`/system/data-management/departments/${dept.id}`)} />
                       <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3" />, onClick: () => openEdit(dept) },
-                        { label: "Delete", icon: <Trash2 className="h-3 w-3" />, onClick: () => { setEditingId(dept.id); setConfirmOpen(true); } },
-                        { label: "Assign Groups", icon: <Users className="h-3 w-3" />, onClick: () => {} },
-                        { label: "View Resources", icon: <Cpu className="h-3 w-3" />, onClick: () => navigate("/system/data-management/resources") },
-                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(dept.plantName)}&department=${encodeURIComponent(dept.name)}`) },
+                        { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => openEdit(dept) },
+                        { label: "Delete", icon: <Trash2 className="h-3 w-3 stroke-current" />, onClick: () => { setEditingId(dept.id); setConfirmOpen(true); } },
+                        { label: "Assign Groups", icon: <Users className="h-3 w-3 stroke-current" />, onClick: () => {} },
+                        { label: "View Resources", icon: <Cpu className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/resources") },
+                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(dept.plantName)}&department=${encodeURIComponent(dept.name)}`) },
                       ]} />
                     </div>
                   </div>
@@ -227,10 +228,10 @@ export function DepartmentsPage() {
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
+        <div className={`mt-3 flex items-center justify-between text-[11px] ${theme.textMuted}`}>
           <span>{filtered.length} of {departments.length} department(s)</span>
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 text-slate-700" />
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300" />
             Select all
           </label>
         </div>

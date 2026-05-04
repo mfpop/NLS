@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Building2, Factory, GitBranch, Cpu, Users, Layers, Globe, MapPin, Clock, FileText, ChevronLeft, ExternalLink, Trash2, X } from "lucide-react";
+import { theme } from "../../../styles/themeTokens";
 
 export interface PlantDetail {
   id: string;
@@ -55,14 +56,20 @@ export function PlantDetailPage() {
 
   if (!plant) {
     return (
-      <div className="flex h-full flex-col overflow-hidden bg-slate-100 dark:bg-slate-950" style={{ minHeight: 0 }}>
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-            <Building2 className="h-5 w-5" />
+
+
+
+
+      <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
+        <header className={`flex h-16 shrink-0 items-center gap-3 border-b px-6 ${theme.header}`}>
+          <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxBlue}`}>
+            <Building2 className="h-5 w-5 stroke-current" />
           </div>
-          <h1 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Plant Not Found</h1>
+
+          <h1 className={`text-sm font-semibold ${theme.textPrimary}`}>Plant Not Found</h1>
         </header>
-        <div className="flex-1 flex items-center justify-center text-xs text-slate-500 dark:text-slate-400">Plant "{plantId}" does not exist.</div>
+
+        <div className={`flex-1 flex items-center justify-center text-xs ${theme.textSecondary}`}>Plant "{plantId}" does not exist.</div>
       </div>
     );
   }
@@ -75,42 +82,50 @@ export function PlantDetailPage() {
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-slate-100 dark:bg-slate-950" style={{ minHeight: 0 }}>
+
+    <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
       {/* ═══════ LAYER 1: HEADER ═══════ */}
-      <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-900">
+
+      <header className={`flex h-16 shrink-0 items-center justify-between border-b px-6 ${theme.header}`}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/system/data-management/plant")}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-white transition-colors"
+
+            className={`rounded-lg p-1.5 transition-colors ${theme.buttonGhost}`}
             aria-label="Back"
           >
-            <ChevronLeft className="h-4 w-4" />
+
+            <ChevronLeft className="h-4 w-4 stroke-current" />
           </button>
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-            <Factory className="h-5 w-5" />
+
+
+          <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
+            <Factory className="h-5 w-5 stroke-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{plant.name}</h1>
+
+              <h1 className={`text-sm font-semibold ${theme.textPrimary}`}>{plant.name}</h1>
               {plant.status === "active" ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400">
+
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${theme.badgeActive}`}>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   Active
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${theme.badgeInactive}`}>
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
                   Inactive
                 </span>
               )}
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400">{plant.code}</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">ID: {plant.id} &middot; {plant.building}</p>
+            <p className={`text-xs ${theme.textSecondary}`}>ID: {plant.id} &middot; {plant.building}</p>
           </div>
         </div>
         <button
           onClick={() => navigate("/system/data-management")}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-transparent px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
+          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${theme.buttonGhost}`}
         >
           <X className="h-4 w-4" />
           Close
@@ -118,11 +133,11 @@ export function PlantDetailPage() {
       </header>
 
       {/* ═══════ LAYER 2: CONTENT ═══════ */}
-      <div className="flex-1 overflow-y-auto bg-slate-100 px-6 py-5 dark:bg-slate-950">
+      <div className={`flex-1 overflow-y-auto ${theme.page} px-6 py-5`}>
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* General Information */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">General Information</h2>
+          <div className={`rounded-xl border p-4 shadow-sm ${theme.card}`}>
+            <h2 className={`mb-3 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>General Information</h2>
             <div className="space-y-3">
               <Field icon={Building2} label="Building / Site" value={plant.building} />
               <Field icon={MapPin} label="Address / Location" value={plant.address} />
@@ -131,8 +146,8 @@ export function PlantDetailPage() {
             </div>
           </div>
           {/* Summary Counters */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Summary Counters</h2>
+          <div className={`rounded-xl border p-4 shadow-sm ${theme.card}`}>
+            <h2 className={`mb-3 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>Summary Counters</h2>
             <div className="grid grid-cols-2 gap-3">
               <StatCard label="Production Lines" value={plant.lines} icon={GitBranch} onClick={() => navigate("/system/data-management/production-lines")} />
               <StatCard label="Departments" value={plant.departments} icon={Layers} onClick={() => navigate("/system/data-management/departments")} />
@@ -144,18 +159,18 @@ export function PlantDetailPage() {
 
         {/* Notes */}
         {plant.notes && (
-          <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className={`mb-6 rounded-xl border p-4 shadow-sm ${theme.card}`}>
+            <h2 className={`mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>
               <FileText className="h-3.5 w-3.5" />
               Description / Notes
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{plant.notes}</p>
+            <p className={`text-xs leading-relaxed ${theme.textSecondary}`}>{plant.notes}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Actions</h2>
+        <div className={`rounded-xl border p-4 shadow-sm ${theme.card}`}>
+          <h2 className={`mb-3 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>Actions</h2>
           <div className="flex flex-wrap gap-2">
             <ActionBtn icon={GitBranch} label="Manage Production Lines" onClick={() => navigate("/system/data-management/production-lines")} />
             <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/data-management/departments")} />
@@ -167,7 +182,7 @@ export function PlantDetailPage() {
         </div>
 
         {/* Delete section */}
-        <div className="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50/50 px-4 py-3 dark:border-red-900/30 dark:bg-red-950/30">
+        <div className={`mt-6 flex items-center justify-between rounded-xl px-4 py-3 ${theme.dangerPanel}`}>
           <div>
             <p className="text-xs font-medium text-red-600 dark:text-red-400">Delete this plant</p>
             <p className="text-[11px] text-red-500 dark:text-red-500">This action cannot be undone. All associated data will be removed.</p>
@@ -185,13 +200,13 @@ export function PlantDetailPage() {
       {/* Confirm delete dialog */}
       {confirmDelete && (
         <>
-          <div className="fixed inset-0 z-30 bg-black/20" onClick={() => setConfirmDelete(false)} />
-          <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Delete Plant</h3>
-            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Are you sure you want to delete "{plant.name}"? This action cannot be undone.</p>
+          <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={() => setConfirmDelete(false)} />
+          <div className={`fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border p-4 shadow-xl ${theme.modal}`}>
+            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>Delete Plant</h3>
+            <p className={`mt-2 text-xs ${theme.textSecondary}`}>Are you sure you want to delete "{plant.name}"? This action cannot be undone.</p>
             <div className="mt-4 flex items-center justify-end gap-2">
               <button onClick={() => setConfirmDelete(false)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">Cancel</button>
+                className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>Cancel</button>
               <button onClick={handleDelete}
                 className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-500 transition-colors">Delete</button>
             </div>
@@ -207,12 +222,12 @@ export function PlantDetailPage() {
 function Field({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2.5">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${theme.iconBoxSubtle}`}>
         <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0">
-        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{label}</div>
-        <div className="text-sm text-slate-900 dark:text-slate-100">{value || <span className="italic text-slate-300 dark:text-slate-600">Not set</span>}</div>
+        <div className={`text-[11px] font-medium ${theme.textSecondary}`}>{label}</div>
+        <div className={`text-sm ${theme.textPrimary}`}>{value || <span className={`italic ${theme.textMuted}`}>Not set</span>}</div>
       </div>
     </div>
   );
@@ -220,20 +235,20 @@ function Field({ icon: Icon, label, value }: { icon: any; label: string; value: 
 
 function StatCard({ label, value, icon: Icon, onClick }: { label: string; value: number; icon: any; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="rounded-lg border border-slate-100 bg-slate-50 p-2.5 text-left transition-all hover:border-slate-200 hover:bg-slate-100 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:hover:bg-slate-700">
+    <button onClick={onClick} className={`rounded-lg border p-2.5 text-left transition-all active:scale-[0.98] ${theme.row} ${theme.cardHover}`}>
       <div className="flex items-center justify-between">
-        <Icon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-        <span className="text-base font-bold text-slate-900 dark:text-white">{value}</span>
+        <Icon className={`h-3.5 w-3.5 ${theme.iconSubtle}`} />
+        <span className={`text-base font-bold ${theme.textPrimary}`}>{value}</span>
       </div>
-      <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">{label}</div>
+      <div className={`mt-1 text-[10px] ${theme.textSecondary}`}>{label}</div>
     </button>
   );
 }
 
 function ActionBtn({ icon: Icon, label, onClick }: { icon: any; label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors active:scale-[0.97]">
-      <Icon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+    <button onClick={onClick} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
+      <Icon className={`h-3.5 w-3.5 ${theme.iconSubtle}`} />
       {label}
     </button>
   );

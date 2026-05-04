@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { TIMEZONE_OPTIONS, validatePlantForm, hasFormChanges, EMPTY_FORM } from "@/hooks/usePlants";
 import type { Plant } from "@/types/plant";
+import { theme } from "../../../styles/themeTokens";
 
 interface PlantModalProps {
   open: boolean;
@@ -96,14 +97,14 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
 
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-black/20" onClick={handleClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-full -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900" style={{ maxWidth: "520px" }}>
+      <div className={`fixed inset-0 z-30 ${theme.overlay}`} onClick={handleClose} />
+      <div className={`fixed left-1/2 top-1/2 z-40 w-full -translate-x-1/2 -translate-y-1/2 rounded-2xl border shadow-xl ${theme.modal}`} style={{ maxWidth: "520px" }}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5 dark:border-slate-700">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+        <div className={`flex items-center justify-between border-b px-5 py-3.5 ${theme.subHeader}`}>
+          <h2 className={`text-sm font-semibold ${theme.textPrimary}`}>
             {isEditing ? "Edit Plant" : "Add Plant"}
           </h2>
-          <button type="button" onClick={handleClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300 transition-colors">
+          <button type="button" onClick={handleClose} className={`rounded-lg p-1 transition-colors ${theme.buttonGhost}`}>
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -124,7 +125,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
               </Field>
               <Field label="Status">
                 <select value={form.status} onChange={(e) => updateField("status", e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+                  className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
@@ -137,7 +138,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
           <div className="space-y-3">
             <Field label="Building / Site">
               <input type="text" value={form.building} onChange={(e) => updateField("building", e.target.value)} placeholder="e.g. Building A"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500" />
+                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
             </Field>
             <Field label="Address">
               <input type="text" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="e.g. 123 Industrial Blvd, Detroit, MI"
@@ -145,7 +146,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
             </Field>
             <Field label="Timezone">
               <select value={form.timezone} onChange={(e) => updateField("timezone", e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
                 {TIMEZONE_OPTIONS.map((tz) => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
               </select>
             </Field>
@@ -156,7 +157,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
           <div className="grid grid-cols-2 gap-3">
             <Field label="Default Calendar">
               <select value={form.defaultCalendarId} onChange={(e) => updateField("defaultCalendarId", e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
                 <option value="">Not set</option>
                 <option value="CAL-001">Standard 5-day Week</option>
                 <option value="CAL-002">6-day Extended Week</option>
@@ -165,7 +166,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
             </Field>
             <Field label="Default Schedule">
               <select value={form.defaultScheduleId} onChange={(e) => updateField("defaultScheduleId", e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white">
+                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
                 <option value="">Not set</option>
                 <option value="SCH-001">Morning Shift (6:00-14:00)</option>
                 <option value="SCH-002">Afternoon Shift (14:00-22:00)</option>
@@ -181,7 +182,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
           <div className="grid grid-cols-2 gap-3">
             <Field label="Plant Manager">
               <input type="text" value={form.managerName} onChange={(e) => updateField("managerName", e.target.value)} placeholder="e.g. John Smith"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500" />
+                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
             </Field>
             <Field label="Email (optional)" error={errors.managerEmail}>
               <input type="email" value={form.managerEmail} onChange={(e) => updateField("managerEmail", e.target.value)} placeholder="john@leansync.com"
@@ -193,7 +194,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
           <SectionTitle title="Notes" />
           <Field label="Description">
             <textarea value={form.description} onChange={(e) => updateField("description", e.target.value)} placeholder="e.g. Primary assembly facility..." rows={3}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 resize-none" />
+              className={`w-full rounded-lg border px-3 py-2 text-xs resize-none ${theme.input} ${theme.focusRing}`} />
           </Field>
 
           {/* ── Validation feedback ── */}
@@ -214,14 +215,14 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
         </form>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 dark:border-slate-700">
+        <div className={`flex items-center justify-between border-t px-5 py-3 ${theme.subHeader}`}>
           <div>
             {isEditing && editingPlant && (editingPlant.lineCount > 0 || editingPlant.departmentCount > 0 || editingPlant.groupCount > 0 || editingPlant.resourceCount > 0) && (
-              <span className="text-[10px] text-slate-400">Plant in use — disable instead of delete</span>
+              <span className={`text-[10px] ${theme.textMuted}`}>Plant in use - disable instead of delete</span>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={handleClose} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-colors">
+            <button type="button" onClick={handleClose} className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${theme.buttonSecondary}`}>
               Cancel
             </button>
             <button type="submit" onClick={handleSubmit} disabled={!canSave}
@@ -238,13 +239,13 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
 /* ── Helpers ── */
 
 function SectionTitle({ title }: { title: string }) {
-  return <h3 className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 first:mt-0 dark:text-slate-400">{title}</h3>;
+  return <h3 className={`mb-2 mt-4 text-[11px] font-bold uppercase tracking-wider first:mt-0 ${theme.textSecondary}`}>{title}</h3>;
 }
 
 function Field({ label, children, error, required }: { label: string; children: React.ReactNode; error?: string; required?: boolean }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-medium text-slate-600 dark:text-slate-300">
+      <label className={`mb-1 block text-[11px] font-medium ${theme.textSecondary}`}>
         {label}
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>

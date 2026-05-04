@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Cog, ChevronDown } from "lucide-react";
 import { GraphqlStatusPage } from "@/pages/graphql-status";
+import { theme } from "../../styles/themeTokens";
 
 type SettingsTab = "overview" | "graphql-status";
 
@@ -17,29 +18,29 @@ export function ApplicationSettingsPage() {
 
   return (
     <section className="p-0 m-0">
-      <header className="flex items-center justify-between border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 shadow-sm h-16">
+      <header className={`flex items-center justify-between border shadow-sm h-16 ${theme.header}`}>
         <div className="flex items-center gap-4 min-w-0 flex-1">
-          <div className="inline-flex h-12 w-12 flex-none items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
-            <Cog className="h-5 w-5" />
+          <div className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
+            <Cog className="h-5 w-5 stroke-current" />
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Application Settings</h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            <h1 className={`text-2xl font-semibold tracking-tight ${theme.textPrimary}`}>Application Settings</h1>
+            <p className={`mt-1 text-sm ${theme.textSecondary}`}>
               Manage storage, backups, security, connections, and system functionality dashboard for the control model.
             </p>
           </div>
         </div>
         <div className="relative flex-none">
           <button
-            className="inline-flex items-center gap-2 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-2)] px-3 py-1.5 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-1)] transition-colors"
+            className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${theme.buttonSecondary}`}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             aria-expanded={isDropdownOpen}
           >
             <span className="truncate max-w-28">{activeTabLabel}</span>
-            <ChevronDown size={15} className={"transition " + (isDropdownOpen ? "rotate-180" : "rotate-0")} />
+            <ChevronDown size={15} className={"stroke-current transition " + (isDropdownOpen ? "rotate-180" : "rotate-0")} />
           </button>
           {isDropdownOpen && (
-            <div className="absolute right-0 z-10 mt-1 w-44 rounded-lg border border-[var(--border-soft)] bg-[var(--surface-1)] p-1 shadow-lg">
+            <div className={`absolute right-0 z-10 mt-1 w-44 rounded-lg border p-1 shadow-lg ${theme.dropdown}`}>
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.value;
                 return (
@@ -48,8 +49,8 @@ export function ApplicationSettingsPage() {
                     className={
                       "flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm " +
                       (isActive
-                        ? "bg-[var(--accent-soft)] font-medium text-[var(--accent)]"
-                        : "text-[var(--text-secondary)] hover:bg-[var(--surface-2)]")
+                        ? `font-medium ${theme.iconBoxEmerald}`
+                        : `${theme.textSecondary} ${theme.interactiveRow}`)
                     }
                     onClick={() => {
                       setActiveTab(tab.value);
@@ -67,7 +68,7 @@ export function ApplicationSettingsPage() {
 
       <div className="mt-4">
         {activeTab === "overview" && (
-          <div className="rounded-xl border border-[var(--border-soft)] bg-[var(--surface-1)] p-6 text-sm text-[var(--text-secondary)] shadow-sm">
+          <div className={`rounded-xl border p-6 text-sm shadow-sm ${theme.card} ${theme.textSecondary}`}>
             <p>Application settings overview and configuration options will be displayed here.</p>
           </div>
         )}

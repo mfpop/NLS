@@ -154,15 +154,15 @@ export function DepartmentsPage() {
         </div>
 
         {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-500/20 dark:bg-blue-500/10 px-3 py-2 text-xs text-blue-700 dark:text-blue-300">
-            <span className="font-medium">{selected.size} dept(s) selected</span>
-            <span className="text-blue-400">|</span>
-            <button className="hover:underline">Assign manager</button>
-            <span className="text-blue-400">|</span>
-            <button onClick={bulkActivate} className="hover:underline">Activate</button>
-            <span className="text-blue-400">|</span>
-            <button onClick={bulkDeactivate} className="hover:underline">Deactivate</button>
-            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-blue-500 hover:text-blue-700 font-medium">Clear</button>
+          <div className={`mb-3 flex items-center gap-2 rounded-lg border ${theme.bulkBar} px-3 py-2 text-xs`}>
+            <span className={`font-medium ${theme.textPrimary}`}>{selected.size} dept(s) selected</span>
+            <span className={theme.textMuted}>|</span>
+            <button className="text-xs text-blue-600 hover:underline dark:text-blue-400">Assign manager</button>
+            <span className={theme.textMuted}>|</span>
+            <button onClick={bulkActivate} className="text-xs text-blue-600 hover:underline dark:text-blue-400">Activate</button>
+            <span className={theme.textMuted}>|</span>
+            <button onClick={bulkDeactivate} className="text-xs text-blue-600 hover:underline dark:text-blue-400">Deactivate</button>
+            <button type="button" onClick={() => setSelected(new Set())} className={`ml-auto font-medium ${theme.textSecondary} ${theme.link}`}>Clear</button>
           </div>
         )}
 
@@ -193,20 +193,20 @@ export function DepartmentsPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <span className={`text-sm font-semibold ${theme.textPrimary}`}>{dept.name}</span>
-                          <span className="rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">{dept.code}</span>
+                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${theme.codeBadge}`}>{dept.code}</span>
                           <StatusBadge status={dept.status} />
                         </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${theme.textSecondary}">
                           <span>{dept.plantName}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
                           <span>Manager: {dept.manager}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
                           <span>{dept.employees} employees</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
                           <span>{dept.groups} group(s)</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
                           <span>{dept.resources} resource(s)</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
                           <span>Lines: {dept.lines.join(", ")}</span>
                         </div>
                       </div>

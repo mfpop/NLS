@@ -53,7 +53,7 @@ export function PlantRow({ plant, isSelected, onToggleSelect, onToggleStatus }: 
           <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
           <span>{plant.departmentCount} dept(s)</span>
           <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-          <span>{plant.groupCount} group(s)</span>
+          <span>{plant.groupCount} resource group(s)</span>
           <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
           <span>{plant.resourceCount} resource(s)</span>
         </div>

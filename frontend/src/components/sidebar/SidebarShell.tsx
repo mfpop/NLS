@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { BrandHeader } from "@/components/BrandHeader";
 import { useSidebarStore } from "@/stores/sidebar";
+import { useAuth } from "@/auth/AuthContext";
 import type { SidebarSectionItem } from "./config";
 import { sidebarEntries, plants as fallbackPlants } from "./config";
 import { ChevronDown, MoreVertical, User, LogOut, Settings, ChevronRight } from "./icons";
@@ -22,6 +23,7 @@ function initialsFromName(name: string) {
 
 export function SidebarShell() {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const openSection = useSidebarStore((state) => state.openSection);
   const setOpenSection = useSidebarStore((state) => state.setOpenSection);
   const [isLineOpen, setIsLineOpen] = useState(false);
@@ -309,10 +311,10 @@ export function SidebarShell() {
               setIsProfileOpen((current) => !current);
             }}
           >
-            <span className="sidebar__avatar">{initialsFromName("Mihai Pop")}</span>
+            <span className="sidebar__avatar">{initialsFromName(user?.username ?? "User")}</span>
             <span className="sidebar__user-copy">
-              <span className="sidebar__user-name">Mihai Pop</span>
-              <span className="sidebar__user-role">Plant Manager</span>
+              <span className="sidebar__user-name">{user?.username ?? "User"}</span>
+              <span className="sidebar__user-role">{user?.role?.replace("_", " ") ?? ""}</span>
             </span>
             <MoreVertical className="sidebar-icon" />
           </button>

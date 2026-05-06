@@ -158,7 +158,7 @@ export function DepartmentsPage() {
                   { label: "Employees", value: dept.employees },
                 ]}
                 readiness={[
-                  { label: "Groups", ready: dept.groupCount > 0 },
+                  { label: "Resource Groups", ready: dept.groupCount > 0 },
                   { label: "Resources", ready: dept.resourceCount > 0 },
                 ]}
                 onEdit={() => openEdit(dept)}

@@ -1,14 +1,56 @@
 """API permission helpers for GraphQL resolvers and mutations."""
 
+from django.contrib.auth.models import User
 
-def has_access(*_args, **_kwargs) -> bool:
-    """Default permissive helper for scaffold mode."""
-    return True
+READ_ONLY_ROLES = {"guest"}
+MANAGER_PLUS = {"dept_manager", "app_owner", "db_admin"}
+SUPERVISOR_PLUS = {"supervisor", "dept_manager", "app_owner", "db_admin"}
+ADMIN_ROLES = {"app_owner", "db_admin"}
+
+_action_roles = {
+    # Plants
+    "create_plant": ADMIN_ROLES,
+    "update_plant": ADMIN_ROLES,
+    "toggle_plant_status": ADMIN_ROLES,
+    "delete_plant": ADMIN_ROLES,
+    "rename_plant": ADMIN_ROLES,
+    # Departments
+    "create_department": ADMIN_ROLES,
+    "update_department": MANAGER_PLUS,
+    "delete_department": ADMIN_ROLES,
+    # Production lines
+    "create_production_line": MANAGER_PLUS,
+    "update_production_line": MANAGER_PLUS,
+    "delete_production_line": ADMIN_ROLES,
+    "toggle_production_line_status": MANAGER_PLUS,
+    # Profile
+    "update_profile": SUPERVISOR_PLUS,
+    # Other domains
+    "create_kaizen": SUPERVISOR_PLUS,
+    "start_work_order": SUPERVISOR_PLUS,
+    "activate_process_flow": SUPERVISOR_PLUS,
+}
 
 
-def ensure_access(*_args, **_kwargs) -> None:
-    """Raise if access is denied for the current operation."""
+def get_role(user: User | None) -> str:
+    if user is None or not user.is_authenticated:
+        return "guest"
+    try:
+        return user.role_profile.role
+    except Exception:
+        return "guest"
+
+
+def has_access(*, user: User | None = None, action: str = "", **_kwargs) -> bool:
+    role = get_role(user)
+    allowed = _action_roles.get(action, MANAGER_PLUS)
+    return role in allowed
+
+
+def ensure_access(*, user: User | None = None, action: str = "", **_kwargs) -> None:
     from api.errors import PermissionDeniedError
 
-    if not has_access(*_args, **_kwargs):
-        raise PermissionDeniedError("You do not have access to perform this action.")
+    if not has_access(user=user, action=action):
+        raise PermissionDeniedError(
+            f"You do not have permission to perform '{action}'. Required role: one of {_action_roles.get(action, MANAGER_PLUS)}"
+        )

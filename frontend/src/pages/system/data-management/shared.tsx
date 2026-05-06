@@ -148,7 +148,7 @@ const dmNavItems = [
   { label: "Plants",          path: "/system/data-management/plant" },
   { label: "Lines",           path: "/system/data-management/production-lines" },
   { label: "Departments",     path: "/system/data-management/departments" },
-  { label: "Groups",          path: "/system/data-management/resource-groups" },
+  { label: "Resource Groups",          path: "/system/data-management/resource-groups" },
   { label: "Resources",       path: "/system/data-management/resources" },
   { label: "Structure",       path: "/system/data-management/structure" },
   { label: "Tables",          path: "/system/data-management/references" },

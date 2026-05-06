@@ -16,12 +16,13 @@ import { usePageSize } from "@/hooks/usePageSize";
 
 interface ResourceGroupNode {
   id: string;
+  code: string;
   name: string;
   groupType: string;
   members: number;
   leader: string;
   status: "active" | "inactive";
-  department: string;
+  departmentName: string;
   plantName: string;
   plantId?: string | null;
   resourceCount: number;
@@ -56,7 +57,7 @@ export function ResourceGroupsPage() {
   const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
 
   const MODAL_FIELDS: ModalField[] = [
-    { key: "name", label: "Group Name", required: true, placeholder: "e.g. Machining Group" },
+    { key: "name", label: "Resource Group Name", required: true, placeholder: "e.g. Machining Group" },
     { key: "groupType", label: "Type", type: "select", options: TYPE_OPTIONS.filter(o => o.value !== "all").map(o => ({ label: o.label, value: o.value })) },
     { key: "leader", label: "Leader", placeholder: "e.g. Jane Doe" },
     { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
@@ -127,7 +128,7 @@ export function ResourceGroupsPage() {
         onStatusFilterChange={setTypeFilter}
         statusOptions={TYPE_OPTIONS}
         onAdd={handleAdd}
-        addLabel="Add Group"
+        addLabel="Add Resource Group"
       />
 
       <div ref={containerRef} className={`flex-1 ${theme.page} p-4`}>
@@ -155,7 +156,7 @@ export function ResourceGroupsPage() {
                   name={group.name}
                   code={group.groupType}
                   status={group.status}
-                  parentContext={[group.plantName, group.department, group.leader || ""].filter(Boolean).join(" · ")}
+                  parentContext={[group.plantName, group.departmentName, group.leader || ""].filter(Boolean).join(" · ")}
                   primaryMetrics={[{ label: "Resources", value: group.resourceCount }]}
                   metrics={[{ label: "Members", value: group.members }]}
                   readiness={[{ label: "Resources", ready: group.resourceCount > 0 }]}

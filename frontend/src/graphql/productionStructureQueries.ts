@@ -33,24 +33,6 @@ export const PRODUCTION_STRUCTURE_TREE_QUERY = gql`
           }
         }
       }
-      departments {
-        id
-        name
-        code
-        status
-        resourceGroups {
-          id
-          name
-          code
-          status
-          resources {
-            id
-            name
-            code
-            status
-          }
-        }
-      }
     }
   }
 `;

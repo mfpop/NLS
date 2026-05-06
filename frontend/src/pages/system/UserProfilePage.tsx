@@ -160,8 +160,11 @@ function validateProfile(
   if (!draft.role.trim()) errors.role = "Role is required.";
   if (!draft.email.trim()) {
     errors.email = "Email is required.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())) {
+  } else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(draft.email.trim())) {
     errors.email = "Enter a valid email address.";
+  }
+  if (draft.phone.trim() && !/^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/.test(draft.phone.trim())) {
+    errors.phone = "Use format +1 (555) 123-4567";
   }
   if (draft.about.length > 500) errors.about = "Summary must be 500 characters or fewer.";
 
@@ -188,7 +191,10 @@ function validateField(field: string, draft: ProfileDraft, workDraft: WorkHistor
   if (field === "role" && !draft.role.trim()) return "Role is required.";
   if (field === "email") {
     if (!draft.email.trim()) return "Email is required.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())) return "Enter a valid email address.";
+    if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(draft.email.trim())) return "Enter a valid email address.";
+  }
+  if (field === "phone" && draft.phone.trim() && !/^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/.test(draft.phone.trim())) {
+    return "Use format +1 (555) 123-4567";
   }
   return undefined;
 }
@@ -585,11 +591,24 @@ export function UserProfilePage() {
                     )}
                   </FieldShell>
 
-                  <FieldShell label="Phone">
+                  <FieldShell label="Phone" error={fieldErrors.phone}>
                     {editingSection === "profile" ? (
                       <div className="flex items-start gap-2">
                         <Phone className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <input value={draft.phone} onChange={(e) => setDraft((prev) => ({ ...prev, phone: e.target.value }))} className={inputClass} placeholder="+1 (555) 123-4567" />
+                        <input value={draft.phone} onChange={(e) => {
+                          const raw = e.target.value.replace(/[^\d]/g, "").slice(0, 11);
+                          let formatted = "";
+                          if (raw.length > 0) formatted = "+1";
+                          if (raw.length > 1) formatted += " (" + raw.slice(1, Math.min(4, raw.length));
+                          if (raw.length > 1) formatted += raw.length > 4 ? ") " + raw.slice(4, Math.min(7, raw.length)) : "";
+                          if (raw.length > 7) formatted += "-" + raw.slice(7, 11);
+                          setDraft((prev) => ({ ...prev, phone: formatted }));
+                          if (formatted && !/^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/.test(formatted)) {
+                            setFieldErrors((prev) => ({ ...prev, phone: "Use format +1 (555) 123-4567" }));
+                          } else {
+                            setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+                          }
+                        }} className={`${fieldErrors.phone ? inputErrorClass : inputClass}`} placeholder="+1 (555) 123-4567" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">

@@ -174,7 +174,7 @@ export function PlantStructurePage() {
                 ]}
                 metrics={[
                   { label: "Departments", value: plant.departmentCount },
-                  { label: "Groups", value: plant.groupCount },
+                  { label: "Resource Groups", value: plant.groupCount },
                   { label: "Resources", value: plant.resourceCount },
                 ]}
                 readiness={[

@@ -1,6 +1,8 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
+import { LoginPage } from "@/auth/LoginPage";
+import { ProtectedRoute } from "@/auth/ProtectedRoute";
 
 const ControlTowerPage = lazy(() =>
   import("@/pages/control-tower").then((module) => ({ default: module.ControlTowerPage }))
@@ -95,7 +97,8 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<RouteLoader />}>
       <Routes>
-        <Route element={<AppShell />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
                     <Route index element={<ControlTowerPage />} />
           <Route path="control-tower" element={<ControlTowerPage />} />
           <Route path="home" element={<Navigate to="/control-tower" replace />} />

@@ -197,7 +197,7 @@ export function ProductionLinesPage() {
                 ]}
                 metrics={[
                   { label: "Departments", value: line.departmentCount },
-                  { label: "Groups", value: line.groupCount },
+                  { label: "Resource Groups", value: line.groupCount },
                   { label: "Resources", value: line.resourceCount },
                   ...(line.shiftPattern ? [{ label: "Shift", value: line.shiftPattern }] : []),
                 ]}

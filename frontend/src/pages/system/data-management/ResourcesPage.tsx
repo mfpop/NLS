@@ -17,7 +17,7 @@ type ResType = "Machine" | "Workstation" | "Inspection Station" | "Material Hand
 
 interface ResourceNode {
   id: string; name: string; resourceType: ResType; code: string;
-  groupName: string; departmentName: string; lineName: string;
+  groupName: string; departmentName: string;
   status: "active" | "inactive"; opStatus: OpStatus;
   utilization: number; shift: string; lastActivity: string; flowPosition: string; plantName: string;
 }
@@ -147,7 +147,7 @@ export function ResourcesPage() {
                     name={res.name}
                     code={res.code}
                     status={res.status}
-                    parentContext={[res.groupName, res.departmentName, res.lineName].filter(Boolean).join(" · ")}
+                    parentContext={[res.groupName, res.departmentName].filter(Boolean).join(" · ")}
                     primaryMetrics={[{ label: "Type", value: res.resourceType }]}
                     metrics={[
                       { label: "Op Status", value: res.opStatus },

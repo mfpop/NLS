@@ -1,225 +1,443 @@
-import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@apollo/client/react";
+import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ChevronDown, ChevronRight, Factory, Layers, Users, Database,
-  GitBranch, Monitor
+  ChevronDown, Factory, Layers, Users, Database,
+  GitBranch, Monitor, X, Eye, Pointer, RefreshCw, Shield, Edit3,
+  AlertTriangle, Hash, Calendar, Clock, FileText, ExternalLink, Info,
+  Lock
 } from "lucide-react";
-import { Breadcrumbs, ResourceStatusBadge, AlertBanner } from "./shared";
+import { StatusBadge } from "./shared";
+import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
-import { usePlants } from "@/hooks/usePlants";
-import { useProductionStructureTree, type ProductionStructureNode } from "@/hooks/useProductionStructureTree";
+import { useDataManagementOverview, type DataManagementTreeChild, type DataManagementTreeRoot } from "@/hooks/useDataManagementOverview";
 import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
+import { useQuery } from "@apollo/client/react";
+import { ReferenceTablesCard } from "./components/ReferenceTablesCard";
 
 interface StructureTreeNode {
   id: string;
   label: string;
+  code: string;
   icon: typeof Factory;
   type: "plant" | "department" | "group" | "resource" | "table" | "line";
-  subtitle: string;
   status?: string;
   children?: StructureTreeNode[];
   to?: string;
+  childCount: number;
 }
 
 interface ReferenceTablesQueryData {
   referenceTables: Array<{ id: string; name: string; entryCount: number }>;
 }
 
-function TreeNodeRow({ node, depth = 0 }: { node: StructureTreeNode; depth?: number }) {
-  const [open, setOpen] = useState(depth < 2);
-  const navigate = useNavigate();
-  const hasChildren = !!node.children?.length;
+const TYPE_LABEL: Record<string, string> = {
+  plant: "Plant", line: "Production Line", department: "Department",
+  group: "Resource Group", resource: "Resource", table: "Reference Table",
+};
 
-  const typeColor =
-    node.type === "plant" ? "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-500/10" :
-    node.type === "department" ? "text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-500/10" :
-    node.type === "group" ? "text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-500/10" :
-    node.type === "line" ? "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-500/10" :
-    node.type === "resource" ? "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-500/10" :
-    "text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-500/10";
+const TYPE_STYLE: Record<string, string> = {
+  plant: theme.typePlant,
+  line: theme.iconBoxAmber,
+  department: theme.typeDepartment,
+  group: theme.typeGroup,
+  resource: theme.typeResource,
+  table: theme.typeTable,
+};
+
+const ICON_MAP: Record<string, typeof Factory> = {
+  plant: Factory,
+  productionLine: GitBranch,
+  line: GitBranch,
+  department: Layers,
+  resourceGroup: Users,
+  group: Users,
+  resource: Monitor,
+};
+
+function getNodePath(type: string, id: string): string | undefined {
+  const routes: Record<string, string> = {
+    plant: "/system/data-management/plant/",
+    productionLine: "/system/data-management/production-lines/",
+    line: "/system/data-management/production-lines/",
+    department: "/system/data-management/departments/",
+    resourceGroup: "/system/data-management/resource-groups/",
+    group: "/system/data-management/resource-groups/",
+    resource: "/system/data-management/resources/",
+  };
+  const base = routes[type];
+  return base ? base + id : undefined;
+}
+
+function countDescendants(node: StructureTreeNode): number {
+  let total = node.children?.length ?? 0;
+  for (const child of node.children ?? []) {
+    total += countDescendants(child);
+  }
+  return total;
+}
+
+function convertTreeChild(node: DataManagementTreeChild, depth: number): StructureTreeNode {
+  const icon = ICON_MAP[node.type] || Factory;
+  const type = (node.type === "productionLine" ? "line" : node.type === "resourceGroup" ? "group" : node.type) as StructureTreeNode["type"];
+  const children = (node.children || []).map((c) => convertTreeChild(c, depth + 1));
+  return {
+    id: node.type === "productionLine" ? `line-${node.id}` : node.id,
+    label: node.name,
+    code: node.code,
+    icon,
+    type,
+    status: node.status,
+    children,
+    to: getNodePath(node.type, node.id),
+    childCount: node.childCount,
+  };
+}
+
+function buildTree(tree: DataManagementTreeRoot | null): StructureTreeNode[] {
+  if (!tree || !tree.children || tree.children.length === 0) return [];
+  const plantNodes = tree.children.map((c) => convertTreeChild(c, 1));
+  return [{
+    id: "company",
+    label: "Company",
+    code: "",
+    icon: Factory,
+    type: "plant",
+    childCount: plantNodes.reduce((sum, n) => sum + 1 + countDescendants(n), 0),
+    children: plantNodes,
+  }];
+}
+
+function TreeNodeRow({ node, nodeKey, depth = 0, selectedKey, onSelect }: {
+  node: StructureTreeNode;
+  nodeKey: string;
+  depth?: number;
+  selectedKey: string | null;
+  onSelect?: (node: StructureTreeNode, key: string) => void;
+}) {
+  const [open, setOpen] = useState(depth < 2);
+  const hasChildren = !!node.children?.length;
+  const isSelected = selectedKey === nodeKey;
+  const isAncestor = open && hasChildren && !isSelected;
+  const indent = `${12 + depth * 20}px`;
+  const rowClass = isSelected
+    ? "bg-white dark:bg-slate-900 border border-emerald-400 border-l-4 border-l-emerald-500 ring-1 ring-emerald-200 shadow-sm relative z-10"
+    : isAncestor
+      ? "bg-emerald-50/10 border-l border-emerald-200/20 shadow-none ring-0"
+      : `${theme.cardHover} border-l border-transparent shadow-none ring-0`;
 
   return (
     <div>
       <div
-        className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-[0.99]"
-        style={{ paddingLeft: `${12 + depth * 20}px` }}
-        onClick={() => { if (hasChildren) setOpen(!open); else if (node.to) navigate(node.to); }}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === "Enter") { if (hasChildren) setOpen(!open); else if (node.to) navigate(node.to); } }}
+        className={`flex cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors min-h-[44px] ${rowClass}`}
+        style={{ paddingLeft: indent }}
+        onClick={() => { onSelect?.(node, nodeKey); if (hasChildren) setOpen(!open); }}
+        role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter") { onSelect?.(node, nodeKey); if (hasChildren) setOpen(!open); } }}
       >
         <span className="w-4 shrink-0">
-          {hasChildren ? (open ? <ChevronDown className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 stroke-current" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 stroke-current" />) : <span className="inline-block w-3.5" />}
+          {hasChildren ? (
+            <span className="transition-transform duration-150 inline-block" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)" }}>
+              <ChevronDown className="h-3.5 w-3.5 stroke-current" />
+            </span>
+          ) : <span className="inline-block w-3.5" />}
         </span>
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${typeColor}`}>
+        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${TYPE_STYLE[node.type] || theme.iconBoxSubtle}`}>
           <node.icon className="h-3.5 w-3.5 stroke-current" />
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className={`text-sm ${depth === 0 ? "font-semibold" : "font-medium"} ${theme.textPrimary}`}>{node.label}</span>
-            {node.status && <ResourceStatusBadge status={node.status as any} />}
-          </div>
-          <div className={`text-[10px] ${theme.textMuted}`}>{node.subtitle}</div>
+        <div className="min-w-0 flex-1 flex items-center gap-2">
+          <span className={`text-sm truncate ${depth === 0 ? "font-semibold" : "font-medium"} ${theme.textPrimary}`}>{node.label}</span>
+          {node.code && <span className={`font-mono text-[10px] shrink-0 ${theme.textMuted}`}>{node.code}</span>}
+          {node.status && (
+            <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${node.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
+          )}
+          {(node.childCount ?? 0) > 0 && (
+            <span className={`ml-auto text-[10px] font-medium shrink-0 ${theme.textMuted}`}>· {node.childCount}</span>
+          )}
         </div>
-        {node.to && (
-          <button type="button" onClick={(e) => { e.stopPropagation(); navigate(node.to!); }} className="shrink-0 h-9 rounded-lg border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 active:scale-[0.97]">
-            Details
-          </button>
-        )}
       </div>
       {open && hasChildren && (
-        <div>
-          {node.children!.map((child) => <TreeNodeRow key={child.id} node={child} depth={depth + 1} />)}
+        <div className="overflow-hidden transition-all duration-150">
+          {node.children!.map((child) => (
+            <TreeNodeRow
+              key={`${nodeKey}/${child.type}:${child.id}`}
+              node={child}
+              nodeKey={`${nodeKey}/${child.type}:${child.id}`}
+              depth={depth + 1}
+              selectedKey={selectedKey}
+              onSelect={onSelect}
+            />
+          ))}
         </div>
       )}
     </div>
   );
 }
 
-function buildTree(tree: ProductionStructureNode | null): StructureTreeNode[] {
-  if (!tree) return [];
-  return [{
-    id: tree.id,
-    label: tree.name,
-    icon: Factory,
-    type: "plant",
-    subtitle: `${tree.productionLines.length} line(s) · ${tree.departments.length} department(s)`,
-    to: `/system/data-management/plant/${tree.id}`,
-    children: [
-      ...tree.productionLines.map((line) => ({
-        id: `line-${line.id}`,
-        label: line.name,
-        icon: GitBranch,
-        type: "line" as const,
-        subtitle: `${line.departments.length} department(s)`,
-        to: `/system/data-management/production-lines/${line.id}`,
-      })),
-      ...tree.departments.map((department) => ({
-        id: `dept-${department.id}`,
-        label: department.name,
-        icon: Layers,
-        type: "department" as const,
-        subtitle: `${department.resourceGroups.length} group(s)`,
-        to: `/system/data-management/departments/${department.id}`,
-        children: department.resourceGroups.map((group) => ({
-          id: `group-${group.id}`,
-          label: group.name,
-          icon: Users,
-          type: "group" as const,
-          subtitle: `${group.resources.length} resource(s)`,
-          to: `/system/data-management/resource-groups/${group.id}`,
-          children: group.resources.map((resource) => ({
-            id: `resource-${resource.id}`,
-            label: resource.name,
-            icon: Monitor,
-            type: "resource" as const,
-            subtitle: resource.code || "No code",
-            status: resource.status === "active" ? "Running" : "Idle",
-            to: `/system/data-management/resources/${resource.id}`,
-          })),
-        })),
-      })),
-    ],
-  }];
-}
-
 export function StructurePage() {
   const navigate = useNavigate();
-  const { plants } = usePlants();
-  const [selectedPlantId, setSelectedPlantId] = useState("");
+  const [selectedNode, setSelectedNode] = useState<StructureTreeNode | null>(null);
+  const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"view" | "edit">("view");
 
-  useEffect(() => {
-    if (!selectedPlantId && plants.length > 0) {
-      setSelectedPlantId(plants[0].id);
-    }
-  }, [plants, selectedPlantId]);
-
-  const { data: structure, loading, error } = useProductionStructureTree(selectedPlantId);
+  const { data: overview, loading, error } = useDataManagementOverview({});
   const { data: tablesData } = useQuery<ReferenceTablesQueryData>(REFERENCE_TABLES_QUERY, {
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
   });
 
-  const structureTree = useMemo(() => buildTree(structure), [structure]);
   const referenceTables = tablesData?.referenceTables ?? [];
+  const plants = overview?.plants ?? [];
+
+  const structureTree = useMemo(() => buildTree(overview?.tree ?? null), [overview?.tree]);
+
+  const handleNodeClick = useCallback((node: StructureTreeNode, key: string) => {
+    setSelectedNode(node);
+    setSelectedNodeKey(key);
+  }, []);
+
+  const descendantCount = useMemo(() => {
+    if (!selectedNode) return 0;
+    return countDescendants(selectedNode);
+  }, [selectedNode]);
+
+  const childCounts = useMemo(() => {
+    if (!selectedNode || !selectedNode.children) return {};
+    return selectedNode.children.reduce<Record<string, number>>((acc, child) => {
+      const type = TYPE_LABEL[child.type] || child.type;
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {});
+  }, [selectedNode]);
+
+  const riskSignals = useMemo(() => {
+    if (!selectedNode) return [];
+    const signals: { icon: typeof Calendar; label: string; level: "low" | "medium" | "high" }[] = [];
+    if (selectedNode.type === "plant" || selectedNode.type === "line") {
+      signals.push({ icon: Calendar, label: "Linked to production schedule", level: "medium" });
+      signals.push({ icon: Clock, label: "Shift pattern configured", level: "low" });
+    }
+    if (selectedNode.type === "plant") {
+      signals.push({ icon: FileText, label: "Default calendar assigned", level: "medium" });
+    }
+    if (selectedNode.type === "resource") {
+      signals.push({ icon: AlertTriangle, label: "Active in work center assignment", level: "high" });
+    }
+    return signals;
+  }, [selectedNode]);
+
+  const relatedTables = useMemo(() => {
+    if (!selectedNode) return [];
+    const typeMap: Record<string, string[]> = {
+      plant: ["Shift Patterns", "Holiday Calendars", "Maintenance Plans"],
+      line: ["Production Models", "Shift Patterns", "Routing Templates"],
+      department: ["Skill Matrix", "Role Definitions"],
+      group: ["Certification Types", "Tool Registries"],
+      resource: ["Maintenance Records", "Calibration Logs", "Operator Certifications"],
+    };
+    const tableNames = typeMap[selectedNode.type] || [];
+    return referenceTables.filter((t) =>
+      tableNames.some((n) => t.name.toLowerCase().includes(n.toLowerCase()))
+    );
+  }, [selectedNode, referenceTables]);
+
+  const totalPlants = plants.length;
+  const totalLines = overview?.kpis?.productionLines ?? 0;
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center gap-4 border-b px-5 py-3 ${theme.header}`}>
-        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-          <Factory className="h-5 w-5 stroke-current" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Full Structure View</h1>
-          <p className={`text-xs ${theme.textSecondary}`}>Hierarchy rendered from database-backed manufacturing structure.</p>
-        </div>
-        <select
-          value={selectedPlantId}
-          onChange={(e) => setSelectedPlantId(e.target.value)}
-          className={`h-9 rounded-lg border px-3 text-xs ${theme.input} ${theme.focusRing}`}
-        >
-          {plants.map((plant) => (
-            <option key={plant.id} value={plant.id}>{plant.name}</option>
-          ))}
-        </select>
-      </header>
+      <PageHeader
+        icon={<Factory className="h-5 w-5 stroke-current" />}
+        iconClass={theme.iconBoxEmerald}
+        title="Structure"
+        subtitle="Database-backed manufacturing hierarchy and configuration structure"
+      >
+        <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors ${viewMode === "edit" ? theme.buttonWarningSoft : theme.buttonSecondary}`}>
+          {viewMode === "edit" ? <Edit3 className="h-3 w-3 stroke-current" /> : <Shield className="h-3 w-3 stroke-current" />}
+          <button type="button" onClick={() => setViewMode(viewMode === "view" ? "edit" : "view")} className="hover:underline">
+            {viewMode === "view" ? "View" : "Edit"}
+          </button>
+        </span>
+        {viewMode === "edit" && (
+          <span className={`flex items-center gap-1 text-[10px] font-medium ${theme.textWarning}`}>
+            <AlertTriangle className="h-3 w-3 stroke-current" />
+            {totalPlants} plant(s)
+          </span>
+        )}
+        <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold ${theme.buttonWarningSoft}`}>
+          <Lock className="h-3 w-3 stroke-current" />
+          {viewMode === "view" ? "View Mode" : "Edit Mode"}
+        </span>
+      </PageHeader>
 
-      <div className={`flex-1 overflow-y-auto ${theme.page} p-4`}>
-        <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Full Structure" }]} />
-
-        <AlertBanner
-          message={selectedPlantId ? "Structure view is reading the current plant hierarchy from the database." : "Select a plant to load structure data."}
-          cta="View in CT"
-          ctaOnClick={() => navigate("/control-tower")}
-        />
-
-        <div className="mb-3 flex flex-wrap items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
-          <span className="font-medium uppercase tracking-wide">Legend:</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded bg-blue-100 dark:bg-blue-500/20" /> Plant</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded bg-amber-100 dark:bg-amber-500/20" /> Line</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded bg-indigo-100 dark:bg-indigo-500/20" /> Department</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded bg-violet-100 dark:bg-violet-500/20" /> Group</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded bg-teal-100 dark:bg-teal-500/20" /> Resource</span>
-        </div>
-
-        <div className={`rounded-xl border px-2 py-1 ${theme.card}`}>
-          {loading && !structure ? (
-            <div className={`py-12 text-center text-sm ${theme.textMuted}`}>Loading structure...</div>
-          ) : error && !structure ? (
-            <div className={`py-12 text-center text-sm ${theme.textCritical}`}>Unable to load structure from the database.</div>
-          ) : structureTree.length === 0 ? (
-            <div className={`py-12 text-center text-sm ${theme.textMuted}`}>No structure found for the selected plant.</div>
-          ) : (
-            structureTree.map((node) => <TreeNodeRow key={node.id} node={node} depth={0} />)
-          )}
-        </div>
-
-        <div className="mt-4">
-          <h3 className={`mb-2 flex items-center gap-2 text-xs font-semibold ${theme.textPrimary}`}>
-            <Database className="h-4 w-4 text-sky-600 dark:text-sky-400 stroke-current" />
-            Reference Tables
-          </h3>
-          <div className={`rounded-xl border px-2 py-1 ${theme.card}`}>
-            <TreeNodeRow
-              node={{
-                id: "tables",
-                label: "All Reference Tables",
-                icon: Database,
-                type: "table",
-                subtitle: `${referenceTables.length} table(s)`,
-                children: referenceTables.map((table) => ({
-                  id: `table-${table.id}`,
-                  label: table.name,
-                  icon: Database,
-                  type: "table",
-                  subtitle: `${table.entryCount} entries`,
-                  to: `/system/data-management/references/${table.id}`,
-                })),
-              }}
-              depth={0}
-            />
+      {/* ── 2-COLUMN BODY ── */}
+      <div className="flex-1 grid gap-4 overflow-hidden p-5 pt-3" style={{ gridTemplateColumns: "1fr 340px" }}>
+        {/* ═══ LEFT COLUMN: Tree Card ═══ */}
+        <div className={`flex flex-col overflow-hidden rounded-xl border ${theme.card}`}>
+          <div className={`flex items-center justify-between border-b px-4 py-2.5 shrink-0 ${theme.subHeader}`}>
+            <h2 className={`text-[11px] font-bold uppercase tracking-wide ${theme.textPrimary}`}>
+              Production Structure
+              <span className={`ml-2 font-normal text-[10px] ${theme.textMuted}`}>{totalPlants} plant(s) · {totalLines} line(s)</span>
+            </h2>
+            {viewMode === "edit" && (
+              <button type="button" className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium ${theme.buttonWarningSoft}`}>
+                <Edit3 className="h-3 w-3 stroke-current" />
+                Edit
+              </button>
+            )}
           </div>
+
+          <div className="flex-1 overflow-y-auto px-1.5 py-1">
+            {loading && !overview ? (
+              <div className={`flex items-center justify-center gap-2 py-12 text-xs ${theme.textMuted}`}>
+                <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> Loading structure...
+              </div>
+            ) : error && !overview ? (
+              <div className={`py-12 text-center text-xs ${theme.textCritical}`}>Unable to load structure from the database.</div>
+            ) : structureTree.length === 0 ? (
+              <div className={`py-12 text-center text-xs ${theme.textMuted}`}>No structure found.</div>
+            ) : (
+              structureTree.map((node) => (
+                <TreeNodeRow
+                  key={`${node.type}:${node.id}`}
+                  node={node}
+                  nodeKey={`${node.type}:${node.id}`}
+                  depth={0}
+                  selectedKey={selectedNodeKey}
+                  onSelect={handleNodeClick}
+                />
+              ))
+            )}
+          </div>
+
+          <div className={`flex items-center gap-3 border-t px-4 py-2 text-[10px] shrink-0 ${theme.textMuted} ${theme.subHeader}`}>
+            <span className="font-medium uppercase tracking-wide">Legend</span>
+            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typePlant}`} /> Plant</span>
+            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.iconBoxAmber}`} /> Line</span>
+            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeDepartment}`} /> Dept</span>
+            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeGroup}`} /> Group</span>
+            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeResource}`} /> Resource</span>
+          </div>
+        </div>
+
+        {/* ═══ RIGHT COLUMN: Stacked Cards ═══ */}
+        <div className="flex flex-col gap-3 h-full min-h-0" style={{ minHeight: 0 }}>
+          {/* Context Detail Panel */}
+          <div className={`rounded-2xl border overflow-hidden shrink-0 ${theme.card}`}>
+            {selectedNode ? (
+              <>
+                <div className={`flex items-center justify-between border-b px-4 py-2.5 ${theme.subHeader}`}>
+                  <div className={`flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider ${theme.textMuted}`}>
+                    <Info className="h-3.5 w-3.5 stroke-current" />
+                    {TYPE_LABEL[selectedNode.type] || "Node"}
+                  </div>
+                  <button type="button" onClick={() => { setSelectedNode(null); setSelectedNodeKey(null); }} className={theme.buttonGhost}>
+                    <X className="h-3.5 w-3.5 stroke-current" />
+                  </button>
+                </div>
+                <div className="px-4 py-3 space-y-3 text-xs max-h-[320px] overflow-y-auto">
+                  <div className={`flex items-center gap-3 rounded-xl border p-3 ${theme.card}`}>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${TYPE_STYLE[selectedNode.type] || theme.iconBoxSubtle}`}>
+                      <selectedNode.icon className="h-4 w-4 stroke-current" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-sm font-semibold ${theme.textPrimary}`}>{selectedNode.label}</span>
+                        <span className={`font-mono text-[10px] ${theme.textMuted}`}>{selectedNode.code}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {selectedNode.status && <StatusBadge status={selectedNode.status} />}
+                        <span className={`text-[10px] ${theme.textMuted}`}>
+                          {selectedNode.children?.length ?? 0} direct · {descendantCount} total
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {Object.keys(childCounts).length > 0 && (
+                    <div className={`rounded-xl border p-3 ${theme.card}`}>
+                      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${theme.textMuted} mb-2`}>
+                        <Hash className="h-3 w-3 stroke-current" />
+                        Impacted Nodes — {descendantCount}
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        {Object.entries(childCounts).map(([type, count]) => (
+                          <div key={type} className={`flex items-center justify-between rounded-md px-2 py-1.5 ${theme.interactiveRow}`}>
+                            <span className={`text-[11px] ${theme.textSecondary}`}>{type}</span>
+                            <span className={`text-[11px] font-semibold ${theme.textPrimary}`}>{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {riskSignals.length > 0 && (
+                    <div className={`rounded-xl border p-3 ${theme.card}`}>
+                      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${theme.textMuted} mb-2`}>
+                        <Shield className="h-3 w-3 stroke-current" />
+                        Linked Schedules
+                      </div>
+                      <div className="space-y-1">
+                        {riskSignals.map((s, i) => (
+                          <div key={i} className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${theme.interactiveRow}`}>
+                            <s.icon className={`h-3 w-3 stroke-current shrink-0 ${
+                              s.level === "high" ? theme.textCritical : s.level === "medium" ? theme.textWarning : theme.textMuted
+                            }`} />
+                            <span className={`text-[11px] flex-1 ${theme.textSecondary}`}>{s.label}</span>
+                            <span className={`text-[10px] font-medium ${
+                              s.level === "high" ? theme.textCritical : s.level === "medium" ? theme.textWarning : theme.textMuted
+                            }`}>{s.level}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {relatedTables.length > 0 && (
+                    <div className={`rounded-xl border p-3 ${theme.card}`}>
+                      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${theme.textMuted} mb-2`}>
+                        <Database className="h-3 w-3 stroke-current" />
+                        Assigned Resources ({relatedTables.length})
+                      </div>
+                      <div className="space-y-1">
+                        {relatedTables.map((t) => (
+                          <div
+                            key={t.id}
+                            className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 ${theme.cardHover} transition-colors`}
+                            onClick={() => navigate(`/system/data-management/references/${t.id}`)}
+                            role="button" tabIndex={0}
+                            onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/data-management/references/${t.id}`); }}
+                          >
+                            <Database className={`h-3 w-3 stroke-current shrink-0 ${theme.iconAccent}`} />
+                            <span className={`text-[11px] flex-1 ${theme.textPrimary}`}>{t.name}</span>
+                            <span className={`text-[10px] font-medium ${theme.textMuted}`}>{t.entryCount}</span>
+                            <ExternalLink className={`h-3 w-3 stroke-current ${theme.iconSubtle}`} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedNode.to && (
+                    <button
+                      type="button"
+                      onClick={() => navigate(selectedNode.to!)}
+                      className={`flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-medium transition-colors ${theme.buttonSecondary}`}
+                    >
+                      <Eye className="h-3.5 w-3.5 stroke-current" />
+                      Open {TYPE_LABEL[selectedNode.type]}
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className={`flex flex-col items-center justify-center gap-2 px-4 py-10 text-xs ${theme.textMuted}`}>
+                <Pointer className="h-6 w-6 stroke-current" />
+                <span>Select a node to view details</span>
+              </div>
+            )}
+          </div>
+
+            <ReferenceTablesCard onSelectCompany={() => navigate("/system/data-management/plant")} />
         </div>
       </div>
     </div>

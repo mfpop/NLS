@@ -91,7 +91,7 @@ textarea {
 
 .brand-header__title {
   color: #1f2937;
-  font-size: 0.875rem;
+  font-size: 1.09375rem;
   font-weight: 700;
   letter-spacing: 0;
   overflow: hidden;
@@ -101,7 +101,7 @@ textarea {
 
 .brand-header__subtitle {
   color: #9ca3af;
-  font-size: 0.625rem;
+  font-size: 0.78125rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;

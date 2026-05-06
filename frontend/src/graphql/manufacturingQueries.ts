@@ -21,12 +21,13 @@ export const RESOURCE_GROUPS_QUERY = gql`
   query ResourceGroups($search: String, $type: String) {
     resourceGroups(search: $search, type: $type) {
       id
+      code
       name
       groupType
       status
       members
       leader
-      department
+      departmentName
       departmentId
       plantName
       plantId
@@ -54,8 +55,6 @@ export const RESOURCES_QUERY = gql`
       groupId
       departmentName
       departmentId
-      lineName
-      lineId
       plantName
       plantId
       createdAt

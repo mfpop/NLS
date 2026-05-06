@@ -10,11 +10,11 @@ from api.types.manufacturing import (
     DataManagementOverview, DataManagementPlantNode, DataManagementKpis,
     DataManagementTreeRoot, DataManagementTreeChild,
     DataManagementNavCounts, DataManagementSystemHealth,
-    ProfileNode,
+    ProfileNode, CompanyNode,
 )
 from manufacturing.models import (
     Plant, Department, ProductionLine,
-    ResourceGroup, Resource, ReferenceTable, Profile,
+    ResourceGroup, Resource, ReferenceTable, Profile, Company,
 )
 
 
@@ -264,9 +264,8 @@ class ManufacturingQuery:
             try:
                 selected_plant_obj = Plant.objects.get(id=plant_id)
             except Plant.DoesNotExist:
-                pass
-        if not selected_plant_obj and plants:
-            selected_plant_obj = all_plants_qs.first()
+                if plants:
+                    selected_plant_obj = all_plants_qs.first()
 
         selected_plant = None
         if selected_plant_obj:
@@ -277,102 +276,100 @@ class ManufacturingQuery:
                 status=selected_plant_obj.status,
             )
 
-        # 3. KPI counts (scoped to selected plant)
-        if selected_plant_obj:
+        # 3. KPI counts
+        if plant_id:
             pid = selected_plant_obj
-            line_count = ProductionLine.objects.filter(plant=pid).count()
-            dept_count = Department.objects.filter(production_lines__plant=pid).distinct().count()
-            res_count = Resource.objects.filter(resource_group__department__production_lines__plant=pid).distinct().count()
+            line_count = ProductionLine.objects.filter(plant=pid).count() if pid else 0
+            dept_count = Department.objects.filter(production_lines__plant=pid).distinct().count() if pid else 0
+            res_count = Resource.objects.filter(resource_group__department__production_lines__plant=pid).distinct().count() if pid else 0
         else:
-            line_count = 0
-            dept_count = 0
-            res_count = 0
+            line_count = ProductionLine.objects.count()
+            dept_count = Department.objects.count()
+            res_count = Resource.objects.count()
 
         kpis = DataManagementKpis(
             production_lines=line_count,
             departments=dept_count,
             resources=res_count,
-            plant_status=selected_plant_obj.status if selected_plant_obj else "unknown",
+            plant_status=selected_plant_obj.status if selected_plant_obj else "all",
         )
 
-        # 4. Production tree (hierarchical)
-        tree_root = None
-        if selected_plant_obj:
-            pid = selected_plant_obj
-
-            lines_qs = ProductionLine.objects.filter(plant=pid)
-            rgs_qs = ResourceGroup.objects.filter(department__production_lines__plant=pid).distinct()
-            res_qs = Resource.objects.filter(resource_group__department__production_lines__plant=pid).distinct()
+        def build_plant_tree(plant):
+            lines_qs = ProductionLine.objects.filter(plant=plant)
+            all_rgs = ResourceGroup.objects.filter(department__production_lines__plant=plant).distinct()
+            all_res = Resource.objects.filter(resource_group__department__production_lines__plant=plant).distinct()
 
             if status and status != "all":
                 lines_qs = lines_qs.filter(status=status)
-                rgs_qs = rgs_qs.filter(status=status)
-                res_qs = res_qs.filter(status=status)
+                all_rgs = all_rgs.filter(status=status)
+                all_res = all_res.filter(status=status)
 
-            # Build tree: line → department → rg → resource
-            tree_children: list[DataManagementTreeChild] = []
+            tree_children = []
             for line in lines_qs:
                 line_depts = Department.objects.filter(production_lines=line)
-                dept_children: list[DataManagementTreeChild] = []
+                dept_children = []
                 for dept in line_depts:
-                    dept_rgs = rgs_qs.filter(department=dept)
-                    rg_children: list[DataManagementTreeChild] = []
+                    dept_rgs = all_rgs.filter(department=dept)
+                    rg_children = []
                     for rg in dept_rgs:
-                        rg_resources = res_qs.filter(resource_group=rg)
+                        rg_resources = all_res.filter(resource_group=rg)
                         res_children = [
                             DataManagementTreeChild(
-                                id=str(r.id),
-                                type="resource",
-                                name=r.name,
-                                code=r.code,
-                                status=r.status,
-                                child_count=0,
-                                children=[],
+                                id=str(r.id), type="resource", name=r.name,
+                                code=r.code, status=r.status, child_count=0, children=[],
                             )
                             for r in rg_resources
                         ]
                         rg_children.append(
                             DataManagementTreeChild(
-                                id=str(rg.id),
-                                type="resourceGroup",
-                                name=rg.name,
-                                code=rg.code,
-                                status=rg.status,
-                                child_count=len(res_children),
-                                children=res_children,
+                                id=str(rg.id), type="resourceGroup", name=rg.name,
+                                code=rg.code, status=rg.status,
+                                child_count=len(res_children), children=res_children,
                             )
                         )
                     dept_children.append(
                         DataManagementTreeChild(
-                            id=str(dept.id),
-                            type="department",
-                            name=dept.name,
-                            code=dept.code,
-                            status=dept.status,
-                            child_count=len(rg_children),
-                            children=rg_children,
+                            id=str(dept.id), type="department", name=dept.name,
+                            code=dept.code, status=dept.status,
+                            child_count=len(rg_children), children=rg_children,
                         )
                     )
                 tree_children.append(
                     DataManagementTreeChild(
-                        id=str(line.id),
-                        type="productionLine",
-                        name=line.name,
-                        code=line.code,
-                        status=line.status,
-                        child_count=len(dept_children),
-                        children=dept_children,
+                        id=str(line.id), type="productionLine", name=line.name,
+                        code=line.code, status=line.status,
+                        child_count=len(dept_children), children=dept_children,
                     )
                 )
+            return tree_children
 
+        # 4. Production tree (hierarchical)
+        tree_root = None
+        if selected_plant_obj and plant_id:
+            # Single-plant tree
+            tree_children = build_plant_tree(selected_plant_obj)
             tree_root = DataManagementTreeRoot(
-                id=str(pid.id),
-                type="plant",
-                name=pid.name,
-                code=pid.code,
-                status=pid.status,
-                child_count=len(tree_children),
-                children=tree_children,
+                id=str(selected_plant_obj.id), type="plant",
+                name=selected_plant_obj.name, code=selected_plant_obj.code,
+                status=selected_plant_obj.status,
+                child_count=len(tree_children), children=tree_children,
+            )
+        elif not plant_id:
+            # All-plants tree: each plant is a top-level child
+            all_children = []
+            for p in all_plants_qs:
+                plant_lines = build_plant_tree(p)
+                all_children.append(
+                    DataManagementTreeChild(
+                        id=str(p.id), type="plant", name=p.name,
+                        code=p.code, status=p.status,
+                        child_count=len(plant_lines), children=plant_lines,
+                    )
+                )
+            tree_root = DataManagementTreeRoot(
+                id="all", type="root", name="All Plants",
+                code="", status="active",
+                child_count=len(all_children), children=all_children,
             )
 
         # 5. Navigation counts (global)
@@ -422,23 +419,27 @@ class ManufacturingQuery:
         )
 
     @strawberry.field
-    def profile(self) -> Optional[ProfileNode]:
-        profile = Profile.objects.first()
+    def profile(self, info: strawberry.types.Info) -> Optional[ProfileNode]:
+        user = info.context.user
+        if user is None:
+            return None
+        profile = getattr(user, "profile", None)
         if not profile:
             profile = Profile.objects.create(
-                name="Mihai Popescu", role="Manufacturing Systems Lead",
-                email="mihai.popescu@leansync.com",
-                phone="+1 (313) 555-0147", location="Detroit, Michigan, USA",
-                timezone="America/Detroit", language="English, Romanian",
-                about="Operations leader focused on lean transformation, digital shopfloor visibility, and cross-plant standardization. Experienced in deploying KPI routines, stabilizing bottlenecks, and coaching supervisors through continuous improvement.",
-                work_history=[
-                    {"id": "w1", "role": "Manufacturing Systems Lead", "company": "LeanSync Manufacturing", "period": "2023 - Present", "description": "Rolled out standard metrics, digital boards, and accountability cadences across three plants."},
-                    {"id": "w2", "role": "Plant Operations Manager", "company": "AutoMotion Components", "period": "2020 - 2023", "description": "Improved OEE by 11 points and reduced expedited freight through better scheduling discipline."},
-                    {"id": "w3", "role": "Continuous Improvement Engineer", "company": "Northline Industrial", "period": "2017 - 2020", "description": "Led kaizen events, value stream redesign, and layered process audits for high-mix assembly cells."},
-                ],
-                education=[
-                    {"id": "e1", "degree": "M.Sc. Industrial Engineering", "school": "Wayne State University", "period": "2015 - 2017"},
-                    {"id": "e2", "degree": "B.Sc. Mechanical Engineering", "school": "Politehnica University of Bucharest", "period": "2011 - 2015"},
-                ],
+                user=user,
+                name=user.get_full_name() or user.username,
+                role="",
+                email=user.email,
             )
         return ProfileNode.from_db(profile)
+
+    @strawberry.field
+    def company(self, id: Optional[str] = None) -> Optional[CompanyNode]:
+        try:
+            if id:
+                company = Company.objects.get(id=id)
+            else:
+                company = Company.objects.first()
+            return CompanyNode.from_db(company) if company else None
+        except Company.DoesNotExist:
+            return None

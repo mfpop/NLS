@@ -5,6 +5,8 @@ from .resource_group import ResourceGroup
 from .resource import Resource
 from .reference_table import ReferenceTable
 from .profile import Profile
+from .role import UserRole
+from .company import Company
 
 __all__ = [
     "Plant",
@@ -14,4 +16,6 @@ __all__ = [
     "Resource",
     "ReferenceTable",
     "Profile",
+    "UserRole",
+    "Company",
 ]

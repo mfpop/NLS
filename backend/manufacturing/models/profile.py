@@ -1,8 +1,10 @@
 from django.db import models
+from django.contrib.auth.models import User
 from shared.models.base import TimeStampedModel
 
 
 class Profile(TimeStampedModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True, related_name="profile")
     name = models.CharField(max_length=200)
     role = models.CharField(max_length=200)
     email = models.EmailField(max_length=200)

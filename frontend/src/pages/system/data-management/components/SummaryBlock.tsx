@@ -40,7 +40,7 @@ export function PlantSummary({ lines, departments, groups, resources }: {
     <SummaryBlock items={[
       { label: "Lines", value: lines },
       { label: "Departments", value: departments },
-      { label: "Groups", value: groups },
+      { label: "Resource Groups", value: groups },
       { label: "Resources", value: resources },
     ]} />
   );
@@ -52,7 +52,7 @@ export function LineSummary({ departments, groups, resources, models }: {
   return (
     <SummaryBlock items={[
       { label: "Departments", value: departments },
-      { label: "Groups", value: groups },
+      { label: "Resource Groups", value: groups },
       { label: "Resources", value: resources },
       { label: "Models", value: models },
     ]} />
@@ -64,7 +64,7 @@ export function DepartmentSummary({ groups, resources }: {
 }) {
   return (
     <SummaryBlock items={[
-      { label: "Groups", value: groups },
+      { label: "Resource Groups", value: groups },
       { label: "Resources", value: resources },
     ]} />
   );

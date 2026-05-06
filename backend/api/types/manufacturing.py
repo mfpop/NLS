@@ -3,7 +3,7 @@ import typing
 
 from manufacturing.models import (
     Plant, Department, ProductionLine,
-    ResourceGroup, Resource, ReferenceTable, Profile,
+    ResourceGroup, Resource, ReferenceTable, Profile, Company,
 )
 
 
@@ -211,6 +211,8 @@ class ResourceGroupNode:
     leader: str
     department_name: str = strawberry.field(name="departmentName")
     department_id: typing.Optional[str] = strawberry.field(name="departmentId")
+    plant_name: str = strawberry.field(name="plantName")
+    plant_id: typing.Optional[str] = strawberry.field(name="plantId")
     resource_count: int = strawberry.field(name="resourceCount")
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
@@ -227,6 +229,8 @@ class ResourceGroupNode:
             leader=group.leader,
             department_name=group.department.name if group.department else "",
             department_id=str(group.department_id) if group.department_id else None,
+            plant_name=group.plant.name if group.plant else "",
+            plant_id=str(group.plant_id) if group.plant_id else None,
             resource_count=group.resource_count,
             created_at=group.created_at.isoformat() if group.created_at else "",
             updated_at=group.updated_at.isoformat() if group.updated_at else "",
@@ -249,6 +253,10 @@ class ResourceNode:
     flow_position: str = strawberry.field(name="flowPosition")
     group_name: str = strawberry.field(name="groupName")
     group_id: typing.Optional[str] = strawberry.field(name="groupId")
+    department_name: str = strawberry.field(name="departmentName")
+    department_id: typing.Optional[str] = strawberry.field(name="departmentId")
+    plant_name: str = strawberry.field(name="plantName")
+    plant_id: typing.Optional[str] = strawberry.field(name="plantId")
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
@@ -267,6 +275,10 @@ class ResourceNode:
             flow_position=res.flow_position,
             group_name=res.resource_group.name if res.resource_group else "",
             group_id=str(res.resource_group_id) if res.resource_group_id else None,
+            department_name=res.resource_group.department.name if res.resource_group and res.resource_group.department else "",
+            department_id=str(res.resource_group.department_id) if res.resource_group and res.resource_group.department_id else None,
+            plant_name=res.resource_group.plant.name if res.resource_group and res.resource_group.plant else "",
+            plant_id=str(res.resource_group.plant_id) if res.resource_group and res.resource_group.plant_id else None,
             created_at=res.created_at.isoformat() if res.created_at else "",
             updated_at=res.updated_at.isoformat() if res.updated_at else "",
         )
@@ -524,4 +536,55 @@ class ProfileInput:
 @strawberry.type
 class ProfileMutationResult:
     profile: typing.Optional[ProfileNode] = None
+    errors: typing.Optional[typing.List[FieldError]] = None
+
+
+# ── Company ──
+
+@strawberry.type
+class CompanyNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    address: str
+    phone: str
+    email: str
+    website: str
+    tax_id: str = strawberry.field(name="taxId")
+    description: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, company: "Company") -> "CompanyNode":
+        return cls(
+            id=strawberry.ID(str(company.id)),
+            code=company.code,
+            name=company.name,
+            address=company.address,
+            phone=company.phone,
+            email=company.email,
+            website=company.website,
+            tax_id=company.tax_id,
+            description=company.description,
+            created_at=company.created_at.isoformat() if company.created_at else "",
+            updated_at=company.updated_at.isoformat() if company.updated_at else "",
+        )
+
+
+@strawberry.input
+class CompanyInput:
+    code: str
+    name: str
+    address: typing.Optional[str] = None
+    phone: typing.Optional[str] = None
+    email: typing.Optional[str] = None
+    website: typing.Optional[str] = None
+    tax_id: typing.Optional[str] = None
+    description: typing.Optional[str] = None
+
+
+@strawberry.type
+class CompanyMutationResult:
+    company: typing.Optional[CompanyNode] = None
     errors: typing.Optional[typing.List[FieldError]] = None

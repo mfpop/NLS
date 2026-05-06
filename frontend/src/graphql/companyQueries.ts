@@ -10,8 +10,15 @@ export const COMPANY_QUERY = gql`
       phone
       email
       website
-      taxId
       description
+      industryType
+      manufacturingType
+      defaultTimezone
+      defaultUnits
+      defaultShiftModel
+      productionCalendar
+      defaultLanguage
+      leanMethodology
       createdAt
       updatedAt
     }
@@ -29,13 +36,31 @@ export const UPDATE_COMPANY_MUTATION = gql`
         phone
         email
         website
-        taxId
         description
+        industryType
+        manufacturingType
+        defaultTimezone
+        defaultUnits
+        defaultShiftModel
+        productionCalendar
+        defaultLanguage
+        leanMethodology
       }
       errors {
         field
         message
       }
+    }
+  }
+`;
+
+export const CONFIG_OPTIONS_QUERY = gql`
+  query ConfigOptions($category: String) {
+    configOptions(category: $category) {
+      category
+      value
+      label
+      sortOrder
     }
   }
 `;

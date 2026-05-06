@@ -309,6 +309,25 @@ class ReferenceTableNode:
         )
 
 
+@strawberry.input
+class ReferenceTableInput:
+    name: str
+    description: typing.Optional[str] = None
+    status: typing.Optional[str] = "active"
+
+
+@strawberry.type
+class ReferenceTableMutationResult:
+    table: typing.Optional[ReferenceTableNode] = None
+    errors: typing.Optional[typing.List[FieldError]] = None
+
+
+@strawberry.type
+class DeleteReferenceTableResult:
+    success: bool
+    errors: typing.Optional[typing.List[FieldError]] = None
+
+
 # ── Data Management Overview Types ──
 
 @strawberry.type
@@ -550,8 +569,15 @@ class CompanyNode:
     phone: str
     email: str
     website: str
-    tax_id: str = strawberry.field(name="taxId")
     description: str
+    industry_type: str = strawberry.field(name="industryType")
+    manufacturing_type: str = strawberry.field(name="manufacturingType")
+    default_timezone: str = strawberry.field(name="defaultTimezone")
+    default_units: str = strawberry.field(name="defaultUnits")
+    default_shift_model: str = strawberry.field(name="defaultShiftModel")
+    production_calendar: str = strawberry.field(name="productionCalendar")
+    default_language: str = strawberry.field(name="defaultLanguage")
+    lean_methodology: str = strawberry.field(name="leanMethodology")
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
@@ -565,8 +591,15 @@ class CompanyNode:
             phone=company.phone,
             email=company.email,
             website=company.website,
-            tax_id=company.tax_id,
             description=company.description,
+            industry_type=company.industry_type,
+            manufacturing_type=company.manufacturing_type,
+            default_timezone=company.default_timezone,
+            default_units=company.default_units,
+            default_shift_model=company.default_shift_model,
+            production_calendar=company.production_calendar,
+            default_language=company.default_language,
+            lean_methodology=company.lean_methodology,
             created_at=company.created_at.isoformat() if company.created_at else "",
             updated_at=company.updated_at.isoformat() if company.updated_at else "",
         )
@@ -580,11 +613,26 @@ class CompanyInput:
     phone: typing.Optional[str] = None
     email: typing.Optional[str] = None
     website: typing.Optional[str] = None
-    tax_id: typing.Optional[str] = None
     description: typing.Optional[str] = None
+    industry_type: typing.Optional[str] = None
+    manufacturing_type: typing.Optional[str] = None
+    default_timezone: typing.Optional[str] = "UTC"
+    default_units: typing.Optional[str] = "Metric"
+    default_shift_model: typing.Optional[str] = None
+    production_calendar: typing.Optional[str] = None
+    default_language: typing.Optional[str] = "en"
+    lean_methodology: typing.Optional[str] = None
 
 
 @strawberry.type
 class CompanyMutationResult:
     company: typing.Optional[CompanyNode] = None
     errors: typing.Optional[typing.List[FieldError]] = None
+
+
+@strawberry.type
+class ConfigOptionNode:
+    category: str
+    value: str
+    label: str
+    sort_order: int = strawberry.field(name="sortOrder")

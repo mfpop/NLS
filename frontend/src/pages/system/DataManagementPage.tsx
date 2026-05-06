@@ -5,11 +5,12 @@ import {
   Database, Factory, Layers, Package, Search, Users,
   GitBranch, Cpu, ChevronRight,
   Building2, Circle, X, RefreshCw, Monitor, AlertCircle,
-  ChevronDown, Eye, Pencil, Pointer, Save
+  ChevronDown, Eye, Pencil, Pointer
 } from "lucide-react";
 import { theme } from "../../styles/themeTokens";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
+import { CompanyEditor } from "./data-management/components/CompanyEditor";
 import { ReferenceTablesCard } from "./data-management/components/ReferenceTablesCard";
 import { COMPANY_QUERY, UPDATE_COMPANY_MUTATION } from "@/graphql/companyQueries";
 
@@ -77,10 +78,10 @@ function TreeNode({ node, depth, expanded, selectedKey, onToggle, onSelect, expa
   const indentPx = depth === 0 ? 8 : 24 + (depth - 1) * 16;
 
   const rowClass = isSelected
-    ? "bg-white dark:bg-slate-900 border border-emerald-400 border-l-4 border-l-emerald-500 ring-1 ring-emerald-200 shadow-sm relative z-10"
+    ? "bg-white dark:bg-slate-900 border border-emerald-400 dark:border-emerald-400 border-l-4 border-l-emerald-500 ring-1 ring-emerald-200 dark:ring-emerald-700/30 shadow-sm relative z-10"
     : isAncestor
-      ? "bg-emerald-50/10 border-l border-emerald-200/20 shadow-none ring-0"
-      : "hover:bg-slate-50 dark:hover:bg-slate-800/60 shadow-none ring-0 border-l border-transparent";
+      ? "bg-emerald-50/10 dark:bg-emerald-500/[0.06] border-l border-emerald-200/20 dark:border-emerald-700/20 shadow-none ring-0"
+      : "border-l border-transparent hover:bg-emerald-50/20 dark:hover:bg-emerald-500/10 shadow-none ring-0";
 
   return (
     <div className="relative group">
@@ -117,7 +118,7 @@ function TreeNode({ node, depth, expanded, selectedKey, onToggle, onSelect, expa
         </div>
       </div>
       {hasChildren && expanded && (
-        <div className="ml-[34px]">
+        <div className="ml-8.5">
           {node.children!.map((child) => {
             const childKey = `${nodeKey}/${child.type}:${child.id}`;
             return <TreeNode key={childKey} nodeKey={childKey} node={child} depth={depth + 1}
@@ -144,7 +145,7 @@ function SummaryCards({ kpis, navCounts }: { kpis: { productionLines: number; de
     <div className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((c) => (
         <button key={c.label} type="button" onClick={() => navigate(c.href)}
-          className={`rounded-xl border p-3 h-[78px] text-left transition-all hover:shadow-sm active:scale-[0.98] ${theme.card} ${theme.cardHover}`}
+          className={`rounded-xl border p-3 h-19.5 text-left transition-all hover:shadow-sm active:scale-[0.98] ${theme.card} ${theme.cardHover}`}
         >
           <div className="flex items-center justify-between mb-1">
             <span className={`text-[9px] font-semibold uppercase tracking-wider ${theme.textSecondary}`}>{c.label}</span>
@@ -173,7 +174,7 @@ export function DataManagementPage() {
     plantId: selectedPlantId, search: debouncedSearch || undefined, status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
-  const { data: companyData } = useQuery<{ company: { id: string; code: string; name: string; address: string; phone: string; email: string; website: string; taxId: string; description: string } }>(COMPANY_QUERY, {
+  const { data: companyData } = useQuery<{ company: { id: string; code: string; name: string; address: string; phone: string; email: string; website: string; description: string; industryType: string; manufacturingType: string; defaultTimezone: string; defaultUnits: string; defaultShiftModel: string; productionCalendar: string; defaultLanguage: string; leanMethodology: string } }>(COMPANY_QUERY, {
     fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
   const [updateCompany] = useMutation(UPDATE_COMPANY_MUTATION);
@@ -189,8 +190,15 @@ export function DataManagementPage() {
         phone: company.phone || "",
         email: company.email || "",
         website: company.website || "",
-        taxId: company.taxId || "",
         description: company.description || "",
+        industryType: company.industryType || "",
+        manufacturingType: company.manufacturingType || "",
+        defaultTimezone: company.defaultTimezone || "",
+        defaultUnits: company.defaultUnits || "",
+        defaultShiftModel: company.defaultShiftModel || "",
+        productionCalendar: company.productionCalendar || "",
+        defaultLanguage: company.defaultLanguage || "",
+        leanMethodology: company.leanMethodology || "",
       });
     }
   }, [company]);
@@ -237,7 +245,7 @@ export function DataManagementPage() {
     return [{
       ...(treeData as unknown as DataManagementTreeChild),
       id: "root",
-      name: "Company",
+      name: company?.name ?? "Company",
       type: "plant",
       children: plantChildren,
       childCount: totalDescendants,
@@ -300,9 +308,26 @@ export function DataManagementPage() {
             <Database className="h-5 w-5 stroke-current" />
           </div>
           <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Data Management</h1>
+            <h1 className={`text-base font-bold tracking-tight ${theme.textPrimary}`}>Data Management</h1>
             <p className={`text-[10px] ${theme.textSecondary}`}>Digital plant model with live operational context</p>
           </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value="" onChange={(e) => { if (e.target.value) navigate(e.target.value); }}
+            className="h-9 rounded-xl border border-emerald-300 bg-emerald-50 pl-2.5 pr-8 text-[11px] font-semibold text-emerald-700 min-w-42.5 appearance-none dark:bg-slate-900 dark:border-emerald-700 dark:text-emerald-300"
+            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2316a34a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 10px center", backgroundSize: "15px" }}
+          >
+            <option value="" disabled>Navigate to...</option>
+            <option value="/system/data-management/plant">Plants ({navCounts?.plants ?? 0})</option>
+            <option value="/system/data-management/production-lines">Lines ({navCounts?.productionLines ?? 0})</option>
+            <option value="/system/data-management/departments">Departments ({navCounts?.departments ?? 0})</option>
+            <option value="/system/data-management/resource-groups">Resource Groups ({navCounts?.resourceGroups ?? 0})</option>
+            <option value="/system/data-management/resources">Resources ({navCounts?.resources ?? 0})</option>
+            <option value="/system/data-management/references">References ({navCounts?.referenceTables ?? 0})</option>
+          </select>
+          <button type="button" onClick={() => navigate("/control-tower")} className="h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500" aria-label="Close">
+            <X className="h-4 w-4 stroke-current" />
+          </button>
         </div>
       </header>
 
@@ -333,13 +358,13 @@ export function DataManagementPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <select value={selectedPlantId === null ? "__company__" : selectedPlantId} onChange={(e) => { const v = e.target.value; if (v === "__company__") { setSelectedPlantId(null); setSelectedNodeKey("plant:root"); setExpandedSet(new Set()); } else { setSelectedPlantId(v || null); setSelectedNodeKey(null); setExpandedSet(new Set()); } }}
-                  className="h-7 rounded-lg border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-medium max-w-[130px] bg-white dark:bg-slate-900">
-                  <option value="__company__">Company</option>
+                  className="h-7 rounded-lg border border-slate-200 dark:border-slate-700 px-2 text-[10px] font-medium max-w-32.5 bg-white dark:bg-slate-900">
+                  <option value="__company__">{company?.name ?? "Company"}</option>
                   {plants.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
                 <div className="relative">
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 stroke-current" />
-                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." className="h-7 w-[140px] sm:w-[160px] rounded-lg border border-slate-200 dark:border-slate-700 pl-7 pr-2 text-[10px] bg-white dark:bg-slate-900" />
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search..." className="h-7 w-35 sm:w-40 rounded-lg border border-slate-200 dark:border-slate-700 pl-7 pr-2 text-[10px] bg-white dark:bg-slate-900" />
                   {searchQuery && <button type="button" onClick={() => setSearchQuery("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><X className="h-3 w-3 stroke-current" /></button>}
                 </div>
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-7 rounded-lg border border-slate-200 dark:border-slate-700 px-1.5 text-[10px] bg-white dark:bg-slate-900">
@@ -405,45 +430,9 @@ export function DataManagementPage() {
             {selectedNode && selectedNode.id === "root" && company ? (
               /* ── Company Editor ── */
               <div className="flex flex-col gap-3">
-                <div className={`rounded-2xl border p-4 ${theme.card}`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${theme.iconBoxEmerald}`}>
-                      <Factory className="h-4 w-4 stroke-current" />
-                    </span>
-                    <div>
-                      <h2 className={`text-base font-semibold ${theme.textPrimary}`}>Company</h2>
-                      <p className={`text-xs ${theme.textSecondary}`}>Organization-level settings and information</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { key: "name", label: "Company Name" },
-                      { key: "code", label: "Company Code" },
-                      { key: "address", label: "Address" },
-                      { key: "phone", label: "Phone" },
-                      { key: "email", label: "Email" },
-                      { key: "website", label: "Website" },
-                      { key: "taxId", label: "Tax ID" },
-                      { key: "description", label: "Description" },
-                    ].map((f) => (
-                      <div key={f.key}>
-                        <label className={`block text-xs font-medium mb-1 ${theme.textSecondary}`}>{f.label}</label>
-                        {f.key === "description" ? (
-                          <textarea value={companyForm[f.key] ?? ""} onChange={(e) => setCompanyForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                            className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} rows={3} />
-                        ) : (
-                          <input type="text" value={companyForm[f.key] ?? ""} onChange={(e) => setCompanyForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                            className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`} />
-                        )}
-                      </div>
-                    ))}
-                    <button type="button" onClick={async () => {
-                      await updateCompany({ variables: { input: companyForm } });
-                    }} className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-semibold ${theme.buttonPrimary}`}>
-                      <Save className="h-3.5 w-3.5 stroke-current" /> Save
-                    </button>
-                  </div>
-                </div>
+                <CompanyEditor form={companyForm as any} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))}
+                  onSave={async () => { await updateCompany({ variables: { input: companyForm } }); }}
+                  onClose={() => setSelectedNodeKey(null)} />
               </div>
             ) : selectedNode ? (
               /* ── Selected Node Detail ── */
@@ -481,7 +470,7 @@ export function DataManagementPage() {
                 {/* Structure Scope + Details grid */}
                 <div className="grid grid-cols-1 gap-3 2xl:grid-cols-2">
                   <div className={`rounded-2xl border p-4 ${theme.card}`}>
-                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${theme.textSecondary}`}>Structure scope</div>
+                    <div className={`text-[10px] font-semibold uppercase tracking-wider ${theme.textSecondary}`}>Branch Summary</div>
                     <div className={`mt-1 text-sm font-semibold ${theme.textPrimary}`}>Items in this branch</div>
                     <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {[
@@ -548,7 +537,7 @@ export function DataManagementPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center flex-1 gap-2 text-xs text-slate-400 min-h-[200px]">
+              <div className="flex flex-col items-center justify-center flex-1 gap-2 text-xs text-slate-400 min-h-50">
                 <Pointer className="h-8 w-8 stroke-current" />
                 <span>Select a node to view details</span>
               </div>

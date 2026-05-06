@@ -7,6 +7,7 @@ from .reference_table import ReferenceTable
 from .profile import Profile
 from .role import UserRole
 from .company import Company
+from .config_option import ConfigOption
 
 __all__ = [
     "Plant",
@@ -18,4 +19,5 @@ __all__ = [
     "Profile",
     "UserRole",
     "Company",
+    "ConfigOption",
 ]

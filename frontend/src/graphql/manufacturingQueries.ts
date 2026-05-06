@@ -76,3 +76,51 @@ export const REFERENCE_TABLES_QUERY = gql`
     }
   }
 `;
+
+export const CREATE_REFERENCE_TABLE_MUTATION = gql`
+  mutation CreateReferenceTable($input: ReferenceTableInput!) {
+    createReferenceTable(input: $input) {
+      table {
+        id
+        name
+        status
+        entryCount
+        description
+      }
+      errors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export const UPDATE_REFERENCE_TABLE_MUTATION = gql`
+  mutation UpdateReferenceTable($id: String!, $input: ReferenceTableInput!) {
+    updateReferenceTable(id: $id, input: $input) {
+      table {
+        id
+        name
+        status
+        entryCount
+        description
+      }
+      errors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export const DELETE_REFERENCE_TABLE_MUTATION = gql`
+  mutation DeleteReferenceTable($id: String!) {
+    deleteReferenceTable(id: $id) {
+      success
+      errors {
+        field
+        message
+      }
+    }
+  }
+`;

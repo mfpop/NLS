@@ -10,11 +10,12 @@ from api.types.manufacturing import (
     DataManagementOverview, DataManagementPlantNode, DataManagementKpis,
     DataManagementTreeRoot, DataManagementTreeChild,
     DataManagementNavCounts, DataManagementSystemHealth,
-    ProfileNode, CompanyNode,
+    ProfileNode, CompanyNode, ConfigOptionNode,
 )
 from manufacturing.models import (
     Plant, Department, ProductionLine,
     ResourceGroup, Resource, ReferenceTable, Profile, Company,
+    ConfigOption,
 )
 
 
@@ -443,3 +444,12 @@ class ManufacturingQuery:
             return CompanyNode.from_db(company) if company else None
         except Company.DoesNotExist:
             return None
+
+    @strawberry.field
+    def config_options(self, category: Optional[str] = None) -> list[ConfigOptionNode]:
+        qs = ConfigOption.objects.all()
+        if category:
+            qs = qs.filter(category=category)
+        return [ConfigOptionNode(
+            category=o.category, value=o.value, label=o.label, sort_order=o.sort_order,
+        ) for o in qs]

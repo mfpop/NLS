@@ -10,8 +10,9 @@ import { StatusBadge } from "./shared";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview, type DataManagementTreeChild, type DataManagementTreeRoot } from "@/hooks/useDataManagementOverview";
-import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
+import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { useQuery } from "@apollo/client/react";
+import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
 import { ReferenceTablesCard } from "./components/ReferenceTablesCard";
 
 interface StructureTreeNode {
@@ -180,6 +181,10 @@ export function StructurePage() {
   const [viewMode, setViewMode] = useState<"view" | "edit">("view");
 
   const { data: overview, loading, error } = useDataManagementOverview({});
+  const { data: companyData } = useQuery<{ company: { name: string } }>(COMPANY_QUERY, {
+    fetchPolicy: "cache-and-network", errorPolicy: "all",
+  });
+  const companyName = companyData?.company?.name ?? "Company";
   const { data: tablesData } = useQuery<ReferenceTablesQueryData>(REFERENCE_TABLES_QUERY, {
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",

@@ -8,6 +8,7 @@ from api.types.manufacturing import (
     DeletePlantResult, FieldError, DepartmentNode, DepartmentInput,
     DepartmentMutationResult, DeleteDepartmentResult,
     ProductionLineNode, ResourceGroupNode, ResourceNode, ReferenceTableNode,
+    ReferenceTableInput, ReferenceTableMutationResult, DeleteReferenceTableResult,
     ProfileNode, ProfileInput, ProfileMutationResult,
     CompanyNode, CompanyInput, CompanyMutationResult,
 )
@@ -373,8 +374,52 @@ class ManufacturingMutation:
         company.phone = input.phone or ""
         company.email = input.email or ""
         company.website = input.website or ""
-        company.tax_id = input.tax_id or ""
         company.description = input.description or ""
+        company.industry_type = input.industry_type or ""
+        company.manufacturing_type = input.manufacturing_type or ""
+        company.default_timezone = input.default_timezone or "UTC"
+        company.default_units = input.default_units or "Metric"
+        company.default_shift_model = input.default_shift_model or ""
+        company.production_calendar = input.production_calendar or ""
+        company.default_language = input.default_language or "en"
+        company.lean_methodology = input.lean_methodology or ""
         company.save()
         return CompanyMutationResult(company=CompanyNode.from_db(company))
+
+    @strawberry.mutation
+    def create_reference_table(self, info: strawberry.types.Info, input: ReferenceTableInput) -> ReferenceTableMutationResult:
+        ensure_access(user=_user(info), action="manage_settings")
+        if not input.name.strip():
+            return ReferenceTableMutationResult(errors=[FieldError(field="name", message="Table name is required")])
+        table = ReferenceTable.objects.create(
+            name=input.name.strip(),
+            description=input.description or "",
+            status=input.status or "active",
+        )
+        return ReferenceTableMutationResult(table=ReferenceTableNode.from_db(table))
+
+    @strawberry.mutation
+    def update_reference_table(self, info: strawberry.types.Info, id: str, input: ReferenceTableInput) -> ReferenceTableMutationResult:
+        ensure_access(user=_user(info), action="manage_settings")
+        try:
+            table = ReferenceTable.objects.get(id=id)
+        except ReferenceTable.DoesNotExist:
+            return ReferenceTableMutationResult(errors=[FieldError(field="id", message="Table not found")])
+        if not input.name.strip():
+            return ReferenceTableMutationResult(errors=[FieldError(field="name", message="Table name is required")])
+        table.name = input.name.strip()
+        table.description = input.description or ""
+        table.status = input.status or "active"
+        table.save()
+        return ReferenceTableMutationResult(table=ReferenceTableNode.from_db(table))
+
+    @strawberry.mutation
+    def delete_reference_table(self, info: strawberry.types.Info, id: str) -> DeleteReferenceTableResult:
+        ensure_access(user=_user(info), action="manage_settings")
+        try:
+            table = ReferenceTable.objects.get(id=id)
+            table.delete()
+            return DeleteReferenceTableResult(success=True)
+        except ReferenceTable.DoesNotExist:
+            return DeleteReferenceTableResult(success=False, errors=[FieldError(field="id", message="Table not found")])
 

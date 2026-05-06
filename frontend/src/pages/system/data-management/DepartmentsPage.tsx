@@ -1,241 +1,211 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Building2, Layers, Pencil, Users, Cpu, ExternalLink, Trash2 } from "lucide-react";
-import {
-  Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge,
-  BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown,
-  CrudModal, ConfirmDialog
-} from "./shared";
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Layers, Building2, X } from "lucide-react";
+import { DataCard, Pagination } from "./components";
+import { Toolbar } from "./components/Toolbar";
+import type { FilterOption } from "./components/Toolbar";
+import { UnifiedModal } from "./components/UnifiedModal";
+import type { ModalField } from "./components/UnifiedModal";
+import { DepartmentSummary } from "./components/SummaryBlock";
+import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
+import { useDepartments } from "@/hooks/useDepartments";
+import { usePlants } from "@/hooks/usePlants";
+import { usePageSize } from "@/hooks/usePageSize";
 
-interface Department {
-  id: string;
-  name: string;
-  code: string;
-  manager: string;
-  employees: number;
-  groups: number;
-  resources: number;
-  lines: string[];
-  status: "active" | "inactive";
-  plantId: string;
-  plantName: string;
+interface DepartmentNode {
+  id: string; name: string; code: string; status: "active" | "inactive";
+  manager: string; employees: number; groupCount: number; resourceCount: number;
+  plantId?: string | null; plantName: string;
 }
 
-let nextDeptId = 6;
-
-const initialDepartments: Department[] = [
-  { id: "D001", name: "Assembly", code: "ASM", manager: "John Smith", employees: 45, groups: 3, resources: 14, lines: ["C2-Cylinder Assembly", "Line A", "Line B"], status: "active", plantId: "P001", plantName: "Main Plant" },
-  { id: "D002", name: "Machining", code: "MCH", manager: "Sarah Chen", employees: 32, groups: 2, resources: 10, lines: ["C2-Cylinder Assembly", "Line B"], status: "active", plantId: "P001", plantName: "Main Plant" },
-  { id: "D003", name: "Quality Control", code: "QC", manager: "Mike Brown", employees: 18, groups: 2, resources: 8, lines: ["C2-Cylinder Assembly", "Line C"], status: "active", plantId: "P001", plantName: "Main Plant" },
-  { id: "D004", name: "Logistics", code: "LOG", manager: "Ana Garcia", employees: 22, groups: 3, resources: 12, lines: ["Line A", "Line B", "Shared"], status: "active", plantId: "P002", plantName: "Secondary Plant" },
-  { id: "D005", name: "Maintenance", code: "MTN", manager: "David Kim", employees: 14, groups: 1, resources: 4, lines: ["All Lines"], status: "inactive", plantId: "P002", plantName: "Secondary Plant" },
-];
-
-const FILTERS = [
+const STATUS_OPTIONS: FilterOption[] = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },
   { label: "Inactive", value: "inactive" },
+  { label: "Not Ready", value: "not_ready" },
 ];
 
-const modalFields = [
-  { key: "name", label: "Department Name", required: true, placeholder: "e.g. Assembly" },
-  { key: "code", label: "Code", required: true, placeholder: "e.g. ASM" },
-  { key: "manager", label: "Manager", placeholder: "e.g. John Smith" },
-  { key: "employees", label: "Employees", placeholder: "e.g. 45" },
-  { key: "status", label: "Status", type: "select" as const, options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
-];
+function generateCode(): string {
+  return `D${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
 
 export function DepartmentsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<string>("all");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { plants } = usePlants();
+  const { departments, loading, error, search, setSearch, statusFilter, setStatusFilter, saveDepartment, deleteDepartment } = useDepartments();
+  const [plantFilter, setPlantFilter] = useState("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDept, setEditingDept] = useState<DepartmentNode | null>(null);
+  const [deptToDelete, setDeptToDelete] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
+  const [page, setPage] = useState(1);
+  const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
 
-  const openAdd = () => {
-    setEditingId(null);
-    setForm({ name: "", code: "", manager: "", employees: "", status: "active" });
+  const MODAL_FIELDS: ModalField[] = [
+    { key: "name", label: "Department Name", required: true, placeholder: "e.g. Assembly" },
+    { key: "manager", label: "Manager", placeholder: "e.g. John Smith" },
+    { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+  ];
+
+  const plantOptions = useMemo<FilterOption[]>(() => (
+    [{ label: "All Plants", value: "all" }].concat(
+      plants.map((plant) => ({ label: plant.name, value: plant.id }))
+    )
+  ), [plants]);
+
+  const filteredDepartments = useMemo(() => {
+    if (plantFilter === "all") return departments;
+    return departments.filter((d) => d.plantId === plantFilter);
+  }, [departments, plantFilter]);
+
+  const paginatedDepartments = filteredDepartments.slice((page - 1) * perPage, page * perPage);
+  useEffect(() => { setPage(1); }, [search, statusFilter, plantFilter, perPage]);
+
+  const openEdit = (dept: DepartmentNode) => {
+    setEditingDept(dept);
+    setForm({ name: dept.name, code: dept.code, manager: dept.manager || "", status: dept.status, employees: String(dept.employees) });
     setModalOpen(true);
   };
 
-  const openEdit = (d: Department) => {
-    setEditingId(d.id);
-    setForm({ name: d.name, code: d.code, manager: d.manager, employees: String(d.employees), status: d.status });
+  const handleAdd = () => {
+    setEditingDept(null);
+    setForm({ name: "", code: generateCode(), manager: "", status: "active", employees: "0" });
     setModalOpen(true);
   };
 
-  const handleSave = () => {
-    if (!form.name?.trim() || !form.code?.trim()) return;
-    if (editingId) {
-      setDepartments((prev) => prev.map((d) => d.id === editingId ? {
-        ...d, name: form.name, code: form.code, manager: form.manager || d.manager,
-        employees: parseInt(form.employees) || 0, status: form.status as "active" | "inactive"
-      } : d));
-    } else {
-      const newId = `D${String(nextDeptId++).padStart(3, "0")}`;
-      setDepartments((prev) => [...prev, {
-        id: newId, name: form.name, code: form.code, manager: form.manager || "", employees: parseInt(form.employees) || 0,
-        groups: 0, resources: 0, lines: [], status: form.status as "active" | "inactive", plantId: "P001", plantName: "Main Plant"
-      }]);
-    }
-    setModalOpen(false);
+  const handleSave = async () => {
+    const result = await saveDepartment(form, editingDept?.id ?? null);
+    if (result.ok) { setModalOpen(false); } else { alert(Object.values(result.errors ?? {}).join("; ")); }
   };
 
-  const confirmDelete = () => {
-    if (editingId) {
-      setDepartments((prev) => prev.filter((d) => d.id !== editingId));
-      setSelected((prev) => { const next = new Set(prev); next.delete(editingId); return next; });
-    }
-    setConfirmOpen(false);
-    setModalOpen(false);
+  const handleDelete = async () => {
+    if (!deptToDelete) return;
+    const result = await deleteDepartment(deptToDelete);
+    if (result.inUse) { alert(result.message); }
+    setConfirmOpen(false); setDeptToDelete(null); setModalOpen(false);
   };
 
-  const bulkActivate = () => {
-    setDepartments((prev) => prev.map((d) => selected.has(d.id) ? { ...d, status: "active" as const } : d));
-    setSelected(new Set());
-  };
-  const bulkDeactivate = () => {
-    setDepartments((prev) => prev.map((d) => selected.has(d.id) ? { ...d, status: "inactive" as const } : d));
-    setSelected(new Set());
-  };
 
-  const filtered = departments.filter((d) => {
-    if (filter !== "all" && d.status !== filter) return false;
-    if (search && !d.name.toLowerCase().includes(search.toLowerCase()) && !d.code.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
-
-  const allSelected = filtered.length > 0 && selected.size === filtered.length;
-
-  const toggleAll = () => {
-    if (allSelected) setSelected(new Set());
-    else setSelected(new Set(filtered.map((d) => d.id)));
-  };
-
-  const toggleOne = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelected(next);
-  };
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center gap-4 border-b px-5 py-3 ${theme.header}`}>
-        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-          <Layers className="h-5 w-5 stroke-current" />
+      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+            <Layers className="h-5 w-5 stroke-current" />
+          </div>
+          <div>
+            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Departments</h1>
+            <p className={`text-xs ${theme.textSecondary}`}>Departments rendered from the manufacturing structure stored in the database.</p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Departments</h1>
-          <p className={`text-xs ${theme.textSecondary}`}>Organize departments, production lines, and resource groups across your plants.</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/system/data-management")}
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+        >
+          <X className="h-4 w-4 stroke-current" />
+          Close
+        </button>
       </header>
 
-      <DataManagementNav currentPath={location.pathname} />
+      <Toolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search departments..."
+        parentFilter={{ value: plantFilter, onChange: setPlantFilter, options: plantOptions }}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        statusOptions={STATUS_OPTIONS}
+        onAdd={handleAdd}
+        addLabel="Add Department"
+      />
 
-      <div className={`flex-1 overflow-y-auto ${theme.page} p-4`}>
-        <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Departments" }]} />
-        <ContextBar segments={[{ label: "All Plants" }]} />
-
-        <div className="mb-3 flex items-center gap-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search departments..." />
-          <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
-          <div className="ml-auto flex items-center gap-2">
-            {selected.size > 0 && <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>}
-            <button onClick={openAdd} className="rounded-lg bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition-colors active:scale-[0.97] shadow-sm">
-              + Add Department
-            </button>
+      <div ref={containerRef} className={`flex-1 ${theme.page} p-4`}>
+        {loading ? (
+          <div className={`py-16 text-center text-sm ${theme.textMuted}`}>Loading departments...</div>
+        ) : error ? (
+          <div className={`py-16 text-center text-sm ${theme.textCritical}`}>Unable to load departments from the database.</div>
+        ) : filteredDepartments.length === 0 ? (
+          <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
+            <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
+              <Layers className="h-6 w-6 stroke-current" />
+            </div>
+            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
+              {search ? "No departments match your search" : "No departments found"}
+            </h3>
+            <p className={`mt-1 max-w-xs text-xs ${theme.textSecondary}`}>Create departments in the backend data source to see them here.</p>
           </div>
-        </div>
-
-        {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 px-3 py-2 text-xs">
-            <span className="font-medium text-slate-900 dark:text-slate-100">{selected.size} dept(s) selected</span>
-            <span className="text-slate-400 dark:text-slate-500">|</span>
-            <button onClick={bulkActivate} className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">Activate</button>
-            <span className="text-slate-400 dark:text-slate-500">|</span>
-            <button onClick={bulkDeactivate} className="text-xs text-amber-600 hover:underline dark:text-amber-400">Deactivate</button>
-            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Clear</button>
-          </div>
-        )}
-
-        {filtered.length === 0 ? (
-          <EmptyState
-            icon={<Layers className="h-6 w-6 stroke-current" />}
-            title={search ? "No departments match your search" : "No departments configured"}
-            description="Create departments and assign managers."
-            action={{ label: "+ Add Department", onClick: openAdd }}
-          />
         ) : (
           <div className="space-y-2">
-            {filtered.map((dept) => {
-              const isSelected = selected.has(dept.id);
-              return (
-                <div
-                  key={dept.id}
-                  className={`group rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm active:scale-[0.99] ${
-                    isSelected ? theme.rowSelected : theme.row
-                  } ${theme.cardHover}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <BulkCheckbox checked={isSelected} onChange={() => toggleOne(dept.id)} />
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                        <Building2 className="h-4.5 w-4.5 stroke-current" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold ${theme.textPrimary}`}>{dept.name}</span>
-                          <span className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${theme.codeBadge}`}>{dept.code}</span>
-                          <StatusBadge status={dept.status} />
-                        </div>
-                        <div className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${theme.textSecondary}`}>
-                          <span>{dept.plantName}</span>
-                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                          <span>Manager: {dept.manager}</span>
-                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                          <span>{dept.employees} employees</span>
-                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                          <span>{dept.groups} group(s)</span>
-                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                          <span>{dept.resources} resource(s)</span>
-                          <span className={`inline-block h-1 w-1 rounded-full ${theme.dividerDot}`} />
-                          <span>Lines: {dept.lines.join(", ")}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <PrimaryAction onClick={() => navigate(`/system/data-management/departments/${dept.id}`)} />
-                      <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => openEdit(dept) },
-                        { label: "Delete", icon: <Trash2 className="h-3 w-3 stroke-current" />, onClick: () => { setEditingId(dept.id); setConfirmOpen(true); }, danger: true },
-                        { label: "Assign Groups", icon: <Users className="h-3 w-3 stroke-current" />, onClick: () => {} },
-                        { label: "View Resources", icon: <Cpu className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/resources") },
-                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(dept.plantName)}&department=${encodeURIComponent(dept.name)}`) },
-                      ]} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {paginatedDepartments.map((dept, idx) => (
+              <div key={dept.id} ref={idx === 0 ? cardRef : undefined}>
+                <DataCard
+                key={dept.id}
+                icon={<Building2 className="h-5 w-5 stroke-current text-indigo-600" />}
+                iconBg="bg-indigo-100 dark:bg-indigo-500/10"
+                name={dept.name}
+                code={dept.code}
+                status={dept.status}
+                parentContext={`${dept.plantName || "Unassigned plant"}${dept.manager ? ` · ${dept.manager}` : ""}`}
+                primaryMetrics={[
+                  { label: "Resource Groups", value: dept.groupCount },
+                ]}
+                metrics={[
+                  { label: "Resources", value: dept.resourceCount },
+                  { label: "Employees", value: dept.employees },
+                ]}
+                readiness={[
+                  { label: "Groups", ready: dept.groupCount > 0 },
+                  { label: "Resources", ready: dept.resourceCount > 0 },
+                ]}
+                onEdit={() => openEdit(dept)}
+                onStructure={() => navigate(`/system/data-management/structure?department=${encodeURIComponent(dept.name)}`)}
+                onOpen={() => navigate(`/system/data-management/departments/${dept.id}`)}
+                />
+              </div>
+            ))}
           </div>
         )}
 
-        <div className={`mt-3 flex items-center justify-between text-[11px] ${theme.textMuted}`}>
-          <span>{filtered.length} of {departments.length} department(s)</span>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300" />
-            Select all
-          </label>
+        <div className="mt-3">
+          <Pagination page={page} total={filteredDepartments.length} perPage={perPage} onChange={setPage} />
         </div>
       </div>
-      <CrudModal open={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? "Edit Department" : "Add Department"} fields={modalFields} values={form} onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))} onSave={handleSave} onDelete={editingId ? () => { setConfirmOpen(true); } : undefined} />
-      <ConfirmDialog open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Delete Department" message={`Are you sure you want to delete "${departments.find(d => d.id === editingId)?.name}"? This action cannot be undone.`} onConfirm={confirmDelete} />
+
+      <UnifiedModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingDept ? "Edit Department" : "Add Department"}
+        fields={MODAL_FIELDS}
+        values={form}
+        onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))}
+        onSave={handleSave}
+        onDelete={editingDept ? () => { setDeptToDelete(editingDept.id); setConfirmOpen(true); } : undefined}
+        summary={
+          editingDept ? (
+            <DepartmentSummary
+              groups={editingDept.groupCount}
+              resources={editingDept.resourceCount}
+            />
+          ) : undefined
+        }
+        onConfigureStructure={
+          editingDept
+            ? () => navigate(`/system/data-management/structure?department=${encodeURIComponent(editingDept.name)}`)
+            : undefined
+        }
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => { setConfirmOpen(false); setDeptToDelete(null); }}
+        title={`Delete department?`}
+        message="This action cannot be undone."
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

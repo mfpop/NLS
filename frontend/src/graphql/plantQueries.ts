@@ -27,7 +27,7 @@ export const PLANTS_QUERY = gql`
 `;
 
 export const PLANT_QUERY = gql`
-  query Plant($id: ID!) {
+  query Plant($id: String!) {
     plant(id: $id) {
       id
       code
@@ -85,7 +85,7 @@ export const CREATE_PLANT_MUTATION = gql`
 `;
 
 export const UPDATE_PLANT_MUTATION = gql`
-  mutation UpdatePlant($id: ID!, $input: PlantInput!) {
+  mutation UpdatePlant($id: String!, $input: PlantInput!) {
     updatePlant(id: $id, input: $input) {
       plant {
         id
@@ -117,7 +117,7 @@ export const UPDATE_PLANT_MUTATION = gql`
 `;
 
 export const TOGGLE_PLANT_STATUS_MUTATION = gql`
-  mutation TogglePlantStatus($id: ID!) {
+  mutation TogglePlantStatus($id: String!) {
     togglePlantStatus(id: $id) {
       plant {
         id
@@ -135,7 +135,7 @@ export const TOGGLE_PLANT_STATUS_MUTATION = gql`
 `;
 
 export const DELETE_PLANT_MUTATION = gql`
-  mutation DeletePlant($id: ID!) {
+  mutation DeletePlant($id: String!) {
     deletePlant(id: $id) {
       success
       inUse

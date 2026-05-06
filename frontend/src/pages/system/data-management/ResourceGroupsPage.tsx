@@ -1,176 +1,203 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Users, Pencil, GitBranch, Cpu, ExternalLink } from "lucide-react";
-import {
-  Breadcrumbs, ContextBar, SearchBar, FilterBar, EmptyState, StatusBadge,
-  BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown
-} from "./shared";
+import { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@apollo/client/react";
+import { useNavigate } from "react-router-dom";
+import { Users, X } from "lucide-react";
+import { DataCard, Pagination } from "./components";
+import { Toolbar } from "./components/Toolbar";
+import type { FilterOption } from "./components/Toolbar";
+import { UnifiedModal } from "./components/UnifiedModal";
+import type { ModalField } from "./components/UnifiedModal";
+import { GroupSummary } from "./components/SummaryBlock";
+import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
+import { RESOURCE_GROUPS_QUERY } from "@/graphql/manufacturingQueries";
+import { usePlants } from "@/hooks/usePlants";
+import { usePageSize } from "@/hooks/usePageSize";
 
-interface ResourceGroup {
+interface ResourceGroupNode {
   id: string;
   name: string;
-  type: string;
+  groupType: string;
   members: number;
   leader: string;
   status: "active" | "inactive";
-  linkedLines: string[];
   department: string;
-  resources: number;
   plantName: string;
+  plantId?: string | null;
+  resourceCount: number;
 }
 
-const groups: ResourceGroup[] = [
-  { id: "RG001", name: "Line Operators", type: "Production", members: 28, leader: "Tom Wilson", status: "active", linkedLines: ["C2-Cylinder Assembly", "Line A", "Line B"], department: "Assembly", resources: 12, plantName: "Main Plant" },
-  { id: "RG002", name: "Setup Technicians", type: "Support", members: 12, leader: "Lisa Park", status: "active", linkedLines: ["C2-Cylinder Assembly", "Line B"], department: "Machining", resources: 6, plantName: "Main Plant" },
-  { id: "RG003", name: "Quality Inspectors", type: "Quality", members: 8, leader: "James Lee", status: "active", linkedLines: ["C2-Cylinder Assembly", "Line C"], department: "Quality Control", resources: 5, plantName: "Main Plant" },
-  { id: "RG004", name: "Material Handlers", type: "Logistics", members: 15, leader: "Maria Santos", status: "active", linkedLines: ["Line A", "Line B", "Shared"], department: "Logistics", resources: 8, plantName: "Secondary Plant" },
-  { id: "RG005", name: "Shift Supervisors", type: "Management", members: 6, leader: "Robert Chen", status: "active", linkedLines: ["All Lines"], department: "Management", resources: 3, plantName: "Secondary Plant" },
-];
+interface ResourceGroupsQueryData {
+  resourceGroups: ResourceGroupNode[];
+}
 
-const FILTERS = [
-  { label: "All", value: "all" },
+const TYPE_OPTIONS: FilterOption[] = [
+  { label: "All Types", value: "all" },
   { label: "Production", value: "Production" },
   { label: "Support", value: "Support" },
   { label: "Management", value: "Management" },
   { label: "Quality", value: "Quality" },
+  { label: "Logistics", value: "Logistics" },
 ];
 
 export function ResourceGroupsPage() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { plants } = usePlants();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<string>("all");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [plantFilter, setPlantFilter] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<ResourceGroupNode | null>(null);
+  const [groupToDelete, setGroupToDelete] = useState<string | null>(null);
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
 
-  const filtered = groups.filter((g) => {
-    if (filter !== "all" && g.type !== filter) return false;
-    if (search && !g.name.toLowerCase().includes(search.toLowerCase()) && !g.leader.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
+  const MODAL_FIELDS: ModalField[] = [
+    { key: "name", label: "Group Name", required: true, placeholder: "e.g. Machining Group" },
+    { key: "groupType", label: "Type", type: "select", options: TYPE_OPTIONS.filter(o => o.value !== "all").map(o => ({ label: o.label, value: o.value })) },
+    { key: "leader", label: "Leader", placeholder: "e.g. Jane Doe" },
+    { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+  ];
+
+  const { data, loading, error } = useQuery<ResourceGroupsQueryData>(RESOURCE_GROUPS_QUERY, {
+    variables: { search: search || undefined, type: typeFilter !== "all" ? typeFilter : undefined },
+    fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
 
-  const allSelected = filtered.length > 0 && selected.size === filtered.length;
-  const toggleAll = () => {
-    if (allSelected) setSelected(new Set());
-    else setSelected(new Set(filtered.map((g) => g.id)));
+  const plantOptions = useMemo<FilterOption[]>(() => (
+    [{ label: "All Plants", value: "all" }].concat(plants.map((plant) => ({ label: plant.name, value: plant.id })))
+  ), [plants]);
+
+  const groups = useMemo(() => {
+    const rows = data?.resourceGroups ?? [];
+    if (plantFilter === "all") return rows;
+    return rows.filter((group) => group.plantId === plantFilter);
+  }, [data?.resourceGroups, plantFilter]);
+
+  const paginatedGroups = groups.slice((page - 1) * perPage, page * perPage);
+  useEffect(() => { setPage(1); }, [search, typeFilter, plantFilter, perPage]);
+
+  const openEdit = (group: ResourceGroupNode) => {
+    setEditingGroup(group); setSaveError(null);
+    setForm({ name: group.name, groupType: group.groupType, leader: group.leader || "", status: group.status });
+    setModalOpen(true);
   };
-  const toggleOne = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelected(next);
+
+  const handleSave = async () => { setModalOpen(false); };
+
+  const handleAdd = () => {
+    setEditingGroup(null); setSaveError(null);
+    setForm({ name: "", groupType: "Production", leader: "", status: "active" });
+    setModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!groupToDelete) return;
+    setConfirmOpen(false); setGroupToDelete(null); setModalOpen(false);
   };
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center gap-4 border-b px-5 py-3 ${theme.header}`}>
-        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
-          <Users className="h-5 w-5 stroke-current" />
+      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
+            <Users className="h-5 w-5 stroke-current" />
+          </div>
+          <div>
+            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Resource Groups</h1>
+            <p className={`text-xs ${theme.textSecondary}`}>Resource groups loaded from the manufacturing database structure.</p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Resource Groups</h1>
-          <p className={`text-xs ${theme.textSecondary}`}>Define teams, assign leaders, and link resources to production groups.</p>
-        </div>
+        <button type="button" onClick={() => navigate("/system/data-management")}
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+          <X className="h-4 w-4 stroke-current" />Close
+        </button>
       </header>
 
-      <DataManagementNav currentPath={location.pathname} />
+      <Toolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search groups or leaders..."
+        parentFilter={{ value: plantFilter, onChange: setPlantFilter, options: plantOptions }}
+        statusFilter={typeFilter}
+        onStatusFilterChange={setTypeFilter}
+        statusOptions={TYPE_OPTIONS}
+        onAdd={handleAdd}
+        addLabel="Add Group"
+      />
 
-      <div className={`flex-1 overflow-y-auto ${theme.page} p-4`}>
-        <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Resource Groups" }]} />
-        <ContextBar segments={[{ label: "All Plants" }]} />
-        <div className="mb-3 flex items-center gap-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search groups or leaders..." />
-          <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
-          <div className="ml-auto flex items-center gap-2">
-            {selected.size > 0 && <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>}
-            <button className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
-              + Add Group
-            </button>
+      <div ref={containerRef} className={`flex-1 ${theme.page} p-4`}>
+        {loading && !data ? (
+          <div className={`py-16 text-center text-sm ${theme.textMuted}`}>Loading resource groups...</div>
+        ) : error && !data?.resourceGroups ? (
+          <div className={`py-16 text-center text-sm ${theme.textCritical}`}>Unable to load resource groups from the database.</div>
+        ) : groups.length === 0 ? (
+          <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
+            <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
+              <Users className="h-6 w-6 stroke-current" />
+            </div>
+            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
+              {search ? "No resource groups match your search" : "No resource groups found"}
+            </h3>
+            <p className={`mt-1 max-w-xs text-xs ${theme.textSecondary}`}>Create resource groups in the backend data source to see them here.</p>
           </div>
-        </div>
-
-        {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 px-3 py-2 text-xs">
-            <span className="font-medium text-slate-900 dark:text-slate-100">{selected.size} group(s) selected</span>
-            <span className="text-slate-400 dark:text-slate-500">|</span>
-            <button className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">Activate</button>
-            <span className="text-slate-400 dark:text-slate-500">|</span>
-            <button className="text-xs text-amber-600 hover:underline dark:text-amber-400">Deactivate</button>
-            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Clear</button>
-          </div>
-        )}
-
-        {filtered.length === 0 ? (
-          <EmptyState icon={<Users className="h-6 w-6 stroke-current" />} title={search ? "No groups match your search" : "No resource groups configured"} description="Create resource groups and assign leaders." action={{ label: "+ Add Group", onClick: () => {} }} />
         ) : (
-          <div className="space-y-2">
-            {filtered.map((group) => {
-              const isSelected = selected.has(group.id);
-              return (
-                <div
-                  key={group.id}
-                  className={`group cursor-pointer rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm active:scale-[0.99] ${
-                    isSelected ? theme.rowSelected : theme.row
-                  } ${theme.cardHover}`}
-                  onClick={() => navigate(`/system/data-management/resource-groups/${group.id}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/data-management/resource-groups/${group.id}`); }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <BulkCheckbox checked={isSelected} onChange={() => toggleOne(group.id)} />
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
-                        <Users className="h-4.5 w-4.5 stroke-current" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold ${theme.textPrimary}`}>{group.name}</span>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${theme.badgeInactive}`}>{group.type}</span>
-                          <StatusBadge status={group.status} />
-                        </div>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-400 dark:text-slate-500">
-                          <span>{group.plantName}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span>Dept: {group.department}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span>Leader: {group.leader}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span>{group.members} member(s)</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span>{group.resources} resource(s)</span>
-                          {group.linkedLines.length > 0 && (
-                            <>
-                              <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                              <span>Lines: {group.linkedLines.join(", ")}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <PrimaryAction onClick={() => navigate(`/system/data-management/resource-groups/${group.id}`)} />
-                      <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => {} },
-                        { label: "Link to Line", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => {} },
-                        { label: "View Resources", icon: <Cpu className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/resources") },
-                        { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(group.plantName)}&department=${encodeURIComponent(group.department)}`) },
-                      ]} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex flex-col gap-2">
+            {paginatedGroups.map((group, idx) => (
+              <div key={group.id} ref={idx === 0 ? cardRef : undefined}>
+                <DataCard
+                  icon={<Users className="h-5 w-5 stroke-current text-violet-600" />}
+                  iconBg="bg-violet-100 dark:bg-violet-500/10"
+                  name={group.name}
+                  code={group.groupType}
+                  status={group.status}
+                  parentContext={[group.plantName, group.department, group.leader || ""].filter(Boolean).join(" · ")}
+                  primaryMetrics={[{ label: "Resources", value: group.resourceCount }]}
+                  metrics={[{ label: "Members", value: group.members }]}
+                  readiness={[{ label: "Resources", ready: group.resourceCount > 0 }]}
+                  onEdit={() => openEdit(group)}
+                  onStructure={() => navigate(`/system/data-management/structure?group=${encodeURIComponent(group.name)}`)}
+                  onOpen={() => navigate(`/system/data-management/resource-groups/${group.id}`)}
+                />
+              </div>
+            ))}
           </div>
         )}
 
-        <div className={`mt-3 flex items-center justify-between text-[11px] ${theme.textMuted}`}>
-          <span>{filtered.length} of {groups.length} resource group(s)</span>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300" />
-            Select all
-          </label>
+        <div className="mt-3">
+          <Pagination page={page} total={groups.length} perPage={perPage} onChange={setPage} />
         </div>
       </div>
+
+      <UnifiedModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingGroup ? "Edit Resource Group" : "Add Resource Group"}
+        fields={MODAL_FIELDS}
+        values={form}
+        onChange={(k, v) => { setForm((prev) => ({ ...prev, [k]: v })); setSaveError(null); }}
+        onSave={handleSave}
+        onDelete={editingGroup ? () => { setGroupToDelete(editingGroup.id); setConfirmOpen(true); } : undefined}
+        summary={
+          <>
+            {saveError && <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 mb-2 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">{saveError}</div>}
+            {editingGroup ? <GroupSummary resources={editingGroup.resourceCount} /> : undefined}
+          </>
+        }
+        onConfigureStructure={editingGroup ? () => navigate(`/system/data-management/structure?group=${encodeURIComponent(editingGroup.name)}`) : undefined}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => { setConfirmOpen(false); setGroupToDelete(null); }}
+        title="Delete resource group?"
+        message="This action cannot be undone."
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

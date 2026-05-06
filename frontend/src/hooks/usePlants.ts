@@ -64,20 +64,29 @@ function generateMockId(): string {
 /* ── Timezone options for the form ── */
 
 export const TIMEZONE_OPTIONS = [
-  { value: "America/New_York (EST)", label: "America/New_York (EST)" },
-  { value: "America/Detroit (EST)", label: "America/Detroit (EST)" },
-  { value: "America/Chicago (CST)", label: "America/Chicago (CST)" },
-  { value: "America/Denver (MST)", label: "America/Denver (MST)" },
-  { value: "America/Los_Angeles (PST)", label: "America/Los_Angeles (PST)" },
-  { value: "America/Anchorage (AKST)", label: "America/Anchorage (AKST)" },
-  { value: "Pacific/Honolulu (HST)", label: "Pacific/Honolulu (HST)" },
-  { value: "Europe/London (GMT)", label: "Europe/London (GMT)" },
-  { value: "Europe/Berlin (CET)", label: "Europe/Berlin (CET)" },
-  { value: "Europe/Bucharest (EET)", label: "Europe/Bucharest (EET)" },
-  { value: "Asia/Tokyo (JST)", label: "Asia/Tokyo (JST)" },
-  { value: "Asia/Shanghai (CST)", label: "Asia/Shanghai (CST)" },
-  { value: "Asia/Dubai (GST)", label: "Asia/Dubai (GST)" },
-  { value: "Australia/Sydney (AEST)", label: "Australia/Sydney (AEST)" },
+  { value: "America/Anchorage", label: "(UTC-09:00) America/Anchorage" },
+  { value: "America/Cancun", label: "(UTC-05:00) America/Cancun" },
+  { value: "America/Chicago", label: "(UTC-06:00) America/Chicago" },
+  { value: "America/Chihuahua", label: "(UTC-06:00) America/Chihuahua" },
+  { value: "America/Denver", label: "(UTC-07:00) America/Denver" },
+  { value: "America/Detroit", label: "(UTC-05:00) America/Detroit" },
+  { value: "America/Hermosillo", label: "(UTC-07:00) America/Hermosillo" },
+  { value: "America/Los_Angeles", label: "(UTC-08:00) America/Los_Angeles" },
+  { value: "America/Mazatlan", label: "(UTC-07:00) America/Mazatlan" },
+  { value: "America/Mexico_City", label: "(UTC-06:00) America/Mexico_City" },
+  { value: "America/Monterrey", label: "(UTC-06:00) America/Monterrey" },
+  { value: "America/New_York", label: "(UTC-05:00) America/New_York" },
+  { value: "America/Phoenix", label: "(UTC-07:00) America/Phoenix" },
+  { value: "America/Tijuana", label: "(UTC-08:00) America/Tijuana" },
+  { value: "Asia/Dubai", label: "(UTC+04:00) Asia/Dubai" },
+  { value: "Asia/Shanghai", label: "(UTC+08:00) Asia/Shanghai" },
+  { value: "Asia/Tokyo", label: "(UTC+09:00) Asia/Tokyo" },
+  { value: "Australia/Sydney", label: "(UTC+11:00) Australia/Sydney" },
+  { value: "Europe/Berlin", label: "(UTC+01:00) Europe/Berlin" },
+  { value: "Europe/Bucharest", label: "(UTC+02:00) Europe/Bucharest" },
+  { value: "Europe/London", label: "(UTC+00:00) Europe/London" },
+  { value: "Pacific/Honolulu", label: "(UTC-10:00) Pacific/Honolulu" },
+  { value: "Etc/UTC", label: "(UTC+00:00) UTC" },
 ];
 
 /* ── Default form data ── */
@@ -244,8 +253,9 @@ export function usePlants() {
       }
       await refetch();
       return { ok: true };
-    } catch {
-      return { ok: false, errors: { _form: "Failed to save plant. Please try again." } };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save plant. Please try again.";
+      return { ok: false, errors: { _form: message } };
     }
   }, [createMutation, updateMutation, refetch, isMockFallback, gqlData]);
 

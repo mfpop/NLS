@@ -15,6 +15,7 @@ class ResourceGroup(TimeStampedModel):
         ("inactive", "Inactive"),
     ]
 
+    code = models.CharField(max_length=50, blank=True, default="", verbose_name="Group Code")
     name = models.CharField(max_length=200, verbose_name="Group Name")
     group_type = models.CharField(
         max_length=50, choices=TYPE_CHOICES, default="Production", verbose_name="Type"

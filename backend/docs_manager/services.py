@@ -167,7 +167,7 @@ DOC_META: Final[dict[str, DocumentationMeta]] = {
 
 
 def _docs_root() -> Path:
-    configured_root = config("DOCS_ROOT", default=".").strip() or "."
+    configured_root = config("DOCS_ROOT", default="docs").strip() or "docs"
     candidate = Path(configured_root)
     if not candidate.is_absolute():
         candidate = REPO_ROOT / candidate

@@ -101,7 +101,19 @@ export const sidebarEntries: SidebarEntry[] = [
     icon: ClipboardList,
     items: [
       { type: "item", label: "Production Plan", to: "/plan/production-plan", icon: FileText },
-
+      { type: "item", label: "Capacity Planning", to: "/plan/capacity", icon: BarChart3 },
+    ],
+  },
+  {
+    type: "section",
+    id: "execute",
+    label: "Execute",
+    icon: Play,
+    items: [
+      { type: "item", label: "Line Performance", to: "/execution/line-performance", icon: Activity },
+      { type: "item", label: "Live Shopfloor", to: "/execution/live-shopfloor", icon: PanelTop },
+      { type: "item", label: "Value Stream Map", to: "/execution/vsm", icon: Workflow },
+      { type: "item", label: "Daily Gemba Walk", to: "/execution/daily-gemba-walk", icon: Footprints },
     ],
   },
   {
@@ -133,7 +145,7 @@ export const sidebarEntries: SidebarEntry[] = [
     label: "Standardize",
     icon: Ruler,
     items: [
-      { type: "item", label: "Standard Work", to: "/improve/standard-work", icon: BookOpen },
+      { type: "item", label: "Standard Work", to: "/standardize/standard-work", icon: BookOpen },
       { type: "item", label: "Procedures", to: "/standardize/procedures", icon: ScrollText },
       { type: "item", label: "Templates", to: "/standardize/templates", icon: FileSpreadsheet },
       { type: "item", label: "Best Practices", to: "/standardize/best-practices", icon: Award },

@@ -1,157 +1,169 @@
-import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Database, Pencil, Download } from "lucide-react";
-import {
-  Breadcrumbs, SearchBar, FilterBar, EmptyState, StatusBadge,
-  BulkCheckbox, DataManagementNav, PrimaryAction, ActionsDropdown
-} from "./shared";
+import { useMemo, useState, useEffect } from "react";
+import { useQuery } from "@apollo/client/react";
+import { useNavigate } from "react-router-dom";
+import { Database, X } from "lucide-react";
+import { DataCard, Pagination } from "./components";
+import { Toolbar } from "./components/Toolbar";
+import type { FilterOption } from "./components/Toolbar";
+import { UnifiedModal } from "./components/UnifiedModal";
+import type { ModalField } from "./components/UnifiedModal";
+import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
+import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
+import { usePageSize } from "@/hooks/usePageSize";
 
-interface ReferenceTable {
-  id: string;
-  name: string;
-  entries: number;
-  updated: string;
-  status: "active" | "inactive";
-  description: string;
+interface ReferenceTableNode {
+  id: string; name: string; entryCount: number; updatedAt: string;
+  status: "active" | "inactive"; description: string;
 }
 
-const tables: ReferenceTable[] = [
-  { id: "T001", name: "Shift Patterns", entries: 3, updated: "2025-06-10", status: "active", description: "Standard shift schedules" },
-  { id: "T002", name: "Machine Types", entries: 12, updated: "2025-06-08", status: "active", description: "Equipment taxonomy" },
-  { id: "T003", name: "Material Categories", entries: 24, updated: "2025-06-05", status: "active", description: "Raw material classifications" },
-  { id: "T004", name: "Work Centers", entries: 15, updated: "2025-05-28", status: "active", description: "Production work center definitions" },
-  { id: "T005", name: "Operation Codes", entries: 42, updated: "2025-05-20", status: "active", description: "Manufacturing operation identifiers" },
-  { id: "T006", name: "Holiday Calendar", entries: 14, updated: "2025-04-15", status: "inactive", description: "Non-working day schedule" },
+interface ReferenceTablesQueryData { referenceTables: ReferenceTableNode[]; }
+
+const STATUS_OPTIONS: FilterOption[] = [
+  { label: "All", value: "all" }, { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" }, { label: "Not Ready", value: "not_ready" },
 ];
 
-const FILTERS = [
-  { label: "All", value: "all" },
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
+const MODAL_FIELDS: ModalField[] = [
+  { key: "name", label: "Table Name", required: true, placeholder: "e.g. Part Categories" },
+  { key: "description", label: "Description", placeholder: "e.g. Lookup table for part classification" },
+  { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
 ];
+
+function formatDate(value: string) {
+  if (!value) return "unknown";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
+}
 
 export function ReferencesPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<string>("all");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editingTable, setEditingTable] = useState<ReferenceTableNode | null>(null);
+  const [tableToDelete, setTableToDelete] = useState<string | null>(null);
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
 
-  const filtered = tables.filter((t) => {
-    if (filter !== "all" && t.status !== filter) return false;
-    if (search && !t.name.toLowerCase().includes(search.toLowerCase()) && !t.description.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
+  const { data, loading, error } = useQuery<ReferenceTablesQueryData>(REFERENCE_TABLES_QUERY, {
+    variables: { search: search || undefined, status: statusFilter !== "all" ? statusFilter : undefined },
+    fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
 
-  const allSelected = filtered.length > 0 && selected.size === filtered.length;
-  const toggleAll = () => {
-    if (allSelected) setSelected(new Set());
-    else setSelected(new Set(filtered.map((t) => t.id)));
+  const tables = useMemo(() => data?.referenceTables ?? [], [data?.referenceTables]);
+
+  const paginatedTables = tables.slice((page - 1) * perPage, page * perPage);
+  useEffect(() => { setPage(1); }, [search, statusFilter, perPage]);
+
+  const openEdit = (table: ReferenceTableNode) => {
+    setEditingTable(table); setSaveError(null);
+    setForm({ name: table.name, description: table.description || "", status: table.status });
+    setModalOpen(true);
   };
-  const toggleOne = (id: string) => {
-    const next = new Set(selected);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelected(next);
+
+  const handleSave = async () => { setModalOpen(false); };
+
+  const handleDelete = async () => {
+    if (!tableToDelete) return;
+    setConfirmOpen(false); setTableToDelete(null); setModalOpen(false);
   };
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center gap-4 border-b px-5 py-3 ${theme.header}`}>
-        <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-          <Database className="h-5 w-5 stroke-current" />
+      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
+            <Database className="h-5 w-5 stroke-current" />
+          </div>
+          <div>
+            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Reference Tables</h1>
+            <p className={`text-xs ${theme.textSecondary}`}>Lookup tables and configuration data loaded from the database.</p>
+          </div>
         </div>
-        <div className="min-w-0 flex-1">
-          <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Reference Tables</h1>
-          <p className={`text-xs ${theme.textSecondary}`}>Lookup tables, taxonomies, and configuration data.</p>
-        </div>
+        <button type="button" onClick={() => navigate("/system/data-management")}
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+          <X className="h-4 w-4 stroke-current" />Close
+        </button>
       </header>
 
-      <DataManagementNav currentPath={location.pathname} />
+      <Toolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search tables..."
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        statusOptions={STATUS_OPTIONS}
+      />
 
-      <div className={`flex-1 overflow-y-auto ${theme.page} p-4`}>
-        <Breadcrumbs crumbs={[{ label: "Data Management", to: "/system/data-management" }, { label: "Reference Tables" }]} />
-        <div className="mb-3 flex items-center gap-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search tables..." />
-          <FilterBar tabs={FILTERS} active={filter} onChange={setFilter} />
-          <div className="ml-auto flex items-center gap-2">
-            {selected.size > 0 && <span className={`text-xs ${theme.textSecondary}`}>{selected.size} selected</span>}
-            <button className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
-              + New Table
-            </button>
+      <div ref={containerRef} className={`flex-1 ${theme.page} p-4`}>
+        {loading && !data ? (
+          <div className={`py-16 text-center text-sm ${theme.textMuted}`}>Loading reference tables...</div>
+        ) : error && !data?.referenceTables ? (
+          <div className={`py-16 text-center text-sm ${theme.textCritical}`}>Unable to load reference tables from the database.</div>
+        ) : tables.length === 0 ? (
+          <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
+            <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
+              <Database className="h-6 w-6 stroke-current" />
+            </div>
+            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
+              {search ? "No tables match your search" : "No reference tables found"}
+            </h3>
+            <p className={`mt-1 max-w-xs text-xs ${theme.textSecondary}`}>Create reference tables in the backend data source to see them here.</p>
           </div>
-        </div>
-
-        {selected.size > 0 && (
-          <div className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 px-3 py-2 text-xs">
-            <span className="font-medium text-slate-900 dark:text-slate-100">{selected.size} table(s) selected</span>
-            <span className="text-slate-400 dark:text-slate-500">|</span>
-            <button className="text-xs text-emerald-600 hover:underline dark:text-emerald-400">Activate</button>
-            <span className="text-slate-400 dark:text-slate-500">|</span>
-            <button className="text-xs text-amber-600 hover:underline dark:text-amber-400">Deactivate</button>
-            <button type="button" onClick={() => setSelected(new Set())} className="ml-auto text-xs font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">Clear</button>
-          </div>
-        )}
-
-        {filtered.length === 0 ? (
-          <EmptyState icon={<Database className="h-6 w-6 stroke-current" />} title={search ? "No tables match your search" : "No reference tables configured"} description="Create reference tables for your production configuration." action={{ label: "+ New Table", onClick: () => {} }} />
         ) : (
-          <div className="space-y-2">
-            {filtered.map((table) => {
-              const isSelected = selected.has(table.id);
-              return (
-                <div
-                  key={table.id}
-                  className={`group cursor-pointer rounded-xl border px-3 py-2.5 transition-all hover:shadow-sm active:scale-[0.99] ${
-                    isSelected ? theme.rowSelected : theme.row
-                  } ${theme.cardHover}`}
-                  onClick={() => navigate(`/system/data-management/references/${table.id}`)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/data-management/references/${table.id}`); }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <BulkCheckbox checked={isSelected} onChange={() => toggleOne(table.id)} />
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-                        <Database className="h-4.5 w-4.5 stroke-current" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold ${theme.textPrimary}`}>{table.name}</span>
-                          <StatusBadge status={table.status} />
-                        </div>
-                        <div className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] ${theme.textMuted}`}>
-                          <span>{table.entries} entries</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span>Updated {table.updated}</span>
-                          <span className="inline-block h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span className="truncate max-w-50">{table.description}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="hidden items-center gap-2 sm:flex" onClick={(e) => e.stopPropagation()}>
-                      <PrimaryAction onClick={() => navigate(`/system/data-management/references/${table.id}`)} />
-                      <ActionsDropdown actions={[
-                        { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => {} },
-                        { label: "Export", icon: <Download className="h-3 w-3 stroke-current" />, onClick: () => {} },
-                      ]} />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex flex-col gap-2">
+            {paginatedTables.map((table, idx) => (
+              <div key={table.id} ref={idx === 0 ? cardRef : undefined}>
+                <DataCard
+                  icon={<Database className="h-5 w-5 stroke-current text-sky-600" />}
+                  iconBg="bg-sky-100 dark:bg-sky-500/10"
+                  name={table.name}
+                  status={table.status}
+                  parentContext={table.description || "No description"}
+                  metrics={[
+                    { label: "Entries", value: table.entryCount },
+                    { label: "Updated", value: formatDate(table.updatedAt) },
+                  ]}
+                  readiness={[
+                    { label: "Configured", ready: !!table.name },
+                    { label: "Has data", ready: table.entryCount > 0 },
+                  ]}
+                  onEdit={() => openEdit(table)}
+                  onOpen={() => navigate(`/system/data-management/references/${table.id}`)}
+                />
+              </div>
+            ))}
           </div>
         )}
 
-        <div className={`mt-3 flex items-center justify-between text-[11px] ${theme.textMuted}`}>
-          <span>{filtered.length} of {tables.length} table(s)</span>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={allSelected} onChange={toggleAll} className="h-3.5 w-3.5 rounded border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300" />
-            Select all
-          </label>
+        <div className="mt-3">
+          <Pagination page={page} total={tables.length} perPage={perPage} onChange={setPage} />
         </div>
       </div>
+
+      <UnifiedModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editingTable ? "Edit Reference Table" : "Add Reference Table"}
+        fields={MODAL_FIELDS}
+        values={form}
+        onChange={(k, v) => { setForm((prev) => ({ ...prev, [k]: v })); setSaveError(null); }}
+        onSave={handleSave}
+        onDelete={editingTable ? () => { setTableToDelete(editingTable.id); setConfirmOpen(true); } : undefined}
+        summary={saveError ? <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">{saveError}</div> : undefined}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => { setConfirmOpen(false); setTableToDelete(null); }}
+        title="Delete reference table?"
+        message="This action cannot be undone."
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

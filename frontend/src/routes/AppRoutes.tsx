@@ -59,6 +59,9 @@ const StructurePage = lazy(() =>
 const ProductionLinesPage = lazy(() =>
   import("@/pages/system/data-management/ProductionLinesPage").then((module) => ({ default: module.ProductionLinesPage }))
 );
+const ProductionLineDetailPage = lazy(() =>
+  import("@/pages/system/data-management/ProductionLinesPage").then((module) => ({ default: module.ProductionLineDetailPage }))
+);
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ApplicationSettingsPage }))
 );
@@ -106,6 +109,7 @@ export function AppRoutes() {
           <Route path="check/actions" element={<ActionsPage />} />
           <Route path="improve/kaizen" element={<KaizenPage />} />
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
+          <Route path="standardize/standard-work" element={<StandardWorkPage />} />
           <Route path="system/data-management" element={<DataManagementPage />} />
                     <Route path="system/data-management/plant" element={<PlantStructurePage />} />
                     <Route path="system/data-management/plant/:plantId" element={<PlantDetailPage />} />
@@ -118,8 +122,8 @@ export function AppRoutes() {
           <Route path="system/data-management/references" element={<ReferencesPage />} />
           <Route path="system/data-management/references/:tableId" element={<ReferencesPage />} />
           <Route path="system/data-management/structure" element={<StructurePage />} />
-          <Route path="system/data-management/production-lines" element={<ProductionLinesPage />} />
-          <Route path="system/data-management/production-lines/:lineId" element={<ProductionLinesPage />} />
+                    <Route path="system/data-management/production-lines" element={<ProductionLinesPage />} />
+          <Route path="system/data-management/production-lines/:lineId" element={<ProductionLineDetailPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />

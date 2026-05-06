@@ -1,13 +1,20 @@
 import strawberry
 from typing import Optional
+from django.db.models import Prefetch, Q
 
 from api.types.manufacturing import (
     ManufacturingSnapshot, PlantNode, DepartmentNode,
-    ProductionLineNode, ResourceGroupNode, ResourceNode, ReferenceTableNode,
+    ProductionLineNode, ProductionLinePage, ResourceGroupNode, ResourceNode, ReferenceTableNode,
+    ProductionStructureNode, ProductionLineStructureNode, DepartmentStructureNode,
+    ResourceGroupStructureNode, ResourceStructureNode,
+    DataManagementOverview, DataManagementPlantNode, DataManagementKpis,
+    DataManagementTreeRoot, DataManagementTreeChild,
+    DataManagementNavCounts, DataManagementSystemHealth,
+    ProfileNode,
 )
 from manufacturing.models import (
     Plant, Department, ProductionLine,
-    ResourceGroup, Resource, ReferenceTable,
+    ResourceGroup, Resource, ReferenceTable, Profile,
 )
 
 
@@ -47,13 +54,29 @@ class ManufacturingQuery:
             return None
 
     @strawberry.field
-    def production_lines(self, search: Optional[str] = None, status: Optional[str] = None) -> list[ProductionLineNode]:
+    def production_lines(
+        self,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> ProductionLinePage:
         qs = ProductionLine.objects.all()
         if status and status != "all":
             qs = qs.filter(status=status)
         if search:
-            qs = qs.filter(name__icontains=search)
-        return [ProductionLineNode.from_db(l) for l in qs]
+            qs = qs.filter(name__icontains=search) | qs.filter(code__icontains=search)
+        total = qs.count()
+        if limit:
+            qs = qs[offset:offset + limit] if offset else qs[:limit]
+        items = [ProductionLineNode.from_db(l) for l in qs]
+        page = (offset // limit) + 1 if limit and offset is not None else 1
+        total_pages = max(1, (total + limit - 1) // limit) if limit else 1
+        return ProductionLinePage(
+            items=items, total_count=total,
+            page=page, page_size=limit or total,
+            total_pages=total_pages,
+        )
 
     @strawberry.field
     def production_line(self, id: str) -> Optional[ProductionLineNode]:
@@ -68,7 +91,7 @@ class ManufacturingQuery:
         if type and type != "all":
             qs = qs.filter(group_type=type)
         if search:
-            qs = qs.filter(name__icontains=search)
+            qs = qs.filter(name__icontains=search) | qs.filter(code__icontains=search)
         return [ResourceGroupNode.from_db(g) for g in qs]
 
     @strawberry.field
@@ -107,6 +130,278 @@ class ManufacturingQuery:
         return [ReferenceTableNode.from_db(t) for t in qs]
 
     @strawberry.field
+    def production_structure_tree(
+        self,
+        plant_id: Optional[str] = None,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> Optional[ProductionStructureNode]:
+        """Build hierarchy: Plant → ProductionLine → Department (M2M) → ResourceGroup → Resource."""
+        # Resolve plant — if None, use first active plant
+        if plant_id:
+            try:
+                plant = Plant.objects.get(id=plant_id)
+            except Plant.DoesNotExist:
+                return None
+        else:
+            plant = Plant.objects.filter(status="active").first()
+            if not plant:
+                return None
+
+        # Build querysets scoped to this plant
+        lines_qs = ProductionLine.objects.filter(plant=plant)
+        rgs_qs = ResourceGroup.objects.filter(department__production_lines__plant=plant).distinct()
+        res_qs = Resource.objects.filter(resource_group__department__production_lines__plant=plant).distinct()
+
+        # Status filtering
+        if status and status != "all":
+            lines_qs = lines_qs.filter(status=status)
+            rgs_qs = rgs_qs.filter(status=status)
+            res_qs = res_qs.filter(status=status)
+
+        # Search filtering
+        if search:
+            lines_qs = lines_qs.filter(
+                Q(name__icontains=search) | Q(code__icontains=search)
+            )
+            rgs_qs = rgs_qs.filter(
+                Q(name__icontains=search) | Q(code__icontains=search)
+            )
+            res_qs = res_qs.filter(
+                Q(name__icontains=search) | Q(code__icontains=search)
+            )
+
+
+        # Prefetch full hierarchy per production line
+        lines_qs = lines_qs.prefetch_related(
+            Prefetch(
+                "departments",
+                queryset=Department.objects.filter(
+                    production_lines__plant=plant
+                ).distinct().prefetch_related(
+                    Prefetch(
+                        "resource_groups",
+                        queryset=rgs_qs.prefetch_related(
+                            Prefetch("resources", queryset=res_qs)
+                        )
+                    )
+                )
+            )
+        )
+
+        # Build tree nodes
+        line_nodes = []
+        for line in lines_qs:
+            dept_nodes = []
+            for dept in line.departments.all():
+                rg_nodes = []
+                for rg in dept.resource_groups.all():
+                    res_nodes = [
+                        ResourceStructureNode(
+                            id=str(r.id),
+                            name=r.name,
+                            code=r.code,
+                            status=r.status,
+                        )
+                        for r in rg.resources.all()
+                    ]
+                    rg_nodes.append(
+                        ResourceGroupStructureNode(
+                            id=str(rg.id),
+                            name=rg.name,
+                            code=rg.code,
+                            status=rg.status,
+                            resources=res_nodes,
+                        )
+                    )
+                dept_nodes.append(
+                    DepartmentStructureNode(
+                        id=str(dept.id),
+                        name=dept.name,
+                        code=dept.code,
+                        status=dept.status,
+                        resource_groups=rg_nodes,
+                    )
+                )
+            line_nodes.append(
+                ProductionLineStructureNode(
+                    id=str(line.id),
+                    name=line.name,
+                    code=line.code,
+                    status=line.status,
+                    departments=dept_nodes,
+                    plant_id=str(plant.id),
+                    plant_name=plant.name,
+                )
+            )
+
+        return ProductionStructureNode(
+            id=str(plant.id),
+            name=plant.name,
+            code=plant.code,
+            status=plant.status,
+            production_lines=line_nodes,
+        )
+
+    @strawberry.field
+    def data_management_overview(
+        self,
+        plant_id: Optional[str] = None,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> DataManagementOverview:
+        """Unified overview for Data Management — hierarchy: Plant → Line → Dept → RG → Resource."""
+        # 1. All plants (for selector)
+        all_plants_qs = Plant.objects.all()
+        plants = [
+            DataManagementPlantNode(id=str(p.id), name=p.name, code=p.code, status=p.status)
+            for p in all_plants_qs
+        ]
+
+        # 2. Selected plant
+        selected_plant_obj = None
+        if plant_id:
+            try:
+                selected_plant_obj = Plant.objects.get(id=plant_id)
+            except Plant.DoesNotExist:
+                pass
+        if not selected_plant_obj and plants:
+            selected_plant_obj = all_plants_qs.first()
+
+        selected_plant = None
+        if selected_plant_obj:
+            selected_plant = DataManagementPlantNode(
+                id=str(selected_plant_obj.id),
+                name=selected_plant_obj.name,
+                code=selected_plant_obj.code,
+                status=selected_plant_obj.status,
+            )
+
+        # 3. KPI counts (scoped to selected plant)
+        if selected_plant_obj:
+            pid = selected_plant_obj
+            line_count = ProductionLine.objects.filter(plant=pid).count()
+            dept_count = Department.objects.filter(production_lines__plant=pid).distinct().count()
+            res_count = Resource.objects.filter(resource_group__department__production_lines__plant=pid).distinct().count()
+        else:
+            line_count = 0
+            dept_count = 0
+            res_count = 0
+
+        kpis = DataManagementKpis(
+            production_lines=line_count,
+            departments=dept_count,
+            resources=res_count,
+            plant_status=selected_plant_obj.status if selected_plant_obj else "unknown",
+        )
+
+        # 4. Production tree (hierarchical)
+        tree_root = None
+        if selected_plant_obj:
+            pid = selected_plant_obj
+
+            lines_qs = ProductionLine.objects.filter(plant=pid)
+            rgs_qs = ResourceGroup.objects.filter(department__production_lines__plant=pid).distinct()
+            res_qs = Resource.objects.filter(resource_group__department__production_lines__plant=pid).distinct()
+
+            if status and status != "all":
+                lines_qs = lines_qs.filter(status=status)
+                rgs_qs = rgs_qs.filter(status=status)
+                res_qs = res_qs.filter(status=status)
+
+            # Build tree: line → department → rg → resource
+            tree_children: list[DataManagementTreeChild] = []
+            for line in lines_qs:
+                line_depts = Department.objects.filter(production_lines=line)
+                dept_children: list[DataManagementTreeChild] = []
+                for dept in line_depts:
+                    dept_rgs = rgs_qs.filter(department=dept)
+                    rg_children: list[DataManagementTreeChild] = []
+                    for rg in dept_rgs:
+                        rg_resources = res_qs.filter(resource_group=rg)
+                        res_children = [
+                            DataManagementTreeChild(
+                                id=str(r.id),
+                                type="resource",
+                                name=r.name,
+                                code=r.code,
+                                status=r.status,
+                                child_count=0,
+                                children=[],
+                            )
+                            for r in rg_resources
+                        ]
+                        rg_children.append(
+                            DataManagementTreeChild(
+                                id=str(rg.id),
+                                type="resourceGroup",
+                                name=rg.name,
+                                code=rg.code,
+                                status=rg.status,
+                                child_count=len(res_children),
+                                children=res_children,
+                            )
+                        )
+                    dept_children.append(
+                        DataManagementTreeChild(
+                            id=str(dept.id),
+                            type="department",
+                            name=dept.name,
+                            code=dept.code,
+                            status=dept.status,
+                            child_count=len(rg_children),
+                            children=rg_children,
+                        )
+                    )
+                tree_children.append(
+                    DataManagementTreeChild(
+                        id=str(line.id),
+                        type="productionLine",
+                        name=line.name,
+                        code=line.code,
+                        status=line.status,
+                        child_count=len(dept_children),
+                        children=dept_children,
+                    )
+                )
+
+            tree_root = DataManagementTreeRoot(
+                id=str(pid.id),
+                type="plant",
+                name=pid.name,
+                code=pid.code,
+                status=pid.status,
+                child_count=len(tree_children),
+                children=tree_children,
+            )
+
+        # 5. Navigation counts (global)
+        nav_counts = DataManagementNavCounts(
+            plants=Plant.objects.count(),
+            production_lines=ProductionLine.objects.count(),
+            departments=Department.objects.count(),
+            resource_groups=ResourceGroup.objects.count(),
+            resources=Resource.objects.count(),
+            reference_tables=ReferenceTable.objects.count(),
+        )
+
+        # 6. System health (global)
+        health = DataManagementSystemHealth(
+            running_lines=ProductionLine.objects.filter(status="active").count(),
+            resources_down=Resource.objects.filter(op_status="Down").count(),
+            high_utilization_resources=Resource.objects.filter(utilization__gte=85.0).count(),
+        )
+
+        return DataManagementOverview(
+            selected_plant=selected_plant,
+            plants=plants,
+            kpis=kpis,
+            tree=tree_root,
+            navigation_counts=nav_counts,
+            system_health=health,
+        )
+
+    @strawberry.field
     def reference_table(self, id: str) -> Optional[ReferenceTableNode]:
         try:
             return ReferenceTableNode.from_db(ReferenceTable.objects.get(id=id))
@@ -125,3 +420,25 @@ class ManufacturingQuery:
             down_count=Resource.objects.filter(op_status="Down").count(),
             maintenance_count=Resource.objects.filter(op_status="Maintenance").count(),
         )
+
+    @strawberry.field
+    def profile(self) -> Optional[ProfileNode]:
+        profile = Profile.objects.first()
+        if not profile:
+            profile = Profile.objects.create(
+                name="Mihai Popescu", role="Manufacturing Systems Lead",
+                email="mihai.popescu@leansync.com",
+                phone="+1 (313) 555-0147", location="Detroit, Michigan, USA",
+                timezone="America/Detroit", language="English, Romanian",
+                about="Operations leader focused on lean transformation, digital shopfloor visibility, and cross-plant standardization. Experienced in deploying KPI routines, stabilizing bottlenecks, and coaching supervisors through continuous improvement.",
+                work_history=[
+                    {"id": "w1", "role": "Manufacturing Systems Lead", "company": "LeanSync Manufacturing", "period": "2023 - Present", "description": "Rolled out standard metrics, digital boards, and accountability cadences across three plants."},
+                    {"id": "w2", "role": "Plant Operations Manager", "company": "AutoMotion Components", "period": "2020 - 2023", "description": "Improved OEE by 11 points and reduced expedited freight through better scheduling discipline."},
+                    {"id": "w3", "role": "Continuous Improvement Engineer", "company": "Northline Industrial", "period": "2017 - 2020", "description": "Led kaizen events, value stream redesign, and layered process audits for high-mix assembly cells."},
+                ],
+                education=[
+                    {"id": "e1", "degree": "M.Sc. Industrial Engineering", "school": "Wayne State University", "period": "2015 - 2017"},
+                    {"id": "e2", "degree": "B.Sc. Mechanical Engineering", "school": "Politehnica University of Bucharest", "period": "2011 - 2015"},
+                ],
+            )
+        return ProfileNode.from_db(profile)

@@ -8,13 +8,17 @@ class ProductionLine(TimeStampedModel):
         ("inactive", "Inactive"),
     ]
 
+    code = models.CharField(max_length=20, verbose_name="Line Code")
     name = models.CharField(max_length=200, verbose_name="Line Name")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     plant = models.ForeignKey(
         "manufacturing.Plant",
         on_delete=models.CASCADE,
         related_name="production_lines",
-        null=True,
+    )
+    departments = models.ManyToManyField(
+        "manufacturing.Department",
+        related_name="production_lines",
         blank=True,
     )
     models_produced = models.TextField(blank=True, default="", help_text="Comma-separated list of models")
@@ -32,4 +36,4 @@ class ProductionLine(TimeStampedModel):
         verbose_name_plural = "Production Lines"
 
     def __str__(self):
-        return f"{self.name} ({self.plant.name if self.plant else 'No Plant'})"
+        return f"{self.name} ({self.code})"

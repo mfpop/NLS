@@ -39,31 +39,7 @@ class Resource(TimeStampedModel):
         "manufacturing.ResourceGroup",
         on_delete=models.CASCADE,
         related_name="resources",
-        null=True,
-        blank=True,
     )
-    department = models.ForeignKey(
-        "manufacturing.Department",
-        on_delete=models.CASCADE,
-        related_name="resources",
-        null=True,
-        blank=True,
-    )
-    production_line = models.ForeignKey(
-        "manufacturing.ProductionLine",
-        on_delete=models.CASCADE,
-        related_name="resources",
-        null=True,
-        blank=True,
-    )
-    plant = models.ForeignKey(
-        "manufacturing.Plant",
-        on_delete=models.CASCADE,
-        related_name="resources",
-        null=True,
-        blank=True,
-    )
-
     class Meta:
         db_table = "manufacturing_resource"
         ordering = ["name"]
@@ -72,3 +48,4 @@ class Resource(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+

@@ -1,10 +1,15 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useQuery } from "@apollo/client/react";
 import { BrandHeader } from "@/components/BrandHeader";
 import { useSidebarStore } from "@/stores/sidebar";
 import type { SidebarSectionItem } from "./config";
-import { sidebarEntries, plants } from "./config";
+import { sidebarEntries, plants as fallbackPlants } from "./config";
 import { ChevronDown, MoreVertical, User, LogOut, Settings, ChevronRight } from "./icons";
+import { PLANTS_QUERY } from "@/graphql/plantQueries";
+import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
+import type { Plant } from "@/types/plant";
+import type { ProductionLine } from "@/types/productionLine";
 
 function initialsFromName(name: string) {
   return name
@@ -22,11 +27,23 @@ export function SidebarShell() {
   const [isLineOpen, setIsLineOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [openNestedGroups, setOpenNestedGroups] = useState<Record<string, boolean>>({});
-  const [selectedPlant, setSelectedPlant] = useState(plants[0].name);
-  const [selectedLine, setSelectedLine] = useState(plants[0].lines[0]);
+  const [selectedPlant, setSelectedPlant] = useState("");
+  const [selectedLine, setSelectedLine] = useState("All Lines");
   const [selectedPlantExpanded, setSelectedPlantExpanded] = useState(false);
   const lineRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
+
+  const { data: plantsData } = useQuery<{ plants: Plant[] }>(PLANTS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: linesData } = useQuery<{ productionLines: { items: ProductionLine[] } }>(PRODUCTION_LINES_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+
+  const sidebarPlants = useMemo(() => {
+    const dbPlants = plantsData?.plants;
+    const dbLines = linesData?.productionLines?.items;
+    if (dbPlants && dbPlants.length > 0 && dbLines) {
+      return dbPlants.map(p => ({ name: p.name, lines: dbLines.filter(l => l.plantId === p.id).map(l => l.name) }));
+    }
+    return fallbackPlants;
+  }, [plantsData, linesData]);
 
         useEffect(() => {
     if (pathname.startsWith("/execution/")) setOpenSection("execute");
@@ -55,11 +72,11 @@ export function SidebarShell() {
   }, []);
 
     const selectedLineLabel = useMemo(() => {
-    const plant = plants.find((p) => p.name === selectedPlant);
+    const plant = sidebarPlants.find((p) => p.name === selectedPlant);
     const plantPrefix = plant ? plant.name.slice(0, 12) + (plant.name.length > 12 ? "…" : "") : "";
     const lineTrimmed = selectedLine.length > 14 ? selectedLine.slice(0, 14) + "…" : selectedLine;
     return plant ? `${plantPrefix} / ${lineTrimmed}` : lineTrimmed;
-  }, [selectedPlant, selectedLine]);
+  }, [selectedPlant, selectedLine, sidebarPlants]);
 
   const hasActivePath = (item: SidebarSectionItem): boolean => {
     if (item.type === "item") {
@@ -148,7 +165,7 @@ export function SidebarShell() {
             <div className={"sidebar__line-dropdown-wrap " + (isLineOpen ? "sidebar__line-dropdown-wrap--open" : "sidebar__line-dropdown-wrap--closed")}>
               <div className="sidebar__line-dropdown">
                 <div className="sidebar__line-list">
-                  {plants.map((plant) => {
+                  {sidebarPlants.map((plant) => {
                     const isPlantExpanded = selectedPlantExpanded && selectedPlant === plant.name;
                     const isPlantSelected = selectedPlant === plant.name;
                     return (

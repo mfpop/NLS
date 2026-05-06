@@ -13,13 +13,6 @@ class Department(TimeStampedModel):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     manager = models.CharField(max_length=200, blank=True, default="")
     employees = models.IntegerField(default=0)
-    plant = models.ForeignKey(
-        "manufacturing.Plant",
-        on_delete=models.CASCADE,
-        related_name="departments",
-        null=True,
-        blank=True,
-    )
 
     group_count = models.IntegerField(default=0)
     resource_count = models.IntegerField(default=0)

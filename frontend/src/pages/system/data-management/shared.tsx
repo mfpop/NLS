@@ -1,6 +1,6 @@
-﻿import { useState, type ReactNode, type FormEvent } from "react";
+import { useState, type ReactNode, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { MoreHorizontal, ChevronRight, ExternalLink, Search, X, AlertTriangle, Info } from "lucide-react";
+import { ChevronRight, ExternalLink, MoreHorizontal, Search, X, AlertTriangle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
 
@@ -136,55 +136,6 @@ export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" 
   );
 }
 
-/* •••••• Primary Action (single visible action) •••••• */
-
-export function PrimaryAction({ onClick }: { onClick?: () => void }) {
-  return <button type="button" onClick={onClick}
-    className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-medium transition-all duration-150 ease-in-out active:scale-[0.97]">Details</button>;
-}
-
-/* •••••• Secondary Actions Dropdown •••••• */
-
-interface SecondaryAction { label: string; icon?: ReactNode; onClick?: () => void; danger?: boolean; }
-
-export function ActionsDropdown({ actions, buttonClass }: { actions: SecondaryAction[]; buttonClass?: string }) {
-  const [open, setOpen] = useState(false);
-  // Insert separators: after each danger action that is followed by a non-danger action
-  const renderedItems: ReactNode[] = [];
-  actions.forEach((a, i) => {
-    if (i > 0 && !a.danger && actions[i - 1].danger) {
-      renderedItems.push(<div key={`sep-${i}`} className="my-1 border-t border-slate-100" />);
-    }
-    renderedItems.push(
-      <button key={i} type="button"
-        onClick={() => { a.onClick?.(); setOpen(false); }}
-        className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm whitespace-nowrap rounded-md transition-all duration-150 ease-in-out ${
-          a.danger ? "text-red-500 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100"
-        }`}
-      >
-        {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-red-400" : "text-slate-500"}`}>{a.icon}</span>}
-        {a.label}
-      </button>
-    );
-  });
-  return (
-    <div className="relative">
-      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className={buttonClass ?? "w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 ease-in-out inline-flex items-center justify-center"}>
-        <MoreHorizontal className="w-4 h-4 stroke-current" />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 w-[240px] bg-white border border-slate-200 rounded-xl shadow-lg p-1" onClick={(e) => e.stopPropagation()}>
-            {renderedItems}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 /* •••••• Bulk Checkbox •••••• */
 
 export function BulkCheckbox({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
@@ -194,10 +145,13 @@ export function BulkCheckbox({ checked, onChange }: { checked: boolean; onChange
 /* •••••• Data Management Sub-Header Navigation •••••• */
 
 const dmNavItems = [
-  { label: "Structure",  path: "/system/data-management/structure" },
-  { label: "Groups",     path: "/system/data-management/resource-groups" },
-  { label: "Resources",  path: "/system/data-management/resources" },
-  { label: "Tables",     path: "/system/data-management/references" },
+  { label: "Plants",          path: "/system/data-management/plant" },
+  { label: "Lines",           path: "/system/data-management/production-lines" },
+  { label: "Departments",     path: "/system/data-management/departments" },
+  { label: "Groups",          path: "/system/data-management/resource-groups" },
+  { label: "Resources",       path: "/system/data-management/resources" },
+  { label: "Structure",       path: "/system/data-management/structure" },
+  { label: "Tables",          path: "/system/data-management/references" },
 ];
 
 export function DataManagementNav({ currentPath }: { currentPath?: string }) {
@@ -270,7 +224,55 @@ export function SmartControlTowerLink({ plant, line, department, resource }: { p
   );
 }
 
-/* •••••• CRUD Modal •••••• */
+/* •••••• Primary Action (single visible action) [Legacy] •••••• */
+
+export function PrimaryAction({ onClick }: { onClick?: () => void }) {
+  return <button type="button" onClick={onClick}
+    className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-medium transition-all duration-150 ease-in-out active:scale-[0.97]">Details</button>;
+}
+
+/* •••••• Secondary Actions Dropdown [Legacy] •••••• */
+
+interface SecondaryAction { label: string; icon?: ReactNode; onClick?: () => void; danger?: boolean; }
+
+export function ActionsDropdown({ actions, buttonClass }: { actions: SecondaryAction[]; buttonClass?: string }) {
+  const [open, setOpen] = useState(false);
+  const renderedItems: ReactNode[] = [];
+  actions.forEach((a, i) => {
+    if (i > 0 && !a.danger && actions[i - 1].danger) {
+      renderedItems.push(<div key={`sep-${i}`} className="my-1 border-t border-slate-100" />);
+    }
+    renderedItems.push(
+      <button key={i} type="button"
+        onClick={() => { a.onClick?.(); setOpen(false); }}
+        className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm whitespace-nowrap rounded-md transition-all duration-150 ease-in-out ${
+          a.danger ? "text-red-500 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100"
+        }`}
+      >
+        {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-red-400" : "text-slate-500"}`}>{a.icon}</span>}
+        {a.label}
+      </button>
+    );
+  });
+  return (
+    <div className="relative">
+      <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className={buttonClass ?? "w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 ease-in-out inline-flex items-center justify-center"}>
+        <MoreHorizontal className="w-4 h-4 stroke-current" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full z-20 mt-1 w-[240px] bg-white border border-slate-200 rounded-xl shadow-lg p-1" onClick={(e) => e.stopPropagation()}>
+            {renderedItems}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* •••••• CRUD Modal [Legacy] •••••• */
 
 interface CrudModalField {
   key: string;
@@ -380,28 +382,7 @@ interface GlobalSearchResult { type: "Plant" | "Department" | "Group" | "Resourc
 export function GlobalSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const allResults: GlobalSearchResult[] = [
-    { type: "Plant", label: "Main Plant", subtitle: "Building A · 3 lines · 72% load", to: "/system/data-management/plant/P001" },
-    { type: "Plant", label: "Secondary Plant", subtitle: "Building B · 2 lines · 45% load", to: "/system/data-management/plant/P002" },
-    { type: "Plant", label: "Warehouse Plant", subtitle: "Warehouse 1 · 1 line (inactive)", to: "/system/data-management/plant/P003" },
-    { type: "Department", label: "Assembly", subtitle: "Main Plant · 14 resources · 78% util", to: "/system/data-management/departments/D001" },
-    { type: "Department", label: "Machining", subtitle: "Main Plant · 10 resources · 92% util", to: "/system/data-management/departments/D002" },
-    { type: "Department", label: "Quality Control", subtitle: "Main Plant · 8 resources · 55% util", to: "/system/data-management/departments/D003" },
-    { type: "Group", label: "Line Operators", subtitle: "Assembly · 28 members · 12 resources", to: "/system/data-management/resource-groups/RG001" },
-    { type: "Group", label: "Setup Technicians", subtitle: "Machining · 12 members · 6 resources", to: "/system/data-management/resource-groups/RG002" },
-    { type: "Group", label: "Quality Inspectors", subtitle: "QC · 8 members · 5 resources", to: "/system/data-management/resource-groups/RG003" },
-    { type: "Resource", label: "Welding Station 2", subtitle: "Workstation · WS-002 · Running", to: "/system/data-management/resources/RES-WELD-02" },
-    { type: "Resource", label: "CNC Mill 1", subtitle: "Machine · CNC-MILL-01 · Running", to: "/system/data-management/resources/RES-CNC-01" },
-    { type: "Resource", label: "QC Gate 1", subtitle: "Inspection Station · QC-GATE-01 · Idle", to: "/system/data-management/resources/RES-QC-01" },
-    { type: "Resource", label: "Forklift 3", subtitle: "Material Handling · FORKLIFT-03 · Running", to: "/system/data-management/resources/RES-FORK-03" },
-    { type: "Resource", label: "CNC Lathe 1", subtitle: "Machine · CNC-LATHE-01 · Down", to: "/system/data-management/resources/RES-LATHE-01" },
-    { type: "Table", label: "Shift Patterns", subtitle: "3 entries", to: "/system/data-management/references/T001" },
-    { type: "Table", label: "Machine Types", subtitle: "12 entries", to: "/system/data-management/references/T002" },
-    { type: "Table", label: "Material Categories", subtitle: "24 entries", to: "/system/data-management/references/T003" },
-    { type: "Table", label: "Work Centers", subtitle: "15 entries", to: "/system/data-management/references/T004" },
-    { type: "Table", label: "Operation Codes", subtitle: "42 entries", to: "/system/data-management/references/T005" },
-    { type: "Table", label: "Holiday Calendar", subtitle: "14 entries", to: "/system/data-management/references/T006" },
-  ];
+  const allResults: GlobalSearchResult[] = [];
   const results = query.trim() ? allResults.filter((r) => r.label.toLowerCase().includes(query.toLowerCase()) || r.subtitle.toLowerCase().includes(query.toLowerCase())) : [];
   if (!open) return null;
   return (

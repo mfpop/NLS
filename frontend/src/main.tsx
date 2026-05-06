@@ -11,7 +11,23 @@ import "@/styles/app.css";
 
 const client = new ApolloClient({
   link: new HttpLink({ uri: GRAPHQL_HTTP_URL }),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      // DataManagementTreeChild nodes share numeric IDs across types
+      // (e.g. Line id=1 and Department id=1). Namespace the cache key
+      // by combining type + id so they don't overwrite each other.
+      DataManagementTreeChild: {
+        keyFields: ["type", "id"],
+      },
+      DataManagementTreeRoot: {
+        keyFields: ["type", "id"],
+      },
+      // The overview query result is ephemeral — don't normalize it
+      DataManagementOverview: {
+        keyFields: false,
+      },
+    },
+  }),
 });
 
 const root = document.getElementById("root")!;

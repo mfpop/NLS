@@ -6,3 +6,9 @@ export type {
 	ManufacturingSnapshot,
 	ProcessSnapshot,
 } from "./dashboard";
+
+export type {
+	ProductionLine,
+	ProductionLinesQueryData,
+	ProductionLineQueryData,
+} from "./productionLine";

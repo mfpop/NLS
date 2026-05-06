@@ -1,197 +1,204 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Building2, Factory, GitBranch, Cpu, Users, Layers, Globe, MapPin, Clock, FileText, ChevronLeft, ExternalLink, Trash2, X } from "lucide-react";
-import { ConfirmDialog } from "./shared";
-import { theme } from "../../../styles/themeTokens";
+import {
+  Building2, Factory, Cpu, Pencil, ExternalLink, Trash2,
+  X, ChevronLeft, GitBranch, Layers, Users, Activity, Database
+} from "lucide-react";
+import { CrudModal, ConfirmDialog } from "./shared";
+import { usePlants, EMPTY_FORM } from "@/hooks/usePlants";
+import type { Plant } from "@/types/plant";
 
-export interface PlantDetail {
-  id: string;
-  name: string;
-  code: string;
-  status: "active" | "inactive";
-  building: string;
-  address: string;
-  timezone: string;
-  calendar: string;
-  notes: string;
-  lines: number;
-  departments: number;
-  groups: number;
-  resources: number;
+/* ── Global plant store (shared across hooks) ── */
+
+let globalPlantsCache: Plant[] = [];
+
+export function getGlobalPlants(): Plant[] {
+  return globalPlantsCache;
 }
 
-export const initialPlantDetails: PlantDetail[] = [
-  { id: "P001", name: "Main Plant", code: "MP-01", status: "active", building: "Building A", address: "123 Industrial Blvd, Detroit, MI 48201", timezone: "America/Detroit (EST)", calendar: "Standard 5-day Week", notes: "Primary assembly facility for cylinder and STB unit production.", lines: 3, departments: 4, groups: 8, resources: 42 },
-  { id: "P002", name: "Secondary Plant", code: "SP-01", status: "active", building: "Building B", address: "456 Manufacturing Dr, Toledo, OH 43601", timezone: "America/New_York (EST)", calendar: "Standard 5-day Week", notes: "Harnesses and pipes fabrication supporting main plant assembly.", lines: 2, departments: 3, groups: 5, resources: 18 },
-  { id: "P003", name: "Warehouse Plant", code: "WP-01", status: "inactive", building: "Warehouse 1", address: "789 Logistics Ave, Chicago, IL 60601", timezone: "America/Chicago (CST)", calendar: "Standard 5-day Week", notes: "Storage and kitting facility. Currently inactive pending reconfiguration.", lines: 1, departments: 1, groups: 2, resources: 6 },
-];
-
-const STORAGE_KEY = "lmd_plant_data";
-
-function loadFromStorage(): PlantDetail[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as PlantDetail[];
-  } catch { /* ignore */ }
-  return [...initialPlantDetails];
-}
-
-function saveToStorage(plants: PlantDetail[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(plants));
-  } catch { /* ignore */ }
-}
-
-let globalPlants: PlantDetail[] = loadFromStorage();
-let listeners: Array<() => void> = [];
-
-export function subscribePlantChanges(fn: () => void) {
-  listeners.push(fn);
-  return () => { listeners = listeners.filter((l) => l !== fn); };
-}
-
-export function notifyPlantChanges() {
-  saveToStorage(globalPlants);
-  listeners.forEach((fn) => fn());
-}
-
-export function getGlobalPlants() {
-  return globalPlants;
-}
+/* ── Plant Detail Page ── */
 
 export function PlantDetailPage() {
   const navigate = useNavigate();
   const { plantId } = useParams<{ plantId: string }>();
-  const [plant, setPlant] = useState<PlantDetail | undefined>(() => globalPlants.find((p) => p.id === plantId));
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const {
+    plants, loading, savePlant, deletePlant,
+  } = usePlants();
 
-  useEffect(() => {
-    const unsub = subscribePlantChanges(() => {
-      setPlant(globalPlants.find((p) => p.id === plantId));
-    });
-    return unsub;
-  }, [plantId]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<Record<string, string>>({ ...EMPTY_FORM });
 
-  if (!plant) {
+  const plant = plants.find((p) => p.id === plantId);
+
+  if (loading && !plant) {
     return (
-      <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-        <header className={`flex h-16 shrink-0 items-center gap-3 border-b px-6 ${theme.header}`}>
-          <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxBlue}`}>
-            <Building2 className="h-5 w-5 stroke-current" />
-          </div>
-          <h1 className={`text-sm font-semibold ${theme.textPrimary}`}>Plant Not Found</h1>
-        </header>
-        <div className={`flex-1 flex items-center justify-center text-xs ${theme.textSecondary}`}>Plant "{plantId}" does not exist.</div>
+      <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
+        <div className="flex items-center justify-center flex-1 text-xs text-slate-500">Loading plant details...</div>
       </div>
     );
   }
 
-  const handleDelete = () => {
-    const idx = globalPlants.findIndex((p) => p.id === plant.id);
-    if (idx >= 0) globalPlants.splice(idx, 1);
-    notifyPlantChanges();
+  if (!plant) {
+    return (
+      <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
+        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-6">
+          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+            <Building2 className="h-5 w-5 stroke-current" />
+          </div>
+          <h1 className="text-sm font-semibold text-slate-900">Plant Not Found</h1>
+        </header>
+        <div className="flex-1 flex items-center justify-center text-xs text-slate-500">Plant "{plantId}" does not exist.</div>
+      </div>
+    );
+  }
+
+  const handleEdit = () => {
+    setEditingId(plant.id);
+    setForm({
+      name: plant.name,
+      code: plant.code,
+      status: plant.status,
+      building: plant.building || "",
+      address: plant.address || "",
+      timezone: plant.timezone || "",
+      managerName: plant.managerName || "",
+      managerEmail: plant.managerEmail || "",
+      description: plant.description || "",
+      defaultCalendarId: plant.defaultCalendarId || "",
+      defaultScheduleId: plant.defaultScheduleId || "",
+    });
+    setModalOpen(true);
+  };
+
+  const handleSave = async () => {
+    const result = await savePlant({
+      ...EMPTY_FORM,
+      ...form,
+      status: (form.status || "active") as "active" | "inactive",
+    }, editingId);
+    if (result.ok) {
+      setModalOpen(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    await deletePlant(plant.id);
     navigate("/system/data-management/plant");
   };
 
+  const isActive = plant.status === "active";
+
   return (
-    <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
+    <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
       {/* HEADER */}
-      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "56px" }}>
+      <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6" style={{ height: "56px" }}>
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/system/data-management/plant")}
-            className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition-colors"
+            className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             aria-label="Back"
           >
             <ChevronLeft className="h-4 w-4 stroke-current" />
           </button>
-          <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
+          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
             <Factory className="h-5 w-5 stroke-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className={`text-sm font-semibold ${theme.textPrimary}`}>{plant.name}</h1>
-              {plant.status === "active" ? (
-                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium ${theme.badgeActive}`}>
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Active
-                </span>
-              ) : (
-                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${theme.badgeInactive}`}>
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-slate-400" />
-                  Inactive
-                </span>
-              )}
+              <h1 className="text-sm font-semibold text-slate-900">{plant.name}</h1>
+              <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-slate-100 text-slate-500">{plant.code}</span>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+                {isActive ? "Active" : "Inactive"}
+              </span>
             </div>
-            <p className={`text-xs ${theme.textSecondary}`}>ID: {plant.id} &middot; {plant.building}</p>
+            <p className="text-xs text-slate-500">ID: {plant.id} &middot; {plant.building || "No building"}</p>
           </div>
         </div>
-        <button
-          onClick={() => navigate("/system/data-management/plant")}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium transition-colors ${theme.buttonGhost}`}
-        >
-          <X className="h-4 w-4" />
-          Close
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleEdit}
+            className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 ease-in-out"
+          >
+            <Pencil className="h-4 w-4 stroke-current" />
+            Edit
+          </button>
+          <button
+            onClick={() => navigate("/system/data-management/plant")}
+            className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-all duration-150 ease-in-out"
+          >
+            <X className="w-4 h-4 stroke-current" />
+            Close
+          </button>
+        </div>
       </header>
 
       {/* CONTENT */}
-      <div className={`flex-1 overflow-y-auto ${theme.page} px-6 py-5`}>
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* General Information */}
-          <div className={`rounded-xl border p-4 shadow-sm ${theme.card}`}>
-            <h2 className={`mb-3 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>General Information</h2>
-            <div className="space-y-3">
-              <Field icon={Building2} label="Building / Site" value={plant.building} />
-              <Field icon={MapPin} label="Address / Location" value={plant.address} />
-              <Field icon={Globe} label="Timezone" value={plant.timezone} />
-              <Field icon={Clock} label="Default Calendar / Schedule" value={plant.calendar} />
-            </div>
-          </div>
-          {/* Summary Counters */}
-          <div className={`rounded-xl border p-4 shadow-sm ${theme.card}`}>
-            <h2 className={`mb-3 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>Summary Counters</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard label="Production Lines" value={plant.lines} icon={GitBranch} onClick={() => navigate("/system/data-management/production-lines")} />
-              <StatCard label="Departments" value={plant.departments} icon={Layers} onClick={() => navigate("/system/data-management/departments")} />
-              <StatCard label="Resource Groups" value={plant.groups} icon={Users} onClick={() => navigate("/system/data-management/resource-groups")} />
-              <StatCard label="Resources" value={plant.resources} icon={Cpu} onClick={() => navigate("/system/data-management/resources")} />
-            </div>
+      <div className="flex-1 overflow-y-auto bg-slate-100 px-6 py-5">
+        {/* Summary Cards */}
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <SummaryCard icon={GitBranch} label="Production Lines" value={plant.lineCount} color="bg-amber-100 text-amber-600" />
+          <SummaryCard icon={Layers} label="Departments" value={plant.departmentCount} color="bg-indigo-100 text-indigo-600" />
+          <SummaryCard icon={Users} label="Resource Groups" value={plant.groupCount} color="bg-violet-100 text-violet-600" />
+          <SummaryCard icon={Cpu} label="Resources" value={plant.resourceCount} color="bg-teal-100 text-teal-600" />
+        </div>
+
+        {/* General Information */}
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">General Information</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <InfoField icon={Building2} label="Building / Site" value={plant.building || "Not set"} />
+            <InfoField icon={Activity} label="Status" value={isActive ? "Active" : "Inactive"} />
+            <InfoField icon={Database} label="Timezone" value={plant.timezone || "Not set"} />
+            <InfoField icon={ExternalLink} label="Address" value={plant.address || "Not set"} />
           </div>
         </div>
 
-        {/* Notes */}
-        {plant.notes && (
-          <div className={`mb-6 rounded-xl border p-4 shadow-sm ${theme.card}`}>
-            <h2 className={`mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>
-              <FileText className="h-3.5 w-3.5" />
-              Description / Notes
-            </h2>
-            <p className={`text-xs leading-relaxed ${theme.textSecondary}`}>{plant.notes}</p>
+        {/* Contact Information */}
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Contact Information</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <InfoField icon={Users} label="Manager" value={plant.managerName || "Not set"} />
+            <InfoField icon={ExternalLink} label="Manager Email" value={plant.managerEmail || "Not set"} />
+          </div>
+        </div>
+
+        {/* Description */}
+        {plant.description && (
+          <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Description / Notes</h2>
+            <p className="text-sm text-slate-700">{plant.description}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className={`rounded-xl border p-4 shadow-sm ${theme.card}`}>
-          <h2 className={`mb-3 text-[11px] font-bold uppercase tracking-wider ${theme.textSecondary}`}>Actions</h2>
+        <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Quick Actions</h2>
           <div className="flex flex-wrap gap-2">
-            <ActionBtn icon={GitBranch} label="Manage Production Lines" onClick={() => navigate("/system/data-management/production-lines")} />
+            <ActionBtn icon={GitBranch} label="View Production Lines" onClick={() => navigate("/system/data-management/production-lines")} />
             <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/data-management/departments")} />
             <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/data-management/resource-groups")} />
             <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/data-management/resources")} />
-            <ActionBtn icon={Building2} label="View Full Structure" onClick={() => navigate("/system/data-management/structure")} />
-            <ActionBtn icon={ExternalLink} label="Open in Control Tower" onClick={() => navigate("/control-tower?plant=" + encodeURIComponent(plant.name))} />
+            <ActionBtn icon={ExternalLink} label="Open in Control Tower" onClick={() => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`)} />
           </div>
         </div>
 
+        {/* Timestamps */}
+        <div className="mb-6 flex gap-4 text-[11px] text-slate-400">
+          <span>Created: {new Date(plant.createdAt).toLocaleDateString()}</span>
+          <span>Updated: {new Date(plant.updatedAt).toLocaleDateString()}</span>
+        </div>
+
         {/* Delete section */}
-        <div className="mt-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/30 px-4 py-3">
+        <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50/50 px-4 py-3">
           <div>
-            <p className="text-xs font-medium text-red-600 dark:text-red-400">Delete this plant</p>
-            <p className="text-[11px] text-red-500 dark:text-red-500">This action cannot be undone. All associated data will be removed.</p>
+            <p className="text-xs font-medium text-red-600">Delete this plant</p>
+            <p className="text-[11px] text-red-500">This action cannot be undone.</p>
           </div>
           <button
-            onClick={() => setConfirmDelete(true)}
+            onClick={() => setConfirmOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 transition-colors active:scale-[0.97]"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -200,49 +207,72 @@ export function PlantDetailPage() {
         </div>
       </div>
 
+      {/* Edit Modal */}
+      <CrudModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Edit Plant"
+        fields={[
+          { key: "name", label: "Plant Name", required: true, placeholder: "e.g. Main Plant" },
+          { key: "code", label: "Plant Code", required: true, placeholder: "e.g. MP-01" },
+          { key: "status", label: "Status", type: "select" as const, options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+          { key: "building", label: "Building / Site", placeholder: "e.g. Building A" },
+          { key: "address", label: "Address / Location", placeholder: "e.g. 123 Industrial Blvd" },
+          { key: "managerName", label: "Manager Name", placeholder: "e.g. Jane Doe" },
+          { key: "managerEmail", label: "Manager Email", placeholder: "e.g. jane@company.com" },
+          { key: "description", label: "Description / Notes", placeholder: "Primary assembly facility" },
+        ]}
+        values={form}
+        onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))}
+        onSave={handleSave}
+      />
+
+      {/* Delete Confirmation */}
       <ConfirmDialog
-        open={confirmDelete}
-        onClose={() => setConfirmDelete(false)}
-        title="Delete Plant"
-        message={`Are you sure you want to delete "${plant.name}"? This action cannot be undone.`}
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title={`Delete plant ${plant.name}?`}
+        message="This action cannot be undone."
         onConfirm={handleDelete}
       />
     </div>
   );
 }
 
-/* ── Helpers ── */
+/* ── Helper Components ── */
 
-function Field({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function SummaryCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</span>
+        <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${color}`}>
+          <Icon className="h-4 w-4 stroke-current" />
+        </span>
+      </div>
+      <div className="text-2xl font-bold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function InfoField({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2.5">
-      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${theme.iconBoxSubtle}`}>
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500">
         <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0">
-        <div className={`text-[11px] font-medium ${theme.textSecondary}`}>{label}</div>
-        <div className={`text-sm ${theme.textPrimary}`}>{value || <span className={`italic ${theme.textMuted}`}>Not set</span>}</div>
+        <div className="text-[11px] font-medium text-slate-500">{label}</div>
+        <div className="text-sm text-slate-900">{value || <span className="italic text-slate-400">Not set</span>}</div>
       </div>
     </div>
   );
 }
 
-function StatCard({ label, value, icon: Icon, onClick }: { label: string; value: number; icon: any; onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={`rounded-lg border p-2.5 text-left transition-all active:scale-[0.98] ${theme.row} ${theme.cardHover}`}>
-      <div className="flex items-center justify-between">
-        <Icon className={`h-3.5 w-3.5 ${theme.iconSubtle}`} />
-        <span className={`text-base font-bold ${theme.textPrimary}`}>{value}</span>
-      </div>
-      <div className={`mt-1 text-[10px] ${theme.textSecondary}`}>{label}</div>
-    </button>
-  );
-}
-
 function ActionBtn({ icon: Icon, label, onClick }: { icon: any; label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors active:scale-[0.97] ${theme.buttonSecondary}`}>
-      <Icon className={`h-3.5 w-3.5 ${theme.iconSubtle}`} />
+    <button onClick={onClick} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition-colors active:scale-[0.97]">
+      <Icon className="h-3.5 w-3.5 text-slate-400" />
       {label}
     </button>
   );

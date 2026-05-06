@@ -5,12 +5,14 @@ from api.permissions import ensure_access
 from api.validators import require_non_empty
 from api.types.manufacturing import (
     PlantInput, PlantNode, PlantMutationResult,
-    DeletePlantResult, FieldError, DepartmentNode,
+    DeletePlantResult, FieldError, DepartmentNode, DepartmentInput,
+    DepartmentMutationResult, DeleteDepartmentResult,
     ProductionLineNode, ResourceGroupNode, ResourceNode, ReferenceTableNode,
+    ProfileNode, ProfileInput, ProfileMutationResult,
 )
 from manufacturing.models import (
     Plant, Department, ProductionLine,
-    ResourceGroup, Resource, ReferenceTable,
+    ResourceGroup, Resource, ReferenceTable, Profile,
 )
 
 
@@ -120,3 +122,187 @@ class ManufacturingMutation:
         ensure_access(action="rename_plant")
         cleaned_name = require_non_empty(name, "name")
         return f"Plant {plant_code} renamed to {cleaned_name}"
+
+    # ── Production Line Mutations ──
+
+        # ── Production Line Mutations ──
+
+    @strawberry.mutation
+    def create_production_line(self, name: str, code: str, plant_id: str,
+                                status: str = "active",
+                                models_produced: str = "", shift_pattern: str = "",
+                                is_constraint: bool = False) -> ProductionLineNode:
+        ensure_access(action="create_production_line")
+        plant = Plant.objects.get(id=plant_id)
+        line = ProductionLine.objects.create(
+            code=code,
+            name=name,
+            status=status,
+            plant=plant,
+            models_produced=models_produced,
+            shift_pattern=shift_pattern,
+            is_constraint=is_constraint,
+        )
+        # Update plant line count
+        plant.line_count = plant.production_lines.count()
+        plant.save()
+        return ProductionLineNode.from_db(line)
+
+    @strawberry.mutation
+    def update_production_line(self, id: str, name: str, code: str, plant_id: str,
+                                status: str = "active", models_produced: str = "",
+                                shift_pattern: str = "", is_constraint: bool = False) -> ProductionLineNode:
+        ensure_access(action="update_production_line")
+        line = ProductionLine.objects.get(id=id)
+        plant = Plant.objects.get(id=plant_id)
+        old_plant_id = line.plant_id
+
+        line.code = code
+        line.name = name
+        line.status = status
+        line.plant = plant
+        line.models_produced = models_produced
+        line.shift_pattern = shift_pattern
+        line.is_constraint = is_constraint
+        line.save()
+
+        # Update counts on both old and new plants
+        if old_plant_id and str(old_plant_id) != str(plant.id):
+            old_plant = Plant.objects.get(id=old_plant_id)
+            old_plant.line_count = old_plant.production_lines.count()
+            old_plant.save()
+        plant.line_count = plant.production_lines.count()
+        plant.save()
+
+        return ProductionLineNode.from_db(line)
+
+    @strawberry.mutation
+    def delete_production_line(self, id: str) -> DeletePlantResult:
+        ensure_access(action="delete_production_line")
+        try:
+            line = ProductionLine.objects.get(id=id)
+        except ProductionLine.DoesNotExist:
+            return DeletePlantResult(
+                success=False, in_use=False,
+                message="Production line not found",
+                errors=[FieldError(field="id", message="Not found")]
+            )
+
+        plant_id = line.plant_id
+        line.delete()
+
+        # Update plant line count
+        if plant_id:
+            plant = Plant.objects.get(id=plant_id)
+            plant.line_count = plant.production_lines.count()
+            plant.save()
+
+        return DeletePlantResult(success=True, in_use=False, message="Production line deleted.")
+
+    @strawberry.mutation
+    def toggle_production_line_status(self, id: str) -> ProductionLineNode:
+        ensure_access(action="toggle_production_line_status")
+        line = ProductionLine.objects.get(id=id)
+        line.status = "inactive" if line.status == "active" else "active"
+        line.save()
+        return ProductionLineNode.from_db(line)
+
+    @strawberry.mutation
+    def update_profile(self, input: ProfileInput) -> ProfileMutationResult:
+        ensure_access(action="update_profile")
+        profile = Profile.objects.first()
+        if not profile:
+            profile = Profile.objects.create(name="", role="", email="")
+
+        errors = []
+        if not input.name.strip():
+            errors.append(FieldError(field="name", message="Name is required"))
+        if not input.role.strip():
+            errors.append(FieldError(field="role", message="Role is required"))
+        if not input.email.strip():
+            errors.append(FieldError(field="email", message="Email is required"))
+        elif "@" not in input.email:
+            errors.append(FieldError(field="email", message="Invalid email format"))
+        if input.about and len(input.about) > 500:
+            errors.append(FieldError(field="about", message="About text must be 500 characters or less"))
+        if errors:
+            return ProfileMutationResult(errors=errors)
+
+        profile.name = input.name.strip()
+        profile.role = input.role.strip()
+        profile.email = input.email.strip()
+        profile.phone = (input.phone or "").strip()
+        profile.location = (input.location or "").strip()
+        profile.plant = (input.plant or "").strip()
+        profile.department = (input.department or "").strip()
+        profile.reports_to = (input.reports_to or "").strip()
+        profile.language = (input.language or "").strip()
+        profile.about = (input.about or "").strip()
+
+        if input.work_history is not None:
+            profile.work_history = [
+                {"id": w.id, "role": w.role, "company": w.company, "period": w.period, "description": w.description}
+                for w in input.work_history if w.role.strip() and w.company.strip()
+            ]
+        if input.education is not None:
+            profile.education = [
+                {"id": e.id, "degree": e.degree, "school": e.school, "period": e.period}
+                for e in input.education if e.degree.strip() and e.school.strip()
+            ]
+
+        profile.save()
+        return ProfileMutationResult(profile=ProfileNode.from_db(profile))
+
+    @strawberry.mutation
+    def create_department(self, input: DepartmentInput) -> DepartmentMutationResult:
+        ensure_access(action="create_department")
+        errors = []
+        if not input.name.strip():
+            errors.append(FieldError(field="name", message="Department name is required"))
+        if not input.code.strip():
+            errors.append(FieldError(field="code", message="Department code is required"))
+        if errors:
+            return DepartmentMutationResult(errors=errors)
+        dept = Department.objects.create(
+            name=input.name.strip(),
+            code=input.code.strip(),
+            status=input.status,
+            manager=(input.manager or "").strip(),
+            employees=input.employees or 0,
+        )
+        return DepartmentMutationResult(department=DepartmentNode.from_db(dept))
+
+    @strawberry.mutation
+    def update_department(self, id: str, input: DepartmentInput) -> DepartmentMutationResult:
+        ensure_access(action="update_department")
+        try:
+            dept = Department.objects.get(id=id)
+        except Department.DoesNotExist:
+            return DepartmentMutationResult(errors=[FieldError(field="id", message="Department not found")])
+        errors = []
+        if not input.name.strip():
+            errors.append(FieldError(field="name", message="Department name is required"))
+        if not input.code.strip():
+            errors.append(FieldError(field="code", message="Department code is required"))
+        if errors:
+            return DepartmentMutationResult(errors=errors)
+        dept.name = input.name.strip()
+        dept.code = input.code.strip()
+        dept.status = input.status
+        dept.manager = (input.manager or "").strip()
+        dept.employees = input.employees or 0
+        dept.save()
+        return DepartmentMutationResult(department=DepartmentNode.from_db(dept))
+
+    @strawberry.mutation
+    def delete_department(self, id: str) -> DeleteDepartmentResult:
+        ensure_access(action="delete_department")
+        try:
+            dept = Department.objects.get(id=id)
+        except Department.DoesNotExist:
+            return DeleteDepartmentResult(success=False, in_use=False, message="Department not found")
+        if dept.group_count > 0 or dept.resource_count > 0:
+            return DeleteDepartmentResult(success=False, in_use=True, message="Department is in use. Disable instead.")
+        dept.delete()
+        return DeleteDepartmentResult(success=True, in_use=False, message="Department deleted.")
+

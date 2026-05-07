@@ -69,6 +69,7 @@ export const REFERENCE_TABLES_QUERY = gql`
       id
       name
       status
+      group
       entryCount
       description
       createdAt
@@ -84,6 +85,7 @@ export const CREATE_REFERENCE_TABLE_MUTATION = gql`
         id
         name
         status
+        group
         entryCount
         description
       }
@@ -102,6 +104,7 @@ export const UPDATE_REFERENCE_TABLE_MUTATION = gql`
         id
         name
         status
+        group
         entryCount
         description
       }

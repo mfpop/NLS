@@ -13,6 +13,7 @@ export interface DataManagementPlantNode {
 export interface DataManagementKpis {
   productionLines: number;
   departments: number;
+  resourceGroups: number;
   resources: number;
   plantStatus: string;
 }

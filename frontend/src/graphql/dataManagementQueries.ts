@@ -18,6 +18,7 @@ export const DATA_MANAGEMENT_OVERVIEW_QUERY = gql`
       kpis {
         productionLines
         departments
+        resourceGroups
         resources
         plantStatus
       }

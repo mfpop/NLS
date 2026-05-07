@@ -156,12 +156,15 @@ export function SidebarShell() {
                 setIsLineOpen((current) => !current);
               }}
               aria-expanded={isLineOpen}
+              title="Filters all reference data to this line."
             >
               <div className="sidebar__line-copy">
                 <div className="sidebar__line-label">Plant / Line</div>
                 <div className="sidebar__line-value">{selectedLineLabel}</div>
               </div>
-              <ChevronDown className={"sidebar__chevron " + (isLineOpen ? "sidebar__chevron--rotated" : "")} />
+              <span className="sidebar__chevron-wrap">
+                <ChevronDown className={"sidebar__chevron " + (isLineOpen ? "sidebar__chevron--rotated" : "")} />
+              </span>
             </button>
 
             <div className={"sidebar__line-dropdown-wrap " + (isLineOpen ? "sidebar__line-dropdown-wrap--open" : "sidebar__line-dropdown-wrap--closed")}>

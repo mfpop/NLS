@@ -22,7 +22,6 @@ class Migration(migrations.Migration):
                 ("phone", models.CharField(blank=True, default="", max_length=50)),
                 ("email", models.EmailField(blank=True, default="", max_length=200)),
                 ("website", models.URLField(blank=True, default="", max_length=500)),
-                ("tax_id", models.CharField(blank=True, default="", max_length=50, verbose_name="Tax ID")),
                 ("description", models.TextField(blank=True, default="")),
             ],
             options={

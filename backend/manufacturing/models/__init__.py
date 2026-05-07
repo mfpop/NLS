@@ -4,6 +4,7 @@ from .production_line import ProductionLine
 from .resource_group import ResourceGroup
 from .resource import Resource
 from .reference_table import ReferenceTable
+from .reference_item import ReferenceItem
 from .profile import Profile
 from .role import UserRole
 from .company import Company
@@ -16,6 +17,7 @@ __all__ = [
     "ResourceGroup",
     "Resource",
     "ReferenceTable",
+    "ReferenceItem",
     "Profile",
     "UserRole",
     "Company",

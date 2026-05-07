@@ -10,12 +10,12 @@ from api.types.manufacturing import (
     DataManagementOverview, DataManagementPlantNode, DataManagementKpis,
     DataManagementTreeRoot, DataManagementTreeChild,
     DataManagementNavCounts, DataManagementSystemHealth,
-    ProfileNode, CompanyNode, ConfigOptionNode,
+    ProfileNode, CompanyNode, ConfigOptionNode, ReferenceItemNode,
 )
 from manufacturing.models import (
     Plant, Department, ProductionLine,
     ResourceGroup, Resource, ReferenceTable, Profile, Company,
-    ConfigOption,
+    ConfigOption, ReferenceItem,
 )
 
 
@@ -282,15 +282,18 @@ class ManufacturingQuery:
             pid = selected_plant_obj
             line_count = ProductionLine.objects.filter(plant=pid).count() if pid else 0
             dept_count = Department.objects.filter(production_lines__plant=pid).distinct().count() if pid else 0
+            rg_count = ResourceGroup.objects.filter(department__production_lines__plant=pid).distinct().count() if pid else 0
             res_count = Resource.objects.filter(resource_group__department__production_lines__plant=pid).distinct().count() if pid else 0
         else:
             line_count = ProductionLine.objects.count()
             dept_count = Department.objects.count()
+            rg_count = ResourceGroup.objects.count()
             res_count = Resource.objects.count()
 
         kpis = DataManagementKpis(
             production_lines=line_count,
             departments=dept_count,
+            resource_groups=rg_count,
             resources=res_count,
             plant_status=selected_plant_obj.status if selected_plant_obj else "all",
         )
@@ -453,3 +456,12 @@ class ManufacturingQuery:
         return [ConfigOptionNode(
             category=o.category, value=o.value, label=o.label, sort_order=o.sort_order,
         ) for o in qs]
+
+    @strawberry.field
+    def reference_items(self, table_type: Optional[str] = None, active_only: Optional[bool] = True) -> list[ReferenceItemNode]:
+        qs = ReferenceItem.objects.all()
+        if table_type:
+            qs = qs.filter(table_type=table_type)
+        if active_only:
+            qs = qs.filter(is_active=True)
+        return [ReferenceItemNode.from_db(i) for i in qs]

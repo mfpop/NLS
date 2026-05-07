@@ -291,6 +291,7 @@ class ReferenceTableNode:
     id: strawberry.ID
     name: str
     status: str
+    group: str
     entry_count: int = strawberry.field(name="entryCount")
     description: str
     created_at: str = strawberry.field(name="createdAt")
@@ -302,6 +303,7 @@ class ReferenceTableNode:
             id=strawberry.ID(str(table.id)),
             name=table.name,
             status=table.status,
+            group=table.group or "",
             entry_count=table.entry_count,
             description=table.description,
             created_at=table.created_at.isoformat() if table.created_at else "",
@@ -314,6 +316,7 @@ class ReferenceTableInput:
     name: str
     description: typing.Optional[str] = None
     status: typing.Optional[str] = "active"
+    group: typing.Optional[str] = None
 
 
 @strawberry.type
@@ -325,6 +328,51 @@ class ReferenceTableMutationResult:
 @strawberry.type
 class DeleteReferenceTableResult:
     success: bool
+    errors: typing.Optional[typing.List[FieldError]] = None
+
+
+# ── Reference Item (unified reference data) ──
+
+@strawberry.type
+class ReferenceItemNode:
+    id: strawberry.ID
+    table_type: str = strawberry.field(name="tableType")
+    code: str
+    name: str
+    description: str
+    is_active: bool = strawberry.field(name="isActive")
+    sort_order: int = strawberry.field(name="sortOrder")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, item: "ReferenceItem") -> "ReferenceItemNode":
+        return cls(
+            id=strawberry.ID(str(item.id)),
+            table_type=item.table_type,
+            code=item.code,
+            name=item.name,
+            description=item.description,
+            is_active=item.is_active,
+            sort_order=item.sort_order,
+            created_at=item.created_at.isoformat() if item.created_at else "",
+            updated_at=item.updated_at.isoformat() if item.updated_at else "",
+        )
+
+
+@strawberry.input
+class ReferenceItemInput:
+    table_type: str
+    code: str
+    name: str
+    description: typing.Optional[str] = None
+    is_active: typing.Optional[bool] = True
+    sort_order: typing.Optional[int] = 0
+
+
+@strawberry.type
+class ReferenceItemMutationResult:
+    item: typing.Optional[ReferenceItemNode] = None
     errors: typing.Optional[typing.List[FieldError]] = None
 
 
@@ -342,6 +390,7 @@ class DataManagementPlantNode:
 class DataManagementKpis:
     production_lines: int = strawberry.field(name="productionLines")
     departments: int
+    resource_groups: int = strawberry.field(name="resourceGroups")
     resources: int
     plant_status: str = strawberry.field(name="plantStatus")
 

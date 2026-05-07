@@ -132,17 +132,18 @@ function TreeNode({ node, depth, expanded, selectedKey, onToggle, onSelect, expa
 }
 
 /* ── KPI Cards ── */
-function SummaryCards({ kpis, navCounts }: { kpis: { productionLines: number; departments: number; resources: number; plantStatus: string } | null; navCounts?: { plants?: number; resourceGroups?: number } | null }) {
+function SummaryCards({ kpis, navCounts }: { kpis: { productionLines: number; departments: number; resourceGroups: number; resources: number; plantStatus: string } | null; navCounts?: { plants?: number; resourceGroups?: number } | null }) {
   const navigate = useNavigate();
   if (!kpis) return null;
   const cards = [
     { label: "Plants", value: String(navCounts?.plants ?? 0), icon: Factory, color: theme.iconBoxBlue, href: "/system/data-management/plant" },
     { label: "Production Lines", value: String(kpis.productionLines), icon: GitBranch, color: theme.iconBoxAmber, href: "/system/data-management/production-lines" },
     { label: "Departments", value: String(kpis.departments), icon: Layers, color: theme.iconBoxBlue, href: "/system/data-management/departments" },
+    { label: "Resource Groups", value: String(kpis.resourceGroups), icon: Users, color: theme.iconBoxViolet, href: "/system/data-management/resource-groups" },
     { label: "Resources", value: String(kpis.resources), icon: Cpu, color: theme.iconBoxTeal, href: "/system/data-management/resources" },
   ];
   return (
-    <div className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {cards.map((c) => (
         <button key={c.label} type="button" onClick={() => navigate(c.href)}
           className={`rounded-xl border p-3 h-19.5 text-left transition-all hover:shadow-sm active:scale-[0.98] ${theme.card} ${theme.cardHover}`}
@@ -179,6 +180,8 @@ export function DataManagementPage() {
   });
   const [updateCompany] = useMutation(UPDATE_COMPANY_MUTATION);
   const [companyForm, setCompanyForm] = useState<Record<string, string>>({});
+  const [companySaving, setCompanySaving] = useState(false);
+  const [companyError, setCompanyError] = useState<string | null>(null);
   const company = companyData?.company;
 
   useEffect(() => {
@@ -431,8 +434,16 @@ export function DataManagementPage() {
               /* ── Company Editor ── */
               <div className="flex flex-col gap-3">
                 <CompanyEditor form={companyForm as any} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))}
-                  onSave={async () => { await updateCompany({ variables: { input: companyForm } }); }}
+                  onSave={async () => {
+                    setCompanySaving(true); setCompanyError(null);
+                    try { await updateCompany({ variables: { input: companyForm } }); setSelectedNodeKey(null); } catch (e) { setCompanyError(e instanceof Error ? e.message : "Save failed"); }
+                    setCompanySaving(false);
+                  }}
+                  saving={companySaving}
                   onClose={() => setSelectedNodeKey(null)} />
+                {companyError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">{companyError}</div>
+                )}
               </div>
             ) : selectedNode ? (
               /* ── Selected Node Detail ── */

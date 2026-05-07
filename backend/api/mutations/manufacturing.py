@@ -9,6 +9,7 @@ from api.types.manufacturing import (
     DepartmentMutationResult, DeleteDepartmentResult,
     ProductionLineNode, ResourceGroupNode, ResourceNode, ReferenceTableNode,
     ReferenceTableInput, ReferenceTableMutationResult, DeleteReferenceTableResult,
+    ReferenceItemNode, ReferenceItemInput, ReferenceItemMutationResult,
     ProfileNode, ProfileInput, ProfileMutationResult,
     CompanyNode, CompanyInput, CompanyMutationResult,
 )
@@ -17,6 +18,7 @@ from api.auth_utils import encode_jwt
 from manufacturing.models import (
     Plant, Department, ProductionLine,
     ResourceGroup, Resource, ReferenceTable, Profile, Company,
+    ReferenceItem,
 )
 from django.contrib.auth import authenticate
 
@@ -395,6 +397,7 @@ class ManufacturingMutation:
             name=input.name.strip(),
             description=input.description or "",
             status=input.status or "active",
+            group=input.group or "",
         )
         return ReferenceTableMutationResult(table=ReferenceTableNode.from_db(table))
 
@@ -410,6 +413,7 @@ class ManufacturingMutation:
         table.name = input.name.strip()
         table.description = input.description or ""
         table.status = input.status or "active"
+        table.group = input.group or ""
         table.save()
         return ReferenceTableMutationResult(table=ReferenceTableNode.from_db(table))
 
@@ -422,4 +426,54 @@ class ManufacturingMutation:
             return DeleteReferenceTableResult(success=True)
         except ReferenceTable.DoesNotExist:
             return DeleteReferenceTableResult(success=False, errors=[FieldError(field="id", message="Table not found")])
+
+    @strawberry.mutation
+    def create_reference_item(self, info: strawberry.types.Info, input: ReferenceItemInput) -> ReferenceItemMutationResult:
+        ensure_access(user=_user(info), action="manage_settings")
+        errors: list[FieldError] = []
+        if not input.code.strip():
+            errors.append(FieldError(field="code", message="Code is required"))
+        if not input.name.strip():
+            errors.append(FieldError(field="name", message="Name is required"))
+        if not input.table_type:
+            errors.append(FieldError(field="table_type", message="Table type is required"))
+        if errors:
+            return ReferenceItemMutationResult(errors=errors)
+        item = ReferenceItem.objects.create(
+            table_type=input.table_type,
+            code=input.code.strip(),
+            name=input.name.strip(),
+            description=input.description or "",
+            is_active=input.is_active if input.is_active is not None else True,
+            sort_order=input.sort_order or 0,
+        )
+        return ReferenceItemMutationResult(item=ReferenceItemNode.from_db(item))
+
+    @strawberry.mutation
+    def update_reference_item(self, info: strawberry.types.Info, id: str, input: ReferenceItemInput) -> ReferenceItemMutationResult:
+        ensure_access(user=_user(info), action="manage_settings")
+        try:
+            item = ReferenceItem.objects.get(id=id)
+        except ReferenceItem.DoesNotExist:
+            return ReferenceItemMutationResult(errors=[FieldError(field="id", message="Item not found")])
+        if not input.name.strip():
+            return ReferenceItemMutationResult(errors=[FieldError(field="name", message="Name is required")])
+        item.code = input.code.strip()
+        item.name = input.name.strip()
+        item.description = input.description or ""
+        item.is_active = input.is_active if input.is_active is not None else item.is_active
+        item.sort_order = input.sort_order or 0
+        item.save()
+        return ReferenceItemMutationResult(item=ReferenceItemNode.from_db(item))
+
+    @strawberry.mutation
+    def deactivate_reference_item(self, info: strawberry.types.Info, id: str) -> ReferenceItemMutationResult:
+        ensure_access(user=_user(info), action="manage_settings")
+        try:
+            item = ReferenceItem.objects.get(id=id)
+            item.is_active = False
+            item.save()
+            return ReferenceItemMutationResult(item=ReferenceItemNode.from_db(item))
+        except ReferenceItem.DoesNotExist:
+            return ReferenceItemMutationResult(errors=[FieldError(field="id", message="Item not found")])
 

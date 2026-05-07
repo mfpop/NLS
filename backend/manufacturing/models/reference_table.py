@@ -3,6 +3,14 @@ from shared.models.base import TimeStampedModel
 
 
 class ReferenceTable(TimeStampedModel):
+    GROUP_CHOICES = [
+        ("organization", "Organization"),
+        ("manufacturing", "Manufacturing"),
+        ("material_flow", "Material Flow"),
+        ("lean_quality", "Lean / Quality"),
+        ("people", "People"),
+    ]
+
     STATUS_CHOICES = [
         ("active", "Active"),
         ("inactive", "Inactive"),
@@ -10,6 +18,7 @@ class ReferenceTable(TimeStampedModel):
 
     name = models.CharField(max_length=200, verbose_name="Table Name")
     description = models.TextField(blank=True, default="")
+    group = models.CharField(max_length=50, choices=GROUP_CHOICES, blank=True, default="", verbose_name="Group")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     entry_count = models.IntegerField(default=0, verbose_name="Number of entries")
 

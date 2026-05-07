@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
@@ -13,13 +13,11 @@ import {
   X,
   Plus,
   Trash2,
-  Quote,
   FileText,
   Mail,
   Phone,
   MapPin,
   Globe,
-  Clock3,
   ShieldCheck,
   AlertCircle,
   Save,
@@ -133,21 +131,6 @@ function profileCompletionScore(
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
-function getProfileChecks(
-  draft: ProfileDraft,
-  workHistory: WorkHistoryEntry[],
-  education: EducationEntry[],
-) {
-  return [
-    { label: "Identity", done: Boolean(draft.firstName.trim() && draft.lastName.trim() && draft.role.trim()) },
-    { label: "Contact", done: Boolean(draft.email.trim() && draft.phone.trim()) },
-    { label: "Location", done: Boolean(draft.location.trim()) },
-    { label: "Summary", done: Boolean(draft.about.trim()) },
-    { label: "Experience", done: workHistory.some((item) => item.role.trim() && item.company.trim()) },
-    { label: "Education", done: education.some((item) => item.degree.trim() && item.school.trim()) },
-  ];
-}
-
 function validateProfile(
   draft: ProfileDraft,
   workHistory: WorkHistoryEntry[],
@@ -185,7 +168,7 @@ function validateProfile(
   return errors;
 }
 
-function validateField(field: string, draft: ProfileDraft, workDraft: WorkHistoryEntry[], eduDraft: EducationEntry[]): string | undefined {
+function validateField(field: string, draft: ProfileDraft): string | undefined {
   if (field === "firstName" && !draft.firstName.trim()) return "First name is required.";
   if (field === "lastName" && !draft.lastName.trim()) return "Last name is required.";
   if (field === "role" && !draft.role.trim()) return "Role is required.";
@@ -197,6 +180,18 @@ function validateField(field: string, draft: ProfileDraft, workDraft: WorkHistor
     return "Use format +1 (555) 123-4567";
   }
   return undefined;
+}
+
+function removeFieldError(errors: Record<string, string>, field: string): Record<string, string> {
+  const nextErrors = { ...errors };
+  delete nextErrors[field];
+  return nextErrors;
+}
+
+function extractPeriodYear(period?: string): number | null {
+  if (!period) return null;
+  const match = period.match(/\b(19|20)\d{2}\b/);
+  return match ? Number(match[0]) : null;
 }
 
 function EmptyBlock({
@@ -249,10 +244,6 @@ const inputClass =
 const inputErrorClass =
   "w-full border-0 border-b-2 border-rose-400 bg-transparent px-0 py-1.5 text-sm text-slate-900 transition placeholder:text-slate-400 hover:border-rose-500 focus:border-rose-500 focus:outline-none focus:ring-0 cursor-text dark:border-rose-600 dark:text-slate-100";
 const mutedValueClass = "text-sm font-medium text-slate-800 dark:text-slate-200";
-const secondaryButtonClass =
-  "inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-all duration-150 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-900";
-const primaryButtonClass =
-  "inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-[#00A86B] hover:shadow-lg hover:shadow-emerald-500/25 active:bg-[#007A50] active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-emerald-500/50 disabled:cursor-not-allowed disabled:opacity-60";
 
 export function UserProfilePage() {
   const navigate = useNavigate();
@@ -282,12 +273,13 @@ export function UserProfilePage() {
   }, [profile]);
 
   const completion = profileCompletionScore(draft, workDraft, eduDraft);
-  const checks = getProfileChecks(draft, workDraft, eduDraft);
-  const dirty = draftInitialized && (
+  void completion;
+  const isDirty = draftInitialized && (
     JSON.stringify(draft) !== JSON.stringify(draftFromProfile(profile)) ||
     JSON.stringify(workDraft) !== JSON.stringify(profile?.workHistory ?? []) ||
     JSON.stringify(eduDraft) !== JSON.stringify(profile?.education ?? [])
   );
+  void isDirty;
 
   const startEditing = (section: string) => {
     setEditingSection(section);
@@ -299,7 +291,7 @@ export function UserProfilePage() {
     fileInputRef.current?.click();
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) return;
@@ -409,7 +401,7 @@ export function UserProfilePage() {
   }
 
   if (error && !profile) {
-    console.error("Profile query error:", error.message, error.graphQLErrors, error.networkError);
+    console.error("Profile query error:", error.message);
     return (
       <div className={`flex h-full flex-col ${theme.page}`}>
         <ModulePage title="Profile" description="Manage your personal information and account settings." icon={<User className="h-5 w-5" />} />
@@ -419,9 +411,6 @@ export function UserProfilePage() {
           </div>
           <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-mono text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-400">
             {error.message}
-            {error.graphQLErrors?.map((e, i) => (
-              <div key={i} className="mt-1 text-rose-500">{e.message}</div>
-            ))}
           </div>
         </div>
       </div>
@@ -458,7 +447,7 @@ export function UserProfilePage() {
               className="h-10 w-10 rounded-full bg-slate-200 object-cover"
             />
           ) : avatarError ? (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 text-sm font-bold text-white shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 via-emerald-600 to-teal-700 text-sm font-bold text-white shadow-sm">
               {avatarInitials}
             </div>
           ) : (
@@ -578,8 +567,8 @@ export function UserProfilePage() {
                         <input value={draft.email} onChange={(e) => {
                           setDraft((prev) => ({ ...prev, email: e.target.value }));
                           setFieldErrors((prev) => {
-                            const err = validateField("email", { ...draft, email: e.target.value }, workDraft, eduDraft);
-                            return err ? { ...prev, email: err } : { ...prev, email: undefined };
+                            const err = validateField("email", { ...draft, email: e.target.value });
+                            return err ? { ...prev, email: err } : removeFieldError(prev, "email");
                           });
                         }} className={`${fieldErrors.email ? inputErrorClass : inputClass}`} placeholder="name@company.com" />
                       </div>
@@ -606,7 +595,7 @@ export function UserProfilePage() {
                           if (formatted && !/^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/.test(formatted)) {
                             setFieldErrors((prev) => ({ ...prev, phone: "Use format +1 (555) 123-4567" }));
                           } else {
-                            setFieldErrors((prev) => ({ ...prev, phone: undefined }));
+                            setFieldErrors((prev) => removeFieldError(prev, "phone"));
                           }
                         }} className={`${fieldErrors.phone ? inputErrorClass : inputClass}`} placeholder="+1 (555) 123-4567" />
                       </div>
@@ -757,8 +746,8 @@ export function UserProfilePage() {
                 {workDraft.length > 0 ? (
                   <div className="space-y-3">
                     {[...workDraft].sort((a, b) => {
-                      const yearA = parseInt(a.period?.match(/\b(19|20)\d{2}\b/)?.[0]);
-                      const yearB = parseInt(b.period?.match(/\b(19|20)\d{2}\b/)?.[0]);
+                      const yearA = extractPeriodYear(a.period);
+                      const yearB = extractPeriodYear(b.period);
                       if (!yearA) return -1;
                       if (!yearB) return 1;
                       return yearB - yearA;
@@ -815,7 +804,7 @@ export function UserProfilePage() {
                               <textarea
                                 value={job.description}
                                 onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, description: e.target.value } : item)))}
-                                className={`${inputClass} min-h-[100px] md:col-span-2`}
+                                className={`${inputClass} min-h-25 md:col-span-2`}
                                 placeholder="Describe results, process improvements, or business impact."
                               />
                             </FieldShell>
@@ -879,8 +868,8 @@ export function UserProfilePage() {
                 {eduDraft.length > 0 ? (
                   <div className="space-y-3">
                     {[...eduDraft].sort((a, b) => {
-                      const yearA = parseInt(a.period?.match(/\b(19|20)\d{2}\b/)?.[0]);
-                      const yearB = parseInt(b.period?.match(/\b(19|20)\d{2}\b/)?.[0]);
+                      const yearA = extractPeriodYear(a.period);
+                      const yearB = extractPeriodYear(b.period);
                       if (!yearA) return -1;
                       if (!yearB) return 1;
                       return yearB - yearA;
@@ -973,7 +962,7 @@ export function UserProfilePage() {
               <span className="text-xs text-slate-500 dark:text-slate-400">Completion</span>
               <div className="w-24">
                 <div className="h-1 rounded-full bg-slate-200 dark:bg-slate-800">
-                  <div className="h-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 transition-all duration-500 ease-out" style={{ width: `${completion}%` }} />
+                  <div className="h-1 rounded-full bg-linear-to-r from-emerald-500 to-teal-600 transition-all duration-500 ease-out" style={{ width: `${completion}%` }} />
                 </div>
               </div>
               <span className="text-xs text-slate-500 dark:text-slate-400">{completion}%</span>

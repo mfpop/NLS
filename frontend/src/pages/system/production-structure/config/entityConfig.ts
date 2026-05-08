@@ -1,4 +1,4 @@
-import { Building2, Factory, GitBranch, Layers, Monitor, Users } from "lucide-react";
+import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface EntityConfigItem {
@@ -10,25 +10,25 @@ export interface EntityConfigItem {
 
 export const ENTITY_CONFIG: Record<string, EntityConfigItem> = {
   company: {
-    icon: Factory,
+    icon: Landmark,
     color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10",
     borderTop: "border-t-emerald-400",
     label: "Company",
   },
   plant: {
-    icon: Building2,
+    icon: Factory,
     color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-500/10",
     borderTop: "border-t-blue-400",
     label: "Plant",
   },
   productionLine: {
-    icon: GitBranch,
+    icon: TrendingUpDown,
     color: "text-amber-600 bg-transparent dark:text-amber-400",
     borderTop: "border-t-amber-400",
     label: "Production Line",
   },
   line: {
-    icon: GitBranch,
+    icon: TrendingUpDown,
     color: "text-amber-600 bg-transparent dark:text-amber-400",
     borderTop: "border-t-amber-400",
     label: "Line",
@@ -40,19 +40,19 @@ export const ENTITY_CONFIG: Record<string, EntityConfigItem> = {
     label: "Department",
   },
   resourceGroup: {
-    icon: Users,
-    color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-500/10",
-    borderTop: "border-t-blue-400",
+    icon: Component,
+    color: "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10",
+    borderTop: "border-t-rose-400",
     label: "Resource Group",
   },
   group: {
-    icon: Users,
-    color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-500/10",
-    borderTop: "border-t-blue-400",
+    icon: Component,
+    color: "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10",
+    borderTop: "border-t-rose-400",
     label: "Resource Group",
   },
   resource: {
-    icon: Monitor,
+    icon: Dumbbell,
     color: "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-500/10",
     borderTop: "border-t-gray-400",
     label: "Resource",
@@ -99,3 +99,34 @@ export const ADD_ROUTES: Record<string, string> = {
   resourceGroup: "/system/production-structure/resources",
   group: "/system/production-structure/resources",
 };
+
+/* ── Reference / Configuration Table Type → Entity Mapping ── */
+
+export const TABLE_ENTITY_MAP: Record<string, string> = {
+  production_calendar: "company",
+  shift_pattern: "company",
+  language: "company",
+  timezone: "company",
+  manufacturing_type: "plant",
+  work_center_type: "plant",
+  machine_type: "plant",
+  operation_code: "plant",
+  routing_type: "plant",
+  material_category: "department",
+  inventory_type: "department",
+  kanban_type: "department",
+  container_type: "department",
+  unit_type: "department",
+  downtime_code: "resource",
+  defect_code: "resource",
+  scrap_reason: "resource",
+  kaizen_category: "resource",
+  skill_type: "resourceGroup",
+  role: "resourceGroup",
+  shift_team: "resourceGroup",
+};
+
+export function getTableEntityStyle(tableType: string): EntityConfigItem {
+  const entityKey = TABLE_ENTITY_MAP[tableType] || "resource";
+  return ENTITY_CONFIG[entityKey] || ENTITY_CONFIG.resource;
+}

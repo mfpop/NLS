@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
-import { Users, X } from "lucide-react";
+import { Component, X } from "lucide-react";
 import { DataCard, Pagination } from "./components";
 import { Toolbar } from "./components/Toolbar";
 import type { FilterOption } from "./components/Toolbar";
@@ -13,6 +13,8 @@ import { theme } from "../../../styles/themeTokens";
 import { RESOURCE_GROUPS_QUERY } from "@/graphql/manufacturingQueries";
 import { usePlants } from "@/hooks/usePlants";
 import { usePageSize } from "@/hooks/usePageSize";
+import { getEntityIconProps, saveEntityConfig } from "./entityDisplay";
+import { PageHeader } from "@/pages/shared/PageHeader";
 
 interface ResourceGroupNode {
   id: string;
@@ -57,6 +59,7 @@ export function ResourceGroupsPage() {
   const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
 
   const MODAL_FIELDS: ModalField[] = [
+    { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
     { key: "name", label: "Resource Group Name", required: true, placeholder: "e.g. Machining Group" },
     { key: "groupType", label: "Type", type: "select", options: TYPE_OPTIONS.filter(o => o.value !== "all").map(o => ({ label: o.label, value: o.value })) },
     { key: "leader", label: "Leader", placeholder: "e.g. Jane Doe" },
@@ -84,15 +87,20 @@ export function ResourceGroupsPage() {
 
   const openEdit = (group: ResourceGroupNode) => {
     setEditingGroup(group); setSaveError(null);
-    setForm({ name: group.name, groupType: group.groupType, leader: group.leader || "", status: group.status });
+    setForm({ entityIcon: "resourceGroup", name: group.name, groupType: group.groupType, leader: group.leader || "", status: group.status });
     setModalOpen(true);
   };
 
-  const handleSave = async () => { setModalOpen(false); };
+  const handleSave = async () => {
+    if (editingGroup?.id && form.entityIcon) {
+      saveEntityConfig("resourceGroup", editingGroup.id, form.entityIcon);
+    }
+    setModalOpen(false);
+  };
 
   const handleAdd = () => {
     setEditingGroup(null); setSaveError(null);
-    setForm({ name: "", groupType: "Production", leader: "", status: "active" });
+    setForm({ entityIcon: "resourceGroup", name: "", groupType: "Production", leader: "", status: "active" });
     setModalOpen(true);
   };
 
@@ -103,21 +111,17 @@ export function ResourceGroupsPage() {
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400">
-            <Users className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Resource Groups</h1>
-            <p className={`text-xs ${theme.textSecondary}`}>Resource groups loaded from the manufacturing database structure.</p>
-          </div>
-        </div>
+      <PageHeader
+        icon={<Component className="h-5 w-5 stroke-current" />}
+        iconClass="bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
+        title="Resource Groups"
+        subtitle="Resource groups loaded from the manufacturing database structure."
+      >
         <button type="button" onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60">
           <X className="h-4 w-4 stroke-current" />Close
         </button>
-      </header>
+      </PageHeader>
 
       <Toolbar
         search={search}
@@ -139,7 +143,7 @@ export function ResourceGroupsPage() {
         ) : groups.length === 0 ? (
           <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
             <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
-              <Users className="h-6 w-6 stroke-current" />
+              <Component className="h-6 w-6 stroke-current" />
             </div>
             <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
               {search ? "No resource groups match your search" : "No resource groups found"}
@@ -148,11 +152,13 @@ export function ResourceGroupsPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {paginatedGroups.map((group, idx) => (
+            {paginatedGroups.map((group, idx) => {
+              const { Icon, textColor, bgColor } = getEntityIconProps("resourceGroup", group.id);
+              return (
               <div key={group.id} ref={idx === 0 ? cardRef : undefined}>
                 <DataCard
-                  icon={<Users className="h-5 w-5 stroke-current text-violet-600" />}
-                  iconBg="bg-violet-100 dark:bg-violet-500/10"
+                  icon={<Icon className={`h-5 w-5 stroke-current ${textColor}`} />}
+                  iconBg={bgColor}
                   name={group.name}
                   code={group.groupType}
                   status={group.status}
@@ -165,7 +171,8 @@ export function ResourceGroupsPage() {
                   onOpen={() => navigate(`/system/production-structure/resource-groups/${group.id}`)}
                 />
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

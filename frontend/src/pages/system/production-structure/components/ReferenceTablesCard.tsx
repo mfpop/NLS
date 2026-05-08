@@ -1,9 +1,34 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
-import { Building2, ChevronRight, Settings, Database, AlertCircle, Users, Factory, Plus, ArrowRight, Info } from "lucide-react";
+import { Building2, ChevronRight, Settings, Database, AlertCircle, Users, Plus, ArrowRight, Info } from "lucide-react";
 import { theme } from "../../../../styles/themeTokens";
 import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
+import { getTableEntityStyle } from "../config/entityConfig";
+
+const TABLE_NAME_TO_KEY: Record<string, string> = {
+  "Production Calendars": "production_calendar",
+  "Shift Patterns": "shift_pattern",
+  Languages: "language",
+  Timezones: "timezone",
+  "Manufacturing Types": "manufacturing_type",
+  "Work Centers": "work_center_type",
+  "Machine Types": "machine_type",
+  "Operation Codes": "operation_code",
+  "Routing Types": "routing_type",
+  "Material Categories": "material_category",
+  "Inventory Types": "inventory_type",
+  "Kanban Types": "kanban_type",
+  "Container Types": "container_type",
+  "Unit Types": "unit_type",
+  "Downtime Codes": "downtime_code",
+  "Defect Codes": "defect_code",
+  "Scrap Reasons": "scrap_reason",
+  "Kaizen Categories": "kaizen_category",
+  "Skill Types": "skill_type",
+  Roles: "role",
+  "Shift Teams": "shift_team",
+};
 
 const GROUP_LABELS: Record<string, string> = {
   organization: "Organization",
@@ -92,8 +117,8 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                   <button type="button" onClick={onSelectCompany}
                     className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-indigo-50/20 dark:hover:bg-indigo-500/5"
                   >
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                      <Factory className="h-2.5 w-2.5 stroke-current" />
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                      <Building2 className="h-2.5 w-2.5 stroke-current" />
                     </span>
                     <span className="flex-1 text-left text-[10px] font-medium text-slate-700 dark:text-slate-200">Company</span>
                     <span className={`text-[8px] ${theme.textMuted}`}>Organization Settings</span>
@@ -101,19 +126,25 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                   </button>
                 )}
                 {items.length > 0 ? (
-                  items.map((table) => (
+                  items.map((table) => {
+                    const tableTypeKey = TABLE_NAME_TO_KEY[table.name] || table.name;
+                    const entityStyle = getTableEntityStyle(tableTypeKey);
+                    const EntityIcon = entityStyle.icon;
+                    const [entityTextColor, entityBgColor] = entityStyle.color.split(" ");
+                    return (
                     <button key={table.id} type="button"
                       onClick={() => navigate(`/system/production-structure/references/${table.id}`)}
                       className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
                     >
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-                        <Database className="h-2.5 w-2.5 stroke-current" />
+                      <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${entityBgColor}`}>
+                        <EntityIcon className={`h-2.5 w-2.5 stroke-current ${entityTextColor}`} />
                       </span>
                       <span className="flex-1 text-left text-[10px] truncate text-slate-600 dark:text-slate-300">{table.name}</span>
                       <span className={`text-[9px] font-medium shrink-0 ${theme.textMuted}`}>{table.entryCount}</span>
                       <ArrowRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-600 stroke-current" />
                     </button>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="px-2 py-2 flex items-center gap-2 text-[9px] text-slate-400">
                     <Info className="h-3 w-3 stroke-current shrink-0 text-slate-300" />

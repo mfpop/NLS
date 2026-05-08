@@ -1,4 +1,4 @@
-import { Building2, GitBranch, Layers, Users, Monitor } from "lucide-react";
+import { Factory, TrendingUpDown, Layers, Component, Dumbbell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface GlobalNavProps {
@@ -12,11 +12,11 @@ interface GlobalNavProps {
 }
 
 const items = [
-  { label: "Plants", path: "/system/production-structure/plant", icon: Building2, color: "text-blue-600 dark:text-blue-400" },
-  { label: "Lines", path: "/system/production-structure/production-lines", icon: GitBranch, color: "text-amber-600 dark:text-amber-400" },
+  { label: "Plants", path: "/system/production-structure/plant", icon: Factory, color: "text-blue-600 dark:text-blue-400" },
+  { label: "Lines", path: "/system/production-structure/production-lines", icon: TrendingUpDown, color: "text-amber-600 dark:text-amber-400" },
   { label: "Depts", path: "/system/production-structure/departments", icon: Layers, color: "text-purple-600 dark:text-purple-400" },
-  { label: "Groups", path: "/system/production-structure/resource-groups", icon: Users, color: "text-blue-600 dark:text-blue-400" },
-  { label: "Resources", path: "/system/production-structure/resources", icon: Monitor, color: "text-gray-600 dark:text-gray-400" },
+  { label: "Groups", path: "/system/production-structure/resource-groups", icon: Component, color: "text-rose-600 dark:text-rose-400" },
+  { label: "Resources", path: "/system/production-structure/resources", icon: Dumbbell, color: "text-gray-600 dark:text-gray-400" },
 ];
 
 export function GlobalNav({ counts }: GlobalNavProps) {

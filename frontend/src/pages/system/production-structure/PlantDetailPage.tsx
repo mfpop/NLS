@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Building2, Factory, Cpu, Pencil, ExternalLink, Trash2,
-  X, ChevronLeft, GitBranch, Layers, Users, Activity, Database
+  Building2, Factory, Pencil, ExternalLink, Trash2,
+  X, ChevronLeft, TrendingUpDown, Layers, Component, Dumbbell, Users, Activity, Database
 } from "lucide-react";
 import { CrudModal, ConfirmDialog } from "./shared";
+import { PageHeader } from "@/pages/shared/PageHeader";
 import { usePlants, EMPTY_FORM } from "@/hooks/usePlants";
 import type { Plant } from "@/types/plant";
 
@@ -43,12 +44,12 @@ export function PlantDetailPage() {
   if (!plant) {
     return (
       <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-6">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-            <Building2 className="h-5 w-5 stroke-current" />
-          </div>
-          <h1 className="text-sm font-semibold text-slate-900">Plant Not Found</h1>
-        </header>
+        <PageHeader
+          icon={<Factory className="h-5 w-5 stroke-current" />}
+          iconClass="bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+          title="Plant Not Found"
+          subtitle="The requested plant could not be found."
+        />
         <div className="flex-1 flex items-center justify-center text-xs text-slate-500">Plant "{plantId}" does not exist.</div>
       </div>
     );
@@ -93,56 +94,48 @@ export function PlantDetailPage() {
   return (
     <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
       {/* HEADER */}
-      <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6" style={{ height: "56px" }}>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/system/production-structure/plant")}
-            className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-            aria-label="Back"
-          >
-            <ChevronLeft className="h-4 w-4 stroke-current" />
-          </button>
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-            <Factory className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-semibold text-slate-900">{plant.name}</h1>
-              <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-slate-100 text-slate-500">{plant.code}</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
-                <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
-                {isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500">ID: {plant.id} &middot; {plant.building || "No building"}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleEdit}
-            className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 ease-in-out"
-          >
-            <Pencil className="h-4 w-4 stroke-current" />
-            Edit
-          </button>
-          <button
-            onClick={() => navigate("/system/production-structure/plant")}
-            className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-all duration-150 ease-in-out"
-          >
-            <X className="w-4 h-4 stroke-current" />
-            Close
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        icon={<Factory className="h-5 w-5 stroke-current" />}
+        iconClass="bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+        title={plant.name}
+        subtitle={`ID: ${plant.id} · ${plant.building || "No building"}`}
+      >
+        <button
+          onClick={() => navigate("/system/production-structure/plant")}
+          className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          aria-label="Back"
+        >
+          <ChevronLeft className="h-4 w-4 stroke-current" />
+        </button>
+        <span className="rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-slate-100 text-slate-500">{plant.code}</span>
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>
+          <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+          {isActive ? "Active" : "Inactive"}
+        </span>
+        <button
+          onClick={handleEdit}
+          className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all duration-150 ease-in-out"
+        >
+          <Pencil className="h-4 w-4 stroke-current" />
+          Edit
+        </button>
+        <button
+          onClick={() => navigate("/system/production-structure/plant")}
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-all duration-150 ease-in-out"
+        >
+          <X className="w-4 h-4 stroke-current" />
+          Close
+        </button>
+      </PageHeader>
 
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto bg-slate-100 px-6 py-5">
         {/* Summary Cards */}
         <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <SummaryCard icon={GitBranch} label="Production Lines" value={plant.lineCount} color="bg-amber-100 text-amber-600" />
-          <SummaryCard icon={Layers} label="Departments" value={plant.departmentCount} color="bg-indigo-100 text-indigo-600" />
-          <SummaryCard icon={Users} label="Resource Groups" value={plant.groupCount} color="bg-violet-100 text-violet-600" />
-          <SummaryCard icon={Cpu} label="Resources" value={plant.resourceCount} color="bg-teal-100 text-teal-600" />
+          <SummaryCard icon={TrendingUpDown} label="Production Lines" value={plant.lineCount} color="bg-amber-100 text-amber-600" />
+          <SummaryCard icon={Layers} label="Departments" value={plant.departmentCount} color="bg-purple-100 text-purple-600" />
+          <SummaryCard icon={Component} label="Resource Groups" value={plant.groupCount} color="bg-rose-100 text-rose-600" />
+          <SummaryCard icon={Dumbbell} label="Resources" value={plant.resourceCount} color="bg-gray-100 text-gray-600" />
         </div>
 
         {/* General Information */}
@@ -177,10 +170,10 @@ export function PlantDetailPage() {
         <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Quick Actions</h2>
           <div className="flex flex-wrap gap-2">
-            <ActionBtn icon={GitBranch} label="View Production Lines" onClick={() => navigate("/system/production-structure/production-lines")} />
+            <ActionBtn icon={TrendingUpDown} label="View Production Lines" onClick={() => navigate("/system/production-structure/production-lines")} />
             <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/production-structure/departments")} />
-            <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/production-structure/resource-groups")} />
-            <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/production-structure/resources")} />
+            <ActionBtn icon={Component} label="View Resource Groups" onClick={() => navigate("/system/production-structure/resource-groups")} />
+            <ActionBtn icon={Dumbbell} label="View Resources" onClick={() => navigate("/system/production-structure/resources")} />
             <ActionBtn icon={ExternalLink} label="Open in Control Tower" onClick={() => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`)} />
           </div>
         </div>

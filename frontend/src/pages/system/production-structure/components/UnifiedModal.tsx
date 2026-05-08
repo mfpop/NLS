@@ -1,16 +1,19 @@
 import { useState, useEffect, type FormEvent, type ReactNode } from "react";
 import { X, GitBranch } from "lucide-react";
 import { theme } from "../../../../styles/themeTokens";
+import { EntityIconPicker } from "./EntityIconPicker";
 
 /* ── Types ── */
 
 export interface ModalField {
   key: string;
   label: string;
-  type?: "text" | "select";
+  type?: "text" | "select" | "entityicon";
   options?: { label: string; value: string }[];
   required?: boolean;
   placeholder?: string;
+  entityType?: string;
+  entityId?: string;
 }
 
 interface UnifiedModalProps {
@@ -117,7 +120,14 @@ export function UnifiedModal({
                   {f.label}
                   {f.required && <span className="ml-0.5 text-red-500">*</span>}
                 </label>
-                {f.type === "select" && f.options ? (
+                {f.type === "entityicon" ? (
+                  <EntityIconPicker
+                    value={values[f.key] ?? ""}
+                    onChange={(v) => handleChange(f.key, v)}
+                    entityType={f.entityType}
+                    entityId={f.entityId}
+                  />
+                ) : f.type === "select" && f.options ? (
                   <div className="relative">
                     <select
                       value={values[f.key] ?? ""}
@@ -165,7 +175,7 @@ export function UnifiedModal({
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); onConfigureStructure?.(); }}
-                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors active:scale-[0.97] bg-white text-slate-700 border-slate-300 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors"
               >
                 <GitBranch className="h-3.5 w-3.5 stroke-current" />
                 Configure Structure
@@ -203,7 +213,7 @@ export function UnifiedModal({
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); onDelete?.(); }}
-                  className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                  className="rounded px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100/60 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
                 >
                   Delete
                 </button>

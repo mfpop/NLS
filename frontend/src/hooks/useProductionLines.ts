@@ -25,6 +25,7 @@ function generateMockId(): string {
 /* ── Default form ── */
 
 export const EMPTY_LINE_FORM = {
+  entityIcon: "productionLine",
   name: "",
   code: "",
   plantId: "",

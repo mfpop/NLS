@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layers, Building2, X } from "lucide-react";
+import { Layers, X } from "lucide-react";
 import { DataCard, Pagination } from "./components";
 import { Toolbar } from "./components/Toolbar";
 import type { FilterOption } from "./components/Toolbar";
@@ -12,6 +12,8 @@ import { theme } from "../../../styles/themeTokens";
 import { useDepartments } from "@/hooks/useDepartments";
 import { usePlants } from "@/hooks/usePlants";
 import { usePageSize } from "@/hooks/usePageSize";
+import { getEntityIconProps, saveEntityConfig } from "./entityDisplay";
+import { PageHeader } from "@/pages/shared/PageHeader";
 
 interface DepartmentNode {
   id: string; name: string; code: string; status: "active" | "inactive";
@@ -44,6 +46,7 @@ export function DepartmentsPage() {
   const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
 
   const MODAL_FIELDS: ModalField[] = [
+    { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
     { key: "name", label: "Department Name", required: true, placeholder: "e.g. Assembly" },
     { key: "manager", label: "Manager", placeholder: "e.g. John Smith" },
     { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
@@ -65,17 +68,20 @@ export function DepartmentsPage() {
 
   const openEdit = (dept: DepartmentNode) => {
     setEditingDept(dept);
-    setForm({ name: dept.name, code: dept.code, manager: dept.manager || "", status: dept.status, employees: String(dept.employees) });
+    setForm({ entityIcon: "department", name: dept.name, code: dept.code, manager: dept.manager || "", status: dept.status, employees: String(dept.employees) });
     setModalOpen(true);
   };
 
   const handleAdd = () => {
     setEditingDept(null);
-    setForm({ name: "", code: generateCode(), manager: "", status: "active", employees: "0" });
+    setForm({ entityIcon: "department", name: "", code: generateCode(), manager: "", status: "active", employees: "0" });
     setModalOpen(true);
   };
 
   const handleSave = async () => {
+    if (editingDept?.id && form.entityIcon) {
+      saveEntityConfig("department", editingDept.id, form.entityIcon);
+    }
     const result = await saveDepartment(form, editingDept?.id ?? null);
     if (result.ok) { setModalOpen(false); } else { alert(Object.values(result.errors ?? {}).join("; ")); }
   };
@@ -91,25 +97,21 @@ export function DepartmentsPage() {
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-            <Layers className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Departments</h1>
-            <p className={`text-xs ${theme.textSecondary}`}>Departments rendered from the manufacturing structure stored in the database.</p>
-          </div>
-        </div>
+      <PageHeader
+        icon={<Layers className="h-5 w-5 stroke-current" />}
+        iconClass="bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400"
+        title="Departments"
+        subtitle="Departments rendered from the manufacturing structure stored in the database."
+      >
         <button
           type="button"
           onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60"
         >
           <X className="h-4 w-4 stroke-current" />
           Close
         </button>
-      </header>
+      </PageHeader>
 
       <Toolbar
         search={search}
@@ -140,12 +142,14 @@ export function DepartmentsPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {paginatedDepartments.map((dept, idx) => (
+            {paginatedDepartments.map((dept, idx) => {
+              const { textColor, bgColor } = getEntityIconProps("department", dept.id);
+              return (
               <div key={dept.id} ref={idx === 0 ? cardRef : undefined}>
                 <DataCard
                 key={dept.id}
-                icon={<Building2 className="h-5 w-5 stroke-current text-indigo-600" />}
-                iconBg="bg-indigo-100 dark:bg-indigo-500/10"
+                icon={<Layers className={`h-5 w-5 stroke-current ${textColor}`} />}
+                iconBg={bgColor}
                 name={dept.name}
                 code={dept.code}
                 status={dept.status}
@@ -166,7 +170,8 @@ export function DepartmentsPage() {
                 onOpen={() => navigate(`/system/production-structure/departments/${dept.id}`)}
                 />
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

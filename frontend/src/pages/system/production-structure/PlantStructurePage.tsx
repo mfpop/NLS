@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Factory, X } from "lucide-react";
+import { Factory, X } from "lucide-react";
 import { DataCard, Pagination } from "./components";
 import { Toolbar } from "./components/Toolbar";
 import type { FilterOption } from "./components/Toolbar";
@@ -10,6 +10,8 @@ import { PlantSummary } from "./components/SummaryBlock";
 import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
 import { usePlants, EMPTY_FORM, TIMEZONE_OPTIONS } from "@/hooks/usePlants";
+import { getEntityIconProps, saveEntityConfig } from "./entityDisplay";
+import { PageHeader } from "@/pages/shared/PageHeader";
 import type { Plant } from "@/types/plant";
 
 const PER_PAGE = 10;
@@ -22,6 +24,7 @@ const STATUS_OPTIONS: FilterOption[] = [
 ];
 
 const MODAL_FIELDS: ModalField[] = [
+  { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
   { key: "name", label: "Plant Name", required: true, placeholder: "e.g. Main Plant" },
   { key: "building", label: "Location / Building", placeholder: "e.g. Building A" },
   { key: "timezone", label: "Timezone", type: "select", required: true, placeholder: "Select timezone", options: TIMEZONE_OPTIONS },
@@ -54,7 +57,7 @@ export function PlantStructurePage() {
   const openAdd = () => {
     setEditingId(null);
     setSaveError(null);
-    setForm({ ...EMPTY_FORM, code: generateCode() });
+    setForm({ ...EMPTY_FORM, code: generateCode(), entityIcon: "plant" });
     setModalOpen(true);
   };
 
@@ -62,6 +65,7 @@ export function PlantStructurePage() {
     setEditingId(plant.id);
     setSaveError(null);
     setForm({
+      entityIcon: "plant",
       name: plant.name,
       code: plant.code,
       status: plant.status,
@@ -79,6 +83,9 @@ export function PlantStructurePage() {
 
   const handleSave = async () => {
     setSaveError(null);
+    if (editingId && form.entityIcon) {
+      saveEntityConfig("plant", editingId, form.entityIcon);
+    }
     const result = await savePlant({
       ...EMPTY_FORM,
       ...form,
@@ -109,25 +116,19 @@ export function PlantStructurePage() {
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-            <Building2 className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Plants</h1>
-            <p className={`text-xs ${theme.textSecondary}`}>Plant structure — facilities, locations, and production sites.</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+      <PageHeader
+        icon={<Factory className="h-5 w-5 stroke-current" />}
+        iconClass="bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+        title="Plants"
+        subtitle="Plant structure — facilities, locations, and production sites."
+      >
+        <button type="button" onClick={() => navigate("/system/production-structure")}
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60"
         >
           <X className="h-4 w-4 stroke-current" />
           Close
         </button>
-      </header>
+      </PageHeader>
 
       <Toolbar
         search={search}
@@ -146,7 +147,7 @@ export function PlantStructurePage() {
         ) : plants.length === 0 ? (
           <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
             <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
-              <Building2 className="h-6 w-6 stroke-current" />
+              <Factory className="h-6 w-6 stroke-current" />
             </div>
             <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
               {search ? "No plants match your search" : "No plants configured"}
@@ -160,11 +161,13 @@ export function PlantStructurePage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {paginatedPlants.map((plant) => (
+            {paginatedPlants.map((plant) => {
+              const { textColor, bgColor } = getEntityIconProps("plant", plant.id);
+              return (
               <DataCard
                 key={plant.id}
-                icon={<Factory className="h-5 w-5 stroke-current text-emerald-600" />}
-                iconBg="bg-emerald-100 dark:bg-emerald-500/10"
+                icon={<Factory className={`h-5 w-5 stroke-current ${textColor}`} />}
+                iconBg={bgColor}
                 name={plant.name}
                 code={plant.code}
                 status={plant.status}
@@ -186,7 +189,8 @@ export function PlantStructurePage() {
                 onStructure={() => navigate(`/system/production-structure/structure?plant=${encodeURIComponent(plant.name)}`)}
                 onOpen={() => navigate(`/system/production-structure/plant/${plant.id}`)}
               />
-            ))}
+              );
+            })}
           </div>
         )}
 

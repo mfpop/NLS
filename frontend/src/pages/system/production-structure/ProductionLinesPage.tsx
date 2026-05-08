@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect, type ComponentType } from "react";
 import { usePageSize } from "@/hooks/usePageSize";
 import { useNavigate, useParams } from "react-router-dom";
-import { GitBranch, ChevronLeft, X, Building2, AlertTriangle, Trash2, FileText, Clock, Layers, Users, Cpu } from "lucide-react";
+import { TrendingUpDown, ChevronLeft, X, Factory, Building2, AlertTriangle, Trash2, FileText, Clock, Layers, Component, Dumbbell } from "lucide-react";
+import { PageHeader } from "@/pages/shared/PageHeader";
 import { DataCard, Pagination } from "./components";
 import { Toolbar } from "./components/Toolbar";
 import type { FilterOption } from "./components/Toolbar";
@@ -11,6 +12,7 @@ import { LineSummary } from "./components/SummaryBlock";
 import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
 import { useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
+import { getEntityIconProps, saveEntityConfig } from "./entityDisplay";
 import type { ProductionLine } from "@/types/productionLine";
 
 const STATUS_OPTIONS: FilterOption[] = [
@@ -58,6 +60,7 @@ export function ProductionLinesPage() {
   [plants]);
 
   const modalFields = useMemo<ModalField[]>(() => [
+    { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
     { key: "name", label: "Line Name", required: true, placeholder: "e.g. C2-Cylinder Assembly" },
     { key: "code", label: "Line Code", required: true, placeholder: "e.g. L-CYL" },
     { key: "plantId", label: "Plant", required: true, type: "select", options: plantModalOptions },
@@ -74,13 +77,14 @@ export function ProductionLinesPage() {
 
   const openAdd = () => {
     setEditingId(null);
-    setForm({ ...EMPTY_LINE_FORM, plantId: plantModalOptions.length > 0 ? plantModalOptions[0].value : "" });
+    setForm({ ...EMPTY_LINE_FORM, plantId: plantModalOptions.length > 0 ? plantModalOptions[0].value : "", entityIcon: "productionLine" });
     setModalOpen(true);
   };
 
   const openEdit = (line: ProductionLine) => {
     setEditingId(line.id);
     setForm({
+      entityIcon: "productionLine",
       name: line.name,
       code: line.code || "",
       plantId: line.plantId || "",
@@ -93,6 +97,9 @@ export function ProductionLinesPage() {
   };
 
   const handleSave = async () => {
+    if (editingId && form.entityIcon) {
+      saveEntityConfig("productionLine", editingId, form.entityIcon);
+    }
     const result = await saveLine(form, editingId);
     if (result.ok) {
       setModalOpen(false);
@@ -128,25 +135,19 @@ export function ProductionLinesPage() {
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
-            <GitBranch className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Production Lines</h1>
-            <p className={`text-xs ${theme.textSecondary}`}>Define line structure — plant affiliation, shift patterns, and models produced.</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+      <PageHeader
+        icon={<TrendingUpDown className="h-5 w-5 stroke-current" />}
+        iconClass="bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+        title="Production Lines"
+        subtitle="Define line structure — plant affiliation, shift patterns, and models produced."
+      >
+        <button type="button" onClick={() => navigate("/system/production-structure")}
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60"
         >
           <X className="h-4 w-4 stroke-current" />
           Close
         </button>
-      </header>
+      </PageHeader>
 
       <Toolbar
         search={search}
@@ -167,7 +168,7 @@ export function ProductionLinesPage() {
         ) : filtered.length === 0 ? (
           <div className={`flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
             <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
-              <GitBranch className="h-6 w-6 stroke-current" />
+              <TrendingUpDown className="h-6 w-6 stroke-current" />
             </div>
             <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
               {search ? "No lines match your search" : "No production lines configured"}
@@ -182,12 +183,14 @@ export function ProductionLinesPage() {
         ) : (
           /* Cards grid — gap-2 ≈ 8px, no overflow */
           <div className="flex flex-col gap-2">
-            {paginatedFiltered.map((line, idx) => (
+            {paginatedFiltered.map((line, idx) => {
+              const { Icon, textColor } = getEntityIconProps("productionLine", line.id);
+              return (
               /* Attach cardRef to the first card so usePageSize can measure real height */
               <div key={line.id} ref={idx === 0 ? cardRef : undefined}>
                 <DataCard
-                icon={<GitBranch className="h-5 w-5 stroke-current text-amber-600" />}
-                iconBg="bg-amber-100 dark:bg-amber-500/10"
+                icon={<Icon className={`h-5 w-5 stroke-current ${textColor}`} />}
+                iconBg="bg-transparent"
                 name={line.name}
                 code={line.code}
                 status={line.status}
@@ -211,7 +214,8 @@ export function ProductionLinesPage() {
                 onOpen={() => navigate(`/system/production-structure/production-lines/${line.id}`)}
               />
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -269,7 +273,7 @@ export function ProductionLineDetailPage() {
       <div className="flex h-full flex-col overflow-hidden bg-slate-100" style={{ minHeight: 0 }}>
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-6">
           <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-            <GitBranch className="h-5 w-5 stroke-current" />
+            <TrendingUpDown className="h-5 w-5 stroke-current" />
           </div>
           <h1 className="text-sm font-semibold text-slate-900">Production Line Not Found</h1>
         </header>
@@ -295,7 +299,7 @@ export function ProductionLineDetailPage() {
             <ChevronLeft className="h-4 w-4 stroke-current" />
           </button>
           <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-            <GitBranch className="h-5 w-5 stroke-current" />
+            <TrendingUpDown className="h-5 w-5 stroke-current" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -341,8 +345,8 @@ export function ProductionLineDetailPage() {
             <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Summary Counters</h2>
             <div className="grid grid-cols-2 gap-3">
               <StatCard label="Departments" value={line.departmentCount} icon={Layers} />
-              <StatCard label="Resource Groups" value={line.groupCount} icon={Users} />
-              <StatCard label="Resources" value={line.resourceCount} icon={Cpu} />
+              <StatCard label="Resource Groups" value={line.groupCount} icon={Component} />
+              <StatCard label="Resources" value={line.resourceCount} icon={Dumbbell} />
               <StatCard label="Models" value={line.modelsProduced.length} icon={FileText} />
             </div>
           </div>
@@ -367,10 +371,10 @@ export function ProductionLineDetailPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Actions</h2>
           <div className="flex flex-wrap gap-2">
-            <ActionBtn icon={Building2} label="View Plant" onClick={() => line.plantId && navigate(`/system/production-structure/plant/${line.plantId}`)} />
+            <ActionBtn icon={Factory} label="View Plant" onClick={() => line.plantId && navigate(`/system/production-structure/plant/${line.plantId}`)} />
             <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/production-structure/departments")} />
-            <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/production-structure/resource-groups")} />
-            <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/production-structure/resources")} />
+            <ActionBtn icon={Component} label="View Resource Groups" onClick={() => navigate("/system/production-structure/resource-groups")} />
+            <ActionBtn icon={Dumbbell} label="View Resources" onClick={() => navigate("/system/production-structure/resources")} />
           </div>
         </div>
 

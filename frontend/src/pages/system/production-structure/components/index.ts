@@ -17,3 +17,4 @@ export type { NodeDetailPanelProps } from "./NodeDetailPanel";
 export { CompanyEditor } from "./CompanyEditor";
 export type { CompanyFormData } from "./CompanyEditor";
 export { GlobalNav } from "./GlobalNav";
+export { EntityIconPicker } from "./EntityIconPicker";

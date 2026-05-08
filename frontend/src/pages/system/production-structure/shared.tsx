@@ -152,6 +152,7 @@ const dmNavItems = [
   { label: "Resources",       path: "/system/production-structure/resources" },
   { label: "Structure",       path: "/system/production-structure/structure" },
   { label: "Tables",          path: "/system/reference-tables" },
+  { label: "Entity Visuals",  path: "/system/entity-visual-settings" },
 ];
 
 export function DataManagementNav({ currentPath }: { currentPath?: string }) {

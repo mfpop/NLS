@@ -1,12 +1,11 @@
 import { useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ChevronDown, Factory, Layers, Users, Database,
-  GitBranch, Monitor, X, Eye, Pointer, RefreshCw, Shield, Edit3,
-  AlertTriangle, Hash, Calendar, Clock, FileText, ExternalLink, Info,
+  ChevronDown, Factory, Landmark, TrendingUpDown, Layers, Component, Dumbbell,
+  X, Pointer, RefreshCw, Shield, Edit3,
+  AlertTriangle, Calendar, Clock, FileText, Info,
   Lock
 } from "lucide-react";
-import { StatusBadge } from "./shared";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview, type DataManagementTreeChild, type DataManagementTreeRoot } from "@/hooks/useDataManagementOverview";
@@ -45,13 +44,14 @@ const TYPE_STYLE: Record<string, string> = {
 };
 
 const ICON_MAP: Record<string, typeof Factory> = {
+  company: Landmark,
   plant: Factory,
-  productionLine: GitBranch,
-  line: GitBranch,
+  productionLine: TrendingUpDown,
+  line: TrendingUpDown,
   department: Layers,
-  resourceGroup: Users,
-  group: Users,
-  resource: Monitor,
+  resourceGroup: Component,
+  group: Component,
+  resource: Dumbbell,
 };
 
 function getNodePath(type: string, id: string): string | undefined {
@@ -100,7 +100,7 @@ function buildTree(tree: DataManagementTreeRoot | null): StructureTreeNode[] {
     id: "company",
     label: "Company",
     code: "",
-    icon: Factory,
+    icon: Landmark,
     type: "plant",
     childCount: plantNodes.reduce((sum, n) => sum + 1 + countDescendants(n), 0),
     children: plantNodes,
@@ -270,9 +270,9 @@ export function StructurePage() {
       </PageHeader>
 
       {/* ── 2-COLUMN BODY ── */}
-      <div className="flex-1 grid gap-4 overflow-hidden p-5 pt-3" style={{ gridTemplateColumns: "1fr 340px" }}>
+      <div className="flex-1 grid overflow-hidden p-0" style={{ gridTemplateColumns: "1fr 340px" }}>
         {/* ═══ LEFT COLUMN: Tree Card ═══ */}
-        <div className={`flex flex-col overflow-hidden rounded-xl border ${theme.card}`}>
+        <div className={`flex flex-col overflow-hidden border-r border-slate-200 dark:border-slate-700 ${theme.page}`}>
           <div className={`flex items-center justify-between border-b px-4 py-2.5 shrink-0 ${theme.subHeader}`}>
             <h2 className={`text-[11px] font-bold uppercase tracking-wide ${theme.textPrimary}`}>
               Production Structure
@@ -319,125 +319,40 @@ export function StructurePage() {
           </div>
         </div>
 
-        {/* ═══ RIGHT COLUMN: Stacked Cards ═══ */}
-        <div className="flex flex-col gap-3 h-full min-h-0" style={{ minHeight: 0 }}>
-          {/* Context Detail Panel */}
-          <div className={`rounded-2xl border overflow-hidden shrink-0 ${theme.card}`}>
-            {selectedNode ? (
-              <>
-                <div className={`flex items-center justify-between border-b px-4 py-2.5 ${theme.subHeader}`}>
-                  <div className={`flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider ${theme.textMuted}`}>
-                    <Info className="h-3.5 w-3.5 stroke-current" />
-                    {TYPE_LABEL[selectedNode.type] || "Node"}
-                  </div>
-                  <button type="button" onClick={() => { setSelectedNode(null); setSelectedNodeKey(null); }} className={theme.buttonGhost}>
-                    <X className="h-3.5 w-3.5 stroke-current" />
-                  </button>
+        {/* ═══ RIGHT COLUMN: Flat Sections ═══ */}
+        <div className="flex flex-col min-h-0">
+          {selectedNode ? (
+            <>
+              <div className={`flex items-center justify-between h-8 shrink-0 ${theme.subHeader} ${theme.textMuted} px-3`}>
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  <Info className="h-3.5 w-3.5 stroke-current" />
+                  {TYPE_LABEL[selectedNode.type] || "Node"}
                 </div>
-                <div className="px-4 py-3 space-y-3 text-xs max-h-[320px] overflow-y-auto">
-                  <div className={`flex items-center gap-3 rounded-xl border p-3 ${theme.card}`}>
-                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${TYPE_STYLE[selectedNode.type] || theme.iconBoxSubtle}`}>
-                      <selectedNode.icon className="h-4 w-4 stroke-current" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-semibold ${theme.textPrimary}`}>{selectedNode.label}</span>
-                        <span className={`font-mono text-[10px] ${theme.textMuted}`}>{selectedNode.code}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {selectedNode.status && <StatusBadge status={selectedNode.status} />}
-                        <span className={`text-[10px] ${theme.textMuted}`}>
-                          {selectedNode.children?.length ?? 0} direct · {descendantCount} total
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {Object.keys(childCounts).length > 0 && (
-                    <div className={`rounded-xl border p-3 ${theme.card}`}>
-                      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${theme.textMuted} mb-2`}>
-                        <Hash className="h-3 w-3 stroke-current" />
-                        Impacted Nodes — {descendantCount}
-                      </div>
-                      <div className="grid grid-cols-2 gap-1">
-                        {Object.entries(childCounts).map(([type, count]) => (
-                          <div key={type} className={`flex items-center justify-between rounded-md px-2 py-1.5 ${theme.interactiveRow}`}>
-                            <span className={`text-[11px] ${theme.textSecondary}`}>{type}</span>
-                            <span className={`text-[11px] font-semibold ${theme.textPrimary}`}>{count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {riskSignals.length > 0 && (
-                    <div className={`rounded-xl border p-3 ${theme.card}`}>
-                      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${theme.textMuted} mb-2`}>
-                        <Shield className="h-3 w-3 stroke-current" />
-                        Linked Schedules
-                      </div>
-                      <div className="space-y-1">
-                        {riskSignals.map((s, i) => (
-                          <div key={i} className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${theme.interactiveRow}`}>
-                            <s.icon className={`h-3 w-3 stroke-current shrink-0 ${
-                              s.level === "high" ? theme.textCritical : s.level === "medium" ? theme.textWarning : theme.textMuted
-                            }`} />
-                            <span className={`text-[11px] flex-1 ${theme.textSecondary}`}>{s.label}</span>
-                            <span className={`text-[10px] font-medium ${
-                              s.level === "high" ? theme.textCritical : s.level === "medium" ? theme.textWarning : theme.textMuted
-                            }`}>{s.level}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {relatedTables.length > 0 && (
-                    <div className={`rounded-xl border p-3 ${theme.card}`}>
-                      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider ${theme.textMuted} mb-2`}>
-                        <Database className="h-3 w-3 stroke-current" />
-                        Assigned Resources ({relatedTables.length})
-                      </div>
-                      <div className="space-y-1">
-                        {relatedTables.map((t) => (
-                          <div
-                            key={t.id}
-                            className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 ${theme.cardHover} transition-colors`}
-                            onClick={() => navigate(`/system/production-structure/references/${t.id}`)}
-                            role="button" tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/production-structure/references/${t.id}`); }}
-                          >
-                            <Database className={`h-3 w-3 stroke-current shrink-0 ${theme.iconAccent}`} />
-                            <span className={`text-[11px] flex-1 ${theme.textPrimary}`}>{t.name}</span>
-                            <span className={`text-[10px] font-medium ${theme.textMuted}`}>{t.entryCount}</span>
-                            <ExternalLink className={`h-3 w-3 stroke-current ${theme.iconSubtle}`} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedNode.to && (
-                    <button
-                      type="button"
-                      onClick={() => navigate(selectedNode.to!)}
-                      className={`flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[11px] font-medium transition-colors ${theme.buttonSecondary}`}
-                    >
-                      <Eye className="h-3.5 w-3.5 stroke-current" />
-                      Open {TYPE_LABEL[selectedNode.type]}
-                    </button>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className={`flex flex-col items-center justify-center gap-2 px-4 py-10 text-xs ${theme.textMuted}`}>
-                <Pointer className="h-6 w-6 stroke-current" />
-                <span>Select a node to view details</span>
+                <button type="button" onClick={() => { setSelectedNode(null); setSelectedNodeKey(null); }} className={theme.buttonGhost}>
+                  <X className="h-3.5 w-3.5 stroke-current" />
+                </button>
               </div>
-            )}
+              <div className="flex-1 overflow-y-auto">
+                <NodeDetailPanel
+                  selectedNode={selectedNode}
+                  selectedNodeKey={selectedNodeKey}
+                  selectedPath={selectedPath}
+                  contextCounts={childCounts}
+                  workspaceMode="view"
+                  onAddChild={() => {}}
+                  onSave={() => {}}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 text-xs text-slate-400 dark:text-slate-500">
+              <Pointer className="h-6 w-6 stroke-current" />
+              <span>Select a node to view details</span>
+            </div>
+          )}
+          <div className="flex items-center shrink-0 h-[60px] border-t border-slate-200 dark:border-slate-700 px-3">
+            <span className={`text-[10px] ${theme.textMuted}`}>{selectedNode ? `Node detail` : "No selection"}</span>
           </div>
-
-            <ReferenceTablesCard onSelectCompany={() => navigate("/system/production-structure/plant")} />
         </div>
       </div>
     </div>

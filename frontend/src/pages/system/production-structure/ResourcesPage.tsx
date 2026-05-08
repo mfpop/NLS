@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
-import { Cpu, Monitor, Wrench, Truck, ClipboardCheck, X } from "lucide-react";
+import { Dumbbell, X } from "lucide-react";
 import { DataCard, Pagination } from "./components";
 import { Toolbar } from "./components/Toolbar";
 import type { FilterOption } from "./components/Toolbar";
@@ -11,6 +11,8 @@ import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { usePageSize } from "@/hooks/usePageSize";
+import { getEntityIconProps, saveEntityConfig } from "./entityDisplay";
+import { PageHeader } from "@/pages/shared/PageHeader";
 
 type OpStatus = "Running" | "Idle" | "Down" | "Maintenance";
 type ResType = "Machine" | "Workstation" | "Inspection Station" | "Material Handling" | "Tool";
@@ -23,14 +25,6 @@ interface ResourceNode {
 }
 
 interface ResourcesQueryData { resources: ResourceNode[]; }
-
-const TYPE_ICONS: Record<ResType, { icon: React.ReactNode; bg: string }> = {
-  Machine: { icon: <Cpu className="h-5 w-5 stroke-current" />, bg: "bg-blue-100 dark:bg-blue-500/10" },
-  Workstation: { icon: <Monitor className="h-5 w-5 stroke-current" />, bg: "bg-teal-100 dark:bg-teal-500/10" },
-  "Inspection Station": { icon: <ClipboardCheck className="h-5 w-5 stroke-current" />, bg: "bg-orange-100 dark:bg-orange-500/10" },
-  "Material Handling": { icon: <Truck className="h-5 w-5 stroke-current" />, bg: "bg-yellow-100 dark:bg-yellow-500/10" },
-  Tool: { icon: <Wrench className="h-5 w-5 stroke-current" />, bg: "bg-purple-100 dark:bg-purple-500/10" },
-};
 
 const STATUS_OPTIONS: FilterOption[] = [
   { label: "All Types", value: "all" }, { label: "Machine", value: "Machine" },
@@ -45,6 +39,7 @@ const RESOURCE_TYPE_OPTIONS = [
 ];
 
 const MODAL_FIELDS: ModalField[] = [
+  { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
   { key: "name", label: "Resource Name", required: true, placeholder: "e.g. CNC-01" },
   { key: "code", label: "Code", placeholder: "e.g. CNC-001" },
   { key: "resourceType", label: "Type", type: "select", options: RESOURCE_TYPE_OPTIONS },
@@ -81,11 +76,16 @@ export function ResourcesPage() {
 
   const openEdit = (resource: ResourceNode) => {
     setEditingResource(resource); setSaveError(null);
-    setForm({ name: resource.name, code: resource.code || "", resourceType: resource.resourceType, groupName: resource.groupName || "", status: resource.status });
+    setForm({ entityIcon: "resource", name: resource.name, code: resource.code || "", resourceType: resource.resourceType, groupName: resource.groupName || "", status: resource.status });
     setModalOpen(true);
   };
 
-  const handleSave = async () => { setModalOpen(false); };
+  const handleSave = async () => {
+    if (editingResource?.id && form.entityIcon) {
+      saveEntityConfig("resource", editingResource.id, form.entityIcon);
+    }
+    setModalOpen(false);
+  };
 
   const handleDelete = async () => {
     if (!resourceToDelete) return;
@@ -94,21 +94,17 @@ export function ResourcesPage() {
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <header className={`flex shrink-0 items-center justify-between border-b px-6 ${theme.header}`} style={{ height: "64px" }}>
-        <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-            <Cpu className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <h1 className={`text-base font-semibold tracking-tight ${theme.textPrimary}`}>Resources</h1>
-            <p className={`text-xs ${theme.textSecondary}`}>Machines, workstations, tools, and production resources from the database.</p>
-          </div>
-        </div>
+      <PageHeader
+        icon={<Dumbbell className="h-5 w-5 stroke-current" />}
+        iconClass="bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400"
+        title="Resources"
+        subtitle="Machines, workstations, tools, and production resources from the database."
+      >
         <button type="button" onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60">
           <X className="h-4 w-4 stroke-current" />Close
         </button>
-      </header>
+      </PageHeader>
 
       <Toolbar
         search={search}
@@ -127,7 +123,7 @@ export function ResourcesPage() {
         ) : resources.length === 0 ? (
           <div className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center ${theme.card}`}>
             <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}>
-              <Cpu className="h-6 w-6 stroke-current" />
+              <Dumbbell className="h-6 w-6 stroke-current" />
             </div>
             <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>
               {search ? "No resources match your search" : "No resources found"}
@@ -137,13 +133,13 @@ export function ResourcesPage() {
         ) : (
           <div className="flex flex-col gap-2">
             {paginatedResources.map((res, idx) => {
-              const ti = TYPE_ICONS[res.resourceType] || TYPE_ICONS.Machine;
+              const { Icon, textColor, bgColor } = getEntityIconProps("resource", res.id);
               const isConfigured = !!res.name && !!res.code && !!res.groupName;
               return (
                 <div key={res.id} ref={idx === 0 ? cardRef : undefined}>
                   <DataCard
-                    icon={ti.icon}
-                    iconBg={ti.bg}
+                    icon={<Icon className={`h-5 w-5 stroke-current ${textColor}`} />}
+                    iconBg={bgColor}
                     name={res.name}
                     code={res.code}
                     status={res.status}

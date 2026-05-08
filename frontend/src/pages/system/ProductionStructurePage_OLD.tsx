@@ -491,7 +491,7 @@ function PageFooter() {
   );
 }
 
-export function DataManagementPage() {
+export function ProductionStructurePage() {
   const navigate = useNavigate();
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Factory, ExternalLink, GitBranch, Pencil, ToggleLeft, ToggleRight, Eye } from "lucide-react";
+import { Factory, ExternalLink, TrendingUpDown, Pencil, ToggleLeft, ToggleRight, Eye } from "lucide-react";
 import type { Plant } from "@/types/plant";
 import { theme } from "../../../styles/themeTokens";
 import { ActionsDropdown } from "./shared";
@@ -69,7 +69,7 @@ export function PlantRow({ plant, isSelected, onToggleSelect, onToggleStatus }: 
         <ActionsDropdown actions={[
           { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/production-structure/plant/" + plant.id) },
           { label: plant.status === "active" ? "Disable" : "Activate", icon: plant.status === "active" ? <ToggleLeft className="h-3 w-3 stroke-current" /> : <ToggleRight className="h-3 w-3 stroke-current" />, onClick: () => { onToggleStatus(); } },
-          { label: "Go to Production Lines", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/production-structure/production-lines") },
+          { label: "Go to Production Lines", icon: <TrendingUpDown className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/production-structure/production-lines") },
           { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`) },
         ]} />
       </div>

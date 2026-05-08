@@ -34,8 +34,8 @@ const KaizenPage = lazy(() =>
 const StandardWorkPage = lazy(() =>
   import("@/pages/improve").then((module) => ({ default: module.StandardWorkPage }))
 );
-const DataManagementPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.DataManagementPage }))
+const ProductionStructurePage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.ProductionStructurePage }))
 );
 const PlantStructurePage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.PlantStructurePage }))
@@ -54,6 +54,9 @@ const ResourcesPage = lazy(() =>
 );
 const ReferencesPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ReferencesPage }))
+);
+const EntityVisualSettingsPage = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.EntityVisualSettingsPage }))
 );
 const StructurePage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.StructurePage }))
@@ -113,7 +116,7 @@ export function AppRoutes() {
           <Route path="improve/kaizen" element={<KaizenPage />} />
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
           <Route path="standardize/standard-work" element={<StandardWorkPage />} />
-          <Route path="system/production-structure" element={<DataManagementPage />} />
+          <Route path="system/production-structure" element={<ProductionStructurePage />} />
                     <Route path="system/production-structure/plant" element={<PlantStructurePage />} />
                     <Route path="system/production-structure/plant/:plantId" element={<PlantDetailPage />} />
           <Route path="system/production-structure/departments" element={<DepartmentsPage />} />
@@ -129,6 +132,7 @@ export function AppRoutes() {
           <Route path="system/production-structure/production-lines/:lineId" element={<ProductionLineDetailPage />} />
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
+          <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />

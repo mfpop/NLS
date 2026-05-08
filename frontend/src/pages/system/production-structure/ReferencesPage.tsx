@@ -1,15 +1,17 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
-  Database, Building2, X, ChevronRight, ChevronDown, Plus, Search, RefreshCw,
+  Database, Building2, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
   Settings, AlertCircle, Users, Pencil, Trash2, Save, Hash, CheckCircle,
-  FileSpreadsheet
+  FileSpreadsheet, Copy, Check, ChevronsUpDown
 } from "lucide-react";
+import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
 import { COMPANY_QUERY, UPDATE_COMPANY_MUTATION } from "@/graphql/companyQueries";
 import { REFERENCE_ITEMS_QUERY, CREATE_REFERENCE_ITEM_MUTATION, UPDATE_REFERENCE_ITEM_MUTATION, DEACTIVATE_REFERENCE_ITEM_MUTATION } from "@/graphql/referenceItemQueries";
 import { CompanyEditor } from "./components/CompanyEditor";
+import { getTableEntityStyle } from "./config/entityConfig";
 
 interface RefItem { id: string; tableType: string; code: string; name: string; description: string; isActive: boolean; sortOrder: number; }
 interface DynamicField { key: string; label: string; required?: boolean; type?: "text" | "select"; options?: { label: string; value: string }[]; placeholder?: string; }
@@ -108,62 +110,288 @@ function validateForm(fields: DynamicField[], values: Record<string, string>): R
 
 const COMPANY_REQUIRED_KEYS = ["name", "code", "industryType", "manufacturingType", "defaultTimezone", "defaultUnits", "defaultShiftModel"];
 
-function ItemsList({ items, selectedType, onEdit, onAdd }: { items: RefItem[]; selectedType: string | null; onEdit: (item: RefItem) => void; onAdd: (tt: string) => void }) {
-  const filtered: RefItem[] = [];
-  for (const item of items) { if (item.tableType === selectedType) filtered.push(item); }
-  if (filtered.length === 0) {
+function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
+  items: RefItem[]; selectedType: string | null; onEdit: (item: RefItem) => void; onAdd: (tt: string) => void; showToast: (msg: string) => void;
+}) {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [codeFilter, setCodeFilter] = useState<Set<string>>(new Set());
+  const [nameFilter, setNameFilter] = useState<Set<string>>(new Set());
+  const [descFilter, setDescFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const typeItems = items.filter((i) => i.tableType === selectedType);
+  const uniqueCodes = [...new Set(typeItems.map((i) => i.code))].sort();
+  const uniqueNames = [...new Set(typeItems.map((i) => i.name))].sort();
+  const uniqueStatuses = ["Active", "Inactive"];
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    }
+    if (openDropdown) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [openDropdown]);
+
+  const toggleFilterValue = (col: string, value: string) => {
+    const set = col === "code" ? codeFilter : col === "name" ? nameFilter : statusFilter;
+    const setFn = col === "code" ? setCodeFilter : col === "name" ? setNameFilter : setStatusFilter;
+    const upd = new Set(set);
+    if (upd.has(value)) upd.delete(value); else upd.add(value);
+    setFn(upd);
+  };
+
+  const clearFilter = (col: string) => {
+    if (col === "code") setCodeFilter(new Set());
+    else if (col === "name") setNameFilter(new Set());
+    else setStatusFilter(new Set());
+  };
+
+  let visible: RefItem[] = [];
+  for (const item of items) {
+    if (item.tableType !== selectedType) continue;
+    if (statusFilter.size > 0) {
+      const st = item.isActive ? "Active" : "Inactive";
+      if (!statusFilter.has(st)) continue;
+    }
+    if (codeFilter.size > 0 && !codeFilter.has(item.code)) continue;
+    if (nameFilter.size > 0 && !nameFilter.has(item.name)) continue;
+    if (descFilter && !(item.description || "").toLowerCase().includes(descFilter.toLowerCase())) continue;
+    visible.push(item);
+  }
+
+  if (sortConfig) {
+    visible.sort((a, b) => {
+      let cmp = 0;
+      if (sortConfig.key === "code") cmp = a.code.localeCompare(b.code);
+      else if (sortConfig.key === "name") cmp = a.name.localeCompare(b.name);
+      else if (sortConfig.key === "description") cmp = (a.description || "").localeCompare(b.description || "");
+      else if (sortConfig.key === "status") cmp = Number(b.isActive) - Number(a.isActive);
+      return sortConfig.direction === "desc" ? -cmp : cmp;
+    });
+  }
+
+  const cycleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (!prev || prev.key !== key) return { key, direction: "asc" };
+      if (prev.direction === "asc") return { key, direction: "desc" };
+      return null;
+    });
+  };
+
+  const showEmptyState = visible.length === 0 && codeFilter.size === 0 && nameFilter.size === 0 && statusFilter.size === 0;
+
+  const gridCols = "grid-cols-[120px_260px_minmax(420px,1fr)_120px_48px]";
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortConfig?.key === col) {
+      return sortConfig.direction === "asc"
+        ? <ChevronUp className="h-3 w-3 stroke-current text-slate-500 shrink-0" />
+        : <ChevronDown className="h-3 w-3 stroke-current text-slate-500 shrink-0" />;
+    }
+    return <ChevronsUpDown className="h-3 w-3 stroke-current shrink-0 opacity-70 group-hover:opacity-100 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-opacity" />;
+  };
+
+  const HeaderCell = ({ col, label, className = "", children }: { col: string; label: string; className?: string; children?: React.ReactNode }) => {
+    const isActive = sortConfig?.key === col;
+    const filters: Record<string, Set<string> | string> = { code: codeFilter, name: nameFilter, description: descFilter, status: statusFilter };
+    const hasFilter = col === "description" ? descFilter.length > 0 : (filters[col] as Set<string>)?.size > 0;
     return (
-      <div className="flex flex-col items-center justify-center gap-2 py-12 text-[10px] text-slate-400">
-        <Database className="h-6 w-6 stroke-current text-slate-300" />
-        <span className="text-xs font-medium text-slate-400">No records yet</span>
-        <button type="button" onClick={() => onAdd(selectedType!)}
-          className="inline-flex items-center gap-1 rounded bg-emerald-600 text-white px-2.5 py-1 text-[10px] font-medium hover:bg-emerald-500 transition-colors"
+      <div className={`relative ${className}`}>
+        <button type="button" onClick={() => setOpenDropdown(openDropdown === col ? null : col)}
+          className={`w-full flex items-center gap-1 group hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded px-1 -mx-1 ${isActive ? "text-slate-600 dark:text-slate-300" : ""} ${hasFilter ? "text-sky-700 dark:text-sky-400" : ""}`}
         >
-          <Plus className="h-3 w-3 stroke-current" /> Add {getEntityLabel(selectedType!)}
+          <span className="truncate">{label}</span>
+          <SortIcon col={col} />
+          {hasFilter && col !== "description" && (
+            <span className="inline-flex items-center justify-center h-3.5 min-w-[14px] rounded-full bg-sky-200/60 dark:bg-sky-500/20 text-[8px] font-bold px-1">{col === "code" ? codeFilter.size : col === "name" ? nameFilter.size : statusFilter.size}</span>
+          )}
         </button>
+        {children}
       </div>
     );
-  }
+  };
+
   const rows: React.ReactNode[] = [];
-  for (let idx = 0; idx < filtered.length; idx++) {
-    const item = filtered[idx];
-    rows.push(
-      <div key={item.id}
-        className="flex items-center gap-2 px-2 py-1.5 rounded transition-colors cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40"
-        onClick={() => onEdit(item)}
-      >
-        <span className="text-[10px] font-mono font-medium text-slate-400 w-14 shrink-0">{item.code}</span>
-        <span className="flex-1 text-[11px] font-medium text-slate-800 dark:text-slate-100 truncate">{item.name}</span>
-        {item.description && <span className="text-[9px] text-slate-400 truncate max-w-[120px] hidden sm:inline">{item.description}</span>}
-        <span className={'inline-flex items-center rounded px-1.5 py-0.5 text-[8px] font-medium ' + (item.isActive ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800')}>{item.isActive ? 'Active' : 'Inactive'}</span>
-        <Pencil className="h-3 w-3 text-slate-300 shrink-0 stroke-current" />
-      </div>
-    );
+  if (!showEmptyState) {
+    for (let idx = 0; idx < visible.length; idx++) {
+      const item = visible[idx];
+      rows.push(
+        <div key={item.id}
+          className={`group grid ${gridCols} gap-0 px-3 transition-colors cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/50`}
+          style={{ height: "44px" }}
+          onClick={() => onEdit(item)}
+        >
+          <span className="flex items-center gap-1">
+            <span className="inline-flex items-center text-[11px] font-mono font-bold bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 rounded px-1.5 py-0.5 leading-none border border-slate-300/50 dark:border-slate-600/50 tracking-wide" title={`Code: ${item.code}`}>
+              {item.code}
+            </span>
+          </span>
+          <span className="flex items-center text-xs font-semibold truncate text-slate-900 dark:text-slate-100 pr-2" title={item.name}>{item.name}</span>
+          <span className="flex items-center text-[10px] truncate text-slate-400 dark:text-slate-500 leading-tight text-left pr-2" title={item.description || ""}>
+            {item.description || ""}
+          </span>
+          <span className={`flex items-center`}>
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-medium ${item.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+              {item.isActive ? 'Active' : 'Inactive'}
+            </span>
+          </span>
+          <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end pr-1">
+            <button type="button" onClick={(e) => {
+              e.stopPropagation();
+              navigator.clipboard.writeText(item.code);
+              setCopiedId(item.id);
+              showToast("Copied");
+              setTimeout(() => setCopiedId((prev) => prev === item.id ? null : prev), 2000);
+            }}
+              className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+            >
+              {copiedId === item.id
+                ? <Check className="h-3 w-3 stroke-current text-emerald-500" />
+                : <Copy className="h-3.5 w-3.5 stroke-current" />
+              }
+            </button>
+            <Pencil className="h-3.5 w-3.5 stroke-current text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300" />
+            <span title="Click to view full details">
+              <ChevronRight className="h-3.5 w-3.5 stroke-current text-slate-300 dark:text-slate-600" />
+            </span>
+          </span>
+        </div>
+      );
+    }
   }
-  return <div className="space-y-0.5">{rows}</div>;
+
+  return (
+    <div className="flex flex-col min-h-0">
+        <div className="flex flex-col h-full" style={{ minWidth: "860px" }}>
+          <div ref={dropdownRef} className={`grid ${gridCols} gap-0 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-200 dark:border-slate-700 ${theme.subHeader} sticky top-0 z-10 bg-white dark:bg-slate-900`} style={{ height: "32px", lineHeight: "32px" }}>
+            <HeaderCell col="code" label="Code" className="font-mono tracking-normal" />
+            <HeaderCell col="name" label="Name" />
+            <HeaderCell col="description" label="Description" className="text-left" />
+            <HeaderCell col="status" label="Status" />
+            <div />
+          </div>
+          {openDropdown === "code" && (
+            <div className="relative z-50" style={{ marginTop: "-1px" }}>
+              <div className="absolute top-0 left-3 w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[280px] flex flex-col">
+                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
+                  <button type="button" onClick={() => cycleSort("code")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
+                  <button type="button" onClick={() => { cycleSort("code"); cycleSort("code"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
+                  {codeFilter.size > 0 && <button type="button" onClick={() => clearFilter("code")} className="text-[10px] text-sky-600 hover:text-sky-700 px-1 py-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-500/10">Clear</button>}
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {uniqueCodes.map((val) => (
+                    <label key={val} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                      <input type="checkbox" checked={codeFilter.size === 0 || codeFilter.has(val)} onChange={() => toggleFilterValue("code", val)} className="h-3 w-3 rounded border-slate-300 dark:border-slate-600 accent-sky-600" />
+                      <span className="font-mono text-[10px]">{val}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {openDropdown === "name" && (
+            <div className="relative z-50" style={{ marginTop: "-1px" }}>
+              <div className="absolute top-0 left-3 w-[240px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[280px] flex flex-col">
+                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
+                  <button type="button" onClick={() => cycleSort("name")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
+                  <button type="button" onClick={() => { cycleSort("name"); cycleSort("name"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
+                  {nameFilter.size > 0 && <button type="button" onClick={() => clearFilter("name")} className="text-[10px] text-sky-600 hover:text-sky-700 px-1 py-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-500/10">Clear</button>}
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {uniqueNames.map((val) => (
+                    <label key={val} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                      <input type="checkbox" checked={nameFilter.size === 0 || nameFilter.has(val)} onChange={() => toggleFilterValue("name", val)} className="h-3 w-3 rounded border-slate-300 dark:border-slate-600 accent-sky-600" />
+                      <span className="truncate">{val}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {openDropdown === "description" && (
+            <div className="relative z-50" style={{ marginTop: "-1px" }}>
+              <div className="absolute top-0 left-3 w-[280px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-2 px-3">
+                <div className="flex items-center gap-2">
+                  <input type="text" value={descFilter} onChange={(e) => setDescFilter(e.target.value)} placeholder="Filter descriptions..."
+                    className="h-7 flex-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[11px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" autoFocus
+                  />
+                  {descFilter && (
+                    <button type="button" onClick={() => setDescFilter("")} className="text-[10px] text-sky-600 hover:text-sky-700 shrink-0">Clear</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {openDropdown === "status" && (
+            <div className="relative z-50" style={{ marginTop: "-1px" }}>
+              <div className="absolute top-0 left-3 w-[180px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[280px] flex flex-col">
+                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
+                  <button type="button" onClick={() => cycleSort("status")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
+                  <button type="button" onClick={() => { cycleSort("status"); cycleSort("status"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
+                  {statusFilter.size > 0 && <button type="button" onClick={() => clearFilter("status")} className="text-[10px] text-sky-600 hover:text-sky-700 px-1 py-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-500/10">Clear</button>}
+                </div>
+                <div className="overflow-y-auto flex-1">
+                  {uniqueStatuses.map((val) => (
+                    <label key={val} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-300">
+                      <input type="checkbox" checked={statusFilter.size === 0 || statusFilter.has(val)} onChange={() => toggleFilterValue("status", val)} className="h-3 w-3 rounded border-slate-300 dark:border-slate-600 accent-sky-600" />
+                      <span>{val}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {showEmptyState ? (
+            <div className={`flex flex-col items-center justify-center gap-2 py-12 text-xs ${theme.textMuted}`}>
+              <Database className={`h-8 w-8 stroke-current ${theme.iconSubtle}`} />
+              <span className={`text-sm font-medium ${theme.textSecondary}`}>No records yet</span>
+              <button type="button" onClick={() => onAdd(selectedType!)}
+                className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+              >
+                <Plus className="h-4 w-4 stroke-current" /> Add {getEntityLabel(selectedType!)}
+              </button>
+            </div>
+          ) : visible.length === 0 ? (
+            <div className={`flex flex-col items-center justify-center gap-2 py-12 text-xs ${theme.textMuted}`}>
+              <Database className={`h-8 w-8 stroke-current ${theme.iconSubtle}`} />
+              <span className={`text-sm font-medium ${theme.textSecondary}`}>No matching records</span>
+            </div>
+          ) : (
+            rows
+          )}
+        </div>
+    </div>
+  );
 }
 
-function ExplorerBrowser({ search, setSearch, openGroup, toggleGroup, groupedFiltered, openCompany, selectedType, selectType, openAddItem, itemsLoading, itemsData }: {
-  search: string; setSearch: (v: string) => void; openGroup: string | null; toggleGroup: (g: string) => void;
+function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup, groupedFiltered, openCompany, selectedType, selectType, openAddItem, itemsLoading, itemsData }: {
+  search: string; setSearch: (v: string) => void; searchRef: React.RefObject<HTMLInputElement | null>; openGroup: string | null; toggleGroup: (g: string) => void;
   groupedFiltered: Record<string, RefItem[]>; openCompany: () => void;
   selectedType: string | null; selectType: (tt: string) => void; openAddItem: (tt: string) => void;
   itemsLoading: boolean; itemsData: any;
 }) {
   return (
     <div className="flex flex-col min-h-0 h-full">
-      <div className="shrink-0 px-2.5 py-2 border-b border-slate-100 dark:border-slate-800">
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 stroke-current pointer-events-none" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search tables..."
-            className="w-full h-7 rounded border border-slate-200 dark:border-slate-700 pl-7 pr-2 text-[10px] bg-white dark:bg-slate-900 outline-none focus:border-sky-400 transition-colors" />
-          {search && <button type="button" onClick={() => setSearch("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><X className="h-2.5 w-2.5 stroke-current" /></button>}
+      <div className={`flex items-center shrink-0 h-12 px-3 border-b border-slate-200 dark:border-slate-700 ${theme.header}`}>
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400 stroke-current" />
+          <input ref={searchRef} type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search"
+            className="h-7 w-full rounded text-[10px] text-slate-700 dark:text-slate-200 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 pl-6 pr-1 outline-none transition-colors" />
+          {search && <button type="button" onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"><X className="h-3 w-3 stroke-current" /></button>}
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         {itemsLoading && !itemsData ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-[10px] text-slate-400"><RefreshCw className="h-3 w-3 animate-spin stroke-current" /> Loading...</div>
+          <div className={`flex items-center justify-center gap-2 py-8 text-xs ${theme.textMuted}`}><RefreshCw className="h-4 w-4 animate-spin stroke-current" /> Loading...</div>
         ) : (
-          <div className="py-1">
+          <div>
             {GROUP_ORDER.map((g) => {
               const items = groupedFiltered[g] || [];
               const uniqueTypes = [...new Set(items.map((i) => i.tableType))];
@@ -172,57 +400,62 @@ function ExplorerBrowser({ search, setSearch, openGroup, toggleGroup, groupedFil
               return (
                 <div key={g}>
                   <button type="button" onClick={() => toggleGroup(g)}
-                    className={`flex items-center justify-between w-full px-2.5 py-1 text-left transition-colors ${isOpen ? "bg-slate-50/80 dark:bg-slate-800/60" : "hover:bg-slate-50/50 dark:hover:bg-slate-800/30"}`}
+                    className={`flex cursor-pointer items-center gap-2 px-3 transition-colors w-full text-left ${
+                      isOpen ? "" : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40"
+                    }`} style={{ height: "36px" }}
                   >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <ChevronRight className={`h-2.5 w-2.5 text-slate-400 stroke-current shrink-0 transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
-                      <Icon className="h-3.5 w-3.5 stroke-current shrink-0 text-slate-500" />
-                      <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100">{GROUP_LABELS[g]}</span>
-                      <span className="text-[9px] text-slate-400">{uniqueTypes.length}</span>
-                    </div>
+                    <span className="w-4 shrink-0">
+                      <ChevronRight className={`h-3.5 w-3.5 text-slate-400 stroke-current transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
+                    </span>
+                    <span className={`min-w-0 flex-1 text-xs font-medium ${theme.textPrimary} ${isOpen ? "font-semibold" : ""}`}>{GROUP_LABELS[g]}</span>
+                    {uniqueTypes.length > 0 && <span className={`text-[10px] shrink-0 ${theme.textMuted}`}>{uniqueTypes.length}</span>}
                   </button>
                   <div className={`overflow-hidden transition-all duration-150 ease-in-out ${isOpen ? "max-h-[5000px]" : "max-h-0"}`}>
-                    <div>
-                      {g === "organization" && (
-                        <button type="button" onClick={openCompany}
-                          className={`flex w-full items-center gap-2 px-2.5 py-1 transition-colors hover:bg-indigo-50/20 dark:hover:bg-indigo-500/5 ${selectedType === "__company__" ? "bg-indigo-50/40 dark:bg-indigo-500/10" : ""}`}
+                    {g === "organization" && (
+                      <button type="button" onClick={openCompany}
+                        className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-4 ${
+                          selectedType === "__company__"
+                            ? "bg-slate-100 dark:bg-slate-800 border-emerald-500 dark:border-emerald-400"
+                            : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-transparent"
+                        } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500`}
+                        style={{ paddingLeft: "34px", height: "34px" }}
+                      >
+                        <span className={`flex-1 text-left text-xs font-medium ${theme.textPrimary}`}>Company</span>
+                        <span className={`text-[10px] shrink-0 ${theme.textMuted}`}>setup</span>
+                      </button>
+                    )}
+                    {uniqueTypes.map((tt) => {
+                      const typeItems = items.filter((i) => i.tableType === tt);
+                      const label = TABLE_TYPE_LABELS[tt] || tt;
+                      const isSelected = selectedType === tt;
+                      const entityStyle = getTableEntityStyle(tt);
+                      const EntityIcon = entityStyle.icon;
+                      const [entityTextColor, entityBgColor] = entityStyle.color.split(" ");
+                      return (
+                        <button key={tt} type="button" onClick={() => selectType(tt)}
+                          className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-4 ${
+                            isSelected
+                              ? "bg-slate-100 dark:bg-slate-800 border-emerald-500 dark:border-emerald-400"
+                              : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-transparent"
+                          } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500`}
+                          style={{ paddingLeft: "34px", height: "34px" }}
                         >
-                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                            <Building2 className="h-2.5 w-2.5 stroke-current" />
+                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${entityBgColor}`}>
+                            <EntityIcon className={`h-3 w-3 stroke-current ${entityTextColor}`} />
                           </span>
-                          <span className="flex-1 text-left text-[10px] font-medium text-slate-700 dark:text-slate-200">Company</span>
-                          <span className="text-[8px] text-slate-400">setup</span>
+                          <span className={`flex-1 text-left text-xs truncate ${isSelected ? "font-semibold" : "font-medium"} ${theme.textPrimary}`}>{label}</span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {typeItems.length === 0 && <span className={`text-[10px] ${theme.textWarning}`}>setup</span>}
+                            {typeItems.length > 0 && <span className={`text-[10px] ${theme.textMuted}`}>{typeItems.length}</span>}
+                            <button type="button" onClick={(e) => { e.stopPropagation(); openAddItem(tt); }}
+                              className="h-5 w-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
+                            >
+                              <Plus className="h-3 w-3 stroke-current" />
+                            </button>
+                          </div>
                         </button>
-                      )}
-                      {uniqueTypes.map((tt) => {
-                        const typeItems = items.filter((i) => i.tableType === tt);
-                        const label = TABLE_TYPE_LABELS[tt] || tt;
-                        const isSelected = selectedType === tt;
-                        return (
-                          <button key={tt} type="button" onClick={() => selectType(tt)}
-                            className={`flex w-full items-center gap-2 px-2.5 py-1 transition-colors ${
-                              isSelected
-                                ? "bg-sky-50/60 dark:bg-sky-500/10 border-l-2 border-l-sky-400"
-                                : "border-l-2 border-l-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
-                            }`}
-                          >
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-                              <Database className="h-2.5 w-2.5 stroke-current" />
-                            </span>
-                            <span className="flex-1 text-left text-[10px] font-medium truncate text-slate-700 dark:text-slate-200">{label}</span>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {typeItems.length === 0 && <span className="text-[8px] text-amber-500 font-medium">setup</span>}
-                              {typeItems.length > 0 && <span className="text-[9px] text-slate-400">{typeItems.length}</span>}
-                              <button type="button" onClick={(e) => { e.stopPropagation(); openAddItem(tt); }}
-                                className="h-4 w-4 flex items-center justify-center rounded text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                              >
-                                <Plus className="h-2.5 w-2.5 stroke-current" />
-                              </button>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -470,31 +703,26 @@ export function ReferencesPage() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
       {/* ── Header ── */}
-      <header className={`flex shrink-0 items-center justify-between gap-4 border-b px-5 h-16 ${theme.header}`}>
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
-            <FileSpreadsheet className="h-4 w-4 stroke-current" />
-          </div>
-          <div className="min-w-0">
-            <h1 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>Reference Tables</h1>
-            <p className="text-[9px] text-slate-500 dark:text-slate-400">Administrative master-data catalog</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button type="button" onClick={() => navigate("/system/production-structure")}
-            className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" aria-label="Close"
-          >
-            <X className="h-3.5 w-3.5 stroke-current" />
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        icon={<FileSpreadsheet className="h-5 w-5 stroke-current" />}
+        iconClass={theme.iconBoxEmerald}
+        title="Reference Tables"
+        subtitle={`Administrative master-data catalog · ${totalTypes} tables, ${totalItems} records`}
+      >
+        <button type="button" onClick={() => navigate("/system/production-structure")}
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60"
+        >
+          <X className="h-4 w-4 stroke-current" />
+          Close
+        </button>
+      </PageHeader>
 
       {/* ── Explorer Workspace ── */}
-      <div className="flex-1 min-h-0 flex overflow-hidden">
+      <div className="grid min-h-0 overflow-hidden" style={{ gridTemplateColumns: "280px 1fr", height: "calc(100vh - 4rem)" }}>
         {/* ═══ LEFT: Browser ═══ */}
-        <div className="flex flex-col min-h-0 border-r border-slate-200/50 dark:border-slate-800 w-[280px] min-w-[240px] shrink-0">
+        <div className="flex flex-col min-h-0 border-r border-slate-200 dark:border-slate-700">
           <ExplorerBrowser
-            search={search} setSearch={setSearch}
+            search={search} setSearch={setSearch} searchRef={searchRef}
             openGroup={openGroup} toggleGroup={toggleGroup}
             groupedFiltered={groupedFiltered}
             openCompany={openCompany}
@@ -505,26 +733,33 @@ export function ReferencesPage() {
         </div>
 
         {/* ═══ RIGHT: Preview Workspace ═══ */}
-        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${theme.page}`}>
           {companyEditMode ? (
             <div className="flex h-full flex-col">
-              <div className={`flex items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800 px-3 py-2 shrink-0 ${theme.subHeader}`}>
+              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 shrink-0 ${theme.header}`} style={{ height: "44px" }}>
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-5 w-5 items-center justify-center rounded bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                    <Building2 className="h-3 w-3 stroke-current" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100">Company</span>
+                  {(() => {
+                    const es = getTableEntityStyle("company");
+                    const Icon = es.icon;
+                    const [tc, bc] = es.color.split(" ");
+                    return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${bc}`}>
+                      <Icon className={`h-3.5 w-3.5 stroke-current ${tc}`} />
+                    </span>;
+                  })()}
+                  <span className={`text-[11px] font-medium ${theme.textMuted}`}>Reference Tables</span>
+                  <span className={`text-[11px] ${theme.textMuted}`}>›</span>
+                  <span className={`text-sm font-semibold ${theme.textPrimary}`}>Company</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <button type="button" onClick={handleCompanySave} disabled={companySaving}
-                    className="h-6 px-2.5 rounded text-[9px] font-semibold inline-flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                    className="h-8 px-3 rounded text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors"
                   >
-                    {companySaving ? <RefreshCw className="h-2.5 w-2.5 animate-spin stroke-current" /> : <Save className="h-2.5 w-2.5 stroke-current" />} Save
+                    {companySaving ? <RefreshCw className="h-4 w-4 animate-spin stroke-current" /> : <Save className="h-4 w-4 stroke-current" />} Save
                   </button>
                   <button type="button" onClick={closeCompanyEdit}
-                    className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="h-8 w-8 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
                   >
-                    <X className="h-3 w-3 stroke-current" />
+                    <X className="h-4 w-4 stroke-current" />
                   </button>
                 </div>
               </div>
@@ -541,32 +776,39 @@ export function ReferencesPage() {
             </div>
           ) : editingItem || (itemForm.tableType && itemForm.name !== undefined) ? (
             <div className="flex h-full flex-col">
-              <div className={`flex items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800 px-3 py-2 shrink-0 ${theme.subHeader}`}>
+              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 shrink-0 ${theme.header}`} style={{ height: "44px" }}>
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-5 w-5 items-center justify-center rounded bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-                    <Database className="h-3 w-3 stroke-current" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+                  {(() => {
+                    const es = getTableEntityStyle(currentTableType);
+                    const Icon = es.icon;
+                    const [tc, bc] = es.color.split(" ");
+                    return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${bc}`}>
+                      <Icon className={`h-3.5 w-3.5 stroke-current ${tc}`} />
+                    </span>;
+                  })()}
+                  <span className={`text-[11px] font-medium ${theme.textMuted}`}>Reference Tables</span>
+                  <span className={`text-[11px] ${theme.textMuted}`}>›</span>
+                  <span className={`text-sm font-semibold ${theme.textPrimary} truncate`}>
                     {editingItem ? `Edit ${editingItem.name}` : `Add ${getEntityLabel(currentTableType)}`}
                   </span>
-                  {isItemDirty && <span className="text-[9px] text-amber-600 shrink-0">● Unsaved</span>}
+                  {isItemDirty && <span className={`text-xs ${theme.textWarning}`}>unsaved</span>}
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   {editingItem && (
                     <button type="button" onClick={requestDelete} disabled={itemSaving}
-                      className="h-6 w-6 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50 transition-colors" title="Delete">
-                      <Trash2 className="h-3 w-3 stroke-current" />
+                      className="h-8 w-8 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-100/60 dark:hover:bg-red-900/30 disabled:opacity-40 transition-colors" title="Delete">
+                      <Trash2 className="h-4 w-4 stroke-current" />
                     </button>
                   )}
                   <button type="submit" form="item-form" disabled={itemSaving || !isFormValid}
-                    className="h-6 px-2.5 rounded text-[9px] font-semibold inline-flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 transition-colors"
+                    className="h-8 px-3 rounded text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors"
                   >
-                    {itemSaving ? <RefreshCw className="h-2.5 w-2.5 animate-spin stroke-current" /> : <Save className="h-2.5 w-2.5 stroke-current" />} Save
+                    {itemSaving ? <RefreshCw className="h-4 w-4 animate-spin stroke-current" /> : <Save className="h-4 w-4 stroke-current" />} Save
                   </button>
                   <button type="button" onClick={tryClosePanel}
-                    className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="h-8 w-8 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
                   >
-                    <X className="h-3 w-3 stroke-current" />
+                    <X className="h-4 w-4 stroke-current" />
                   </button>
                 </div>
               </div>
@@ -600,11 +842,11 @@ export function ReferencesPage() {
                     <p className="font-medium mb-1">Delete <strong>{itemForm.name}</strong>?</p>
                     <div className="flex items-center gap-1.5">
                       <button type="button" onClick={handleDelete} disabled={itemSaving}
-                        className="rounded bg-red-600 px-2 py-1 text-[9px] font-medium text-white hover:bg-red-500 disabled:opacity-50">
+                        className="rounded px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-100/60 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-40 transition-colors">
                         {itemSaving ? "Deleting..." : "Delete"}
                       </button>
                       <button type="button" onClick={cancelDelete}
-                        className="rounded border border-red-200 bg-white px-2 py-1 text-[9px] font-medium text-red-700 hover:bg-red-100 dark:border-red-500/30 dark:bg-slate-800 dark:text-red-300 dark:hover:bg-red-500/20">
+                        className="rounded px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">
                         Cancel
                       </button>
                     </div>
@@ -619,49 +861,45 @@ export function ReferencesPage() {
               </form>
             </div>
           ) : selectedType ? (
-            <div className="flex h-full flex-col">
-              <div className={`flex items-center justify-between gap-2 border-b border-slate-200/50 dark:border-slate-800 px-3 py-2 shrink-0 ${theme.subHeader}`}>
+              <div className="flex h-full flex-col">
+              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 shrink-0 ${theme.header}`} style={{ height: "48px" }}>
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="flex h-5 w-5 items-center justify-center rounded bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
-                    <Database className="h-3 w-3 stroke-current" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-100">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
-                  <span className="text-[9px] text-slate-400">{selectedTypeItems.length} records</span>
+                  {(() => {
+                    const es = getTableEntityStyle(selectedType);
+                    const Icon = es.icon;
+                    const [tc, bc] = es.color.split(" ");
+                    return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${bc}`}>
+                      <Icon className={`h-3.5 w-3.5 stroke-current ${tc}`} />
+                    </span>;
+                  })()}
+                  <span className={`text-[11px] ${theme.textMuted}`}>Reference Tables</span>
+                  <ChevronRight className="h-3 w-3 stroke-current text-slate-300 dark:text-slate-600" />
+                  <span className={`text-sm font-semibold ${theme.textPrimary}`}>{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
+                  <span className={`text-[11px] ${theme.textMuted}`}>{selectedTypeItems.length} records</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 shrink-0">
                   <button type="button" onClick={() => openAddItem(selectedType)}
-                    className="h-6 px-2 rounded text-[9px] font-semibold inline-flex items-center gap-1 bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+                    className="h-8 px-3 rounded text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
                   >
-                    <Plus className="h-2.5 w-2.5 stroke-current" /> Add
+                    <Plus className="h-3.5 w-3.5 stroke-current" /> Add
                   </button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto px-3 py-2">
-                <ItemsList items={allItems} selectedType={selectedType} onEdit={openEditItem} onAdd={openAddItem} />
+              <div className="flex-1 overflow-auto">
+                <ItemsList items={allItems} selectedType={selectedType} onEdit={openEditItem} onAdd={openAddItem} showToast={showToast} />
               </div>
-              <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 px-3 py-1.5 flex items-center gap-3 text-[8px] text-slate-400">
-                <span className="flex items-center gap-1"><CheckCircle className="h-2.5 w-2.5 stroke-current" /> {selectedTypeActive} active</span>
-                <span className="flex items-center gap-1"><X className="h-2.5 w-2.5 stroke-current" /> {selectedTypeInactive} inactive</span>
-                <span className="flex items-center gap-1"><Hash className="h-2.5 w-2.5 stroke-current" /> {selectedTypeItems.reduce((s, i) => s + i.sortOrder, 0)} total sort</span>
+              <div className="flex items-center shrink-0 h-[60px] border-t border-slate-200 dark:border-slate-700 px-3">
+                <span className={`text-[10px] ${theme.textMuted}`}>{selectedTypeItems.length} item{selectedTypeItems.length !== 1 ? "s" : ""}</span>
               </div>
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center px-4">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 dark:bg-sky-500/10 mb-3">
-                  <FileSpreadsheet className="h-6 w-6 text-sky-400 dark:text-sky-500 stroke-current" />
-                </div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-1">Reference Tables Explorer</h3>
-                <p className="text-[10px] text-slate-400 max-w-[220px] mx-auto leading-relaxed mb-4">
-                  Select a table from the browser to preview and manage its records.
+                <FileSpreadsheet className="h-10 w-10 stroke-current text-slate-300 mx-auto mb-3" />
+                <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1`}>Reference Tables</h3>
+                <p className={`text-xs ${theme.textMuted} max-w-[240px] mx-auto leading-relaxed`}>
+                  Select a table from the sidebar to browse and manage reference data.
                 </p>
-                <div className="flex items-center justify-center gap-4">
-                  <div className="text-center"><span className="block text-lg font-bold text-slate-800 dark:text-slate-100">{GROUP_ORDER.length}</span><span className="text-[8px] text-slate-400">Groups</span></div>
-                  <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
-                  <div className="text-center"><span className="block text-lg font-bold text-slate-800 dark:text-slate-100">{totalTypes}</span><span className="text-[8px] text-slate-400">Tables</span></div>
-                  <div className="w-px h-6 bg-slate-200 dark:bg-slate-700" />
-                  <div className="text-center"><span className="block text-lg font-bold text-slate-800 dark:text-slate-100">{totalItems}</span><span className="text-[8px] text-slate-400">Records</span></div>
-                </div>
               </div>
             </div>
           )}
@@ -675,10 +913,10 @@ export function ReferencesPage() {
           <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-[360px] max-w-[90vw]">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Unsaved changes</h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">You have unsaved changes that will be lost.</p>
-            <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={handleModalSave} className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-[10px] font-medium hover:bg-emerald-500 transition-colors">Save</button>
-              <button type="button" onClick={handleModalDiscard} className="rounded-lg border border-slate-200 bg-white text-slate-700 px-3 py-1.5 text-[10px] font-medium hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Discard</button>
-              <button type="button" onClick={handleModalCancel} className="rounded-lg bg-white text-slate-500 px-3 py-1.5 text-[10px] font-medium hover:text-slate-700 transition-colors">Cancel</button>
+            <div className="flex items-center justify-end gap-1">
+              <button type="button" onClick={handleModalSave} className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">Save</button>
+              <button type="button" onClick={handleModalDiscard} className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">Discard</button>
+              <button type="button" onClick={handleModalCancel} className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
             </div>
           </div>
         </div>

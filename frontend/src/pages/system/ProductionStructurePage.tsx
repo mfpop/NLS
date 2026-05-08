@@ -1,13 +1,14 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
-import { Database, Building2, GitBranch, Layers, Users, Monitor, X, Search, RefreshCw, Plus, Pencil } from "lucide-react";
+import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, Plus, Pencil } from "lucide-react";
+import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../styles/themeTokens";
 import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
 import { TreeNavigation, NodeDetailPanel, CompanyEditor, GlobalNav, type CompanyFormData } from "./production-structure/components";
-import { findNodeByKey, findNodePathByKey, ADD_ROUTES, ENTITY_CONFIG, TYPE_TITLES, formatStatusLabel, CHILD_TYPE_MAP } from "./production-structure/config";
+import { findNodeByKey, findNodePathByKey, ADD_ROUTES, ENTITY_CONFIG, CHILD_TYPE_MAP } from "./production-structure/config";
 
 interface ContextMenuState {
   x: number; y: number; nodeKey: string; node: DataManagementTreeChild; visible: boolean;
@@ -47,7 +48,7 @@ function ContextMenu({ state, onClose, onAdd, onEdit }: {
   );
 }
 
-export function DataManagementPage() {
+export function ProductionStructurePage() {
   const navigate = useNavigate();
   const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set());
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
@@ -157,17 +158,12 @@ export function DataManagementPage() {
         onEdit={(key) => { const node = findNodeByKey(treeData || [], key); if (node) { const route = entityRoutes[node.type]; if (route) navigate(route + node.id); } }} />
 
       {/* Page Header */}
-      <header className={`flex shrink-0 items-center justify-between gap-4 border-b px-3 h-14 ${theme.header}`}>
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
-            <Database className="h-4 w-4 stroke-current" />
-          </div>
-          <div className="min-w-0">
-            <h1 className={`text-sm font-bold tracking-tight ${theme.textPrimary}`}>Production Structure</h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Manufacturing hierarchy explorer</p>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        icon={<Database className="h-5 w-5 stroke-current" />}
+        iconClass={theme.iconBoxEmerald}
+        title="Production Structure"
+        subtitle="Manufacturing hierarchy explorer"
+      />
 
       {/* 3-Column Explorer */}
       <div className="flex-1 min-h-0 grid grid-cols-[auto_380px_1fr] gap-0">
@@ -210,11 +206,11 @@ export function DataManagementPage() {
 
           {/* Footer Legend */}
           <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-5 px-5 h-15 text-xs text-slate-500 dark:text-slate-300 font-medium">
-            <span className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-blue-500 stroke-current" /> Plant</span>
-            <span className="flex items-center gap-1.5"><GitBranch className="h-3.5 w-3.5 text-amber-500 stroke-current" /> Line</span>
+            <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-blue-500 stroke-current" /> Plant</span>
+            <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-amber-500 stroke-current" /> Line</span>
             <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-purple-500 stroke-current" /> Dept</span>
-            <span className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-blue-500 stroke-current" /> RG</span>
-            <span className="flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5 text-gray-500 stroke-current" /> Resource</span>
+            <span className="flex items-center gap-1.5"><Component className="h-3.5 w-3.5 text-rose-500 stroke-current" /> RG</span>
+            <span className="flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-gray-500 stroke-current" /> Resource</span>
           </div>
         </div>
 
@@ -253,10 +249,6 @@ export function DataManagementPage() {
                         <button type="button" onClick={() => setWorkspaceMode("view")}
                           className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1 transition-colors"><X className="h-3.5 w-3.5 stroke-current" /> Cancel</button>
                       </>)}
-                      {workspaceMode === "view" && (
-                        <button type="button" onClick={() => setSelectedNodeKey(null)}
-                          className="h-7 w-7 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><X className="h-3.5 w-3.5 stroke-current" /></button>
-                      )}
                     </div>
                   </div>
               );
@@ -296,30 +288,7 @@ export function DataManagementPage() {
             )}
           </div>
 
-          {/* Right Footer */}
-          <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center px-5 h-15 text-xs text-slate-400 dark:text-slate-500 font-medium">
-            {selectedNode && !isCompany ? (() => {
-              const t = TYPE_TITLES[selectedNode.type] || selectedNode.type;
-              const depth = selectedNodeKey ? selectedNodeKey.split("/").length : 0;
-              return (<span className="flex items-center gap-1.5">
-                <span className="text-slate-500 dark:text-slate-400">Explorer</span>
-                <span className="text-slate-300">·</span>
-                <span>{t}</span>
-                {selectedNode.code && <><span className="text-slate-300">·</span><span className="font-mono">{selectedNode.code}</span></>}
-                <span className="text-slate-300">·</span>
-                <span className={`inline-flex items-center gap-1 ${selectedNode.status === "active" ? "text-emerald-600" : "text-slate-400"}`}>
-                  <span className={`inline-block h-2 w-2 rounded-full ${selectedNode.status === "active" ? "bg-emerald-500" : "bg-slate-300"}`} />
-                  {formatStatusLabel(selectedNode.status)}
-                </span>
-                <span className="text-slate-300">·</span>
-                <span>depth {depth}</span>
-              </span>);
-            })() : isCompany ? (
-              <span>Company Configuration</span>
-            ) : (
-              <span>Structure Explorer</span>
-            )}
-          </div>
+
         </div>
       </div>
     </div>

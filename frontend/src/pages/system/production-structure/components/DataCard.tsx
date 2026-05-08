@@ -67,12 +67,12 @@ function ActionButtons({ onEdit, onStructure, onOpen, isLowestLevel }: {
   onOpen?: () => void;
   isLowestLevel?: boolean;
 }) {
-  const secondaryBtn = "inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-medium transition-all active:scale-[0.97] dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800";
+  const secondaryBtn = "inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors";
   return (
     <div className="flex items-center gap-1.5">
       {onEdit && (
         <button type="button" onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-slate-400 bg-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-500 text-xs font-medium transition-all active:scale-[0.97] dark:border-slate-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:border-slate-400"
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors"
         >
           <Pencil className="h-3.5 w-3.5 stroke-current" />
           Edit

@@ -238,56 +238,56 @@ function NodeFormPanel({ selectedNode, selectedNodeKey, setSelectedNodeKey, path
 
   return (
     <div className="flex flex-col min-h-0">
-      {/* Right Column Header */}
-      <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/80 dark:bg-slate-900/80">
-        <div className="flex items-center justify-between gap-2 px-2.5 py-1.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${ts?.color || theme.iconBoxSubtle}`}>
-              <Icon className="h-2.5 w-2.5 stroke-current" />
-            </span>
-            <span className={`text-[13px] font-bold truncate ${theme.textPrimary}`}>{selectedNode.name}</span>
-            <span className="text-slate-300 mx-1">·</span>
-            <span className="text-[11px] text-slate-500 shrink-0">{title}</span>
-            {selectedNode.code && <><span className="text-slate-300 mx-1">·</span><span className="text-[11px] font-mono text-slate-500 shrink-0">{selectedNode.code}</span></>}
-            <span className="text-slate-300 mx-1">·</span>
-            <span className={`inline-flex items-center gap-1 text-[11px] shrink-0 ${selectedNode.status === "active" ? "text-emerald-600" : "text-slate-400"}`}>
-              <span className={`inline-block h-1.5 w-1.5 rounded-full ${selectedNode.status === "active" ? "bg-emerald-500" : "bg-slate-300"}`} />
-              {statusLabel}
-            </span>
-            <span className="text-slate-300 mx-1">·</span>
-            <span className="text-[11px] text-slate-500 shrink-0">depth {hierarchyDepth}</span>
-          </div>
+      {/* Right Column: Title Header */}
+      <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/80 dark:bg-slate-900/80 h-12 px-4 flex items-center">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${ts?.color || theme.iconBoxSubtle}`}>
+            <Icon className="h-2.5 w-2.5 stroke-current" />
+          </span>
+          <span className={`text-[13px] font-bold truncate ${theme.textPrimary}`}>{selectedNode.name}</span>
+          <span className="text-slate-300 mx-1">·</span>
+          <span className="text-[11px] text-slate-500 shrink-0">{title}</span>
+          {selectedNode.code && <><span className="text-slate-300 mx-1">·</span><span className="text-[11px] font-mono text-slate-500 shrink-0">{selectedNode.code}</span></>}
+          <span className="text-slate-300 mx-1">·</span>
+          <span className={`inline-flex items-center gap-1 text-[11px] shrink-0 ${selectedNode.status === "active" ? "text-emerald-600" : "text-slate-400"}`}>
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${selectedNode.status === "active" ? "bg-emerald-500" : "bg-slate-300"}`} />
+            {statusLabel}
+          </span>
+          <span className="text-slate-300 mx-1">·</span>
+          <span className="text-[11px] text-slate-500 shrink-0">depth {hierarchyDepth}</span>
         </div>
-        <div className="flex items-center justify-end gap-1 px-2 pb-1.5">
-          {workspaceMode === 'view' && canAdd && (
-            <button type="button" onClick={() => { const route = addRoutes[selectedNode.type]; if (route) { setCreateType(childTypeMap[selectedNode.type]); setWorkspaceMode('create'); } }}
+      </div>
+
+      {/* Right Column: Toolbar */}
+      <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/40 dark:bg-slate-900/40 h-10 px-4 flex items-center justify-end gap-1">
+        {workspaceMode === 'view' && canAdd && (
+          <button type="button" onClick={() => { const route = addRoutes[selectedNode.type]; if (route) { setCreateType(childTypeMap[selectedNode.type]); setWorkspaceMode('create'); } }}
+            className="h-7 px-2.5 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 transition-colors"
+          ><Plus className="h-3.5 w-3.5 stroke-current" /> Add {addLabel}</button>
+        )}
+        {workspaceMode === 'view' && (
+          <button type="button" onClick={() => setWorkspaceMode('edit')}
+            className="h-7 px-2.5 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 transition-colors"
+          ><Pencil className="h-3.5 w-3.5 stroke-current" /> Edit</button>
+        )}
+        {workspaceMode !== 'view' && (
+          <>
+            <button type="button" onClick={() => {
+              if (workspaceMode === 'edit') { const base = entityRoutes[selectedNode.type]; if (base) navigate(base + selectedNode.id); }
+              if (workspaceMode === 'create') { const route = addRoutes[selectedNode.type]; if (route) navigate(route); }
+            }}
+              className="h-7 px-2.5 rounded text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 inline-flex items-center gap-1.5 transition-colors"
+            ><Check className="h-3.5 w-3.5 stroke-current" /> Save</button>
+            <button type="button" onClick={() => setWorkspaceMode('view')}
               className="h-7 px-2.5 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 transition-colors"
-            ><Plus className="h-3.5 w-3.5 stroke-current" /> Add {addLabel}</button>
-          )}
-          {workspaceMode === 'view' && (
-            <button type="button" onClick={() => setWorkspaceMode('edit')}
-              className="h-7 px-2.5 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 transition-colors"
-            ><Pencil className="h-3.5 w-3.5 stroke-current" /> Edit</button>
-          )}
-          {workspaceMode !== 'view' && (
-            <>
-              <button type="button" onClick={() => {
-                if (workspaceMode === 'edit') { const base = entityRoutes[selectedNode.type]; if (base) navigate(base + selectedNode.id); }
-                if (workspaceMode === 'create') { const route = addRoutes[selectedNode.type]; if (route) navigate(route); }
-              }}
-                className="h-7 px-2.5 rounded text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-500 inline-flex items-center gap-1.5 transition-colors"
-              ><Check className="h-3.5 w-3.5 stroke-current" /> Save</button>
-              <button type="button" onClick={() => setWorkspaceMode('view')}
-                className="h-7 px-2.5 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1.5 transition-colors"
-              ><X className="h-3.5 w-3.5 stroke-current" /> Cancel</button>
-            </>
-          )}
-          {workspaceMode === 'view' && (
-            <button type="button" onClick={() => setSelectedNodeKey(null)}
-              className="h-7 w-7 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            ><X className="h-3.5 w-3.5 stroke-current" /></button>
-          )}
-        </div>
+            ><X className="h-3.5 w-3.5 stroke-current" /> Cancel</button>
+          </>
+        )}
+        {workspaceMode === 'view' && (
+          <button type="button" onClick={() => setSelectedNodeKey(null)}
+            className="h-7 w-7 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          ><X className="h-3.5 w-3.5 stroke-current" /></button>
+        )}
       </div>
 
       {/* Content area */}

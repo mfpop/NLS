@@ -1,7 +1,8 @@
 import type { ChangeEvent, ReactNode } from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useLazyQuery } from "@apollo/client/react";
+import { gql } from "@apollo/client";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { DEPARTMENTS_QUERY } from "@/graphql/manufacturingQueries";
 import {
@@ -20,16 +21,44 @@ import {
   Globe,
   ShieldCheck,
   AlertCircle,
-  Save,
   Camera,
   Factory,
   Layers,
+  Search,
 } from "lucide-react";
 import { ModulePage } from "@/pages/shared/ModulePage";
 import { theme } from "../../styles/themeTokens";
 import { useProfile } from "@/hooks/useProfile";
 import type { Profile, WorkHistoryEntry, EducationEntry } from "@/types/profile";
 import { normalizeProfile } from "@/utils/profileNormalizer";
+
+const USERS_SEARCH_QUERY = gql`
+  query UsersSearch($search: String) {
+    users(search: $search) {
+      id
+      name
+      role
+      email
+    }
+  }
+`;
+
+const SECTIONS = ["Identity", "Contact", "Summary", "Experience", "Education"] as const;
+
+const SECTION_FIELD_MAP: Record<string, string> = {
+  firstName: "Identity",
+  lastName: "Identity",
+  role: "Identity",
+  plant: "Identity",
+  department: "Identity",
+  language: "Identity",
+  email: "Contact",
+  phone: "Contact",
+  location: "Contact",
+  about: "Summary",
+  workHistory: "Experience",
+  education: "Education",
+};
 
 type ProfileDraft = {
   firstName: string;
@@ -112,22 +141,26 @@ function formatLastUpdated(value: string): string {
   });
 }
 
+const COMPLETION_FIELD_DEFS = [
+  { key: "name", label: "First & last name", check: (d: ProfileDraft) => d.firstName.trim() && d.lastName.trim() },
+  { key: "role", label: "Role", check: (d: ProfileDraft) => d.role.trim() },
+  { key: "email", label: "Email", check: (d: ProfileDraft) => d.email.trim() },
+  { key: "phone", label: "Phone", check: (d: ProfileDraft) => d.phone.trim() },
+  { key: "location", label: "Location", check: (d: ProfileDraft) => d.location.trim() },
+  { key: "plant", label: "Plant", check: (d: ProfileDraft) => d.plant.trim() },
+  { key: "department", label: "Department", check: (d: ProfileDraft) => d.department.trim() },
+  { key: "language", label: "Language", check: (d: ProfileDraft) => d.language.trim() },
+  { key: "about", label: "Summary", check: (d: ProfileDraft) => d.about.trim() },
+  { key: "workHistory", label: "Work history", check: (_d: ProfileDraft, w: WorkHistoryEntry[]) => w.some((item) => item.role.trim() && item.company.trim()) },
+  { key: "education", label: "Education", check: (_d: ProfileDraft, _w: WorkHistoryEntry[], e: EducationEntry[]) => e.some((item) => item.degree.trim() && item.school.trim()) },
+];
+
 function profileCompletionScore(
   draft: ProfileDraft,
   workHistory: WorkHistoryEntry[],
   education: EducationEntry[],
 ): number {
-  const checks = [
-    draft.firstName.trim() && draft.lastName.trim(),
-    draft.role.trim(),
-    draft.email.trim(),
-    draft.phone.trim(),
-    draft.location.trim(),
-    draft.language.trim(),
-    draft.about.trim(),
-    workHistory.some((item) => item.role.trim() && item.company.trim()),
-    education.some((item) => item.degree.trim() && item.school.trim()),
-  ];
+  const checks = COMPLETION_FIELD_DEFS.map((def) => def.check(draft, workHistory, education));
   return Math.round((checks.filter(Boolean).length / checks.length) * 100);
 }
 
@@ -179,6 +212,7 @@ function validateField(field: string, draft: ProfileDraft): string | undefined {
   if (field === "phone" && draft.phone.trim() && !/^\+1\s\(\d{3}\)\s\d{3}-\d{4}$/.test(draft.phone.trim())) {
     return "Use format +1 (555) 123-4567";
   }
+  if (field === "department" && !draft.department.trim()) return "Department is required.";
   return undefined;
 }
 
@@ -221,17 +255,20 @@ function FieldShell({
   label,
   error,
   className,
+  required,
   children,
 }: {
   label: string;
   error?: string;
   className?: string;
+  required?: boolean;
   children: ReactNode;
 }) {
   return (
     <label className={className || "block"}>
       <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
         {label}
+        {required ? <span className="ml-0.5 text-rose-500">*</span> : null}
       </div>
       {children}
       {error ? <div className="mt-1 text-xs text-rose-500">{error}</div> : null}
@@ -247,7 +284,7 @@ const mutedValueClass = "text-sm font-medium text-slate-800 dark:text-slate-200"
 
 export function UserProfilePage() {
   const navigate = useNavigate();
-  const { profile, loading, error, saving, saveProfile } = useProfile();
+  const { profile, loading, error, saveProfile } = useProfile();
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
@@ -258,12 +295,42 @@ export function UserProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+  const pendingNav = useRef<string | null>(null);
+  const navConfirmed = useRef(false);
+
+  const [showCompletionPopover, setShowCompletionPopover] = useState(false);
+  const completionPopoverRef = useRef<HTMLDivElement>(null);
+  const completionBarRef = useRef<HTMLDivElement>(null);
+
+  const [deptTouched, setDeptTouched] = useState(false);
+
+  const [userSearchText, setUserSearchText] = useState("");
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+  const userSearchTimeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; role: string; email: string } | null>(null);
+
+  const identityRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const experienceRef = useRef<HTMLDivElement>(null);
+  const educationRef = useRef<HTMLDivElement>(null);
+  const aboutRef = useRef<HTMLTextAreaElement>(null);
+
+  const [activeSection, setActiveSection] = useState<string>("Identity");
+
   const { data: plantsData } = useQuery<{ plants: { id: string; name: string }[] }>(PLANTS_QUERY, { fetchPolicy: "cache-and-network" });
   const { data: deptsData } = useQuery<{ departments: { id: string; name: string }[] }>(DEPARTMENTS_QUERY, { fetchPolicy: "cache-and-network" });
   const plants = plantsData?.plants ?? [];
   const departments = deptsData?.departments ?? [];
   const [workDraft, setWorkDraft] = useState<WorkHistoryEntry[]>([]);
   const [eduDraft, setEduDraft] = useState<EducationEntry[]>([]);
+
+  const [searchUsers, { data: userData, loading: userLoading }] = useLazyQuery<{ users: { id: string; name: string; role: string; email: string }[] }>(USERS_SEARCH_QUERY, {
+    fetchPolicy: "network-only",
+  });
+  const userResults = userData?.users ?? [];
 
   useEffect(() => {
     setDraft(draftFromProfile(profile));
@@ -272,19 +339,164 @@ export function UserProfilePage() {
     setDraftInitialized(true);
   }, [profile]);
 
-  const completion = profileCompletionScore(draft, workDraft, eduDraft);
-  void completion;
-  const isDirty = draftInitialized && (
-    JSON.stringify(draft) !== JSON.stringify(draftFromProfile(profile)) ||
-    JSON.stringify(workDraft) !== JSON.stringify(profile?.workHistory ?? []) ||
-    JSON.stringify(eduDraft) !== JSON.stringify(profile?.education ?? [])
+  useEffect(() => {
+    if (draftInitialized && !draft.plant && plants.length > 0) {
+      setDraft((prev) => ({ ...prev, plant: plants[0].name }));
+    }
+  }, [draftInitialized, plants]);
+
+  const completion = useMemo(
+    () => profileCompletionScore(draft, workDraft, eduDraft),
+    [draft, workDraft, eduDraft],
   );
-  void isDirty;
+
+  const isDirty = useMemo(
+    () => draftInitialized && (
+      JSON.stringify(draft) !== JSON.stringify(draftFromProfile(profile)) ||
+      JSON.stringify(workDraft) !== JSON.stringify(profile?.workHistory ?? []) ||
+      JSON.stringify(eduDraft) !== JSON.stringify(profile?.education ?? [])
+    ),
+    [draftInitialized, draft, workDraft, eduDraft, profile],
+  );
+
+
+
+  const scrollToSection = useCallback((section: string) => {
+    const refMap: Record<string, React.RefObject<HTMLDivElement | null>> = {
+      Identity: identityRef,
+      Contact: contactRef,
+      Summary: summaryRef,
+      Experience: experienceRef,
+      Education: educationRef,
+    };
+    const target = refMap[section];
+    if (target?.current) {
+      target.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    setActiveSection(section);
+  }, []);
+
+  const scrollToField = useCallback((key: string) => {
+    const section = SECTION_FIELD_MAP[key];
+    if (section) {
+      scrollToSection(section);
+      setTimeout(() => {
+        const el = document.querySelector(`[data-field="${key}"]`) as HTMLElement;
+        if (el && editingSection) el.focus();
+      }, 500);
+    }
+    setShowCompletionPopover(false);
+  }, [scrollToSection, editingSection]);
+
+  const handleNavigate = useCallback((to: string) => {
+    if (isDirty && !navConfirmed.current) {
+      pendingNav.current = to;
+      setShowUnsavedModal(true);
+      return;
+    }
+    navConfirmed.current = false;
+    navigate(to);
+  }, [isDirty, navigate]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let best = activeSection;
+        let bestRatio = 0;
+        entries.forEach((entry) => {
+          const section = entry.target.getAttribute("data-section");
+          if (section && entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio;
+            best = section;
+          }
+        });
+        if (best) setActiveSection(best);
+      },
+      { threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5] },
+    );
+
+    const refs = [
+      { ref: identityRef, section: "Identity" },
+      { ref: contactRef, section: "Contact" },
+      { ref: summaryRef, section: "Summary" },
+      { ref: experienceRef, section: "Experience" },
+      { ref: educationRef, section: "Education" },
+    ];
+
+    refs.forEach(({ ref, section }) => {
+      if (ref.current) {
+        ref.current.setAttribute("data-section", section);
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        const currentIndex = SECTIONS.indexOf(activeSection as (typeof SECTIONS)[number]);
+        if (currentIndex === -1) return;
+        const nextIndex = e.key === "ArrowRight"
+          ? Math.min(currentIndex + 1, SECTIONS.length - 1)
+          : Math.max(currentIndex - 1, 0);
+        if (nextIndex !== currentIndex) {
+          scrollToSection(SECTIONS[nextIndex]);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeSection, scrollToSection]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        completionPopoverRef.current &&
+        !completionPopoverRef.current.contains(e.target as Node) &&
+        completionBarRef.current &&
+        !completionBarRef.current.contains(e.target as Node)
+      ) {
+        setShowCompletionPopover(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const missingFields = useMemo(() => {
+    return COMPLETION_FIELD_DEFS.filter((def) => !def.check(draft, workDraft, eduDraft));
+  }, [draft, workDraft, eduDraft]);
+
+  const perFieldWeight = useMemo(
+    () => Math.round(100 / COMPLETION_FIELD_DEFS.length),
+    [],
+  );
+
+  const deptError = useMemo(
+    () => (deptTouched && !draft.department.trim() ? "Department is required." : undefined),
+    [deptTouched, draft.department],
+  );
+
+  const aboutCharCount = draft.about.length;
+  const aboutCharColor = aboutCharCount >= 500 ? "text-rose-500" : aboutCharCount >= 450 ? "text-amber-500" : "text-slate-400";
 
   const startEditing = (section: string) => {
     setEditingSection(section);
     setSaveError(null);
     setSaveSuccess(null);
+    setShowCompletionPopover(false);
   };
 
   const handleAvatarClick = () => {
@@ -308,42 +520,28 @@ export function UserProfilePage() {
     setSaveError(null);
     setSaveSuccess(null);
     setFieldErrors({});
+    setDeptTouched(false);
     setDraft(draftFromProfile(profile));
     setWorkDraft(cloneWork(profile?.workHistory ?? []));
     setEduDraft(cloneEducation(profile?.education ?? []));
-  };
-
-  useEffect(() => {
-    if (saveError || saveSuccess) {
-      const timer = setTimeout(() => {
-        setSaveError(null);
-        setSaveSuccess(null);
-      }, 3000);
-      return () => clearTimeout(timer);
+    const reportsToName = profile?.reportsTo ?? "";
+    if (reportsToName) {
+      setSelectedUser({ id: "", name: reportsToName, role: "", email: "" });
+    } else {
+      setSelectedUser(null);
     }
-  }, [saveError, saveSuccess]);
+    setUserSearchText("");
+  };
 
   const handleSave = async () => {
     setSaveError(null);
     setSaveSuccess(null);
-    console.debug("[Profile Save] Starting save with payload:", {
-      name: [draft.firstName.trim(), draft.lastName.trim()].filter(Boolean).join(" "),
-      role: draft.role.trim(),
-      email: draft.email.trim(),
-      phone: draft.phone.trim() || undefined,
-      location: draft.location.trim() || undefined,
-      plant: draft.plant || undefined,
-      department: draft.department || undefined,
-      reportsTo: draft.reportsTo.trim() || undefined,
-      language: draft.language.trim() || undefined,
-      workHistoryCount: workDraft.filter((w) => w.role || w.company).length,
-      educationCount: eduDraft.filter((e) => e.degree || e.school).length,
-    });
+    setDeptTouched(true);
 
     const nextErrors = validateProfile(draft, workDraft, eduDraft);
     if (Object.keys(nextErrors).length > 0) {
       setFieldErrors(nextErrors);
-      setSaveError("Review the highlighted fields before saving.");
+      setSaveError("Save failed — review required fields");
       return;
     }
 
@@ -379,15 +577,65 @@ export function UserProfilePage() {
     });
 
     if (result.ok) {
-      console.debug("[Profile Save] Success");
       setEditingSection(null);
-      setSaveSuccess("Profile saved successfully.");
+      setSaveSuccess("Profile saved");
+      setSaveError(null);
+      setTimeout(() => setSaveSuccess(null), 3000);
       return;
     }
 
-    console.debug("[Profile Save] Validation errors:", result.errors);
     setFieldErrors(result.errors ?? {});
-    setSaveError(Object.values(result.errors ?? {}).join(" ") || "Failed to save profile.");
+    setSaveError("Save failed — review required fields");
+  };
+
+  const handleUserSearchInput = (text: string) => {
+    setUserSearchText(text);
+    if (userSearchTimeout.current) clearTimeout(userSearchTimeout.current);
+    userSearchTimeout.current = setTimeout(() => {
+      searchUsers({ variables: { search: text || undefined } });
+    }, 300);
+  };
+
+  const handleUserSelect = (user: { id: string; name: string; role: string; email: string }) => {
+    setSelectedUser(user);
+    setDraft((prev) => ({ ...prev, reportsTo: user.name }));
+    setShowUserDropdown(false);
+    setUserSearchText("");
+  };
+
+  const handleUserClear = () => {
+    setSelectedUser(null);
+    setDraft((prev) => ({ ...prev, reportsTo: "" }));
+    setUserSearchText("");
+    setTimeout(() => {
+      const input = document.querySelector<HTMLInputElement>("[data-reports-to-input]");
+      input?.focus();
+    }, 0);
+  };
+
+  const confirmSave = async () => {
+    setShowUnsavedModal(false);
+    await handleSave();
+    if (pendingNav.current) {
+      navConfirmed.current = true;
+      navigate(pendingNav.current);
+      pendingNav.current = null;
+    }
+  };
+
+  const confirmDiscard = () => {
+    setShowUnsavedModal(false);
+    cancelEditing();
+    if (pendingNav.current) {
+      navConfirmed.current = true;
+      navigate(pendingNav.current);
+      pendingNav.current = null;
+    }
+  };
+
+  const confirmCancel = () => {
+    setShowUnsavedModal(false);
+    pendingNav.current = null;
   };
 
   if (loading) {
@@ -423,21 +671,28 @@ export function UserProfilePage() {
     name: fullName,
     role: draft.role,
     summary: draft.about,
-    experience: workDraft.map(w => ({
+    experience: workDraft.map((w) => ({
       role: w.role,
       company: w.company,
       startDate: w.period?.split(" - ")[0] || "",
       endDate: w.period?.split(" - ")[1] || "",
-      bullets: w.description ? w.description.split(/[.!\n]+/).filter(Boolean).map(s => s.trim()) : [],
+      bullets: w.description ? w.description.split(/[.!\n]+/).filter(Boolean).map((s) => s.trim()) : [],
     })),
     education: eduDraft,
   });
   const highlights = normalized.highlights;
   const score = normalized.score;
 
+  function getHighlightTitle(highlight: string): string {
+    if (highlight.includes("experience")) return "Calculated from earliest work history start date";
+    const plantMatch = highlight.match(/(\d+)\s+(plants|lines|teams)/i);
+    if (plantMatch) return `Assigned to: —`;
+    return "";
+  }
+
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`}>
-      {/* HEADER: Identity + Action */}
+      {/* HEADER: Identity + Global Actions */}
       <header className={`relative flex items-center gap-4 border-b shadow-sm h-16 shrink-0 px-5 ${theme.header}`}>
         <div className="relative group cursor-pointer shrink-0" onClick={handleAvatarClick}>
           {avatarPreview ? (
@@ -470,44 +725,48 @@ export function UserProfilePage() {
           />
         </div>
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">{fullName || "Complete your profile"}</div>
-            {editingSection && <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">Editing</span>}
+            {editingSection && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">Editing</span>
+            )}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400 truncate leading-tight">{draft.role || "Add your role and details"}</div>
         </div>
-        <button type="button" onClick={() => navigate("/control-tower")} className="shrink-0 rounded-lg border border-slate-200 bg-white p-2 text-slate-400 transition hover:border-slate-300 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500 dark:hover:border-slate-600 dark:hover:text-slate-300" aria-label="Close profile">
+        <button type="button" onClick={() => handleNavigate("/control-tower")} className="shrink-0 rounded-lg border border-slate-200 bg-white p-2 text-slate-400 transition hover:border-slate-300 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-500 dark:hover:border-slate-600 dark:hover:text-slate-300" aria-label="Close profile">
           <X className="h-4 w-4" />
         </button>
 
-        {(saveError || saveSuccess) && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className={`flex items-center gap-2 rounded-xl px-4 py-1.5 text-sm font-medium shadow-lg ${
-              saveError
-                ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/30 dark:text-rose-300 dark:border-rose-900/60"
-                : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-900/60"
-            }`}>
-              {saveError ? <AlertCircle className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-              {saveError || saveSuccess}
-            </div>
+        {saveError && !saveSuccess && (
+          <div className="absolute left-0 right-0 top-full z-20 flex items-center gap-2 border-b border-rose-200 bg-rose-50 px-5 py-2 text-sm font-medium text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span className="flex-1">{saveError}</span>
+            <button type="button" onClick={() => setSaveError(null)} className="shrink-0 rounded p-0.5 text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-200">
+              <X className="h-3.5 w-3.5" />
+            </button>
           </div>
         )}
       </header>
-
 
       {/* TOOLBAR: Highlights + Score */}
       <div className="shrink-0 border-b border-slate-100 bg-white px-5 py-1.5 dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-1.5">
           {highlights.map((h, i) => (
-            <span key={i} className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <span key={i} title={getHighlightTitle(h)} className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
               {h}
             </span>
           ))}
           {highlights.length > 0 && <div className="h-3 w-px bg-slate-200 dark:bg-slate-700" />}
-          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <span
+            title="Profile quality score: completeness + skill coverage"
+            className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          >
             {score.value}/100
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <span
+            title="Top 30% of operator profiles in this plant"
+            className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          >
             {score.label}
           </span>
         </div>
@@ -528,8 +787,8 @@ export function UserProfilePage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {editingSection === "profile" ? (
                       <>
-                        <button type="button" onClick={handleSave} disabled={saving} className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
-                          {saving ? <Save className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                        <button type="button" onClick={handleSave} title="Confirm this section" className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+                          <Check className="h-3.5 w-3.5" />
                         </button>
                         <button type="button" onClick={cancelEditing} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400 transition hover:border-rose-200 hover:text-rose-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-rose-800 dark:hover:text-rose-400">
                           <X className="h-3.5 w-3.5" />
@@ -542,29 +801,155 @@ export function UserProfilePage() {
                     )}
                   </div>
                 </div>
-
-                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                <div ref={identityRef} className="grid md:grid-cols-2 gap-4">
                   <FieldShell label="First name" error={fieldErrors.firstName}>
                     {editingSection === "profile" ? (
-                        <input value={draft.firstName} onChange={(e) => setDraft((prev) => ({ ...prev, firstName: e.target.value }))} className={fieldErrors.firstName ? inputErrorClass : inputClass} placeholder="First name" />
-                      ) : (
-                        <div className={mutedValueClass}>{draft.firstName || ""}</div>
-                      )}
-                    </FieldShell>
+                      <input data-field="firstName" value={draft.firstName} onChange={(e) => setDraft((prev) => ({ ...prev, firstName: e.target.value }))} className={fieldErrors.firstName ? inputErrorClass : inputClass} placeholder="First name" />
+                    ) : (
+                      <div className={mutedValueClass}>{draft.firstName || ""}</div>
+                    )}
+                  </FieldShell>
 
-                    <FieldShell label="Last name" error={fieldErrors.lastName}>
-                      {editingSection === "profile" ? (
-                        <input value={draft.lastName} onChange={(e) => setDraft((prev) => ({ ...prev, lastName: e.target.value }))} className={fieldErrors.lastName ? inputErrorClass : inputClass} placeholder="Last name" />
-                      ) : (
-                        <div className={mutedValueClass}>{draft.lastName || ""}</div>
-                      )}
-                    </FieldShell>
+                  <FieldShell label="Last name" error={fieldErrors.lastName}>
+                    {editingSection === "profile" ? (
+                      <input data-field="lastName" value={draft.lastName} onChange={(e) => setDraft((prev) => ({ ...prev, lastName: e.target.value }))} className={fieldErrors.lastName ? inputErrorClass : inputClass} placeholder="Last name" />
+                    ) : (
+                      <div className={mutedValueClass}>{draft.lastName || ""}</div>
+                    )}
+                  </FieldShell>
 
-                    <FieldShell label="Email" error={fieldErrors.email}>
-                      {editingSection === "profile" ? (
+                  <FieldShell label="Role" error={fieldErrors.role}>
+                    {editingSection === "profile" ? (
+                      <input data-field="role" value={draft.role} onChange={(e) => setDraft((prev) => ({ ...prev, role: e.target.value }))} className={inputClass} placeholder="Role or title" />
+                    ) : (
+                      <div className={mutedValueClass}>{draft.role || ""}</div>
+                    )}
+                  </FieldShell>
+
+                  <FieldShell label="Reports to">
+                    {editingSection === "profile" ? (
+                      <div className="relative" ref={userDropdownRef}>
+                        <div className="flex items-start gap-2">
+                          <User className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
+                          {selectedUser ? (
+                            <div className="flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800">
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                {initials(selectedUser.name)}
+                              </span>
+                              <span className="text-slate-800 dark:text-slate-200">{selectedUser.name}</span>
+                              {selectedUser.role && <span className="text-[11px] text-slate-400 dark:text-slate-500">({selectedUser.role})</span>}
+                              <button type="button" onClick={handleUserClear} className="ml-1 rounded p-0.5 text-slate-400 hover:text-rose-500">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative flex-1">
+                              <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                              <input
+                                data-reports-to-input
+                                type="text"
+                                value={userSearchText}
+                                onChange={(e) => {
+                                  handleUserSearchInput(e.target.value);
+                                  setShowUserDropdown(true);
+                                }}
+                                onFocus={() => setShowUserDropdown(true)}
+                                className="w-full border-0 border-b-2 border-slate-300 bg-transparent pl-5 pr-0 py-1.5 text-sm text-slate-900 transition placeholder:text-slate-400 hover:border-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-0 dark:border-slate-600 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-500"
+                                placeholder="Search by name or role..."
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {showUserDropdown && !selectedUser && (
+                          <div className="absolute left-7 right-0 top-full z-30 mt-1 max-h-48 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                            {userLoading ? (
+                              <div className="px-3 py-2 text-xs text-slate-400">Searching...</div>
+                            ) : userResults.length > 0 ? (
+                              userResults.map((u) => (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  onClick={() => handleUserSelect(u)}
+                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-slate-800"
+                                >
+                                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300">
+                                    {initials(u.name)}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="text-slate-800 dark:text-slate-200 truncate">{u.name}</div>
+                                    {u.role && <div className="text-[11px] text-slate-400 truncate">{u.role}</div>}
+                                  </div>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-3 py-2 text-xs text-slate-400">No users found</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <User className="h-4 w-4 text-slate-400" />
+                        {draft.reportsTo || ""}
+                      </div>
+                    )}
+                  </FieldShell>
+
+                  <FieldShell label="Plant">
+                    {editingSection === "profile" ? (
+                      <select data-field="plant" value={draft.plant} onChange={(e) => setDraft((prev) => ({ ...prev, plant: e.target.value }))} className={inputClass}>
+                        <option value="">Select plant...</option>
+                        {plants.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
+                      </select>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <Factory className="h-4 w-4 text-slate-400" />
+                        {draft.plant || ""}
+                      </div>
+                    )}
+                  </FieldShell>
+
+                  <FieldShell label="Department" error={deptError} required>
+                    {editingSection === "profile" ? (
+                      <select
+                        data-field="department"
+                        value={draft.department}
+                        onChange={(e) => setDraft((prev) => ({ ...prev, department: e.target.value }))}
+                        onBlur={() => setDeptTouched(true)}
+                        className={deptError ? inputErrorClass : inputClass}
+                      >
+                        <option value="">Select department...</option>
+                        {departments.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
+                      </select>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <Layers className="h-4 w-4 text-slate-400" />
+                        {draft.department || ""}
+                      </div>
+                    )}
+                  </FieldShell>
+
+                  <FieldShell label="Languages" className="md:col-span-2">
+                    {editingSection === "profile" ? (
+                      <div className="flex items-start gap-2">
+                        <Globe className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
+                        <input data-field="language" value={draft.language} onChange={(e) => setDraft((prev) => ({ ...prev, language: e.target.value }))} className={inputClass} placeholder="English, Romanian" />
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <Globe className="h-4 w-4 text-slate-400" />
+                        {draft.language || ""}
+                      </div>
+                    )}
+                  </FieldShell>
+                </div>
+
+                <div ref={contactRef} className="grid md:grid-cols-2 gap-4 mt-4">
+                  <FieldShell label="Email" error={fieldErrors.email}>
+                    {editingSection === "profile" ? (
                       <div className="flex items-start gap-2">
                         <Mail className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <input value={draft.email} onChange={(e) => {
+                        <input data-field="email" value={draft.email} onChange={(e) => {
                           setDraft((prev) => ({ ...prev, email: e.target.value }));
                           setFieldErrors((prev) => {
                             const err = validateField("email", { ...draft, email: e.target.value });
@@ -584,7 +969,7 @@ export function UserProfilePage() {
                     {editingSection === "profile" ? (
                       <div className="flex items-start gap-2">
                         <Phone className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <input value={draft.phone} onChange={(e) => {
+                        <input data-field="phone" value={draft.phone} onChange={(e) => {
                           const raw = e.target.value.replace(/[^\d]/g, "").slice(0, 11);
                           let formatted = "";
                           if (raw.length > 0) formatted = "+1";
@@ -611,7 +996,7 @@ export function UserProfilePage() {
                     {editingSection === "profile" ? (
                       <div className="flex items-start gap-2">
                         <MapPin className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <input value={draft.location} onChange={(e) => setDraft((prev) => ({ ...prev, location: e.target.value }))} className={inputClass} placeholder="123 Main St, Detroit, MI 48201" />
+                        <input data-field="location" value={draft.location} onChange={(e) => setDraft((prev) => ({ ...prev, location: e.target.value }))} className={inputClass} placeholder="123 Main St, Detroit, MI 48201" />
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
@@ -620,85 +1005,29 @@ export function UserProfilePage() {
                       </div>
                     )}
                   </FieldShell>
-
-                  <FieldShell label="Role" error={fieldErrors.role}>
-                    {editingSection === "profile" ? (
-                        <input value={draft.role} onChange={(e) => setDraft((prev) => ({ ...prev, role: e.target.value }))} className={inputClass} placeholder="Role or title" />
-                      ) : (
-                        <div className={mutedValueClass}>{draft.role || ""}</div>
-                      )}
-                  </FieldShell>
-
-                  <FieldShell label="Reports to">
-                    {editingSection === "profile" ? (
-                      <div className="flex items-start gap-2">
-                        <User className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <input value={draft.reportsTo} onChange={(e) => setDraft((prev) => ({ ...prev, reportsTo: e.target.value }))} className={inputClass} placeholder="VP of Operations" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                        <User className="h-4 w-4 text-slate-400" />
-                        {draft.reportsTo || ""}
-                      </div>
-                    )}
-                  </FieldShell>
-
-                  <FieldShell label="Plant">
-                    {editingSection === "profile" ? (
-                        <select value={draft.plant} onChange={(e) => setDraft((prev) => ({ ...prev, plant: e.target.value }))} className={inputClass}>
-                          <option value="">Select plant...</option>
-                          {plants.map((p) => <option key={p.id} value={p.name}>{p.name}</option>)}
-                        </select>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                        <Factory className="h-4 w-4 text-slate-400" />
-                        {draft.plant || ""}
-                        </div>
-                      )}
-                  </FieldShell>
-
-                  <FieldShell label="Department">
-                    {editingSection === "profile" ? (
-                        <select value={draft.department} onChange={(e) => setDraft((prev) => ({ ...prev, department: e.target.value }))} className={inputClass}>
-                          <option value="">Select department...</option>
-                          {departments.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
-                        </select>
-                      ) : (
-                        <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                        <Layers className="h-4 w-4 text-slate-400" />
-                        {draft.department || ""}
-                        </div>
-                      )}
-                  </FieldShell>
-
-                  <FieldShell label="Languages" className="md:col-span-2">
-                    {editingSection === "profile" ? (
-                      <div className="flex items-start gap-2">
-                        <Globe className="mt-2.5 h-4 w-4 shrink-0 text-slate-400" />
-                        <input value={draft.language} onChange={(e) => setDraft((prev) => ({ ...prev, language: e.target.value }))} className={inputClass} placeholder="English, Romanian" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                        <Globe className="h-4 w-4 text-slate-400" />
-                        {draft.language || ""}
-                      </div>
-                    )}
-                  </FieldShell>
                 </div>
 
-                <div className="flex-1 flex flex-col min-h-0">
+                <div ref={summaryRef} className="flex-1 flex flex-col min-h-0 mt-4">
                   <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">About</div>
                   {editingSection === "profile" ? (
-                    <textarea
-                      value={draft.about}
-                      onChange={(e) => setDraft((prev) => ({ ...prev, about: e.target.value }))}
-                      className="w-full flex-1 resize-y rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                      placeholder="Summarize your leadership scope, manufacturing experience, and outcomes."
-                      maxLength={500}
-                    />
+                    <div className="relative flex-1 flex flex-col">
+                      <textarea
+                        ref={aboutRef}
+                        data-field="about"
+                        value={draft.about}
+                        onChange={(e) => setDraft((prev) => ({ ...prev, about: e.target.value }))}
+                        className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                        placeholder="Summarize your role, expertise, and manufacturing focus (plain text, max 500 characters)"
+                        maxLength={500}
+                        style={{ minHeight: "80px", resize: "vertical" }}
+                      />
+                      <div className={`mt-1 self-end text-xs ${aboutCharColor}`}>
+                        {aboutCharCount} / 500
+                      </div>
+                    </div>
                   ) : draft.about ? (
-                      <div className="flex-1">
-                        <ul className="space-y-2">
+                    <div className="flex-1">
+                      <ul className="space-y-2">
                         {normalized.summary.map((b, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm leading-5 text-slate-700 dark:text-slate-300">
                             <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400 dark:bg-slate-500" />
@@ -706,16 +1035,17 @@ export function UserProfilePage() {
                           </li>
                         ))}
                       </ul>
-                      </div>
-                    ) : (
-                      <EmptyBlock icon={FileText} title="No summary added yet." action="Add Summary" onAction={() => startEditing("profile")} />
-                    )}
+                    </div>
+                  ) : (
+                    <EmptyBlock icon={FileText} title="No summary added yet." action="Add Summary" onAction={() => startEditing("profile")} />
+                  )}
                   {fieldErrors.about && <div className="mt-1 text-xs text-rose-500">{fieldErrors.about}</div>}
                 </div>
               </section>
             </div>
+
             {/* Column 2 — Work History */}
-            <div className="flex flex-col min-h-0 overflow-hidden">
+            <div ref={experienceRef} className="flex flex-col min-h-0 overflow-hidden">
               <section className="flex-1 overflow-auto border border-slate-200/40 bg-white p-4 shadow-sm dark:border-slate-700/40 dark:bg-slate-950">
                 <div className="mb-3 flex items-start justify-between">
                   <div>
@@ -725,11 +1055,11 @@ export function UserProfilePage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {editingSection === "work" ? (
                       <>
+                        <button type="button" onClick={handleSave} title="Confirm this section" className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
                         <button type="button" onClick={() => setWorkDraft((prev) => [{ id: `w${Date.now()}`, role: "", company: "", period: "", description: "" }, ...prev])} className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
                           <Plus className="h-3.5 w-3.5" />
-                        </button>
-                        <button type="button" onClick={handleSave} disabled={saving} className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
-                          {saving ? <Save className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
                         </button>
                         <button type="button" onClick={cancelEditing} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400 transition hover:border-rose-200 hover:text-rose-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-rose-800 dark:hover:text-rose-400">
                           <X className="h-3.5 w-3.5" />
@@ -836,8 +1166,9 @@ export function UserProfilePage() {
                 )}
               </section>
             </div>
+
             {/* Column 3 — Education */}
-            <div className="flex flex-col min-h-0 overflow-hidden">
+            <div ref={educationRef} className="flex flex-col min-h-0 overflow-hidden">
               <section className="flex-1 overflow-auto border border-slate-200/40 bg-[#F3F6F4] p-4 shadow-sm dark:border-slate-700/40 dark:bg-slate-900">
                 <div className="mb-3 flex items-start justify-between">
                   <div>
@@ -847,11 +1178,11 @@ export function UserProfilePage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {editingSection === "edu" ? (
                       <>
+                        <button type="button" onClick={handleSave} title="Confirm this section" className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
                         <button type="button" onClick={() => setEduDraft((prev) => [{ id: `e${Date.now()}`, degree: "", school: "", period: "" }, ...prev])} className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
                           <Plus className="h-3.5 w-3.5" />
-                        </button>
-                        <button type="button" onClick={handleSave} disabled={saving} className="rounded-lg border border-emerald-200 bg-emerald-50 p-1.5 text-emerald-600 transition hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400">
-                          {saving ? <Save className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
                         </button>
                         <button type="button" onClick={cancelEditing} className="rounded-lg border border-slate-200 bg-white p-1.5 text-slate-400 transition hover:border-rose-200 hover:text-rose-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-rose-800 dark:hover:text-rose-400">
                           <X className="h-3.5 w-3.5" />
@@ -940,33 +1271,20 @@ export function UserProfilePage() {
       {/* FOOTER: Section progress + Completion bar + dates */}
       <footer className="shrink-0 border-t border-slate-200/40 bg-white px-5 py-3 dark:border-slate-700/40 dark:bg-slate-950" style={{ height: "3.75rem" }}>
         <div className="flex items-center justify-between gap-4 h-full">
-          <div className="flex items-center gap-3 text-[11px]">
-            {(["Identity", "Contact", "Summary", "Experience", "Education"] as const).map((section) => {
-              const done = section === "Identity" ? Boolean(draft.firstName && draft.lastName && draft.role)
-                : section === "Contact" ? Boolean(draft.email && draft.phone)
-                : section === "Summary" ? Boolean(draft.about)
-                : section === "Experience" ? workDraft.some((w) => w.role && w.company)
-                : eduDraft.some((e) => e.degree && e.school);
-              return (
-                <span key={section} className={`flex items-center gap-1 font-medium ${
-                  done ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"
-                }`}>
-                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${done ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
-                  {section}
-                </span>
-              );
-            })}
-          </div>
-          <div className="flex items-center justify-center flex-1 gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Completion</span>
-              <div className="w-24">
+          <div className="flex items-center gap-2" ref={completionBarRef}>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Completion</span>
+            <button
+              type="button"
+              onClick={() => setShowCompletionPopover((prev) => !prev)}
+              className="flex items-center gap-2 group"
+            >
+              <div className="w-24 cursor-pointer">
                 <div className="h-1 rounded-full bg-slate-200 dark:bg-slate-800">
                   <div className="h-1 rounded-full bg-linear-to-r from-emerald-500 to-teal-600 transition-all duration-500 ease-out" style={{ width: `${completion}%` }} />
                 </div>
               </div>
-              <span className="text-xs text-slate-500 dark:text-slate-400">{completion}%</span>
-            </div>
+              <span className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300">{completion}%</span>
+            </button>
           </div>
           <div className="flex flex-col items-end gap-0.5 text-[11px]">
             <div className="flex items-center gap-1.5">
@@ -980,6 +1298,78 @@ export function UserProfilePage() {
           </div>
         </div>
       </footer>
+
+      {/* Completion popover */}
+      {showCompletionPopover && (
+        <div
+          ref={completionPopoverRef}
+          className="fixed bottom-16 right-8 z-50 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        >
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+            Missing fields
+          </div>
+          {missingFields.length > 0 ? (
+            <div className="space-y-1">
+              {missingFields.map((field) => (
+                <button
+                  key={field.key}
+                  type="button"
+                  onClick={() => scrollToField(field.key)}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1 text-xs text-slate-600 transition hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
+                >
+                  <span className="text-slate-400">●</span>
+                  <span className="flex-1 text-left">{field.label}</span>
+                  <span className="font-medium text-slate-400">{perFieldWeight}%</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-xs text-emerald-600 dark:text-emerald-400">All fields complete!</div>
+          )}
+        </div>
+      )}
+
+      {/* Unsaved changes modal */}
+      {showUnsavedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={confirmCancel} />
+          <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-[380px] max-w-[90vw]">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Unsaved changes</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Your profile changes will be lost.</p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={confirmSave}
+                className="rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-emerald-500 transition-colors"
+              >
+                Save profile
+              </button>
+              <button
+                type="button"
+                onClick={confirmDiscard}
+                className="rounded-lg border border-slate-200 bg-white text-slate-700 px-3 py-1.5 text-xs font-medium hover:bg-slate-50 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={confirmCancel}
+                className="rounded-lg bg-white text-slate-500 px-3 py-1.5 text-xs font-medium hover:text-slate-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {saveSuccess && !saveError && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-medium text-white shadow-lg transition-opacity duration-300">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+          {saveSuccess}
+        </div>
+      )}
     </div>
   );
 }

@@ -127,6 +127,8 @@ export function AppRoutes() {
           <Route path="system/data-management/structure" element={<StructurePage />} />
                     <Route path="system/data-management/production-lines" element={<ProductionLinesPage />} />
           <Route path="system/data-management/production-lines/:lineId" element={<ProductionLineDetailPage />} />
+          <Route path="system/reference-tables" element={<ReferencesPage />} />
+          <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />

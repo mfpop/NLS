@@ -151,7 +151,7 @@ const dmNavItems = [
   { label: "Resource Groups",          path: "/system/data-management/resource-groups" },
   { label: "Resources",       path: "/system/data-management/resources" },
   { label: "Structure",       path: "/system/data-management/structure" },
-  { label: "Tables",          path: "/system/data-management/references" },
+  { label: "Tables",          path: "/system/reference-tables" },
 ];
 
 export function DataManagementNav({ currentPath }: { currentPath?: string }) {

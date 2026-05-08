@@ -14,7 +14,6 @@ export interface EnrichedProfile {
   summary: string[];
 }
 
-const ACTION_VERBS = ["Improved", "Reduced", "Increased", "Led", "Implemented", "Optimized", "Developed", "Deployed", "Managed"];
 const FILLER_WORDS = /\b(successfully|effectively|actively|proactively|diligently)\b\s*/gi;
 
 function capitalize(s: string): string {
@@ -32,15 +31,6 @@ const KPI_PATTERNS = [
   /\b\d+\s*%(\s|$)/g,
   /\bcycle\s+time\b/gi,
 ];
-
-function removeKPIPatterns(s: string): string {
-  let out = s;
-  for (const rx of KPI_PATTERNS) {
-    rx.lastIndex = 0;
-    out = out.replace(rx, "").trim();
-  }
-  return out.replace(/\s{2,}/g, " ").trim();
-}
 
 function hasKPI(s: string): boolean {
   return KPI_PATTERNS.some(rx => { rx.lastIndex = 0; return rx.test(s); });
@@ -70,12 +60,9 @@ export function cleanBullets(bullets: string[]): string[] {
     .filter(b => b.split(/\s+/).length >= 6)
     .map(b => {
       let cleaned = b;
-      cleaned = removeKPIPatterns(cleaned);
       cleaned = removeFiller(cleaned);
       cleaned = removeRepeatedWords(cleaned);
       cleaned = capitalize(cleaned.charAt(0).toLowerCase() + cleaned.slice(1));
-      const hasVerb = ACTION_VERBS.some(v => cleaned.startsWith(v));
-      if (!hasVerb) cleaned = "Improved " + capitalize(cleaned.charAt(0).toLowerCase() + cleaned.slice(1));
       return ensurePeriod(cleaned);
     });
 }
@@ -164,7 +151,6 @@ function normalizeSummary(text: string): string[] {
     .slice(0, 3)
     .map(s => {
       let cleaned = s;
-      cleaned = removeKPIPatterns(cleaned);
       cleaned = removeFiller(cleaned);
       cleaned = removeRepeatedWords(cleaned);
       cleaned = capitalize(cleaned.charAt(0).toLowerCase() + cleaned.slice(1));

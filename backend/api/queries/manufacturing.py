@@ -359,7 +359,10 @@ class ManufacturingQuery:
                 child_count=len(tree_children), children=tree_children,
             )
         elif not plant_id:
-            # All-plants tree: each plant is a top-level child
+            # Company-root tree: company as root, all plants as children
+            company = Company.objects.first()
+            company_id = str(company.id) if company else "company"
+            company_name = company.name if company else "Company"
             all_children = []
             for p in all_plants_qs:
                 plant_lines = build_plant_tree(p)
@@ -371,7 +374,8 @@ class ManufacturingQuery:
                     )
                 )
             tree_root = DataManagementTreeRoot(
-                id="all", type="root", name="All Plants",
+                id=company_id, type="company",
+                name=company_name,
                 code="", status="active",
                 child_count=len(all_children), children=all_children,
             )

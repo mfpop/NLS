@@ -103,7 +103,7 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                 {items.length > 0 ? (
                   items.map((table) => (
                     <button key={table.id} type="button"
-                      onClick={() => navigate(`/system/data-management/references/${table.id}`)}
+                      onClick={() => navigate(`/system/production-structure/references/${table.id}`)}
                       className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
                     >
                       <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400">
@@ -118,7 +118,7 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                   <div className="px-2 py-2 flex items-center gap-2 text-[9px] text-slate-400">
                     <Info className="h-3 w-3 stroke-current shrink-0 text-slate-300" />
                     <span className="flex-1">{GROUP_SHORTCUTS[g]}</span>
-                    <button type="button" onClick={() => navigate("/system/data-management/references")}
+                    <button type="button" onClick={() => navigate("/system/production-structure/references")}
                       className="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-500 font-medium"
                     >
                       <Plus className="h-2.5 w-2.5 stroke-current" /> Add

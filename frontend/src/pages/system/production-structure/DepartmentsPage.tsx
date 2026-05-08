@@ -103,7 +103,7 @@ export function DepartmentsPage() {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/system/data-management")}
+          onClick={() => navigate("/system/production-structure")}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
         >
           <X className="h-4 w-4 stroke-current" />
@@ -162,8 +162,8 @@ export function DepartmentsPage() {
                   { label: "Resources", ready: dept.resourceCount > 0 },
                 ]}
                 onEdit={() => openEdit(dept)}
-                onStructure={() => navigate(`/system/data-management/structure?department=${encodeURIComponent(dept.name)}`)}
-                onOpen={() => navigate(`/system/data-management/departments/${dept.id}`)}
+                onStructure={() => navigate(`/system/production-structure/structure?department=${encodeURIComponent(dept.name)}`)}
+                onOpen={() => navigate(`/system/production-structure/departments/${dept.id}`)}
                 />
               </div>
             ))}
@@ -194,7 +194,7 @@ export function DepartmentsPage() {
         }
         onConfigureStructure={
           editingDept
-            ? () => navigate(`/system/data-management/structure?department=${encodeURIComponent(editingDept.name)}`)
+            ? () => navigate(`/system/production-structure/structure?department=${encodeURIComponent(editingDept.name)}`)
             : undefined
         }
       />

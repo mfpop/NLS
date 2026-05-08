@@ -85,7 +85,7 @@ export function PlantDetailPage() {
 
   const handleDelete = async () => {
     await deletePlant(plant.id);
-    navigate("/system/data-management/plant");
+    navigate("/system/production-structure/plant");
   };
 
   const isActive = plant.status === "active";
@@ -96,7 +96,7 @@ export function PlantDetailPage() {
       <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6" style={{ height: "56px" }}>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/system/data-management/plant")}
+            onClick={() => navigate("/system/production-structure/plant")}
             className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             aria-label="Back"
           >
@@ -126,7 +126,7 @@ export function PlantDetailPage() {
             Edit
           </button>
           <button
-            onClick={() => navigate("/system/data-management/plant")}
+            onClick={() => navigate("/system/production-structure/plant")}
             className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-all duration-150 ease-in-out"
           >
             <X className="w-4 h-4 stroke-current" />
@@ -177,10 +177,10 @@ export function PlantDetailPage() {
         <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Quick Actions</h2>
           <div className="flex flex-wrap gap-2">
-            <ActionBtn icon={GitBranch} label="View Production Lines" onClick={() => navigate("/system/data-management/production-lines")} />
-            <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/data-management/departments")} />
-            <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/data-management/resource-groups")} />
-            <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/data-management/resources")} />
+            <ActionBtn icon={GitBranch} label="View Production Lines" onClick={() => navigate("/system/production-structure/production-lines")} />
+            <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/production-structure/departments")} />
+            <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/production-structure/resource-groups")} />
+            <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/production-structure/resources")} />
             <ActionBtn icon={ExternalLink} label="Open in Control Tower" onClick={() => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`)} />
           </div>
         </div>

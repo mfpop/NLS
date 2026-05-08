@@ -121,7 +121,7 @@ export function PlantStructurePage() {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/system/data-management")}
+          onClick={() => navigate("/system/production-structure")}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
         >
           <X className="h-4 w-4 stroke-current" />
@@ -183,8 +183,8 @@ export function PlantStructurePage() {
                   { label: "Resources", ready: plant.resourceCount > 0 },
                 ]}
                 onEdit={() => openEdit(plant)}
-                onStructure={() => navigate(`/system/data-management/structure?plant=${encodeURIComponent(plant.name)}`)}
-                onOpen={() => navigate(`/system/data-management/plant/${plant.id}`)}
+                onStructure={() => navigate(`/system/production-structure/structure?plant=${encodeURIComponent(plant.name)}`)}
+                onOpen={() => navigate(`/system/production-structure/plant/${plant.id}`)}
               />
             ))}
           </div>
@@ -222,7 +222,7 @@ export function PlantStructurePage() {
         }
         onConfigureStructure={
           editingId
-            ? () => { const p = plants.find((pl) => pl.id === editingId); navigate(`/system/data-management/structure?plant=${encodeURIComponent(p?.name ?? "")}`); }
+            ? () => { const p = plants.find((pl) => pl.id === editingId); navigate(`/system/production-structure/structure?plant=${encodeURIComponent(p?.name ?? "")}`); }
             : undefined
         }
       />

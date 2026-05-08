@@ -142,15 +142,15 @@ export function BulkCheckbox({ checked, onChange }: { checked: boolean; onChange
   return <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className={`h-4 w-4 cursor-pointer rounded ${theme.checkbox} ${theme.focusRing}`} onClick={(e) => e.stopPropagation()} />;
 }
 
-/* •••••• Data Management Sub-Header Navigation •••••• */
+/* •••••• Production Structure Sub-Header Navigation •••••• */
 
 const dmNavItems = [
-  { label: "Plants",          path: "/system/data-management/plant" },
-  { label: "Lines",           path: "/system/data-management/production-lines" },
-  { label: "Departments",     path: "/system/data-management/departments" },
-  { label: "Resource Groups",          path: "/system/data-management/resource-groups" },
-  { label: "Resources",       path: "/system/data-management/resources" },
-  { label: "Structure",       path: "/system/data-management/structure" },
+  { label: "Plants",          path: "/system/production-structure/plant" },
+  { label: "Lines",           path: "/system/production-structure/production-lines" },
+  { label: "Departments",     path: "/system/production-structure/departments" },
+  { label: "Resource Groups",          path: "/system/production-structure/resource-groups" },
+  { label: "Resources",       path: "/system/production-structure/resources" },
+  { label: "Structure",       path: "/system/production-structure/structure" },
   { label: "Tables",          path: "/system/reference-tables" },
 ];
 

@@ -61,15 +61,15 @@ export function PlantRow({ plant, isSelected, onToggleSelect, onToggleStatus }: 
 
       {/* Actions */}
       <div className="flex items-center gap-1">
-        <button type="button" onClick={() => navigate("/system/data-management/plant/" + plant.id)}
+        <button type="button" onClick={() => navigate("/system/production-structure/plant/" + plant.id)}
           className="h-9 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 text-xs font-medium transition-colors active:scale-[0.97] inline-flex items-center gap-1.5">
           <Eye className="h-3.5 w-3.5 stroke-current" />
           Details
         </button>
         <ActionsDropdown actions={[
-          { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/plant/" + plant.id) },
+          { label: "Edit", icon: <Pencil className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/production-structure/plant/" + plant.id) },
           { label: plant.status === "active" ? "Disable" : "Activate", icon: plant.status === "active" ? <ToggleLeft className="h-3 w-3 stroke-current" /> : <ToggleRight className="h-3 w-3 stroke-current" />, onClick: () => { onToggleStatus(); } },
-          { label: "Go to Production Lines", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/data-management/production-lines") },
+          { label: "Go to Production Lines", icon: <GitBranch className="h-3 w-3 stroke-current" />, onClick: () => navigate("/system/production-structure/production-lines") },
           { label: "View in Control Tower", icon: <ExternalLink className="h-3 w-3 stroke-current" />, onClick: () => navigate(`/control-tower?plant=${encodeURIComponent(plant.name)}`) },
         ]} />
       </div>

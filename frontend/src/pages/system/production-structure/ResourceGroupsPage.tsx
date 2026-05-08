@@ -113,7 +113,7 @@ export function ResourceGroupsPage() {
             <p className={`text-xs ${theme.textSecondary}`}>Resource groups loaded from the manufacturing database structure.</p>
           </div>
         </div>
-        <button type="button" onClick={() => navigate("/system/data-management")}
+        <button type="button" onClick={() => navigate("/system/production-structure")}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800">
           <X className="h-4 w-4 stroke-current" />Close
         </button>
@@ -161,8 +161,8 @@ export function ResourceGroupsPage() {
                   metrics={[{ label: "Members", value: group.members }]}
                   readiness={[{ label: "Resources", ready: group.resourceCount > 0 }]}
                   onEdit={() => openEdit(group)}
-                  onStructure={() => navigate(`/system/data-management/structure?group=${encodeURIComponent(group.name)}`)}
-                  onOpen={() => navigate(`/system/data-management/resource-groups/${group.id}`)}
+                  onStructure={() => navigate(`/system/production-structure/structure?group=${encodeURIComponent(group.name)}`)}
+                  onOpen={() => navigate(`/system/production-structure/resource-groups/${group.id}`)}
                 />
               </div>
             ))}
@@ -189,7 +189,7 @@ export function ResourceGroupsPage() {
             {editingGroup ? <GroupSummary resources={editingGroup.resourceCount} /> : undefined}
           </>
         }
-        onConfigureStructure={editingGroup ? () => navigate(`/system/data-management/structure?group=${encodeURIComponent(editingGroup.name)}`) : undefined}
+        onConfigureStructure={editingGroup ? () => navigate(`/system/production-structure/structure?group=${encodeURIComponent(editingGroup.name)}`) : undefined}
       />
 
       <ConfirmDialog

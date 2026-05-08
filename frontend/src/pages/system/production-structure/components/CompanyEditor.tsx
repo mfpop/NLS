@@ -169,7 +169,7 @@ function SearchableSelect({ category, formKey, label, form, onChange, options, l
         <label className="block text-[8px] font-medium text-slate-400 mb-px">{label}</label>
         <div className="w-full border-0 border-b border-slate-200 dark:border-slate-700 px-0 py-0.5 text-[11px] flex items-center justify-between">
           <span className="text-slate-400 italic">No options configured</span>
-          <button type="button" onClick={() => window.open("/system/data-management/references", "_blank")}
+          <button type="button" onClick={() => window.open("/system/production-structure/references", "_blank")}
             className="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-500 font-medium"
           >
             <Plus className="h-2.5 w-2.5 stroke-current" /> Add

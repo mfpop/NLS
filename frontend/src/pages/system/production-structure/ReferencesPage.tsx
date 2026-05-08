@@ -481,7 +481,7 @@ export function ReferencesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button type="button" onClick={() => navigate("/system/data-management")}
+          <button type="button" onClick={() => navigate("/system/production-structure")}
             className="h-8 w-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors" aria-label="Close"
           >
             <X className="h-3.5 w-3.5 stroke-current" />

@@ -11,7 +11,7 @@ import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import type { ProductionLine, ProductionLinesQueryData, ProductionLinesQueryVars } from "@/types/productionLine";
 import { MOCK_PRODUCTION_LINES } from "@/types/productionLine";
 import type { DeletePlantResult } from "@/types/plant";
-import { getGlobalPlants } from "@/pages/system/data-management/PlantDetailPage";
+import { getGlobalPlants } from "@/pages/system/production-structure/PlantDetailPage";
 
 /* ── Mock fallback data ── */
 

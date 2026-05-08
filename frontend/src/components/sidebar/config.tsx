@@ -157,7 +157,7 @@ export const sidebarEntries: SidebarEntry[] = [
     label: "System",
     icon: Settings,
     items: [
-      { type: "item", label: "Data Management", to: "/system/data-management", icon: Database },
+      { type: "item", label: "Production Structure", to: "/system/production-structure", icon: Database },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
       { type: "item", label: "Application Settings", to: "/system/application-settings", icon: Cog },
       {

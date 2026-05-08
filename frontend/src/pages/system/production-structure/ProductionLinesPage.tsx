@@ -140,7 +140,7 @@ export function ProductionLinesPage() {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/system/data-management")}
+          onClick={() => navigate("/system/production-structure")}
           className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
         >
           <X className="h-4 w-4 stroke-current" />
@@ -207,8 +207,8 @@ export function ProductionLinesPage() {
                   { label: "Models", ready: line.modelsProduced.length > 0 },
                 ]}
                 onEdit={() => openEdit(line)}
-                onStructure={() => navigate(`/system/data-management/structure?line=${encodeURIComponent(line.name)}`)}
-                onOpen={() => navigate(`/system/data-management/production-lines/${line.id}`)}
+                onStructure={() => navigate(`/system/production-structure/structure?line=${encodeURIComponent(line.name)}`)}
+                onOpen={() => navigate(`/system/production-structure/production-lines/${line.id}`)}
               />
               </div>
             ))}
@@ -240,7 +240,7 @@ export function ProductionLinesPage() {
         }
         onConfigureStructure={
           editingId
-            ? () => { const l = lines.find((ln) => ln.id === editingId); navigate(`/system/data-management/structure?line=${encodeURIComponent(l?.name ?? "")}`); }
+            ? () => { const l = lines.find((ln) => ln.id === editingId); navigate(`/system/production-structure/structure?line=${encodeURIComponent(l?.name ?? "")}`); }
             : undefined
         }
       />
@@ -280,7 +280,7 @@ export function ProductionLineDetailPage() {
 
   const handleDelete = async () => {
     await deleteLine(line.id);
-    navigate("/system/data-management/production-lines");
+    navigate("/system/production-structure/production-lines");
   };
 
   return (
@@ -288,7 +288,7 @@ export function ProductionLineDetailPage() {
       <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-6" style={{ height: "56px" }}>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/system/data-management/production-lines")}
+            onClick={() => navigate("/system/production-structure/production-lines")}
             className="rounded-lg p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             aria-label="Back"
           >
@@ -319,7 +319,7 @@ export function ProductionLineDetailPage() {
           </div>
         </div>
         <button
-          onClick={() => navigate("/system/data-management/production-lines")}
+          onClick={() => navigate("/system/production-structure/production-lines")}
           className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
         >
           <X className="h-4 w-4" />
@@ -367,10 +367,10 @@ export function ProductionLineDetailPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Actions</h2>
           <div className="flex flex-wrap gap-2">
-            <ActionBtn icon={Building2} label="View Plant" onClick={() => line.plantId && navigate(`/system/data-management/plant/${line.plantId}`)} />
-            <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/data-management/departments")} />
-            <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/data-management/resource-groups")} />
-            <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/data-management/resources")} />
+            <ActionBtn icon={Building2} label="View Plant" onClick={() => line.plantId && navigate(`/system/production-structure/plant/${line.plantId}`)} />
+            <ActionBtn icon={Layers} label="View Departments" onClick={() => navigate("/system/production-structure/departments")} />
+            <ActionBtn icon={Users} label="View Resource Groups" onClick={() => navigate("/system/production-structure/resource-groups")} />
+            <ActionBtn icon={Cpu} label="View Resources" onClick={() => navigate("/system/production-structure/resources")} />
           </div>
         </div>
 

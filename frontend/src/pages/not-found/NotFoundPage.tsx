@@ -7,13 +7,13 @@ export function NotFoundPage() {
   // Smart redirect: suggest the right place based on URL pattern
   const getSuggestedRoute = (): string | null => {
     const path = location.pathname;
-    if (path.includes("plant")) return "/system/data-management/plant";
-    if (path.includes("lines")) return "/system/data-management/production-lines";
-    if (path.includes("resources")) return "/system/data-management/resources";
-    if (path.includes("departments")) return "/system/data-management/departments";
-    if (path.includes("groups")) return "/system/data-management/resource-groups";
-    if (path.includes("references") || path.includes("tables")) return "/system/data-management/references";
-    if (path.includes("data-management")) return "/system/data-management";
+    if (path.includes("plant")) return "/system/production-structure/plant";
+    if (path.includes("lines")) return "/system/production-structure/production-lines";
+    if (path.includes("resources")) return "/system/production-structure/resources";
+    if (path.includes("departments")) return "/system/production-structure/departments";
+    if (path.includes("groups")) return "/system/production-structure/resource-groups";
+    if (path.includes("references") || path.includes("tables")) return "/system/production-structure/references";
+    if (path.includes("data-management")) return "/system/production-structure";
     return null;
   };
 

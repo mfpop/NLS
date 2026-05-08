@@ -56,13 +56,13 @@ const ICON_MAP: Record<string, typeof Factory> = {
 
 function getNodePath(type: string, id: string): string | undefined {
   const routes: Record<string, string> = {
-    plant: "/system/data-management/plant/",
-    productionLine: "/system/data-management/production-lines/",
-    line: "/system/data-management/production-lines/",
-    department: "/system/data-management/departments/",
-    resourceGroup: "/system/data-management/resource-groups/",
-    group: "/system/data-management/resource-groups/",
-    resource: "/system/data-management/resources/",
+    plant: "/system/production-structure/plant/",
+    productionLine: "/system/production-structure/production-lines/",
+    line: "/system/production-structure/production-lines/",
+    department: "/system/production-structure/departments/",
+    resourceGroup: "/system/production-structure/resource-groups/",
+    group: "/system/production-structure/resource-groups/",
+    resource: "/system/production-structure/resources/",
   };
   const base = routes[type];
   return base ? base + id : undefined;
@@ -403,9 +403,9 @@ export function StructurePage() {
                           <div
                             key={t.id}
                             className={`flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 ${theme.cardHover} transition-colors`}
-                            onClick={() => navigate(`/system/data-management/references/${t.id}`)}
+                            onClick={() => navigate(`/system/production-structure/references/${t.id}`)}
                             role="button" tabIndex={0}
-                            onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/data-management/references/${t.id}`); }}
+                            onKeyDown={(e) => { if (e.key === "Enter") navigate(`/system/production-structure/references/${t.id}`); }}
                           >
                             <Database className={`h-3 w-3 stroke-current shrink-0 ${theme.iconAccent}`} />
                             <span className={`text-[11px] flex-1 ${theme.textPrimary}`}>{t.name}</span>
@@ -437,7 +437,7 @@ export function StructurePage() {
             )}
           </div>
 
-            <ReferenceTablesCard onSelectCompany={() => navigate("/system/data-management/plant")} />
+            <ReferenceTablesCard onSelectCompany={() => navigate("/system/production-structure/plant")} />
         </div>
       </div>
     </div>

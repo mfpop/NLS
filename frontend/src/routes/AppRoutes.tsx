@@ -40,18 +40,6 @@ const ProductionFlow = lazy(() =>
 const ProductionComponents = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ProductionComponents }))
 );
-const PlantDetailPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.PlantDetailPage }))
-);
-const DepartmentsPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.DepartmentsPage }))
-);
-const ResourceGroupsPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ResourceGroupsPage }))
-);
-const ResourcesPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ResourcesPage }))
-);
 const ReferencesPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ReferencesPage }))
 );
@@ -60,12 +48,6 @@ const EntityVisualSettingsPage = lazy(() =>
 );
 const StructurePage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.StructurePage }))
-);
-const ProductionLinesPage = lazy(() =>
-  import("@/pages/system/production-structure/ProductionLinesPage").then((module) => ({ default: module.ProductionLinesPage }))
-);
-const ProductionLineDetailPage = lazy(() =>
-  import("@/pages/system/production-structure/ProductionLinesPage").then((module) => ({ default: module.ProductionLineDetailPage }))
 );
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.ApplicationSettingsPage }))
@@ -119,18 +101,9 @@ export function AppRoutes() {
           <Route path="system/production-structure" element={<ProductionFlow />} />
                     <Route path="system/production-structure/flow" element={<ProductionFlow />} />
                     <Route path="system/production-structure/components" element={<ProductionComponents />} />
-                    <Route path="system/production-structure/plant/:plantId" element={<PlantDetailPage />} />
-          <Route path="system/production-structure/departments" element={<DepartmentsPage />} />
-          <Route path="system/production-structure/departments/:deptId" element={<DepartmentsPage />} />
-          <Route path="system/production-structure/resource-groups" element={<ResourceGroupsPage />} />
-                    <Route path="system/production-structure/resource-groups/:groupId" element={<ResourceGroupsPage />} />
-          <Route path="system/production-structure/resources" element={<ResourcesPage />} />
-          <Route path="system/production-structure/resources/:resourceId" element={<ResourcesPage />} />
           <Route path="system/production-structure/references" element={<ReferencesPage />} />
           <Route path="system/production-structure/references/:tableId" element={<ReferencesPage />} />
           <Route path="system/production-structure/structure" element={<StructurePage />} />
-                    <Route path="system/production-structure/production-lines" element={<ProductionLinesPage />} />
-          <Route path="system/production-structure/production-lines/:lineId" element={<ProductionLineDetailPage />} />
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />

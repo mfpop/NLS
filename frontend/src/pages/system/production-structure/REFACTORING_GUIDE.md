@@ -34,7 +34,7 @@ production-structure/
 │   ├── TreeNavigation.tsx           # Left sidebar tree navigation
 │   ├── [existing components]        # DataCard, Toolbar, SummaryBlock, etc.
 │   └── ...
-├── [pages]                          # Independent pages (PlantStructurePage, etc.)
+├── [pages]                          # Independent pages (ProductionStructureComponents, etc.)
 └── [main orchestrator]              # ProductionStructurePage.tsx (simplified)
 ```
 
@@ -343,7 +343,7 @@ expect(node.name).toBe("Expected Name");
 
 ## Related Files
 
-- **Existing independent pages**: PlantStructurePage, DepartmentsPage, ResourcesPage, etc.
+- **Existing independent pages**: ProductionStructureComponents, DepartmentsPage, ResourcesPage, etc.
 - **Shared components**: components/ folder has DataCard, Toolbar, SummaryBlock, etc.
 - **GraphQL queries**: graphql/dataManagementQueries.ts
 - **Hooks**: hooks/useDataManagementOverview.ts

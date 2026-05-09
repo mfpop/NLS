@@ -7,6 +7,8 @@ import {
   Cog,
   Database,
   Footprints,
+  GitBranch,
+  Layers,
   LayoutDashboard,
   ListChecks,
   Monitor,
@@ -157,7 +159,15 @@ export const sidebarEntries: SidebarEntry[] = [
     label: "System",
     icon: Settings,
     items: [
-      { type: "item", label: "Production Structure", to: "/system/production-structure", icon: Database },
+      {
+        type: "group",
+        label: "Production Structure",
+        icon: Database,
+        items: [
+          { type: "item", label: "Flow", to: "/system/production-structure", icon: GitBranch },
+          { type: "item", label: "Components", to: "/system/production-structure/components", icon: Layers },
+        ],
+      },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
       { type: "item", label: "Application Settings", to: "/system/application-settings", icon: Cog },
       {

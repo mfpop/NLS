@@ -101,6 +101,31 @@ export const RESOURCES_QUERY = gql`
   }
 `;
 
+export const RESOURCE_QUERY = gql`
+  query Resource($id: String!) {
+    resource(id: $id) {
+      id
+      name
+      code
+      resourceType
+      status
+      opStatus
+      utilization
+      shift
+      lastActivity
+      flowPosition
+      groupName
+      groupId
+      departmentName
+      departmentId
+      plantName
+      plantId
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 export const REFERENCE_TABLES_QUERY = gql`
   query ReferenceTables($search: String, $status: String) {
     referenceTables(search: $search, status: $status) {

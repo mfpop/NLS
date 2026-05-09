@@ -1,0 +1,280 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@apollo/client/react";
+import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
+import { UPDATE_RESOURCE_GROUP } from "@/graphql/dataManagementMutations";
+import { ENTITY_CONFIG } from "../config/entityConfig";
+import { EntityEditPanel } from "./EntityEditPanel";
+import { EntityFormHeader } from "./EntityFormHeader";
+import { EntityFormActions } from "./EntityFormActions";
+import { theme } from "@/styles/themeTokens";
+
+interface ResourceFormProps {
+  resourceId: string;
+  onClose: () => void;
+  onSaved?: () => void;
+  readOnlyContext?: {
+    plantName?: string;
+    departmentName?: string;
+    groupName?: string;
+  };
+}
+
+const STATUS_OPTIONS = [
+  { label: "Active", value: "active" },
+  { label: "Inactive", value: "inactive" },
+];
+
+const RESOURCE_TYPE_OPTIONS = [
+  { label: "Equipment", value: "Equipment" },
+  { label: "Machine", value: "Machine" },
+  { label: "Tool", value: "Tool" },
+  { label: "Personnel", value: "Personnel" },
+  { label: "Workstation", value: "Workstation" },
+  { label: "Vehicle", value: "Vehicle" },
+];
+
+interface TextFieldProps {
+  label: string; value: string; onChange: (v: string) => void;
+  required?: boolean; placeholder?: string; disabled?: boolean; error?: string;
+}
+
+function TextField({ label, value, onChange, required, placeholder, disabled, error }: TextFieldProps) {
+  return (
+    <div>
+      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
+        {label}{required && <span className="ml-0.5 text-red-500">*</span>}
+      </label>
+      <input type="text" value={value} onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder} disabled={disabled}
+        className={`w-full h-9 rounded-lg border px-3 text-sm outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+          error ? "border-red-300 focus:ring-2 focus:ring-red-200" : `${theme.input} ${theme.focusRing}`
+        } ${disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : ""}`} />
+      {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
+    </div>
+  );
+}
+
+interface SelectFieldProps {
+  label: string; value: string; onChange: (v: string) => void;
+  options: { label: string; value: string }[]; disabled?: boolean;
+}
+
+function SelectField({ label, value, onChange, options, disabled }: SelectFieldProps) {
+  return (
+    <div>
+      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
+      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
+        className={`w-full h-9 rounded-lg border px-3 text-sm outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+          disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : `${theme.input} ${theme.focusRing}`
+        }`}>
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
+      <div className="h-9 flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-transparent">
+        {value || "\u2014"}
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children, twoColumns }: { title: string; children: React.ReactNode; twoColumns?: boolean }) {
+  return (
+    <div>
+      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 dark:border-slate-800">{title}</h3>
+      <div className={twoColumns ? "grid grid-cols-2 gap-x-6 gap-y-3" : "space-y-3"}>{children}</div>
+    </div>
+  );
+}
+
+export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: ResourceFormProps) {
+  const { data, loading } = useQuery<{ resources: any[] }>(RESOURCES_QUERY, {
+    variables: {},
+    fetchPolicy: "network-only",
+  });
+  const [updateMutation, { loading: saving }] = useMutation(UPDATE_RESOURCE_GROUP);
+  const resource = data?.resources?.find((r: any) => r.id === resourceId);
+
+  const [form, setForm] = useState<Record<string, string>>({});
+  const [initialData, setInitialData] = useState<Record<string, string> | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (resource && !initialData) {
+      const data = {
+        name: resource.name || "",
+        code: resource.code || "",
+        resourceType: resource.resourceType || "",
+        status: resource.status || "active",
+        opStatus: resource.opStatus || "",
+        utilization: String(resource.utilization ?? ""),
+        shift: resource.shift || "",
+      };
+      setForm(data);
+      setInitialData(data);
+    }
+  }, [resource, initialData]);
+
+  const update = (key: string, value: string) => {
+    setForm((p) => ({ ...p, [key]: value }));
+    if (errors[key]) setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
+  };
+
+  const hasChanges = initialData !== null && Object.keys(initialData).some((k) => form[k] !== initialData[k]);
+  const isDirty = hasChanges;
+
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.name?.trim()) errs.name = "Name is required";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaveError(null);
+    setToast(null);
+    try {
+      await updateMutation({
+        variables: {
+          id: resourceId,
+          input: {
+            name: form.name,
+            code: form.code || "",
+            status: form.status || "active",
+          },
+        },
+      });
+      setInitialData({ ...form });
+      setToast("Resource saved successfully.");
+      setTimeout(() => setToast(null), 3000);
+      onSaved?.();
+    } catch {
+      setSaveError("Failed to save resource.");
+    }
+  };
+
+  const handleDelete = async () => {
+    setSaveError(null);
+    try {
+      await updateMutation({ variables: { id: resourceId, input: { status: "inactive" } } });
+      onSaved?.();
+      onClose();
+    } catch {
+      setSaveError("Failed to deactivate resource.");
+      setDeleteConfirm(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (initialData) setForm({ ...initialData });
+    setErrors({});
+    setSaveError(null);
+    onClose();
+  };
+
+  const cfg = ENTITY_CONFIG.resource;
+  const Icon = cfg.icon;
+
+  return (
+    <EntityEditPanel loading={loading && !resource} notFound={!loading && !resource} error={saveError}>
+      <EntityFormHeader
+        icon={<Icon className="h-5 w-5 stroke-current" />}
+        iconBg={cfg.color}
+        name={resource?.name || ""}
+        entityType="Resource"
+        code={resource?.code || ""}
+        status={resource?.status || ""}
+        isDirty={isDirty}
+        error={saveError}
+      />
+
+      <div className="flex-1 overflow-y-auto">
+        <div className="mx-auto px-6 py-5 space-y-6" style={{ maxWidth: "1000px" }}>
+          {toast && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">{toast}</div>
+          )}
+          {saveError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">{saveError}</div>
+          )}
+
+          <Section title="Identity" twoColumns>
+            <TextField label="Name" value={form.name ?? ""} onChange={(v) => update("name", v)}
+              required placeholder="e.g. CNC Machine 03" error={errors.name} />
+            <TextField label="Code / Asset Number" value={form.code ?? ""} onChange={(v) => update("code", v)}
+              placeholder="e.g. CNC-003" />
+            <SelectField label="Resource Type" value={form.resourceType ?? ""} onChange={(v) => update("resourceType", v)} options={RESOURCE_TYPE_OPTIONS} />
+            <SelectField label="Status" value={form.status ?? ""} onChange={(v) => update("status", v)} options={STATUS_OPTIONS} />
+          </Section>
+
+          <Section title="Context" twoColumns>
+            {readOnlyContext ? (
+              <>
+                <ReadOnlyField label="Plant" value={readOnlyContext.plantName || ""} />
+                <ReadOnlyField label="Department" value={readOnlyContext.departmentName || ""} />
+                <ReadOnlyField label="Resource Group" value={readOnlyContext.groupName || ""} />
+              </>
+            ) : (
+              <>
+                <ReadOnlyField label="Plant" value={resource?.plantName || ""} />
+                <ReadOnlyField label="Department" value={resource?.departmentName || ""} />
+                <ReadOnlyField label="Resource Group" value={resource?.groupName || ""} />
+              </>
+            )}
+          </Section>
+
+          <Section title="Operational Status" twoColumns>
+            <ReadOnlyField label="Operational Status" value={resource?.opStatus || "\u2014"} />
+            <ReadOnlyField label="Utilization" value={resource?.utilization != null ? `${resource.utilization}%` : "\u2014"} />
+            <ReadOnlyField label="Shift" value={resource?.shift || "\u2014"} />
+            <ReadOnlyField label="Last Activity" value={resource?.lastActivity || "\u2014"} />
+          </Section>
+
+          <Section title="Working Schedule">
+            <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-3">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                Schedule and shift pattern are inherited from the resource group.
+                Configure at the production line or resource group level.
+              </p>
+            </div>
+          </Section>
+
+          <Section title="Maintenance">
+            <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-3">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                Maintenance status tracking is not yet available in the current data model.
+              </p>
+            </div>
+          </Section>
+
+          <Section title="Notes">
+            <textarea disabled
+              className="w-full h-20 rounded-lg border px-3 py-2 text-sm outline-none bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 resize-none cursor-not-allowed"
+              placeholder="Notes are not yet available in the current data model." value="" />
+          </Section>
+        </div>
+      </div>
+
+      <EntityFormActions
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onDelete={() => setDeleteConfirm(true)}
+        saving={saving}
+        hasChanges={!!hasChanges}
+        deleteConfirm={deleteConfirm}
+        onDeleteConfirm={handleDelete}
+        onDeleteCancel={() => setDeleteConfirm(false)}
+        deleting={false}
+      />
+    </EntityEditPanel>
+  );
+}

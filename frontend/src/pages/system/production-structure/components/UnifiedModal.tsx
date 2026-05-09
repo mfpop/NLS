@@ -116,10 +116,12 @@ export function UnifiedModal({
           <div className="overflow-y-auto px-5 py-4 space-y-3 flex-1">
             {fields.map((f) => (
               <div key={f.key}>
-                <label className="mb-1 block text-xs text-gray-500 dark:text-slate-400">
-                  {f.label}
-                  {f.required && <span className="ml-0.5 text-red-500">*</span>}
-                </label>
+                {f.type !== "entityicon" && (
+                  <label className="mb-1 block text-xs text-gray-500 dark:text-slate-400">
+                    {f.label}
+                    {f.required && <span className="ml-0.5 text-red-500">*</span>}
+                  </label>
+                )}
                 {f.type === "entityicon" ? (
                   <EntityIconPicker
                     value={values[f.key] ?? ""}

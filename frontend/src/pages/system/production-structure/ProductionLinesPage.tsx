@@ -60,13 +60,12 @@ export function ProductionLinesPage() {
   [plants]);
 
   const modalFields = useMemo<ModalField[]>(() => [
-    { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
+    { key: "entityIcon", label: "Production Structure", type: "entityicon" },
     { key: "name", label: "Line Name", required: true, placeholder: "e.g. C2-Cylinder Assembly" },
     { key: "code", label: "Line Code", required: true, placeholder: "e.g. L-CYL" },
     { key: "plantId", label: "Plant", required: true, type: "select", options: plantModalOptions },
     { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
     { key: "shiftPattern", label: "Shift Pattern", type: "select", options: SHIFT_OPTIONS },
-    { key: "isConstraintStr", label: "Bottleneck / Constraint", type: "select", options: [{ label: "No", value: "false" }, { label: "Yes", value: "true" }] },
   ], [plantModalOptions]);
 
   const filtered = useMemo(() => {
@@ -117,20 +116,16 @@ export function ProductionLinesPage() {
   const currentLine = editingId ? lines.find((l) => l.id === editingId) : undefined;
 
   const modalValues = useMemo<Record<string, string>>(() => ({
+    entityIcon: form.entityIcon,
     name: form.name,
     code: form.code,
     plantId: form.plantId,
     status: form.status,
     shiftPattern: form.shiftPattern,
-    isConstraintStr: form.isConstraint ? "true" : "false",
   }), [form]);
 
   const handleModalChange = (key: string, value: string) => {
-    if (key === "isConstraintStr") {
-      setForm((prev) => ({ ...prev, isConstraint: value === "true" }));
-    } else {
-      setForm((prev) => ({ ...prev, [key]: value }));
-    }
+    setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -182,7 +177,7 @@ export function ProductionLinesPage() {
           </div>
         ) : (
           /* Cards grid — gap-2 ≈ 8px, no overflow */
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4 flex-1">
             {paginatedFiltered.map((line, idx) => {
               const { Icon, textColor } = getEntityIconProps("productionLine", line.id);
               return (
@@ -210,7 +205,6 @@ export function ProductionLinesPage() {
                   { label: "Models", ready: line.modelsProduced.length > 0 },
                 ]}
                 onEdit={() => openEdit(line)}
-                onStructure={() => navigate(`/system/production-structure/structure?line=${encodeURIComponent(line.name)}`)}
                 onOpen={() => navigate(`/system/production-structure/production-lines/${line.id}`)}
               />
               </div>
@@ -241,11 +235,6 @@ export function ProductionLinesPage() {
             resources={currentLine?.resourceCount ?? 0}
             models={currentLine?.modelsProduced?.length ?? 0}
           />
-        }
-        onConfigureStructure={
-          editingId
-            ? () => { const l = lines.find((ln) => ln.id === editingId); navigate(`/system/production-structure/structure?line=${encodeURIComponent(l?.name ?? "")}`); }
-            : undefined
         }
       />
 

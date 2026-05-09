@@ -33,6 +33,8 @@ export interface DataCardProps {
   onEdit?: () => void;
   onStructure?: () => void;
   onOpen?: () => void;
+  onClick?: () => void;
+  selected?: boolean;
   isLowestLevel?: boolean;
 }
 
@@ -87,7 +89,7 @@ function ActionButtons({ onEdit, onStructure, onOpen, isLowestLevel }: {
       {onOpen && (
         <button type="button" onClick={(e) => { e.stopPropagation(); onOpen?.(); }} className={secondaryBtn}>
           <ExternalLink className="h-3.5 w-3.5 stroke-current" />
-          Open
+          Details
         </button>
       )}
     </div>
@@ -129,10 +131,15 @@ export function DataCard({
   onEdit,
   onStructure,
   onOpen,
+  onClick,
+  selected = false,
   isLowestLevel = false,
 }: DataCardProps) {
   return (
-    <div className={`group rounded-lg border p-3 transition-all hover:shadow-sm ${theme.row} ${theme.cardHover}`}>
+    <div
+      className={`group rounded-lg border p-3 transition-all ${onClick ? "cursor-pointer" : ""} ${selected ? theme.rowSelected : `${theme.row} hover:shadow-sm ${theme.cardHover}`}`}
+      onClick={onClick}
+    >
       <div className="flex items-center gap-1">
         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconBg || theme.iconBoxSubtle}`}>
           {icon}

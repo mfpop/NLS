@@ -238,7 +238,7 @@
  *     │   └── ...
  *     │
  *     ├── [Page Files]
- *     │   ├── PlantStructurePage.tsx
+ *     │   ├── PlantStructurePage.tsx (exports ProductionStructureComponents)
  *     │   ├── DepartmentsPage.tsx
  *     │   ├── ResourcesPage.tsx
  *     │   └── ...

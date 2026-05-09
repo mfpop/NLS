@@ -12,12 +12,6 @@ import { getEntityIconProps } from "./entityDisplay";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { DepartmentEditModal } from "./components/DepartmentEditModal";
 
-interface DepartmentNode {
-  id: string; name: string; code: string; status: "active" | "inactive";
-  manager: string; employees: number; groupCount: number; resourceCount: number;
-  plantId?: string | null; plantName: string;
-}
-
 const STATUS_OPTIONS: FilterOption[] = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },

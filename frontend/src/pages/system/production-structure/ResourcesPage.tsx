@@ -39,7 +39,7 @@ const RESOURCE_TYPE_OPTIONS = [
 ];
 
 const MODAL_FIELDS: ModalField[] = [
-  { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
+  { key: "entityIcon", label: "Production Structure", type: "entityicon" },
   { key: "name", label: "Resource Name", required: true, placeholder: "e.g. CNC-01" },
   { key: "code", label: "Code", placeholder: "e.g. CNC-001" },
   { key: "resourceType", label: "Type", type: "select", options: RESOURCE_TYPE_OPTIONS },

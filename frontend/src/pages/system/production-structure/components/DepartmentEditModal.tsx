@@ -117,7 +117,7 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
     setError(null);
     try {
       saveEntityConfig("department", departmentId, selectedIcon);
-      const { data: res } = await updateMutation({
+      const { data: res }: any = await updateMutation({
         variables: {
           id: departmentId,
           input: { name: name.trim(), code: code.trim(), status, manager: manager.trim() || undefined, employees: employees ? Number(employees) : undefined },
@@ -186,9 +186,7 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
                 </div>
               )}
 
-              {/* Icon & Color */}
-              <div className="space-y-2">
-                <label className={`text-[11px] font-semibold uppercase tracking-wide ${theme.textSecondary}`}>Icon & Color</label>
+              {/* Entity Icon Picker */}
                 <div className="flex flex-wrap gap-2">
                   {ICON_KEYS.map((key) => {
                     const Icon = getIconByKey(key);
@@ -209,7 +207,6 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
                     );
                   })}
                 </div>
-              </div>
 
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">

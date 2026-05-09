@@ -2,8 +2,8 @@ import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Database, Building2, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
-  Settings, AlertCircle, Users, Pencil, Trash2, Save, Hash, CheckCircle,
+  Database, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
+  Pencil, Trash2, Save,
   FileSpreadsheet, Copy, Check, ChevronsUpDown
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
@@ -49,7 +49,6 @@ const TYPE_GROUPS: Record<string, string[]> = {
 };
 
 const GROUP_ORDER = ["organization", "manufacturing", "material_flow", "lean_quality", "people"];
-const GROUP_ICONS: Record<string, typeof Database> = { organization: Building2, manufacturing: Settings, material_flow: Database, lean_quality: AlertCircle, people: Users };
 
 function generateCode(): string { return `R${Math.random().toString(36).slice(2, 8).toUpperCase()}`; }
 
@@ -224,7 +223,7 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
           <span className="truncate">{label}</span>
           <SortIcon col={col} />
           {hasFilter && col !== "description" && (
-            <span className="inline-flex items-center justify-center h-3.5 min-w-[14px] rounded-full bg-sky-200/60 dark:bg-sky-500/20 text-[8px] font-bold px-1">{col === "code" ? codeFilter.size : col === "name" ? nameFilter.size : statusFilter.size}</span>
+            <span className="inline-flex items-center justify-center h-3.5 min-w-3.5 rounded-full bg-sky-200/60 dark:bg-sky-500/20 text-[8px] font-bold px-1">{col === "code" ? codeFilter.size : col === "name" ? nameFilter.size : statusFilter.size}</span>
           )}
         </button>
         {children}
@@ -293,7 +292,7 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
           </div>
           {openDropdown === "code" && (
             <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-[200px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[280px] flex flex-col">
+              <div className="absolute top-0 left-3 w-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-70 flex flex-col">
                 <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
                   <button type="button" onClick={() => cycleSort("code")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
                   <button type="button" onClick={() => { cycleSort("code"); cycleSort("code"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
@@ -312,7 +311,7 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
           )}
           {openDropdown === "name" && (
             <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-[240px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[280px] flex flex-col">
+              <div className="absolute top-0 left-3 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-70 flex flex-col">
                 <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
                   <button type="button" onClick={() => cycleSort("name")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
                   <button type="button" onClick={() => { cycleSort("name"); cycleSort("name"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
@@ -331,7 +330,7 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
           )}
           {openDropdown === "description" && (
             <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-[280px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-2 px-3">
+              <div className="absolute top-0 left-3 w-70 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-2 px-3">
                 <div className="flex items-center gap-2">
                   <input type="text" value={descFilter} onChange={(e) => setDescFilter(e.target.value)} placeholder="Filter descriptions..."
                     className="h-7 flex-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[11px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" autoFocus
@@ -345,7 +344,7 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
           )}
           {openDropdown === "status" && (
             <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-[180px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[280px] flex flex-col">
+              <div className="absolute top-0 left-3 w-45 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-70 flex flex-col">
                 <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
                   <button type="button" onClick={() => cycleSort("status")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
                   <button type="button" onClick={() => { cycleSort("status"); cycleSort("status"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
@@ -409,7 +408,6 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
             {GROUP_ORDER.map((g) => {
               const items = groupedFiltered[g] || [];
               const uniqueTypes = [...new Set(items.map((i) => i.tableType))];
-              const Icon = GROUP_ICONS[g];
               const isOpen = openGroup === g;
               return (
                 <div key={g}>
@@ -424,7 +422,7 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
                     <span className={`min-w-0 flex-1 text-xs font-medium ${theme.textPrimary} ${isOpen ? "font-semibold" : ""}`}>{GROUP_LABELS[g]}</span>
                     {uniqueTypes.length > 0 && <span className={`text-[10px] shrink-0 ${theme.textMuted}`}>{uniqueTypes.length}</span>}
                   </button>
-                  <div className={`overflow-hidden transition-all duration-150 ease-in-out ${isOpen ? "max-h-[5000px]" : "max-h-0"}`}>
+                  <div className={`overflow-hidden transition-all duration-150 ease-in-out ${isOpen ? "max-h-1250" : "max-h-0"}`}>
                     {g === "organization" && (
                       <button type="button" onClick={openCompany}
                         className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-4 ${
@@ -730,9 +728,6 @@ export function ReferencesPage() {
     for (const i of allItems) { if (i.tableType === selectedType) result.push(i); }
     return result;
   }, [allItems, selectedType]);
-  const selectedTypeActive = selectedTypeItems.filter(i => i.isActive).length;
-  const selectedTypeInactive = selectedTypeItems.filter(i => !i.isActive).length;
-
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
       {/* ── Header ── */}
@@ -956,7 +951,7 @@ export function ReferencesPage() {
               <div className="text-center px-4">
                 <FileSpreadsheet className="h-10 w-10 stroke-current text-slate-300 mx-auto mb-3" />
                 <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1`}>Reference Tables</h3>
-                <p className={`text-xs ${theme.textMuted} max-w-[240px] mx-auto leading-relaxed`}>
+                <p className={`text-xs ${theme.textMuted} max-w-60 mx-auto leading-relaxed`}>
                   Select a table from the sidebar to browse and manage reference data.
                 </p>
               </div>
@@ -969,7 +964,7 @@ export function ReferencesPage() {
       {showUnsavedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/40" onClick={handleModalCancel} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-[360px] max-w-[90vw]">
+          <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-90 max-w-[90vw]">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Unsaved changes</h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">You have unsaved changes that will be lost.</p>
             <div className="flex items-center justify-end gap-1">

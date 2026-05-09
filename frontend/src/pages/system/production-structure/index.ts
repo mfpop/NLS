@@ -1,4 +1,4 @@
-export { PlantStructurePage } from "./PlantStructurePage";
+export { ProductionComponents } from "./PlantStructurePage";
 export { PlantDetailPage } from "./PlantDetailPage";
 export { DepartmentsPage } from "./DepartmentsPage";
 export { ResourceGroupsPage } from "./ResourceGroupsPage";

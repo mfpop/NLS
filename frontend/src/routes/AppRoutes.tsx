@@ -34,11 +34,11 @@ const KaizenPage = lazy(() =>
 const StandardWorkPage = lazy(() =>
   import("@/pages/improve").then((module) => ({ default: module.StandardWorkPage }))
 );
-const ProductionStructurePage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ProductionStructurePage }))
+const ProductionFlow = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.ProductionFlow }))
 );
-const PlantStructurePage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.PlantStructurePage }))
+const ProductionComponents = lazy(() =>
+  import("@/pages/system").then((module) => ({ default: module.ProductionComponents }))
 );
 const PlantDetailPage = lazy(() =>
   import("@/pages/system").then((module) => ({ default: module.PlantDetailPage }))
@@ -116,8 +116,9 @@ export function AppRoutes() {
           <Route path="improve/kaizen" element={<KaizenPage />} />
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
           <Route path="standardize/standard-work" element={<StandardWorkPage />} />
-          <Route path="system/production-structure" element={<ProductionStructurePage />} />
-                    <Route path="system/production-structure/plant" element={<PlantStructurePage />} />
+          <Route path="system/production-structure" element={<ProductionFlow />} />
+                    <Route path="system/production-structure/flow" element={<ProductionFlow />} />
+                    <Route path="system/production-structure/components" element={<ProductionComponents />} />
                     <Route path="system/production-structure/plant/:plantId" element={<PlantDetailPage />} />
           <Route path="system/production-structure/departments" element={<DepartmentsPage />} />
           <Route path="system/production-structure/departments/:deptId" element={<DepartmentsPage />} />

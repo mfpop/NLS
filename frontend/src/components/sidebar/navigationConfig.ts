@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Activity, BookMarked, BookOpen, CircleAlert, Cog, Database,
-  Footprints, LayoutDashboard, ListChecks, Monitor, PanelTop,
+  Footprints, GitBranch, Layers, LayoutDashboard, ListChecks, Monitor, PanelTop,
   Settings, ShieldCheck, Sparkles, TrendingUp, Play, ClipboardList,
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, Award, Ruler, FileSpreadsheet, RefreshCw,
@@ -93,7 +93,13 @@ export const sidebarNav: TopLevelEntry[] = [
   {
     type: "section", id: "system", label: "System", icon: Settings,
     items: [
-      { type: "item", label: "Production Structure", to: "/system/production-structure", icon: Database },
+      {
+        type: "group", label: "Production Structure", icon: Database,
+        items: [
+          { type: "item", label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
+          { type: "item", label: "Components", to: "/system/production-structure/components", icon: Layers },
+        ],
+      },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
       { type: "item", label: "Application Settings", to: "/system/application-settings", icon: Cog },
       {

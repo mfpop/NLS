@@ -7,7 +7,7 @@ import { theme } from "../../styles/themeTokens";
 import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
-import { TreeNavigation, NodeDetailPanel, CompanyEditor, GlobalNav, type CompanyFormData } from "./production-structure/components";
+import { TreeNavigation, NodeDetailPanel, CompanyEditor, type CompanyFormData } from "./production-structure/components";
 import { findNodeByKey, findNodePathByKey, ADD_ROUTES, ENTITY_CONFIG, CHILD_TYPE_MAP } from "./production-structure/config";
 
 interface ContextMenuState {
@@ -48,7 +48,7 @@ function ContextMenu({ state, onClose, onAdd, onEdit }: {
   );
 }
 
-export function ProductionStructurePage() {
+export function ProductionFlow() {
   const navigate = useNavigate();
   const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set());
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
@@ -161,16 +161,13 @@ export function ProductionStructurePage() {
       <PageHeader
         icon={<Database className="h-5 w-5 stroke-current" />}
         iconClass={theme.iconBoxEmerald}
-        title="Production Structure"
+        title="Production Structure - Flow"
         subtitle="Manufacturing hierarchy explorer"
       />
 
-      {/* 3-Column Explorer */}
-      <div className="flex-1 min-h-0 grid grid-cols-[auto_380px_1fr] gap-0">
-        {/* Column 1: Global Navigation */}
-        <GlobalNav counts={contextCounts} />
-
-        {/* Column 2: Hierarchy Tree */}
+      {/* 2-Column Explorer */}
+      <div className="flex-1 min-h-0 grid grid-cols-[380px_1fr] gap-0">
+        {/* Column 1: Hierarchy Tree */}
         <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 dark:border-slate-700/50 min-w-0">
           {/* Tree Toolbar */}
           <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-950 h-10 px-2 flex items-center gap-1">
@@ -205,7 +202,7 @@ export function ProductionStructurePage() {
           </div>
 
           {/* Footer Legend */}
-          <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-5 px-5 h-15 text-xs text-slate-500 dark:text-slate-300 font-medium">
+          <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-5 px-5 text-xs text-slate-500 dark:text-slate-300 font-medium" style={{ height: "60px" }}>
             <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-blue-500 stroke-current" /> Plant</span>
             <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-amber-500 stroke-current" /> Line</span>
             <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-purple-500 stroke-current" /> Dept</span>

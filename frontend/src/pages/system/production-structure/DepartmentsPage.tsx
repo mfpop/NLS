@@ -4,16 +4,13 @@ import { Layers, X } from "lucide-react";
 import { DataCard, Pagination } from "./components";
 import { Toolbar } from "./components/Toolbar";
 import type { FilterOption } from "./components/Toolbar";
-import { UnifiedModal } from "./components/UnifiedModal";
-import type { ModalField } from "./components/UnifiedModal";
-import { DepartmentSummary } from "./components/SummaryBlock";
-import { ConfirmDialog } from "./shared";
 import { theme } from "../../../styles/themeTokens";
 import { useDepartments } from "@/hooks/useDepartments";
 import { usePlants } from "@/hooks/usePlants";
 import { usePageSize } from "@/hooks/usePageSize";
-import { getEntityIconProps, saveEntityConfig } from "./entityDisplay";
+import { getEntityIconProps } from "./entityDisplay";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { DepartmentEditModal } from "./components/DepartmentEditModal";
 
 interface DepartmentNode {
   id: string; name: string; code: string; status: "active" | "inactive";
@@ -28,29 +25,14 @@ const STATUS_OPTIONS: FilterOption[] = [
   { label: "Not Ready", value: "not_ready" },
 ];
 
-function generateCode(): string {
-  return `D${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-}
-
 export function DepartmentsPage() {
   const navigate = useNavigate();
   const { plants } = usePlants();
-  const { departments, loading, error, search, setSearch, statusFilter, setStatusFilter, saveDepartment, deleteDepartment } = useDepartments();
+  const { departments, loading, error, search, setSearch, statusFilter, setStatusFilter, refetch } = useDepartments();
   const [plantFilter, setPlantFilter] = useState("all");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [editingDept, setEditingDept] = useState<DepartmentNode | null>(null);
-  const [deptToDelete, setDeptToDelete] = useState<string | null>(null);
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const { containerRef, cardRef, perPage } = usePageSize(56, 8, 1);
-
-  const MODAL_FIELDS: ModalField[] = [
-    { key: "entityIcon", label: "Icon & Color", type: "entityicon" },
-    { key: "name", label: "Department Name", required: true, placeholder: "e.g. Assembly" },
-    { key: "manager", label: "Manager", placeholder: "e.g. John Smith" },
-    { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
-  ];
 
   const plantOptions = useMemo<FilterOption[]>(() => (
     [{ label: "All Plants", value: "all" }].concat(
@@ -66,31 +48,8 @@ export function DepartmentsPage() {
   const paginatedDepartments = filteredDepartments.slice((page - 1) * perPage, page * perPage);
   useEffect(() => { setPage(1); }, [search, statusFilter, plantFilter, perPage]);
 
-  const openEdit = (dept: DepartmentNode) => {
-    setEditingDept(dept);
-    setForm({ entityIcon: "department", name: dept.name, code: dept.code, manager: dept.manager || "", status: dept.status, employees: String(dept.employees) });
-    setModalOpen(true);
-  };
-
   const handleAdd = () => {
-    setEditingDept(null);
-    setForm({ entityIcon: "department", name: "", code: generateCode(), manager: "", status: "active", employees: "0" });
-    setModalOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (editingDept?.id && form.entityIcon) {
-      saveEntityConfig("department", editingDept.id, form.entityIcon);
-    }
-    const result = await saveDepartment(form, editingDept?.id ?? null);
-    if (result.ok) { setModalOpen(false); } else { alert(Object.values(result.errors ?? {}).join("; ")); }
-  };
-
-  const handleDelete = async () => {
-    if (!deptToDelete) return;
-    const result = await deleteDepartment(deptToDelete);
-    if (result.inUse) { alert(result.message); }
-    setConfirmOpen(false); setDeptToDelete(null); setModalOpen(false);
+    navigate("/system/production-structure/departments/add");
   };
 
 
@@ -165,7 +124,7 @@ export function DepartmentsPage() {
                   { label: "Resource Groups", ready: dept.groupCount > 0 },
                   { label: "Resources", ready: dept.resourceCount > 0 },
                 ]}
-                onEdit={() => openEdit(dept)}
+                onEdit={() => setEditingDeptId(dept.id)}
                 onStructure={() => navigate(`/system/production-structure/structure?department=${encodeURIComponent(dept.name)}`)}
                 onOpen={() => navigate(`/system/production-structure/departments/${dept.id}`)}
                 />
@@ -180,36 +139,11 @@ export function DepartmentsPage() {
         </div>
       </div>
 
-      <UnifiedModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editingDept ? "Edit Department" : "Add Department"}
-        fields={MODAL_FIELDS}
-        values={form}
-        onChange={(k, v) => setForm((prev) => ({ ...prev, [k]: v }))}
-        onSave={handleSave}
-        onDelete={editingDept ? () => { setDeptToDelete(editingDept.id); setConfirmOpen(true); } : undefined}
-        summary={
-          editingDept ? (
-            <DepartmentSummary
-              groups={editingDept.groupCount}
-              resources={editingDept.resourceCount}
-            />
-          ) : undefined
-        }
-        onConfigureStructure={
-          editingDept
-            ? () => navigate(`/system/production-structure/structure?department=${encodeURIComponent(editingDept.name)}`)
-            : undefined
-        }
-      />
-
-      <ConfirmDialog
-        open={confirmOpen}
-        onClose={() => { setConfirmOpen(false); setDeptToDelete(null); }}
-        title={`Delete department?`}
-        message="This action cannot be undone."
-        onConfirm={handleDelete}
+      <DepartmentEditModal
+        departmentId={editingDeptId}
+        open={!!editingDeptId}
+        onClose={() => setEditingDeptId(null)}
+        onSaved={() => { setEditingDeptId(null); refetch(); }}
       />
     </div>
   );

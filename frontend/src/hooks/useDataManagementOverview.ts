@@ -26,6 +26,9 @@ export interface DataManagementTreeChild {
   status: string;
   childCount: number;
   children: DataManagementTreeChild[];
+  scheduleStatus?: string | null;
+  scheduleSource?: string | null;
+  shiftPatternName?: string | null;
 }
 
 export interface DataManagementTreeRoot {
@@ -36,6 +39,9 @@ export interface DataManagementTreeRoot {
   status: string;
   childCount: number;
   children: DataManagementTreeChild[];
+  scheduleStatus?: string | null;
+  scheduleSource?: string | null;
+  shiftPatternName?: string | null;
 }
 
 export interface DataManagementNavCounts {

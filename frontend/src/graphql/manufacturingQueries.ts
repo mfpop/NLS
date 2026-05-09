@@ -17,9 +17,47 @@ export const DEPARTMENTS_QUERY = gql`
   }
 `;
 
+export const DEPARTMENT_QUERY = gql`
+  query Department($id: String!) {
+    department(id: $id) {
+      id
+      code
+      name
+      status
+      manager
+      employees
+      groupCount
+      resourceCount
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 export const RESOURCE_GROUPS_QUERY = gql`
   query ResourceGroups($search: String, $type: String) {
     resourceGroups(search: $search, type: $type) {
+      id
+      code
+      name
+      groupType
+      status
+      members
+      leader
+      departmentName
+      departmentId
+      plantName
+      plantId
+      resourceCount
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+export const RESOURCE_GROUP_QUERY = gql`
+  query ResourceGroup($id: String!) {
+    resourceGroup(id: $id) {
       id
       code
       name

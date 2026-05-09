@@ -1,17 +1,14 @@
 import { useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   ChevronDown, Factory, Landmark, TrendingUpDown, Layers, Component, Dumbbell,
   X, Pointer, RefreshCw, Shield, Edit3,
-  AlertTriangle, Calendar, Clock, FileText, Info,
-  Lock
+  AlertTriangle, Info, Lock
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview, type DataManagementTreeChild, type DataManagementTreeRoot } from "@/hooks/useDataManagementOverview";
-import { useQuery } from "@apollo/client/react";
-import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
-import { ReferenceTablesCard } from "./components/ReferenceTablesCard";
+import { NodeDetailPanel } from "./components/NodeDetailPanel";
+import { DepartmentEditModal } from "./components/DepartmentEditModal";
 
 interface StructureTreeNode {
   id: string;
@@ -23,10 +20,7 @@ interface StructureTreeNode {
   children?: StructureTreeNode[];
   to?: string;
   childCount: number;
-}
-
-interface ReferenceTablesQueryData {
-  referenceTables: Array<{ id: string; name: string; entryCount: number }>;
+  rawNode: DataManagementTreeChild;
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -90,6 +84,7 @@ function convertTreeChild(node: DataManagementTreeChild, depth: number): Structu
     children,
     to: getNodePath(node.type, node.id),
     childCount: node.childCount,
+    rawNode: node,
   };
 }
 
@@ -104,6 +99,18 @@ function buildTree(tree: DataManagementTreeRoot | null): StructureTreeNode[] {
     type: "plant",
     childCount: plantNodes.reduce((sum, n) => sum + 1 + countDescendants(n), 0),
     children: plantNodes,
+    rawNode: {
+      id: tree.id,
+      type: tree.type,
+      name: tree.name,
+      code: tree.code,
+      status: tree.status,
+      childCount: tree.childCount,
+      children: tree.children,
+      scheduleStatus: tree.scheduleStatus,
+      scheduleSource: tree.scheduleSource,
+      shiftPatternName: tree.shiftPatternName,
+    },
   }];
 }
 
@@ -128,7 +135,7 @@ function TreeNodeRow({ node, nodeKey, depth = 0, selectedKey, onSelect }: {
   return (
     <div>
       <div
-        className={`flex cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors min-h-[44px] ${rowClass}`}
+        className={`flex cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors min-h-11 ${rowClass}`}
         style={{ paddingLeft: indent }}
         onClick={() => { onSelect?.(node, nodeKey); if (hasChildren) setOpen(!open); }}
         role="button" tabIndex={0}
@@ -174,31 +181,20 @@ function TreeNodeRow({ node, nodeKey, depth = 0, selectedKey, onSelect }: {
 }
 
 export function StructurePage() {
-  const navigate = useNavigate();
-  const [selectedNode, setSelectedNode] = useState<StructureTreeNode | null>(null);
+  const [selectedNode, setSelectedNode] = useState<DataManagementTreeChild | null>(null);
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"view" | "edit">("view");
+  const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
 
-  const { data: overview, loading, error } = useDataManagementOverview({});
-  const { data: tablesData } = useQuery<ReferenceTablesQueryData>(REFERENCE_TABLES_QUERY, {
-    fetchPolicy: "cache-and-network",
-    errorPolicy: "all",
-  });
-
-  const referenceTables = tablesData?.referenceTables ?? [];
+  const { data: overview, loading, error, refetch: refetchOverview } = useDataManagementOverview({});
   const plants = overview?.plants ?? [];
 
   const structureTree = useMemo(() => buildTree(overview?.tree ?? null), [overview?.tree]);
 
   const handleNodeClick = useCallback((node: StructureTreeNode, key: string) => {
-    setSelectedNode(node);
+    setSelectedNode(node.rawNode);
     setSelectedNodeKey(key);
   }, []);
-
-  const descendantCount = useMemo(() => {
-    if (!selectedNode) return 0;
-    return countDescendants(selectedNode);
-  }, [selectedNode]);
 
   const childCounts = useMemo(() => {
     if (!selectedNode || !selectedNode.children) return {};
@@ -208,37 +204,6 @@ export function StructurePage() {
       return acc;
     }, {});
   }, [selectedNode]);
-
-  const riskSignals = useMemo(() => {
-    if (!selectedNode) return [];
-    const signals: { icon: typeof Calendar; label: string; level: "low" | "medium" | "high" }[] = [];
-    if (selectedNode.type === "plant" || selectedNode.type === "line") {
-      signals.push({ icon: Calendar, label: "Linked to production schedule", level: "medium" });
-      signals.push({ icon: Clock, label: "Shift pattern configured", level: "low" });
-    }
-    if (selectedNode.type === "plant") {
-      signals.push({ icon: FileText, label: "Default calendar assigned", level: "medium" });
-    }
-    if (selectedNode.type === "resource") {
-      signals.push({ icon: AlertTriangle, label: "Active in work center assignment", level: "high" });
-    }
-    return signals;
-  }, [selectedNode]);
-
-  const relatedTables = useMemo(() => {
-    if (!selectedNode) return [];
-    const typeMap: Record<string, string[]> = {
-      plant: ["Shift Patterns", "Holiday Calendars", "Maintenance Plans"],
-      line: ["Production Models", "Shift Patterns", "Routing Templates"],
-      department: ["Skill Matrix", "Role Definitions"],
-      group: ["Certification Types", "Tool Registries"],
-      resource: ["Maintenance Records", "Calibration Logs", "Operator Certifications"],
-    };
-    const tableNames = typeMap[selectedNode.type] || [];
-    return referenceTables.filter((t) =>
-      tableNames.some((n) => t.name.toLowerCase().includes(n.toLowerCase()))
-    );
-  }, [selectedNode, referenceTables]);
 
   const totalPlants = plants.length;
   const totalLines = overview?.kpis?.productionLines ?? 0;
@@ -328,15 +293,25 @@ export function StructurePage() {
                   <Info className="h-3.5 w-3.5 stroke-current" />
                   {TYPE_LABEL[selectedNode.type] || "Node"}
                 </div>
-                <button type="button" onClick={() => { setSelectedNode(null); setSelectedNodeKey(null); }} className={theme.buttonGhost}>
-                  <X className="h-3.5 w-3.5 stroke-current" />
-                </button>
+                <div className="flex items-center gap-1">
+                  {selectedNode.type === "department" && (
+                    <button
+                      type="button"
+                      onClick={() => setEditingDeptId(selectedNode.id)}
+                      className={`rounded px-2 py-0.5 text-[10px] font-medium ${theme.buttonWarningSoft}`}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button type="button" onClick={() => { setSelectedNode(null); setSelectedNodeKey(null); }} className={theme.buttonGhost}>
+                    <X className="h-3.5 w-3.5 stroke-current" />
+                  </button>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto">
                 <NodeDetailPanel
                   selectedNode={selectedNode}
                   selectedNodeKey={selectedNodeKey}
-                  selectedPath={selectedPath}
                   contextCounts={childCounts}
                   workspaceMode="view"
                   onAddChild={() => {}}
@@ -350,11 +325,18 @@ export function StructurePage() {
               <span>Select a node to view details</span>
             </div>
           )}
-          <div className="flex items-center shrink-0 h-[60px] border-t border-slate-200 dark:border-slate-700 px-3">
+          <div className="flex items-center shrink-0 h-15 border-t border-slate-200 dark:border-slate-700 px-3">
             <span className={`text-[10px] ${theme.textMuted}`}>{selectedNode ? `Node detail` : "No selection"}</span>
           </div>
         </div>
       </div>
+
+      <DepartmentEditModal
+        departmentId={editingDeptId}
+        open={!!editingDeptId}
+        onClose={() => setEditingDeptId(null)}
+        onSaved={() => { refetchOverview(); setSelectedNode(null); setSelectedNodeKey(null); setEditingDeptId(null); }}
+      />
     </div>
   );
 }

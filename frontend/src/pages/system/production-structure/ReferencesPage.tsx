@@ -63,7 +63,7 @@ const BASE_FIELDS: DynamicField[] = [
 
 const TYPE_PLACEHOLDERS: Record<string, Partial<Record<string, string>>> = {
   production_calendar: { name: "e.g. Standard 5-Day Week", code: "e.g. STD5" },
-  shift_pattern: { name: "e.g. Day Shift", code: "e.g. 1SH-D" },
+  shift_pattern: { name: "e.g. Day Shift (06:00-14:00)", code: "e.g. 1SH-D" },
   language: { name: "e.g. English", code: "e.g. en" },
   timezone: { name: "e.g. Eastern Standard Time", code: "e.g. EST" },
   manufacturing_type: { name: "e.g. Discrete Manufacturing", code: "e.g. DISC" },
@@ -88,7 +88,21 @@ const TYPE_PLACEHOLDERS: Record<string, Partial<Record<string, string>>> = {
 const ENTITY_SPECIFIC_FIELDS: Record<string, DynamicField[]> = {
   timezone: [{ key: "utcOffset", label: "UTC Offset", placeholder: "e.g. UTC-5 (EST)" }, { key: "region", label: "Region", placeholder: "e.g. Americas" }],
   language: [{ key: "localeCode", label: "Locale Code", placeholder: "e.g. en-US" }],
-  shift_pattern: [{ key: "shiftDuration", label: "Duration (hours)", placeholder: "e.g. 8" }, { key: "startTime", label: "Start Time", placeholder: "e.g. 06:00" }, { key: "endTime", label: "End Time", placeholder: "e.g. 14:00" }],
+  shift_pattern: [
+    { key: "shiftType", label: "Shift Type", type: "select", options: [
+      { label: "Day (06:00-14:00)", value: "day" },
+      { label: "Afternoon (14:00-22:00)", value: "afternoon" },
+      { label: "Night (22:00-06:00)", value: "night" },
+      { label: "Split", value: "split" },
+      { label: "Rotating", value: "rotating" },
+    ]},
+    { key: "startTime", label: "Start Time", placeholder: "e.g. 06:00" },
+    { key: "endTime", label: "End Time", placeholder: "e.g. 14:00" },
+    { key: "breakStart", label: "Break Start", placeholder: "e.g. 12:00" },
+    { key: "breakEnd", label: "Break End", placeholder: "e.g. 12:30" },
+    { key: "gracePeriod", label: "Grace Period (min)", placeholder: "e.g. 5" },
+    { key: "overtimeRule", label: "Overtime Rule", placeholder: "e.g. Max 2h/day, 1.5x rate" },
+  ],
   operation_code: [{ key: "operationCategory", label: "Category", placeholder: "e.g. Machining" }],
   kanban_type: [{ key: "pullType", label: "Pull Type", placeholder: "e.g. Supermarket" }],
 };
@@ -473,6 +487,15 @@ export function ReferencesPage() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [openGroup, setOpenGroup] = useState<string | null>("organization");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const { tableId } = useParams<{ tableId: string }>();
+
+  useEffect(() => {
+    if (tableId && TABLE_TYPE_LABELS[tableId]) {
+      setSelectedType(tableId);
+      const group = Object.entries(TYPE_GROUPS).find(([, types]) => types.includes(tableId))?.[0];
+      if (group) setOpenGroup(group);
+    }
+  }, [tableId]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -630,6 +653,16 @@ export function ReferencesPage() {
         description: itemForm.description || "", sortOrder: parseInt(itemForm.sortOrder) || 0, isActive: itemForm.isActive === "true",
       };
       ENTITY_SPECIFIC_FIELDS[currentTableType]?.forEach(f => { if (itemForm[f.key]) input[f.key] = itemForm[f.key]; });
+      if (currentTableType === "shift_pattern") {
+        const toH = (t: string) => { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; };
+        const s = toH(itemForm.startTime || "0"), e = toH(itemForm.endTime || "0");
+        const bs = toH(itemForm.breakStart || "0"), be = toH(itemForm.breakEnd || "0");
+        const total = e > s ? e - s : 0;
+        const brk = be > bs ? be - bs : 0;
+        input.shiftDuration = total;
+        input.breakDuration = brk;
+        input.workDuration = total - brk;
+      }
       if (editingItem) await updateItem({ variables: { id: editingItem.id, input } });
       else await createItem({ variables: { input } });
       closePanel(); showToast("Record saved");
@@ -813,6 +846,32 @@ export function ReferencesPage() {
                 </div>
               </div>
               <form id="item-form" onSubmit={(e) => { e.preventDefault(); handleItemSave(); }} className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
+                {currentTableType === "shift_pattern" && (() => {
+                  const toHours = (t: string) => { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; };
+                  const s = toHours(itemForm.startTime || "0");
+                  const e = toHours(itemForm.endTime || "0");
+                  const bs = toHours(itemForm.breakStart || "0");
+                  const be = toHours(itemForm.breakEnd || "0");
+                  const totalDur = e > s ? e - s : 0;
+                  const breakDur = be > bs ? be - bs : 0;
+                  const workDur = totalDur - breakDur;
+                  return (
+                    <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-2">
+                        <label className="block text-[9px] font-medium text-slate-400 mb-px w-20">Duration</label>
+                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{totalDur > 0 ? `${totalDur.toFixed(1)}h` : "\u2014"}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="block text-[9px] font-medium text-slate-400 mb-px w-20">Break</label>
+                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{breakDur > 0 ? `${breakDur.toFixed(1)}h` : "\u2014"}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="block text-[9px] font-medium text-slate-400 mb-px w-20">Work Time</label>
+                        <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{workDur > 0 ? `${workDur.toFixed(1)}h` : "\u2014"}</div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 {activeFields.map((f) => (
                   <div key={f.key}>
                     <label className="block text-[9px] font-medium text-slate-400 mb-px">
@@ -888,7 +947,7 @@ export function ReferencesPage() {
               <div className="flex-1 overflow-auto">
                 <ItemsList items={allItems} selectedType={selectedType} onEdit={openEditItem} onAdd={openAddItem} showToast={showToast} />
               </div>
-              <div className="flex items-center shrink-0 h-[60px] border-t border-slate-200 dark:border-slate-700 px-3">
+              <div className="flex items-center shrink-0 h-15 border-t border-slate-200 dark:border-slate-700 px-3">
                 <span className={`text-[10px] ${theme.textMuted}`}>{selectedTypeItems.length} item{selectedTypeItems.length !== 1 ? "s" : ""}</span>
               </div>
             </div>

@@ -298,6 +298,12 @@ class ManufacturingQuery:
             plant_status=selected_plant_obj.status if selected_plant_obj else "all",
         )
 
+        def _safe_get(obj, field):
+            try:
+                return getattr(obj, field, None)
+            except Exception:
+                return None
+
         def build_plant_tree(plant):
             lines_qs = ProductionLine.objects.filter(plant=plant)
             all_rgs = ResourceGroup.objects.filter(department__production_lines__plant=plant).distinct()
@@ -321,6 +327,9 @@ class ManufacturingQuery:
                             DataManagementTreeChild(
                                 id=str(r.id), type="resource", name=r.name,
                                 code=r.code, status=r.status, child_count=0, children=[],
+                                schedule_status=_safe_get(r, "shift_pattern_id") and "Scheduled" or "Missing schedule",
+                                schedule_source="resource",
+                                shift_pattern_name=None,
                             )
                             for r in rg_resources
                         ]
@@ -329,6 +338,9 @@ class ManufacturingQuery:
                                 id=str(rg.id), type="resourceGroup", name=rg.name,
                                 code=rg.code, status=rg.status,
                                 child_count=len(res_children), children=res_children,
+                                schedule_status=_safe_get(rg, "shift_pattern_id") and "Scheduled" or "Missing schedule",
+                                schedule_source="resourceGroup",
+                                shift_pattern_name=None,
                             )
                         )
                     dept_children.append(
@@ -336,6 +348,9 @@ class ManufacturingQuery:
                             id=str(dept.id), type="department", name=dept.name,
                             code=dept.code, status=dept.status,
                             child_count=len(rg_children), children=rg_children,
+                            schedule_status=_safe_get(dept, "shift_pattern_id") and "Scheduled" or "Missing schedule",
+                            schedule_source="department",
+                            shift_pattern_name=None,
                         )
                     )
                 tree_children.append(
@@ -343,6 +358,9 @@ class ManufacturingQuery:
                         id=str(line.id), type="productionLine", name=line.name,
                         code=line.code, status=line.status,
                         child_count=len(dept_children), children=dept_children,
+                        schedule_status=_safe_get(line, "shift_pattern_id") and "Scheduled" or "Missing schedule",
+                        schedule_source="productionLine",
+                        shift_pattern_name=None,
                     )
                 )
             return tree_children
@@ -352,11 +370,15 @@ class ManufacturingQuery:
         if selected_plant_obj and plant_id:
             # Single-plant tree
             tree_children = build_plant_tree(selected_plant_obj)
+            plant_sp = _safe_get(selected_plant_obj, "shift_pattern_id")
             tree_root = DataManagementTreeRoot(
                 id=str(selected_plant_obj.id), type="plant",
                 name=selected_plant_obj.name, code=selected_plant_obj.code,
                 status=selected_plant_obj.status,
                 child_count=len(tree_children), children=tree_children,
+                schedule_status="Scheduled" if plant_sp else "Missing schedule",
+                schedule_source="plant",
+                shift_pattern_name=None,
             )
         elif not plant_id:
             # Company-root tree: company as root, all plants as children
@@ -366,11 +388,15 @@ class ManufacturingQuery:
             all_children = []
             for p in all_plants_qs:
                 plant_lines = build_plant_tree(p)
+                plant_sp = _safe_get(p, "shift_pattern_id")
                 all_children.append(
                     DataManagementTreeChild(
                         id=str(p.id), type="plant", name=p.name,
                         code=p.code, status=p.status,
                         child_count=len(plant_lines), children=plant_lines,
+                        schedule_status="Scheduled" if plant_sp else "Missing schedule",
+                        schedule_source="plant",
+                        shift_pattern_name=None,
                     )
                 )
             tree_root = DataManagementTreeRoot(

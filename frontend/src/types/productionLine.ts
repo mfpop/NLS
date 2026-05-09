@@ -93,4 +93,12 @@ export const MOCK_PRODUCTION_LINES: ProductionLine[] = [
     departmentCount: 1, groupCount: 2, resourceCount: 4,
     createdAt: "2024-03-15T08:00:00Z", updatedAt: "2025-01-05T16:00:00Z",
   },
+  {
+    id: "L007", name: "C2 Units Line", code: "C2-UL", status: "active",
+    plantName: "Main Plant", plantId: "1",
+    modelsProduced: ["C2 Unit Type A", "C2 Unit Type B", "C2 Unit Type C"],
+    shiftPattern: "2-shift (Morn/Aftn)", isConstraint: true,
+    departmentCount: 6, groupCount: 7, resourceCount: 18,
+    createdAt: "2024-04-01T08:00:00Z", updatedAt: "2025-03-15T10:00:00Z",
+  },
 ];

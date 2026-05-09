@@ -1,8 +1,9 @@
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from manufacturing.models import (
     Plant, Department, ProductionLine,
     ResourceGroup, Resource, ReferenceTable,
-    Profile,
+    Profile, UserRole,
 )
 
 
@@ -16,6 +17,7 @@ class Command(BaseCommand):
         self._seed_resource_groups()
         self._seed_resources()
         self._seed_reference_tables()
+        self._seed_users()
         self._seed_profile()
         self._update_counts()
 
@@ -65,10 +67,6 @@ class Command(BaseCommand):
     # ── Departments (reusable master data — no plant FK) ──
 
     def _seed_departments(self):
-        if Department.objects.exists():
-            self.stdout.write("  Departments already exist, skipping.")
-            return
-
         depts_data = [
             {
                 "code": "ASM", "name": "Assembly", "status": "active",
@@ -90,19 +88,34 @@ class Command(BaseCommand):
                 "code": "MTN", "name": "Maintenance", "status": "inactive",
                 "manager": "David Kim", "employees": 14,
             },
+            {
+                "code": "WLD", "name": "Welding", "status": "active",
+                "manager": "Robert Chen", "employees": 28,
+            },
+            {
+                "code": "CIT", "name": "Coating Internal", "status": "active",
+                "manager": "Maria Lopez", "employees": 15,
+            },
+            {
+                "code": "CET", "name": "Coating External", "status": "active",
+                "manager": "James Wilson", "employees": 14,
+            },
+            {
+                "code": "PKG", "name": "Packaging", "status": "active",
+                "manager": "Emily Davis", "employees": 20,
+            },
         ]
 
         for data in depts_data:
-            Department.objects.create(**data)
-            self.stdout.write(f"  Created department: {data['name']}")
+            if not Department.objects.filter(code=data["code"]).exists():
+                Department.objects.create(**data)
+                self.stdout.write(f"  Created department: {data['name']}")
+            else:
+                self.stdout.write(f"  Department already exists: {data['name']}")
 
     # ── Production Lines (now has code + departments M2M) ──
 
     def _seed_production_lines(self):
-        if ProductionLine.objects.exists():
-            self.stdout.write("  Production lines already exist, skipping.")
-            return
-
         main_plant = Plant.objects.get(code="MP-01")
         secondary = Plant.objects.get(code="SP-01")
 
@@ -110,6 +123,10 @@ class Command(BaseCommand):
         machining = Department.objects.get(code="MCH")
         qc = Department.objects.get(code="QC")
         logistics = Department.objects.get(code="LOG")
+        welding = Department.objects.get(code="WLD")
+        coating_internal = Department.objects.get(code="CIT")
+        coating_external = Department.objects.get(code="CET")
+        packaging = Department.objects.get(code="PKG")
 
         lines_data = [
             {
@@ -153,25 +170,33 @@ class Command(BaseCommand):
                 "shift_pattern": "1-shift (Morning)",
                 "depts": [qc],
             },
+            {
+                "code": "C2-UL", "name": "C2 Units Line", "status": "active",
+                "plant": main_plant, "is_constraint": True,
+                "models_produced": "C2 Unit Type A, C2 Unit Type B, C2 Unit Type C",
+                "shift_pattern": "2-shift (Morn/Aftn)",
+                "depts": [assembly, machining, welding, coating_internal, coating_external, packaging],
+            },
         ]
 
         for data in lines_data:
             depts = data.pop("depts", [])
-            line = ProductionLine.objects.create(**data)
-            line.departments.set(depts)
-            self.stdout.write(f"  Created production line: {data['name']}")
+            line, created = ProductionLine.objects.get_or_create(code=data["code"], defaults=data)
+            if created:
+                line.departments.set(depts)
+                self.stdout.write(f"  Created production line: {data['name']}")
+            else:
+                self.stdout.write(f"  Production line already exists: {data['name']}")
 
     # ── Resource Groups (now has code, no plant FK) ──
 
     def _seed_resource_groups(self):
-        if ResourceGroup.objects.exists():
-            self.stdout.write("  Resource groups already exist, skipping.")
-            return
-
         assembly = Department.objects.get(code="ASM")
         machining = Department.objects.get(code="MCH")
         qc = Department.objects.get(code="QC")
         logistics = Department.objects.get(code="LOG")
+        welding = Department.objects.get(code="WLD")
+        packaging = Department.objects.get(code="PKG")
 
         groups_data = [
             {
@@ -194,23 +219,58 @@ class Command(BaseCommand):
                 "members": 15, "leader": "Maria Santos", "status": "active",
                 "department": logistics,
             },
+            {
+                "code": "RG-WLD-OP", "name": "Welding Operators", "group_type": "Production",
+                "members": 10, "leader": "Tom Hardy", "status": "active",
+                "department": welding,
+            },
+            {
+                "code": "RG-WLD-TECH", "name": "Welding Technicians", "group_type": "Support",
+                "members": 6, "leader": "Anna Schmidt", "status": "active",
+                "department": welding,
+            },
+            {
+                "code": "RG-WLD-QC", "name": "Welding Inspection", "group_type": "Quality",
+                "members": 4, "leader": "Peter Kim", "status": "active",
+                "department": welding,
+            },
+            {
+                "code": "RG-WLD-LOG", "name": "Welding Material Handlers", "group_type": "Logistics",
+                "members": 5, "leader": "Carlos Ruiz", "status": "active",
+                "department": welding,
+            },
+            {
+                "code": "RG-WLD-MGT", "name": "Welding Supervision", "group_type": "Management",
+                "members": 3, "leader": "Diana Park", "status": "active",
+                "department": welding,
+            },
+            {
+                "code": "RG-PKG", "name": "Packaging Operators", "group_type": "Production",
+                "members": 8, "leader": "Tom Nilsen", "status": "active",
+                "department": packaging,
+            },
         ]
 
         for data in groups_data:
-            ResourceGroup.objects.create(**data)
-            self.stdout.write(f"  Created resource group: {data['name']}")
+            if not ResourceGroup.objects.filter(code=data["code"]).exists():
+                ResourceGroup.objects.create(**data)
+                self.stdout.write(f"  Created resource group: {data['name']}")
+            else:
+                self.stdout.write(f"  Resource group already exists: {data['name']}")
 
     # ── Resources (only resource_group FK kept) ──
 
     def _seed_resources(self):
-        if Resource.objects.exists():
-            self.stdout.write("  Resources already exist, skipping.")
-            return
-
         line_op = ResourceGroup.objects.get(code="RG-OP")
         setup_tech = ResourceGroup.objects.get(code="RG-SETUP")
         qc_insp = ResourceGroup.objects.get(code="RG-QC")
         mat_hand = ResourceGroup.objects.get(code="RG-LOG")
+        weld_ops = ResourceGroup.objects.get(code="RG-WLD-OP")
+        weld_tech = ResourceGroup.objects.get(code="RG-WLD-TECH")
+        weld_qc = ResourceGroup.objects.get(code="RG-WLD-QC")
+        weld_log = ResourceGroup.objects.get(code="RG-WLD-LOG")
+        weld_mgt = ResourceGroup.objects.get(code="RG-WLD-MGT")
+        pkg_ops = ResourceGroup.objects.get(code="RG-PKG")
 
         resources_data = [
             {
@@ -301,11 +361,145 @@ class Command(BaseCommand):
                 "flow_position": "Material Trans",
                 "resource_group": mat_hand,
             },
+            {
+                "name": "Welding Station 1", "code": "WLD-ST-001",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Running", "utilization": 85.0,
+                "shift": "Morning", "last_activity": "5 min ago",
+                "flow_position": "Step 3/8",
+                "resource_group": weld_ops,
+            },
+            {
+                "name": "Welding Station 2", "code": "WLD-ST-002",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Running", "utilization": 72.0,
+                "shift": "Morning", "last_activity": "12 min ago",
+                "flow_position": "Step 3/8",
+                "resource_group": weld_ops,
+            },
+            {
+                "name": "Welding Station 3", "code": "WLD-ST-003",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Idle", "utilization": 45.0,
+                "shift": "Afternoon", "last_activity": "30 min ago",
+                "flow_position": "Step 3/8",
+                "resource_group": weld_ops,
+            },
+            {
+                "name": "Welding Robot 1", "code": "WLD-RBT-001",
+                "resource_type": "Machine", "status": "active",
+                "op_status": "Running", "utilization": 91.0,
+                "shift": "Morning", "last_activity": "2 min ago",
+                "flow_position": "Step 2/8",
+                "resource_group": weld_tech,
+            },
+            {
+                "name": "Welding Robot 2", "code": "WLD-RBT-002",
+                "resource_type": "Machine", "status": "active",
+                "op_status": "Running", "utilization": 88.0,
+                "shift": "Morning", "last_activity": "4 min ago",
+                "flow_position": "Step 2/8",
+                "resource_group": weld_tech,
+            },
+            {
+                "name": "Welding Robot 3", "code": "WLD-RBT-003",
+                "resource_type": "Machine", "status": "active",
+                "op_status": "Maintenance", "utilization": 0.0,
+                "shift": "Afternoon", "last_activity": "2h ago",
+                "flow_position": "Step 2/8",
+                "resource_group": weld_tech,
+            },
+            {
+                "name": "Weld Inspection Station 1", "code": "WLD-INSP-001",
+                "resource_type": "Inspection Station", "status": "active",
+                "op_status": "Running", "utilization": 63.0,
+                "shift": "Morning", "last_activity": "15 min ago",
+                "flow_position": "Step 5/8",
+                "resource_group": weld_qc,
+            },
+            {
+                "name": "Weld Inspection Station 2", "code": "WLD-INSP-002",
+                "resource_type": "Inspection Station", "status": "active",
+                "op_status": "Idle", "utilization": 38.0,
+                "shift": "Afternoon", "last_activity": "1h ago",
+                "flow_position": "Step 5/8",
+                "resource_group": weld_qc,
+            },
+            {
+                "name": "Weld Material Cart 1", "code": "WLD-CART-001",
+                "resource_type": "Material Handling", "status": "active",
+                "op_status": "Running", "utilization": 74.0,
+                "shift": "Morning", "last_activity": "8 min ago",
+                "flow_position": "Material Trans",
+                "resource_group": weld_log,
+            },
+            {
+                "name": "Weld Material Cart 2", "code": "WLD-CART-002",
+                "resource_type": "Material Handling", "status": "active",
+                "op_status": "Running", "utilization": 69.0,
+                "shift": "Morning", "last_activity": "11 min ago",
+                "flow_position": "Material Trans",
+                "resource_group": weld_log,
+            },
+            {
+                "name": "Weld Material Cart 3", "code": "WLD-CART-003",
+                "resource_type": "Material Handling", "status": "active",
+                "op_status": "Running", "utilization": 82.0,
+                "shift": "Afternoon", "last_activity": "6 min ago",
+                "flow_position": "Material Trans",
+                "resource_group": weld_log,
+            },
+            {
+                "name": "Welding Control Room", "code": "WLD-CTRL-001",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Running", "utilization": 100.0,
+                "shift": "Morning", "last_activity": "1 min ago",
+                "flow_position": "Supervision",
+                "resource_group": weld_mgt,
+            },
+            {
+                "name": "Welding Quality Terminal", "code": "WLD-TERM-001",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Running", "utilization": 55.0,
+                "shift": "Morning", "last_activity": "20 min ago",
+                "flow_position": "Supervision",
+                "resource_group": weld_mgt,
+            },
+            {
+                "name": "Packaging Line 1", "code": "PKG-LINE-001",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Running", "utilization": 76.0,
+                "shift": "Morning", "last_activity": "3 min ago",
+                "flow_position": "Step 1/4",
+                "resource_group": pkg_ops,
+            },
+            {
+                "name": "Packaging Line 2", "code": "PKG-LINE-002",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Idle", "utilization": 42.0,
+                "shift": "Afternoon", "last_activity": "45 min ago",
+                "flow_position": "Step 1/4",
+                "resource_group": pkg_ops,
+            },
+            {
+                "name": "Packaging Station 1", "code": "PKG-ST-001",
+                "resource_type": "Workstation", "status": "active",
+                "op_status": "Running", "utilization": 88.0,
+                "shift": "Morning", "last_activity": "7 min ago",
+                "flow_position": "Step 3/4",
+                "resource_group": pkg_ops,
+            },
         ]
 
         for data in resources_data:
-            Resource.objects.create(**data)
-            self.stdout.write(f"  Created resource: {data['name']}")
+            if data["resource_group"] is None:
+                self.stdout.write(f"  SKIP resource '{data['name']}' — resource group not found")
+                continue
+            if not Resource.objects.filter(code=data["code"]).exists():
+                Resource.objects.create(**data)
+                self.stdout.write(f"  Created resource: {data['name']}")
+            else:
+                self.stdout.write(f"  Resource already exists: {data['name']}")
 
     # ── Reference Tables ──
 
@@ -333,14 +527,42 @@ class Command(BaseCommand):
             ReferenceTable.objects.create(**data)
             self.stdout.write(f"  Created table: {data['name']}")
 
+    # ── Auth Users ──
+
+    def _seed_users(self):
+        users_data = [
+            {"username": "admin", "password": "admin", "email": "admin@leansync.com",
+             "is_superuser": True, "role": UserRole.RoleType.DB_ADMIN},
+            {"username": "manager", "password": "manager", "email": "manager@leansync.com",
+             "is_superuser": False, "role": UserRole.RoleType.DEPT_MANAGER},
+            {"username": "supervisor", "password": "supervisor", "email": "supervisor@leansync.com",
+             "is_superuser": False, "role": UserRole.RoleType.SUPERVISOR},
+            {"username": "operator", "password": "operator", "email": "operator@leansync.com",
+             "is_superuser": False, "role": UserRole.RoleType.GUEST},
+        ]
+
+        for ud in users_data:
+            if User.objects.filter(username=ud["username"]).exists():
+                self.stdout.write(f"  User '{ud['username']}' already exists, skipping.")
+                continue
+            if ud["is_superuser"]:
+                user = User.objects.create_superuser(
+                    username=ud["username"], email=ud["email"], password=ud["password"],
+                )
+            else:
+                user = User.objects.create_user(
+                    username=ud["username"], email=ud["email"], password=ud["password"],
+                )
+            UserRole.objects.create(user=user, role=ud["role"])
+            self.stdout.write(f"  Created user: {ud['username']} / {ud['password']} (role={ud['role']})")
+
     # ── User Profile ──
 
     def _seed_profile(self):
-        if Profile.objects.exists():
-            self.stdout.write("  Profile already exists, skipping.")
-            return
+        admin_user = User.objects.filter(username="admin").first()
 
-        Profile.objects.create(
+        defaults = dict(
+            user=admin_user,
             name="Mihai Popescu",
             role="Manufacturing Systems Lead",
             email="mihai.popescu@leansync.com",
@@ -393,7 +615,11 @@ class Command(BaseCommand):
                 },
             ],
         )
-        self.stdout.write("  Created sample user profile.")
+        profile, created = Profile.objects.update_or_create(pk=1, defaults=defaults)
+        if created:
+            self.stdout.write("  Created sample user profile.")
+        else:
+            self.stdout.write("  Updated sample user profile.")
 
     # ── Update counts on parent models ──
 

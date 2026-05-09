@@ -147,6 +147,25 @@ class DeleteDepartmentResult:
     errors: typing.Optional[typing.List[FieldError]] = None
 
 
+# ── Resource Group Input & Mutation Result ──
+
+@strawberry.input
+class ResourceGroupInput:
+    name: str
+    code: str = ""
+    status: str = "active"
+    group_type: typing.Optional[str] = None
+    members: typing.Optional[int] = None
+    leader: typing.Optional[str] = None
+
+
+@strawberry.type
+class DeleteResourceGroupResult:
+    success: bool
+    message: str
+    errors: typing.Optional[typing.List[FieldError]] = None
+
+
 # ── Production Line ──
 
 @strawberry.type
@@ -404,6 +423,9 @@ class DataManagementTreeChild:
     status: str
     child_count: int = strawberry.field(name="childCount")
     children: typing.List["DataManagementTreeChild"] = strawberry.field(default_factory=list)
+    schedule_status: typing.Optional[str] = strawberry.field(name="scheduleStatus", default=None)
+    schedule_source: typing.Optional[str] = strawberry.field(name="scheduleSource", default=None)
+    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName", default=None)
 
 
 @strawberry.type
@@ -415,6 +437,9 @@ class DataManagementTreeRoot:
     status: str
     child_count: int = strawberry.field(name="childCount")
     children: typing.List[DataManagementTreeChild] = strawberry.field(default_factory=list)
+    schedule_status: typing.Optional[str] = strawberry.field(name="scheduleStatus", default=None)
+    schedule_source: typing.Optional[str] = strawberry.field(name="scheduleSource", default=None)
+    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName", default=None)
 
 
 @strawberry.type
@@ -685,3 +710,163 @@ class ConfigOptionNode:
     value: str
     label: str
     sort_order: int = strawberry.field(name="sortOrder")
+
+
+# ── Schedule Configuration ──
+
+@strawberry.type
+class ScheduleConfigNode:
+    shift_pattern_id: typing.Optional[int] = strawberry.field(name="shiftPatternId")
+    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName")
+    production_calendar_id: typing.Optional[int] = strawberry.field(name="productionCalendarId")
+    production_calendar_name: typing.Optional[str] = strawberry.field(name="productionCalendarName")
+    timezone_id: typing.Optional[int] = strawberry.field(name="timezoneId")
+    timezone_name: typing.Optional[str] = strawberry.field(name="timezoneName")
+    effective_from: typing.Optional[str] = strawberry.field(name="effectiveFrom")
+    effective_to: typing.Optional[str] = strawberry.field(name="effectiveTo")
+    uses_parent_schedule: bool = strawberry.field(name="usesParentSchedule")
+    schedule_override_allowed: bool = strawberry.field(name="scheduleOverrideAllowed")
+
+
+@strawberry.type
+class EffectiveScheduleNode:
+    shift_pattern_id: typing.Optional[int] = strawberry.field(name="shiftPatternId")
+    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName")
+    production_calendar_id: typing.Optional[int] = strawberry.field(name="productionCalendarId")
+    production_calendar_name: typing.Optional[str] = strawberry.field(name="productionCalendarName")
+    timezone_id: typing.Optional[int] = strawberry.field(name="timezoneId")
+    timezone_name: typing.Optional[str] = strawberry.field(name="timezoneName")
+    source_entity_type: typing.Optional[str] = strawberry.field(name="sourceEntityType")
+    source_entity_name: typing.Optional[str] = strawberry.field(name="sourceEntityName")
+    status: str
+
+
+def resolve_ref_name(ref_id, table_type):
+    if not ref_id:
+        return None
+    try:
+        from manufacturing.models import ReferenceItem
+        item = ReferenceItem.objects.get(id=ref_id, table_type=table_type)
+        return item.name
+    except ReferenceItem.DoesNotExist:
+        return None
+
+
+def resolve_effective_schedule(entity_type, entity_id):
+    from manufacturing.models import Plant, ProductionLine, Department, ResourceGroup, Resource, ReferenceItem, Company
+
+    SCHEDULE_FIELDS = ["shift_pattern_id", "production_calendar_id", "timezone_id",
+                       "effective_from", "effective_to", "uses_parent_schedule"]
+
+    def get_schedule(obj):
+        return {
+            "shift_pattern_id": getattr(obj, "shift_pattern_id", None),
+            "production_calendar_id": getattr(obj, "production_calendar_id", None),
+            "timezone_id": getattr(obj, "timezone_id", None),
+            "effective_from": getattr(obj, "effective_from", None),
+            "effective_to": getattr(obj, "effective_to", None),
+            "uses_parent_schedule": getattr(obj, "uses_parent_schedule", True),
+        }
+
+    def get_parent(obj, etype):
+        if etype == "plant":
+            company = Company.objects.first()
+            return ("company", company.name if company else "Company", company) if company else None
+        if etype == "productionLine" or etype == "line":
+            return ("plant", obj.plant.name, obj.plant) if obj.plant else None
+        if etype == "department":
+            lines = obj.production_lines.first()
+            if lines:
+                return ("productionLine", lines.name, lines)
+            plants = Plant.objects.filter(production_lines__departments=obj).first()
+            return ("plant", plants.name, plants) if plants else None
+        if etype == "resourceGroup" or etype == "group":
+            dept = obj.department
+            if dept:
+                return ("department", dept.name, dept)
+            if obj.plant:
+                return ("plant", obj.plant.name, obj.plant)
+            return None
+        if etype == "resource":
+            rg = obj.resource_group
+            if rg:
+                return ("resourceGroup", rg.name, rg)
+            return None
+        return None
+
+    model_map = {
+        "plant": Plant, "productionLine": ProductionLine, "line": ProductionLine,
+        "department": Department, "resourceGroup": ResourceGroup, "group": ResourceGroup,
+        "resource": Resource,
+    }
+
+    model_class = model_map.get(entity_type)
+    if not model_class:
+        return None
+
+    try:
+        obj = model_class.objects.get(id=entity_id)
+    except model_class.DoesNotExist:
+        return None
+
+    # Walk up the chain to find the effective schedule
+    current = obj
+    current_type = entity_type
+    visited = set()
+
+    while current is not None:
+        if id(current) in visited:
+            break
+        visited.add(id(current))
+
+        schedule = get_schedule(current)
+        if not schedule["uses_parent_schedule"]:
+            # This entity has its own schedule — check it has all required fields
+            has_own = schedule["shift_pattern_id"] is not None
+            if has_own:
+                sp_name = resolve_ref_name(schedule["shift_pattern_id"], "shift_pattern")
+                cal_name = resolve_ref_name(schedule["production_calendar_id"], "production_calendar")
+                tz_name = resolve_ref_name(schedule["timezone_id"], "timezone")
+                return {
+                    "shift_pattern_id": schedule["shift_pattern_id"],
+                    "shift_pattern_name": sp_name or "Unknown",
+                    "production_calendar_id": schedule["production_calendar_id"],
+                    "production_calendar_name": cal_name or "Unknown",
+                    "timezone_id": schedule["timezone_id"],
+                    "timezone_name": tz_name or "Unknown",
+                    "source_entity_type": current_type,
+                    "source_entity_name": getattr(current, "name", ""),
+                    "status": "Scheduled",
+                    "effective_from": schedule["effective_from"].isoformat() if schedule["effective_from"] else None,
+                    "effective_to": schedule["effective_to"].isoformat() if schedule["effective_to"] else None,
+                }
+
+        # Move to parent
+        parent_info = get_parent(current, current_type)
+        if parent_info is None:
+            # No parent — check if current has its own schedule anyway
+            has_own = schedule["shift_pattern_id"] is not None
+            if has_own:
+                sp_name = resolve_ref_name(schedule["shift_pattern_id"], "shift_pattern")
+                cal_name = resolve_ref_name(schedule["production_calendar_id"], "production_calendar")
+                tz_name = resolve_ref_name(schedule["timezone_id"], "timezone")
+                return {
+                    "shift_pattern_id": schedule["shift_pattern_id"],
+                    "shift_pattern_name": sp_name or "Unknown",
+                    "production_calendar_id": schedule["production_calendar_id"],
+                    "production_calendar_name": cal_name or "Unknown",
+                    "timezone_id": schedule["timezone_id"],
+                    "timezone_name": tz_name or "Unknown",
+                    "source_entity_type": current_type,
+                    "source_entity_name": getattr(current, "name", ""),
+                    "status": "Scheduled",
+                    "effective_from": schedule["effective_from"].isoformat() if schedule["effective_from"] else None,
+                    "effective_to": schedule["effective_to"].isoformat() if schedule["effective_to"] else None,
+                }
+            return None
+
+        parent_type, parent_name, parent_obj = parent_info
+        current = parent_obj
+        current_type = parent_type
+
+    return None

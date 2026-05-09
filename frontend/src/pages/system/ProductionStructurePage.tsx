@@ -238,14 +238,16 @@ export function ProductionStructurePage() {
                         )}
                         <button type="button" onClick={() => setWorkspaceMode("edit")}
                           className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1 transition-colors">
-                          <Pencil className="h-3.5 w-3.5 stroke-current" /> Edit
+                          <Pencil className="h-3.5 w-3.5 stroke-current" /> Details
                         </button>
                       </>)}
                       {workspaceMode !== "view" && (<>
-                        <button type="button" onClick={() => {
-                          if (workspaceMode === "edit") { const route = entityRoutes[selectedNode.type]; if (route) navigate(route + selectedNode.id); }
-                          if (workspaceMode === "create") { const route = ADD_ROUTES[selectedNode.type]; if (route) navigate(route); }
-                        }} className="h-7 px-2 rounded text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 inline-flex items-center gap-1 transition-colors">Save</button>
+                        {(workspaceMode !== "edit" || (selectedNode.type !== "resourceGroup" && selectedNode.type !== "group")) && (
+                          <button type="button" onClick={() => {
+                            if (workspaceMode === "edit") { const route = entityRoutes[selectedNode.type]; if (route) navigate(route + selectedNode.id); }
+                            if (workspaceMode === "create") { const route = ADD_ROUTES[selectedNode.type]; if (route) navigate(route); }
+                          }} className="h-7 px-2 rounded text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 inline-flex items-center gap-1 transition-colors">Save</button>
+                        )}
                         <button type="button" onClick={() => setWorkspaceMode("view")}
                           className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1 transition-colors"><X className="h-3.5 w-3.5 stroke-current" /> Cancel</button>
                       </>)}
@@ -284,6 +286,7 @@ export function ProductionStructurePage() {
                 contextCounts={contextCounts}
                 workspaceMode={workspaceMode}
                 onAddChild={() => setWorkspaceMode("create")}
+                onSave={() => { setWorkspaceMode("view"); refetch(); }}
               />
             )}
           </div>

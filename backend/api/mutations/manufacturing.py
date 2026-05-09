@@ -7,6 +7,7 @@ from api.types.manufacturing import (
     PlantInput, PlantNode, PlantMutationResult,
     DeletePlantResult, FieldError, DepartmentNode, DepartmentInput,
     DepartmentMutationResult, DeleteDepartmentResult,
+    ResourceGroupInput, DeleteResourceGroupResult,
     ProductionLineNode, ResourceGroupNode, ResourceNode, ReferenceTableNode,
     ReferenceTableInput, ReferenceTableMutationResult, DeleteReferenceTableResult,
     ReferenceItemNode, ReferenceItemInput, ReferenceItemMutationResult,
@@ -331,16 +332,50 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def create_resource_group(self, info: strawberry.types.Info, name: str, department_id: str,
-                              code: str = "", status: str = "active") -> ResourceGroupNode:
+                              code: str = "", status: str = "active",
+                              group_type: Optional[str] = None,
+                              members: Optional[int] = None,
+                              leader: Optional[str] = None) -> ResourceGroupNode:
         ensure_access(user=_user(info), action="create_department")
         dept = Department.objects.get(id=department_id)
         rg = ResourceGroup.objects.create(
             name=name.strip(),
             code=code.strip() or name.strip()[:4].upper(),
             status=status,
+            group_type=group_type or "Production",
+            members=members or 0,
+            leader=leader or "",
             department=dept,
         )
         return ResourceGroupNode.from_db(rg)
+
+    @strawberry.mutation
+    def update_resource_group(self, info: strawberry.types.Info, id: str, input: ResourceGroupInput) -> ResourceGroupNode:
+        ensure_access(user=_user(info), action="create_department")
+        rg = ResourceGroup.objects.get(id=id)
+        rg.name = input.name.strip()
+        rg.code = input.code.strip() or input.name.strip()[:4].upper()
+        rg.status = input.status
+        if input.group_type is not None:
+            rg.group_type = input.group_type
+        if input.members is not None:
+            rg.members = input.members
+        if input.leader is not None:
+            rg.leader = input.leader
+        rg.save()
+        return ResourceGroupNode.from_db(rg)
+
+    @strawberry.mutation
+    def delete_resource_group(self, info: strawberry.types.Info, id: str) -> DeleteResourceGroupResult:
+        ensure_access(user=_user(info), action="create_department")
+        try:
+            rg = ResourceGroup.objects.get(id=id)
+        except ResourceGroup.DoesNotExist:
+            return DeleteResourceGroupResult(success=False, message="Resource group not found")
+        if rg.resource_count > 0:
+            return DeleteResourceGroupResult(success=False, message="Resource group has resources. Remove them first.")
+        rg.delete()
+        return DeleteResourceGroupResult(success=True, message="Resource group deleted.")
 
     @strawberry.mutation
     def create_resource(self, info: strawberry.types.Info, name: str, resource_group_id: str,

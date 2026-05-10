@@ -3,13 +3,11 @@ import strawberry
 from api.mutations.execution import ExecutionMutation
 from api.mutations.improvement import ImprovementMutation
 from api.mutations.manufacturing import ManufacturingMutation
-from api.mutations.process import ProcessMutation
 
 
 @strawberry.type
 class Mutation(
     ManufacturingMutation,
-    ProcessMutation,
     ExecutionMutation,
     ImprovementMutation,
 ):

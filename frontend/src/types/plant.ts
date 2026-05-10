@@ -2,20 +2,17 @@ export interface Plant {
   id: string;
   code: string;
   name: string;
-  status: "active" | "inactive";
+  status: string;
   building: string;
   address: string;
   timezone: string;
-  defaultCalendarId: string | null;
-  defaultScheduleId: string | null;
   managerName: string;
   managerEmail: string;
   description: string;
-  lineCount: number;
-  departmentCount: number;
-  groupCount: number;
-  resourceCount: number;
-  isActive: boolean;
+  lineCount?: number;
+  departmentCount?: number;
+  groupCount?: number;
+  resourceCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,7 +20,7 @@ export interface Plant {
 export interface PlantInput {
   name: string;
   code: string;
-  status: "active" | "inactive";
+  status: string;
   building?: string;
   address?: string;
   timezone?: string;
@@ -37,12 +34,10 @@ export interface PlantInput {
 export interface PlantFormData {
   name: string;
   code: string;
-  status: "active" | "inactive";
+  status: string;
   building: string;
   address: string;
   timezone: string;
-  defaultCalendarId: string;
-  defaultScheduleId: string;
   managerName: string;
   managerEmail: string;
   description: string;

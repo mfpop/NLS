@@ -28,12 +28,10 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
         setForm({
           name: editingPlant.name,
           code: editingPlant.code,
-          status: editingPlant.status,
+          status: editingPlant.status as string,
           building: editingPlant.building || "",
           address: editingPlant.address || "",
           timezone: editingPlant.timezone || TIMEZONE_OPTIONS[0].value,
-          defaultCalendarId: editingPlant.defaultCalendarId || "",
-          defaultScheduleId: editingPlant.defaultScheduleId || "",
           managerName: editingPlant.managerName || "",
           managerEmail: editingPlant.managerEmail || "",
           description: editingPlant.description || "",
@@ -152,30 +150,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
             </Field>
           </div>
 
-          {/* 3. DEFAULTS */}
-          <SectionTitle title="Defaults" />
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Default Calendar">
-              <select value={form.defaultCalendarId} onChange={(e) => updateField("defaultCalendarId", e.target.value)}
-                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
-                <option value="">Not set</option>
-                <option value="CAL-001">Standard 5-day Week</option>
-                <option value="CAL-002">6-day Extended Week</option>
-                <option value="CAL-003">24/7 Continuous</option>
-              </select>
-            </Field>
-            <Field label="Default Schedule">
-              <select value={form.defaultScheduleId} onChange={(e) => updateField("defaultScheduleId", e.target.value)}
-                className={`w-full rounded-lg border px-3 py-2 text-xs ${theme.input} ${theme.focusRing}`}>
-                <option value="">Not set</option>
-                <option value="SCH-001">Morning Shift (6:00-14:00)</option>
-                <option value="SCH-002">Afternoon Shift (14:00-22:00)</option>
-                <option value="SCH-003">Night Shift (22:00-6:00)</option>
-                <option value="SCH-004">Rotating 8h</option>
-                <option value="SCH-005">Fixed 12h</option>
-              </select>
-            </Field>
-          </div>
+
 
           {/* 4. MANAGEMENT */}
           <SectionTitle title="Management" />
@@ -217,7 +192,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
         {/* Footer */}
         <div className={`flex items-center justify-between border-t px-5 py-3 ${theme.subHeader}`}>
           <div>
-            {isEditing && editingPlant && (editingPlant.lineCount > 0 || editingPlant.departmentCount > 0 || editingPlant.groupCount > 0 || editingPlant.resourceCount > 0) && (
+            {isEditing && editingPlant && ((editingPlant.lineCount ?? 0) > 0 || (editingPlant.departmentCount ?? 0) > 0 || (editingPlant.groupCount ?? 0) > 0 || (editingPlant.resourceCount ?? 0) > 0) && (
               <span className={`text-[10px] ${theme.textMuted}`}>Plant in use - disable instead of delete</span>
             )}
           </div>

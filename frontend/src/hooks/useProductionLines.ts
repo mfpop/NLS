@@ -4,14 +4,17 @@ import {
   PRODUCTION_LINES_QUERY,
   CREATE_PRODUCTION_LINE_MUTATION,
   UPDATE_PRODUCTION_LINE_MUTATION,
-  DELETE_PRODUCTION_LINE_MUTATION,
-  TOGGLE_PRODUCTION_LINE_STATUS_MUTATION,
+  ARCHIVE_PRODUCTION_LINE_MUTATION,
 } from "@/graphql/productionLineQueries";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import type { ProductionLine, ProductionLinesQueryData, ProductionLinesQueryVars } from "@/types/productionLine";
 import { MOCK_PRODUCTION_LINES } from "@/types/productionLine";
-import type { DeletePlantResult } from "@/types/plant";
-import { getGlobalPlants } from "@/pages/system/production-structure/PlantDetailPage";
+import type { Plant } from "@/types/plant";
+
+let globalPlantsCache: Plant[] = [];
+export function getGlobalPlants(): Plant[] {
+  return globalPlantsCache;
+}
 
 /* ── Mock fallback data ── */
 
@@ -75,20 +78,16 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
   });
 
   const isMockFallback = !!gqlError || !gqlData;
-  const pageData = isMockFallback
-    ? null
-    : gqlData?.productionLines;
-  const lines = isMockFallback
+  const rawData = gqlData?.productionLines;
+  const lines: ProductionLine[] = isMockFallback
     ? filterMockLines(search, statusFilter)
-    : (pageData?.items ?? []);
-  const totalCount = isMockFallback ? lines.length : (pageData?.totalCount ?? 0);
-  const totalPages = isMockFallback ? 1 : (pageData?.totalPages ?? 1);
+    : (Array.isArray(rawData) ? rawData : (rawData as any)?.items ?? []);
+  const totalCount = lines.length;
 
   /* ── Mutations ── */
   const [createMutation, createState] = useMutation(CREATE_PRODUCTION_LINE_MUTATION);
   const [updateMutation, updateState] = useMutation(UPDATE_PRODUCTION_LINE_MUTATION);
-  const [deleteMutation] = useMutation<{ deleteProductionLine: DeletePlantResult }>(DELETE_PRODUCTION_LINE_MUTATION);
-  const [toggleStatusMutation] = useMutation(TOGGLE_PRODUCTION_LINE_STATUS_MUTATION);
+  const [archiveMutation] = useMutation<any, { id: string }>(ARCHIVE_PRODUCTION_LINE_MUTATION);
 
   const saveLoading = createState.loading || updateState.loading;
 
@@ -109,7 +108,6 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
             status: form.status,
             plantId: form.plantId,
             plantName,
-            modelsProduced: form.modelsProduced ? form.modelsProduced.split(",").map((m: string) => m.trim()) : [],
             shiftPattern: form.shiftPattern,
             isConstraint: form.isConstraint,
             updatedAt: new Date().toISOString(),
@@ -117,19 +115,15 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
         }
       } else {
         const plantName = getPlantName(form.plantId) || "Unknown";
-        const newLine: ProductionLine = {
+        const newLine: any = {
           id: generateMockId(),
           name: form.name,
           code: form.code,
           status: form.status,
           plantId: form.plantId,
           plantName,
-          modelsProduced: form.modelsProduced ? form.modelsProduced.split(",").map((m: string) => m.trim()) : [],
           shiftPattern: form.shiftPattern,
           isConstraint: form.isConstraint,
-          departmentCount: 0,
-          groupCount: 0,
-          resourceCount: 0,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -172,49 +166,24 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     }
   }, [createMutation, updateMutation, refetch, isMockFallback]);
 
-  const deleteLine = useCallback(async (id: string): Promise<{ success: boolean; inUse: boolean; message: string }> => {
-    if (isMockFallback) {
-      const idx = mockLines.findIndex((l) => l.id === id);
-      if (idx >= 0) {
-        const line = mockLines[idx];
-        if (line.resourceCount > 0) {
-          return { success: false, inUse: true, message: "Line has resources assigned. Remove resources first." };
-        }
-        mockLines.splice(idx, 1);
-      }
-      return { success: true, inUse: false, message: "Production line deleted." };
-    }
-    try {
-      const { data } = await deleteMutation({ variables: { id } });
-      if (data?.deleteProductionLine) {
-        if (data.deleteProductionLine.inUse) {
-          return { success: false, inUse: true, message: data.deleteProductionLine.message || "Line is in use." };
-        }
-        await refetch();
-        return { success: data.deleteProductionLine.success, inUse: false, message: data.deleteProductionLine.message || "Deleted." };
-      }
-      return { success: false, inUse: false, message: "Failed to delete production line." };
-    } catch {
-      return { success: false, inUse: false, message: "Failed to delete production line." };
-    }
-  }, [deleteMutation, refetch, isMockFallback]);
-
-  const toggleStatus = useCallback(async (id: string): Promise<boolean> => {
+  const archiveLine = useCallback(async (id: string): Promise<{ success: boolean; inUse: boolean; message: string }> => {
     if (isMockFallback) {
       const line = mockLines.find((l) => l.id === id);
-      if (line) {
-        line.status = line.status === "active" ? "inactive" : "active";
-      }
-      return true;
+      if (line) (line as any).status = "ARCHIVED";
+      return { success: true, inUse: false, message: "Production line archived." };
     }
     try {
-      await toggleStatusMutation({ variables: { id } });
-      await refetch();
-      return true;
+      const { data } = await archiveMutation({ variables: { id } });
+      if (data?.archiveProductionLine?.ok) {
+        await refetch();
+        return { success: true, inUse: false, message: "Production line archived." };
+      }
+      const err = data?.archiveProductionLine?.errors?.[0];
+      return { success: false, inUse: false, message: err?.message || "Failed to archive production line." };
     } catch {
-      return false;
+      return { success: false, inUse: false, message: "Failed to archive production line." };
     }
-  }, [toggleStatusMutation, refetch, isMockFallback]);
+  }, [archiveMutation, refetch, isMockFallback]);
 
   const loading = gqlLoading && !isMockFallback;
 
@@ -228,12 +197,10 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     statusFilter,
     setStatusFilter,
     saveLine,
-    deleteLine,
-    toggleStatus,
+    archiveLine,
     refetch,
     plants: plantsData?.plants ?? getGlobalPlants().map((p) => ({ id: p.id, name: p.name })),
     totalCount,
-    totalPages,
   };
 }
 
@@ -254,8 +221,7 @@ function filterMockLines(search: string, statusFilter: string): ProductionLine[]
     const q = search.toLowerCase();
     filtered = filtered.filter((l) =>
       l.name.toLowerCase().includes(q) ||
-      l.plantName.toLowerCase().includes(q) ||
-      l.modelsProduced.some((m) => m.toLowerCase().includes(q))
+      l.plantName.toLowerCase().includes(q)
     );
   }
   return filtered;

@@ -402,7 +402,7 @@ function PlantsViewMode({ selectedId, onSelect, onEdit, detailItem, onCloseDetai
                 return (
                   <EntityCard key={plant.id} icon={<Factory className={`h-5 w-5 stroke-current ${textColor}`} />} iconBg={bgColor}
                     name={plant.name} code={plant.code} status={plant.status} subtitle={plant.building || "No location set"}
-                    metrics={[{ label: "Lines", value: plant.lineCount }, { label: "Depts", value: plant.departmentCount }, { label: "Groups", value: plant.groupCount }, { label: "Resources", value: plant.resourceCount }]}
+                    metrics={[{ label: "Lines", value: plant.lineCount ?? 0 }, { label: "Depts", value: plant.departmentCount ?? 0 }, { label: "Groups", value: plant.groupCount ?? 0 }, { label: "Resources", value: plant.resourceCount ?? 0 }]}
                     selected={selectedId === plant.id} onClick={() => onSelect(plant.id)} selectedClass="bg-blue-100/60 dark:bg-blue-900/30" />
                 );
               })}</div>
@@ -483,7 +483,7 @@ function LinesViewMode({ selectedId, onSelect, search, onSearchChange, statusFil
               <div className="space-y-px">{filtered.map((line) => (
                 <EntityCard key={line.id} icon={<TrendingUpDown className="h-5 w-5 stroke-current text-amber-600 dark:text-amber-400" />} iconBg="bg-amber-50 dark:bg-amber-500/10"
                   name={line.name} code={line.code} status={line.status} subtitle={line.plantName ? `Plant: ${line.plantName}` : undefined}
-                  metrics={[{ label: "Departments", value: line.departmentCount }, { label: "Groups", value: line.groupCount }, { label: "Resources", value: line.resourceCount }]}
+                  metrics={[{ label: "Departments", value: line.departmentCount ?? 0 }, { label: "Groups", value: line.groupCount ?? 0 }, { label: "Resources", value: line.resourceCount ?? 0 }]}
                   selected={selectedId === line.id} onClick={() => onSelect(line.id)} selectedClass="bg-amber-100/60 dark:bg-amber-900/30" />
               ))}</div>
             )}
@@ -807,7 +807,7 @@ export function ProductionComponents() {
   const [sharedSearch, setSharedSearch] = useState("");
   const [sharedStatusFilter, setSharedStatusFilter] = useState("all");
 
-  const { plants, saveLoading, savePlant, deletePlant } = usePlants();
+  const { plants, saveLoading, savePlant, archivePlant } = usePlants();
 
   const HIERARCHY_ITEMS = [
     { key: "company", label: companyName || "Company", Icon: ENTITY_CONFIG.company.icon, colorActive: "text-white", bgActive: "bg-emerald-500 dark:bg-emerald-600", colorInactive: "text-emerald-700 dark:text-emerald-300", bgInactive: "bg-emerald-100 dark:bg-emerald-900/40" },
@@ -825,7 +825,7 @@ export function ProductionComponents() {
     setForm({ entityIcon: "plant", name: plant.name || "", code: plant.code || "", status: plant.status || "active",
       building: plant.building || "", address: plant.address || "", timezone: plant.timezone || "",
       managerName: plant.managerName || "", managerEmail: plant.managerEmail || "",
-      description: plant.description || "", defaultCalendarId: plant.defaultCalendarId || "", defaultScheduleId: plant.defaultScheduleId || "" });
+      description: plant.description || "" });
     setSelectedItemId(plant.id); setModalOpen(true);
   };
 
@@ -838,7 +838,7 @@ export function ProductionComponents() {
 
   const handleDelete = async () => {
     if (!plantToDelete) return;
-    const result = await deletePlant(plantToDelete.id);
+    const result = await archivePlant(plantToDelete.id);
     if (result.inUse) alert(result.message);
     setConfirmOpen(false); setPlantToDelete(null); setModalOpen(false);
     if (selectedItemId === plantToDelete.id) setSelectedItemId(null);

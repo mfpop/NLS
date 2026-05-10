@@ -1,18 +1,76 @@
 import { gql } from "@apollo/client";
 
+const DEPT_FIELDS = `
+  id
+  departmentId
+  code
+  name
+  description
+  status
+  manager
+  employees
+  groupCount
+  groupName
+  createdAt
+  updatedAt
+`;
+
+const RG_FIELDS = `
+  id
+  code
+  name
+  description
+  status
+  departmentId
+  departmentName
+  members
+  leader
+  resourceCount
+  resourceType
+  createdAt
+  updatedAt
+`;
+
+const RES_FIELDS = `
+  id
+  code
+  name
+  description
+  status
+  resourceGroupId
+  resourceGroupName
+  utilization
+  opStatus
+  lastActivity
+  shiftPattern
+  createdAt
+  updatedAt
+`;
+
+const LINE_FIELDS = `
+  id
+  code
+  name
+  description
+  status
+  plantId
+  plantName
+  shiftPattern
+  isConstraint
+  lineCount
+  modelsProduced
+  createdAt
+  updatedAt
+`;
+
 export const DEPARTMENTS_QUERY = gql`
-  query Departments($search: String, $status: String) {
-    departments(search: $search, status: $status) {
-      id
-      code
-      name
-      status
-      manager
-      employees
-      groupCount
-      resourceCount
-      createdAt
-      updatedAt
+  query Departments($productionLineId: String, $status: String, $limit: Int, $offset: Int) {
+    departments(productionLineId: $productionLineId, status: $status, limit: $limit, offset: $offset) {
+      items {
+        ${DEPT_FIELDS}
+      }
+      total
+      hasMore
     }
   }
 `;
@@ -20,37 +78,15 @@ export const DEPARTMENTS_QUERY = gql`
 export const DEPARTMENT_QUERY = gql`
   query Department($id: String!) {
     department(id: $id) {
-      id
-      code
-      name
-      status
-      manager
-      employees
-      groupCount
-      resourceCount
-      createdAt
-      updatedAt
+      ${DEPT_FIELDS}
     }
   }
 `;
 
 export const RESOURCE_GROUPS_QUERY = gql`
-  query ResourceGroups($search: String, $type: String) {
-    resourceGroups(search: $search, type: $type) {
-      id
-      code
-      name
-      groupType
-      status
-      members
-      leader
-      departmentName
-      departmentId
-      plantName
-      plantId
-      resourceCount
-      createdAt
-      updatedAt
+  query ResourceGroups($departmentId: String, $limit: Int, $offset: Int) {
+    resourceGroups(departmentId: $departmentId, limit: $limit, offset: $offset) {
+      ${RG_FIELDS}
     }
   }
 `;
@@ -58,45 +94,15 @@ export const RESOURCE_GROUPS_QUERY = gql`
 export const RESOURCE_GROUP_QUERY = gql`
   query ResourceGroup($id: String!) {
     resourceGroup(id: $id) {
-      id
-      code
-      name
-      groupType
-      status
-      members
-      leader
-      departmentName
-      departmentId
-      plantName
-      plantId
-      resourceCount
-      createdAt
-      updatedAt
+      ${RG_FIELDS}
     }
   }
 `;
 
 export const RESOURCES_QUERY = gql`
-  query Resources($search: String, $status: String) {
-    resources(search: $search, status: $status) {
-      id
-      name
-      code
-      resourceType
-      status
-      opStatus
-      utilization
-      shift
-      lastActivity
-      flowPosition
-      groupName
-      groupId
-      departmentName
-      departmentId
-      plantName
-      plantId
-      createdAt
-      updatedAt
+  query Resources($resourceGroupId: String, $limit: Int, $offset: Int) {
+    resources(resourceGroupId: $resourceGroupId, limit: $limit, offset: $offset) {
+      ${RES_FIELDS}
     }
   }
 `;
@@ -104,89 +110,88 @@ export const RESOURCES_QUERY = gql`
 export const RESOURCE_QUERY = gql`
   query Resource($id: String!) {
     resource(id: $id) {
-      id
-      name
-      code
-      resourceType
-      status
-      opStatus
-      utilization
-      shift
-      lastActivity
-      flowPosition
-      groupName
-      groupId
-      departmentName
-      departmentId
-      plantName
-      plantId
+      ${RES_FIELDS}
+    }
+  }
+`;
+
+export const PRODUCTION_LINES_QUERY = gql`
+  query ProductionLines($plantId: String, $status: String, $limit: Int, $offset: Int) {
+    productionLines(plantId: $plantId, status: $status, limit: $limit, offset: $offset) {
+      ${LINE_FIELDS}
+    }
+  }
+`;
+
+export const PRODUCTION_LINE_QUERY = gql`
+  query ProductionLine($id: String!) {
+    productionLine(id: $id) {
+      ${LINE_FIELDS}
+    }
+  }
+`;
+
+export const REFERENCE_TABLE_QUERY = gql`
+  query ReferenceTable($category: String!) {
+    referenceTable: referenceTables(category: $category) {
+      categoryId
+      categoryCode
+      categoryName
+      values {
+        id
+        categoryId
+        code
+        name
+        description
+        sortOrder
+        isActive
+        status
+        createdAt
+        updatedAt
+      }
+      totalCount
       createdAt
       updatedAt
     }
   }
 `;
 
-export const REFERENCE_TABLES_QUERY = gql`
-  query ReferenceTables($search: String, $status: String) {
-    referenceTables(search: $search, status: $status) {
-      id
-      name
-      status
-      group
-      entryCount
-      description
-      createdAt
-      updatedAt
-    }
-  }
-`;
-
-export const CREATE_REFERENCE_TABLE_MUTATION = gql`
-  mutation CreateReferenceTable($input: ReferenceTableInput!) {
-    createReferenceTable(input: $input) {
-      table {
+export const REFERENCE_CATEGORIES_QUERY = gql`
+  query ReferenceCategories($limit: Int, $offset: Int) {
+    referenceCategories(limit: $limit, offset: $offset) {
+      items {
         id
+        code
         name
-        status
-        group
-        entryCount
         description
+        status
+        createdAt
+        updatedAt
       }
-      errors {
-        field
-        message
-      }
+      total
+      hasMore
     }
   }
 `;
 
-export const UPDATE_REFERENCE_TABLE_MUTATION = gql`
-  mutation UpdateReferenceTable($id: String!, $input: ReferenceTableInput!) {
-    updateReferenceTable(id: $id, input: $input) {
-      table {
+export const REFERENCE_VALUES_QUERY = gql`
+  query ReferenceValues($categoryId: String, $limit: Int, $offset: Int) {
+    referenceValues(categoryId: $categoryId, limit: $limit, offset: $offset) {
+      items {
         id
+        categoryId
+        code
         name
-        status
-        group
-        entryCount
         description
+        sortOrder
+        isActive
+        status
+        createdAt
+        updatedAt
       }
-      errors {
-        field
-        message
-      }
+      total
+      hasMore
     }
   }
 `;
 
-export const DELETE_REFERENCE_TABLE_MUTATION = gql`
-  mutation DeleteReferenceTable($id: String!) {
-    deleteReferenceTable(id: $id) {
-      success
-      errors {
-        field
-        message
-      }
-    }
-  }
-`;

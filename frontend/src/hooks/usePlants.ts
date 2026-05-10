@@ -4,8 +4,7 @@ import {
   PLANTS_QUERY,
   CREATE_PLANT_MUTATION,
   UPDATE_PLANT_MUTATION,
-  TOGGLE_PLANT_STATUS_MUTATION,
-  DELETE_PLANT_MUTATION,
+  ARCHIVE_PLANT_MUTATION,
 } from "@/graphql/plantQueries";
 import type {
   Plant,
@@ -16,10 +15,6 @@ import type {
   CreatePlantVars,
   UpdatePlantData,
   UpdatePlantVars,
-  TogglePlantStatusData,
-  TogglePlantStatusVars,
-  DeletePlantData,
-  DeletePlantVars,
 } from "@/types/plant";
 
 /* ── Fallback mock data when backend is not available ── */
@@ -28,29 +23,29 @@ const MOCK_PLANTS: Plant[] = [
   {
     id: "P001", code: "MP-01", name: "Main Plant", status: "active",
     building: "Building A", address: "123 Industrial Blvd, Detroit, MI 48201",
-    timezone: "America/Detroit (EST)", defaultCalendarId: null, defaultScheduleId: null,
+    timezone: "America/Detroit (EST)",
     managerName: "John Smith", managerEmail: "john.smith@leansync.com",
     description: "Primary assembly facility for cylinder and STB unit production.",
     lineCount: 3, departmentCount: 4, groupCount: 8, resourceCount: 42,
-    isActive: true, createdAt: "2024-01-15T08:00:00Z", updatedAt: "2025-03-10T14:30:00Z",
+    createdAt: "2024-01-15T08:00:00Z", updatedAt: "2025-03-10T14:30:00Z",
   },
   {
     id: "P002", code: "SP-01", name: "Secondary Plant", status: "active",
     building: "Building B", address: "456 Manufacturing Dr, Toledo, OH 43601",
-    timezone: "America/New_York (EST)", defaultCalendarId: null, defaultScheduleId: null,
+    timezone: "America/New_York (EST)",
     managerName: "Sarah Chen", managerEmail: "sarah.chen@leansync.com",
     description: "Harnesses and pipes fabrication supporting main plant assembly.",
     lineCount: 2, departmentCount: 3, groupCount: 5, resourceCount: 18,
-    isActive: true, createdAt: "2024-02-01T09:00:00Z", updatedAt: "2025-02-20T11:00:00Z",
+    createdAt: "2024-02-01T09:00:00Z", updatedAt: "2025-02-20T11:00:00Z",
   },
   {
     id: "P003", code: "WP-01", name: "Warehouse Plant", status: "inactive",
     building: "Warehouse 1", address: "789 Logistics Ave, Chicago, IL 60601",
-    timezone: "America/Chicago (CST)", defaultCalendarId: null, defaultScheduleId: null,
+    timezone: "America/Chicago (CST)",
     managerName: "Mike Brown", managerEmail: "mike.brown@leansync.com",
     description: "Storage and kitting facility. Currently inactive pending reconfiguration.",
     lineCount: 1, departmentCount: 1, groupCount: 2, resourceCount: 6,
-    isActive: false, createdAt: "2024-03-10T10:00:00Z", updatedAt: "2025-01-05T16:00:00Z",
+    createdAt: "2024-03-10T10:00:00Z", updatedAt: "2025-01-05T16:00:00Z",
   },
 ];
 
@@ -94,12 +89,10 @@ export const TIMEZONE_OPTIONS = [
 export const EMPTY_FORM = {
   name: "",
   code: "",
-  status: "active" as "active" | "inactive",
+  status: "active",
   building: "",
   address: "",
   timezone: "America/New_York (EST)",
-  defaultCalendarId: "",
-  defaultScheduleId: "",
   managerName: "",
   managerEmail: "",
   description: "",
@@ -132,8 +125,6 @@ export function hasFormChanges(form: typeof EMPTY_FORM, original?: Plant): boole
     form.building !== (original.building || "") ||
     form.address !== (original.address || "") ||
     form.timezone !== (original.timezone || "") ||
-    form.defaultCalendarId !== (original.defaultCalendarId || "") ||
-    form.defaultScheduleId !== (original.defaultScheduleId || "") ||
     form.managerName !== (original.managerName || "") ||
     form.managerEmail !== (original.managerEmail || "") ||
     form.description !== (original.description || "")
@@ -161,8 +152,7 @@ export function usePlants() {
   /* ── Mutations ── */
   const [createMutation, createState] = useMutation<CreatePlantData, CreatePlantVars>(CREATE_PLANT_MUTATION);
   const [updateMutation, updateState] = useMutation<UpdatePlantData, UpdatePlantVars>(UPDATE_PLANT_MUTATION);
-  const [toggleMutation] = useMutation<TogglePlantStatusData, TogglePlantStatusVars>(TOGGLE_PLANT_STATUS_MUTATION);
-  const [deleteMutation] = useMutation<DeletePlantData, DeletePlantVars>(DELETE_PLANT_MUTATION);
+  const [archiveMutation] = useMutation<any, { id: string }>(ARCHIVE_PLANT_MUTATION);
 
   const saveLoading = createState.loading || updateState.loading;
 
@@ -177,16 +167,14 @@ export function usePlants() {
       if (editingId) {
         const idx = mockPlants.findIndex((p) => p.id === editingId);
         if (idx >= 0) {
-          mockPlants[idx] = {
-            ...mockPlants[idx],
+          (mockPlants as any)[idx] = {
+            ...(mockPlants as any)[idx],
             name: form.name,
             code: form.code,
             status: form.status,
             building: form.building,
             address: form.address,
             timezone: form.timezone,
-            defaultCalendarId: form.defaultCalendarId || null,
-            defaultScheduleId: form.defaultScheduleId || null,
             managerName: form.managerName,
             managerEmail: form.managerEmail,
             description: form.description,
@@ -194,7 +182,7 @@ export function usePlants() {
           };
         }
       } else {
-        const newPlant: Plant = {
+        const newPlant: any = {
           id: generateMockId(),
           code: form.code,
           name: form.name,
@@ -202,8 +190,6 @@ export function usePlants() {
           building: form.building,
           address: form.address,
           timezone: form.timezone,
-          defaultCalendarId: form.defaultCalendarId || null,
-          defaultScheduleId: form.defaultScheduleId || null,
           managerName: form.managerName,
           managerEmail: form.managerEmail,
           description: form.description,
@@ -229,8 +215,6 @@ export function usePlants() {
         building: form.building || undefined,
         address: form.address || undefined,
         timezone: form.timezone || undefined,
-        defaultCalendarId: form.defaultCalendarId || undefined,
-        defaultScheduleId: form.defaultScheduleId || undefined,
         managerName: form.managerName || undefined,
         managerEmail: form.managerEmail || undefined,
         description: form.description || undefined,
@@ -259,50 +243,24 @@ export function usePlants() {
     }
   }, [createMutation, updateMutation, refetch, isMockFallback, gqlData]);
 
-  const toggleStatus = useCallback(async (id: string): Promise<boolean> => {
+  const archivePlant = useCallback(async (id: string): Promise<{ success: boolean; inUse: boolean; message: string }> => {
     if (isMockFallback) {
       const plant = mockPlants.find((p) => p.id === id);
-      if (plant) {
-        plant.status = plant.status === "active" ? "inactive" : "active";
-        plant.isActive = !plant.isActive;
-      }
-      return true;
+      if (plant) (plant as any).status = "ARCHIVED";
+      return { success: true, inUse: false, message: "Plant archived." };
     }
     try {
-      await toggleMutation({ variables: { id } });
-      await refetch();
-      return true;
-    } catch {
-      return false;
-    }
-  }, [toggleMutation, refetch, isMockFallback]);
-
-  const deletePlant = useCallback(async (id: string): Promise<{ success: boolean; inUse: boolean; message: string }> => {
-    if (isMockFallback) {
-      const idx = mockPlants.findIndex((p) => p.id === id);
-      if (idx >= 0) {
-        const plant = mockPlants[idx];
-        if (plant.lineCount > 0 || plant.departmentCount > 0 || plant.groupCount > 0 || plant.resourceCount > 0) {
-          return { success: false, inUse: true, message: "Plant is in use. Disable instead." };
-        }
-        mockPlants.splice(idx, 1);
-      }
-      return { success: true, inUse: false, message: "Plant deleted." };
-    }
-    try {
-      const { data } = await deleteMutation({ variables: { id } });
-      if (data?.deletePlant) {
-        if (data.deletePlant.inUse) {
-          return { success: false, inUse: true, message: data.deletePlant.message || "Plant is in use. Disable instead." };
-        }
+      const { data } = await archiveMutation({ variables: { id } });
+      if (data?.archivePlant?.ok) {
         await refetch();
-        return { success: data.deletePlant.success, inUse: false, message: data.deletePlant.message || "Plant deleted." };
+        return { success: true, inUse: false, message: "Plant archived." };
       }
-      return { success: false, inUse: false, message: "Failed to delete plant." };
+      const err = data?.archivePlant?.errors?.[0];
+      return { success: false, inUse: false, message: err?.message || "Failed to archive plant." };
     } catch {
-      return { success: false, inUse: false, message: "Failed to delete plant. Please try again." };
+      return { success: false, inUse: false, message: "Failed to archive plant." };
     }
-  }, [deleteMutation, refetch, isMockFallback]);
+  }, [archiveMutation, refetch, isMockFallback]);
 
   const loading = gqlLoading && !isMockFallback;
 
@@ -316,8 +274,7 @@ export function usePlants() {
     statusFilter,
     setStatusFilter,
     savePlant,
-    toggleStatus,
-    deletePlant,
+    archivePlant,
     refetch,
   };
 }

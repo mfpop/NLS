@@ -1,635 +1,22 @@
 import strawberry
 import typing
+from datetime import datetime
 
 from manufacturing.models import (
-    Plant, Department, ProductionLine,
-    ResourceGroup, Resource, ReferenceTable, Profile, Company,
+    Plant, Department, ProductionLine, ResourceGroup, Resource,
+    ProductionLineDepartmentAssignment, Company,
+    Schedule, Shift, ScheduleAssignment,
+    ReferenceCategory, ReferenceValue, ResourceType, VisualIdentity,
+    ProductModel, ProcessFlow, ProcessStep,
 )
 
-
-# ── Plant ──
+# ── Shared interfaces ──
 
 @strawberry.type
-class PlantNode:
-    id: strawberry.ID
+class MutationError:
+    field: typing.Optional[str]
     code: str
-    name: str
-    status: str
-    building: str
-    address: str
-    timezone: str
-    default_calendar_id: typing.Optional[str] = strawberry.field(name="defaultCalendarId")
-    default_schedule_id: typing.Optional[str] = strawberry.field(name="defaultScheduleId")
-    manager_name: str = strawberry.field(name="managerName")
-    manager_email: str = strawberry.field(name="managerEmail")
-    description: str
-    line_count: int = strawberry.field(name="lineCount")
-    department_count: int = strawberry.field(name="departmentCount")
-    group_count: int = strawberry.field(name="groupCount")
-    resource_count: int = strawberry.field(name="resourceCount")
-    is_active: bool = strawberry.field(name="isActive")
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, plant: Plant) -> "PlantNode":
-        return cls(
-            id=strawberry.ID(str(plant.id)),
-            code=plant.code,
-            name=plant.name,
-            status=plant.status,
-            building=plant.building,
-            address=plant.address,
-            timezone=plant.timezone,
-            default_calendar_id=plant.default_calendar_id,
-            default_schedule_id=plant.default_schedule_id,
-            manager_name=plant.manager_name,
-            manager_email=plant.manager_email,
-            description=plant.description,
-            line_count=plant.line_count,
-            department_count=plant.department_count,
-            group_count=plant.group_count,
-            resource_count=plant.resource_count,
-            is_active=plant.is_active,
-            created_at=plant.created_at.isoformat() if plant.created_at else "",
-            updated_at=plant.updated_at.isoformat() if plant.updated_at else "",
-        )
-
-
-@strawberry.input
-class PlantInput:
-    name: str
-    code: str
-    status: str = "active"
-    building: typing.Optional[str] = None
-    address: typing.Optional[str] = None
-    timezone: typing.Optional[str] = None
-    default_calendar_id: typing.Optional[str] = strawberry.field(name="defaultCalendarId", default=None)
-    default_schedule_id: typing.Optional[str] = strawberry.field(name="defaultScheduleId", default=None)
-    manager_name: typing.Optional[str] = strawberry.field(name="managerName", default=None)
-    manager_email: typing.Optional[str] = strawberry.field(name="managerEmail", default=None)
-    description: typing.Optional[str] = None
-
-
-@strawberry.type
-class PlantMutationResult:
-    plant: typing.Optional[PlantNode] = None
-    errors: typing.Optional[typing.List["FieldError"]] = None
-
-
-@strawberry.type
-class DeletePlantResult:
-    success: bool
-    in_use: bool = strawberry.field(name="inUse")
     message: str
-    errors: typing.Optional[typing.List["FieldError"]] = None
-
-
-@strawberry.type
-class FieldError:
-    field: str
-    message: str
-
-
-# ── Department (reusable master data — no plant FK) ──
-
-@strawberry.type
-class DepartmentNode:
-    id: strawberry.ID
-    code: str
-    name: str
-    status: str
-    manager: str
-    employees: int
-    group_count: int = strawberry.field(name="groupCount")
-    resource_count: int = strawberry.field(name="resourceCount")
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, dept: Department) -> "DepartmentNode":
-        return cls(
-            id=strawberry.ID(str(dept.id)),
-            code=dept.code,
-            name=dept.name,
-            status=dept.status,
-            manager=dept.manager,
-            employees=dept.employees,
-            group_count=dept.group_count,
-            resource_count=dept.resource_count,
-            created_at=dept.created_at.isoformat() if dept.created_at else "",
-            updated_at=dept.updated_at.isoformat() if dept.updated_at else "",
-        )
-
-
-# ── Department Input & Mutation Result ──
-
-@strawberry.input
-class DepartmentInput:
-    name: str
-    code: str
-    status: str = "active"
-    manager: typing.Optional[str] = None
-    employees: typing.Optional[int] = None
-
-
-@strawberry.type
-class DepartmentMutationResult:
-    department: typing.Optional[DepartmentNode] = None
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-@strawberry.type
-class DeleteDepartmentResult:
-    success: bool
-    in_use: bool = strawberry.field(name="inUse")
-    message: str
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-# ── Resource Group Input & Mutation Result ──
-
-@strawberry.input
-class ResourceGroupInput:
-    name: str
-    code: str = ""
-    status: str = "active"
-    group_type: typing.Optional[str] = None
-    members: typing.Optional[int] = None
-    leader: typing.Optional[str] = None
-
-
-@strawberry.type
-class DeleteResourceGroupResult:
-    success: bool
-    message: str
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-# ── Production Line ──
-
-@strawberry.type
-class ProductionLineNode:
-    id: strawberry.ID
-    code: str
-    name: str
-    status: str
-    plant_name: str = strawberry.field(name="plantName")
-    plant_id: str = strawberry.field(name="plantId")
-    models_produced: typing.List[str] = strawberry.field(name="modelsProduced")
-    shift_pattern: str = strawberry.field(name="shiftPattern")
-    is_constraint: bool = strawberry.field(name="isConstraint")
-    department_count: int = strawberry.field(name="departmentCount")
-    group_count: int = strawberry.field(name="groupCount")
-    resource_count: int = strawberry.field(name="resourceCount")
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, line: ProductionLine) -> "ProductionLineNode":
-        models = [m.strip() for m in line.models_produced.split(",") if m.strip()] if line.models_produced else []
-        return cls(
-            id=strawberry.ID(str(line.id)),
-            code=line.code,
-            name=line.name,
-            status=line.status,
-            plant_name=line.plant.name if line.plant else "",
-            plant_id=str(line.plant_id) if line.plant_id else "",
-            models_produced=models,
-            shift_pattern=line.shift_pattern,
-            is_constraint=line.is_constraint,
-            department_count=line.department_count,
-            group_count=line.group_count,
-            resource_count=line.resource_count,
-            created_at=line.created_at.isoformat() if line.created_at else "",
-            updated_at=line.updated_at.isoformat() if line.updated_at else "",
-        )
-
-
-# ── Paginated Production Line ──
-
-@strawberry.type
-class ProductionLinePage:
-    items: typing.List[ProductionLineNode]
-    total_count: int = strawberry.field(name="totalCount")
-    page: int
-    page_size: int = strawberry.field(name="pageSize")
-    total_pages: int = strawberry.field(name="totalPages")
-
-
-# ── Resource Group ──
-
-@strawberry.type
-class ResourceGroupNode:
-    id: strawberry.ID
-    code: str
-    name: str
-    group_type: str = strawberry.field(name="groupType")
-    status: str
-    members: int
-    leader: str
-    department_name: str = strawberry.field(name="departmentName")
-    department_id: typing.Optional[str] = strawberry.field(name="departmentId")
-    plant_name: str = strawberry.field(name="plantName")
-    plant_id: typing.Optional[str] = strawberry.field(name="plantId")
-    resource_count: int = strawberry.field(name="resourceCount")
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, group: ResourceGroup) -> "ResourceGroupNode":
-        return cls(
-            id=strawberry.ID(str(group.id)),
-            code=group.code,
-            name=group.name,
-            group_type=group.group_type,
-            status=group.status,
-            members=group.members,
-            leader=group.leader,
-            department_name=group.department.name if group.department else "",
-            department_id=str(group.department_id) if group.department_id else None,
-            plant_name=group.plant.name if group.plant else "",
-            plant_id=str(group.plant_id) if group.plant_id else None,
-            resource_count=group.resource_count,
-            created_at=group.created_at.isoformat() if group.created_at else "",
-            updated_at=group.updated_at.isoformat() if group.updated_at else "",
-        )
-
-
-# ── Resource ──
-
-@strawberry.type
-class ResourceNode:
-    id: strawberry.ID
-    name: str
-    code: str
-    resource_type: str = strawberry.field(name="resourceType")
-    status: str
-    op_status: str = strawberry.field(name="opStatus")
-    utilization: float
-    shift: str
-    last_activity: str = strawberry.field(name="lastActivity")
-    flow_position: str = strawberry.field(name="flowPosition")
-    group_name: str = strawberry.field(name="groupName")
-    group_id: typing.Optional[str] = strawberry.field(name="groupId")
-    department_name: str = strawberry.field(name="departmentName")
-    department_id: typing.Optional[str] = strawberry.field(name="departmentId")
-    plant_name: str = strawberry.field(name="plantName")
-    plant_id: typing.Optional[str] = strawberry.field(name="plantId")
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, res: Resource) -> "ResourceNode":
-        return cls(
-            id=strawberry.ID(str(res.id)),
-            name=res.name,
-            code=res.code,
-            resource_type=res.resource_type,
-            status=res.status,
-            op_status=res.op_status,
-            utilization=res.utilization,
-            shift=res.shift,
-            last_activity=res.last_activity,
-            flow_position=res.flow_position,
-            group_name=res.resource_group.name if res.resource_group else "",
-            group_id=str(res.resource_group_id) if res.resource_group_id else None,
-            department_name=res.resource_group.department.name if res.resource_group and res.resource_group.department else "",
-            department_id=str(res.resource_group.department_id) if res.resource_group and res.resource_group.department_id else None,
-            plant_name=res.resource_group.plant.name if res.resource_group and res.resource_group.plant else "",
-            plant_id=str(res.resource_group.plant_id) if res.resource_group and res.resource_group.plant_id else None,
-            created_at=res.created_at.isoformat() if res.created_at else "",
-            updated_at=res.updated_at.isoformat() if res.updated_at else "",
-        )
-
-
-# ── Reference Table ──
-
-@strawberry.type
-class ReferenceTableNode:
-    id: strawberry.ID
-    name: str
-    status: str
-    group: str
-    entry_count: int = strawberry.field(name="entryCount")
-    description: str
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, table: ReferenceTable) -> "ReferenceTableNode":
-        return cls(
-            id=strawberry.ID(str(table.id)),
-            name=table.name,
-            status=table.status,
-            group=table.group or "",
-            entry_count=table.entry_count,
-            description=table.description,
-            created_at=table.created_at.isoformat() if table.created_at else "",
-            updated_at=table.updated_at.isoformat() if table.updated_at else "",
-        )
-
-
-@strawberry.input
-class ReferenceTableInput:
-    name: str
-    description: typing.Optional[str] = None
-    status: typing.Optional[str] = "active"
-    group: typing.Optional[str] = None
-
-
-@strawberry.type
-class ReferenceTableMutationResult:
-    table: typing.Optional[ReferenceTableNode] = None
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-@strawberry.type
-class DeleteReferenceTableResult:
-    success: bool
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-# ── Reference Item (unified reference data) ──
-
-@strawberry.type
-class ReferenceItemNode:
-    id: strawberry.ID
-    table_type: str = strawberry.field(name="tableType")
-    code: str
-    name: str
-    description: str
-    is_active: bool = strawberry.field(name="isActive")
-    sort_order: int = strawberry.field(name="sortOrder")
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-
-    @classmethod
-    def from_db(cls, item: "ReferenceItem") -> "ReferenceItemNode":
-        return cls(
-            id=strawberry.ID(str(item.id)),
-            table_type=item.table_type,
-            code=item.code,
-            name=item.name,
-            description=item.description,
-            is_active=item.is_active,
-            sort_order=item.sort_order,
-            created_at=item.created_at.isoformat() if item.created_at else "",
-            updated_at=item.updated_at.isoformat() if item.updated_at else "",
-        )
-
-
-@strawberry.input
-class ReferenceItemInput:
-    table_type: str
-    code: str
-    name: str
-    description: typing.Optional[str] = None
-    is_active: typing.Optional[bool] = True
-    sort_order: typing.Optional[int] = 0
-
-
-@strawberry.type
-class ReferenceItemMutationResult:
-    item: typing.Optional[ReferenceItemNode] = None
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-# ── Data Management Overview Types ──
-
-@strawberry.type
-class DataManagementPlantNode:
-    id: strawberry.ID
-    name: str
-    code: str
-    status: str
-
-
-@strawberry.type
-class DataManagementKpis:
-    production_lines: int = strawberry.field(name="productionLines")
-    departments: int
-    resource_groups: int = strawberry.field(name="resourceGroups")
-    resources: int
-    plant_status: str = strawberry.field(name="plantStatus")
-
-
-@strawberry.type
-class DataManagementTreeChild:
-    id: str
-    type: str
-    name: str
-    code: str
-    status: str
-    child_count: int = strawberry.field(name="childCount")
-    children: typing.List["DataManagementTreeChild"] = strawberry.field(default_factory=list)
-    schedule_status: typing.Optional[str] = strawberry.field(name="scheduleStatus", default=None)
-    schedule_source: typing.Optional[str] = strawberry.field(name="scheduleSource", default=None)
-    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName", default=None)
-
-
-@strawberry.type
-class DataManagementTreeRoot:
-    id: str
-    type: str
-    name: str
-    code: str
-    status: str
-    child_count: int = strawberry.field(name="childCount")
-    children: typing.List[DataManagementTreeChild] = strawberry.field(default_factory=list)
-    schedule_status: typing.Optional[str] = strawberry.field(name="scheduleStatus", default=None)
-    schedule_source: typing.Optional[str] = strawberry.field(name="scheduleSource", default=None)
-    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName", default=None)
-
-
-@strawberry.type
-class DataManagementNavCounts:
-    plants: int
-    production_lines: int = strawberry.field(name="productionLines")
-    departments: int
-    resource_groups: int = strawberry.field(name="resourceGroups")
-    resources: int
-    reference_tables: int = strawberry.field(name="referenceTables")
-
-
-@strawberry.type
-class DataManagementSystemHealth:
-    running_lines: int = strawberry.field(name="runningLines")
-    resources_down: int = strawberry.field(name="resourcesDown")
-    high_utilization_resources: int = strawberry.field(name="highUtilizationResources")
-
-
-@strawberry.type
-class DataManagementOverview:
-    selected_plant: typing.Optional[DataManagementPlantNode] = strawberry.field(name="selectedPlant")
-    plants: typing.List[DataManagementPlantNode]
-    kpis: DataManagementKpis
-    tree: typing.Optional[DataManagementTreeRoot]
-    navigation_counts: DataManagementNavCounts = strawberry.field(name="navigationCounts")
-    system_health: DataManagementSystemHealth = strawberry.field(name="systemHealth")
-
-
-# ── Snapshot ──
-
-@strawberry.type
-class ManufacturingSnapshot:
-    plant_count: int = strawberry.field(name="plantCount")
-    department_count: int = strawberry.field(name="departmentCount")
-    resource_group_count: int = strawberry.field(name="resourceGroupCount")
-    resource_count: int = strawberry.field(name="resourceCount")
-    running_count: int = strawberry.field(name="runningCount")
-    down_count: int = strawberry.field(name="downCount")
-    maintenance_count: int = strawberry.field(name="maintenanceCount")
-
-
-# ── Production Structure Tree Types ──
-
-@strawberry.type
-class ResourceStructureNode:
-    id: str
-    name: str
-    code: str
-    status: str
-
-
-@strawberry.type
-class ResourceGroupStructureNode:
-    id: str
-    name: str
-    code: str
-    status: str
-    resources: typing.List[ResourceStructureNode]
-
-
-@strawberry.type
-class DepartmentStructureNode:
-    id: str
-    name: str
-    code: str
-    status: str
-    resource_groups: typing.List[ResourceGroupStructureNode]
-
-
-@strawberry.type
-class ProductionLineStructureNode:
-    id: str
-    name: str
-    code: str
-    status: str
-    departments: typing.List[DepartmentStructureNode]
-    plant_id: str = strawberry.field(name="plantId")
-    plant_name: str = strawberry.field(name="plantName")
-
-
-@strawberry.type
-class ProductionStructureNode:
-    """Top-level plant wrapper for the production tree."""
-    id: str
-    name: str
-    code: str
-    status: str
-    production_lines: typing.List[ProductionLineStructureNode]
-
-
-# ── Work History Entry ──
-
-@strawberry.input
-class WorkHistoryInput:
-    id: str
-    role: str
-    company: str
-    period: str
-    description: str
-
-
-@strawberry.type
-class WorkHistoryEntry:
-    id: str
-    role: str
-    company: str
-    period: str
-    description: str
-
-
-# ── Education Entry ──
-
-@strawberry.input
-class EducationInput:
-    id: str
-    degree: str
-    school: str
-    period: str
-
-
-@strawberry.type
-class EducationEntry:
-    id: str
-    degree: str
-    school: str
-    period: str
-
-
-# ── Profile ──
-
-@strawberry.type
-class ProfileNode:
-    id: strawberry.ID
-    name: str
-    role: str
-    email: str
-    phone: str
-    location: str
-    plant: str
-    department: str
-    reports_to: str = strawberry.field(name="reportsTo")
-    language: str
-    about: str
-    created_at: str = strawberry.field(name="createdAt")
-    updated_at: str = strawberry.field(name="updatedAt")
-    work_history: typing.List[WorkHistoryEntry] = strawberry.field(name="workHistory")
-    education: typing.List[EducationEntry]
-
-    @classmethod
-    def from_db(cls, profile: "Profile") -> "ProfileNode":
-        return cls(
-            id=strawberry.ID(str(profile.id)),
-            name=profile.name,
-            role=profile.role,
-            email=profile.email,
-            phone=profile.phone or "",
-            location=profile.location or "",
-            plant=profile.plant or "",
-            department=profile.department or "",
-            reports_to=profile.reports_to or "",
-            language=profile.language or "",
-            about=profile.about or "",
-            created_at=profile.created_at.isoformat() if profile.created_at else "",
-            updated_at=profile.updated_at.isoformat() if profile.updated_at else "",
-            work_history=[WorkHistoryEntry(**w) for w in (profile.work_history or [])],
-            education=[EducationEntry(**e) for e in (profile.education or [])],
-        )
-
-
-@strawberry.input
-class ProfileInput:
-    name: str
-    role: str
-    email: str
-    phone: typing.Optional[str] = None
-    location: typing.Optional[str] = None
-    plant: typing.Optional[str] = None
-    department: typing.Optional[str] = None
-    reports_to: typing.Optional[str] = None
-    language: typing.Optional[str] = None
-    about: typing.Optional[str] = None
-    work_history: typing.Optional[typing.List[WorkHistoryInput]] = None
-    education: typing.Optional[typing.List[EducationInput]] = None
-
-
-@strawberry.type
-class ProfileMutationResult:
-    profile: typing.Optional[ProfileNode] = None
-    errors: typing.Optional[typing.List[FieldError]] = None
 
 
 # ── Company ──
@@ -639,234 +26,785 @@ class CompanyNode:
     id: strawberry.ID
     code: str
     name: str
+    description: str
+    status: str
     address: str
     phone: str
     email: str
     website: str
-    description: str
-    industry_type: str = strawberry.field(name="industryType")
-    manufacturing_type: str = strawberry.field(name="manufacturingType")
     default_timezone: str = strawberry.field(name="defaultTimezone")
-    default_units: str = strawberry.field(name="defaultUnits")
-    default_shift_model: str = strawberry.field(name="defaultShiftModel")
-    production_calendar: str = strawberry.field(name="productionCalendar")
-    default_language: str = strawberry.field(name="defaultLanguage")
-    lean_methodology: str = strawberry.field(name="leanMethodology")
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
     @classmethod
-    def from_db(cls, company: "Company") -> "CompanyNode":
+    def from_db(cls, obj: Company) -> "CompanyNode":
         return cls(
-            id=strawberry.ID(str(company.id)),
-            code=company.code,
-            name=company.name,
-            address=company.address,
-            phone=company.phone,
-            email=company.email,
-            website=company.website,
-            description=company.description,
-            industry_type=company.industry_type,
-            manufacturing_type=company.manufacturing_type,
-            default_timezone=company.default_timezone,
-            default_units=company.default_units,
-            default_shift_model=company.default_shift_model,
-            production_calendar=company.production_calendar,
-            default_language=company.default_language,
-            lean_methodology=company.lean_methodology,
-            created_at=company.created_at.isoformat() if company.created_at else "",
-            updated_at=company.updated_at.isoformat() if company.updated_at else "",
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            address=obj.address, phone=obj.phone, email=obj.email,
+            website=obj.website, default_timezone=obj.default_timezone,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
         )
 
 
-@strawberry.input
-class CompanyInput:
+# ── Plant ──
+
+@strawberry.type
+class PlantNode:
+    id: strawberry.ID
     code: str
     name: str
-    address: typing.Optional[str] = None
-    phone: typing.Optional[str] = None
-    email: typing.Optional[str] = None
-    website: typing.Optional[str] = None
-    description: typing.Optional[str] = None
-    industry_type: typing.Optional[str] = None
-    manufacturing_type: typing.Optional[str] = None
-    default_timezone: typing.Optional[str] = "UTC"
-    default_units: typing.Optional[str] = "Metric"
-    default_shift_model: typing.Optional[str] = None
-    production_calendar: typing.Optional[str] = None
-    default_language: typing.Optional[str] = "en"
-    lean_methodology: typing.Optional[str] = None
-
-
-@strawberry.type
-class CompanyMutationResult:
-    company: typing.Optional[CompanyNode] = None
-    errors: typing.Optional[typing.List[FieldError]] = None
-
-
-@strawberry.type
-class ConfigOptionNode:
-    category: str
-    value: str
-    label: str
-    sort_order: int = strawberry.field(name="sortOrder")
-
-
-# ── Schedule Configuration ──
-
-@strawberry.type
-class ScheduleConfigNode:
-    shift_pattern_id: typing.Optional[int] = strawberry.field(name="shiftPatternId")
-    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName")
-    production_calendar_id: typing.Optional[int] = strawberry.field(name="productionCalendarId")
-    production_calendar_name: typing.Optional[str] = strawberry.field(name="productionCalendarName")
-    timezone_id: typing.Optional[int] = strawberry.field(name="timezoneId")
-    timezone_name: typing.Optional[str] = strawberry.field(name="timezoneName")
-    effective_from: typing.Optional[str] = strawberry.field(name="effectiveFrom")
-    effective_to: typing.Optional[str] = strawberry.field(name="effectiveTo")
-    uses_parent_schedule: bool = strawberry.field(name="usesParentSchedule")
-    schedule_override_allowed: bool = strawberry.field(name="scheduleOverrideAllowed")
-
-
-@strawberry.type
-class EffectiveScheduleNode:
-    shift_pattern_id: typing.Optional[int] = strawberry.field(name="shiftPatternId")
-    shift_pattern_name: typing.Optional[str] = strawberry.field(name="shiftPatternName")
-    production_calendar_id: typing.Optional[int] = strawberry.field(name="productionCalendarId")
-    production_calendar_name: typing.Optional[str] = strawberry.field(name="productionCalendarName")
-    timezone_id: typing.Optional[int] = strawberry.field(name="timezoneId")
-    timezone_name: typing.Optional[str] = strawberry.field(name="timezoneName")
-    source_entity_type: typing.Optional[str] = strawberry.field(name="sourceEntityType")
-    source_entity_name: typing.Optional[str] = strawberry.field(name="sourceEntityName")
+    description: str
     status: str
+    building: str
+    address: str
+    timezone: str
+    manager_name: str = strawberry.field(name="managerName")
+    manager_email: str = strawberry.field(name="managerEmail")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: Plant) -> "PlantNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            building=obj.building, address=obj.address, timezone=obj.timezone,
+            manager_name=obj.manager_name, manager_email=obj.manager_email,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
 
 
-def resolve_ref_name(ref_id, table_type):
-    if not ref_id:
-        return None
-    try:
-        from manufacturing.models import ReferenceItem
-        item = ReferenceItem.objects.get(id=ref_id, table_type=table_type)
-        return item.name
-    except ReferenceItem.DoesNotExist:
-        return None
+# ── ProductionLine ──
+
+@strawberry.type
+class ProductionLineNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
+    plant_name: str = strawberry.field(name="plantName")
+    shift_pattern: str = strawberry.field(name="shiftPattern")
+    is_constraint: bool = strawberry.field(name="isConstraint")
+    line_count: typing.Optional[int] = strawberry.field(name="lineCount", default=0)
+    models_produced: typing.Optional[list[str]] = strawberry.field(name="modelsProduced", default_factory=list)
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ProductionLine) -> "ProductionLineNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            plant_id=strawberry.ID(str(obj.plant_id)),
+            plant_name=obj.plant.name if obj.plant else "",
+            shift_pattern=obj.shift_pattern, is_constraint=obj.is_constraint,
+            line_count=1,
+            models_produced=[],
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
 
 
-def resolve_effective_schedule(entity_type, entity_id):
-    from manufacturing.models import Plant, ProductionLine, Department, ResourceGroup, Resource, ReferenceItem, Company
+# ── ProductionLineDepartmentAssignment ──
 
-    SCHEDULE_FIELDS = ["shift_pattern_id", "production_calendar_id", "timezone_id",
-                       "effective_from", "effective_to", "uses_parent_schedule"]
+@strawberry.type
+class ProductionLineDepartmentAssignmentNode:
+    id: strawberry.ID
+    production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
+    department_id: strawberry.ID = strawberry.field(name="departmentId")
+    sequence: int
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
 
-    def get_schedule(obj):
-        return {
-            "shift_pattern_id": getattr(obj, "shift_pattern_id", None),
-            "production_calendar_id": getattr(obj, "production_calendar_id", None),
-            "timezone_id": getattr(obj, "timezone_id", None),
-            "effective_from": getattr(obj, "effective_from", None),
-            "effective_to": getattr(obj, "effective_to", None),
-            "uses_parent_schedule": getattr(obj, "uses_parent_schedule", True),
-        }
+    @classmethod
+    def from_db(cls, obj: ProductionLineDepartmentAssignment) -> "ProductionLineDepartmentAssignmentNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            production_line_id=strawberry.ID(str(obj.production_line_id)),
+            department_id=strawberry.ID(str(obj.department_id)),
+            sequence=obj.sequence, status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
 
-    def get_parent(obj, etype):
-        if etype == "plant":
-            company = Company.objects.first()
-            return ("company", company.name if company else "Company", company) if company else None
-        if etype == "productionLine" or etype == "line":
-            return ("plant", obj.plant.name, obj.plant) if obj.plant else None
-        if etype == "department":
-            lines = obj.production_lines.first()
-            if lines:
-                return ("productionLine", lines.name, lines)
-            plants = Plant.objects.filter(production_lines__departments=obj).first()
-            return ("plant", plants.name, plants) if plants else None
-        if etype == "resourceGroup" or etype == "group":
-            dept = obj.department
-            if dept:
-                return ("department", dept.name, dept)
-            if obj.plant:
-                return ("plant", obj.plant.name, obj.plant)
-            return None
-        if etype == "resource":
-            rg = obj.resource_group
-            if rg:
-                return ("resourceGroup", rg.name, rg)
-            return None
-        return None
 
-    model_map = {
-        "plant": Plant, "productionLine": ProductionLine, "line": ProductionLine,
-        "department": Department, "resourceGroup": ResourceGroup, "group": ResourceGroup,
-        "resource": Resource,
-    }
+# ── Department ──
 
-    model_class = model_map.get(entity_type)
-    if not model_class:
-        return None
+@strawberry.type
+class DepartmentNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    manager: str
+    employees: int
+    group_count: typing.Optional[int] = strawberry.field(name="groupCount", default=0)
+    group_name: typing.Optional[str] = strawberry.field(name="groupName", default="")
+    department_id: strawberry.ID = strawberry.field(name="departmentId")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
 
-    try:
-        obj = model_class.objects.get(id=entity_id)
-    except model_class.DoesNotExist:
-        return None
+    @classmethod
+    def from_db(cls, obj: Department) -> "DepartmentNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            manager=obj.manager, employees=obj.employees,
+            group_count=0,
+            group_name="",
+            department_id=strawberry.ID(str(obj.id)),
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
 
-    # Walk up the chain to find the effective schedule
-    current = obj
-    current_type = entity_type
-    visited = set()
 
-    while current is not None:
-        if id(current) in visited:
-            break
-        visited.add(id(current))
+# ── ResourceGroup ──
 
-        schedule = get_schedule(current)
-        if not schedule["uses_parent_schedule"]:
-            # This entity has its own schedule — check it has all required fields
-            has_own = schedule["shift_pattern_id"] is not None
-            if has_own:
-                sp_name = resolve_ref_name(schedule["shift_pattern_id"], "shift_pattern")
-                cal_name = resolve_ref_name(schedule["production_calendar_id"], "production_calendar")
-                tz_name = resolve_ref_name(schedule["timezone_id"], "timezone")
-                return {
-                    "shift_pattern_id": schedule["shift_pattern_id"],
-                    "shift_pattern_name": sp_name or "Unknown",
-                    "production_calendar_id": schedule["production_calendar_id"],
-                    "production_calendar_name": cal_name or "Unknown",
-                    "timezone_id": schedule["timezone_id"],
-                    "timezone_name": tz_name or "Unknown",
-                    "source_entity_type": current_type,
-                    "source_entity_name": getattr(current, "name", ""),
-                    "status": "Scheduled",
-                    "effective_from": schedule["effective_from"].isoformat() if schedule["effective_from"] else None,
-                    "effective_to": schedule["effective_to"].isoformat() if schedule["effective_to"] else None,
-                }
+@strawberry.type
+class ResourceGroupNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    department_id: typing.Optional[str] = strawberry.field(name="departmentId")
+    department_name: str = strawberry.field(name="departmentName")
+    members: int
+    leader: str
+    resource_count: typing.Optional[int] = strawberry.field(name="resourceCount", default=0)
+    resource_type: typing.Optional[str] = strawberry.field(name="resourceType", default="")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
 
-        # Move to parent
-        parent_info = get_parent(current, current_type)
-        if parent_info is None:
-            # No parent — check if current has its own schedule anyway
-            has_own = schedule["shift_pattern_id"] is not None
-            if has_own:
-                sp_name = resolve_ref_name(schedule["shift_pattern_id"], "shift_pattern")
-                cal_name = resolve_ref_name(schedule["production_calendar_id"], "production_calendar")
-                tz_name = resolve_ref_name(schedule["timezone_id"], "timezone")
-                return {
-                    "shift_pattern_id": schedule["shift_pattern_id"],
-                    "shift_pattern_name": sp_name or "Unknown",
-                    "production_calendar_id": schedule["production_calendar_id"],
-                    "production_calendar_name": cal_name or "Unknown",
-                    "timezone_id": schedule["timezone_id"],
-                    "timezone_name": tz_name or "Unknown",
-                    "source_entity_type": current_type,
-                    "source_entity_name": getattr(current, "name", ""),
-                    "status": "Scheduled",
-                    "effective_from": schedule["effective_from"].isoformat() if schedule["effective_from"] else None,
-                    "effective_to": schedule["effective_to"].isoformat() if schedule["effective_to"] else None,
-                }
-            return None
+    @classmethod
+    def from_db(cls, obj: ResourceGroup) -> "ResourceGroupNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            department_id=str(obj.department_id) if obj.department_id else None,
+            department_name=obj.department.name if obj.department else "",
+            members=obj.members, leader=obj.leader,
+            resource_count=0,
+            resource_type="",
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
 
-        parent_type, parent_name, parent_obj = parent_info
-        current = parent_obj
-        current_type = parent_type
 
-    return None
+# ── Resource ──
+
+@strawberry.type
+class ResourceNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    resource_group_id: strawberry.ID = strawberry.field(name="resourceGroupId")
+    resource_group_name: str = strawberry.field(name="resourceGroupName")
+    utilization: typing.Optional[float] = strawberry.field(default=0.0)
+    op_status: typing.Optional[str] = strawberry.field(name="opStatus", default="Idle")
+    last_activity: typing.Optional[str] = strawberry.field(name="lastActivity", default=None)
+    shift_pattern: typing.Optional[str] = strawberry.field(name="shiftPattern", default="")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: Resource) -> "ResourceNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            resource_group_id=strawberry.ID(str(obj.resource_group_id)),
+            resource_group_name=obj.resource_group.name if obj.resource_group else "",
+            utilization=0.0,
+            op_status="Idle",
+            last_activity=None,
+            shift_pattern="",
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+# ── Schedule ──
+
+@strawberry.type
+class ScheduleNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: Schedule) -> "ScheduleNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ShiftNode:
+    id: strawberry.ID
+    schedule_id: strawberry.ID = strawberry.field(name="scheduleId")
+    name: str
+    start_time: str = strawberry.field(name="startTime")
+    end_time: str = strawberry.field(name="endTime")
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: Shift) -> "ShiftNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), schedule_id=strawberry.ID(str(obj.schedule_id)),
+            name=obj.name,
+            start_time=obj.start_time.isoformat() if obj.start_time else "",
+            end_time=obj.end_time.isoformat() if obj.end_time else "",
+            status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ScheduleAssignmentNode:
+    id: strawberry.ID
+    entity_type: str = strawberry.field(name="entityType")
+    entity_id: str = strawberry.field(name="entityId")
+    schedule_id: strawberry.ID = strawberry.field(name="scheduleId")
+    inheritance_mode: str = strawberry.field(name="inheritanceMode")
+    valid_from: typing.Optional[str] = strawberry.field(name="validFrom")
+    valid_to: typing.Optional[str] = strawberry.field(name="validTo")
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ScheduleAssignment) -> "ScheduleAssignmentNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), entity_type=obj.entity_type,
+            entity_id=obj.entity_id, schedule_id=strawberry.ID(str(obj.schedule_id)),
+            inheritance_mode=obj.inheritance_mode,
+            valid_from=obj.valid_from.isoformat() if obj.valid_from else None,
+            valid_to=obj.valid_to.isoformat() if obj.valid_to else None,
+            status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+# ── Reference Data & Response Types ──
+
+@strawberry.type
+class ReferenceTableNode:
+    """Reference table with metadata and values (for new referenceTables resolver)"""
+    category_id: strawberry.ID = strawberry.field(name="categoryId")
+    category_code: str = strawberry.field(name="categoryCode")
+    category_name: str = strawberry.field(name="categoryName")
+    values: list["ReferenceValueNode"] = strawberry.field(default_factory=list)
+    total_count: int = strawberry.field(name="totalCount", default=0)
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_category(cls, category: ReferenceCategory, values: list[ReferenceValue]) -> "ReferenceTableNode":
+        return cls(
+            category_id=strawberry.ID(str(category.id)),
+            category_code=category.code,
+            category_name=category.name,
+            values=[ReferenceValueNode.from_db(v) for v in values],
+            total_count=len(values),
+            created_at=_iso(category.created_at),
+            updated_at=_iso(category.updated_at),
+        )
+
+
+@strawberry.type
+class ReferenceCategoryNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ReferenceCategory) -> "ReferenceCategoryNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ReferenceValueNode:
+    id: strawberry.ID
+    category_id: strawberry.ID = strawberry.field(name="categoryId")
+    code: str
+    name: str
+    description: str
+    sort_order: int = strawberry.field(name="sortOrder")
+    is_active: bool = strawberry.field(name="isActive")
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ReferenceValue) -> "ReferenceValueNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), category_id=strawberry.ID(str(obj.category_id)),
+            code=obj.code, name=obj.name, description=obj.description,
+            sort_order=obj.sort_order, is_active=obj.is_active,
+            status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ResourceTypeNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ResourceType) -> "ResourceTypeNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class VisualIdentityNode:
+    id: strawberry.ID
+    entity_type: str = strawberry.field(name="entityType")
+    entity_id: str = strawberry.field(name="entityId")
+    icon_key: str = strawberry.field(name="iconKey")
+    color_key: str = strawberry.field(name="colorKey")
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: VisualIdentity) -> "VisualIdentityNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), entity_type=obj.entity_type,
+            entity_id=obj.entity_id, icon_key=obj.icon_key,
+            color_key=obj.color_key, status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+# ── Product Routing ──
+
+@strawberry.type
+class ProductModelNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ProductModel) -> "ProductModelNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ProcessFlowNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    description: str
+    product_model_id: typing.Optional[str] = strawberry.field(name="productModelId")
+    production_line_id: typing.Optional[str] = strawberry.field(name="productionLineId")
+    version: str
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ProcessFlow) -> "ProcessFlowNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            description=obj.description, status=obj.status,
+            product_model_id=str(obj.product_model_id) if obj.product_model_id else None,
+            production_line_id=str(obj.production_line_id) if obj.production_line_id else None,
+            version=obj.version,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ProcessStepNode:
+    id: strawberry.ID
+    process_flow_id: strawberry.ID = strawberry.field(name="processFlowId")
+    sequence: int
+    name: str
+    description: str
+    entity_type: str = strawberry.field(name="entityType")
+    entity_id: str = strawberry.field(name="entityId")
+    lead_time_minutes: typing.Optional[float] = strawberry.field(name="leadTimeMinutes")
+    status: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: ProcessStep) -> "ProcessStepNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)), process_flow_id=strawberry.ID(str(obj.process_flow_id)),
+            sequence=obj.sequence, name=obj.name, description=obj.description,
+            entity_type=obj.entity_type, entity_id=obj.entity_id,
+            lead_time_minutes=obj.lead_time_minutes,
+            status=obj.status,
+            created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+# ── ProductionStructureTree (read model) ──
+
+@strawberry.type
+class StructureChildNode:
+    id: strawberry.ID
+    type: str
+    name: str
+    code: str
+    status: str
+    child_count: int = strawberry.field(name="childCount")
+    children: list["StructureChildNode"] = strawberry.field(name="children")
+    schedule_status: str = strawberry.field(name="scheduleStatus")
+
+    @classmethod
+    def from_tree(cls, node: dict) -> "StructureChildNode":
+        return cls(
+            id=strawberry.ID(str(node["id"])), type=node["type"],
+            name=node["name"], code=node["code"], status=node["status"],
+            child_count=node.get("childCount", 0),
+            children=[cls.from_tree(c) for c in node.get("children", [])],
+            schedule_status=node.get("scheduleStatus", "Missing Schedule"),
+        )
+
+
+@strawberry.type
+class ProductionStructureTree:
+    id: strawberry.ID
+    type: str
+    name: str
+    code: str
+    status: str
+    child_count: int = strawberry.field(name="childCount")
+    children: list[StructureChildNode]
+    schedule_status: str = strawberry.field(name="scheduleStatus")
+
+    @classmethod
+    def from_tree(cls, root: dict) -> "ProductionStructureTree":
+        return cls(
+            id=strawberry.ID(str(root["id"])), type=root["type"],
+            name=root["name"], code=root["code"], status=root["status"],
+            child_count=root.get("childCount", 0),
+            children=[StructureChildNode.from_tree(c) for c in root.get("children", [])],
+            schedule_status=root.get("scheduleStatus", "Missing Schedule"),
+        )
+
+
+# ── Read-only summaries ──
+
+@strawberry.type
+class ManufacturingSnapshot:
+    plant_count: int = strawberry.field(name="plantCount")
+    line_count: int = strawberry.field(name="lineCount")
+    department_count: int = strawberry.field(name="departmentCount")
+    resource_group_count: int = strawberry.field(name="resourceGroupCount")
+    resource_count: int = strawberry.field(name="resourceCount")
+
+    @classmethod
+    def from_counts(cls, plants=0, lines=0, departments=0, groups=0, resources=0) -> "ManufacturingSnapshot":
+        return cls(
+            plant_count=plants, line_count=lines,
+            department_count=departments, resource_group_count=groups,
+            resource_count=resources,
+        )
+
+
+# ── Mutation payloads ──
+
+@strawberry.type
+class PlantPayload:
+    ok: bool
+    plant: typing.Optional[PlantNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class DepartmentPayload:
+    ok: bool
+    department: typing.Optional[DepartmentNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class ProductionLinePayload:
+    ok: bool
+    production_line: typing.Optional[ProductionLineNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class ResourceGroupPayload:
+    ok: bool
+    resource_group: typing.Optional[ResourceGroupNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class ResourcePayload:
+    ok: bool
+    resource: typing.Optional[ResourceNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class AssignmentPayload:
+    ok: bool
+    assignment: typing.Optional[ProductionLineDepartmentAssignmentNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class SchedulePayload:
+    ok: bool
+    schedule: typing.Optional[ScheduleNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class ScheduleAssignmentPayload:
+    ok: bool
+    assignment: typing.Optional[ScheduleAssignmentNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
+# ── Mutation inputs ──
+
+@strawberry.input
+class PlantInput:
+    code: str
+    name: str
+    description: typing.Optional[str] = ""
+    status: typing.Optional[str] = "ACTIVE"
+    building: typing.Optional[str] = ""
+    address: typing.Optional[str] = ""
+    timezone: typing.Optional[str] = ""
+    manager_name: typing.Optional[str] = strawberry.field(name="managerName", default="")
+    manager_email: typing.Optional[str] = strawberry.field(name="managerEmail", default="")
+
+@strawberry.input
+class ProductionLineInput:
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
+    code: str
+    name: str
+    description: typing.Optional[str] = ""
+    status: typing.Optional[str] = "ACTIVE"
+    shift_pattern: typing.Optional[str] = strawberry.field(name="shiftPattern", default="")
+    is_constraint: typing.Optional[bool] = strawberry.field(name="isConstraint", default=False)
+
+@strawberry.input
+class DepartmentInput:
+    code: str
+    name: str
+    description: typing.Optional[str] = ""
+    status: typing.Optional[str] = "ACTIVE"
+    manager: typing.Optional[str] = ""
+    employees: typing.Optional[int] = 0
+
+@strawberry.input
+class ResourceGroupInput:
+    department_id: strawberry.ID = strawberry.field(name="departmentId")
+    code: typing.Optional[str] = ""
+    name: str
+    description: typing.Optional[str] = ""
+    status: typing.Optional[str] = "ACTIVE"
+    members: typing.Optional[int] = 0
+    leader: typing.Optional[str] = ""
+
+@strawberry.input
+class ResourceInput:
+    resource_group_id: strawberry.ID = strawberry.field(name="resourceGroupId")
+    code: str
+    name: str
+    description: typing.Optional[str] = ""
+    status: typing.Optional[str] = "ACTIVE"
+
+@strawberry.input
+class AssignDepartmentInput:
+    production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
+    department_id: strawberry.ID = strawberry.field(name="departmentId")
+    sequence: typing.Optional[int] = 0
+    status: typing.Optional[str] = "ACTIVE"
+
+@strawberry.input
+class ScheduleInput:
+    code: str
+    name: str
+    description: typing.Optional[str] = ""
+    status: typing.Optional[str] = "ACTIVE"
+
+@strawberry.input
+class ScheduleAssignmentInput:
+    entity_type: str = strawberry.field(name="entityType")
+    entity_id: str = strawberry.field(name="entityId")
+    schedule_id: strawberry.ID = strawberry.field(name="scheduleId")
+    inheritance_mode: typing.Optional[str] = strawberry.field(name="inheritanceMode", default="NONE")
+    valid_from: typing.Optional[str] = strawberry.field(name="validFrom", default=None)
+    valid_to: typing.Optional[str] = strawberry.field(name="validTo", default=None)
+
+
+# ── Pagination Input Types ──
+
+@strawberry.input
+class PaginationInput:
+    """Base pagination parameters for list queries"""
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class PlantPaginationInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ProductionLineListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class DepartmentListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ResourceGroupListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ResourceListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ScheduleListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ScheduleAssignmentListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class VisualIdentityListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ProductModelListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ProcessFlowListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ProcessStepListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+@strawberry.input
+class ReferenceListInput:
+    limit: typing.Optional[int] = 50
+    offset: typing.Optional[int] = 0
+
+
+# ── Paginated Response Types ──
+
+@strawberry.type
+class PaginatedReferenceCategoryResponse:
+    items: list[ReferenceCategoryNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedReferenceValueResponse:
+    items: list[ReferenceValueNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedShiftResponse:
+    items: list[ShiftNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedScheduleAssignmentResponse:
+    items: list[ScheduleAssignmentNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedVisualIdentityResponse:
+    items: list[VisualIdentityNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedProductModelResponse:
+    items: list[ProductModelNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedProcessFlowResponse:
+    items: list[ProcessFlowNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+@strawberry.type
+class PaginatedProcessStepResponse:
+    items: list[ProcessStepNode]
+    total: int
+    has_more: bool = strawberry.field(name="hasMore")
+
+
+def _iso(dt: typing.Optional[datetime]) -> str:
+    return dt.isoformat() if dt else ""

@@ -59,20 +59,33 @@ export function ProductionFlow() {
 
   useEffect(() => { setWorkspaceMode("view"); }, [selectedNodeKey]);
 
+  const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null);
+
   const { data: overviewData, loading, refetch } = useDataManagementOverview({
-    plantId: null, search: searchQuery || undefined, status: statusFilter !== "all" ? statusFilter : undefined,
+    plantId: selectedPlantId, search: searchQuery || undefined, status: statusFilter !== "all" ? statusFilter : undefined,
   });
 
-  const { data: companyData } = useQuery<{
-    company: { id: string; code: string; name: string; address: string; phone: string; email: string; website: string; description: string; industryType: string; manufacturingType: string; defaultTimezone: string; defaultUnits: string; defaultShiftModel: string; productionCalendar: string; defaultLanguage: string; leanMethodology: string }
-  }>(COMPANY_QUERY, { fetchPolicy: "cache-and-network" });
+  // When a plant is selected from the tree, fetch its detailed tree
+  // (selectedPlantId stays null initially so all plants are shown)
+
+  const { data: companyData } = useQuery<{ company: { id: string; code: string; name: string; description: string; status: string; address: string; phone: string; email: string; website: string; defaultTimezone: string; createdAt: string; updatedAt: string } }>(COMPANY_QUERY, { fetchPolicy: "cache-and-network" });
 
   const treeData = overviewData?.tree ? [overviewData.tree] : [];
 
   useEffect(() => {
     if (overviewData?.tree && expandedSet.size === 0 && overviewData.tree.children.length > 0) {
       const rootKey = `${overviewData.tree.type}:${overviewData.tree.id}`;
-      setExpandedSet(new Set([rootKey]));
+      // Expand root (company) to show plants
+      const keys = [rootKey];
+      // Also expand each plant to show its lines
+      for (const plant of overviewData.tree.children) {
+        const plantKey = `${plant.type}:${plant.id}`;
+        keys.push(plantKey);
+      }
+      setExpandedSet(new Set(keys));
+      if (!selectedNodeKey) {
+        setSelectedNodeKey(rootKey);
+      }
     }
   }, [overviewData?.tree]);
 
@@ -90,7 +103,13 @@ export function ProductionFlow() {
     });
   }, []);
 
-  const handleSelectNode = useCallback((key: string | null) => setSelectedNodeKey(key), []);
+  const handleSelectNode = useCallback((key: string | null) => {
+    setSelectedNodeKey(key);
+    if (key && key.startsWith("plant:")) {
+      const plantId = key.split(":")[1];
+      setSelectedPlantId(plantId);
+    }
+  }, []);
   const handleContextMenu = useCallback((e: React.MouseEvent, nodeKey: string, node: DataManagementTreeChild) => {
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, nodeKey, node, visible: true });
@@ -128,11 +147,7 @@ export function ProductionFlow() {
       setCompanyForm({
         code: company.code, name: company.name, address: company.address || "",
         phone: company.phone || "", email: company.email || "", website: company.website || "",
-        description: company.description || "", industryType: company.industryType || "",
-        manufacturingType: company.manufacturingType || "", defaultTimezone: company.defaultTimezone || "",
-        defaultUnits: company.defaultUnits || "", defaultShiftModel: company.defaultShiftModel || "",
-        productionCalendar: company.productionCalendar || "", defaultLanguage: company.defaultLanguage || "",
-        leanMethodology: company.leanMethodology || "",
+        description: company.description || "", defaultTimezone: company.defaultTimezone || "",
       });
     }
   }, [company]);
@@ -143,7 +158,7 @@ export function ProductionFlow() {
 
   const isCompanyDirty = useMemo(() => {
     if (!company) return false;
-    const keys: (keyof CompanyFormData)[] = ["code", "name", "address", "phone", "email", "website", "description", "industryType", "manufacturingType", "defaultTimezone", "defaultUnits", "defaultShiftModel", "productionCalendar", "defaultLanguage", "leanMethodology"];
+    const keys: (keyof CompanyFormData)[] = ["code", "name", "address", "phone", "email", "website", "description", "defaultTimezone"];
     return keys.some((key) => (companyForm[key] ?? "") !== ((company as any)[key] ?? ""));
   }, [company, companyForm]);
 

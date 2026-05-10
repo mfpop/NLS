@@ -1,65 +1,15 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useQuery } from "@apollo/client/react";
-import { X, RefreshCw, Plus, ChevronDown, Search } from "lucide-react";
+import { X, ChevronDown, Search, RefreshCw, Plus } from "lucide-react";
 import { CONFIG_OPTIONS_QUERY } from "@/graphql/companyQueries";
 
 export type CompanyFormData = {
   name: string; code: string; address: string; phone: string; email: string;
-  website: string; description: string;
-  industryType: string; manufacturingType: string; defaultTimezone: string;
-  defaultUnits: string; defaultShiftModel: string; productionCalendar: string;
-  defaultLanguage: string; leanMethodology: string;
+  website: string; description: string; defaultTimezone: string;
 };
 
-function HelpButton({ content }: { content: { purpose: string; affects: string } }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    function handleClick(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-  return (
-    <span ref={ref} className="relative inline-flex items-center">
-      <button type="button" onClick={() => setOpen(!open)}
-        className="w-4 h-4 inline-flex items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors text-[11px] font-bold leading-none">?</button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1 w-[260px] bg-white border shadow-lg rounded-lg p-3 z-50 dark:bg-slate-900 dark:border-slate-700">
-          <p className="text-[10px] text-slate-700 dark:text-slate-300 mb-1"><span className="font-semibold">Purpose:</span> {content.purpose}</p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400"><span className="font-semibold">Affects:</span> {content.affects}</p>
-        </div>
-      )}
-    </span>
-  );
-}
 
-function StyledSelect({ value, onChange, options, label, required, touched, onBlur, placeholder, id }: {
-  value: string;
-  onChange: (v: string) => void;
-  options: Array<{ value: string; label: string }>;
-  label: React.ReactNode;
-  required?: boolean;
-  touched?: boolean;
-  onBlur?: () => void;
-  placeholder?: string;
-  id?: string;
-}) {
-  const invalid = required && touched && !value?.toString().trim();
-  return (
-    <div>
-      <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">{label}{required && <span className="ml-0.5 text-red-500">*</span>}</label>
-      <div className="relative">
-        <select id={id} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
-          className={'w-full h-9 rounded-lg border border-slate-200 dark:border-slate-700 px-3 pr-8 text-[13px] bg-white dark:bg-slate-900 appearance-none cursor-pointer focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50 outline-none transition-colors' + (invalid ? ' border-red-300' : '')}>
-          <option value="">{placeholder || "Select..."}</option>
-          {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-        <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current" />
-      </div>
-      {invalid && <p className="text-[11px] text-red-500 mt-0.5">This field is required</p>}
-    </div>
-  );
-}
+
 
 function SearchableSelect({ category, formKey, label, form, onChange, options, loading, required, touched, onBlur, id }: {
   category: string;
@@ -147,14 +97,6 @@ function SearchableSelect({ category, formKey, label, form, onChange, options, l
   );
 }
 
-const HELP_CONTENT: Record<string, { purpose: string; affects: string }> = {
-  industryType: { purpose: "Configures industry-specific defaults and compliance report templates.", affects: "Standardize > Templates \u00b7 Check > Audit types" },
-  defaultShiftModel: { purpose: "Sets the shift template applied when auto-scheduling production runs.", affects: "Execute > Work Orders \u00b7 Plan > Capacity Planning" },
-  leanMethodology: { purpose: "Defines the improvement framework used in audits and standardization workflows.", affects: "Improve > Kaizen \u00b7 Standardize > SOPs" },
-  productionCalendar: { purpose: "Controls which days count as working days for scheduling and reporting.", affects: "Plan > Production Schedule \u00b7 Execute > Work Orders" },
-  defaultUnits: { purpose: "Sets the measurement system for all quantities across the plant.", affects: "Material Flow \u00b7 Execute \u00b7 all numeric fields" },
-};
-
 export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact, touchedFields, setTouched }: {
   form: CompanyFormData;
   onChange: (key: string, value: string) => void;
@@ -208,14 +150,6 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
               className={inputClass(isInvalid("code", true))} placeholder="e.g. LMD" />
             {isInvalid("code", true) && <p className="text-[11px] text-red-500 mt-0.5">Required</p>}
           </div>
-          <StyledSelect key="industryType" id="company-field-industryType" value={form.industryType}
-            onChange={(v) => onChange("industryType", v)} options={options["industry_type"] ?? []}
-            label={<span>Industry Type <HelpButton content={HELP_CONTENT.industryType} /></span>}
-            required touched={touchedFields?.industryType} onBlur={() => touch("industryType")} placeholder="Select industry type..." />
-          <StyledSelect key="manufacturingType" value={form.manufacturingType}
-            onChange={(v) => onChange("manufacturingType", v)} options={options["manufacturing_type"] ?? []}
-            label="Manufacturing Type" required touched={touchedFields?.manufacturingType}
-            onBlur={() => touch("manufacturingType")} placeholder="Select manufacturing type..." />
         </div>
       </Section>
 
@@ -225,26 +159,6 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
           <SearchableSelect key="timezone" category="timezone" formKey="defaultTimezone"
             label="Timezone" form={form} onChange={onChange} options={options} loading={optsLoading}
             required touched={touchedFields?.defaultTimezone} onBlur={() => touch("defaultTimezone")} />
-          <StyledSelect key="units" value={form.defaultUnits}
-            onChange={(v) => onChange("defaultUnits", v)} options={options["units"] ?? []}
-            label={<span>Units <HelpButton content={HELP_CONTENT.defaultUnits} /></span>}
-            required touched={touchedFields?.defaultUnits} onBlur={() => touch("defaultUnits")} placeholder="Select units..." />
-          <StyledSelect key="shiftModel" value={form.defaultShiftModel}
-            onChange={(v) => onChange("defaultShiftModel", v)} options={options["shift_model"] ?? []}
-            label={<span>Shift Model <HelpButton content={HELP_CONTENT.defaultShiftModel} /></span>}
-            required touched={touchedFields?.defaultShiftModel} onBlur={() => touch("defaultShiftModel")} placeholder="Select shift model..." />
-          <SearchableSelect key="calendar" category="calendar" formKey="productionCalendar"
-            label={<span>Calendar</span>} form={form} onChange={onChange} options={options} loading={optsLoading} />
-          <div className="col-span-2">
-            <StyledSelect key="leanMethodology" value={form.leanMethodology}
-              onChange={(v) => onChange("leanMethodology", v)} options={options["lean_methodology"] ?? []}
-              label={<span>Lean Methodology <HelpButton content={HELP_CONTENT.leanMethodology} /></span>}
-              placeholder="Select lean methodology..." />
-          </div>
-          <div className="col-span-2">
-            <SearchableSelect key="language" category="language" formKey="defaultLanguage"
-              label="Language" form={form} onChange={onChange} options={options} loading={optsLoading} />
-          </div>
         </div>
       </Section>
 

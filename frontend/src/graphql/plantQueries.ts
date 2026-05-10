@@ -1,27 +1,24 @@
 import { gql } from "@apollo/client";
 
+const PLANT_FIELDS = `
+  id
+  code
+  name
+  description
+  status
+  building
+  address
+  timezone
+  managerName
+  managerEmail
+  createdAt
+  updatedAt
+`;
+
 export const PLANTS_QUERY = gql`
-  query Plants($search: String, $status: String) {
-    plants(search: $search, status: $status) {
-      id
-      code
-      name
-      status
-      building
-      address
-      timezone
-      defaultCalendarId
-      defaultScheduleId
-      managerName
-      managerEmail
-      description
-      lineCount
-      departmentCount
-      groupCount
-      resourceCount
-      isActive
-      createdAt
-      updatedAt
+  query Plants($status: String, $limit: Int, $offset: Int) {
+    plants(status: $status, limit: $limit, offset: $offset) {
+      ${PLANT_FIELDS}
     }
   }
 `;
@@ -29,25 +26,7 @@ export const PLANTS_QUERY = gql`
 export const PLANT_QUERY = gql`
   query Plant($id: String!) {
     plant(id: $id) {
-      id
-      code
-      name
-      status
-      building
-      address
-      timezone
-      defaultCalendarId
-      defaultScheduleId
-      managerName
-      managerEmail
-      description
-      lineCount
-      departmentCount
-      groupCount
-      resourceCount
-      isActive
-      createdAt
-      updatedAt
+      ${PLANT_FIELDS}
     }
   }
 `;
@@ -55,29 +34,13 @@ export const PLANT_QUERY = gql`
 export const CREATE_PLANT_MUTATION = gql`
   mutation CreatePlant($input: PlantInput!) {
     createPlant(input: $input) {
+      ok
       plant {
-        id
-        code
-        name
-        status
-        building
-        address
-        timezone
-        defaultCalendarId
-        defaultScheduleId
-        managerName
-        managerEmail
-        description
-        lineCount
-        departmentCount
-        groupCount
-        resourceCount
-        isActive
-        createdAt
-        updatedAt
+        ${PLANT_FIELDS}
       }
       errors {
         field
+        code
         message
       }
     }
@@ -87,61 +50,29 @@ export const CREATE_PLANT_MUTATION = gql`
 export const UPDATE_PLANT_MUTATION = gql`
   mutation UpdatePlant($id: String!, $input: PlantInput!) {
     updatePlant(id: $id, input: $input) {
+      ok
       plant {
-        id
-        code
-        name
-        status
-        building
-        address
-        timezone
-        defaultCalendarId
-        defaultScheduleId
-        managerName
-        managerEmail
-        description
-        lineCount
-        departmentCount
-        groupCount
-        resourceCount
-        isActive
-        createdAt
-        updatedAt
+        ${PLANT_FIELDS}
       }
       errors {
         field
+        code
         message
       }
     }
   }
 `;
 
-export const TOGGLE_PLANT_STATUS_MUTATION = gql`
-  mutation TogglePlantStatus($id: String!) {
-    togglePlantStatus(id: $id) {
+export const ARCHIVE_PLANT_MUTATION = gql`
+  mutation ArchivePlant($id: String!) {
+    archivePlant(id: $id) {
+      ok
       plant {
-        id
+        ${PLANT_FIELDS}
+      }
+      errors {
+        field
         code
-        name
-        status
-        isActive
-      }
-      errors {
-        field
-        message
-      }
-    }
-  }
-`;
-
-export const DELETE_PLANT_MUTATION = gql`
-  mutation DeletePlant($id: String!) {
-    deletePlant(id: $id) {
-      success
-      inUse
-      message
-      errors {
-        field
         message
       }
     }

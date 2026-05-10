@@ -1,26 +1,24 @@
 import { gql } from "@apollo/client";
 
+const COMPANY_FIELDS = `
+  id
+  code
+  name
+  description
+  status
+  address
+  phone
+  email
+  website
+  defaultTimezone
+  createdAt
+  updatedAt
+`;
+
 export const COMPANY_QUERY = gql`
   query Company($id: String) {
     company(id: $id) {
-      id
-      code
-      name
-      address
-      phone
-      email
-      website
-      description
-      industryType
-      manufacturingType
-      defaultTimezone
-      defaultUnits
-      defaultShiftModel
-      productionCalendar
-      defaultLanguage
-      leanMethodology
-      createdAt
-      updatedAt
+      ${COMPANY_FIELDS}
     }
   }
 `;
@@ -29,25 +27,11 @@ export const UPDATE_COMPANY_MUTATION = gql`
   mutation UpdateCompany($input: CompanyInput!) {
     updateCompany(input: $input) {
       company {
-        id
-        code
-        name
-        address
-        phone
-        email
-        website
-        description
-        industryType
-        manufacturingType
-        defaultTimezone
-        defaultUnits
-        defaultShiftModel
-        productionCalendar
-        defaultLanguage
-        leanMethodology
+        ${COMPANY_FIELDS}
       }
       errors {
         field
+        code
         message
       }
     }

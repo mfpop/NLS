@@ -1,33 +1,21 @@
 from django.db import models
 from shared.models.base import TimeStampedModel
+from .entity_status import EntityStatus
 
 
 class ProductionLine(TimeStampedModel):
-    STATUS_CHOICES = [
-        ("active", "Active"),
-        ("inactive", "Inactive"),
-    ]
-
-    code = models.CharField(max_length=20, verbose_name="Line Code")
-    name = models.CharField(max_length=200, verbose_name="Line Name")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     plant = models.ForeignKey(
-        "manufacturing.Plant",
-        on_delete=models.CASCADE,
+        "manufacturing.Plant", on_delete=models.CASCADE,
         related_name="production_lines",
     )
-    departments = models.ManyToManyField(
-        "manufacturing.Department",
-        related_name="production_lines",
-        blank=True,
+    code = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )
-    models_produced = models.TextField(blank=True, default="", help_text="Comma-separated list of models")
     shift_pattern = models.CharField(max_length=100, blank=True, default="")
     is_constraint = models.BooleanField(default=False)
-
-    department_count = models.IntegerField(default=0)
-    group_count = models.IntegerField(default=0)
-    resource_count = models.IntegerField(default=0)
 
     class Meta:
         db_table = "manufacturing_production_line"

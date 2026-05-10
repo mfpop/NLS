@@ -1,24 +1,20 @@
 from django.db import models
 from shared.models.base import TimeStampedModel
+from .entity_status import EntityStatus
 
 
 class Company(TimeStampedModel):
-    code = models.CharField(max_length=20, unique=True, verbose_name="Company Code")
-    name = models.CharField(max_length=200, verbose_name="Company Name")
+    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
+    )
     address = models.CharField(max_length=500, blank=True, default="")
     phone = models.CharField(max_length=50, blank=True, default="")
     email = models.EmailField(max_length=200, blank=True, default="")
     website = models.URLField(max_length=500, blank=True, default="")
-    description = models.TextField(blank=True, default="")
-
-    industry_type = models.CharField(max_length=100, blank=True, default="")
-    manufacturing_type = models.CharField(max_length=100, blank=True, default="")
     default_timezone = models.CharField(max_length=100, blank=True, default="UTC")
-    default_units = models.CharField(max_length=50, blank=True, default="Metric")
-    default_shift_model = models.CharField(max_length=50, blank=True, default="")
-    production_calendar = models.CharField(max_length=100, blank=True, default="")
-    default_language = models.CharField(max_length=50, blank=True, default="en")
-    lean_methodology = models.CharField(max_length=100, blank=True, default="")
 
     class Meta:
         db_table = "manufacturing_company"

@@ -14,6 +14,7 @@ export const theme = {
   textPrimary: "text-slate-900 dark:text-slate-100",
   textSecondary: "text-slate-500 dark:text-slate-400",
   textMuted: "text-slate-500 dark:text-slate-400",
+  textDisabled: "text-slate-400 dark:text-slate-500",
   icon: "text-slate-500 dark:text-slate-400",
   iconStrong: "text-slate-700 dark:text-slate-200",
   iconAccent: "text-emerald-600 dark:text-emerald-400",

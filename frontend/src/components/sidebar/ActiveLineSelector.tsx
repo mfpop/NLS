@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { useQuery } from "@apollo/client/react";
 import { ChevronDown, ChevronRight, Check } from "lucide-react";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -15,16 +15,28 @@ export function ActiveLineSelector() {
   const ref = useRef<HTMLDivElement>(null);
 
   const { data: plantsData } = useQuery<{ plants: Plant[] }>(PLANTS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
-  const { data: linesData } = useQuery<{ productionLines: { items: ProductionLine[] } }>(PRODUCTION_LINES_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: linesData } = useQuery<{ productionLines: ProductionLine[] | { items: ProductionLine[] } }>(PRODUCTION_LINES_QUERY, {
+    fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
+  });
+
+  const dbLines = useMemo(() => {
+    const raw = linesData?.productionLines;
+    if (Array.isArray(raw)) return raw;
+    return raw?.items ?? [];
+  }, [linesData]);
 
   const plants = useMemo(() => {
     const db = plantsData?.plants;
-    const lns = linesData?.productionLines?.items;
+    const lns = dbLines;
     if (db?.length && lns) {
       return db.map((p) => ({ name: p.name, lines: lns.filter((l) => l.plantId === p.id).map((l) => l.name) }));
     }
     return PLANTS_FALLBACK;
-  }, [plantsData, linesData]);
+  }, [plantsData, dbLines]);
+
+  const plantsRef = useRef(plants);
+  plantsRef.current = plants;
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -36,34 +48,35 @@ export function ActiveLineSelector() {
 
   const label = useMemo(() => {
     if (!selectedPlant) return "All Lines";
-    const p = plants.find((x) => x.name === selectedPlant);
-    return p ? `${p.name.slice(0, 14)} / ${selectedLine.slice(0, 16)}` : selectedLine;
+    const p = plantsRef.current.find((x) => x.name === selectedPlant);
+    return p ? `${p.name.slice(0, 16)} / ${selectedLine.slice(0, 20)}` : selectedLine;
   }, [selectedPlant, selectedLine, plants]);
 
-  const selectPlant = (name: string) => {
-    const p = plants.find((x) => x.name === name);
+  const selectPlant = useCallback((name: string) => {
+    const p = plantsRef.current.find((x) => x.name === name);
     setSelectedPlant(name);
     setSelectedLine(p?.lines[0] || "All Lines");
     setIsOpen(false);
     setExpandedPlant("");
-  };
+  }, []);
 
-  const selectLine = (line: string) => {
+  const selectLine = useCallback((plantName: string, line: string) => {
+    setSelectedPlant(plantName);
     setSelectedLine(line);
     setIsOpen(false);
     setExpandedPlant("");
-  };
+  }, []);
 
   return (
-    <div ref={ref} className="relative shrink-0 px-3 pt-2 pb-1 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+    <div ref={ref} className="relative shrink-0 px-3 pt-2 pb-1 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
       <button type="button" onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full h-10 rounded-md px-2.5 text-[15px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+        className="flex items-center justify-between w-full h-10 rounded-md px-2.5 text-[15px] font-medium bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
       >
         <span className="truncate">{label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 stroke-current transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
       </button>
       {isOpen && (
-        <div className="absolute left-3 right-3 top-full mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[300px] overflow-y-auto">
+        <div className="absolute left-3 right-3 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-[300px] overflow-y-auto">
           {plants.map((plant) => (
             <div key={plant.name}>
               <button type="button" onClick={() => selectPlant(plant.name)}
@@ -80,13 +93,16 @@ export function ActiveLineSelector() {
                 Lines
               </button>
               {expandedPlant === plant.name && plant.lines.map((line) => (
-                <button key={line} type="button" onClick={() => selectLine(line)}
+                <button key={line} type="button" onClick={() => selectLine(plant.name, line)}
                   className={`flex items-center gap-2 w-full pl-8 pr-3 h-7 text-xs transition-colors ${selectedPlant === plant.name && selectedLine === line ? "bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 font-semibold" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60"}`}
                 >
                   <span className="truncate text-left">{line}</span>
                   {selectedPlant === plant.name && selectedLine === line && <Check className="h-3 w-3 stroke-current shrink-0" />}
                 </button>
               ))}
+              {expandedPlant === plant.name && plant.lines.length === 0 && (
+                <div className="px-8 py-1 text-[11px] text-slate-400 dark:text-slate-500">No lines</div>
+              )}
             </div>
           ))}
           <div className="border-t border-slate-100 dark:border-slate-800 my-1" />

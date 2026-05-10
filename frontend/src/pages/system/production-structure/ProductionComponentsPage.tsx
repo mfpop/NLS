@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import {
-  Factory, X, Info, GripVertical, TrendingUpDown, Layers, Component, Dumbbell
+  Factory, X, GripVertical, TrendingUpDown, Layers, Component, Dumbbell, Pencil, RefreshCw, Plus, Trash2, Calendar, Check
 } from "lucide-react";
-import { Pagination, EntityToolbar, NodeDetailPanel } from "./components";
+import { Pagination, EntityToolbar, NodeDetailPanel, CompanyDetailView, PlantDetailView } from "./components";
 import { UnifiedModal } from "./components/UnifiedModal";
 import { PlantSummary } from "./components/SummaryBlock";
 import { ConfirmDialog } from "./shared";
@@ -19,7 +19,7 @@ import { PageHeader } from "@/pages/shared/PageHeader";
 import type { Plant } from "@/types/plant";
 import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { RESOURCE_GROUPS_QUERY, RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
-import { ENTITY_CONFIG } from "./config/entityConfig";
+import { ENTITY_CONFIG, ADD_ROUTES } from "./config/entityConfig";
 const PER_PAGE = 10;
 
 type DetailTreeNode = DataManagementTreeChild & { metadata?: Record<string, unknown> };
@@ -33,12 +33,12 @@ const ADD_CHILD_ROUTES: Record<string, string> = {
 
 function EntityCard({ icon, iconBg, name, code, status, subtitle, metrics, selected, onClick, selectedClass }: {
   icon: React.ReactNode; iconBg?: string; name: string; code?: string;
-  status: string; subtitle?: string; metrics?: { label: string; value: string | number }[];
+  status: string; subtitle?: string; metrics?: { icon?: React.ComponentType<{ className?: string }>; label?: string; value: string | number; color?: string }[];
   selected?: boolean; onClick?: () => void; selectedClass?: string;
 }) {
   const isActive = status === "active";
   return (
-    <div className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none transition-colors ${selected ? (selectedClass || "bg-blue-100/60 dark:bg-blue-900/30") : "hover:bg-blue-50/40 dark:hover:bg-slate-800/40"}`} onClick={onClick}>
+    <div className={`flex items-center gap-2 px-3 py-2 cursor-pointer select-none transition-colors ${selected ? (selectedClass || "bg-blue-100/60 dark:bg-blue-900/30") : "hover:bg-blue-50/40 dark:hover:bg-slate-800/40"}`} onClick={onClick}>
       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${iconBg || "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>{icon}</div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
@@ -48,12 +48,22 @@ function EntityCard({ icon, iconBg, name, code, status, subtitle, metrics, selec
             <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />{status}
           </span>
         </div>
-        {subtitle && <div className={`text-[11px] ${theme.textMuted}`}>{subtitle}</div>}
+        {subtitle && <div className={`text-[11px] truncate ${theme.textMuted}`}>{subtitle}</div>}
         {metrics && metrics.length > 0 && (
-          <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-            {metrics.map((m, idx) => (
-              <span key={idx}>{idx > 0 && <span className="mx-1.5 text-gray-400 dark:text-gray-600">|</span>}{m.label}: {m.value}</span>
-            ))}
+          <div className="mt-0.5 flex items-center gap-2">
+            {metrics.map((m, idx) => {
+              const MetricIcon = m.icon;
+              return MetricIcon ? (
+                <span key={idx} className="inline-flex items-center gap-1" title={`${m.value}`}>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded ${m.color ? `${m.color} bg-opacity-100` : "bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400"}`}>
+                    <MetricIcon className="h-2.5 w-2.5 stroke-current" />
+                  </span>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">{m.value}</span>
+                </span>
+              ) : (
+                <span key={idx}>{idx > 0 && <span className="mx-1.5 text-gray-400 dark:text-gray-600">|</span>}{m.label}: {m.value}</span>
+              );
+            })}
           </div>
         )}
       </div>
@@ -345,14 +355,16 @@ function DetailColumnContent({
 }
 
 
-function PlantsViewMode({ selectedId, onSelect, onEdit, detailItem, onCloseDetail, search, onSearchChange, statusFilter, onStatusFilterChange }: {
+function PlantsViewMode({ selectedId, onSelect, onEdit, detailItem, search, onSearchChange, statusFilter, onStatusFilterChange, onNavigateToLine }: {
   selectedId: string | null; onSelect: (id: string | null) => void; onEdit: (plant: Plant) => void;
-  detailItem: any; onCloseDetail: () => void; search: string; onSearchChange: (v: string) => void; statusFilter: string; onStatusFilterChange: (v: string) => void;
+  detailItem: any; search: string; onSearchChange: (v: string) => void; statusFilter: string; onStatusFilterChange: (v: string) => void;
+  onNavigateToLine?: (lineId: string) => void;
 }) {
   const navigate = useNavigate();
   const { plants, loading, refetch } = usePlants();
   const [page, setPage] = useState(1);
-  const [detailPct, setDetailPct] = useState(75);
+  const [detailPct, setDetailPct] = useState(85);
+  const [editingPlantId, setEditingPlantId] = useState<string | null>(null);
   const detailContainerRef = useRef<HTMLDivElement>(null);
   const handleDetailDividerDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -369,25 +381,44 @@ function PlantsViewMode({ selectedId, onSelect, onEdit, detailItem, onCloseDetai
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const openAdd = () => onEdit({} as Plant);
   const selectedPlant = selectedId ? plants.find((p) => p.id === selectedId) : null;
-  const { selectedNode, selectedPath, selectedNodeKey } = useDetailTreeContext("plant", detailItem, plants, detailItem?.id);
+  const plantDetailRef = useRef<{ save: () => Promise<void>; cancel: () => void }>(null);
+  const [saving, setSaving] = useState(false);
 
   return (
     <div className="flex flex-col overflow-hidden flex-1">
-      <EntityToolbar
-        onBack={() => navigate("/system/production-structure")}
-        onAdd={openAdd}
-        onEdit={selectedPlant ? () => onEdit(selectedPlant) : undefined}
-        onDelete={undefined}
-        hasSelected={!!selectedPlant}
-        onRefresh={() => refetch()}
-        statusFilter={statusFilter}
-        onStatusFilterChange={onStatusFilterChange}
-        search={search}
-        onSearchChange={onSearchChange}
-      />
+      {editingPlantId ? (
+        <div className="flex shrink-0 items-center gap-1 border-b border-slate-200 bg-slate-50/80 px-3 dark:border-slate-700 dark:bg-slate-800/80 font-['Segoe_UI',system-ui,sans-serif]" style={{ height: 40 }}>
+          <button type="button" title="Refresh plant data" onClick={() => refetch()} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">
+            <RefreshCw className="h-3.5 w-3.5 stroke-current" />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+          <span className="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-600" />
+          <button type="button" title="Save changes" disabled={saving} onClick={async () => { setSaving(true); try { await plantDetailRef.current?.save(); setEditingPlantId(null); } finally { setSaving(false); } }} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-medium text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors">
+            <Check className="h-3.5 w-3.5 stroke-current" />
+            <span className="hidden sm:inline">Save</span>
+          </button>
+          <button type="button" title="Cancel editing" onClick={() => { plantDetailRef.current?.cancel(); setEditingPlantId(null); }} className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">
+            <X className="h-3.5 w-3.5 stroke-current" />
+            <span className="hidden sm:inline">Cancel</span>
+          </button>
+        </div>
+      ) : (
+        <EntityToolbar
+          onBack={() => navigate("/system/production-structure")}
+          onAdd={openAdd}
+          onEdit={selectedPlant ? () => setEditingPlantId(selectedPlant.id) : undefined}
+          onDelete={undefined}
+          hasSelected={!!selectedPlant}
+          onRefresh={() => refetch()}
+          statusFilter={statusFilter}
+          onStatusFilterChange={onStatusFilterChange}
+          search={search}
+          onSearchChange={onSearchChange}
+        />
+      )}
       <div ref={detailContainerRef} className="flex flex-1 overflow-hidden p-0 m-0">
-        <div className="flex flex-col overflow-hidden p-0 m-0" style={{ flex: 1, minWidth: 0 }}>
-          <div className="flex-1 overflow-y-auto p-3 m-0 bg-white dark:bg-slate-900">
+        <div className="flex flex-col overflow-hidden p-0 m-0" style={{ flex: `${100 - detailPct}%`, minWidth: 0 }}>
+          <div className="flex-1 overflow-y-auto p-2 m-0 bg-white dark:bg-slate-900">
             {loading && plants.length === 0 ? (
               <div className={`py-12 text-center text-sm ${theme.textMuted}`}>Loading plants...</div>
             ) : filtered.length === 0 ? (
@@ -401,8 +432,8 @@ function PlantsViewMode({ selectedId, onSelect, onEdit, detailItem, onCloseDetai
                 const { textColor, bgColor } = getEntityIconProps("plant", plant.id);
                 return (
                   <EntityCard key={plant.id} icon={<Factory className={`h-5 w-5 stroke-current ${textColor}`} />} iconBg={bgColor}
-                    name={plant.name} code={plant.code} status={plant.status} subtitle={plant.building || "No location set"}
-                    metrics={[{ label: "Lines", value: plant.lineCount ?? 0 }, { label: "Depts", value: plant.departmentCount ?? 0 }, { label: "Groups", value: plant.groupCount ?? 0 }, { label: "Resources", value: plant.resourceCount ?? 0 }]}
+                    name={plant.name} code={plant.code} status={plant.status}
+                    metrics={[{ icon: TrendingUpDown, value: plant.lineCount ?? 0, color: "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" }, { icon: Layers, value: plant.departmentCount ?? 0, color: "bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" }, { icon: Component, value: plant.groupCount ?? 0, color: "bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" }, { icon: Dumbbell, value: plant.resourceCount ?? 0, color: "bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400" }]}
                     selected={selectedId === plant.id} onClick={() => onSelect(plant.id)} selectedClass="bg-blue-100/60 dark:bg-blue-900/30" />
                 );
               })}</div>
@@ -414,15 +445,19 @@ function PlantsViewMode({ selectedId, onSelect, onEdit, detailItem, onCloseDetai
           <GripVertical className="h-3 w-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
         </div>
         <div className="flex flex-col overflow-hidden p-0 m-0" style={{ flexBasis: `${detailPct}%`, minWidth: 0 }}>
-          <DetailColumnContent
-            selectedEntity={detailItem}
-            selectedNode={selectedNode}
-            selectedPath={selectedPath}
-            selectedNodeKey={selectedNodeKey}
-            onClose={onCloseDetail}
-            emptyMessage="Select a plant to view details"
-            onAddChild={() => navigate(ADD_CHILD_ROUTES.plant)}
-          />
+          {detailItem ? (
+            <PlantDetailView
+              ref={plantDetailRef}
+              plantId={detailItem.id}
+              editing={editingPlantId === detailItem.id}
+              onEditToggle={(v) => setEditingPlantId(v ? detailItem.id : null)}
+              onNavigateToLine={onNavigateToLine}
+            />
+          ) : (
+            <div className="flex flex-1 items-center justify-center bg-white dark:bg-slate-900">
+              <div className="text-center"><p className={`text-xs ${theme.textMuted}`}>Select a plant to view details</p></div>
+            </div>
+          )}
         </div>
       </div>
       <div className="shrink-0 flex items-center border-t border-slate-200 bg-slate-50/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-800/80 font-['Segoe_UI',system-ui,sans-serif]">
@@ -749,43 +784,8 @@ function ResViewMode({ selectedId, onSelect, search, onSearchChange, statusFilte
   );
 }
 
-function CompanyViewMode() {
-  const { data } = useQuery<any>(COMPANY_QUERY);
-  const company = data?.company;
-  return (
-    <div className="flex flex-col overflow-hidden flex-1">
-      <div className="flex items-center h-10 border-b border-slate-200 bg-white px-3 dark:border-slate-700 dark:bg-slate-900 shrink-0"><span className="text-xs font-medium text-slate-500 dark:text-slate-400">Company Overview</span></div>
-      <div className="flex-1 overflow-y-auto p-3 m-0 bg-white dark:bg-slate-900">
-        {!company ? (
-          <div className={`flex flex-col items-center justify-center rounded-lg border border-dashed px-4 py-12 text-center ${theme.card}`}>
-            <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full ${theme.iconBoxSubtle}`}><Info className="h-5 w-5 stroke-current" /></div>
-            <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>No company data</h3>
-            <p className={`mt-1 text-xs ${theme.textSecondary}`}>Company information is not available.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-4 dark:bg-slate-900 dark:border-slate-700">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"><LandmarkIcon className="h-5 w-5 stroke-current" /></div>
-                <div><h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{company.name}</h3>{company.code && <span className="text-[11px] text-slate-500 dark:text-slate-400">{company.code}</span>}</div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                {company.industryType && <div><span className="text-slate-500 dark:text-slate-400">Industry</span><p className="text-slate-900 dark:text-slate-100 font-medium">{company.industryType}</p></div>}
-                {company.manufacturingType && <div><span className="text-slate-500 dark:text-slate-400">Manufacturing</span><p className="text-slate-900 dark:text-slate-100 font-medium">{company.manufacturingType}</p></div>}
-                {company.defaultTimezone && <div><span className="text-slate-500 dark:text-slate-400">Timezone</span><p className="text-slate-900 dark:text-slate-100 font-medium">{company.defaultTimezone}</p></div>}
-                {company.defaultLanguage && <div><span className="text-slate-500 dark:text-slate-400">Language</span><p className="text-slate-900 dark:text-slate-100 font-medium">{company.defaultLanguage}</p></div>}
-                {company.phone && <div><span className="text-slate-500 dark:text-slate-400">Phone</span><p className="text-slate-900 dark:text-slate-100 font-medium">{company.phone}</p></div>}
-                {company.email && <div><span className="text-slate-500 dark:text-slate-400">Email</span><p className="text-slate-900 dark:text-slate-100 font-medium">{company.email}</p></div>}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="shrink-0 flex items-center border-t border-slate-200 bg-slate-50/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-800/80">
-        <span className="text-[10px] text-slate-500 dark:text-slate-400">Company</span>
-      </div>
-    </div>
-  );
+function CompanyViewMode({ onSelectPlant }: { onSelectPlant?: (id: string) => void }) {
+  return <CompanyDetailView onSelectPlant={onSelectPlant} />;
 }
 
 function LandmarkIcon({ className }: { className?: string }) {
@@ -796,7 +796,7 @@ export function ProductionComponents() {
   const navigate = useNavigate();
   const { data: companyData } = useQuery<any>(COMPANY_QUERY);
   const companyName = companyData?.company?.name || "";
-  const [activeEntity, setActiveEntity] = useState("plant");
+  const [activeEntity, setActiveEntity] = useState("company");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -810,12 +810,12 @@ export function ProductionComponents() {
   const { plants, saveLoading, savePlant, archivePlant } = usePlants();
 
   const HIERARCHY_ITEMS = [
-    { key: "company", label: companyName || "Company", Icon: ENTITY_CONFIG.company.icon, colorActive: "text-white", bgActive: "bg-emerald-500 dark:bg-emerald-600", colorInactive: "text-emerald-700 dark:text-emerald-300", bgInactive: "bg-emerald-100 dark:bg-emerald-900/40" },
-    { key: "plant", label: "Plants", Icon: ENTITY_CONFIG.plant.icon, colorActive: "text-white", bgActive: "bg-blue-500 dark:bg-blue-600", colorInactive: "text-blue-700 dark:text-blue-300", bgInactive: "bg-blue-100 dark:bg-blue-900/40" },
-    { key: "productionLine", label: "Line", Icon: ENTITY_CONFIG.productionLine.icon, colorActive: "text-white", bgActive: "bg-amber-500 dark:bg-amber-600", colorInactive: "text-amber-700 dark:text-amber-300", bgInactive: "bg-amber-100 dark:bg-amber-900/40" },
-    { key: "department", label: "Dept", Icon: ENTITY_CONFIG.department.icon, colorActive: "text-white", bgActive: "bg-purple-500 dark:bg-purple-600", colorInactive: "text-purple-700 dark:text-purple-300", bgInactive: "bg-purple-100 dark:bg-purple-900/40" },
-    { key: "resourceGroup", label: "RG", Icon: ENTITY_CONFIG.resourceGroup.icon, colorActive: "text-white", bgActive: "bg-rose-500 dark:bg-rose-600", colorInactive: "text-rose-700 dark:text-rose-300", bgInactive: "bg-rose-100 dark:bg-rose-900/40" },
-    { key: "resource", label: "Resource", Icon: ENTITY_CONFIG.resource.icon, colorActive: "text-white", bgActive: "bg-slate-600 dark:bg-slate-500", colorInactive: "text-slate-700 dark:text-slate-300", bgInactive: "bg-slate-200 dark:bg-slate-700/50" },
+    { key: "company", label: companyName || "Company", Icon: ENTITY_CONFIG.company.icon, colorActive: "text-white", bgActive: "bg-emerald-400 dark:bg-emerald-500", colorInactive: "text-emerald-600 dark:text-emerald-400", bgInactive: "bg-emerald-50 dark:bg-emerald-900/30" },
+    { key: "plant", label: "Plants", Icon: ENTITY_CONFIG.plant.icon, colorActive: "text-white", bgActive: "bg-blue-400 dark:bg-blue-500", colorInactive: "text-blue-600 dark:text-blue-400", bgInactive: "bg-blue-50 dark:bg-blue-900/30" },
+    { key: "productionLine", label: "Line", Icon: ENTITY_CONFIG.productionLine.icon, colorActive: "text-white", bgActive: "bg-amber-400 dark:bg-amber-500", colorInactive: "text-amber-600 dark:text-amber-400", bgInactive: "bg-amber-50 dark:bg-amber-900/30" },
+    { key: "department", label: "Dept", Icon: ENTITY_CONFIG.department.icon, colorActive: "text-white", bgActive: "bg-purple-400 dark:bg-purple-500", colorInactive: "text-purple-600 dark:text-purple-400", bgInactive: "bg-purple-50 dark:bg-purple-900/30" },
+    { key: "resourceGroup", label: "RG", Icon: ENTITY_CONFIG.resourceGroup.icon, colorActive: "text-white", bgActive: "bg-rose-400 dark:bg-rose-500", colorInactive: "text-rose-600 dark:text-rose-400", bgInactive: "bg-rose-50 dark:bg-rose-900/30" },
+    { key: "resource", label: "Resource", Icon: ENTITY_CONFIG.resource.icon, colorActive: "text-white", bgActive: "bg-slate-500 dark:bg-slate-400", colorInactive: "text-slate-600 dark:text-slate-400", bgInactive: "bg-slate-50 dark:bg-slate-800/40" },
   ];
 
   const switchEntity = (key: string) => { setActiveEntity(key); setSelectedItemId(null); setSharedSearch(""); setSharedStatusFilter("all"); };
@@ -823,8 +823,13 @@ export function ProductionComponents() {
   const openEdit = (plant: Plant) => {
     setEditingId(plant.id); setSaveError(null);
     setForm({ entityIcon: "plant", name: plant.name || "", code: plant.code || "", status: plant.status || "active",
-      building: plant.building || "", address: plant.address || "", timezone: plant.timezone || "",
-      managerName: plant.managerName || "", managerEmail: plant.managerEmail || "",
+      building: plant.building || "", address: plant.address || "", city: plant.city || "", state: plant.state || "", country: plant.country || "", zipcode: plant.zipcode || "", timezone: plant.timezone || "",
+      latitude: plant.latitude || "", longitude: plant.longitude || "",
+      plantType: plant.plantType || "", operatingSince: plant.operatingSince || "",
+      managerName: plant.managerName || "", managerEmail: plant.managerEmail || "", managerPhone: plant.managerPhone || "",
+      defaultCalendar: plant.defaultCalendar || "", defaultShiftModel: plant.defaultShiftModel || "",
+      weekStartDay: plant.weekStartDay || "", defaultSchedule: plant.defaultSchedule || "",
+      manufacturingFocus: plant.manufacturingFocus || "",
       description: plant.description || "" });
     setSelectedItemId(plant.id); setModalOpen(true);
   };
@@ -849,7 +854,7 @@ export function ProductionComponents() {
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <PageHeader icon={<Factory className="h-5 w-5 stroke-current" />} iconClass="bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" title="Production Structure - Components" subtitle="Facilities, locations, and production sites." />
+      <PageHeader icon={<Factory className="h-5 w-5 stroke-current" />} iconClass="bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400" title="Production Structure - Components" subtitle={activeEntity === "company" ? "Company root profile, global defaults, and production structure overview." : "Facilities, locations, and production sites."} />
 
       <div className="flex flex-1 overflow-hidden p-0 m-0">
         {/* ── COL 1: Colored Label Tabs ── */}
@@ -859,8 +864,8 @@ export function ProductionComponents() {
             const isActiveTab = activeEntity === item.key;
             return (
               <button key={item.key} type="button" onClick={() => switchEntity(item.key)}
-                className={`flex items-center justify-center transition-all duration-150 font-['Segoe_UI',system-ui,sans-serif] ${isActiveTab ? `${item.bgActive} ${item.colorActive} rounded-r-lg shadow-sm z-10` : `${item.bgInactive} ${item.colorInactive} hover:brightness-95 dark:hover:brightness-125`}`}
-                style={{ flex: "1 0 auto", ...(isActiveTab ? { marginRight: -1, clipPath: "inset(0 0 0 0 round 0 8px 8px 0)" } : {}) }}
+                className={`flex items-center justify-center transition-all duration-150 font-['Segoe_UI',system-ui,sans-serif] ${isActiveTab ? `${item.bgActive} ${item.colorActive} rounded-l-lg shadow-sm z-10` : `${item.bgInactive} ${item.colorInactive} hover:brightness-95 dark:hover:brightness-125`}`}
+                style={{ flex: "1 0 auto", ...(isActiveTab ? { marginLeft: -1, clipPath: "inset(0 0 0 0 round 8px 0 0 8px)" } : {}) }}
               >
                 <div className="flex items-center gap-1" style={{ transform: "rotate(-90deg)", transformOrigin: "center", whiteSpace: "nowrap" }}>
                   <span className={`flex items-center justify-center w-3.5 h-3.5 ${isActiveTab ? "text-white" : item.colorInactive}`}>
@@ -878,12 +883,13 @@ export function ProductionComponents() {
 
         {/* ── COL 2+3: Browser Window ── */}
         <div className="flex flex-col overflow-hidden p-0 m-0" style={{ flex: 1, minWidth: 0 }}>
-          {activeEntity === "company" && <CompanyViewMode />}
+          {activeEntity === "company" && <CompanyViewMode onSelectPlant={(id) => { setActiveEntity("plant"); setSelectedItemId(id); }} />}
           {activeEntity === "plant" && (
             <PlantsViewMode
               selectedId={selectedItemId} onSelect={setSelectedItemId} onEdit={openEdit}
-              detailItem={selectedPlant} onCloseDetail={() => setSelectedItemId(null)}
+              detailItem={selectedPlant}
               search={sharedSearch} onSearchChange={setSharedSearch} statusFilter={sharedStatusFilter} onStatusFilterChange={setSharedStatusFilter}
+              onNavigateToLine={(lineId) => { setActiveEntity("productionLine"); setSelectedItemId(lineId); }}
             />
           )}
           {activeEntity === "productionLine" && <LinesViewMode selectedId={selectedItemId} onSelect={setSelectedItemId} search={sharedSearch} onSearchChange={setSharedSearch} statusFilter={sharedStatusFilter} onStatusFilterChange={setSharedStatusFilter} plants={plants} />}
@@ -897,6 +903,9 @@ export function ProductionComponents() {
         { key: "entityIcon", label: "Production Structure", type: "entityicon" },
         { key: "name", label: "Plant Name", required: true, placeholder: "e.g. Main Plant" },
         { key: "building", label: "Location / Building", placeholder: "e.g. Building A" },
+        { key: "city", label: "City", placeholder: "e.g. Santa Fe Springs" },
+        { key: "state", label: "State", placeholder: "e.g. CA" },
+        { key: "country", label: "Country", placeholder: "e.g. USA" },
         { key: "timezone", label: "Timezone", type: "select", required: true, placeholder: "Select timezone", options: TIMEZONE_OPTIONS },
         { key: "status", label: "Status", type: "select", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
       ]} values={form} onChange={(k, v) => { setForm((prev) => ({ ...prev, [k]: v })); setSaveError(null); }} onSave={handleSave}

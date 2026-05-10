@@ -17,44 +17,7 @@ import type {
   UpdatePlantVars,
 } from "@/types/plant";
 
-/* ── Fallback mock data when backend is not available ── */
 
-const MOCK_PLANTS: Plant[] = [
-  {
-    id: "P001", code: "MP-01", name: "Main Plant", status: "active",
-    building: "Building A", address: "123 Industrial Blvd, Detroit, MI 48201",
-    timezone: "America/Detroit (EST)",
-    managerName: "John Smith", managerEmail: "john.smith@leansync.com",
-    description: "Primary assembly facility for cylinder and STB unit production.",
-    lineCount: 3, departmentCount: 4, groupCount: 8, resourceCount: 42,
-    createdAt: "2024-01-15T08:00:00Z", updatedAt: "2025-03-10T14:30:00Z",
-  },
-  {
-    id: "P002", code: "SP-01", name: "Secondary Plant", status: "active",
-    building: "Building B", address: "456 Manufacturing Dr, Toledo, OH 43601",
-    timezone: "America/New_York (EST)",
-    managerName: "Sarah Chen", managerEmail: "sarah.chen@leansync.com",
-    description: "Harnesses and pipes fabrication supporting main plant assembly.",
-    lineCount: 2, departmentCount: 3, groupCount: 5, resourceCount: 18,
-    createdAt: "2024-02-01T09:00:00Z", updatedAt: "2025-02-20T11:00:00Z",
-  },
-  {
-    id: "P003", code: "WP-01", name: "Warehouse Plant", status: "inactive",
-    building: "Warehouse 1", address: "789 Logistics Ave, Chicago, IL 60601",
-    timezone: "America/Chicago (CST)",
-    managerName: "Mike Brown", managerEmail: "mike.brown@leansync.com",
-    description: "Storage and kitting facility. Currently inactive pending reconfiguration.",
-    lineCount: 1, departmentCount: 1, groupCount: 2, resourceCount: 6,
-    createdAt: "2024-03-10T10:00:00Z", updatedAt: "2025-01-05T16:00:00Z",
-  },
-];
-
-let mockNextId = 4;
-let mockPlants = [...MOCK_PLANTS];
-
-function generateMockId(): string {
-  return `P${String(mockNextId++).padStart(3, "0")}`;
-}
 
 /* ── Timezone options for the form ── */
 
@@ -92,7 +55,21 @@ export const EMPTY_FORM = {
   status: "active",
   building: "",
   address: "",
+  city: "",
+  state: "",
+  country: "",
+  zipcode: "",
   timezone: "America/New_York (EST)",
+  latitude: "",
+  longitude: "",
+  plantType: "",
+  operatingSince: "",
+  managerPhone: "",
+  defaultCalendar: "",
+  defaultShiftModel: "",
+  weekStartDay: "",
+  defaultSchedule: "",
+  manufacturingFocus: "",
   managerName: "",
   managerEmail: "",
   description: "",
@@ -138,7 +115,7 @@ export function usePlants() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   /* ── Attempt GraphQL query, fall back to mock data ── */
-  const { data: gqlData, loading: gqlLoading, error: gqlError, refetch } = useQuery<PlantsQueryData, PlantsQueryVars>(
+  const { data: gqlData, loading: gqlLoading, refetch } = useQuery<PlantsQueryData, PlantsQueryVars>(
     PLANTS_QUERY,
     { variables: { search: search || undefined, status: statusFilter !== "all" ? statusFilter : undefined },
       fetchPolicy: "cache-and-network",
@@ -146,8 +123,7 @@ export function usePlants() {
     }
   );
 
-  const isMockFallback = !!gqlError || !gqlData;
-  const plants = isMockFallback ? filterMockPlants(search, statusFilter) : (gqlData?.plants ?? []);
+  const plants = gqlData?.plants ?? [];
 
   /* ── Mutations ── */
   const [createMutation, createState] = useMutation<CreatePlantData, CreatePlantVars>(CREATE_PLANT_MUTATION);
@@ -159,54 +135,9 @@ export function usePlants() {
   /* ── CRUD helpers ── */
 
   const savePlant = useCallback(async (form: typeof EMPTY_FORM, editingId?: string | null): Promise<{ ok: boolean; errors?: Record<string, string> }> => {
-    const validation = validatePlantForm(form, isMockFallback ? mockPlants : (gqlData?.plants ?? []), editingId);
+    const validation = validatePlantForm(form, gqlData?.plants ?? [], editingId);
     if (Object.keys(validation).length > 0) return { ok: false, errors: validation };
 
-    if (isMockFallback) {
-      // Mock mode
-      if (editingId) {
-        const idx = mockPlants.findIndex((p) => p.id === editingId);
-        if (idx >= 0) {
-          (mockPlants as any)[idx] = {
-            ...(mockPlants as any)[idx],
-            name: form.name,
-            code: form.code,
-            status: form.status,
-            building: form.building,
-            address: form.address,
-            timezone: form.timezone,
-            managerName: form.managerName,
-            managerEmail: form.managerEmail,
-            description: form.description,
-            updatedAt: new Date().toISOString(),
-          };
-        }
-      } else {
-        const newPlant: any = {
-          id: generateMockId(),
-          code: form.code,
-          name: form.name,
-          status: form.status,
-          building: form.building,
-          address: form.address,
-          timezone: form.timezone,
-          managerName: form.managerName,
-          managerEmail: form.managerEmail,
-          description: form.description,
-          lineCount: 0,
-          departmentCount: 0,
-          groupCount: 0,
-          resourceCount: 0,
-          isActive: form.status === "active",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        mockPlants.push(newPlant);
-      }
-      return { ok: true };
-    }
-
-    // Apollo mode
     try {
       const input: PlantInput = {
         name: form.name,
@@ -241,14 +172,9 @@ export function usePlants() {
       const message = err instanceof Error ? err.message : "Failed to save plant. Please try again.";
       return { ok: false, errors: { _form: message } };
     }
-  }, [createMutation, updateMutation, refetch, isMockFallback, gqlData]);
+  }, [createMutation, updateMutation, refetch, gqlData]);
 
   const archivePlant = useCallback(async (id: string): Promise<{ success: boolean; inUse: boolean; message: string }> => {
-    if (isMockFallback) {
-      const plant = mockPlants.find((p) => p.id === id);
-      if (plant) (plant as any).status = "ARCHIVED";
-      return { success: true, inUse: false, message: "Plant archived." };
-    }
     try {
       const { data } = await archiveMutation({ variables: { id } });
       if (data?.archivePlant?.ok) {
@@ -260,14 +186,13 @@ export function usePlants() {
     } catch {
       return { success: false, inUse: false, message: "Failed to archive plant." };
     }
-  }, [archiveMutation, refetch, isMockFallback]);
+  }, [archiveMutation, refetch]);
 
-  const loading = gqlLoading && !isMockFallback;
+  const loading = gqlLoading;
 
   return {
     plants,
     loading,
-    isMockFallback,
     saveLoading,
     search,
     setSearch,
@@ -277,22 +202,4 @@ export function usePlants() {
     archivePlant,
     refetch,
   };
-}
-
-/* ── Mock filter helper ── */
-
-function filterMockPlants(search: string, statusFilter: string): Plant[] {
-  let filtered = [...mockPlants];
-  if (statusFilter !== "all") {
-    filtered = filtered.filter((p) => p.status === statusFilter);
-  }
-  if (search) {
-    const q = search.toLowerCase();
-    filtered = filtered.filter((p) =>
-      p.name.toLowerCase().includes(q) ||
-      p.code.toLowerCase().includes(q) ||
-      p.building.toLowerCase().includes(q)
-    );
-  }
-  return filtered;
 }

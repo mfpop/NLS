@@ -1,13 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
-import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, Plus, Pencil } from "lucide-react";
+import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, Plus, Pencil, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../styles/themeTokens";
 import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
-import { TreeNavigation, NodeDetailPanel, CompanyEditor, type CompanyFormData } from "./production-structure/components";
+import { TreeNavigation, NodeDetailPanel, CompanyDetailView } from "./production-structure/components";
 import { findNodeByKey, findNodePathByKey, ADD_ROUTES, ENTITY_CONFIG, CHILD_TYPE_MAP } from "./production-structure/config";
 
 interface ContextMenuState {
@@ -141,27 +141,6 @@ export function ProductionFlow() {
   };
 
   const company = companyData?.company;
-  const [companyForm, setCompanyForm] = useState<CompanyFormData>({} as CompanyFormData);
-  useEffect(() => {
-    if (company && Object.keys(companyForm).length === 0) {
-      setCompanyForm({
-        code: company.code, name: company.name, address: company.address || "",
-        phone: company.phone || "", email: company.email || "", website: company.website || "",
-        description: company.description || "", defaultTimezone: company.defaultTimezone || "",
-      });
-    }
-  }, [company]);
-
-  const handleCompanyFieldChange = (key: string, value: string) => {
-    setCompanyForm((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const isCompanyDirty = useMemo(() => {
-    if (!company) return false;
-    const keys: (keyof CompanyFormData)[] = ["code", "name", "address", "phone", "email", "website", "description", "defaultTimezone"];
-    return keys.some((key) => (companyForm[key] ?? "") !== ((company as any)[key] ?? ""));
-  }, [company, companyForm]);
-
   const isCompany = selectedNode?.type === "company";
   const childLabel = selectedNode ? (CHILD_TYPE_MAP[selectedNode.type] || null) : null;
   const canAdd = !!childLabel;
@@ -228,80 +207,74 @@ export function ProductionFlow() {
 
         {/* Column 3: Entity Details */}
         <div className="flex flex-col min-h-0 min-w-0">
-          {/* Entity Header + Actions */}
-          <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-950">
-            {selectedNode && !isCompany ? (() => {
-              const cfg = ENTITY_CONFIG[selectedNode.type] || ENTITY_CONFIG.resource;
-              const Icon = cfg.icon;
-              return (
-                <div className="h-10 flex items-center justify-between gap-2 px-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${cfg.color}`}>
-                        <Icon className="h-3 w-3 stroke-current" />
-                      </span>
-                      <span className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate">{selectedNode.name}</span>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {workspaceMode === "view" && (<>
-                        {canAdd && (
-                          <button type="button" onClick={() => setWorkspaceMode("create")} className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1 transition-colors">
-                            <Plus className="h-3.5 w-3.5 stroke-current" /> Add {childLabel}
+          {isCompany ? (
+            <CompanyDetailView onBack={() => setSelectedNodeKey(null)} />
+          ) : (
+            <>
+              {/* Entity Header + Actions */}
+              <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-950">
+                {selectedNode && !isCompany ? (() => {
+                  const cfg = ENTITY_CONFIG[selectedNode.type] || ENTITY_CONFIG.resource;
+                  const Icon = cfg.icon;
+                  return (
+                    <div className="h-10 flex items-center justify-between gap-2 px-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <button type="button" onClick={() => setSelectedNodeKey(null)}
+                            className="flex items-center justify-center h-7 w-7 rounded text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors shrink-0" title="Back">
+                            <ChevronLeft className="h-4 w-4 stroke-current" />
                           </button>
-                        )}
-                        <button type="button" onClick={() => setWorkspaceMode("edit")}
-                          className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1 transition-colors">
-                          <Pencil className="h-3.5 w-3.5 stroke-current" /> Details
-                        </button>
-                      </>)}
-                      {workspaceMode !== "view" && (<>
-                        {(workspaceMode !== "edit" || (selectedNode.type !== "resourceGroup" && selectedNode.type !== "group")) && (
-                          <button type="button" onClick={() => {
-                            if (workspaceMode === "edit") { const route = entityRoutes[selectedNode.type]; if (route) navigate(route + selectedNode.id); }
-                            if (workspaceMode === "create") { const route = ADD_ROUTES[selectedNode.type]; if (route) navigate(route); }
-                          }} className="h-7 px-2 rounded text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 inline-flex items-center gap-1 transition-colors">Save</button>
-                        )}
-                        <button type="button" onClick={() => setWorkspaceMode("view")}
-                          className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1 transition-colors"><X className="h-3.5 w-3.5 stroke-current" /> Cancel</button>
-                      </>)}
-                    </div>
+                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${cfg.color}`}>
+                            <Icon className="h-3 w-3 stroke-current" />
+                          </span>
+                          <span className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate">{selectedNode.name}</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">{cfg.label}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {workspaceMode === "view" && (<>
+                            {canAdd && (
+                              <button type="button" onClick={() => setWorkspaceMode("create")} className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 inline-flex items-center gap-1 transition-colors">
+                                <Plus className="h-3.5 w-3.5 stroke-current" /> Add {childLabel}
+                              </button>
+                            )}
+                            <button type="button" onClick={() => setWorkspaceMode("edit")}
+                              className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 inline-flex items-center gap-1 transition-colors">
+                              <Pencil className="h-3.5 w-3.5 stroke-current" /> Details
+                            </button>
+                          </>)}
+                          {workspaceMode !== "view" && (<>
+                            {(workspaceMode !== "edit" || (selectedNode.type !== "resourceGroup" && selectedNode.type !== "group")) && (
+                              <button type="button" onClick={() => {
+                                if (workspaceMode === "edit") { const route = entityRoutes[selectedNode.type]; if (route) navigate(route + selectedNode.id); }
+                                if (workspaceMode === "create") { const route = ADD_ROUTES[selectedNode.type]; if (route) navigate(route); }
+                              }} className="h-7 px-2 rounded text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 inline-flex items-center gap-1 transition-colors">Save</button>
+                            )}
+                            <button type="button" onClick={() => setWorkspaceMode("view")}
+                              className="h-7 px-2 rounded text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 inline-flex items-center gap-1 transition-colors"><X className="h-3.5 w-3.5 stroke-current" /> Cancel</button>
+                          </>)}
+                        </div>
+                      </div>
+                  );
+                })() : (
+                  <div className="h-10 flex items-center px-3 bg-slate-50 dark:bg-slate-950">
+                    <span className="text-[13px] text-slate-400">Select a node</span>
                   </div>
-              );
-            })() : isCompany ? (
-              <div className="h-10 flex items-center justify-between px-3">
-                <span className="text-[13px] font-bold text-slate-900 dark:text-slate-100">{company?.name || "Company"}</span>
-                <div className="flex items-center gap-1">
-                  <button type="button" onClick={async () => {
-                    /* save handled by parent — placeholder for mutation */
-                    setSelectedNodeKey(null);
-                  }} disabled={!isCompanyDirty}
-                    className="h-7 px-2 rounded text-xs font-medium inline-flex items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed bg-emerald-600 text-white hover:bg-emerald-500">Save</button>
-                  <button type="button" onClick={() => setSelectedNodeKey(null)}
-                    className="h-7 w-7 rounded flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"><X className="h-3.5 w-3.5 stroke-current" /></button>
-                </div>
+                )}
               </div>
-            ) : (
-              <div className="h-10 flex items-center px-3">
-                <span className="text-[13px] text-slate-400">Select a node</span>
-              </div>
-            )}
-          </div>
 
-          {/* Detail Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-2.5">
-            {isCompany && company ? (
-              <CompanyEditor form={companyForm} onChange={handleCompanyFieldChange} />
-            ) : (
-              <NodeDetailPanel
-                selectedNode={selectedNode}
-                selectedNodeKey={selectedNodeKey}
-                selectedPath={selectedPath}
-                contextCounts={contextCounts}
-                workspaceMode={workspaceMode}
-                onAddChild={() => setWorkspaceMode("create")}
-                onSave={() => { setWorkspaceMode("view"); refetch(); }}
-              />
-            )}
-          </div>
+              {/* Detail Content */}
+              <div className="flex-1 min-h-0 overflow-y-auto p-2.5">
+                <NodeDetailPanel
+                  selectedNode={selectedNode}
+                  selectedNodeKey={selectedNodeKey}
+                  selectedPath={selectedPath}
+                  contextCounts={contextCounts}
+                  workspaceMode={workspaceMode}
+                  onAddChild={() => setWorkspaceMode("create")}
+                  onSave={() => { setWorkspaceMode("view"); refetch(); }}
+                />
+              </div>
+            </>
+          )}
 
 
         </div>

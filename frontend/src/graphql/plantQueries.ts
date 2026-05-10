@@ -8,9 +8,27 @@ const PLANT_FIELDS = `
   status
   building
   address
+  city
+  state
+  country
+  zipcode
   timezone
+  latitude
+  longitude
+  plantType
+  operatingSince
+  managerPhone
+  defaultCalendar
+  defaultShiftModel
+  weekStartDay
+  defaultSchedule
+  manufacturingFocus
   managerName
   managerEmail
+  lineCount
+  departmentCount
+  groupCount
+  resourceCount
   createdAt
   updatedAt
 `;

@@ -1,4 +1,5 @@
-import { Search, X, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { SearchInput } from "./SearchInput";
 
 /* ── Types ── */
 
@@ -60,24 +61,8 @@ export function Toolbar({
   return (
     <div className="flex shrink-0 items-center bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-slate-800" style={{ height: "40px" }}>
       {/* Search - fills all available space */}
-      <div className="relative flex-1 h-full">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500 stroke-current" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={searchPlaceholder}
-          className="h-full w-full border-0 bg-transparent pl-10 pr-8 text-xs outline-none text-slate-900 placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
-        />
-        {search && (
-          <button
-            type="button"
-            onClick={() => onSearchChange("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
-          >
-            <X className="h-4 w-4 stroke-current" />
-          </button>
-        )}
+      <div className="flex-1 h-full flex items-center">
+        <SearchInput value={search} onChange={onSearchChange} placeholder={searchPlaceholder} className="w-full max-w-xs" />
       </div>
 
       {/* Parent filter */}

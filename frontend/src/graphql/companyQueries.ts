@@ -7,6 +7,9 @@ const COMPANY_FIELDS = `
   description
   status
   address
+  city
+  state
+  country
   phone
   email
   website

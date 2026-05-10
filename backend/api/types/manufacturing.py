@@ -29,6 +29,9 @@ class CompanyNode:
     description: str
     status: str
     address: str
+    city: str
+    state: str
+    country: str
     phone: str
     email: str
     website: str
@@ -41,7 +44,8 @@ class CompanyNode:
         return cls(
             id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
             description=obj.description, status=obj.status,
-            address=obj.address, phone=obj.phone, email=obj.email,
+            address=obj.address, city=obj.city, state=obj.state, country=obj.country,
+            phone=obj.phone, email=obj.email,
             website=obj.website, default_timezone=obj.default_timezone,
             created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
         )
@@ -58,19 +62,61 @@ class PlantNode:
     status: str
     building: str
     address: str
+    city: str
+    state: str
+    country: str
+    zipcode: str
     timezone: str
+    latitude: str
+    longitude: str
+    plant_type: str = strawberry.field(name="plantType")
+    operating_since: str = strawberry.field(name="operatingSince")
     manager_name: str = strawberry.field(name="managerName")
     manager_email: str = strawberry.field(name="managerEmail")
+    manager_phone: str = strawberry.field(name="managerPhone")
+    default_calendar: str = strawberry.field(name="defaultCalendar")
+    default_shift_model: str = strawberry.field(name="defaultShiftModel")
+    week_start_day: str = strawberry.field(name="weekStartDay")
+    default_schedule: str = strawberry.field(name="defaultSchedule")
+    manufacturing_focus: str = strawberry.field(name="manufacturingFocus")
+    line_count: int = strawberry.field(name="lineCount")
+    department_count: int = strawberry.field(name="departmentCount")
+    group_count: int = strawberry.field(name="groupCount")
+    resource_count: int = strawberry.field(name="resourceCount")
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
     @classmethod
     def from_db(cls, obj: Plant) -> "PlantNode":
+        from manufacturing.models import ResourceGroup, Resource
+        plant_lines = obj.production_lines.all()
+        line_count = plant_lines.count()
+        dept_ids = set()
+        for line in plant_lines:
+            for a in line.department_assignments.all():
+                dept_ids.add(a.department_id)
+        department_count = len(dept_ids)
+        group_qs = ResourceGroup.objects.filter(department_id__in=dept_ids) if dept_ids else ResourceGroup.objects.none()
+        group_count = group_qs.count()
+        resource_qs = Resource.objects.filter(resource_group_id__in=list(group_qs.values_list("id", flat=True))) if dept_ids else Resource.objects.none()
+        resource_count = resource_qs.count()
         return cls(
             id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
             description=obj.description, status=obj.status,
-            building=obj.building, address=obj.address, timezone=obj.timezone,
+            building=obj.building, address=obj.address,
+            city=obj.city, state=obj.state, country=obj.country,
+            zipcode=obj.zipcode, timezone=obj.timezone,
+            latitude=obj.latitude, longitude=obj.longitude,
+            plant_type=obj.plant_type, operating_since=obj.operating_since,
             manager_name=obj.manager_name, manager_email=obj.manager_email,
+            manager_phone=obj.manager_phone,
+            default_calendar=obj.default_calendar,
+            default_shift_model=obj.default_shift_model,
+            week_start_day=obj.week_start_day,
+            default_schedule=obj.default_schedule,
+            manufacturing_focus=obj.manufacturing_focus,
+            line_count=line_count, department_count=department_count,
+            group_count=group_count, resource_count=resource_count,
             created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
         )
 
@@ -602,9 +648,23 @@ class PlantInput:
     status: typing.Optional[str] = "ACTIVE"
     building: typing.Optional[str] = ""
     address: typing.Optional[str] = ""
+    city: typing.Optional[str] = ""
+    state: typing.Optional[str] = ""
+    country: typing.Optional[str] = ""
+    zipcode: typing.Optional[str] = ""
     timezone: typing.Optional[str] = ""
+    latitude: typing.Optional[str] = ""
+    longitude: typing.Optional[str] = ""
+    plant_type: typing.Optional[str] = strawberry.field(name="plantType", default="")
+    operating_since: typing.Optional[str] = strawberry.field(name="operatingSince", default="")
     manager_name: typing.Optional[str] = strawberry.field(name="managerName", default="")
     manager_email: typing.Optional[str] = strawberry.field(name="managerEmail", default="")
+    manager_phone: typing.Optional[str] = strawberry.field(name="managerPhone", default="")
+    default_calendar: typing.Optional[str] = strawberry.field(name="defaultCalendar", default="")
+    default_shift_model: typing.Optional[str] = strawberry.field(name="defaultShiftModel", default="")
+    week_start_day: typing.Optional[str] = strawberry.field(name="weekStartDay", default="")
+    default_schedule: typing.Optional[str] = strawberry.field(name="defaultSchedule", default="")
+    manufacturing_focus: typing.Optional[str] = strawberry.field(name="manufacturingFocus", default="")
 
 @strawberry.input
 class ProductionLineInput:

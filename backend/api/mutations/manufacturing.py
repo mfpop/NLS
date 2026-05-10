@@ -47,8 +47,18 @@ class ManufacturingMutation:
         plant = Plant.objects.create(
             code=input.code, name=input.name, description=input.description or "",
             status=input.status or "ACTIVE", building=input.building or "",
-            address=input.address or "", timezone=input.timezone or "",
+            address=input.address or "", city=input.city or "",
+            state=input.state or "", country=input.country or "",
+            zipcode=input.zipcode or "", timezone=input.timezone or "",
+            latitude=input.latitude or "", longitude=input.longitude or "",
+            plant_type=input.plant_type or "", operating_since=input.operating_since or "",
             manager_name=input.manager_name or "", manager_email=input.manager_email or "",
+            manager_phone=input.manager_phone or "",
+            default_calendar=input.default_calendar or "",
+            default_shift_model=input.default_shift_model or "",
+            week_start_day=input.week_start_day or "",
+            default_schedule=input.default_schedule or "",
+            manufacturing_focus=input.manufacturing_focus or "",
         )
         return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
 
@@ -58,7 +68,7 @@ class ManufacturingMutation:
             plant = Plant.objects.get(id=id)
         except Plant.DoesNotExist:
             return PlantPayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Plant not found"}])
-        for f in ("code", "name", "description", "status", "building", "address", "timezone", "manager_name", "manager_email"):
+        for f in ("code", "name", "description", "status", "building", "address", "city", "state", "country", "zipcode", "timezone", "latitude", "longitude", "plant_type", "operating_since", "manager_name", "manager_email", "manager_phone", "default_calendar", "default_shift_model", "week_start_day", "default_schedule", "manufacturing_focus"):
             v = getattr(input, f)
             if v is not None:
                 setattr(plant, f, v)

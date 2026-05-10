@@ -28,8 +28,35 @@ const ProblemsPage = lazy(() =>
 const ActionsPage = lazy(() =>
   import("@/pages/check").then((module) => ({ default: module.ActionsPage }))
 );
+const AuditsPage = lazy(() =>
+  import("@/pages/check").then((module) => ({ default: module.AuditsPage }))
+);
+const CapacityPage = lazy(() =>
+  import("@/pages/plan").then((module) => ({ default: module.CapacityPage }))
+);
+const ContinuousImprovementPage = lazy(() =>
+  import("@/pages/improve").then((module) => ({ default: module.ContinuousImprovementPage }))
+);
 const KaizenPage = lazy(() =>
   import("@/pages/improve").then((module) => ({ default: module.KaizenPage }))
+);
+const BestPracticesPage = lazy(() =>
+  import("@/pages/standardize").then((module) => ({ default: module.BestPracticesPage }))
+);
+const ProceduresPage = lazy(() =>
+  import("@/pages/standardize").then((module) => ({ default: module.ProceduresPage }))
+);
+const ProductionPlanPage = lazy(() =>
+  import("@/pages/plan").then((module) => ({ default: module.ProductionPlanPage }))
+);
+const QualityPage = lazy(() =>
+  import("@/pages/check").then((module) => ({ default: module.QualityPage }))
+);
+const SuggestionsPage = lazy(() =>
+  import("@/pages/improve").then((module) => ({ default: module.SuggestionsPage }))
+);
+const TemplatesPage = lazy(() =>
+  import("@/pages/standardize").then((module) => ({ default: module.TemplatesPage }))
 );
 const StandardWorkPage = lazy(() =>
   import("@/pages/improve").then((module) => ({ default: module.StandardWorkPage }))
@@ -93,11 +120,20 @@ export function AppRoutes() {
           <Route path="execution/live-shopfloor" element={<LiveShopfloorPage />} />
           <Route path="execution/vsm" element={<VsmPage />} />
           <Route path="execution/daily-gemba-walk" element={<DailyGembaWalkPage />} />
+          <Route path="plan/production-plan" element={<ProductionPlanPage />} />
+          <Route path="plan/capacity" element={<CapacityPage />} />
           <Route path="check/problems" element={<ProblemsPage />} />
           <Route path="check/actions" element={<ActionsPage />} />
+          <Route path="check/audits" element={<AuditsPage />} />
+          <Route path="check/quality" element={<QualityPage />} />
           <Route path="improve/kaizen" element={<KaizenPage />} />
           <Route path="improve/standard-work" element={<StandardWorkPage />} />
+          <Route path="improve/continuous-improvement" element={<ContinuousImprovementPage />} />
+          <Route path="improve/suggestions" element={<SuggestionsPage />} />
           <Route path="standardize/standard-work" element={<StandardWorkPage />} />
+          <Route path="standardize/procedures" element={<ProceduresPage />} />
+          <Route path="standardize/templates" element={<TemplatesPage />} />
+          <Route path="standardize/best-practices" element={<BestPracticesPage />} />
           <Route path="system/production-structure" element={<ProductionFlow />} />
                     <Route path="system/production-structure/flow" element={<ProductionFlow />} />
                     <Route path="system/production-structure/components" element={<ProductionComponents />} />

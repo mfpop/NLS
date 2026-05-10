@@ -1,6 +1,6 @@
 export function SidebarBrand() {
   return (
-    <div className="flex items-center gap-3 h-14 px-3 shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+    <div className="flex items-center gap-3 h-14 px-3 shrink-0 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white font-bold text-base">
         N
       </div>

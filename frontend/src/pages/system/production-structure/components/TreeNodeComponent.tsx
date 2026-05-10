@@ -36,11 +36,9 @@ export function TreeNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center gap-1.5 cursor-pointer transition-colors select-none outline-none ${
-          isRoot ? "h-9 min-h-9" : "h-8 min-h-8"
-        } ${isRoot ? "rounded" : "rounded-sm"} px-2 ${
+        className={`flex items-center gap-1.5 cursor-pointer transition-colors select-none outline-none h-8 min-h-8 rounded px-2 ${
           isSelected
-            ? "bg-blue-50/60 dark:bg-blue-500/8 border-l-[3px] border-l-blue-400 dark:border-l-blue-400/60"
+            ? "bg-emerald-50/80 dark:bg-emerald-500/10 border-l-[3px] border-l-emerald-500 dark:border-l-emerald-400"
             : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
         }`}
         style={{ paddingLeft: `${indentPx}px` }}
@@ -75,11 +73,9 @@ export function TreeNodeComponent({
         </span>
         <div className="min-w-0 flex-1 flex items-center gap-1.5">
           <span
-            className={`truncate ${
-              isRoot ? "text-[14px]" : "text-[13px]"
-            } font-semibold ${
+            className={`truncate text-[13px] font-semibold ${
               isSelected
-                ? "text-blue-700 dark:text-cyan-300"
+                ? "text-emerald-700 dark:text-emerald-400"
                 : "text-slate-800 dark:text-slate-100"
             }`}
           >

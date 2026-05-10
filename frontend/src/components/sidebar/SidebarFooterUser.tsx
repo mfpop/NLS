@@ -21,9 +21,9 @@ export function SidebarFooterUser() {
   }, []);
 
   return (
-    <div ref={ref} className="relative shrink-0 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+    <div ref={ref} className="relative shrink-0 border-t border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900">
       <div className={`absolute bottom-full left-0 right-0 overflow-hidden transition-all duration-150 ${isOpen ? "max-h-[200px]" : "max-h-0"}`}>
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 py-1">
+        <div className="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 py-1">
           <NavLink to="/system/profile" onClick={() => setIsOpen(false)}
             className="flex items-center gap-2.5 h-9 px-3 text-[15px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
           >
@@ -45,7 +45,7 @@ export function SidebarFooterUser() {
         </div>
       </div>
       <button type="button" onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 w-full h-12 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+        className="flex items-center gap-2.5 w-full h-12 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors outline-none focus:outline-none"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 shrink-0">
           {initials(user?.username ?? "User")}

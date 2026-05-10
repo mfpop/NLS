@@ -5,7 +5,10 @@ from manufacturing.models.company import Company
 DATA = {
     "code": "LMD",
     "name": "Lean Manufacturing Demo",
-    "address": "1250 Innovation Drive, Suite 200, Detroit, MI 48207",
+    "address": "1250 Innovation Drive, Suite 200",
+    "city": "Detroit",
+    "state": "MI",
+    "country": "USA",
     "phone": "+1 (313) 555-0142",
     "email": "info@leanmfgdemo.com",
     "website": "https://www.leanmfgdemo.com",

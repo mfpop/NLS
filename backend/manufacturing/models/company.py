@@ -11,6 +11,9 @@ class Company(TimeStampedModel):
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )
     address = models.CharField(max_length=500, blank=True, default="")
+    city = models.CharField(max_length=200, blank=True, default="")
+    state = models.CharField(max_length=200, blank=True, default="")
+    country = models.CharField(max_length=200, blank=True, default="")
     phone = models.CharField(max_length=50, blank=True, default="")
     email = models.EmailField(max_length=200, blank=True, default="")
     website = models.URLField(max_length=500, blank=True, default="")

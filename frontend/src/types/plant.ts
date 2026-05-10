@@ -5,9 +5,23 @@ export interface Plant {
   status: string;
   building: string;
   address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode: string;
   timezone: string;
+  latitude: string;
+  longitude: string;
+  plantType: string;
+  operatingSince: string;
   managerName: string;
   managerEmail: string;
+  managerPhone: string;
+  defaultCalendar: string;
+  defaultShiftModel: string;
+  weekStartDay: string;
+  defaultSchedule: string;
+  manufacturingFocus: string;
   description: string;
   lineCount?: number;
   departmentCount?: number;
@@ -23,11 +37,23 @@ export interface PlantInput {
   status: string;
   building?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zipcode?: string;
   timezone?: string;
-  defaultCalendarId?: string;
-  defaultScheduleId?: string;
+  latitude?: string;
+  longitude?: string;
+  plantType?: string;
+  operatingSince?: string;
   managerName?: string;
   managerEmail?: string;
+  managerPhone?: string;
+  defaultCalendar?: string;
+  defaultShiftModel?: string;
+  weekStartDay?: string;
+  defaultSchedule?: string;
+  manufacturingFocus?: string;
   description?: string;
 }
 
@@ -37,9 +63,23 @@ export interface PlantFormData {
   status: string;
   building: string;
   address: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode: string;
   timezone: string;
+  latitude: string;
+  longitude: string;
+  plantType: string;
+  operatingSince: string;
   managerName: string;
   managerEmail: string;
+  managerPhone: string;
+  defaultCalendar: string;
+  defaultShiftModel: string;
+  weekStartDay: string;
+  defaultSchedule: string;
+  manufacturingFocus: string;
   description: string;
 }
 

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronRight, ExternalLink, MoreHorizontal, Search, X, AlertTriangle, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
+import { SearchInput } from "./components/SearchInput";
 
 /* •••••• Breadcrumbs •••••• */
 
@@ -45,13 +46,7 @@ export function ContextBar({ segments }: { segments: ContextSegment[] }) {
 interface SearchBarProps { value: string; onChange: (value: string) => void; placeholder?: string; }
 
 export function SearchBar({ value, onChange, placeholder = "Search..." }: SearchBarProps) {
-  return (
-    <div className="relative flex-1 max-w-xs">
-      <Search className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${theme.iconSubtle} stroke-current`} />
-      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={`w-full rounded-lg border py-2 pl-9 pr-3 text-xs transition-colors ${theme.input} ${theme.focusRing}`} />
-      {value && <button type="button" onClick={() => onChange("")} className={`absolute right-2 top-1/2 -translate-y-1/2 ${theme.iconSubtle} ${theme.link}`}><X className="h-4 w-4 stroke-current" /></button>}
-    </div>
-  );
+  return <SearchInput value={value} onChange={onChange} placeholder={placeholder} className="flex-1 max-w-xs" />;
 }
 
 /* •••••• Filter Tabs •••••• */

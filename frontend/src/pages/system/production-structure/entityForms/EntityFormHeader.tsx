@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { Circle } from "lucide-react";
+import { PillBadge } from "../shared";
 
 interface EntityFormHeaderProps {
   icon: ReactNode;
@@ -13,7 +14,6 @@ interface EntityFormHeaderProps {
 }
 
 export function EntityFormHeader({ icon, iconBg, name, entityType, code, status, isDirty, error }: EntityFormHeaderProps) {
-  const statusColor = status === "active" ? "bg-emerald-500" : "bg-slate-400 dark:bg-slate-500";
   const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
@@ -34,10 +34,7 @@ export function EntityFormHeader({ icon, iconBg, name, entityType, code, status,
                 <span className="text-slate-300 dark:text-slate-600">|</span>
                 <span className="font-mono">{code || "\u2014"}</span>
                 <span className="text-slate-300 dark:text-slate-600">|</span>
-                <span className="inline-flex items-center gap-1">
-                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${statusColor}`} />
-                  {statusLabel}
-                </span>
+                <PillBadge variant={status === "active" ? "active" : "inactive"} label={statusLabel} />
                 {isDirty && (
                   <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
                     <Circle className="h-2 w-2 fill-amber-500 stroke-none" />

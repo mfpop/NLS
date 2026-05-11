@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, Pencil, Check, X, Trash2, RefreshCw, Building2, Globe, Phone, MapPin, Info, Factory, TrendingUpDown, Layers, Component, Dumbbell, Calendar } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { Plus, Pencil, Check, X, Trash2, RefreshCw, Globe, Phone, MapPin, Info, Factory, TrendingUpDown, Layers, Component, Dumbbell, Calendar } from "lucide-react";
 import { CompanyOverview } from "./CompanyOverview";
-import { theme } from "../../../../styles/themeTokens";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { COMPANY_QUERY, UPDATE_COMPANY_MUTATION } from "@/graphql/companyQueries";
 import { usePlants } from "@/hooks/usePlants";
 import { useNavigate } from "react-router-dom";
+import { ReferenceSelect, ReferenceMultiSelect } from "./ReferenceSelect";
 
 export type CompanyFormData = {
   name: string; code: string; legalName: string; industryType: string; status: string; operatingSince: string;
@@ -14,6 +14,13 @@ export type CompanyFormData = {
   defaultCalendar: string; defaultShiftModel: string; weekStartDay: string;
   phone: string; email: string; website: string; adminName: string; adminRole: string;
   address: string; zipcode: string; city: string; state: string; country: string;
+  /* Reference IDs */
+  statusId: string; industryTypeId: string; defaultTimezoneId: string;
+  defaultLanguageId: string; defaultCalendarId: string; defaultShiftModelId: string;
+  weekStartDayId: string;
+  manufacturingFocusIds: string[];
+  productLineIds: string[];
+  leanMethodologyIds: string[];
 };
 
 function Pill({ label }: { label: string }) {
@@ -34,33 +41,59 @@ function Stat({ icon, label, value, color, to }: { icon: React.ReactNode; label:
   );
 }
 
-export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => void; onSelectPlant?: (plantId: string) => void }) {
+const DEFAULT_FORM: CompanyFormData = {
+  name: "", code: "", legalName: "", industryType: "", status: "active", operatingSince: "",
+  manufacturingFocus: "", productLines: "", leanMethodology: "",
+  description: "", defaultTimezone: "", defaultLanguage: "",
+  defaultCalendar: "", defaultShiftModel: "", weekStartDay: "",
+  phone: "", email: "", website: "", adminName: "", adminRole: "",
+  address: "", zipcode: "", city: "", state: "", country: "",
+  statusId: "", industryTypeId: "", defaultTimezoneId: "",
+  defaultLanguageId: "", defaultCalendarId: "", defaultShiftModelId: "",
+  weekStartDayId: "",
+  manufacturingFocusIds: [],
+  productLineIds: [],
+  leanMethodologyIds: [],
+};
+
+export function CompanyDetailView({ onSelectPlant }: { onSelectPlant?: (plantId: string) => void }) {
   const { data, refetch: refetchCompany } = useQuery<any>(COMPANY_QUERY);
   const { plants, loading: plantsLoading } = usePlants();
   const company = data?.company;
   const [readOnly, setReadOnly] = useState(true);
   const [descExpanded, setDescExpanded] = useState(false);
-  const [form, setForm] = useState<CompanyFormData>({} as CompanyFormData);
+  const [form, setForm] = useState<CompanyFormData>(DEFAULT_FORM);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!company && Object.keys(form).length === 0) return;
-    if (Object.keys(form).length > 0) return;
+    if (initialized.current) return;
+    initialized.current = true;
     setForm({
       code: "MLC",
       name: "Maxon Lift Corp.",
       legalName: "Maxon Lift Corporation",
       industryType: "Liftgate Manufacturing",
       status: "active",
+      statusId: "",
+      industryTypeId: "",
       operatingSince: "1957-01-01",
       manufacturingFocus: "Lean, TPS, Kaizen, VSM",
+      manufacturingFocusIds: [],
       productLines: "Light Duty, Railift, Tuk-A-Way, Slidelift, Columnlift, Gas Bottle",
+      productLineIds: [],
       leanMethodology: "Lean, Six Sigma, TPS, Kaizen",
+      leanMethodologyIds: [],
       description: "Since 1957, Maxon has been the leader in liftgates. Beginning with the first Tuk-A-Way, we have constantly worked to make your life easier with innovative products that offer workhorse performance, coupled with seamless support through a network of industry professionals. We are a family-owned company, the largest single-brand manufacturer of liftgates in the world.",
       defaultTimezone: "America/Los_Angeles",
+      defaultTimezoneId: "",
       defaultLanguage: "English",
+      defaultLanguageId: "",
       defaultCalendar: "Standard (Mon-Fri)",
+      defaultCalendarId: "",
       defaultShiftModel: "Single Day Shift",
+      defaultShiftModelId: "",
       weekStartDay: "Monday",
+      weekStartDayId: "",
       phone: "800.227.4116",
       email: "info@maxonlift.com",
       website: "https://www.maxonlift.com",
@@ -76,14 +109,36 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
   });
 
   const handleSave = async () => {
-    await updateCompany({ variables: { input: { name: form.name, code: form.code, legalName: form.legalName, industryType: form.industryType, status: form.status, operatingSince: form.operatingSince, manufacturingFocus: form.manufacturingFocus, productLines: form.productLines, leanMethodology: form.leanMethodology, description: form.description, defaultTimezone: form.defaultTimezone, defaultLanguage: form.defaultLanguage, defaultCalendar: form.defaultCalendar, defaultShiftModel: form.defaultShiftModel, weekStartDay: form.weekStartDay, phone: form.phone, email: form.email, website: form.website, adminName: form.adminName, adminRole: form.adminRole, address: form.address, zipcode: form.zipcode, city: form.city, state: form.state, country: form.country } } });
+    await updateCompany({ variables: { input: {
+      name: form.name, code: form.code, legalName: form.legalName,
+      industryType: form.industryType, status: form.status,
+      statusId: form.statusId || null,
+      operatingSince: form.operatingSince,
+      manufacturingFocus: form.manufacturingFocus,
+      productLines: form.productLines, leanMethodology: form.leanMethodology,
+      description: form.description,
+      defaultTimezone: form.defaultTimezone,
+      defaultTimezoneId: form.defaultTimezoneId || null,
+      defaultLanguage: form.defaultLanguage,
+      defaultLanguageId: form.defaultLanguageId || null,
+      defaultCalendar: form.defaultCalendar,
+      defaultCalendarId: form.defaultCalendarId || null,
+      defaultShiftModel: form.defaultShiftModel,
+      defaultShiftModelId: form.defaultShiftModelId || null,
+      weekStartDay: form.weekStartDay,
+      weekStartDayId: form.weekStartDayId || null,
+      phone: form.phone, email: form.email, website: form.website,
+      adminName: form.adminName, adminRole: form.adminRole,
+      address: form.address, zipcode: form.zipcode,
+      city: form.city, state: form.state, country: form.country,
+      manufacturingFocusIds: form.manufacturingFocusIds.length ? form.manufacturingFocusIds : null,
+      productLineIds: form.productLineIds.length ? form.productLineIds : null,
+      leanMethodologyIds: form.leanMethodologyIds.length ? form.leanMethodologyIds : null,
+    } } });
   };
 
   const ro = readOnly
     ? "read-only border-0 bg-transparent px-0 text-slate-900 dark:text-slate-100 cursor-default"
-    : "border border-slate-200 dark:border-slate-700 px-3 h-9 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50";
-  const roSel = readOnly
-    ? "border-0 bg-transparent px-0 text-slate-900 dark:text-slate-100 cursor-default appearance-none"
     : "border border-slate-200 dark:border-slate-700 px-3 h-9 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50";
   const roTA = readOnly
     ? "read-only border-0 bg-transparent px-0 text-slate-900 dark:text-slate-100 cursor-default resize-none"
@@ -195,8 +250,9 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
                     {readOnly ? (
                       <span className="block text-[13px] text-slate-900 dark:text-slate-100">{c.industryType}</span>
                     ) : (
-                      <input type="text" value={form.industryType} onChange={(e) => setForm((p) => ({ ...p, industryType: e.target.value }))}
-                        className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      <ReferenceSelect categoryCode="industry_type" label=""
+                        value={form.industryTypeId ?? ""} onChange={(v) => setForm((p) => ({ ...p, industryTypeId: v }))}
+                        placeholder="Select industry..." />
                     )}
                   </div>
                   <div>
@@ -207,11 +263,9 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
                         {form.status}
                       </span>
                     ) : (
-                      <select value={form.status} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
-                        className={`w-full text-[13px] outline-none transition-colors ${roSel}`}>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
+                      <ReferenceSelect categoryCode="status" label=""
+                        value={form.statusId ?? ""} onChange={(v) => setForm((p) => ({ ...p, statusId: v }))}
+                        includeInactive placeholder="Select status..." />
                     )}
                   </div>
                   <div>
@@ -253,8 +307,9 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
                         {(form.manufacturingFocus || "").split(",").map((t: string) => t.trim()).filter(Boolean).map((t: string) => <Pill key={t} label={t} />)}
                       </div>
                     ) : (
-                      <input type="text" value={form.manufacturingFocus} onChange={(e) => setForm((p) => ({ ...p, manufacturingFocus: e.target.value }))}
-                        className={`w-full text-[13px] outline-none transition-colors ${ro}`} placeholder="Comma-separated tags" />
+                      <ReferenceMultiSelect categoryCode="manufacturing_focus" label=""
+                        values={form.manufacturingFocusIds ?? []}
+                        onChange={(v) => setForm((p) => ({ ...p, manufacturingFocusIds: v }))} />
                     )}
                   </div>
                   <div>
@@ -264,8 +319,9 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
                         {(form.productLines || "").split(",").map((t: string) => t.trim()).filter(Boolean).map((t: string) => <Pill key={t} label={t} />)}
                       </div>
                     ) : (
-                      <input type="text" value={form.productLines} onChange={(e) => setForm((p) => ({ ...p, productLines: e.target.value }))}
-                        className={`w-full text-[13px] outline-none transition-colors ${ro}`} placeholder="Comma-separated tags" />
+                      <ReferenceMultiSelect categoryCode="product_line" label=""
+                        values={form.productLineIds ?? []}
+                        onChange={(v) => setForm((p) => ({ ...p, productLineIds: v }))} />
                     )}
                   </div>
                   <div>
@@ -275,8 +331,9 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
                         {(form.leanMethodology || "").split(",").map((t: string) => t.trim()).filter(Boolean).map((t: string) => <Pill key={t} label={t} />)}
                       </div>
                     ) : (
-                      <input type="text" value={form.leanMethodology} onChange={(e) => setForm((p) => ({ ...p, leanMethodology: e.target.value }))}
-                        className={`w-full text-[13px] outline-none transition-colors ${ro}`} placeholder="Comma-separated tags" />
+                      <ReferenceMultiSelect categoryCode="lean_methodology" label=""
+                        values={form.leanMethodologyIds ?? []}
+                        onChange={(v) => setForm((p) => ({ ...p, leanMethodologyIds: v }))} />
                     )}
                   </div>
                 </div>
@@ -376,28 +433,53 @@ export function CompanyDetailView({ onBack, onSelectPlant }: { onBack?: () => vo
                 <div className="grid grid-cols-2 gap-1">
                   <div>
                     <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Default Timezone</label>
-                    <input type="text" value={form.defaultTimezone} readOnly={readOnly} onChange={(e) => setForm((p) => ({ ...p, defaultTimezone: e.target.value }))}
-                      className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                    {readOnly ? (
+                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultTimezone || "\u2014"}</span>
+                    ) : (
+                      <ReferenceSelect categoryCode="timezone" label=""
+                        value={form.defaultTimezoneId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultTimezoneId: v }))}
+                        placeholder="Select timezone..." />
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Language / Locale</label>
-                    <input type="text" value={form.defaultLanguage} readOnly={readOnly} onChange={(e) => setForm((p) => ({ ...p, defaultLanguage: e.target.value }))}
-                      className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                    {readOnly ? (
+                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultLanguage || "\u2014"}</span>
+                    ) : (
+                      <ReferenceSelect categoryCode="language_locale" label=""
+                        value={form.defaultLanguageId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultLanguageId: v }))}
+                        placeholder="Select language..." />
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Working Calendar</label>
-                    <input type="text" value={form.defaultCalendar} readOnly={readOnly} onChange={(e) => setForm((p) => ({ ...p, defaultCalendar: e.target.value }))}
-                      className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                    {readOnly ? (
+                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultCalendar || "\u2014"}</span>
+                    ) : (
+                      <ReferenceSelect categoryCode="calendar" label=""
+                        value={form.defaultCalendarId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultCalendarId: v }))}
+                        placeholder="Select calendar..." />
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Shift Model</label>
-                    <input type="text" value={form.defaultShiftModel} readOnly={readOnly} onChange={(e) => setForm((p) => ({ ...p, defaultShiftModel: e.target.value }))}
-                      className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                    {readOnly ? (
+                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultShiftModel || "\u2014"}</span>
+                    ) : (
+                      <ReferenceSelect categoryCode="shift_model" label=""
+                        value={form.defaultShiftModelId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultShiftModelId: v }))}
+                        placeholder="Select shift model..." />
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Week Start Day</label>
-                    <input type="text" value={form.weekStartDay} readOnly={readOnly} onChange={(e) => setForm((p) => ({ ...p, weekStartDay: e.target.value }))}
-                      className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                    {readOnly ? (
+                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.weekStartDay || "\u2014"}</span>
+                    ) : (
+                      <ReferenceSelect categoryCode="week_start_day" label=""
+                        value={form.weekStartDayId ?? ""} onChange={(v) => setForm((p) => ({ ...p, weekStartDayId: v }))}
+                        placeholder="Select day..." />
+                    )}
                   </div>
                 </div>
               </div>

@@ -31,6 +31,7 @@ class ReferenceValue(models.Model):
     description = models.TextField(blank=True, default="")
     sort_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    metadata = models.JSONField(blank=True, default=dict)
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )

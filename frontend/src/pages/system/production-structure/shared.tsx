@@ -78,7 +78,53 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
   );
 }
 
-/* •••••• Status Badge •••••• */
+/* •••••• Shared Pill Badge - SINGLE SOURCE OF TRUTH •••••• */
+/* All badges across production-structure MUST use this base for identical dimensions. */
+const PILL_BASE = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold";
+
+const PILL_VARIANTS: Record<string, string> = {
+  active: theme.badgeActive,
+  inactive: theme.badgeInactive,
+  warning: theme.badgeWarning,
+  critical: theme.badgeCritical,
+};
+
+const PILL_DOTS: Record<string, string> = {
+  active: "bg-emerald-500",
+  inactive: "bg-slate-400",
+  warning: "bg-amber-500",
+  critical: "bg-red-500",
+};
+
+export function PillBadge({ variant = "active", label, dot = true, className = "", ...props }: {
+  variant?: "active" | "inactive" | "warning" | "critical";
+  label: string;
+  dot?: boolean;
+  className?: string;
+} & React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span className={`${PILL_BASE} ${PILL_VARIANTS[variant]} ${className}`} {...props}>
+      {dot && <span className={`inline-block h-1.5 w-1.5 rounded-full ${PILL_DOTS[variant]}`} />}
+      {label}
+    </span>
+  );
+}
+
+export function PillBadgeAsButton({ variant = "active", label, dot = true, className = "", ...props }: {
+  variant?: "active" | "inactive" | "warning" | "critical";
+  label: string;
+  dot?: boolean;
+  className?: string;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button type="button" className={`${PILL_BASE} ${PILL_VARIANTS[variant]} cursor-pointer ${className}`} {...props}>
+      {dot && <span className={`inline-block h-1.5 w-1.5 rounded-full ${PILL_DOTS[variant]}`} />}
+      {label}
+    </button>
+  );
+}
+
+/* •••••• Status Badge (legacy) •••••• */
 
 export function StatusBadge({ status }: { status: string }) {
   const isActive = status === "active";

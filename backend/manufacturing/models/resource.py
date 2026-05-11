@@ -14,6 +14,18 @@ class Resource(TimeStampedModel):
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )
+    status_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    resource_type_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    capabilities = models.ManyToManyField(
+        "manufacturing.ReferenceValue", blank=True,
+        related_name="resources_with_capability",
+    )
 
     class Meta:
         db_table = "manufacturing_resource"

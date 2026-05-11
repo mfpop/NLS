@@ -3,6 +3,10 @@ from typing import Optional
 from django.db.models import Count, Q
 from django.db.models import Prefetch
 
+# Legacy types for backward compat
+import typing
+import strawberry as strawberry_decorator
+
 from api.types.manufacturing import (
     ManufacturingSnapshot, CompanyNode,
     PlantNode, ProductionLineNode, DepartmentNode,
@@ -17,6 +21,74 @@ from api.types.manufacturing import (
     PaginatedVisualIdentityResponse, PaginatedProductModelResponse,
     PaginatedProcessFlowResponse, PaginatedProcessStepResponse,
 )
+
+
+@strawberry_decorator.type
+class LegacyReferenceItemNode:
+    id: strawberry.ID
+    table_type: str = strawberry.field(name="tableType")
+    code: str
+    name: str
+    description: str
+    is_active: bool = strawberry.field(name="isActive")
+    sort_order: int = strawberry.field(name="sortOrder")
+
+    @classmethod
+    def from_ref_value(cls, rv: ReferenceValue, table_type: str) -> "LegacyReferenceItemNode":
+        return cls(
+            id=strawberry.ID(str(rv.id)),
+            table_type=table_type,
+            code=rv.code,
+            name=rv.name,
+            description=rv.description,
+            is_active=rv.is_active,
+            sort_order=rv.sort_order,
+        )
+
+
+@strawberry_decorator.type
+class LegacyConfigOptionNode:
+    category: str
+    value: str
+    label: str
+    sort_order: int = strawberry.field(name="sortOrder")
+
+    @classmethod
+    def from_ref_value(cls, rv: ReferenceValue, category: str) -> "LegacyConfigOptionNode":
+        return cls(
+            category=category,
+            value=rv.code,
+            label=rv.name,
+            sort_order=rv.sort_order,
+        )
+
+
+# Map old legacy table types to new category codes
+TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
+    "production_calendar": "calendar",
+    "shift_pattern": "shift_model",
+    "language": "language",
+    "timezone": "timezone",
+    "manufacturing_type": "plant_type",
+    "work_center_type": "department_type",
+    "machine_type": "resource_type",
+    "operation_code": "resource_capability",
+    "routing_type": "product_line",
+    "material_category": "manufacturing_focus",
+    "inventory_type": "resource_group_type",
+    "kanban_type": "lean_methodology",
+    "container_type": "industry_type",
+    "unit_type": "schedule",
+    "downtime_code": "status",
+    "defect_code": "status",
+    "scrap_reason": "status",
+    "kaizen_category": "lean_methodology",
+    "skill_type": "resource_capability",
+    "role": "department_type",
+    "shift_team": "shift_model",
+}
+
+CATEGORY_TO_TABLE_TYPE: dict[str, str] = {v: k for k, v in TABLE_TYPE_TO_CATEGORY.items()}
 from manufacturing.models import (
     Plant, Department, ProductionLine, ResourceGroup, Resource, Company,
     Schedule, Shift, ScheduleAssignment,
@@ -305,6 +377,20 @@ class ManufacturingQuery:
         
         return PaginatedScheduleAssignmentResponse(items=items, total=total, has_more=has_more)
 
+    # ── Reference Options (lightweight dropdown query) ──
+    @strawberry.field
+    def reference_options(self, types: list[str]) -> list["ReferenceTableNode"]:
+        """Fetch reference options for dropdowns by type codes. Returns only active values."""
+        result = []
+        for cat_code in types:
+            try:
+                cat = ReferenceCategory.objects.get(code=cat_code)
+                values = ReferenceValue.objects.filter(category=cat, is_active=True).order_by("sort_order")
+                result.append(ReferenceTableNode.from_category(cat, list(values)))
+            except ReferenceCategory.DoesNotExist:
+                pass
+        return result
+
     # ── New Reference Tables Resolver (replaces legacy) ──
     @strawberry.field
     def reference_tables(self, category: str) -> Optional[ReferenceTableNode]:
@@ -315,6 +401,16 @@ class ManufacturingQuery:
             return ReferenceTableNode.from_category(cat, list(values))
         except ReferenceCategory.DoesNotExist:
             return None
+
+    @strawberry.field
+    def reference_tables_list(self) -> list[ReferenceTableNode]:
+        """Fetch all reference tables grouped by category with values."""
+        categories = ReferenceCategory.objects.all().order_by("name")
+        result = []
+        for cat in categories:
+            values = ReferenceValue.objects.filter(category=cat, is_active=True).order_by("sort_order")
+            result.append(ReferenceTableNode.from_category(cat, list(values)))
+        return result
 
     # ── Reference Data ──
     @strawberry.field
@@ -426,3 +522,34 @@ class ManufacturingQuery:
             groups=ResourceGroup.objects.count(),
             resources=Resource.objects.count(),
         )
+
+    # ── Legacy backward-compatible resolvers ──
+
+    @strawberry.field
+    def reference_items(self, table_type: typing.Optional[str] = None, active_only: typing.Optional[bool] = None) -> list[LegacyReferenceItemNode]:
+        """Legacy: returns ReferenceItem-style results from new ReferenceValue data."""
+        result = []
+        cats_qs = ReferenceCategory.objects.all()
+        for cat in cats_qs:
+            tt = CATEGORY_TO_TABLE_TYPE.get(cat.code, cat.code)
+            if table_type and tt != table_type:
+                continue
+            vals = ReferenceValue.objects.filter(category=cat)
+            if active_only:
+                vals = vals.filter(is_active=True)
+            for v in vals.order_by("sort_order"):
+                result.append(LegacyReferenceItemNode.from_ref_value(v, tt))
+        return result
+
+    @strawberry.field
+    def config_options(self, category: typing.Optional[str] = None) -> list[LegacyConfigOptionNode]:
+        """Legacy: returns ConfigOption-style results from new ReferenceValue data."""
+        result = []
+        cats_qs = ReferenceCategory.objects.all()
+        for cat in cats_qs:
+            if category and cat.code != category:
+                continue
+            vals = ReferenceValue.objects.filter(category=cat, is_active=True).order_by("sort_order")
+            for v in vals:
+                result.append(LegacyConfigOptionNode.from_ref_value(v, cat.code))
+        return result

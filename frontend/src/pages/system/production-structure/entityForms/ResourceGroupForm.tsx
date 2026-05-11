@@ -6,6 +6,7 @@ import { ENTITY_CONFIG } from "../config/entityConfig";
 import { EntityEditPanel } from "./EntityEditPanel";
 import { EntityFormHeader } from "./EntityFormHeader";
 import { EntityFormActions } from "./EntityFormActions";
+import { ReferenceSelect } from "../components/ReferenceSelect";
 import { theme } from "@/styles/themeTokens";
 
 interface ResourceGroupFormProps {
@@ -13,34 +14,13 @@ interface ResourceGroupFormProps {
   onClose: () => void;
   onSaved?: () => void;
   readOnlyContext?: {
-    plantName?: string;
-    departmentName?: string;
-    plantId?: string;
-    departmentId?: string;
+    plantName?: string; departmentName?: string; plantId?: string; departmentId?: string;
   };
 }
 
-const GROUP_TYPE_OPTIONS = [
-  { label: "Production", value: "Production" },
-  { label: "Support", value: "Support" },
-  { label: "Management", value: "Management" },
-  { label: "Quality", value: "Quality" },
-  { label: "Logistics", value: "Logistics" },
-];
-
-const STATUS_OPTIONS = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-];
-
 interface TextFieldProps {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  required?: boolean;
-  placeholder?: string;
-  disabled?: boolean;
-  error?: string;
+  label: string; value: string; onChange: (v: string) => void;
+  required?: boolean; placeholder?: string; disabled?: boolean; error?: string;
 }
 
 function TextField({ label, value, onChange, required, placeholder, disabled, error }: TextFieldProps) {
@@ -59,36 +39,7 @@ function TextField({ label, value, onChange, required, placeholder, disabled, er
   );
 }
 
-interface SelectFieldProps {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { label: string; value: string }[];
-  disabled?: boolean;
-  error?: string;
-}
-
-function SelectField({ label, value, onChange, options, disabled, error }: SelectFieldProps) {
-  return (
-    <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className={`w-full h-9 rounded-lg border px-3 text-sm outline-none transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-          error ? "border-red-300" : `${theme.input} ${theme.focusRing}`
-        } ${disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : ""}`}>
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-      {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
-    </div>
-  );
-}
-
-interface ReadOnlyFieldProps {
-  label: string;
-  value: string;
-}
-
-function ReadOnlyField({ label, value }: ReadOnlyFieldProps) {
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
@@ -99,21 +50,13 @@ function ReadOnlyField({ label, value }: ReadOnlyFieldProps) {
   );
 }
 
-interface SectionProps {
-  title: string;
-  children: React.ReactNode;
-  twoColumns?: boolean;
-}
-
-function Section({ title, children, twoColumns }: SectionProps) {
+function Section({ title, children, twoColumns }: { title: string; children: React.ReactNode; twoColumns?: boolean }) {
   return (
     <div>
       <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 dark:border-slate-800">
         {title}
       </h3>
-      <div className={twoColumns ? "grid grid-cols-2 gap-x-6 gap-y-3" : "space-y-3"}>
-        {children}
-      </div>
+      <div className={twoColumns ? "grid grid-cols-2 gap-x-6 gap-y-3" : "space-y-3"}>{children}</div>
     </div>
   );
 }
@@ -140,10 +83,10 @@ export function ResourceGroupForm({ groupId, onClose, onSaved, readOnlyContext }
       const data = {
         name: group.name || "",
         code: group.code || "",
-        groupType: group.groupType || "Production",
+        statusId: group.statusId || "",
+        groupTypeId: group.groupTypeId || "",
         leader: group.leader || "",
         members: String(group.members ?? ""),
-        status: group.status || "active",
       };
       setForm(data);
       setInitialData(data);
@@ -177,8 +120,8 @@ export function ResourceGroupForm({ groupId, onClose, onSaved, readOnlyContext }
           input: {
             name: form.name,
             code: form.code || "",
-            status: form.status || "active",
-            groupType: form.groupType || "Production",
+            statusId: form.statusId || null,
+            groupTypeId: form.groupTypeId || null,
             members: members && !isNaN(members) ? members : undefined,
             leader: form.leader || "",
           },
@@ -246,10 +189,11 @@ export function ResourceGroupForm({ groupId, onClose, onSaved, readOnlyContext }
               required placeholder="e.g. Welding Operators" error={errors.name} />
             <TextField label="Code" value={form.code ?? ""} onChange={(v) => update("code", v)}
               placeholder="e.g. WELD-01" />
-            <SelectField label="Type" value={form.groupType ?? ""} onChange={(v) => update("groupType", v)}
-              options={GROUP_TYPE_OPTIONS} />
-            <SelectField label="Status" value={form.status ?? ""} onChange={(v) => update("status", v)}
-              options={STATUS_OPTIONS} />
+            <ReferenceSelect categoryCode="resource_group_type" label="Type"
+              value={form.groupTypeId ?? ""} onChange={(v) => update("groupTypeId", v)} />
+            <ReferenceSelect categoryCode="status" label="Status"
+              value={form.statusId ?? ""} onChange={(v) => update("statusId", v)}
+              includeInactive />
           </Section>
 
           <Section title="Context" twoColumns>
@@ -289,10 +233,8 @@ export function ResourceGroupForm({ groupId, onClose, onSaved, readOnlyContext }
           </Section>
 
           <Section title="Additional Information" twoColumns>
-            <TextField label="Sort / Order Index" value={""} onChange={() => {}}
-              placeholder="Not available in current data model" disabled />
-            <TextField label="Cost Center" value={""} onChange={() => {}}
-              placeholder="Not available in current data model" disabled />
+            <ReadOnlyField label="Created" value={group?.createdAt || ""} />
+            <ReadOnlyField label="Updated" value={group?.updatedAt || ""} />
           </Section>
 
           <Section title="Notes">

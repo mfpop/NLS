@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import {
-  Factory, X, GripVertical, TrendingUpDown, Layers, Component, Dumbbell, Pencil, RefreshCw, Plus, Trash2, Calendar, Check
+  Factory, X, GripVertical, TrendingUpDown, Layers, Component, Dumbbell, RefreshCw, Check
 } from "lucide-react";
 import { Pagination, EntityToolbar, NodeDetailPanel, CompanyDetailView, PlantDetailView } from "./components";
 import { UnifiedModal } from "./components/UnifiedModal";
@@ -19,7 +19,7 @@ import { PageHeader } from "@/pages/shared/PageHeader";
 import type { Plant } from "@/types/plant";
 import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { RESOURCE_GROUPS_QUERY, RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
-import { ENTITY_CONFIG, ADD_ROUTES } from "./config/entityConfig";
+import { ENTITY_CONFIG } from "./config/entityConfig";
 const PER_PAGE = 10;
 
 type DetailTreeNode = DataManagementTreeChild & { metadata?: Record<string, unknown> };
@@ -44,7 +44,7 @@ function EntityCard({ icon, iconBg, name, code, status, subtitle, metrics, selec
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`text-[13px] font-medium ${theme.textPrimary}`}>{name}</span>
           {code && <span className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-medium ${theme.codeBadge}`}>{code}</span>}
-          <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${isActive ? "bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" : "bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"}`}>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${isActive ? "bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" : "bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"}`}>
             <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />{status}
           </span>
         </div>
@@ -786,10 +786,6 @@ function ResViewMode({ selectedId, onSelect, search, onSearchChange, statusFilte
 
 function CompanyViewMode({ onSelectPlant }: { onSelectPlant?: (id: string) => void }) {
   return <CompanyDetailView onSelectPlant={onSelectPlant} />;
-}
-
-function LandmarkIcon({ className }: { className?: string }) {
-  return <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 22h18" /><path d="M6 18v-7" /><path d="M10 18v-7" /><path d="M14 18v-7" /><path d="M18 18v-7" /><path d="M12 2l-9 5h18z" /></svg>;
 }
 
 export function ProductionComponents() {

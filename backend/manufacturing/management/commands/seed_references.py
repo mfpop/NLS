@@ -1,0 +1,380 @@
+from django.core.management.base import BaseCommand
+from manufacturing.models import ReferenceCategory, ReferenceValue
+
+
+CATEGORIES = {
+    "status": {
+        "name": "Entity Status",
+        "description": "Active/Inactive/Archived status values for all entities",
+        "values": [
+            {"code": "ACTIVE", "name": "Active", "sort_order": 1, "metadata": {"color": "emerald"}},
+            {"code": "INACTIVE", "name": "Inactive", "sort_order": 2, "metadata": {"color": "slate"}},
+            {"code": "ARCHIVED", "name": "Archived", "sort_order": 3, "metadata": {"color": "gray"}},
+        ],
+    },
+    "country": {
+        "name": "Country",
+        "description": "Countries for entity addresses",
+        "values": [
+            {"code": "US", "name": "United States", "sort_order": 1},
+            {"code": "MX", "name": "Mexico", "sort_order": 2},
+            {"code": "CA", "name": "Canada", "sort_order": 3},
+        ],
+    },
+    "timezone": {
+        "name": "Timezone",
+        "description": "IANA timezone identifiers",
+        "values": [
+            {"code": "America/Anchorage", "name": "(UTC-09:00) America/Anchorage", "sort_order": 1},
+            {"code": "America/Los_Angeles", "name": "(UTC-08:00) America/Los_Angeles", "sort_order": 2},
+            {"code": "America/Phoenix", "name": "(UTC-07:00) America/Phoenix", "sort_order": 3},
+            {"code": "America/Denver", "name": "(UTC-07:00) America/Denver", "sort_order": 4},
+            {"code": "America/Chicago", "name": "(UTC-06:00) America/Chicago", "sort_order": 5},
+            {"code": "America/Mexico_City", "name": "(UTC-06:00) America/Mexico_City", "sort_order": 6},
+            {"code": "America/Monterrey", "name": "(UTC-06:00) America/Monterrey", "sort_order": 7},
+            {"code": "America/Tijuana", "name": "(UTC-08:00) America/Tijuana", "sort_order": 8},
+            {"code": "America/New_York", "name": "(UTC-05:00) America/New_York", "sort_order": 9},
+            {"code": "America/Detroit", "name": "(UTC-05:00) America/Detroit", "sort_order": 10},
+            {"code": "America/Cancun", "name": "(UTC-05:00) America/Cancun", "sort_order": 11},
+            {"code": "America/Chihuahua", "name": "(UTC-06:00) America/Chihuahua", "sort_order": 12},
+            {"code": "America/Hermosillo", "name": "(UTC-07:00) America/Hermosillo", "sort_order": 13},
+            {"code": "America/Mazatlan", "name": "(UTC-07:00) America/Mazatlan", "sort_order": 14},
+            {"code": "Europe/London", "name": "(UTC+00:00) Europe/London", "sort_order": 15},
+            {"code": "Europe/Berlin", "name": "(UTC+01:00) Europe/Berlin", "sort_order": 16},
+            {"code": "Europe/Bucharest", "name": "(UTC+02:00) Europe/Bucharest", "sort_order": 17},
+            {"code": "Asia/Dubai", "name": "(UTC+04:00) Asia/Dubai", "sort_order": 18},
+            {"code": "Asia/Shanghai", "name": "(UTC+08:00) Asia/Shanghai", "sort_order": 19},
+            {"code": "Asia/Tokyo", "name": "(UTC+09:00) Asia/Tokyo", "sort_order": 20},
+            {"code": "Australia/Sydney", "name": "(UTC+11:00) Australia/Sydney", "sort_order": 21},
+            {"code": "Pacific/Honolulu", "name": "(UTC-10:00) Pacific/Honolulu", "sort_order": 22},
+            {"code": "Etc/UTC", "name": "(UTC+00:00) UTC", "sort_order": 23},
+        ],
+    },
+    "language": {
+        "name": "Language / Locale",
+        "description": "Languages and locales",
+        "values": [
+            {"code": "en", "name": "English", "sort_order": 1},
+            {"code": "en_US", "name": "English (US)", "sort_order": 2},
+            {"code": "en_GB", "name": "English (UK)", "sort_order": 3},
+            {"code": "es", "name": "Spanish", "sort_order": 4},
+            {"code": "es_MX", "name": "Spanish (Mexico)", "sort_order": 5},
+            {"code": "fr", "name": "French", "sort_order": 6},
+            {"code": "fr_CA", "name": "French (Canada)", "sort_order": 7},
+            {"code": "ro", "name": "Romanian", "sort_order": 8},
+            {"code": "de", "name": "German", "sort_order": 9},
+            {"code": "zh", "name": "Chinese", "sort_order": 10},
+            {"code": "ja", "name": "Japanese", "sort_order": 11},
+        ],
+    },
+    "language_locale": {
+        "name": "Language / Locale",
+        "description": "Alias for language category",
+        "values": [],
+    },
+    "state": {
+        "name": "State / Province",
+        "description": "States and provinces for entity addresses",
+        "values": [
+            {"code": "CA", "name": "California", "sort_order": 1, "metadata": {"country": "US"}},
+            {"code": "TX", "name": "Texas", "sort_order": 2, "metadata": {"country": "US"}},
+            {"code": "IL", "name": "Illinois", "sort_order": 3, "metadata": {"country": "US"}},
+            {"code": "MI", "name": "Michigan", "sort_order": 4, "metadata": {"country": "US"}},
+            {"code": "OH", "name": "Ohio", "sort_order": 5, "metadata": {"country": "US"}},
+            {"code": "IN", "name": "Indiana", "sort_order": 6, "metadata": {"country": "US"}},
+            {"code": "NY", "name": "New York", "sort_order": 7, "metadata": {"country": "US"}},
+            {"code": "AZ", "name": "Arizona", "sort_order": 8, "metadata": {"country": "US"}},
+            {"code": "WA", "name": "Washington", "sort_order": 9, "metadata": {"country": "US"}},
+            {"code": "OR", "name": "Oregon", "sort_order": 10, "metadata": {"country": "US"}},
+            {"code": "GA", "name": "Georgia", "sort_order": 11, "metadata": {"country": "US"}},
+            {"code": "NC", "name": "North Carolina", "sort_order": 12, "metadata": {"country": "US"}},
+            {"code": "TN", "name": "Tennessee", "sort_order": 13, "metadata": {"country": "US"}},
+            {"code": "PA", "name": "Pennsylvania", "sort_order": 14, "metadata": {"country": "US"}},
+            {"code": "FL", "name": "Florida", "sort_order": 15, "metadata": {"country": "US"}},
+            {"code": "MO", "name": "Missouri", "sort_order": 16, "metadata": {"country": "US"}},
+            {"code": "WI", "name": "Wisconsin", "sort_order": 17, "metadata": {"country": "US"}},
+            {"code": "MN", "name": "Minnesota", "sort_order": 18, "metadata": {"country": "US"}},
+            {"code": "CO", "name": "Colorado", "sort_order": 19, "metadata": {"country": "US"}},
+            {"code": "AL", "name": "Alabama", "sort_order": 20, "metadata": {"country": "US"}},
+            {"code": "SC", "name": "South Carolina", "sort_order": 21, "metadata": {"country": "US"}},
+            {"code": "KY", "name": "Kentucky", "sort_order": 22, "metadata": {"country": "US"}},
+            {"code": "IA", "name": "Iowa", "sort_order": 23, "metadata": {"country": "US"}},
+            {"code": "NJ", "name": "New Jersey", "sort_order": 24, "metadata": {"country": "US"}},
+            {"code": "VA", "name": "Virginia", "sort_order": 25, "metadata": {"country": "US"}},
+            {"code": "OK", "name": "Oklahoma", "sort_order": 26, "metadata": {"country": "US"}},
+            {"code": "AR", "name": "Arkansas", "sort_order": 27, "metadata": {"country": "US"}},
+            {"code": "MS", "name": "Mississippi", "sort_order": 28, "metadata": {"country": "US"}},
+            {"code": "KS", "name": "Kansas", "sort_order": 29, "metadata": {"country": "US"}},
+            {"code": "NE", "name": "Nebraska", "sort_order": 30, "metadata": {"country": "US"}},
+            {"code": "UT", "name": "Utah", "sort_order": 31, "metadata": {"country": "US"}},
+            {"code": "NV", "name": "Nevada", "sort_order": 32, "metadata": {"country": "US"}},
+            {"code": "NM", "name": "New Mexico", "sort_order": 33, "metadata": {"country": "US"}},
+            {"code": "CT", "name": "Connecticut", "sort_order": 34, "metadata": {"country": "US"}},
+            {"code": "MA", "name": "Massachusetts", "sort_order": 35, "metadata": {"country": "US"}},
+            {"code": "MD", "name": "Maryland", "sort_order": 36, "metadata": {"country": "US"}},
+            {"code": "LA", "name": "Louisiana", "sort_order": 37, "metadata": {"country": "US"}},
+            {"code": "NH", "name": "New Hampshire", "sort_order": 38, "metadata": {"country": "US"}},
+            {"code": "ME", "name": "Maine", "sort_order": 39, "metadata": {"country": "US"}},
+            {"code": "RI", "name": "Rhode Island", "sort_order": 40, "metadata": {"country": "US"}},
+            {"code": "VT", "name": "Vermont", "sort_order": 41, "metadata": {"country": "US"}},
+            {"code": "DE", "name": "Delaware", "sort_order": 42, "metadata": {"country": "US"}},
+            {"code": "WV", "name": "West Virginia", "sort_order": 43, "metadata": {"country": "US"}},
+            {"code": "WY", "name": "Wyoming", "sort_order": 44, "metadata": {"country": "US"}},
+            {"code": "ID", "name": "Idaho", "sort_order": 45, "metadata": {"country": "US"}},
+            {"code": "MT", "name": "Montana", "sort_order": 46, "metadata": {"country": "US"}},
+            {"code": "SD", "name": "South Dakota", "sort_order": 47, "metadata": {"country": "US"}},
+            {"code": "ND", "name": "North Dakota", "sort_order": 48, "metadata": {"country": "US"}},
+            {"code": "AK", "name": "Alaska", "sort_order": 49, "metadata": {"country": "US"}},
+            {"code": "HI", "name": "Hawaii", "sort_order": 50, "metadata": {"country": "US"}},
+            {"code": "BC", "name": "British Columbia", "sort_order": 51, "metadata": {"country": "CA"}},
+            {"code": "ON", "name": "Ontario", "sort_order": 52, "metadata": {"country": "CA"}},
+            {"code": "QC", "name": "Quebec", "sort_order": 53, "metadata": {"country": "CA"}},
+            {"code": "AB", "name": "Alberta", "sort_order": 54, "metadata": {"country": "CA"}},
+            {"code": "NS", "name": "Nova Scotia", "sort_order": 55, "metadata": {"country": "CA"}},
+            {"code": "NL", "name": "Newfoundland and Labrador", "sort_order": 56, "metadata": {"country": "CA"}},
+            {"code": "MB", "name": "Manitoba", "sort_order": 57, "metadata": {"country": "CA"}},
+            {"code": "SK", "name": "Saskatchewan", "sort_order": 58, "metadata": {"country": "CA"}},
+            {"code": "NB", "name": "New Brunswick", "sort_order": 59, "metadata": {"country": "CA"}},
+            {"code": "PE", "name": "Prince Edward Island", "sort_order": 60, "metadata": {"country": "CA"}},
+            {"code": "NT", "name": "Northwest Territories", "sort_order": 61, "metadata": {"country": "CA"}},
+            {"code": "YT", "name": "Yukon", "sort_order": 62, "metadata": {"country": "CA"}},
+            {"code": "NU", "name": "Nunavut", "sort_order": 63, "metadata": {"country": "CA"}},
+            {"code": "aguascalientes", "name": "Aguascalientes", "sort_order": 64, "metadata": {"country": "MX"}},
+            {"code": "baja_california", "name": "Baja California", "sort_order": 65, "metadata": {"country": "MX"}},
+            {"code": "baja_california_sur", "name": "Baja California Sur", "sort_order": 66, "metadata": {"country": "MX"}},
+            {"code": "campeche", "name": "Campeche", "sort_order": 67, "metadata": {"country": "MX"}},
+            {"code": "chiapas", "name": "Chiapas", "sort_order": 68, "metadata": {"country": "MX"}},
+            {"code": "chihuahua", "name": "Chihuahua", "sort_order": 69, "metadata": {"country": "MX"}},
+            {"code": "coahuila", "name": "Coahuila", "sort_order": 70, "metadata": {"country": "MX"}},
+            {"code": "colima", "name": "Colima", "sort_order": 71, "metadata": {"country": "MX"}},
+            {"code": "durango", "name": "Durango", "sort_order": 72, "metadata": {"country": "MX"}},
+            {"code": "guanajuato", "name": "Guanajuato", "sort_order": 73, "metadata": {"country": "MX"}},
+            {"code": "guerrero", "name": "Guerrero", "sort_order": 74, "metadata": {"country": "MX"}},
+            {"code": "hidalgo", "name": "Hidalgo", "sort_order": 75, "metadata": {"country": "MX"}},
+            {"code": "jalisco", "name": "Jalisco", "sort_order": 76, "metadata": {"country": "MX"}},
+            {"code": "mexico_state", "name": "Mexico State", "sort_order": 77, "metadata": {"country": "MX"}},
+            {"code": "mexico_city", "name": "Mexico City", "sort_order": 78, "metadata": {"country": "MX"}},
+            {"code": "michoacan", "name": "Michoacan", "sort_order": 79, "metadata": {"country": "MX"}},
+            {"code": "morelos", "name": "Morelos", "sort_order": 80, "metadata": {"country": "MX"}},
+            {"code": "nayarit", "name": "Nayarit", "sort_order": 81, "metadata": {"country": "MX"}},
+            {"code": "nuevo_leon", "name": "Nuevo Leon", "sort_order": 82, "metadata": {"country": "MX"}},
+            {"code": "oaxaca", "name": "Oaxaca", "sort_order": 83, "metadata": {"country": "MX"}},
+            {"code": "puebla", "name": "Puebla", "sort_order": 84, "metadata": {"country": "MX"}},
+            {"code": "queretaro", "name": "Queretaro", "sort_order": 85, "metadata": {"country": "MX"}},
+            {"code": "quintana_roo", "name": "Quintana Roo", "sort_order": 86, "metadata": {"country": "MX"}},
+            {"code": "san_luis_potosi", "name": "San Luis Potosi", "sort_order": 87, "metadata": {"country": "MX"}},
+            {"code": "sinaloa", "name": "Sinaloa", "sort_order": 88, "metadata": {"country": "MX"}},
+            {"code": "sonora", "name": "Sonora", "sort_order": 89, "metadata": {"country": "MX"}},
+            {"code": "tabasco", "name": "Tabasco", "sort_order": 90, "metadata": {"country": "MX"}},
+            {"code": "tamaulipas", "name": "Tamaulipas", "sort_order": 91, "metadata": {"country": "MX"}},
+            {"code": "tlaxcala", "name": "Tlaxcala", "sort_order": 92, "metadata": {"country": "MX"}},
+            {"code": "veracruz", "name": "Veracruz", "sort_order": 93, "metadata": {"country": "MX"}},
+            {"code": "yucatan", "name": "Yucatan", "sort_order": 94, "metadata": {"country": "MX"}},
+            {"code": "zacatecas", "name": "Zacatecas", "sort_order": 95, "metadata": {"country": "MX"}},
+        ],
+    },
+    "plant_type": {
+        "name": "Plant Type",
+        "description": "Type/category of manufacturing plant",
+        "values": [
+            {"code": "manufacturing", "name": "Manufacturing", "sort_order": 1, "metadata": {"color": "blue"}},
+            {"code": "assembly", "name": "Assembly", "sort_order": 2, "metadata": {"color": "indigo"}},
+            {"code": "warehouse", "name": "Warehouse", "sort_order": 3, "metadata": {"color": "amber"}},
+            {"code": "fabrication", "name": "Fabrication", "sort_order": 4, "metadata": {"color": "violet"}},
+            {"code": "distribution", "name": "Distribution Center", "sort_order": 5, "metadata": {"color": "cyan"}},
+        ],
+    },
+    "calendar": {
+        "name": "Calendar",
+        "description": "Work calendar patterns",
+        "values": [
+            {"code": "standard_mo_fri", "name": "Standard (Mon-Fri)", "sort_order": 1},
+            {"code": "extended_mo_sat", "name": "Extended (Mon-Sat)", "sort_order": 2},
+            {"code": "continuous", "name": "Continuous (7 days)", "sort_order": 3},
+            {"code": "compressed_4x10", "name": "Compressed 4x10", "sort_order": 4},
+        ],
+    },
+    "shift_model": {
+        "name": "Shift Model",
+        "description": "Shift patterns and models",
+        "values": [
+            {"code": "1_shift_morning", "name": "1-shift (Morning)", "sort_order": 1},
+            {"code": "2_shift_morn_aftn", "name": "2-shift (Morn/Aftn)", "sort_order": 2},
+            {"code": "3_shift_rotating", "name": "3-shift (Rotating)", "sort_order": 3},
+            {"code": "night_only", "name": "Night Only", "sort_order": 4},
+            {"code": "split", "name": "Split", "sort_order": 5},
+        ],
+    },
+    "schedule": {
+        "name": "Schedule",
+        "description": "Named schedule patterns",
+        "values": [
+            {"code": "day_shift", "name": "Day Shift", "sort_order": 1},
+            {"code": "morning_shift", "name": "Morning Shift", "sort_order": 2},
+            {"code": "afternoon_shift", "name": "Afternoon Shift", "sort_order": 3},
+            {"code": "night_shift", "name": "Night Shift", "sort_order": 4},
+            {"code": "swing_shift", "name": "Swing Shift", "sort_order": 5},
+        ],
+    },
+    "week_start_day": {
+        "name": "Week Start Day",
+        "description": "First day of the work week",
+        "values": [
+            {"code": "monday", "name": "Monday", "sort_order": 1},
+            {"code": "sunday", "name": "Sunday", "sort_order": 2},
+            {"code": "saturday", "name": "Saturday", "sort_order": 3},
+        ],
+    },
+    "manufacturing_focus": {
+        "name": "Manufacturing Focus",
+        "description": "Manufacturing capabilities and focus areas",
+        "values": [
+            {"code": "liftgate_assembly", "name": "Liftgate Assembly", "sort_order": 1, "metadata": {"color": "blue"}},
+            {"code": "welding", "name": "Welding", "sort_order": 2, "metadata": {"color": "amber"}},
+            {"code": "painting", "name": "Painting", "sort_order": 3, "metadata": {"color": "violet"}},
+            {"code": "harness", "name": "Harness", "sort_order": 4, "metadata": {"color": "cyan"}},
+            {"code": "pipes", "name": "Pipes", "sort_order": 5, "metadata": {"color": "indigo"}},
+            {"code": "assembly", "name": "Assembly", "sort_order": 6, "metadata": {"color": "emerald"}},
+            {"code": "logistics", "name": "Logistics", "sort_order": 7, "metadata": {"color": "orange"}},
+            {"code": "packaging", "name": "Packaging", "sort_order": 8, "metadata": {"color": "pink"}},
+            {"code": "kitting", "name": "Kitting", "sort_order": 9, "metadata": {"color": "teal"}},
+            {"code": "storage", "name": "Storage", "sort_order": 10, "metadata": {"color": "slate"}},
+        ],
+    },
+    "industry_type": {
+        "name": "Industry Type",
+        "description": "Industry/business classification",
+        "values": [
+            {"code": "automotive", "name": "Automotive", "sort_order": 1},
+            {"code": "aerospace", "name": "Aerospace", "sort_order": 2},
+            {"code": "heavy_machinery", "name": "Heavy Machinery", "sort_order": 3},
+            {"code": "electronics", "name": "Electronics", "sort_order": 4},
+            {"code": "food_beverage", "name": "Food & Beverage", "sort_order": 5},
+            {"code": "pharma", "name": "Pharmaceutical", "sort_order": 6},
+        ],
+    },
+    "product_line": {
+        "name": "Product Line",
+        "description": "Product lines and categories",
+        "values": [
+            {"code": "liftgates", "name": "Liftgates", "sort_order": 1},
+            {"code": "rail_liftgates", "name": "Rail Liftgates", "sort_order": 2},
+            {"code": "tuckunder", "name": "TuckUnder", "sort_order": 3},
+            {"code": "flipaway", "name": "FlipAway", "sort_order": 4},
+            {"code": "accessories", "name": "Accessories", "sort_order": 5},
+        ],
+    },
+    "lean_methodology": {
+        "name": "Lean Methodology",
+        "description": "Lean manufacturing methodologies",
+        "values": [
+            {"code": "kaizen", "name": "Kaizen", "sort_order": 1, "metadata": {"color": "emerald"}},
+            {"code": "kanban", "name": "Kanban", "sort_order": 2, "metadata": {"color": "blue"}},
+            {"code": "5s", "name": "5S", "sort_order": 3, "metadata": {"color": "amber"}},
+            {"code": "tpm", "name": "TPM", "sort_order": 4, "metadata": {"color": "violet"}},
+            {"code": "six_sigma", "name": "Six Sigma", "sort_order": 5, "metadata": {"color": "cyan"}},
+            {"code": "value_stream", "name": "Value Stream Mapping", "sort_order": 6, "metadata": {"color": "indigo"}},
+            {"code": "jit", "name": "Just-In-Time", "sort_order": 7, "metadata": {"color": "rose"}},
+            {"code": "poka_yoke", "name": "Poka-Yoke", "sort_order": 8, "metadata": {"color": "orange"}},
+        ],
+    },
+    "department_type": {
+        "name": "Department Type",
+        "description": "Types of departments within a production structure",
+        "values": [
+            {"code": "production", "name": "Production", "sort_order": 1, "metadata": {"color": "blue"}},
+            {"code": "quality", "name": "Quality", "sort_order": 2, "metadata": {"color": "emerald"}},
+            {"code": "maintenance", "name": "Maintenance", "sort_order": 3, "metadata": {"color": "amber"}},
+            {"code": "logistics", "name": "Logistics", "sort_order": 4, "metadata": {"color": "violet"}},
+            {"code": "engineering", "name": "Engineering", "sort_order": 5, "metadata": {"color": "cyan"}},
+            {"code": "warehouse", "name": "Warehouse", "sort_order": 6, "metadata": {"color": "indigo"}},
+        ],
+    },
+    "resource_group_type": {
+        "name": "Resource Group Type",
+        "description": "Types/categories of resource groups",
+        "values": [
+            {"code": "production", "name": "Production", "sort_order": 1, "metadata": {"color": "blue"}},
+            {"code": "support", "name": "Support", "sort_order": 2, "metadata": {"color": "emerald"}},
+            {"code": "management", "name": "Management", "sort_order": 3, "metadata": {"color": "amber"}},
+            {"code": "quality", "name": "Quality", "sort_order": 4, "metadata": {"color": "violet"}},
+            {"code": "logistics", "name": "Logistics", "sort_order": 5, "metadata": {"color": "cyan"}},
+        ],
+    },
+    "resource_type": {
+        "name": "Resource Type",
+        "description": "Types of resources (equipment, personnel, etc.)",
+        "values": [
+            {"code": "equipment", "name": "Equipment", "sort_order": 1, "metadata": {"color": "blue", "icon": "cog"}},
+            {"code": "machine", "name": "Machine", "sort_order": 2, "metadata": {"color": "amber", "icon": "cpu"}},
+            {"code": "tool", "name": "Tool", "sort_order": 3, "metadata": {"color": "emerald", "icon": "wrench"}},
+            {"code": "personnel", "name": "Personnel", "sort_order": 4, "metadata": {"color": "violet", "icon": "users"}},
+            {"code": "workstation", "name": "Workstation", "sort_order": 5, "metadata": {"color": "cyan", "icon": "component"}},
+            {"code": "vehicle", "name": "Vehicle", "sort_order": 6, "metadata": {"color": "indigo", "icon": "truck"}},
+        ],
+    },
+    "resource_capability": {
+        "name": "Resource Capability",
+        "description": "Capabilities and skills a resource can have",
+        "values": [
+            {"code": "welding", "name": "Welding", "sort_order": 1, "metadata": {"color": "amber"}},
+            {"code": "assembly", "name": "Assembly", "sort_order": 2, "metadata": {"color": "blue"}},
+            {"code": "painting", "name": "Painting", "sort_order": 3, "metadata": {"color": "violet"}},
+            {"code": "inspection", "name": "Inspection", "sort_order": 4, "metadata": {"color": "emerald"}},
+            {"code": "packaging", "name": "Packaging", "sort_order": 5, "metadata": {"color": "cyan"}},
+            {"code": "forklift", "name": "Forklift Operation", "sort_order": 6, "metadata": {"color": "orange"}},
+            {"code": "cnc", "name": "CNC Operation", "sort_order": 7, "metadata": {"color": "indigo"}},
+            {"code": "quality_check", "name": "Quality Check", "sort_order": 8, "metadata": {"color": "rose"}},
+        ],
+    },
+}
+
+
+class Command(BaseCommand):
+    help = "Seed all reference categories and values for the production structure"
+
+    def handle(self, *args, **options):
+        for cat_code, cat_data in CATEGORIES.items():
+            cat, created = ReferenceCategory.objects.update_or_create(
+                code=cat_code,
+                defaults={
+                    "name": cat_data["name"],
+                    "description": cat_data["description"],
+                },
+            )
+            if created:
+                self.stdout.write(f"  Created category: {cat.name}")
+            else:
+                self.stdout.write(f"  Updated category: {cat.name}")
+
+            if cat_code == "language_locale":
+                source_cat = ReferenceCategory.objects.get(code="language")
+                for rv in ReferenceValue.objects.filter(category=source_cat):
+                    ReferenceValue.objects.update_or_create(
+                        category=cat,
+                        code=rv.code,
+                        defaults={
+                            "name": rv.name,
+                            "sort_order": rv.sort_order,
+                            "is_active": rv.is_active,
+                            "metadata": rv.metadata,
+                        },
+                    )
+                self.stdout.write(f"    Cloned {source_cat.values.count()} values from language")
+
+            for val_data in cat_data["values"]:
+                metadata = val_data.get("metadata", {})
+                val, val_created = ReferenceValue.objects.update_or_create(
+                    category=cat,
+                    code=val_data["code"],
+                    defaults={
+                        "name": val_data["name"],
+                        "sort_order": val_data.get("sort_order", 0),
+                        "is_active": True,
+                        "metadata": metadata,
+                    },
+                )
+                if val_created:
+                    self.stdout.write(f"    Created value: {val.name}")
+
+        self.stdout.write(self.style.SUCCESS("References seeded successfully!"))

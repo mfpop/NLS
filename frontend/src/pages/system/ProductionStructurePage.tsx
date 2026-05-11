@@ -1,10 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@apollo/client/react";
 import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, Plus, Pencil, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../styles/themeTokens";
-import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
 import { TreeNavigation, NodeDetailPanel, CompanyDetailView } from "./production-structure/components";
@@ -67,8 +65,6 @@ export function ProductionFlow() {
 
   // When a plant is selected from the tree, fetch its detailed tree
   // (selectedPlantId stays null initially so all plants are shown)
-
-  const { data: companyData } = useQuery<{ company: { id: string; code: string; name: string; description: string; status: string; address: string; phone: string; email: string; website: string; defaultTimezone: string; createdAt: string; updatedAt: string } }>(COMPANY_QUERY, { fetchPolicy: "cache-and-network" });
 
   const treeData = overviewData?.tree ? [overviewData.tree] : [];
 
@@ -140,7 +136,6 @@ export function ProductionFlow() {
     resource: "/system/production-structure/resources/",
   };
 
-  const company = companyData?.company;
   const isCompany = selectedNode?.type === "company";
   const childLabel = selectedNode ? (CHILD_TYPE_MAP[selectedNode.type] || null) : null;
   const canAdd = !!childLabel;
@@ -208,7 +203,7 @@ export function ProductionFlow() {
         {/* Column 3: Entity Details */}
         <div className="flex flex-col min-h-0 min-w-0">
           {isCompany ? (
-            <CompanyDetailView onBack={() => setSelectedNodeKey(null)} />
+            <CompanyDetailView />
           ) : (
             <>
               {/* Entity Header + Actions */}

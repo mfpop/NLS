@@ -6,6 +6,7 @@ import { PLANT_QUERY, UPDATE_PLANT_MUTATION } from "@/graphql/plantQueries";
 import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
 import { COMPANY_QUERY } from "@/graphql/companyQueries";
 import type { Plant } from "@/types/plant";
+import { ReferenceSelect, ReferenceMultiSelect } from "./ReferenceSelect";
 
 
 
@@ -52,42 +53,50 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
   const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => { setReadOnly(!editing); }, [editing]);
-  const [form, setForm] = useState<Record<string, string>>({});
+  const [form, setForm] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!plant || Object.keys(form).length > 0) return;
+    const p = plant as any;
     setForm({
-      name: plant.name || "",
-      code: plant.code || "",
-      status: plant.status || "active",
-      plantType: plant.plantType || "",
-      operatingSince: plant.operatingSince || "",
-      building: plant.building || "",
-      address: plant.address || "",
-      city: plant.city || "",
-      state: plant.state || "",
-      country: plant.country || "",
-      zipcode: plant.zipcode || "",
-      timezone: plant.timezone || "",
-      latitude: plant.latitude || "",
-      longitude: plant.longitude || "",
-      managerName: plant.managerName || "",
-      managerEmail: plant.managerEmail || "",
-      managerPhone: plant.managerPhone || "",
-      defaultCalendar: plant.defaultCalendar || "",
-      defaultShiftModel: plant.defaultShiftModel || "",
-      weekStartDay: plant.weekStartDay || "",
-      defaultSchedule: plant.defaultSchedule || "",
-      manufacturingFocus: plant.manufacturingFocus || "",
-      description: plant.description || "",
+      name: p.name || "",
+      code: p.code || "",
+      status: p.status || "active",
+      statusId: p.statusId || "",
+      plantType: p.plantType || "",
+      plantTypeId: p.plantTypeId || "",
+      operatingSince: p.operatingSince || "",
+      building: p.building || "",
+      address: p.address || "",
+      city: p.city || "",
+      state: p.state || "",
+      stateId: p.stateId || "",
+      country: p.country || "",
+      countryId: p.countryId || "",
+      zipcode: p.zipcode || "",
+      timezone: p.timezone || "",
+      timezoneId: p.timezoneId || "",
+      latitude: p.latitude || "",
+      longitude: p.longitude || "",
+      managerName: p.managerName || "",
+      managerEmail: p.managerEmail || "",
+      managerPhone: p.managerPhone || "",
+      defaultCalendar: p.defaultCalendar || "",
+      defaultCalendarId: p.defaultCalendarId || "",
+      defaultShiftModel: p.defaultShiftModel || "",
+      defaultShiftModelId: p.defaultShiftModelId || "",
+      weekStartDay: p.weekStartDay || "",
+      weekStartDayId: p.weekStartDayId || "",
+      defaultSchedule: p.defaultSchedule || "",
+      defaultScheduleId: p.defaultScheduleId || "",
+      manufacturingFocus: p.manufacturingFocus || "",
+      manufacturingFocusIds: [],
+      description: p.description || "",
     });
   }, [plant]);
 
   const ro = readOnly
     ? "read-only border-0 bg-transparent px-0 text-slate-900 dark:text-slate-100 cursor-default"
-    : "border border-slate-200 dark:border-slate-700 px-3 h-9 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50";
-  const roSel = readOnly
-    ? "border-0 bg-transparent px-0 text-slate-900 dark:text-slate-100 cursor-default appearance-none"
     : "border border-slate-200 dark:border-slate-700 px-3 h-9 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200/50";
   const roTA = readOnly
     ? "read-only border-0 bg-transparent px-0 text-slate-900 dark:text-slate-100 cursor-default resize-none"
@@ -96,7 +105,20 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
   useImperativeHandle(ref, () => ({
     save: async () => {
       try {
-        await updatePlant({ variables: { id: plantId, input: form } });
+        const input = {
+          name: form.name,
+          code: form.code,
+          status: form.status,
+          building: form.building || undefined,
+          address: form.address || undefined,
+          timezone: form.timezone || undefined,
+          defaultCalendarId: form.defaultCalendarId || undefined,
+          defaultScheduleId: form.defaultScheduleId || undefined,
+          managerName: form.managerName || undefined,
+          managerEmail: form.managerEmail || undefined,
+          description: form.description || undefined,
+        };
+        await updatePlant({ variables: { id: plantId, input } });
       } catch (e: any) {
         alert(`Save failed: ${e.message}`);
       }
@@ -164,9 +186,9 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${form.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300"}`}>
                       <span className={`inline-block h-1.5 w-1.5 rounded-full ${form.status === "active" ? "bg-emerald-500" : "bg-slate-400"}`} />{form.status}</span>
                   ) : (
-                    <select value={form.status || "active"} onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${roSel}`}>
-                      <option value="active">Active</option><option value="inactive">Inactive</option>
-                    </select>
+                    <ReferenceSelect categoryCode="status" label=""
+                      value={form.statusId ?? ""} onChange={(v) => setForm((p) => ({ ...p, statusId: v }))}
+                      includeInactive placeholder="Select status..." />
                   )}
                 </div>
                 <div>
@@ -178,7 +200,9 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                   {readOnly ? (
                     <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.plantType || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
                   ) : (
-                    <input type="text" value={form.plantType || ""} onChange={(e) => setForm((p) => ({ ...p, plantType: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                    <ReferenceSelect categoryCode="plant_type" label=""
+                      value={form.plantTypeId ?? ""} onChange={(v) => setForm((p) => ({ ...p, plantTypeId: v }))}
+                      placeholder="Select type..." />
                   )}
                 </div>
                 <div>
@@ -237,27 +261,61 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                 <h4 className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Operations</h4>
               </div>
               <div className="grid grid-cols-2 gap-1">
-                {[
-                  ["defaultCalendar", "Default Calendar"],
-                  ["defaultShiftModel", "Default Shift Model"],
-                  ["weekStartDay", "Week Start Day"],
-                  ["defaultSchedule", "Default Schedule"],
-                  ["timezone", "Timezone"],
-                ].map(([key, label]) => (
-                  <div key={key}>
-                    <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">{label}</label>
-                    {readOnly ? (
-                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form[key] || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                    ) : (
-                      <input type="text" value={form[key] || ""} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                    )}
-                  </div>
-                ))}
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Default Calendar</label>
+                  {readOnly ? (
+                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultCalendar || "\u2014"}</span>
+                  ) : (
+                    <ReferenceSelect categoryCode="calendar" label=""
+                      value={form.defaultCalendarId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultCalendarId: v }))}
+                      placeholder="Select calendar..." />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Default Shift Model</label>
+                  {readOnly ? (
+                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultShiftModel || "\u2014"}</span>
+                  ) : (
+                    <ReferenceSelect categoryCode="shift_model" label=""
+                      value={form.defaultShiftModelId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultShiftModelId: v }))}
+                      placeholder="Select shift model..." />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Week Start Day</label>
+                  {readOnly ? (
+                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.weekStartDay || "\u2014"}</span>
+                  ) : (
+                    <ReferenceSelect categoryCode="week_start_day" label=""
+                      value={form.weekStartDayId ?? ""} onChange={(v) => setForm((p) => ({ ...p, weekStartDayId: v }))}
+                      placeholder="Select day..." />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Default Schedule</label>
+                  {readOnly ? (
+                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.defaultSchedule || "\u2014"}</span>
+                  ) : (
+                    <ReferenceSelect categoryCode="schedule" label=""
+                      value={form.defaultScheduleId ?? ""} onChange={(v) => setForm((p) => ({ ...p, defaultScheduleId: v }))}
+                      placeholder="Select schedule..." />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Timezone</label>
+                  {readOnly ? (
+                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.timezone || "\u2014"}</span>
+                  ) : (
+                    <ReferenceSelect categoryCode="timezone" label=""
+                      value={form.timezoneId ?? ""} onChange={(v) => setForm((p) => ({ ...p, timezoneId: v }))}
+                      placeholder="Select timezone..." />
+                  )}
+                </div>
               </div>
             </div>
 
             {/* 4. Manufacturing Focus */}
-            {(form.manufacturingFocus || readOnly) ? (
+            {(form.manufacturingFocus || !readOnly) ? (
               <div className="rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 p-1.5">
               <div className="flex items-center gap-1 mb-0.5">
                 <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 dark:bg-blue-500/10">
@@ -273,7 +331,9 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                     {!form.manufacturingFocus && <span className="text-[12px] text-slate-400 dark:text-slate-500 italic">No manufacturing focus set</span>}
                   </div>
                 ) : (
-                  <input type="text" value={form.manufacturingFocus || ""} onChange={(e) => setForm((p) => ({ ...p, manufacturingFocus: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                  <ReferenceMultiSelect categoryCode="manufacturing_focus" label=""
+                    values={form.manufacturingFocusIds ?? []}
+                    onChange={(v: string[]) => setForm((p: any) => ({ ...p, manufacturingFocusIds: v }))} />
                 )}
               </div>
             ) : null}
@@ -359,14 +419,16 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                       <input type="text" value={form.state || ""} onChange={(e) => setForm((p) => ({ ...p, state: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
                     )}
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Country</label>
-                    {readOnly ? (
-                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.country || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                    ) : (
-                      <input type="text" value={form.country || ""} onChange={(e) => setForm((p) => ({ ...p, country: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                    )}
-                  </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Country</label>
+                  {readOnly ? (
+                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.country || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                  ) : (
+                    <ReferenceSelect categoryCode="country" label=""
+                      value={form.countryId ?? ""} onChange={(v) => setForm((p) => ({ ...p, countryId: v }))}
+                      placeholder="Select country..." />
+                  )}
+                </div>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Latitude</label>
@@ -442,8 +504,8 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                       <span className="flex-[2] min-w-0 truncate font-semibold text-slate-900 dark:text-slate-100" title={line.name}>{line.name}</span>
                       <span className="w-14 shrink-0 text-center text-slate-500 dark:text-slate-400 font-mono hidden sm:block">{line.code || "-"}</span>
                       <span className="w-12 shrink-0 text-center">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${line.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300"}`}>
-                          <span className={`inline-block h-1 w-1 rounded-full ${line.status === "active" ? "bg-emerald-500" : "bg-slate-400"}`} />
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${line.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300"}`}>
+                          <span className={`inline-block h-1.5 w-1.5 rounded-full ${line.status === "active" ? "bg-emerald-500" : "bg-slate-400"}`} />
                         </span>
                       </span>
                       <span className="w-4 shrink-0 flex items-center justify-center text-slate-300 hover:text-slate-500 dark:text-slate-600 dark:hover:text-slate-400 transition-colors">

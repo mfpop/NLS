@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { Building2, ChevronRight, Settings, Database, AlertCircle, Users, Plus, ArrowRight, Info } from "lucide-react";
 import { theme } from "../../../../styles/themeTokens";
-import { REFERENCE_TABLES_QUERY } from "@/graphql/manufacturingQueries";
+import { REFERENCE_TABLE_QUERY } from "@/graphql/manufacturingQueries";
 import { getTableEntityStyle } from "../config/entityConfig";
 
 const TABLE_NAME_TO_KEY: Record<string, string> = {
@@ -66,7 +66,7 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
   const navigate = useNavigate();
   const [openGroup, setOpenGroup] = useState<string | null>("manufacturing");
 
-  const { data } = useQuery<{ referenceTables: ReferenceTableRow[] }>(REFERENCE_TABLES_QUERY, {
+  const { data } = useQuery<{ referenceTables: ReferenceTableRow[] }>(REFERENCE_TABLE_QUERY, {
     fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
 

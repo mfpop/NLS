@@ -6,14 +6,17 @@ const COMPANY_FIELDS = `
   name
   description
   status
+  statusId
   address
   city
   state
   country
+  countryId
   phone
   email
   website
   defaultTimezone
+  defaultTimezoneId
   createdAt
   updatedAt
 `;
@@ -29,6 +32,7 @@ export const COMPANY_QUERY = gql`
 export const UPDATE_COMPANY_MUTATION = gql`
   mutation UpdateCompany($input: CompanyInput!) {
     updateCompany(input: $input) {
+      ok
       company {
         ${COMPANY_FIELDS}
       }

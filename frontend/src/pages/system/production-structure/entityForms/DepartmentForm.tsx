@@ -6,21 +6,15 @@ import { ENTITY_CONFIG } from "../config/entityConfig";
 import { EntityEditPanel } from "./EntityEditPanel";
 import { EntityFormHeader } from "./EntityFormHeader";
 import { EntityFormActions } from "./EntityFormActions";
+import { ReferenceSelect } from "../components/ReferenceSelect";
 import { theme } from "@/styles/themeTokens";
 
 interface DepartmentFormProps {
   departmentId: string;
   onClose: () => void;
   onSaved?: () => void;
-  readOnlyContext?: {
-    plantName?: string;
-  };
+  readOnlyContext?: { plantName?: string; };
 }
-
-const STATUS_OPTIONS = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-];
 
 interface TextFieldProps {
   label: string; value: string; onChange: (v: string) => void;
@@ -43,25 +37,6 @@ function TextField({ label, value, onChange, required, placeholder, disabled, er
   );
 }
 
-interface SelectFieldProps {
-  label: string; value: string; onChange: (v: string) => void;
-  options: { label: string; value: string }[]; disabled?: boolean;
-}
-
-function SelectField({ label, value, onChange, options, disabled }: SelectFieldProps) {
-  return (
-    <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className={`w-full h-9 rounded-lg border px-3 text-sm outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-          disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : `${theme.input} ${theme.focusRing}`
-        }`}>
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </div>
-  );
-}
-
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -79,9 +54,7 @@ function Section({ title, children, twoColumns }: { title: string; children: Rea
       <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 dark:border-slate-800">
         {title}
       </h3>
-      <div className={twoColumns ? "grid grid-cols-2 gap-x-6 gap-y-3" : "space-y-3"}>
-        {children}
-      </div>
+      <div className={twoColumns ? "grid grid-cols-2 gap-x-6 gap-y-3" : "space-y-3"}>{children}</div>
     </div>
   );
 }
@@ -108,7 +81,7 @@ export function DepartmentForm({ departmentId, onClose, onSaved, readOnlyContext
       const data = {
         name: dept.name || "",
         code: dept.code || "",
-        status: dept.status || "active",
+        statusId: dept.statusId || "",
         manager: dept.manager || "",
         employees: String(dept.employees ?? ""),
       };
@@ -144,7 +117,7 @@ export function DepartmentForm({ departmentId, onClose, onSaved, readOnlyContext
           input: {
             name: form.name,
             code: form.code,
-            status: form.status || "active",
+            statusId: form.statusId || null,
             manager: form.manager || undefined,
             employees: form.employees ? Number(form.employees) : undefined,
           },
@@ -213,8 +186,9 @@ export function DepartmentForm({ departmentId, onClose, onSaved, readOnlyContext
               required placeholder="e.g. Assembly" error={errors.name} />
             <TextField label="Code" value={form.code ?? ""} onChange={(v) => update("code", v)}
               required placeholder="e.g. ASM" error={errors.code} />
-            <SelectField label="Status" value={form.status ?? ""} onChange={(v) => update("status", v)}
-              options={STATUS_OPTIONS} />
+            <ReferenceSelect categoryCode="status" label="Status"
+              value={form.statusId ?? ""} onChange={(v) => update("statusId", v)}
+              includeInactive />
           </Section>
 
           <Section title="Context" twoColumns>

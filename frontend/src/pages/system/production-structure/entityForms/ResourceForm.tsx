@@ -6,32 +6,15 @@ import { ENTITY_CONFIG } from "../config/entityConfig";
 import { EntityEditPanel } from "./EntityEditPanel";
 import { EntityFormHeader } from "./EntityFormHeader";
 import { EntityFormActions } from "./EntityFormActions";
+import { ReferenceSelect } from "../components/ReferenceSelect";
 import { theme } from "@/styles/themeTokens";
 
 interface ResourceFormProps {
   resourceId: string;
   onClose: () => void;
   onSaved?: () => void;
-  readOnlyContext?: {
-    plantName?: string;
-    departmentName?: string;
-    groupName?: string;
-  };
+  readOnlyContext?: { plantName?: string; departmentName?: string; groupName?: string; };
 }
-
-const STATUS_OPTIONS = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-];
-
-const RESOURCE_TYPE_OPTIONS = [
-  { label: "Equipment", value: "Equipment" },
-  { label: "Machine", value: "Machine" },
-  { label: "Tool", value: "Tool" },
-  { label: "Personnel", value: "Personnel" },
-  { label: "Workstation", value: "Workstation" },
-  { label: "Vehicle", value: "Vehicle" },
-];
 
 interface TextFieldProps {
   label: string; value: string; onChange: (v: string) => void;
@@ -50,25 +33,6 @@ function TextField({ label, value, onChange, required, placeholder, disabled, er
           error ? "border-red-300 focus:ring-2 focus:ring-red-200" : `${theme.input} ${theme.focusRing}`
         } ${disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : ""}`} />
       {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
-    </div>
-  );
-}
-
-interface SelectFieldProps {
-  label: string; value: string; onChange: (v: string) => void;
-  options: { label: string; value: string }[]; disabled?: boolean;
-}
-
-function SelectField({ label, value, onChange, options, disabled }: SelectFieldProps) {
-  return (
-    <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
-        className={`w-full h-9 rounded-lg border px-3 text-sm outline-none appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-          disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : `${theme.input} ${theme.focusRing}`
-        }`}>
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
     </div>
   );
 }
@@ -113,8 +77,8 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
       const data = {
         name: resource.name || "",
         code: resource.code || "",
-        resourceType: resource.resourceType || "",
-        status: resource.status || "active",
+        statusId: resource.statusId || "",
+        resourceTypeId: resource.resourceTypeId || "",
         opStatus: resource.opStatus || "",
         utilization: String(resource.utilization ?? ""),
         shift: resource.shift || "",
@@ -150,7 +114,8 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
           input: {
             name: form.name,
             code: form.code || "",
-            status: form.status || "active",
+            statusId: form.statusId || null,
+            resourceTypeId: form.resourceTypeId || null,
           },
         },
       });
@@ -212,8 +177,11 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
               required placeholder="e.g. CNC Machine 03" error={errors.name} />
             <TextField label="Code / Asset Number" value={form.code ?? ""} onChange={(v) => update("code", v)}
               placeholder="e.g. CNC-003" />
-            <SelectField label="Resource Type" value={form.resourceType ?? ""} onChange={(v) => update("resourceType", v)} options={RESOURCE_TYPE_OPTIONS} />
-            <SelectField label="Status" value={form.status ?? ""} onChange={(v) => update("status", v)} options={STATUS_OPTIONS} />
+            <ReferenceSelect categoryCode="resource_type" label="Resource Type"
+              value={form.resourceTypeId ?? ""} onChange={(v) => update("resourceTypeId", v)} />
+            <ReferenceSelect categoryCode="status" label="Status"
+              value={form.statusId ?? ""} onChange={(v) => update("statusId", v)}
+              includeInactive />
           </Section>
 
           <Section title="Context" twoColumns>

@@ -6,22 +6,30 @@ const PLANT_FIELDS = `
   name
   description
   status
+  statusId
   building
   address
   city
   state
   country
+  countryId
   zipcode
   timezone
+  timezoneId
   latitude
   longitude
   plantType
+  plantTypeId
   operatingSince
   managerPhone
   defaultCalendar
+  defaultCalendarId
   defaultShiftModel
+  defaultShiftModelId
   weekStartDay
+  weekStartDayId
   defaultSchedule
+  defaultScheduleId
   manufacturingFocus
   managerName
   managerEmail

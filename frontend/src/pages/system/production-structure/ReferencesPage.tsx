@@ -251,7 +251,8 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
             {item.description || ""}
           </span>
           <span className={`flex items-center`}>
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-medium ${item.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full ${item.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
               {item.isActive ? 'Active' : 'Inactive'}
             </span>
           </span>

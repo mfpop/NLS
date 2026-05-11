@@ -2,6 +2,7 @@ import strawberry
 from typing import Optional
 from django.contrib.auth import authenticate
 from api.types.manufacturing import (
+    CompanyNode, CompanyPayload, CompanyInput,
     PlantNode, PlantPayload, PlantInput,
     ProductionLineNode, ProductionLinePayload, ProductionLineInput,
     DepartmentNode, DepartmentPayload, DepartmentInput,
@@ -10,14 +11,125 @@ from api.types.manufacturing import (
     ProductionLineDepartmentAssignmentNode, AssignmentPayload, AssignDepartmentInput,
     ScheduleNode, SchedulePayload, ScheduleInput,
     ScheduleAssignmentNode, ScheduleAssignmentPayload, ScheduleAssignmentInput,
+    MutationError,
 )
 from api.types.auth import LoginInput, AuthPayload, UserNode
 from api.auth_utils import encode_jwt
 from manufacturing.models import (
-    Plant, Department, ProductionLine, ResourceGroup, Resource,
+    Company, Plant, Department, ProductionLine, ResourceGroup, Resource,
     ProductionLineDepartmentAssignment, Schedule, ScheduleAssignment,
+    ReferenceValue, ReferenceCategory,
 )
 from manufacturing.domain.plant_structure_rules import validate_plant_input
+
+
+def _resolve_ref(model, ref_id: Optional[str]):
+    if not ref_id:
+        return None
+    try:
+        return model.objects.get(id=ref_id)
+    except model.DoesNotExist:
+        return None
+
+
+def _set_refs(plant, input: PlantInput):
+    if input.status_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.status_id)
+        plant.status_id = ref
+    if input.country_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.country_id)
+        plant.country_id = ref
+    if input.timezone_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.timezone_id)
+        plant.timezone_id = ref
+    if input.plant_type_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.plant_type_id)
+        plant.plant_type_id = ref
+    if input.default_calendar_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.default_calendar_id)
+        plant.default_calendar_id = ref
+    if input.default_shift_model_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.default_shift_model_id)
+        plant.default_shift_model_id = ref
+    if input.week_start_day_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.week_start_day_id)
+        plant.week_start_day_id = ref
+    if input.default_schedule_id is not None:
+        ref = _resolve_ref(ReferenceValue, input.default_schedule_id)
+        plant.default_schedule_id = ref
+    if input.manufacturing_focus_ids is not None:
+        refs = ReferenceValue.objects.filter(id__in=input.manufacturing_focus_ids)
+        plant.manufacturing_focus_refs.set(refs)
+
+
+# ── Legacy reference item mutation types ──
+
+@strawberry.input
+class ReferenceItemInput:
+    table_type: str = strawberry.field(name="tableType")
+    code: str
+    name: str
+    description: Optional[str] = ""
+    is_active: Optional[bool] = strawberry.field(name="isActive", default=True)
+    sort_order: Optional[int] = strawberry.field(name="sortOrder", default=0)
+
+
+@strawberry.type
+class ReferenceItemPayload:
+    item: Optional["LegacyReferenceItemResult"] = None
+    errors: Optional[list[MutationError]] = strawberry.field(default_factory=list)
+
+
+@strawberry.type
+class LegacyReferenceItemResult:
+    id: strawberry.ID
+    table_type: str = strawberry.field(name="tableType")
+    code: str
+    name: str
+    description: str
+    is_active: bool = strawberry.field(name="isActive")
+    sort_order: int = strawberry.field(name="sortOrder")
+
+    @classmethod
+    def from_ref_value(cls, rv: ReferenceValue, table_type: str) -> "LegacyReferenceItemResult":
+        return cls(
+            id=strawberry.ID(str(rv.id)),
+            table_type=table_type,
+            code=rv.code,
+            name=rv.name,
+            description=rv.description,
+            is_active=rv.is_active,
+            sort_order=rv.sort_order,
+        )
+
+
+TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
+    "production_calendar": "calendar",
+    "shift_pattern": "shift_model",
+    "language": "language",
+    "timezone": "timezone",
+    "manufacturing_type": "plant_type",
+    "work_center_type": "department_type",
+    "machine_type": "resource_type",
+    "operation_code": "resource_capability",
+    "routing_type": "product_line",
+    "material_category": "manufacturing_focus",
+    "inventory_type": "resource_group_type",
+    "kanban_type": "lean_methodology",
+    "container_type": "industry_type",
+    "unit_type": "schedule",
+    "downtime_code": "status",
+    "defect_code": "status",
+    "scrap_reason": "status",
+    "kaizen_category": "lean_methodology",
+    "skill_type": "resource_capability",
+    "role": "department_type",
+    "shift_team": "shift_model",
+}
+
+
+def _table_type_to_category(table_type: str) -> str:
+    return TABLE_TYPE_TO_CATEGORY.get(table_type, table_type)
 
 
 @strawberry.type
@@ -39,6 +151,25 @@ class ManufacturingMutation:
                 department=getattr(user.role_profile, "department", "") or "",
             ),
         )
+
+    @strawberry.mutation
+    def update_company(self, input: CompanyInput) -> CompanyPayload:
+        company = Company.objects.first()
+        if not company:
+            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="NOT_FOUND", message="No company found")])
+        for f in ("code", "name", "description", "status", "address", "city", "state", "country", "phone", "email", "website", "default_timezone"):
+            v = getattr(input, f)
+            if v is not None:
+                setattr(company, f, v)
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            company.status_id = ref
+        if input.default_timezone_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.default_timezone_id)
+            company.default_timezone_id = ref
+        company.save()
+        return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+
     @strawberry.mutation
     def create_plant(self, input: PlantInput) -> PlantPayload:
         errors = validate_plant_input(input)
@@ -60,6 +191,8 @@ class ManufacturingMutation:
             default_schedule=input.default_schedule or "",
             manufacturing_focus=input.manufacturing_focus or "",
         )
+        _set_refs(plant, input)
+        plant.save()
         return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
 
     @strawberry.mutation
@@ -72,6 +205,7 @@ class ManufacturingMutation:
             v = getattr(input, f)
             if v is not None:
                 setattr(plant, f, v)
+        _set_refs(plant, input)
         plant.save()
         return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
 
@@ -92,6 +226,13 @@ class ManufacturingMutation:
             description=input.description or "", status=input.status or "ACTIVE",
             shift_pattern=input.shift_pattern or "", is_constraint=input.is_constraint or False,
         )
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            line.status_id = ref
+        if input.shift_pattern_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.shift_pattern_id)
+            line.shift_pattern_id = ref
+        line.save()
         return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
 
     @strawberry.mutation
@@ -104,6 +245,12 @@ class ManufacturingMutation:
             v = getattr(input, f)
             if v is not None:
                 setattr(line, f, v)
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            line.status_id = ref
+        if input.shift_pattern_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.shift_pattern_id)
+            line.shift_pattern_id = ref
         line.save()
         return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
 
@@ -123,6 +270,13 @@ class ManufacturingMutation:
             code=input.code, name=input.name, description=input.description or "",
             status=input.status or "ACTIVE", manager=input.manager or "", employees=input.employees or 0,
         )
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            dept.status_id = ref
+        if input.department_type_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.department_type_id)
+            dept.department_type_id = ref
+        dept.save()
         return DepartmentPayload(ok=True, department=DepartmentNode.from_db(dept))
 
     @strawberry.mutation
@@ -135,6 +289,12 @@ class ManufacturingMutation:
             v = getattr(input, f)
             if v is not None:
                 setattr(dept, f, v)
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            dept.status_id = ref
+        if input.department_type_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.department_type_id)
+            dept.department_type_id = ref
         dept.save()
         return DepartmentPayload(ok=True, department=DepartmentNode.from_db(dept))
 
@@ -170,6 +330,13 @@ class ManufacturingMutation:
             description=input.description or "", status=input.status or "ACTIVE",
             members=input.members or 0, leader=input.leader or "",
         )
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            rg.status_id = ref
+        if input.group_type_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.group_type_id)
+            rg.group_type_id = ref
+        rg.save()
         return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
 
     @strawberry.mutation
@@ -182,6 +349,12 @@ class ManufacturingMutation:
             v = getattr(input, f)
             if v is not None:
                 setattr(rg, f, v)
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            rg.status_id = ref
+        if input.group_type_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.group_type_id)
+            rg.group_type_id = ref
         rg.save()
         return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
 
@@ -201,6 +374,16 @@ class ManufacturingMutation:
             resource_group_id=input.resource_group_id, code=input.code, name=input.name,
             description=input.description or "", status=input.status or "ACTIVE",
         )
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            res.status_id = ref
+        if input.resource_type_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.resource_type_id)
+            res.resource_type_id = ref
+        if input.capability_ids is not None:
+            refs = ReferenceValue.objects.filter(id__in=input.capability_ids)
+            res.capabilities.set(refs)
+        res.save()
         return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
 
     @strawberry.mutation
@@ -213,6 +396,15 @@ class ManufacturingMutation:
             v = getattr(input, f)
             if v is not None:
                 setattr(res, f, v)
+        if input.status_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.status_id)
+            res.status_id = ref
+        if input.resource_type_id is not None:
+            ref = _resolve_ref(ReferenceValue, input.resource_type_id)
+            res.resource_type_id = ref
+        if input.capability_ids is not None:
+            refs = ReferenceValue.objects.filter(id__in=input.capability_ids)
+            res.capabilities.set(refs)
         res.save()
         return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
 
@@ -270,3 +462,49 @@ class ManufacturingMutation:
     def remove_schedule_assignment(self, id: str) -> ScheduleAssignmentPayload:
         deleted, _ = ScheduleAssignment.objects.filter(id=id).delete()
         return ScheduleAssignmentPayload(ok=deleted > 0)
+
+    # ── Legacy reference item mutations ──
+
+    @strawberry.mutation
+    def create_reference_item(self, input: ReferenceItemInput) -> ReferenceItemPayload:
+        cat_code = _table_type_to_category(input.table_type)
+        try:
+            cat = ReferenceCategory.objects.get(code=cat_code)
+        except ReferenceCategory.DoesNotExist:
+            return ReferenceItemPayload(errors=[MutationError(field="tableType", code="INVALID", message=f"Unknown table type: {input.table_type}")])
+        rv, _ = ReferenceValue.objects.update_or_create(
+            category=cat,
+            code=input.code,
+            defaults={
+                "name": input.name,
+                "description": input.description or "",
+                "sort_order": input.sort_order or 0,
+                "is_active": input.is_active if input.is_active is not None else True,
+            },
+        )
+        return ReferenceItemPayload(item=LegacyReferenceItemResult.from_ref_value(rv, input.table_type))
+
+    @strawberry.mutation
+    def update_reference_item(self, id: str, input: ReferenceItemInput) -> ReferenceItemPayload:
+        try:
+            rv = ReferenceValue.objects.get(id=id)
+        except ReferenceValue.DoesNotExist:
+            return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Reference item not found")])
+        rv.code = input.code
+        rv.name = input.name
+        rv.description = input.description or ""
+        rv.sort_order = input.sort_order or 0
+        if input.is_active is not None:
+            rv.is_active = input.is_active
+        rv.save()
+        return ReferenceItemPayload(item=LegacyReferenceItemResult.from_ref_value(rv, input.table_type))
+
+    @strawberry.mutation
+    def deactivate_reference_item(self, id: str) -> ReferenceItemPayload:
+        try:
+            rv = ReferenceValue.objects.get(id=id)
+        except ReferenceValue.DoesNotExist:
+            return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Reference item not found")])
+        rv.is_active = False
+        rv.save()
+        return ReferenceItemPayload(item=LegacyReferenceItemResult.from_ref_value(rv, ""))

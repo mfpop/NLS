@@ -7,6 +7,7 @@ const DEPT_FIELDS = `
   name
   description
   status
+  statusId
   manager
   employees
   groupCount
@@ -21,10 +22,12 @@ const RG_FIELDS = `
   name
   description
   status
+  statusId
   departmentId
   departmentName
   members
   leader
+  groupTypeId
   resourceCount
   resourceType
   createdAt
@@ -37,8 +40,10 @@ const RES_FIELDS = `
   name
   description
   status
+  statusId
   resourceGroupId
   resourceGroupName
+  resourceTypeId
   utilization
   opStatus
   lastActivity
@@ -53,9 +58,11 @@ const LINE_FIELDS = `
   name
   description
   status
+  statusId
   plantId
   plantName
   shiftPattern
+  shiftPatternId
   isConstraint
   lineCount
   modelsProduced

@@ -10,8 +10,16 @@ class Department(TimeStampedModel):
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )
+    status_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
     manager = models.CharField(max_length=200, blank=True, default="")
     employees = models.IntegerField(default=0)
+    department_type_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
 
     class Meta:
         db_table = "manufacturing_department"

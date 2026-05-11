@@ -14,7 +14,15 @@ class ProductionLine(TimeStampedModel):
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )
+    status_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
     shift_pattern = models.CharField(max_length=100, blank=True, default="")
+    shift_pattern_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
     is_constraint = models.BooleanField(default=False)
 
     class Meta:

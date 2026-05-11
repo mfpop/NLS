@@ -24,5 +24,4 @@ export { SearchInput } from "./SearchInput";
 export { CompanyOverview } from "./CompanyOverview";
 export type { CompanyOverviewData } from "./CompanyOverview";
 export { CompanyDetailView } from "./CompanyDetailView";
-export type { CompanyFormData } from "./CompanyDetailView";
 export { PlantDetailView } from "./PlantDetailView";

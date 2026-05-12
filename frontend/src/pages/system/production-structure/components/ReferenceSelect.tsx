@@ -11,16 +11,18 @@ interface ReferenceSelectProps {
   error?: string;
   placeholder?: string;
   includeInactive?: boolean;
+  filteredValues?: Array<{ id: string; name: string }>;
 }
 
 export function ReferenceSelect({
-  categoryCode, label, value, onChange, required, disabled, error, placeholder, includeInactive,
+  categoryCode, label, value, onChange, required, disabled, error, placeholder, includeInactive, filteredValues,
 }: ReferenceSelectProps) {
   const { values, loading } = useReferenceCategory(categoryCode);
 
+  const rawOptions = filteredValues ?? values;
   const options = includeInactive
-    ? values
-    : values.filter((v) => v.isActive);
+    ? rawOptions
+    : rawOptions.filter((v) => "isActive" in v ? (v as any).isActive : true);
 
   return (
     <div>
@@ -59,14 +61,17 @@ interface ReferenceMultiSelectProps {
   onChange: (values: string[]) => void;
   disabled?: boolean;
   error?: string;
+  showUnselected?: boolean;
 }
 
 export function ReferenceMultiSelect({
-  categoryCode, label, values, onChange, disabled, error,
+  categoryCode, label, values, onChange, disabled, error, showUnselected = true,
 }: ReferenceMultiSelectProps) {
   const { values: allOptions, loading } = useReferenceCategory(categoryCode);
 
   const activeOptions = allOptions.filter((v) => v.isActive);
+  const selectedOptions = activeOptions.filter((v) => values.includes(v.id));
+  const unselectedOptions = activeOptions.filter((v) => !values.includes(v.id));
 
   const toggle = (id: string) => {
     if (values.includes(id)) {
@@ -88,25 +93,41 @@ export function ReferenceMultiSelect({
         <div className="h-9 flex items-center text-xs text-slate-400">No reference values configured</div>
       )}
       {!loading && activeOptions.length > 0 && (
-        <div className="flex flex-nowrap gap-1 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "thin" }}>
-          {activeOptions.map((opt) => {
-            const selected = values.includes(opt.id);
-            return (
+        <div>
+          {/* Selected badges */}
+          <div className="flex flex-wrap gap-1 mb-1">
+            {selectedOptions.length === 0 && (
+              <span className="text-xs text-slate-400 italic">None</span>
+            )}
+            {selectedOptions.map((opt) => (
               <button
                 key={opt.id}
                 type="button"
                 disabled={disabled}
                 onClick={() => toggle(opt.id)}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border whitespace-nowrap shrink-0 ${
-                  selected
-                    ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                    : "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border whitespace-nowrap shrink-0 bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {opt.name}
+                {!disabled && <span className="ml-0.5 text-emerald-400 hover:text-emerald-600 dark:text-emerald-300">&times;</span>}
               </button>
-            );
-          })}
+            ))}
+          </div>
+          {/* Unselected options */}
+          {showUnselected && unselectedOptions.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {unselectedOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => toggle(opt.id)}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border whitespace-nowrap shrink-0 bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  + {opt.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}

@@ -89,7 +89,43 @@ export function useReferenceTables() {
     return found?.metadata ?? null;
   };
 
-  return { data, loading, error, byCategory, getLabel, getMetadata };
+  const filterByMeta = (categoryCode: string, metaKey: string, metaValue: string): ReferenceValueNode[] => {
+    const values = byCategory(categoryCode);
+    return values.filter((v) => {
+      const meta = v.metadata;
+      if (!meta) return false;
+      try {
+        const parsed = typeof meta === "string" ? JSON.parse(meta) : meta;
+        return parsed[metaKey] === metaValue;
+      } catch {
+        return false;
+      }
+    });
+  };
+
+  const findIdByText = (categoryCode: string, text: string): string => {
+    if (!text) return "";
+    const values = byCategory(categoryCode);
+    const lower = text.toLowerCase().trim();
+    // 1. Exact name or code match
+    let found = values.find((v) => v.name === text || v.code === text);
+    if (found) return found.id;
+    // 2. Case-insensitive name or code
+    found = values.find((v) => v.name.toLowerCase() === lower || v.code.toLowerCase() === lower);
+    if (found) return found.id;
+    // 3. Text CONTAINS the code (e.g. "USA" contains "US")
+    found = values.find((v) => v.code && lower.includes(v.code.toLowerCase()));
+    if (found) return found.id;
+    // 4. Name contains the text (e.g. "United" in "United States")
+    found = values.find((v) => v.name.toLowerCase().includes(lower));
+    if (found) return found.id;
+    // 5. Code contains the text (e.g. "US" in "USA")
+    found = values.find((v) => v.code && v.code.toLowerCase().includes(lower));
+    if (found) return found.id;
+    return "";
+  };
+
+  return { data, loading, error, byCategory, getLabel, getMetadata, findIdByText, filterByMeta };
 }
 
 export function useReferenceCategory(categoryCode: string) {

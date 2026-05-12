@@ -1,23 +1,22 @@
 import { Check, ChevronDown, ChevronUp, Copy, Search } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
-import remarkGfm from "remark-gfm";
-import mermaid from "mermaid";
+import { DiagramRenderer } from "./DiagramRenderer";
 import type { DocumentationContent } from "./documentationTypes";
 
 interface MarkdownReaderProps {
   document: DocumentationContent | null;
 }
 
-interface MermaidBlockProps {
-  chart: string;
-}
-
 interface SectionHeading {
   id: string;
   level: number;
   text: string;
+}
+
+interface MarkdownRuntime {
+  ReactMarkdown: (props: Record<string, unknown>) => ReactNode;
+  remarkGfm: unknown;
+  rehypeHighlight: unknown;
 }
 
 function extractTextContent(node: ReactNode): string {
@@ -83,49 +82,12 @@ function renderWithCoreConceptPills(text: string): ReactNode[] {
   });
 }
 
-function MermaidBlock({ chart }: MermaidBlockProps) {
-  const [svg, setSvg] = useState<string | null>(null);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function render() {
-      try {
-        mermaid.initialize({ startOnLoad: false, securityLevel: "loose" });
-        const id = `mermaid-${Math.random().toString(36).slice(2)}`;
-        const renderResult = await mermaid.render(id, chart);
-        if (!cancelled) {
-          setSvg(renderResult.svg);
-          setHasError(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setHasError(true);
-          setSvg(null);
-        }
-      }
-    }
-
-    void render();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [chart]);
-
-  if (hasError || !svg) {
-    return <pre className="code-block">{chart}</pre>;
-  }
-
-  return <div className="mermaid-block" dangerouslySetInnerHTML={{ __html: svg }} />;
-}
-
 export function MarkdownReader({ document }: MarkdownReaderProps) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const readerScrollRef = useRef<HTMLDivElement | null>(null);
   const matchesRef = useRef<HTMLElement[]>([]);
   const headingIdCountRef = useRef<Map<string, number>>(new Map());
+  const [runtime, setRuntime] = useState<MarkdownRuntime | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [matchCount, setMatchCount] = useState(0);
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
@@ -142,6 +104,38 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
     setActiveHeadingId(null);
     headingIdCountRef.current = new Map();
   }, [document?.name]);
+
+  useEffect(() => {
+    if (!document) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadRuntime() {
+      const [reactMarkdownModule, remarkGfmModule, rehypeHighlightModule] = await Promise.all([
+        import("react-markdown"),
+        import("remark-gfm"),
+        import("rehype-highlight"),
+      ]);
+
+      if (cancelled) {
+        return;
+      }
+
+      setRuntime({
+        ReactMarkdown: reactMarkdownModule.default as (props: Record<string, unknown>) => ReactNode,
+        remarkGfm: remarkGfmModule.default,
+        rehypeHighlight: rehypeHighlightModule.default,
+      });
+    }
+
+    void loadRuntime();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [document]);
 
   useEffect(() => {
     const root = contentRef.current;
@@ -377,6 +371,24 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
     );
   }
 
+  if (!runtime) {
+    return (
+      <section className="reader-panel" aria-label="Documentation Reader">
+        <div className="reader-header">
+          <div>
+            <h2 className="reader-title">{displayDocumentTitle(document.name)}</h2>
+            <p className="reader-description">{document.purpose ?? document.path}</p>
+          </div>
+        </div>
+        <div className="reader-content">
+          <div className="doc-empty-state">Loading document renderer...</div>
+        </div>
+      </section>
+    );
+  }
+
+  const ReactMarkdown = runtime.ReactMarkdown;
+
   return (
     <section className="reader-panel" aria-label="Documentation Reader">
       <div className="reader-header">
@@ -428,14 +440,15 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
           <div className="reader-layout">
             <div className="reader-document-box" ref={contentRef}>
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight]}
+                remarkPlugins={[runtime.remarkGfm]}
+                rehypePlugins={[runtime.rehypeHighlight]}
                 components={{
-                  code({ className, children, ...props }) {
+                  code(params: any) {
+                    const { className, children, ...props } = params;
                     const language = className?.replace("language-", "") ?? "";
                     const raw = String(children).replace(/\n$/, "");
                     if (language === "mermaid") {
-                      return <MermaidBlock chart={raw} />;
+                      return <DiagramRenderer chart={raw} />;
                     }
 
                     return (
@@ -444,7 +457,8 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
                       </code>
                     );
                   },
-                  h1({ children, ...props }) {
+                  h1(params: any) {
+                    const { children, ...props } = params;
                     const headingText = extractTextContent(children).trim();
                     const id = nextHeadingId(headingText);
                     return (
@@ -453,7 +467,8 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
                       </h1>
                     );
                   },
-                  h2({ children, ...props }) {
+                  h2(params: any) {
+                    const { children, ...props } = params;
                     const headingText = extractTextContent(children).trim();
                     const id = nextHeadingId(headingText);
                     return (
@@ -462,7 +477,8 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
                       </h2>
                     );
                   },
-                  h3({ children, ...props }) {
+                  h3(params: any) {
+                    const { children, ...props } = params;
                     const headingText = extractTextContent(children).trim();
                     const id = nextHeadingId(headingText);
                     return (
@@ -471,7 +487,8 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
                       </h3>
                     );
                   },
-                  p({ children, ...props }) {
+                  p(params: any) {
+                    const { children, ...props } = params;
                     const raw = extractTextContent(children).trim();
                     const flowLine = raw.match(/^([A-Za-z][A-Za-z0-9\s_-]{1,40})(\s*(->|→|=>)\s*[A-Za-z][A-Za-z0-9\s_-]{1,40})+$/);
                     if (flowLine) {
@@ -524,7 +541,8 @@ export function MarkdownReader({ document }: MarkdownReaderProps) {
 
                     return <p {...props}>{children}</p>;
                   },
-                  li({ children, ...props }) {
+                  li(params: any) {
+                    const { children, ...props } = params;
                     const raw = extractTextContent(children).trim();
                     if (CORE_CONCEPT_PATTERN.test(raw)) {
                       CORE_CONCEPT_PATTERN.lastIndex = 0;

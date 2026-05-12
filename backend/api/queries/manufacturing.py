@@ -20,6 +20,7 @@ from api.types.manufacturing import (
     PaginatedShiftResponse, PaginatedScheduleAssignmentResponse,
     PaginatedVisualIdentityResponse, PaginatedProductModelResponse,
     PaginatedProcessFlowResponse, PaginatedProcessStepResponse,
+    ProfileNode, WorkHistoryEntry, EducationEntry,
 )
 
 
@@ -77,6 +78,7 @@ TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
     "material_category": "manufacturing_focus",
     "inventory_type": "resource_group_type",
     "kanban_type": "lean_methodology",
+    "industry_type": "industry_type",
     "container_type": "industry_type",
     "unit_type": "schedule",
     "downtime_code": "status",
@@ -88,7 +90,26 @@ TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
     "shift_team": "shift_model",
 }
 
-CATEGORY_TO_TABLE_TYPE: dict[str, str] = {v: k for k, v in TABLE_TYPE_TO_CATEGORY.items()}
+# Canonical table type per category for unfiltered listing.
+# Keep this explicit to avoid lossy reverse-map collisions where multiple table types
+# share the same category (e.g. shift_pattern and shift_team -> shift_model).
+CATEGORY_TO_TABLE_TYPE: dict[str, str] = {
+    "calendar": "production_calendar",
+    "shift_model": "shift_pattern",
+    "language": "language",
+    "timezone": "timezone",
+    "plant_type": "manufacturing_type",
+    "department_type": "work_center_type",
+    "resource_type": "machine_type",
+    "resource_capability": "operation_code",
+    "product_line": "routing_type",
+    "manufacturing_focus": "material_category",
+    "resource_group_type": "inventory_type",
+    "lean_methodology": "kanban_type",
+    "industry_type": "industry_type",
+    "schedule": "unit_type",
+    "status": "downtime_code",
+}
 from manufacturing.models import (
     Plant, Department, ProductionLine, ResourceGroup, Resource, Company,
     Schedule, Shift, ScheduleAssignment,
@@ -166,7 +187,11 @@ class DataManagementOverview:
 class ManufacturingQuery:
     @strawberry.field
     def data_management_overview(
-        self, plant_id: Optional[str] = None, search: Optional[str] = None, status: Optional[str] = None,
+        self,
+        plant_id: Optional[str] = None,
+        search: Optional[str] = None,
+        status: Optional[str] = None,
+        include_tree: bool = True,
     ) -> DataManagementOverview:
         all_plants = Plant.objects.all()
         selected_plant = None
@@ -177,34 +202,35 @@ class ManufacturingQuery:
                 pass
 
         tree = None
-        if selected_plant:
-            children = build_plant_tree(selected_plant, status)
-            tree = ProductionStructureTree(
-                id=strawberry.ID(str(selected_plant.id)), type="plant",
-                name=selected_plant.name, code=selected_plant.code,
-                status=selected_plant.status,
-                child_count=len(children), children=children,
-                schedule_status="Scheduled" if selected_plant.id else "Missing Schedule",
-            )
-        else:
-            # Show all plants as top-level tree nodes
-            company = Company.objects.first()
-            company_name = company.name if company else "Company"
-            all_children = []
-            for p in all_plants:
-                p_children = build_plant_tree(p, status)
-                all_children.append(StructureChildNode(
-                    id=strawberry.ID(str(p.id)), type="plant",
-                    name=p.name, code=p.code, status=p.status,
-                    child_count=len(p_children), children=p_children,
-                    schedule_status="Scheduled" if p.id else "Missing Schedule",
-                ))
-            tree = ProductionStructureTree(
-                id=strawberry.ID("root"), type="company",
-                name=company_name, code="", status="ACTIVE",
-                child_count=len(all_children), children=all_children,
-                schedule_status="Scheduled",
-            )
+        if include_tree:
+            if selected_plant:
+                children = build_plant_tree(selected_plant, status, search)
+                tree = ProductionStructureTree(
+                    id=strawberry.ID(str(selected_plant.id)), type="plant",
+                    name=selected_plant.name, code=selected_plant.code,
+                    status=selected_plant.status,
+                    child_count=len(children), children=children,
+                    schedule_status="Scheduled" if selected_plant.id else "Missing Schedule",
+                )
+            else:
+                # Show all plants as top-level tree nodes
+                company = Company.objects.first()
+                company_name = company.name if company else "Company"
+                all_children = []
+                for p in all_plants:
+                    p_children = build_plant_tree(p, status, search)
+                    all_children.append(StructureChildNode(
+                        id=strawberry.ID(str(p.id)), type="plant",
+                        name=p.name, code=p.code, status=p.status,
+                        child_count=len(p_children), children=p_children,
+                        schedule_status="Scheduled" if p.id else "Missing Schedule",
+                    ))
+                tree = ProductionStructureTree(
+                    id=strawberry.ID("root"), type="company",
+                    name=company_name, code="", status="ACTIVE",
+                    child_count=len(all_children), children=all_children,
+                    schedule_status="Scheduled",
+                )
 
         counts = get_structure_counts()
         health_data = get_system_health()
@@ -240,6 +266,31 @@ class ManufacturingQuery:
             system_health=health,
         )
 
+    # ── Profile ──
+    @strawberry.field
+    def profile(self) -> Optional["ProfileNode"]:
+        from manufacturing.models.profile import Profile as ProfileModel
+        obj = ProfileModel.objects.first()
+        if not obj:
+            return None
+        return ProfileNode(
+            id=strawberry.ID(str(obj.id)),
+            name=obj.name,
+            role=obj.role,
+            email=obj.email,
+            phone=obj.phone or "",
+            location=obj.location or "",
+            plant=obj.plant or "",
+            department=obj.department or "",
+            reports_to=obj.reports_to or "",
+            language=obj.language or "",
+            about=obj.about or "",
+            created_at=obj.created_at.isoformat() if obj.created_at else "",
+            updated_at=obj.updated_at.isoformat() if obj.updated_at else "",
+            work_history=[WorkHistoryEntry(**w) for w in (obj.work_history or [])],
+            education=[EducationEntry(**e) for e in (obj.education or [])],
+        )
+
     # ── Company ──
     @strawberry.field
     def company(self, id: Optional[str] = None) -> Optional[CompanyNode]:
@@ -252,7 +303,12 @@ class ManufacturingQuery:
     # ── Plant ──
     @strawberry.field
     def plants(self, status: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> list[PlantNode]:
-        qs = Plant.objects.all()
+        qs = Plant.objects.all().annotate(
+            line_count_annotated=Count("production_lines", distinct=True),
+            department_count_annotated=Count("production_lines__department_assignments__department", distinct=True),
+            group_count_annotated=Count("production_lines__department_assignments__department__resource_groups", distinct=True),
+            resource_count_annotated=Count("production_lines__department_assignments__department__resource_groups__resources", distinct=True),
+        )
         if status and status != "all":
             qs = qs.filter(status=status)
         if limit:
@@ -262,7 +318,14 @@ class ManufacturingQuery:
     @strawberry.field
     def plant(self, id: str) -> Optional[PlantNode]:
         try:
-            return PlantNode.from_db(Plant.objects.get(id=id))
+            return PlantNode.from_db(
+                Plant.objects.annotate(
+                    line_count_annotated=Count("production_lines", distinct=True),
+                    department_count_annotated=Count("production_lines__department_assignments__department", distinct=True),
+                    group_count_annotated=Count("production_lines__department_assignments__department__resource_groups", distinct=True),
+                    resource_count_annotated=Count("production_lines__department_assignments__department__resource_groups__resources", distinct=True),
+                ).get(id=id)
+            )
         except Plant.DoesNotExist:
             return None
 
@@ -500,12 +563,12 @@ class ManufacturingQuery:
 
     # ── Read Models ──
     @strawberry.field
-    def production_structure_tree(self, plant_id: str) -> Optional[ProductionStructureTree]:
+    def production_structure_tree(self, plant_id: str, search: Optional[str] = None, status: Optional[str] = None) -> Optional[ProductionStructureTree]:
         try:
             plant = Plant.objects.get(id=plant_id)
         except Plant.DoesNotExist:
             return None
-        children = build_plant_tree(plant)
+        children = build_plant_tree(plant, status=status, search=search)
         return ProductionStructureTree(
             id=strawberry.ID(str(plant.id)), type="plant",
             name=plant.name, code=plant.code, status=plant.status,
@@ -530,10 +593,11 @@ class ManufacturingQuery:
         """Legacy: returns ReferenceItem-style results from new ReferenceValue data."""
         result = []
         cats_qs = ReferenceCategory.objects.all()
+        if table_type:
+            category_code = TABLE_TYPE_TO_CATEGORY.get(table_type, table_type)
+            cats_qs = cats_qs.filter(code=category_code)
         for cat in cats_qs:
-            tt = CATEGORY_TO_TABLE_TYPE.get(cat.code, cat.code)
-            if table_type and tt != table_type:
-                continue
+            tt = table_type or CATEGORY_TO_TABLE_TYPE.get(cat.code, cat.code)
             vals = ReferenceValue.objects.filter(category=cat)
             if active_only:
                 vals = vals.filter(is_active=True)

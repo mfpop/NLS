@@ -5,100 +5,112 @@ import { LoginPage } from "@/auth/LoginPage";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
 
 const ControlTowerPage = lazy(() =>
-  import("@/pages/control-tower").then((module) => ({ default: module.ControlTowerPage }))
+  import("@/pages/control-tower/ControlTowerPage").then((module) => ({ default: module.ControlTowerPage }))
 );
 const GraphqlStatusPage = lazy(() =>
-  import("@/pages/graphql-status").then((module) => ({ default: module.GraphqlStatusPage }))
+  import("@/pages/graphql-status/GraphqlStatusPage").then((module) => ({ default: module.GraphqlStatusPage }))
 );
 const LinePerformancePage = lazy(() =>
-  import("@/pages/execution").then((module) => ({ default: module.LinePerformancePage }))
+  import("@/pages/execution/LinePerformancePage").then((module) => ({ default: module.LinePerformancePage }))
 );
 const LiveShopfloorPage = lazy(() =>
-  import("@/pages/execution").then((module) => ({ default: module.LiveShopfloorPage }))
+  import("@/pages/execution/LiveShopfloorPage").then((module) => ({ default: module.LiveShopfloorPage }))
 );
 const VsmPage = lazy(() =>
-  import("@/pages/execution").then((module) => ({ default: module.VsmPage }))
+  import("@/pages/execution/VsmPage").then((module) => ({ default: module.VsmPage }))
 );
 const DailyGembaWalkPage = lazy(() =>
-  import("@/pages/execution").then((module) => ({ default: module.DailyGembaWalkPage }))
+  import("@/pages/execution/DailyGembaWalkPage").then((module) => ({ default: module.DailyGembaWalkPage }))
 );
 const ProblemsPage = lazy(() =>
-  import("@/pages/check").then((module) => ({ default: module.ProblemsPage }))
+  import("@/pages/check/ProblemsPage").then((module) => ({ default: module.ProblemsPage }))
 );
 const ActionsPage = lazy(() =>
-  import("@/pages/check").then((module) => ({ default: module.ActionsPage }))
+  import("@/pages/check/ActionsPage").then((module) => ({ default: module.ActionsPage }))
 );
 const AuditsPage = lazy(() =>
-  import("@/pages/check").then((module) => ({ default: module.AuditsPage }))
+  import("@/pages/check/AuditsPage").then((module) => ({ default: module.AuditsPage }))
 );
 const CapacityPage = lazy(() =>
-  import("@/pages/plan").then((module) => ({ default: module.CapacityPage }))
+  import("@/pages/plan/CapacityPage").then((module) => ({ default: module.CapacityPage }))
 );
 const ContinuousImprovementPage = lazy(() =>
-  import("@/pages/improve").then((module) => ({ default: module.ContinuousImprovementPage }))
+  import("@/pages/improve/ContinuousImprovementPage").then((module) => ({ default: module.ContinuousImprovementPage }))
 );
 const KaizenPage = lazy(() =>
-  import("@/pages/improve").then((module) => ({ default: module.KaizenPage }))
+  import("@/pages/improve/KaizenPage").then((module) => ({ default: module.KaizenPage }))
 );
 const BestPracticesPage = lazy(() =>
-  import("@/pages/standardize").then((module) => ({ default: module.BestPracticesPage }))
+  import("@/pages/standardize/BestPracticesPage").then((module) => ({ default: module.BestPracticesPage }))
 );
 const ProceduresPage = lazy(() =>
-  import("@/pages/standardize").then((module) => ({ default: module.ProceduresPage }))
+  import("@/pages/standardize/ProceduresPage").then((module) => ({ default: module.ProceduresPage }))
 );
 const ProductionPlanPage = lazy(() =>
-  import("@/pages/plan").then((module) => ({ default: module.ProductionPlanPage }))
+  import("@/pages/plan/ProductionPlanPage").then((module) => ({ default: module.ProductionPlanPage }))
 );
 const QualityPage = lazy(() =>
-  import("@/pages/check").then((module) => ({ default: module.QualityPage }))
+  import("@/pages/check/QualityPage").then((module) => ({ default: module.QualityPage }))
 );
 const SuggestionsPage = lazy(() =>
-  import("@/pages/improve").then((module) => ({ default: module.SuggestionsPage }))
+  import("@/pages/improve/SuggestionsPage").then((module) => ({ default: module.SuggestionsPage }))
 );
 const TemplatesPage = lazy(() =>
-  import("@/pages/standardize").then((module) => ({ default: module.TemplatesPage }))
+  import("@/pages/standardize/TemplatesPage").then((module) => ({ default: module.TemplatesPage }))
 );
 const StandardWorkPage = lazy(() =>
-  import("@/pages/improve").then((module) => ({ default: module.StandardWorkPage }))
+  import("@/pages/improve/StandardWorkPage").then((module) => ({ default: module.StandardWorkPage }))
 );
 const ProductionFlow = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ProductionFlow }))
+  import("@/pages/system/ProductionStructurePage").then((module) => ({ default: module.ProductionFlow }))
 );
-const ProductionComponents = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ProductionComponents }))
+const CompanyComponentsPage = lazy(() =>
+  import("@/pages/system/production-structure/CompanyComponentsPage").then((module) => ({ default: module.CompanyComponentsPage }))
+);
+const PlantsPage = lazy(() =>
+  import("@/pages/system/production-structure/PlantsPage").then((module) => ({ default: module.PlantsPage }))
+);
+const DepartmentsPage = lazy(() =>
+  import("@/pages/system/production-structure/DepartmentsPage").then((module) => ({ default: module.DepartmentsPage }))
+);
+const ResourceGroupsPage = lazy(() =>
+  import("@/pages/system/production-structure/ResourceGroupsPage").then((module) => ({ default: module.ResourceGroupsPage }))
+);
+const ResourcesPage = lazy(() =>
+  import("@/pages/system/production-structure/ResourcesPage").then((module) => ({ default: module.ResourcesPage }))
 );
 const ReferencesPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ReferencesPage }))
+  import("@/pages/system/production-structure/ReferencesPage").then((module) => ({ default: module.ReferencesPage }))
 );
 const EntityVisualSettingsPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.EntityVisualSettingsPage }))
+  import("@/pages/system/production-structure/EntityVisualSettingsPage").then((module) => ({ default: module.EntityVisualSettingsPage }))
 );
 const StructurePage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.StructurePage }))
+  import("@/pages/system/production-structure/StructurePage").then((module) => ({ default: module.StructurePage }))
 );
 const ApplicationSettingsPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.ApplicationSettingsPage }))
+  import("@/pages/system/ApplicationSettingsPage").then((module) => ({ default: module.ApplicationSettingsPage }))
 );
 const UserProfilePage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.UserProfilePage }))
+  import("@/pages/system/UserProfilePage").then((module) => ({ default: module.UserProfilePage }))
 );
 const UserPreferencesPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.UserPreferencesPage }))
+  import("@/pages/system/UserPreferencesPage").then((module) => ({ default: module.UserPreferencesPage }))
 );
 const SignOutPage = lazy(() =>
-  import("@/pages/system").then((module) => ({ default: module.SignOutPage }))
+  import("@/pages/system/SignOutPage").then((module) => ({ default: module.SignOutPage }))
 );
 const MyDashboardPage = lazy(() =>
-  import("@/pages/myworkspace").then((module) => ({ default: module.MyDashboardPage }))
+  import("@/pages/myworkspace/MyDashboardPage").then((module) => ({ default: module.MyDashboardPage }))
 );
 const MyTasksPage = lazy(() =>
-  import("@/pages/myworkspace").then((module) => ({ default: module.MyTasksPage }))
+  import("@/pages/myworkspace/MyTasksPage").then((module) => ({ default: module.MyTasksPage }))
 );
 const DocumentationCenter = lazy(() =>
-  import("@/pages/DocumentationCenter").then((module) => ({ default: module.DocumentationCenter }))
+  import("@/pages/DocumentationCenter/DocumentationCenter").then((module) => ({ default: module.DocumentationCenter }))
 );
 const NotFoundPage = lazy(() =>
-  import("@/pages/not-found").then((module) => ({ default: module.NotFoundPage }))
+  import("@/pages/not-found/NotFoundPage").then((module) => ({ default: module.NotFoundPage }))
 );
 
 function RouteLoader() {
@@ -136,7 +148,11 @@ export function AppRoutes() {
           <Route path="standardize/best-practices" element={<BestPracticesPage />} />
           <Route path="system/production-structure" element={<ProductionFlow />} />
                     <Route path="system/production-structure/flow" element={<ProductionFlow />} />
-                    <Route path="system/production-structure/components" element={<ProductionComponents />} />
+                    <Route path="system/production-structure/components" element={<CompanyComponentsPage />} />
+          <Route path="system/production-structure/plants" element={<PlantsPage />} />
+          <Route path="system/production-structure/departments" element={<DepartmentsPage />} />
+          <Route path="system/production-structure/resource-groups" element={<ResourceGroupsPage />} />
+          <Route path="system/production-structure/resources" element={<ResourcesPage />} />
           <Route path="system/production-structure/references" element={<ReferencesPage />} />
           <Route path="system/production-structure/references/:tableId" element={<ReferencesPage />} />
           <Route path="system/production-structure/structure" element={<StructurePage />} />

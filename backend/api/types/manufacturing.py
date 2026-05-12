@@ -20,6 +20,77 @@ class MutationError:
     message: str
 
 
+# ── Profile ──
+
+@strawberry.input
+class WorkHistoryInput:
+    id: str
+    role: str
+    company: str
+    period: str
+    description: typing.Optional[str] = ""
+
+@strawberry.input
+class EducationInput:
+    id: str
+    degree: str
+    school: str
+    period: str
+
+@strawberry.input
+class ProfileInput:
+    name: typing.Optional[str] = None
+    role: typing.Optional[str] = None
+    email: typing.Optional[str] = None
+    phone: typing.Optional[str] = None
+    location: typing.Optional[str] = None
+    plant: typing.Optional[str] = None
+    department: typing.Optional[str] = None
+    reports_to: typing.Optional[str] = strawberry.field(name="reportsTo", default=None)
+    language: typing.Optional[str] = None
+    about: typing.Optional[str] = None
+    work_history: typing.Optional[list[WorkHistoryInput]] = strawberry.field(name="workHistory", default=None)
+    education: typing.Optional[list[EducationInput]] = strawberry.field(name="education", default=None)
+
+@strawberry.type
+class WorkHistoryEntry:
+    id: str
+    role: str
+    company: str
+    period: str
+    description: str
+
+@strawberry.type
+class EducationEntry:
+    id: str
+    degree: str
+    school: str
+    period: str
+
+@strawberry.type
+class ProfileNode:
+    id: strawberry.ID
+    name: str
+    role: str
+    email: str
+    phone: str
+    location: str
+    plant: str
+    department: str
+    reports_to: str = strawberry.field(name="reportsTo")
+    language: str
+    about: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+    work_history: list[WorkHistoryEntry] = strawberry.field(name="workHistory")
+    education: list[EducationEntry] = strawberry.field(name="education")
+
+@strawberry.type
+class ProfilePayload:
+    profile: typing.Optional[ProfileNode] = None
+    errors: typing.Optional[list[MutationError]] = None
+
+
 # ── Company ──
 
 @strawberry.type
@@ -27,7 +98,11 @@ class CompanyNode:
     id: strawberry.ID
     code: str
     name: str
+    legal_name: str = strawberry.field(name="legalName")
     description: str
+    industry_type: str = strawberry.field(name="industryType")
+    industry_type_id: typing.Optional[str] = strawberry.field(name="industryTypeId", default=None)
+    industry_type_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="industryTypeRef", default=None)
     status: str
     status_id: typing.Optional[str] = strawberry.field(name="statusId", default=None)
     status_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="statusRef", default=None)
@@ -40,29 +115,73 @@ class CompanyNode:
     phone: str
     email: str
     website: str
+    operating_since: str = strawberry.field(name="operatingSince")
+    manufacturing_focus: str = strawberry.field(name="manufacturingFocus")
+    product_lines: str = strawberry.field(name="productLines")
+    product_line_refs: typing.Optional[list["ReferenceValueNode"]] = strawberry.field(name="productLineRefs", default_factory=list)
+    lean_methodology: str = strawberry.field(name="leanMethodology")
+    lean_methodology_refs: typing.Optional[list["ReferenceValueNode"]] = strawberry.field(name="leanMethodologyRefs", default_factory=list)
     default_timezone: str = strawberry.field(name="defaultTimezone")
     default_timezone_id: typing.Optional[str] = strawberry.field(name="defaultTimezoneId", default=None)
     default_timezone_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="defaultTimezoneRef", default=None)
-    manufacturing_focus: typing.Optional[list["ReferenceValueNode"]] = strawberry.field(name="manufacturingFocus", default_factory=list)
+    default_language: str = strawberry.field(name="defaultLanguage")
+    default_language_id: typing.Optional[str] = strawberry.field(name="defaultLanguageId", default=None)
+    default_language_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="defaultLanguageRef", default=None)
+    default_calendar: str = strawberry.field(name="defaultCalendar")
+    default_calendar_id: typing.Optional[str] = strawberry.field(name="defaultCalendarId", default=None)
+    default_calendar_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="defaultCalendarRef", default=None)
+    default_shift_model: str = strawberry.field(name="defaultShiftModel")
+    default_shift_model_id: typing.Optional[str] = strawberry.field(name="defaultShiftModelId", default=None)
+    default_shift_model_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="defaultShiftModelRef", default=None)
+    week_start_day: str = strawberry.field(name="weekStartDay")
+    week_start_day_id: typing.Optional[str] = strawberry.field(name="weekStartDayId", default=None)
+    week_start_day_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="weekStartDayRef", default=None)
+    admin_name: str = strawberry.field(name="adminName")
+    admin_role: str = strawberry.field(name="adminRole")
+    zipcode: str
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
     @classmethod
     def from_db(cls, obj: Company) -> "CompanyNode":
-        mfg_focus = list(obj.manufacturing_focus.all()) if obj.pk else []
+        product_line_refs_list = list(obj.product_line_refs.all()) if obj.pk else []
+        lean_methodology_refs_list = list(obj.lean_methodology_refs.all()) if obj.pk else []
         return cls(
             id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
-            description=obj.description, status=obj.status,
+            legal_name=obj.legal_name or "",
+            description=obj.description, industry_type=obj.industry_type or "",
+            industry_type_id=str(obj.industry_type_id_id) if obj.industry_type_id_id else None,
+            industry_type_ref=_ref_val(obj.industry_type_id) if obj.industry_type_id_id else None,
+            status=obj.status,
             status_id=str(obj.status_id_id) if obj.status_id_id else None,
             status_ref=_ref_val(obj.status_id) if obj.status_id_id else None,
             address=obj.address, city=obj.city, state=obj.state, country=obj.country,
             country_id=str(obj.country_id_id) if obj.country_id_id else None,
             country_ref=_ref_val(obj.country_id) if obj.country_id_id else None,
             phone=obj.phone, email=obj.email,
-            website=obj.website, default_timezone=obj.default_timezone,
+            website=obj.website, operating_since=obj.operating_since or "",
+            manufacturing_focus=obj.manufacturing_focus or "",
+            product_lines=obj.product_lines or "",
+            product_line_refs=[_ref_val(rv) for rv in product_line_refs_list],
+            lean_methodology=obj.lean_methodology or "",
+            lean_methodology_refs=[_ref_val(rv) for rv in lean_methodology_refs_list],
+            default_timezone=obj.default_timezone,
             default_timezone_id=str(obj.default_timezone_id_id) if obj.default_timezone_id_id else None,
             default_timezone_ref=_ref_val(obj.default_timezone_id) if obj.default_timezone_id_id else None,
-            manufacturing_focus=[_ref_val(rv) for rv in mfg_focus],
+            default_language=obj.default_language or "",
+            default_language_id=str(obj.default_language_id_id) if obj.default_language_id_id else None,
+            default_language_ref=_ref_val(obj.default_language_id) if obj.default_language_id_id else None,
+            default_calendar=obj.default_calendar or "",
+            default_calendar_id=str(obj.default_calendar_id_id) if obj.default_calendar_id_id else None,
+            default_calendar_ref=_ref_val(obj.default_calendar_id) if obj.default_calendar_id_id else None,
+            default_shift_model=obj.default_shift_model or "",
+            default_shift_model_id=str(obj.default_shift_model_id_id) if obj.default_shift_model_id_id else None,
+            default_shift_model_ref=_ref_val(obj.default_shift_model_id) if obj.default_shift_model_id_id else None,
+            week_start_day=obj.week_start_day or "",
+            week_start_day_id=str(obj.week_start_day_id_id) if obj.week_start_day_id_id else None,
+            week_start_day_ref=_ref_val(obj.week_start_day_id) if obj.week_start_day_id_id else None,
+            admin_name=obj.admin_name or "", admin_role=obj.admin_role or "",
+            zipcode=obj.zipcode or "",
             created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
         )
 
@@ -121,18 +240,31 @@ class PlantNode:
 
     @classmethod
     def from_db(cls, obj: Plant) -> "PlantNode":
-        from manufacturing.models import ResourceGroup, Resource
-        plant_lines = obj.production_lines.all()
-        line_count = plant_lines.count()
-        dept_ids = set()
-        for line in plant_lines:
-            for a in line.department_assignments.all():
-                dept_ids.add(a.department_id)
-        department_count = len(dept_ids)
-        group_qs = ResourceGroup.objects.filter(department_id__in=dept_ids) if dept_ids else ResourceGroup.objects.none()
-        group_count = group_qs.count()
-        resource_qs = Resource.objects.filter(resource_group_id__in=list(group_qs.values_list("id", flat=True))) if dept_ids else Resource.objects.none()
-        resource_count = resource_qs.count()
+        line_count = getattr(obj, "line_count_annotated", None)
+        department_count = getattr(obj, "department_count_annotated", None)
+        group_count = getattr(obj, "group_count_annotated", None)
+        resource_count = getattr(obj, "resource_count_annotated", None)
+
+        if line_count is None or department_count is None or group_count is None or resource_count is None:
+            from manufacturing.models import ResourceGroup, Resource
+
+            plant_lines = obj.production_lines.all()
+            line_count = plant_lines.count()
+            dept_ids = set()
+            for line in plant_lines:
+                for a in line.department_assignments.all():
+                    dept_ids.add(a.department_id)
+
+            department_count = len(dept_ids)
+            group_qs = ResourceGroup.objects.filter(department_id__in=dept_ids) if dept_ids else ResourceGroup.objects.none()
+            group_count = group_qs.count()
+            resource_qs = (
+                Resource.objects.filter(resource_group_id__in=list(group_qs.values_list("id", flat=True)))
+                if dept_ids
+                else Resource.objects.none()
+            )
+            resource_count = resource_qs.count()
+
         mfg_refs = list(obj.manufacturing_focus_refs.all()) if obj.pk else []
         return cls(
             id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
@@ -740,18 +872,40 @@ class ScheduleAssignmentPayload:
 class CompanyInput:
     code: typing.Optional[str] = None
     name: typing.Optional[str] = None
+    legal_name: typing.Optional[str] = strawberry.field(name="legalName", default=None)
     description: typing.Optional[str] = None
+    industry_type: typing.Optional[str] = strawberry.field(name="industryType", default=None)
+    industry_type_id: typing.Optional[str] = strawberry.field(name="industryTypeId", default=None)
     status: typing.Optional[str] = None
     status_id: typing.Optional[str] = strawberry.field(name="statusId", default=None)
     address: typing.Optional[str] = None
     city: typing.Optional[str] = None
     state: typing.Optional[str] = None
     country: typing.Optional[str] = None
+    country_id: typing.Optional[str] = strawberry.field(name="countryId", default=None)
     phone: typing.Optional[str] = None
     email: typing.Optional[str] = None
     website: typing.Optional[str] = None
+    operating_since: typing.Optional[str] = strawberry.field(name="operatingSince", default=None)
+    manufacturing_focus: typing.Optional[str] = strawberry.field(name="manufacturingFocus", default=None)
+    product_lines: typing.Optional[str] = strawberry.field(name="productLines", default=None)
+    lean_methodology: typing.Optional[str] = strawberry.field(name="leanMethodology", default=None)
     default_timezone: typing.Optional[str] = strawberry.field(name="defaultTimezone", default=None)
     default_timezone_id: typing.Optional[str] = strawberry.field(name="defaultTimezoneId", default=None)
+    default_language: typing.Optional[str] = strawberry.field(name="defaultLanguage", default=None)
+    default_language_id: typing.Optional[str] = strawberry.field(name="defaultLanguageId", default=None)
+    default_calendar: typing.Optional[str] = strawberry.field(name="defaultCalendar", default=None)
+    default_calendar_id: typing.Optional[str] = strawberry.field(name="defaultCalendarId", default=None)
+    default_shift_model: typing.Optional[str] = strawberry.field(name="defaultShiftModel", default=None)
+    default_shift_model_id: typing.Optional[str] = strawberry.field(name="defaultShiftModelId", default=None)
+    week_start_day: typing.Optional[str] = strawberry.field(name="weekStartDay", default=None)
+    week_start_day_id: typing.Optional[str] = strawberry.field(name="weekStartDayId", default=None)
+    admin_name: typing.Optional[str] = strawberry.field(name="adminName", default=None)
+    admin_role: typing.Optional[str] = strawberry.field(name="adminRole", default=None)
+    zipcode: typing.Optional[str] = None
+    manufacturing_focus_ids: typing.Optional[list[str]] = strawberry.field(name="manufacturingFocusIds", default=None)
+    product_line_ids: typing.Optional[list[str]] = strawberry.field(name="productLineIds", default=None)
+    lean_methodology_ids: typing.Optional[list[str]] = strawberry.field(name="leanMethodologyIds", default=None)
 
 @strawberry.input
 class PlantInput:

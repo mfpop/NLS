@@ -4,7 +4,10 @@ const COMPANY_FIELDS = `
   id
   code
   name
+  legalName
   description
+  industryType
+  industryTypeId
   status
   statusId
   address
@@ -15,8 +18,35 @@ const COMPANY_FIELDS = `
   phone
   email
   website
+  operatingSince
+  manufacturingFocus
+  productLines
+  productLineRefs {
+    id
+    name
+    code
+    isActive
+  }
+  leanMethodology
+  leanMethodologyRefs {
+    id
+    name
+    code
+    isActive
+  }
   defaultTimezone
   defaultTimezoneId
+  defaultLanguage
+  defaultLanguageId
+  defaultCalendar
+  defaultCalendarId
+  defaultShiftModel
+  defaultShiftModelId
+  weekStartDay
+  weekStartDayId
+  adminName
+  adminRole
+  zipcode
   createdAt
   updatedAt
 `;
@@ -36,6 +66,35 @@ export const UPDATE_COMPANY_MUTATION = gql`
       company {
         ${COMPANY_FIELDS}
       }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const CREATE_COMPANY_MUTATION = gql`
+  mutation CreateCompany($input: CompanyInput!) {
+    createCompany(input: $input) {
+      ok
+      company {
+        ${COMPANY_FIELDS}
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const DELETE_COMPANY_MUTATION = gql`
+  mutation DeleteCompany {
+    deleteCompany {
+      ok
       errors {
         field
         code

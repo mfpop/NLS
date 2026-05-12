@@ -1074,7 +1074,7 @@ export function UserProfilePage() {
                 </div>
 
                 {workDraft.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {[...workDraft].sort((a, b) => {
                       const yearA = extractPeriodYear(a.period);
                       const yearB = extractPeriodYear(b.period);
@@ -1082,69 +1082,86 @@ export function UserProfilePage() {
                       if (!yearB) return 1;
                       return yearB - yearA;
                     }).map((job, index) => (
-                      <div key={job.id} className="rounded-xl border border-slate-200/40 p-3 transition cursor-pointer hover:border-slate-300 hover:shadow-sm dark:border-slate-700/40 dark:hover:border-slate-600 dark:hover:bg-slate-800/30">
-                        <div className="mb-3 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                      <div
+                        key={job.id}
+                        className={`rounded-xl border transition-shadow ${
+                          editingSection === "work"
+                            ? "border-sky-200 bg-sky-50/40 shadow-sm dark:border-sky-800 dark:bg-sky-950/20"
+                            : "border-slate-200/60 bg-white dark:border-slate-700/60 dark:bg-slate-900"
+                        }`}
+                      >
+                        {/* Card header */}
+                        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
                             <Briefcase className="h-3.5 w-3.5" />
-                            Experience {index + 1}
+                            {editingSection === "work" ? "Editing" : "Experience"} {index + 1}
                           </div>
-                          {editingSection !== "work" && (
-                            <button type="button" onClick={() => startEditing("work")} className="opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                              <Pencil className="h-3 w-3" />
-                              Edit
+                          {editingSection === "work" && (
+                            <button
+                              type="button"
+                              title="Remove this experience"
+                              onClick={() => setWorkDraft((prev) => prev.filter((item) => item.id !== job.id))}
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-rose-500 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Remove
                             </button>
                           )}
                         </div>
+
                         {editingSection === "work" ? (
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <FieldShell label="Role" error={fieldErrors[`work-${index}-role`]}>
-                              <input
-                                value={job.role}
-                                onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, role: e.target.value } : item)))}
-                                className={inputClass}
-                                placeholder="Plant manager"
-                              />
-                            </FieldShell>
-                            <FieldShell label="Company" error={fieldErrors[`work-${index}-company`]}>
-                              <input
-                                value={job.company}
-                                onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, company: e.target.value } : item)))}
-                                className={inputClass}
-                                placeholder="Company name"
-                              />
-                            </FieldShell>
-                            <FieldShell label="Period">
-                              <input
-                                value={job.period}
-                                onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, period: e.target.value } : item)))}
-                                className={inputClass}
-                                placeholder="2023 - Present"
-                              />
-                            </FieldShell>
-                            <div className="flex items-end justify-end">
-                              <button
-                                type="button"
-                                onClick={() => setWorkDraft((prev) => prev.filter((item) => item.id !== job.id))}
-                                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                          <div className="px-4 pb-4 pt-1 space-y-3">
+                            {/* Row 1: Role + Company */}
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <FieldShell label="Role" error={fieldErrors[`work-${index}-role`]}>
+                                <input
+                                  value={job.role}
+                                  onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, role: e.target.value } : item)))}
+                                  className={inputClass}
+                                  placeholder="Plant manager"
+                                />
+                              </FieldShell>
+                              <FieldShell label="Company" error={fieldErrors[`work-${index}-company`]}>
+                                <input
+                                  value={job.company}
+                                  onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, company: e.target.value } : item)))}
+                                  className={inputClass}
+                                  placeholder="Company name"
+                                />
+                              </FieldShell>
                             </div>
-                            <FieldShell label="Impact statement">
-                              <textarea
-                                value={job.description}
-                                onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, description: e.target.value } : item)))}
-                                className={`${inputClass} min-h-25 md:col-span-2`}
-                                placeholder="Describe results, process improvements, or business impact."
-                              />
-                            </FieldShell>
+
+                            {/* Row 2: Period */}
+                            <div className="sm:w-64">
+                              <FieldShell label="Period">
+                                <input
+                                  value={job.period}
+                                  onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, period: e.target.value } : item)))}
+                                  className={inputClass}
+                                  placeholder="2023 - Present"
+                                />
+                              </FieldShell>
+                            </div>
+
+                            {/* Row 3: Impact statement — dominant */}
+                            <div>
+                              <FieldShell label="Impact statement">
+                                <textarea
+                                  value={job.description}
+                                  onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, description: e.target.value } : item)))}
+                                  className="w-full rounded-lg border border-slate-200 bg-sky-50/60 p-3 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200/50 dark:border-slate-600 dark:bg-sky-950/20 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                  rows={4}
+                                  placeholder="Describe results, process improvements, or business impact."
+                                />
+                              </FieldShell>
+                            </div>
                           </div>
                         ) : (
-                          <div>
-                            <div className="text-base font-medium text-slate-800 dark:text-slate-100">{job.role}</div>
-                            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                          <div className="px-4 pb-4 pt-1">
+                            <div className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{job.role}</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400">
                               {job.company}
-                              {job.period ? ` · ${job.period}` : ""}
+                              {job.period ? <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">({job.period})</span> : null}
                             </div>
                             {normalized.roles[index]?.bullets?.length ? (
                               <ul className="mt-2 space-y-1">
@@ -1197,7 +1214,7 @@ export function UserProfilePage() {
                 </div>
 
                 {eduDraft.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {[...eduDraft].sort((a, b) => {
                       const yearA = extractPeriodYear(a.period);
                       const yearB = extractPeriodYear(b.period);
@@ -1205,53 +1222,68 @@ export function UserProfilePage() {
                       if (!yearB) return 1;
                       return yearB - yearA;
                     }).map((edu, index) => (
-                      <div key={edu.id} className="rounded-xl border border-slate-200/40 p-3 dark:border-slate-700/40">
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
-                          <BookOpen className="h-3.5 w-3.5" />
-                          Education {index + 1}
+                      <div
+                        key={edu.id}
+                        className={`rounded-xl border transition-shadow ${
+                          editingSection === "edu"
+                            ? "border-sky-200 bg-sky-50/40 shadow-sm dark:border-sky-800 dark:bg-sky-950/20"
+                            : "border-slate-200/60 bg-white dark:border-slate-700/60 dark:bg-slate-900"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                            <BookOpen className="h-3.5 w-3.5" />
+                            {editingSection === "edu" ? "Editing" : "Education"} {index + 1}
+                          </div>
+                          {editingSection === "edu" && (
+                            <button
+                              type="button"
+                              title="Remove this education"
+                              onClick={() => setEduDraft((prev) => prev.filter((item) => item.id !== edu.id))}
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium text-rose-500 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              Remove
+                            </button>
+                          )}
                         </div>
                         {editingSection === "edu" ? (
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <FieldShell label="Degree" error={fieldErrors[`edu-${index}-degree`]}>
-                              <input
-                                value={edu.degree}
-                                onChange={(e) => setEduDraft((prev) => prev.map((item) => (item.id === edu.id ? { ...item, degree: e.target.value } : item)))}
-                                className={inputClass}
-                                placeholder="M.Sc. Industrial Engineering"
-                              />
-                            </FieldShell>
-                            <FieldShell label="School" error={fieldErrors[`edu-${index}-school`]}>
-                              <input
-                                value={edu.school}
-                                onChange={(e) => setEduDraft((prev) => prev.map((item) => (item.id === edu.id ? { ...item, school: e.target.value } : item)))}
-                                className={inputClass}
-                                placeholder="University name"
-                              />
-                            </FieldShell>
-                            <FieldShell label="Period">
-                              <input
-                                value={edu.period}
-                                onChange={(e) => setEduDraft((prev) => prev.map((item) => (item.id === edu.id ? { ...item, period: e.target.value } : item)))}
-                                className={inputClass}
-                                placeholder="2015 - 2017"
-                              />
-                            </FieldShell>
-                            <div className="flex items-end justify-end">
-                              <button
-                                type="button"
-                                onClick={() => setEduDraft((prev) => prev.filter((item) => item.id !== edu.id))}
-                                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/30"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                          <div className="px-4 pb-4 pt-1 space-y-3">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <FieldShell label="Degree" error={fieldErrors[`edu-${index}-degree`]}>
+                                <input
+                                  value={edu.degree}
+                                  onChange={(e) => setEduDraft((prev) => prev.map((item) => (item.id === edu.id ? { ...item, degree: e.target.value } : item)))}
+                                  className={inputClass}
+                                  placeholder="M.Sc. Industrial Engineering"
+                                />
+                              </FieldShell>
+                              <FieldShell label="School" error={fieldErrors[`edu-${index}-school`]}>
+                                <input
+                                  value={edu.school}
+                                  onChange={(e) => setEduDraft((prev) => prev.map((item) => (item.id === edu.id ? { ...item, school: e.target.value } : item)))}
+                                  className={inputClass}
+                                  placeholder="University name"
+                                />
+                              </FieldShell>
+                            </div>
+                            <div className="sm:w-64">
+                              <FieldShell label="Period">
+                                <input
+                                  value={edu.period}
+                                  onChange={(e) => setEduDraft((prev) => prev.map((item) => (item.id === edu.id ? { ...item, period: e.target.value } : item)))}
+                                  className={inputClass}
+                                  placeholder="2015 - 2017"
+                                />
+                              </FieldShell>
                             </div>
                           </div>
                         ) : (
-                          <div>
-                            <div className="text-base font-medium text-slate-800 dark:text-slate-100">{edu.degree}</div>
-                            <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                          <div className="px-4 pb-4 pt-1">
+                            <div className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">{edu.degree}</div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400">
                               {edu.school}
-                              {edu.period ? ` · ${edu.period}` : ""}
+                              {edu.period ? <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">({edu.period})</span> : null}
                             </div>
                           </div>
                         )}

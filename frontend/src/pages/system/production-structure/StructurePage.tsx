@@ -186,7 +186,7 @@ export function StructurePage() {
   const [viewMode, setViewMode] = useState<"view" | "edit">("view");
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
 
-  const { data: overview, loading, error, refetch: refetchOverview } = useDataManagementOverview({});
+  const { data: overview, loading, error, refetch: refetchOverview } = useDataManagementOverview({ includeTree: true });
   const plants = overview?.plants ?? [];
 
   const structureTree = useMemo(() => buildTree(overview?.tree ?? null), [overview?.tree]);

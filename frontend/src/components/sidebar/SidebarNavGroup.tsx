@@ -23,11 +23,11 @@ export function SidebarNavGroup({ id, label, icon: Icon, items, pathname, openSe
           hasActiveChild ? "text-slate-600 dark:text-slate-400 bg-slate-200/30 dark:bg-slate-800/40" : "text-slate-500 dark:text-slate-400"
         } hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40`}
       >
-        <Icon className="h-[18px] w-[18px] stroke-current shrink-0" />
+        <Icon className="h-4.5 w-4.5 stroke-current shrink-0" />
         <span className="truncate flex-1 text-left text-[15px]">{label}</span>
         <ChevronDown className={`h-3.5 w-3.5 stroke-current transition-transform duration-150 ${isOpen ? "rotate-0" : "-rotate-90"}`} />
       </button>
-      <div className={`overflow-hidden transition-all duration-150 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}>
+      <div className={`overflow-hidden transition-all duration-150 ${isOpen ? "max-h-250" : "max-h-0"}`}>
         <div className="py-0.5 space-y-0.5">
           {items.map((item, i) => (
             <NavEntryRow key={i} entry={item} depth={1} pathname={pathname} onNavigate={onNavigate} />
@@ -58,7 +58,7 @@ function NavEntryRow({ entry, depth = 0, pathname, onNavigate }: {
         <ChevronRight className={`h-3 w-3 stroke-current shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
         <span className="truncate flex-1 text-left">{entry.label}</span>
       </button>
-      <div className={`overflow-hidden transition-all duration-150 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}>
+      <div className={`overflow-hidden transition-all duration-150 ${isOpen ? "max-h-250" : "max-h-0"}`}>
         <div className="space-y-0.5">
           {entry.items.map((child, i) => (
             <NavEntryRow key={i} entry={child} depth={depth + 1} pathname={pathname} onNavigate={onNavigate} />

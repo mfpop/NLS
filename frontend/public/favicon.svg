@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="LeanSynk symbol favicon">
+  <rect width="256" height="256" rx="40" fill="#f1f1f1"/>
+
+  <g fill="none" stroke="#1f3f82" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="72" cy="64" r="18" fill="#f1f1f1"/>
+    <circle cx="72" cy="192" r="18" fill="#f1f1f1"/>
+    <circle cx="184" cy="64" r="18" fill="#f1f1f1"/>
+
+    <path d="M72 82V174"/>
+    <path d="M90 192H136C168 192 196 176 212 148"/>
+    <path d="M72 112H116C146 112 173 100 192 78"/>
+  </g>
+</svg>

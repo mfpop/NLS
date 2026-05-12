@@ -25,7 +25,7 @@ const GROUP_LABELS: Record<string, string> = {
 };
 
 const TABLE_TYPE_LABELS: Record<string, string> = {
-  production_calendar: "Production Calendars", shift_pattern: "Shift Patterns", language: "Languages", timezone: "Timezones",
+  production_calendar: "Production Calendars", shift_pattern: "Shift Patterns", language: "Languages", timezone: "Timezones", industry_type: "Industry Types",
   manufacturing_type: "Manufacturing Types", work_center_type: "Work Centers", machine_type: "Machine Types", operation_code: "Operation Codes", routing_type: "Routing Types",
   material_category: "Material Categories", inventory_type: "Inventory Types", kanban_type: "Kanban Types", container_type: "Container Types", unit_type: "Unit Types",
   downtime_code: "Downtime Codes", defect_code: "Defect Codes", scrap_reason: "Scrap Reasons", kaizen_category: "Kaizen Categories",
@@ -33,7 +33,7 @@ const TABLE_TYPE_LABELS: Record<string, string> = {
 };
 
 const TABLE_TYPE_SINGULAR: Record<string, string> = {
-  production_calendar: "Production Calendar", shift_pattern: "Shift Pattern", language: "Language", timezone: "Timezone",
+  production_calendar: "Production Calendar", shift_pattern: "Shift Pattern", language: "Language", timezone: "Timezone", industry_type: "Industry Type",
   manufacturing_type: "Manufacturing Type", work_center_type: "Work Center", machine_type: "Machine Type", operation_code: "Operation Code", routing_type: "Routing Type",
   material_category: "Material Category", inventory_type: "Inventory Type", kanban_type: "Kanban Type", container_type: "Container Type", unit_type: "Unit Type",
   downtime_code: "Downtime Code", defect_code: "Defect Code", scrap_reason: "Scrap Reason", kaizen_category: "Kaizen Category",
@@ -41,7 +41,7 @@ const TABLE_TYPE_SINGULAR: Record<string, string> = {
 };
 
 const TYPE_GROUPS: Record<string, string[]> = {
-  organization: ["production_calendar", "shift_pattern", "language", "timezone"],
+  organization: ["production_calendar", "shift_pattern", "language", "timezone", "industry_type"],
   manufacturing: ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type"],
   material_flow: ["material_category", "inventory_type", "kanban_type", "container_type", "unit_type"],
   lean_quality: ["downtime_code", "defect_code", "scrap_reason", "kaizen_category"],
@@ -122,6 +122,23 @@ function validateForm(fields: DynamicField[], values: Record<string, string>): R
 }
 
 const COMPANY_REQUIRED_KEYS = ["name", "code", "industryType", "manufacturingType", "defaultTimezone", "defaultUnits", "defaultShiftModel"];
+
+const buildCompanyInput = (form: Record<string, string>) => ({
+  code: form.code || null,
+  name: form.name || null,
+  description: form.description || null,
+  status: form.status || null,
+  statusId: form.statusId || null,
+  address: form.address || null,
+  city: form.city || null,
+  state: form.state || null,
+  country: form.country || null,
+  phone: form.phone || null,
+  email: form.email || null,
+  website: form.website || null,
+  defaultTimezone: form.defaultTimezone || null,
+  defaultTimezoneId: form.defaultTimezoneId || null,
+});
 
 function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
   items: RefItem[]; selectedType: string | null; onEdit: (item: RefItem) => void; onAdd: (tt: string) => void; showToast: (msg: string) => void;
@@ -408,7 +425,7 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
           <div>
             {GROUP_ORDER.map((g) => {
               const items = groupedFiltered[g] || [];
-              const uniqueTypes = [...new Set(items.map((i) => i.tableType))];
+              const uniqueTypes = [...new Set([...TYPE_GROUPS[g], ...items.map((i) => i.tableType)])];
               const isOpen = openGroup === g;
               return (
                 <div key={g}>
@@ -460,11 +477,11 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
                           <div className="flex items-center gap-1 shrink-0">
                             {typeItems.length === 0 && <span className={`text-[10px] ${theme.textWarning}`}>setup</span>}
                             {typeItems.length > 0 && <span className={`text-[10px] ${theme.textMuted}`}>{typeItems.length}</span>}
-                            <button type="button" onClick={(e) => { e.stopPropagation(); openAddItem(tt); }}
-                              className="h-5 w-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
+                            <span role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); openAddItem(tt); }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); openAddItem(tt); } }}
+                              className="h-5 w-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
                             >
                               <Plus className="h-3 w-3 stroke-current" />
-                            </button>
+                            </span>
                           </div>
                         </button>
                       );
@@ -504,7 +521,19 @@ export function ReferencesPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const [companyForm, setCompanyForm] = useState<Record<string, string>>({});
+  const [companyForm, setCompanyForm] = useState<Record<string, string>>({
+    name: "", code: "", address: "", phone: "", email: "",
+    website: "", description: "", legalName: "", industryType: "",
+    status: "active", operatingSince: "",
+    manufacturingFocus: "", productLines: "", leanMethodology: "",
+    defaultTimezone: "", defaultLanguage: "",
+    defaultCalendar: "", defaultShiftModel: "", weekStartDay: "",
+    adminName: "", adminRole: "",
+    city: "", state: "", country: "", zipcode: "",
+    statusId: "", industryTypeId: "", defaultTimezoneId: "",
+    defaultLanguageId: "", defaultCalendarId: "", defaultShiftModelId: "",
+    weekStartDayId: "", manufacturingType: "", defaultUnits: "", productionCalendar: "",
+  });
   const [companySaving, setCompanySaving] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
   const [companyErrorDismissed, setCompanyErrorDismissed] = useState(false);
@@ -593,16 +622,69 @@ export function ReferencesPage() {
       code: company.code, name: company.name, address: company.address || "",
       phone: company.phone || "", email: company.email || "",
       website: company.website || "", description: company.description || "",
-      industryType: company.industryType || "", manufacturingType: company.manufacturingType || "",
-      defaultTimezone: company.defaultTimezone || "", defaultUnits: company.defaultUnits || "",
-      defaultShiftModel: company.defaultShiftModel || "", productionCalendar: company.productionCalendar || "",
-      defaultLanguage: company.defaultLanguage || "", leanMethodology: company.leanMethodology || "",
+      legalName: company.legalName || "", industryType: company.industryType || "",
+      status: company.status || "active", statusId: company.statusId || "",
+      industryTypeId: company.industryTypeId || "",
+      operatingSince: company.operatingSince || "",
+      manufacturingFocus: company.manufacturingFocus || "",
+      manufacturingType: company.manufacturingType || "",
+      productLines: company.productLines || "",
+      leanMethodology: company.leanMethodology || "",
+      defaultTimezone: company.defaultTimezone || "",
+      defaultTimezoneId: company.defaultTimezoneId || "",
+      defaultLanguage: company.defaultLanguage || "",
+      defaultLanguageId: company.defaultLanguageId || "",
+      defaultCalendar: company.defaultCalendar || "",
+      defaultCalendarId: company.defaultCalendarId || "",
+      defaultShiftModel: company.defaultShiftModel || "",
+      defaultShiftModelId: company.defaultShiftModelId || "",
+      weekStartDay: company.weekStartDay || "",
+      weekStartDayId: company.weekStartDayId || "",
+      defaultUnits: company.defaultUnits || "",
+      productionCalendar: company.productionCalendar || "",
+      adminName: company.adminName || "", adminRole: company.adminRole || "",
+      city: company.city || "", state: company.state || "",
+      country: company.country || "", countryId: company.countryId || "",
+      zipcode: company.zipcode || "",
     });
     setCompanyError(null);
     setCompanyErrorDismissed(false);
     setCompanyTouched({});
     setCompanyEditMode(true);
   };
+
+  useEffect(() => {
+    if (!companyEditMode || !company) return;
+    setCompanyForm({
+      code: company.code, name: company.name, address: company.address || "",
+      phone: company.phone || "", email: company.email || "",
+      website: company.website || "", description: company.description || "",
+      legalName: company.legalName || "", industryType: company.industryType || "",
+      status: company.status || "active", statusId: company.statusId || "",
+      industryTypeId: company.industryTypeId || "",
+      operatingSince: company.operatingSince || "",
+      manufacturingFocus: company.manufacturingFocus || "",
+      manufacturingType: company.manufacturingType || "",
+      productLines: company.productLines || "",
+      leanMethodology: company.leanMethodology || "",
+      defaultTimezone: company.defaultTimezone || "",
+      defaultTimezoneId: company.defaultTimezoneId || "",
+      defaultLanguage: company.defaultLanguage || "",
+      defaultLanguageId: company.defaultLanguageId || "",
+      defaultCalendar: company.defaultCalendar || "",
+      defaultCalendarId: company.defaultCalendarId || "",
+      defaultShiftModel: company.defaultShiftModel || "",
+      defaultShiftModelId: company.defaultShiftModelId || "",
+      weekStartDay: company.weekStartDay || "",
+      weekStartDayId: company.weekStartDayId || "",
+      defaultUnits: company.defaultUnits || "",
+      productionCalendar: company.productionCalendar || "",
+      adminName: company.adminName || "", adminRole: company.adminRole || "",
+      city: company.city || "", state: company.state || "",
+      country: company.country || "", countryId: company.countryId || "",
+      zipcode: company.zipcode || "",
+    });
+  }, [companyEditMode, company]);
 
   const openAddItem = (tableType: string) => {
     setCompanyEditMode(false);
@@ -702,7 +784,11 @@ export function ReferencesPage() {
       el?.focus(); return;
     }
     setCompanySaving(true); setCompanyError(null); setCompanyErrorDismissed(false);
-    try { await updateCompany({ variables: { input: companyForm } }); setCompanyEditMode(false); showToast("Record saved"); }
+    try {
+      await updateCompany({ variables: { input: buildCompanyInput(companyForm) } });
+      setCompanyEditMode(false);
+      showToast("Record saved");
+    }
     catch (e) { setCompanyError(e instanceof Error ? e.message : "Save failed"); }
     setCompanySaving(false);
   }, [companyForm, updateCompany, showToast]);

@@ -11,14 +11,14 @@ export interface EntityConfigItem {
 export const ENTITY_CONFIG: Record<string, EntityConfigItem> = {
   company: {
     icon: Landmark,
-    color: "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-500/10",
-    borderTop: "border-t-emerald-400",
+    color: "text-slate-600 bg-slate-50 dark:text-slate-400 dark:bg-slate-800",
+    borderTop: "border-t-slate-400",
     label: "Company",
   },
   plant: {
     icon: Factory,
-    color: "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-500/10",
-    borderTop: "border-t-blue-400",
+    color: "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-500/10",
+    borderTop: "border-t-teal-400",
     label: "Plant",
   },
   productionLine: {

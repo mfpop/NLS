@@ -29,7 +29,8 @@ export function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900"
       >
-        <h1 className="mb-1 text-2xl font-bold text-slate-900 dark:text-slate-100">LeanSync</h1>
+        <img src="/leansynk-logo.svg" alt="LeanSynk" className="mb-4 h-14 w-auto" />
+        <h1 className="mb-1 text-2xl font-bold text-slate-900 dark:text-slate-100">LeanSynk</h1>
         <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">Sign in to your account</p>
 
         {error && (

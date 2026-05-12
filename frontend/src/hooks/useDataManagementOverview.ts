@@ -1,5 +1,8 @@
 import { useQuery } from "@apollo/client/react";
-import { DATA_MANAGEMENT_OVERVIEW_QUERY } from "@/graphql/dataManagementQueries";
+import {
+  DATA_MANAGEMENT_OVERVIEW_FULL_QUERY,
+  DATA_MANAGEMENT_OVERVIEW_SUMMARY_QUERY,
+} from "@/graphql/dataManagementQueries";
 
 /* ── Types ── */
 
@@ -74,16 +77,24 @@ export interface DataManagementOverviewVars {
   plantId?: string | null;
   search?: string;
   status?: string;
+  includeTree?: boolean;
 }
 
 /* ── Hook ── */
 
 export function useDataManagementOverview(vars: DataManagementOverviewVars) {
+  const includeTree = vars.includeTree ?? false;
+
   const { data, loading, error, refetch } = useQuery<
     DataManagementOverviewData,
     DataManagementOverviewVars
-  >(DATA_MANAGEMENT_OVERVIEW_QUERY, {
-    variables: vars,
+  >(includeTree ? DATA_MANAGEMENT_OVERVIEW_FULL_QUERY : DATA_MANAGEMENT_OVERVIEW_SUMMARY_QUERY, {
+    variables: {
+      plantId: vars.plantId,
+      search: vars.search,
+      status: vars.status,
+      includeTree,
+    },
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
   });

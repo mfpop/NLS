@@ -1,0 +1,7 @@
+Wrote benchmark output to D:\02_Work\localai\lmd\backend\benchmarks\graphql-query-benchmark.latest.json
+
+GraphQL Query Benchmark Summary
+----------------------------------------
+overview_before_include_tree_true: avg_queries=13.0 avg_ms=32.758
+overview_after_include_tree_false: avg_queries=2.0 avg_ms=15.73
+production_structure_tree_after: avg_queries=5.0 avg_ms=17.276

@@ -60,7 +60,10 @@ export function ProductionFlow() {
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null);
 
   const { data: overviewData, loading, refetch } = useDataManagementOverview({
-    plantId: selectedPlantId, search: searchQuery || undefined, status: statusFilter !== "all" ? statusFilter : undefined,
+    plantId: selectedPlantId,
+    search: searchQuery || undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    includeTree: true,
   });
 
   // When a plant is selected from the tree, fetch its detailed tree

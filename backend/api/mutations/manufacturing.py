@@ -11,6 +11,7 @@ from api.types.manufacturing import (
     ProductionLineDepartmentAssignmentNode, AssignmentPayload, AssignDepartmentInput,
     ScheduleNode, SchedulePayload, ScheduleInput,
     ScheduleAssignmentNode, ScheduleAssignmentPayload, ScheduleAssignmentInput,
+    ProfileNode, ProfilePayload, ProfileInput, WorkHistoryEntry, EducationEntry,
     MutationError,
 )
 from api.types.auth import LoginInput, AuthPayload, UserNode
@@ -116,6 +117,7 @@ TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
     "material_category": "manufacturing_focus",
     "inventory_type": "resource_group_type",
     "kanban_type": "lean_methodology",
+    "industry_type": "industry_type",
     "container_type": "industry_type",
     "unit_type": "schedule",
     "downtime_code": "status",
@@ -132,8 +134,69 @@ def _table_type_to_category(table_type: str) -> str:
     return TABLE_TYPE_TO_CATEGORY.get(table_type, table_type)
 
 
+_REF_TEXT_MAP: dict[str, str] = {
+    "status_id": "status",
+    "industry_type_id": "industry_type",
+    "default_timezone_id": "default_timezone",
+    "default_language_id": "default_language",
+    "default_shift_model_id": "default_shift_model",
+    "country_id": "country",
+    "default_calendar_id": "default_calendar",
+    "week_start_day_id": "week_start_day",
+}
+
+def _set_company_refs(company, input: CompanyInput):
+    for ref_field, text_field in _REF_TEXT_MAP.items():
+        v = getattr(input, ref_field, None)
+        if v is not None:
+            ref = _resolve_ref(ReferenceValue, v)
+            setattr(company, ref_field, ref)
+            if ref and text_field:
+                setattr(company, text_field, ref.name)
+    if input.product_line_ids is not None:
+        refs = ReferenceValue.objects.filter(id__in=input.product_line_ids)
+        company.product_line_refs.set(refs)
+    if input.lean_methodology_ids is not None:
+        refs = ReferenceValue.objects.filter(id__in=input.lean_methodology_ids)
+        company.lean_methodology_refs.set(refs)
+
 @strawberry.type
 class ManufacturingMutation:
+    @strawberry.mutation
+    def update_profile(self, input: ProfileInput) -> ProfilePayload:
+        from manufacturing.models.profile import Profile as ProfileModel
+        obj = ProfileModel.objects.first()
+        if not obj:
+            return ProfilePayload(errors=[MutationError(field=None, code="NOT_FOUND", message="No profile found")])
+        for f in ("name", "role", "email", "phone", "location", "plant", "department", "language", "about"):
+            v = getattr(input, f)
+            if v is not None:
+                setattr(obj, f, v)
+        if input.reports_to is not None:
+            obj.reports_to = input.reports_to
+        if input.work_history is not None:
+            obj.work_history = [{"id": w.id, "role": w.role, "company": w.company, "period": w.period, "description": w.description} for w in input.work_history]
+        if input.education is not None:
+            obj.education = [{"id": e.id, "degree": e.degree, "school": e.school, "period": e.period} for e in input.education]
+        obj.save()
+        def e_dict(e: "EducationEntry") -> dict:
+            return {"id": e.id, "degree": e.degree, "school": e.school, "period": e.period}
+        def w_dict(w: "WorkHistoryEntry") -> dict:
+            return {"id": w.id, "role": w.role, "company": w.company, "period": w.period, "description": w.description}
+        return ProfilePayload(
+            profile=ProfileNode(
+                id=strawberry.ID(str(obj.id)), name=obj.name, role=obj.role,
+                email=obj.email, phone=obj.phone or "", location=obj.location or "",
+                plant=obj.plant or "", department=obj.department or "",
+                reports_to=obj.reports_to or "", language=obj.language or "",
+                about=obj.about or "",
+                created_at=obj.created_at.isoformat() if obj.created_at else "",
+                updated_at=obj.updated_at.isoformat() if obj.updated_at else "",
+                work_history=[WorkHistoryEntry(**w) for w in (obj.work_history or [])],
+                education=[EducationEntry(**e) for e in (obj.education or [])],
+            )
+        )
+
     @strawberry.mutation
     def login(self, input: LoginInput) -> Optional[AuthPayload]:
         user = authenticate(username=input.username, password=input.password)
@@ -153,22 +216,60 @@ class ManufacturingMutation:
         )
 
     @strawberry.mutation
+    def create_company(self, input: CompanyInput) -> CompanyPayload:
+        if Company.objects.exists():
+            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="DUPLICATE", message="A company already exists")])
+        company = Company.objects.create(
+            code=input.code or "", name=input.name or "",
+            legal_name=input.legal_name or "", description=input.description or "",
+            industry_type=input.industry_type or "", status=input.status or "ACTIVE",
+            address=input.address or "", city=input.city or "",
+            state=input.state or "", country=input.country or "",
+            phone=input.phone or "", email=input.email or "",
+            website=input.website or "", operating_since=input.operating_since or "",
+            manufacturing_focus=input.manufacturing_focus or "",
+            product_lines=input.product_lines or "",
+            lean_methodology=input.lean_methodology or "",
+            default_timezone=input.default_timezone or "",
+            default_language=input.default_language or "",
+            default_calendar=input.default_calendar or "",
+            default_shift_model=input.default_shift_model or "",
+            week_start_day=input.week_start_day or "",
+            admin_name=input.admin_name or "", admin_role=input.admin_role or "",
+            zipcode=input.zipcode or "",
+        )
+        _set_company_refs(company, input)
+        company.save()
+        return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+
+    @strawberry.mutation
     def update_company(self, input: CompanyInput) -> CompanyPayload:
         company = Company.objects.first()
         if not company:
             return CompanyPayload(ok=False, errors=[MutationError(field=None, code="NOT_FOUND", message="No company found")])
-        for f in ("code", "name", "description", "status", "address", "city", "state", "country", "phone", "email", "website", "default_timezone"):
+        for f in ("code", "name", "legal_name", "description", "industry_type", "status",
+                   "address", "city", "state", "country", "phone", "email", "website",
+                   "operating_since", "manufacturing_focus", "product_lines",
+                   "lean_methodology", "default_timezone", "default_language",
+                   "default_calendar", "default_shift_model", "week_start_day",
+                   "admin_name", "admin_role", "zipcode"):
             v = getattr(input, f)
             if v is not None:
                 setattr(company, f, v)
-        if input.status_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.status_id)
-            company.status_id = ref
-        if input.default_timezone_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.default_timezone_id)
-            company.default_timezone_id = ref
+        _set_company_refs(company, input)
         company.save()
         return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+
+    @strawberry.mutation
+    def delete_company(self) -> CompanyPayload:
+        company = Company.objects.first()
+        if not company:
+            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="NOT_FOUND", message="No company found")])
+        from manufacturing.models import Plant
+        if Plant.objects.exists():
+            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="IN_USE", message="Cannot delete company with existing plants. Remove all plants first.")])
+        company.delete()
+        return CompanyPayload(ok=True)
 
     @strawberry.mutation
     def create_plant(self, input: PlantInput) -> PlantPayload:

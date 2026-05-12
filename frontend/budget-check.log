@@ -1,0 +1,16 @@
+
+> lmd-frontend@0.1.0 budget:initial-js
+> node scripts/check-initial-js-budget.mjs
+
+Initial Route JS Budget Report
+------------------------------------
+Budget: 700.00 KB
+Actual: 589.05 KB
+Assets:
+  - assets/react-vendor-D1n7tGVX.js: 368.81 KB
+  - assets/apollo-vendor-C-NxxsMd.js: 175.19 KB
+  - assets/index-Bq7oIC39.js: 42.32 KB
+  - assets/state-vendor-KBuyf568.js: 1.87 KB
+  - assets/rolldown-runtime-BTPm5ob3.js: 0.86 KB
+
+PASS: initial route JS is within budget.

@@ -163,6 +163,17 @@ export const REFERENCE_TABLE_QUERY = gql`
   }
 `;
 
+export const REFERENCE_TABLES_LIST_QUERY = gql`
+  query ReferenceTablesList {
+    referenceTablesList {
+      categoryId
+      categoryCode
+      categoryName
+      totalCount
+    }
+  }
+`;
+
 export const REFERENCE_CATEGORIES_QUERY = gql`
   query ReferenceCategories($limit: Int, $offset: Int) {
     referenceCategories(limit: $limit, offset: $offset) {

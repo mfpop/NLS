@@ -8,6 +8,7 @@ GROUP_MAP = {
         ("Shift Patterns", "Standard shift schedule definitions"),
         ("Languages", "Supported interface and documentation languages"),
         ("Timezones", "Global timezone reference list"),
+        ("Industry Types", "Industry sector and business type classifications"),
     ],
     "manufacturing": [
         ("Manufacturing Types", "Production methodology classifications"),

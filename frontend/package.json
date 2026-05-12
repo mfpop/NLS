@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "budget:initial-js": "node scripts/check-initial-js-budget.mjs",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx"
   },

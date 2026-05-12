@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { Building2, ChevronRight, Settings, Database, AlertCircle, Users, Plus, ArrowRight, Info } from "lucide-react";
 import { theme } from "../../../../styles/themeTokens";
-import { REFERENCE_TABLE_QUERY } from "@/graphql/manufacturingQueries";
+import { REFERENCE_TABLES_LIST_QUERY } from "@/graphql/manufacturingQueries";
 import { getTableEntityStyle } from "../config/entityConfig";
 
 const TABLE_NAME_TO_KEY: Record<string, string> = {
@@ -60,29 +60,100 @@ const GROUP_SHORTCUTS: Record<string, string> = {
   people: "Configure skills matrix & team roles",
 };
 
-interface ReferenceTableRow { id: string; name: string; entryCount: number; group: string; }
+const CATEGORY_CODE_TO_TABLE_KEY: Record<string, string> = {
+  calendar: "production_calendar",
+  shift_model: "shift_pattern",
+  language: "language",
+  timezone: "timezone",
+  plant_type: "manufacturing_type",
+  department_type: "work_center_type",
+  resource_type: "machine_type",
+  resource_capability: "operation_code",
+  product_line: "routing_type",
+  manufacturing_focus: "material_category",
+  resource_group_type: "inventory_type",
+  lean_methodology: "kanban_type",
+  industry_type: "container_type",
+  schedule: "unit_type",
+  status: "downtime_code",
+};
+
+const TABLE_KEY_TO_GROUP: Record<string, string> = {
+  production_calendar: "organization",
+  shift_pattern: "organization",
+  language: "organization",
+  timezone: "organization",
+  manufacturing_type: "manufacturing",
+  work_center_type: "manufacturing",
+  machine_type: "manufacturing",
+  operation_code: "manufacturing",
+  routing_type: "manufacturing",
+  material_category: "material_flow",
+  inventory_type: "material_flow",
+  kanban_type: "material_flow",
+  container_type: "material_flow",
+  unit_type: "material_flow",
+  downtime_code: "lean_quality",
+  defect_code: "lean_quality",
+  scrap_reason: "lean_quality",
+  kaizen_category: "lean_quality",
+  skill_type: "people",
+  role: "people",
+  shift_team: "people",
+};
+
+interface ReferenceTableRow {
+  id: string;
+  name: string;
+  entryCount: number;
+  group: string;
+  tableTypeKey: string;
+  categoryCode: string;
+}
+interface ReferenceTableApiRow {
+  categoryId: string;
+  categoryCode: string;
+  categoryName: string;
+  totalCount: number;
+}
 
 export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () => void }) {
   const navigate = useNavigate();
   const [openGroup, setOpenGroup] = useState<string | null>("manufacturing");
 
-  const { data } = useQuery<{ referenceTables: ReferenceTableRow[] }>(REFERENCE_TABLE_QUERY, {
+  const { data } = useQuery<{ referenceTablesList: ReferenceTableApiRow[] }>(REFERENCE_TABLES_LIST_QUERY, {
     fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
+
+  const referenceTables = useMemo<ReferenceTableRow[]>(() => {
+    return (data?.referenceTablesList ?? []).map((table) => {
+      const byName = TABLE_NAME_TO_KEY[table.categoryName];
+      const tableKey = byName || CATEGORY_CODE_TO_TABLE_KEY[table.categoryCode] || table.categoryCode;
+      const group = TABLE_KEY_TO_GROUP[tableKey] || "organization";
+      return {
+        id: table.categoryId,
+        name: table.categoryName,
+        entryCount: table.totalCount,
+        group,
+        tableTypeKey: tableKey,
+        categoryCode: table.categoryCode,
+      };
+    });
+  }, [data]);
 
   const grouped = useMemo(() => {
     const map: Record<string, ReferenceTableRow[]> = {};
     for (const g of GROUP_ORDER) map[g] = [];
-    for (const t of data?.referenceTables ?? []) {
+    for (const t of referenceTables) {
       const g = t.group || "organization";
       if (map[g]) map[g].push(t); else map[g] = [t];
     }
     return map;
-  }, [data]);
+  }, [referenceTables]);
 
   const totalEntries = useMemo(() => {
-    return (data?.referenceTables ?? []).reduce((s, t) => s + t.entryCount, 0);
-  }, [data]);
+    return referenceTables.reduce((s, t) => s + t.entryCount, 0);
+  }, [referenceTables]);
 
   const toggleGroup = (g: string) => setOpenGroup(openGroup === g ? null : g);
 
@@ -90,7 +161,7 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
     <div className="rounded border border-slate-200/50 dark:border-slate-800">
       <div className="px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-slate-400 bg-slate-50/40 dark:bg-slate-900/20 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
         <span>Configuration References</span>
-        <span className={`text-[8px] font-normal ${theme.textMuted}`}>{data?.referenceTables?.length ?? 0} tables · {totalEntries} entries</span>
+        <span className={`text-[8px] font-normal ${theme.textMuted}`}>{referenceTables.length} tables · {totalEntries} entries</span>
       </div>
       {GROUP_ORDER.map((g) => {
         const items = grouped[g] || [];
@@ -111,7 +182,7 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
               </div>
               <span className={`text-[8px] ${theme.textMuted} shrink-0`}>{GROUP_DESCRIPTIONS[g]}</span>
             </button>
-            <div className={`overflow-hidden transition-all duration-200 ease-in-out ${isOpen ? "max-h-[2000px]" : "max-h-0"}`}>
+            <div className={`overflow-hidden transition-all duration-200 ease-in-out ${isOpen ? "max-h-500" : "max-h-0"}`}>
               <div className="border-t border-slate-100/50 dark:border-slate-800/50">
                 {g === "organization" && (
                   <button type="button" onClick={onSelectCompany}
@@ -127,13 +198,17 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                 )}
                 {items.length > 0 ? (
                   items.map((table) => {
-                    const tableTypeKey = TABLE_NAME_TO_KEY[table.name] || table.name;
-                    const entityStyle = getTableEntityStyle(tableTypeKey);
+                    const entityStyle = getTableEntityStyle(table.tableTypeKey);
                     const EntityIcon = entityStyle.icon;
                     const [entityTextColor, entityBgColor] = entityStyle.color.split(" ");
                     return (
                     <button key={table.id} type="button"
-                      onClick={() => navigate(`/system/production-structure/references/${table.id}`)}
+                      onClick={() => {
+                        const byName = TABLE_NAME_TO_KEY[table.name];
+                        const byCategory = CATEGORY_CODE_TO_TABLE_KEY[table.categoryCode];
+                        const nextTableType = byName || byCategory || table.tableTypeKey;
+                        navigate(`/system/reference-tables/${nextTableType}`);
+                      }}
                       className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
                     >
                       <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${entityBgColor}`}>

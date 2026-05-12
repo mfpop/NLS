@@ -377,89 +377,95 @@ function PlantDetailView({ plantId, editing = false, onEditToggle, onNavigateToL
                 </span>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Location</h3>
               </div>
-              <div className="grid grid-cols-2 gap-1 mb-1.5">
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Building / Site</label>
-                  {readOnly ? (
-                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.building || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                  ) : (
-                    <input type="text" value={form.building || ""} onChange={(e) => setForm((p) => ({ ...p, building: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                  )}
+              <div className="flex gap-2">
+                <div className="w-[65%]">
+                  <div className="grid grid-cols-2 gap-1">
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Building / Site</label>
+                      {readOnly ? (
+                        <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.building || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                      ) : (
+                        <input type="text" value={form.building || ""} onChange={(e) => setForm((p) => ({ ...p, building: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Street Address</label>
+                      {readOnly ? (
+                        <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.address || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                      ) : (
+                        <input type="text" value={form.address || ""} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Zip / Postal Code</label>
+                      {readOnly ? (
+                        <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.zipcode || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                      ) : (
+                        <input type="text" value={form.zipcode || ""} onChange={(e) => setForm((p) => ({ ...p, zipcode: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      )}
+                    </div>
+                    <div className="col-span-2 grid grid-cols-3 gap-1">
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">City</label>
+                        {readOnly ? (
+                          <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.city || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                        ) : (
+                          <input type="text" value={form.city || ""} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">State</label>
+                        {readOnly ? (
+                          <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.state || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                        ) : (
+                          <input type="text" value={form.state || ""} onChange={(e) => setForm((p) => ({ ...p, state: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                        )}
+                      </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Country</label>
+                      {readOnly ? (
+                        <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.country || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                      ) : (
+                        <ReferenceSelect categoryCode="country" label=""
+                          value={form.countryId ?? ""} onChange={(v) => setForm((p) => ({ ...p, countryId: v }))}
+                          placeholder="Select country..." />
+                      )}
+                    </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Latitude</label>
+                      {readOnly ? (
+                        <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.latitude || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                      ) : (
+                        <input type="text" value={form.latitude || ""} onChange={(e) => setForm((p) => ({ ...p, latitude: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Longitude</label>
+                      {readOnly ? (
+                        <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.longitude || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                      ) : (
+                        <input type="text" value={form.longitude || ""} onChange={(e) => setForm((p) => ({ ...p, longitude: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Street Address</label>
-                  {readOnly ? (
-                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.address || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                  ) : (
-                    <input type="text" value={form.address || ""} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                  )}
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Zip / Postal Code</label>
-                  {readOnly ? (
-                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.zipcode || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                  ) : (
-                    <input type="text" value={form.zipcode || ""} onChange={(e) => setForm((p) => ({ ...p, zipcode: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                  )}
-                </div>
-                <div className="col-span-2 grid grid-cols-3 gap-1">
-                  <div>
-                    <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">City</label>
-                    {readOnly ? (
-                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.city || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
+                <div className="w-[35%]">
+                  <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 h-full min-h-[120px]">
+                    {form.latitude && form.longitude ? (
+                      <iframe title="Plant location" className="w-full h-full" loading="lazy"
+                        src={`https://maps.google.com/maps?q=${form.latitude},${form.longitude}&output=embed&z=14`} />
+                    ) : form.address && form.city ? (
+                      <iframe title="Plant location" className="w-full h-full" loading="lazy"
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(`${form.address}, ${form.city}, ${form.state || ""}, ${form.country || ""}`)}&output=embed&z=14`} />
+                    ) : form.city ? (
+                      <iframe title="Plant location" className="w-full h-full" loading="lazy"
+                        src={`https://maps.google.com/maps?q=${encodeURIComponent(`${form.city}, ${form.state || ""}, ${form.country || ""}`)}&output=embed&z=14`} />
                     ) : (
-                      <input type="text" value={form.city || ""} onChange={(e) => setForm((p) => ({ ...p, city: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
+                      <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-900 text-slate-400 text-xs">No location data</div>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">State</label>
-                    {readOnly ? (
-                      <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.state || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                    ) : (
-                      <input type="text" value={form.state || ""} onChange={(e) => setForm((p) => ({ ...p, state: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                    )}
-                  </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Country</label>
-                  {readOnly ? (
-                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.country || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                  ) : (
-                    <ReferenceSelect categoryCode="country" label=""
-                      value={form.countryId ?? ""} onChange={(v) => setForm((p) => ({ ...p, countryId: v }))}
-                      placeholder="Select country..." />
-                  )}
                 </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Latitude</label>
-                  {readOnly ? (
-                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.latitude || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                  ) : (
-                    <input type="text" value={form.latitude || ""} onChange={(e) => setForm((p) => ({ ...p, latitude: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                  )}
-                </div>
-                <div>
-                  <label className="block text-[10px] font-medium text-slate-400 dark:text-slate-500 mb-0.5 uppercase tracking-wide">Longitude</label>
-                  {readOnly ? (
-                    <span className="block text-[13px] text-slate-900 dark:text-slate-100">{form.longitude || <span className="text-slate-400 dark:text-slate-500 italic">Not set</span>}</span>
-                  ) : (
-                    <input type="text" value={form.longitude || ""} onChange={(e) => setForm((p) => ({ ...p, longitude: e.target.value }))} className={`w-full text-[13px] outline-none transition-colors ${ro}`} />
-                  )}
-                </div>
-              </div>
-              <div className="mt-2 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 h-16">
-                {form.latitude && form.longitude ? (
-                  <iframe title="Plant location" className="w-full h-full" loading="lazy"
-                    src={`https://maps.google.com/maps?q=${form.latitude},${form.longitude}&output=embed&z=14`} />
-                ) : form.address && form.city ? (
-                  <iframe title="Plant location" className="w-full h-full" loading="lazy"
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${form.address}, ${form.city}, ${form.state || ""}, ${form.country || ""}`)}&output=embed&z=14`} />
-                ) : form.city ? (
-                  <iframe title="Plant location" className="w-full h-full" loading="lazy"
-                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${form.city}, ${form.state || ""}, ${form.country || ""}`)}&output=embed&z=14`} />
-                ) : (
-                  <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-900 text-slate-400 text-xs">No location data</div>
-                )}
               </div>
             </div>
 

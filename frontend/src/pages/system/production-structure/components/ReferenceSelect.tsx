@@ -69,15 +69,16 @@ export function ReferenceMultiSelect({
 }: ReferenceMultiSelectProps) {
   const { values: allOptions, loading } = useReferenceCategory(categoryCode);
 
+  const safeValues = values ?? [];
   const activeOptions = allOptions.filter((v) => v.isActive);
-  const selectedOptions = activeOptions.filter((v) => values.includes(v.id));
-  const unselectedOptions = activeOptions.filter((v) => !values.includes(v.id));
+  const selectedOptions = activeOptions.filter((v) => safeValues.includes(v.id));
+  const unselectedOptions = activeOptions.filter((v) => !safeValues.includes(v.id));
 
   const toggle = (id: string) => {
-    if (values.includes(id)) {
-      onChange(values.filter((v) => v !== id));
+    if (safeValues.includes(id)) {
+      onChange(safeValues.filter((v) => v !== id));
     } else {
-      onChange([...values, id]);
+      onChange([...safeValues, id]);
     }
   };
 

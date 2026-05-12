@@ -4,7 +4,6 @@ import { Layers, GripVertical } from "lucide-react";
 import { Pagination, EntityToolbar, NodeDetailPanel } from "./components";
 import { theme } from "../../../styles/themeTokens";
 import { useDepartments } from "@/hooks/useDepartments";
-import { PageHeader } from "@/pages/shared/PageHeader";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
 
 const PER_PAGE = 10;
@@ -56,16 +55,8 @@ export function DepartmentsPage() {
   const { selectedNode, selectedPath, selectedNodeKey } = useDetailContext(selectedDept);
 
   return (
-    <div className="flex flex-col overflow-hidden h-full">
-      <PageHeader
-        icon={<Layers className="h-5 w-5 stroke-current" />}
-        iconClass="bg-violet-100 text-violet-600 dark:bg-violet-500/10 dark:text-violet-400"
-        title="Departments"
-        subtitle="Organizational departments and work centers."
-      />
-      <div className="flex flex-col overflow-hidden flex-1">
+    <div className="flex flex-col overflow-hidden flex-1">
         <EntityToolbar
-          onBack={() => navigate("/system/production-structure")}
           onAdd={() => navigate("/system/production-structure/departments")}
           onEdit={selectedDept ? () => navigate(`/system/production-structure/departments/${selectedDept.id}`) : undefined}
           onDelete={undefined}
@@ -136,6 +127,5 @@ export function DepartmentsPage() {
           <span className="text-xs text-slate-500 dark:text-slate-400">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
         </div>
       </div>
-    </div>
   );
 }

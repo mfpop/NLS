@@ -5,7 +5,6 @@ import { Component, GripVertical } from "lucide-react";
 import { Pagination, EntityToolbar, NodeDetailPanel } from "./components";
 import { theme } from "../../../styles/themeTokens";
 import { RESOURCE_GROUPS_QUERY } from "@/graphql/manufacturingQueries";
-import { PageHeader } from "@/pages/shared/PageHeader";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
 
 const PER_PAGE = 10;
@@ -58,16 +57,8 @@ export function ResourceGroupsPage() {
   const { selectedNode, selectedPath, selectedNodeKey } = useDetailContext(selectedRG);
 
   return (
-    <div className="flex flex-col overflow-hidden h-full">
-      <PageHeader
-        icon={<Component className="h-5 w-5 stroke-current" />}
-        iconClass="bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
-        title="Resource Groups"
-        subtitle="Work cells, teams, and resource groupings."
-      />
-      <div className="flex flex-col overflow-hidden flex-1">
+    <div className="flex flex-col overflow-hidden flex-1">
         <EntityToolbar
-          onBack={() => navigate("/system/production-structure")}
           onAdd={() => navigate("/system/production-structure/resource-groups")}
           onEdit={selectedRG ? () => navigate(`/system/production-structure/resource-groups/${selectedRG.id}`) : undefined}
           onDelete={undefined}
@@ -138,6 +129,5 @@ export function ResourceGroupsPage() {
           <span className="text-xs text-slate-500 dark:text-slate-400">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
         </div>
       </div>
-    </div>
   );
 }

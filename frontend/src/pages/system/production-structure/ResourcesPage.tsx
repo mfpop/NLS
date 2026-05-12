@@ -5,7 +5,6 @@ import { Dumbbell, GripVertical } from "lucide-react";
 import { Pagination, EntityToolbar, NodeDetailPanel } from "./components";
 import { theme } from "../../../styles/themeTokens";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
-import { PageHeader } from "@/pages/shared/PageHeader";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
 
 const PER_PAGE = 10;
@@ -58,16 +57,8 @@ export function ResourcesPage() {
   const { selectedNode, selectedPath, selectedNodeKey } = useDetailContext(selectedRes);
 
   return (
-    <div className="flex flex-col overflow-hidden h-full">
-      <PageHeader
-        icon={<Dumbbell className="h-5 w-5 stroke-current" />}
-        iconClass="bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400"
-        title="Resources"
-        subtitle="Machines, workstations, and production assets."
-      />
-      <div className="flex flex-col overflow-hidden flex-1">
+    <div className="flex flex-col overflow-hidden flex-1">
         <EntityToolbar
-          onBack={() => navigate("/system/production-structure")}
           onAdd={() => navigate("/system/production-structure/resources")}
           onEdit={selectedRes ? () => navigate(`/system/production-structure/resources/${selectedRes.id}`) : undefined}
           onDelete={undefined}
@@ -138,6 +129,5 @@ export function ResourcesPage() {
           <span className="text-xs text-slate-500 dark:text-slate-400">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</span>
         </div>
       </div>
-    </div>
   );
 }

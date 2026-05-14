@@ -103,7 +103,7 @@ export const theme = {
   dividerVertical: "w-px bg-slate-300 dark:bg-slate-600",
   cardSection: "border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900",
   fieldErrorBorder: "border-red-300",
-  selectButton: "border border-slate-200 dark:border-slate-700 px-3 h-9 rounded-lg bg-white dark:bg-slate-900",
+  selectButton: "border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded bg-white dark:bg-slate-900",
   plantCode: "rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
   entityIconBg: "bg-slate-100 dark:bg-slate-800",
   surfaceBg: "bg-white dark:bg-slate-900",

@@ -1,5 +1,4 @@
 import { useReferenceCategory, type ReferenceValueNode } from "@/hooks/useReferenceTables";
-import { theme } from "@/styles/themeTokens";
 
 interface ReferenceSelectProps {
   categoryCode: string;
@@ -33,8 +32,8 @@ export function ReferenceSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled || loading}
-        className={`w-full h-9 rounded-lg border px-3 text-sm outline-none transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-          error ? "border-red-300 focus:ring-2 focus:ring-red-200" : `${theme.input} ${theme.focusRing}`
+        className={`w-full rounded border px-2 py-0.5 text-[13px] outline-none transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+          error ? "border-red-300 focus:ring-2 focus:ring-red-200" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-200/50 focus:border-emerald-400"
         } ${disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : ""}`}
       >
         {placeholder && <option value="">{placeholder}</option>}
@@ -62,11 +61,12 @@ interface ReferenceMultiSelectProps {
   disabled?: boolean;
   error?: string;
   showUnselected?: boolean;
+  emptyLabel?: string;
 }
 
 export function ReferenceMultiSelect({
-  categoryCode, label, values, onChange, disabled, error, showUnselected = true,
-}: ReferenceMultiSelectProps) {
+  categoryCode, label, values, onChange, disabled, error, showUnselected = true, compact, emptyLabel = "None",
+}: ReferenceMultiSelectProps & { compact?: boolean }) {
   const { values: allOptions, loading } = useReferenceCategory(categoryCode);
 
   const safeValues = values ?? [];
@@ -98,7 +98,7 @@ export function ReferenceMultiSelect({
           {/* Selected badges */}
           <div className="flex flex-wrap gap-1 mb-1">
             {selectedOptions.length === 0 && (
-              <span className="text-xs text-slate-400 italic">None</span>
+              <span className="text-xs text-slate-400 italic">{emptyLabel}</span>
             )}
             {selectedOptions.map((opt) => (
               <button
@@ -106,10 +106,10 @@ export function ReferenceMultiSelect({
                 type="button"
                 disabled={disabled}
                 onClick={() => toggle(opt.id)}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border whitespace-nowrap shrink-0 bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`inline-flex items-center gap-1 rounded-full font-medium transition-colors border whitespace-nowrap shrink-0 ${compact ? "h-6 text-xs px-2" : "px-2 py-0.5 text-[10px]"} bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {opt.name}
-                {!disabled && <span className="ml-0.5 text-emerald-400 hover:text-emerald-600 dark:text-emerald-300">&times;</span>}
+                {!disabled && <span className={`${compact ? "text-[10px]" : "text-xs"} ml-0.5 text-emerald-400 hover:text-emerald-600 dark:text-emerald-300`}>&times;</span>}
               </button>
             ))}
           </div>
@@ -122,7 +122,7 @@ export function ReferenceMultiSelect({
                   type="button"
                   disabled={disabled}
                   onClick={() => toggle(opt.id)}
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors border whitespace-nowrap shrink-0 bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`inline-flex items-center gap-1 rounded-full font-medium transition-colors border whitespace-nowrap shrink-0 ${compact ? "h-6 text-xs px-2" : "px-2 py-0.5 text-[10px]"} bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   + {opt.name}
                 </button>

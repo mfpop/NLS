@@ -1,12 +1,12 @@
 import { Footprints } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function DailyGembaWalkPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Daily Gemba Walk"
-      description="Capture observations directly from the shopfloor and keep daily learning attached to the real place of work."
-      icon={<Footprints className="h-5 w-5" />}
+      subtitle="Capture observations directly from the shopfloor and keep daily learning attached to the real place of work."
+      icon={<Footprints />}
     />
   );
 }

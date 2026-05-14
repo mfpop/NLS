@@ -1,12 +1,12 @@
 import { Lightbulb } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function SuggestionsPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Suggestions"
-      description="Collect, review, and implement employee suggestions to improve operations and workplace safety."
-      icon={<Lightbulb className="h-5 w-5" />}
+      subtitle="Collect, review, and implement employee suggestions to improve operations and workplace safety."
+      icon={<Lightbulb />}
     />
   );
 }

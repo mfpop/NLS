@@ -1,12 +1,12 @@
 import { RefreshCw } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function ContinuousImprovementPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Continuous Improvement"
-      description="Track ongoing improvement initiatives, monitor KPIs, and drive a culture of continuous improvement."
-      icon={<RefreshCw className="h-5 w-5" />}
+      subtitle="Track ongoing improvement initiatives, monitor KPIs, and drive a culture of continuous improvement."
+      icon={<RefreshCw />}
     />
   );
 }

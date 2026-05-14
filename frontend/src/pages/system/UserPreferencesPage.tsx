@@ -1,5 +1,5 @@
 import { Moon, SlidersHorizontal, Sun } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { useThemeStore } from "@/stores/theme";
 
 export function UserPreferencesPage() {
@@ -7,13 +7,11 @@ export function UserPreferencesPage() {
   const setTheme = useThemeStore((state) => state.setTheme);
 
   return (
-    <>
-      <ModulePage
-        title="Preferences"
-        description="Set your personal app preferences, notification options, and interface behavior defaults."
-        icon={<SlidersHorizontal className="module-page__icon-svg" />}
-      />
-
+    <AppPageLayout
+      title="Preferences"
+      subtitle="Set your personal app preferences, notification options, and interface behavior defaults."
+      icon={<SlidersHorizontal />}
+    >
       <div className="preferences-grid">
         <section className="preferences-card" aria-labelledby="theme-preference-title">
           <div className="preferences-card__header">
@@ -65,6 +63,6 @@ export function UserPreferencesPage() {
           </div>
         </section>
       </div>
-    </>
+    </AppPageLayout>
   );
 }

@@ -1,12 +1,12 @@
 import { CircleAlert } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function ProblemsPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Problems"
-      description="Surface abnormalities, blockers, and deviations that require immediate production attention."
-      icon={<CircleAlert className="h-5 w-5" />}
+      subtitle="Surface abnormalities, blockers, and deviations that require immediate production attention."
+      icon={<CircleAlert />}
     />
   );
 }

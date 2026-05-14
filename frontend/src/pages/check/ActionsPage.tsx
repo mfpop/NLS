@@ -1,12 +1,12 @@
 import { ListChecks } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function ActionsPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Actions"
-      description="Review active actions, assign owners, and follow through on response plans without leaving the flow."
-      icon={<ListChecks className="h-5 w-5" />}
+      subtitle="Review active actions, assign owners, and follow through on response plans without leaving the flow."
+      icon={<ListChecks />}
     />
   );
 }

@@ -1,16 +1,86 @@
+export interface ProductFamilyAssignment {
+  id: string;
+  name: string;
+  code: string;
+  isPrimary: boolean;
+  status: string;
+}
+
+export interface ProductModelAssignment {
+  id: string;
+  name: string;
+  code: string;
+  familyId?: string | null;
+  familyName?: string | null;
+  isPrimary: boolean;
+  status: string;
+}
+
+export interface ProductModelByFamily {
+  id: string;
+  name: string;
+  code: string;
+  familyId: string;
+  status: string;
+}
+
 export interface ProductionLine {
   id: string;
   name: string;
   code: string;
   description?: string;
   status: string;
+  statusId?: string | null;
+  statusRef?: { id: string; code: string; name: string } | null;
   plantName: string;
   plantId: string;
+  lineType?: string;
+  lineTypeId?: string | null;
+  lineTypeRef?: { id: string; code: string; name: string } | null;
   shiftPattern: string;
+  shiftPatternId?: string | null;
+  shiftPatternRef?: { id: string; code: string; name: string } | null;
+  defaultCalendar?: string;
+  defaultCalendarId?: string | null;
+  defaultCalendarRef?: { id: string; code: string; name: string } | null;
+  weekStartDay?: string;
+  weekStartDayId?: string | null;
+  weekStartDayRef?: { id: string; code: string; name: string } | null;
+  timezone?: string;
+  timezoneId?: string | null;
+  timezoneRef?: { id: string; code: string; name: string } | null;
+  productFamily?: ProductFamilyAssignment | null;
+  productFamilyId?: string | null;
+  productFamilies: ProductFamilyAssignment[];
+  productModels: ProductModelAssignment[];
+  productFamilyCount: number;
+  productModelCount: number;
+  primaryModelId?: string | null;
+  primaryProductModel?: ProductModelAssignment | null;
+  bottleneckResourceGroupCalculated?: string | null;
+  constraintStatus?: string;
+  capacityBasis?: string;
+  capacityUom?: string;
+  capacityUomId?: string | null;
+  capacityUomRef?: { id: string; code: string; name: string } | null;
+  bottleneckResourceGroupId?: string | null;
+  bottleneckResourceGroup?: string | null;
+  resourceGroupOptions?: Array<{ id: string; code: string; name: string; departmentName: string }>;
   isConstraint: boolean;
   departmentCount?: number;
   groupCount?: number;
   resourceCount?: number;
+  departmentLinks?: Array<{
+    id: string;
+    sequence: number;
+    departmentId: string;
+    departmentName: string;
+    departmentCode: string;
+    resourceGroups: number;
+    resources: number;
+    schedule: string;
+    status: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

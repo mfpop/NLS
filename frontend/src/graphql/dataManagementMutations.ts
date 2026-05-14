@@ -3,22 +3,77 @@ import { gql } from "@apollo/client";
 export const UPDATE_RESOURCE_GROUP = gql`
   mutation UpdateResourceGroup($id: String!, $input: ResourceGroupInput!) {
     updateResourceGroup(id: $id, input: $input) {
-      id
-      name
-      code
-      status
-      groupType
-      members
-      leader
+      ok
+      resourceGroup {
+        id
+        code
+        name
+        description
+        status
+        statusId
+        departmentId
+        departmentName
+        members
+        leader
+        groupTypeId
+        resourceCount
+        resourceType
+        createdAt
+        updatedAt
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const CREATE_RESOURCE_GROUP = gql`
+  mutation CreateResourceGroup($input: ResourceGroupInput!) {
+    createResourceGroup(input: $input) {
+      ok
+      resourceGroup {
+        id
+        code
+        name
+        description
+        status
+        statusId
+        departmentId
+        departmentName
+        members
+        leader
+        groupTypeId
+        resourceCount
+        resourceType
+        createdAt
+        updatedAt
+      }
+      errors {
+        field
+        code
+        message
+      }
     }
   }
 `;
 
 export const DELETE_RESOURCE_GROUP = gql`
-  mutation DeleteResourceGroup($id: String!) {
-    deleteResourceGroup(id: $id) {
-      success
-      message
+  mutation ArchiveResourceGroup($id: String!) {
+    archiveResourceGroup(id: $id) {
+      ok
+      resourceGroup {
+        id
+        status
+        updatedAt
+      }
+      errors {
+        field
+        code
+        message
+      }
     }
   }
 `;

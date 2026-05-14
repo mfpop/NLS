@@ -193,7 +193,7 @@ export function validateCompanyForm(form: CompanyFormData): Record<string, strin
   if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = "Invalid email format";
   if (form.website && !/^https?:\/\/.+/.test(form.website)) errors.website = "Website must be a valid URL (http://...)";
   if (form.operatingSince && !/^\d{4}-\d{2}-\d{2}$/.test(form.operatingSince)) errors.operatingSince = "Use YYYY-MM-DD format";
-  if (form.zipcode && form.zipcode.length > 20) errors.zipcode = "Max 20 characters";
+  if (form.zipcode && !/^(\d{5}(-\d{4})?|[A-Za-z]\d[A-Za-z] ?\d[A-Za-z]\d)$/.test(form.zipcode)) errors.zipcode = "Use US (90670), US+4 (90670-2221), or Canada (A1A 1A1) format";
   if (form.phone && !/^[\d\s+\-()]+$/.test(form.phone)) errors.phone = "Invalid characters in phone number";
   return errors;
 }

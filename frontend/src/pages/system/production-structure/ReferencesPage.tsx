@@ -1,20 +1,66 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Database, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
-  Pencil, Trash2, Save,
-  FileSpreadsheet, Copy, Check, ChevronsUpDown
+  Pencil, Trash2, Save, FileSpreadsheet, Check, ChevronsUpDown, EyeOff, Eye,
+  Lock, ExternalLink, Info,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
 import { COMPANY_QUERY, UPDATE_COMPANY_MUTATION } from "@/graphql/companyQueries";
 import { REFERENCE_ITEMS_QUERY, CREATE_REFERENCE_ITEM_MUTATION, UPDATE_REFERENCE_ITEM_MUTATION, DEACTIVATE_REFERENCE_ITEM_MUTATION } from "@/graphql/referenceItemQueries";
-import { CompanyEditor } from "./components/CompanyEditor";
+import { CompanyEditor, type CompanyFormData } from "./components/CompanyEditor";
 import { getTableEntityStyle } from "./config/entityConfig";
 
-interface RefItem { id: string; tableType: string; code: string; name: string; description: string; isActive: boolean; sortOrder: number; }
+interface RefItem {
+  id: string;
+  tableType: string;
+  code: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  sortOrder: number;
+  categoryName?: string;
+  dataType?: string;
+  usageContext?: string;
+  usageImpact?: string;
+  updatedAt?: string;
+  username?: string;
+  role?: string;
+  department?: string;
+  plant?: string;
+  shiftTeam?: string;
+  [key: string]: string | number | boolean | null | undefined;
+}
+type MutationErrorResult = { message: string };
+type ReferenceItemMutationResponse = {
+  createReferenceItem?: { errors?: MutationErrorResult[] };
+  updateReferenceItem?: { errors?: MutationErrorResult[] };
+  deactivateReferenceItem?: { errors?: MutationErrorResult[] };
+};
 interface DynamicField { key: string; label: string; required?: boolean; type?: "text" | "select"; options?: { label: string; value: string }[]; placeholder?: string; }
+interface CompanyRecord {
+  code?: string; name?: string; address?: string; phone?: string; email?: string; website?: string; description?: string;
+  legalName?: string; industryType?: string; status?: string; statusId?: string; industryTypeId?: string;
+  operatingSince?: string; manufacturingFocus?: string; manufacturingType?: string; productLines?: string;
+  leanMethodology?: string; defaultTimezone?: string; defaultTimezoneId?: string; defaultLanguage?: string;
+  defaultLanguageId?: string; defaultCalendar?: string; defaultCalendarId?: string; defaultShiftModel?: string;
+  defaultShiftModelId?: string; weekStartDay?: string; weekStartDayId?: string; defaultUnits?: string;
+  productionCalendar?: string; adminName?: string; adminRole?: string; city?: string; state?: string;
+  country?: string; countryId?: string; zipcode?: string;
+}
+
+const EMPTY_REFERENCE_COMPANY_FORM: CompanyFormData = {
+  name: "", code: "", legalName: "", industryType: "", status: "active", operatingSince: "",
+  manufacturingFocus: "", productLines: "", leanMethodology: "", description: "",
+  defaultTimezone: "", defaultLanguage: "", defaultCalendar: "", defaultShiftModel: "", weekStartDay: "",
+  phone: "", email: "", website: "", adminName: "", adminRole: "",
+  address: "", city: "", state: "", country: "", zipcode: "",
+  statusId: "", industryTypeId: "", defaultTimezoneId: "", defaultLanguageId: "",
+  defaultCalendarId: "", defaultShiftModelId: "", weekStartDayId: "",
+  manufacturingType: "", defaultUnits: "", productionCalendar: "",
+};
 
 const GROUP_LABELS: Record<string, string> = {
   organization: "Organization",
@@ -29,7 +75,9 @@ const TABLE_TYPE_LABELS: Record<string, string> = {
   manufacturing_type: "Manufacturing Types", work_center_type: "Work Centers", machine_type: "Machine Types", operation_code: "Operation Codes", routing_type: "Routing Types",
   material_category: "Material Categories", inventory_type: "Inventory Types", kanban_type: "Kanban Types", container_type: "Container Types", unit_type: "Unit Types",
   downtime_code: "Downtime Codes", defect_code: "Defect Codes", scrap_reason: "Scrap Reasons", kaizen_category: "Kaizen Categories",
-  skill_type: "Skill Types", role: "Roles", shift_team: "Shift Teams",
+  skill_type: "Skill Types", role: "Roles", shift_team: "Shift Teams", staff_user: "Staff Users", staff_assignment: "Staff Assignments",
+  product_model: "Product Models",
+  production_family: "Production Families",
 };
 
 const TABLE_TYPE_SINGULAR: Record<string, string> = {
@@ -37,18 +85,30 @@ const TABLE_TYPE_SINGULAR: Record<string, string> = {
   manufacturing_type: "Manufacturing Type", work_center_type: "Work Center", machine_type: "Machine Type", operation_code: "Operation Code", routing_type: "Routing Type",
   material_category: "Material Category", inventory_type: "Inventory Type", kanban_type: "Kanban Type", container_type: "Container Type", unit_type: "Unit Type",
   downtime_code: "Downtime Code", defect_code: "Defect Code", scrap_reason: "Scrap Reason", kaizen_category: "Kaizen Category",
-  skill_type: "Skill Type", role: "Role", shift_team: "Shift Team",
+  skill_type: "Skill Type", role: "Role", shift_team: "Shift Team", staff_user: "Staff User", staff_assignment: "Staff Assignment",
+  product_model: "Product Model",
+  production_family: "Product Family",
 };
 
 const TYPE_GROUPS: Record<string, string[]> = {
   organization: ["production_calendar", "shift_pattern", "language", "timezone", "industry_type"],
-  manufacturing: ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type"],
+  manufacturing: ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type", "product_model", "production_family"],
   material_flow: ["material_category", "inventory_type", "kanban_type", "container_type", "unit_type"],
   lean_quality: ["downtime_code", "defect_code", "scrap_reason", "kaizen_category"],
-  people: ["skill_type", "role", "shift_team"],
+  people: ["skill_type", "role", "shift_team", "staff_user", "staff_assignment"],
 };
 
 const GROUP_ORDER = ["organization", "manufacturing", "material_flow", "lean_quality", "people"];
+const READ_ONLY_TABLE_TYPES = new Set(["staff_user", "staff_assignment"]);
+const PEOPLE_TABLE_TYPES = new Set(["skill_type", "role", "shift_team", "staff_user", "staff_assignment"]);
+const WORKFLOW_ACTION_LABELS: Record<string, string> = {
+  staff_user: "Open Staff Management",
+  staff_assignment: "Open Assignments Workflow",
+};
+const WORKFLOW_ACTION_TARGETS: Record<string, string> = {
+  staff_user: "/system/profile",
+  staff_assignment: "/system/production-structure/references/staff_assignment",
+};
 
 function generateCode(): string { return `R${Math.random().toString(36).slice(2, 8).toUpperCase()}`; }
 
@@ -82,6 +142,10 @@ const TYPE_PLACEHOLDERS: Record<string, Partial<Record<string, string>>> = {
   skill_type: { name: "e.g. Machine Operator", code: "e.g. OPER" },
   role: { name: "e.g. Operator", code: "e.g. OP" },
   shift_team: { name: "e.g. Team A (Day)", code: "e.g. A" },
+  staff_user: { name: "Backend user display name", code: "Backend username" },
+  staff_assignment: { name: "Assigned staff member", code: "Backend username" },
+  product_model: { name: "e.g. Cylinder Assembly Type A", code: "e.g. CYL-A" },
+  production_family: { name: "e.g. Engine Family", code: "e.g. ENGINE" },
 };
 
 const ENTITY_SPECIFIC_FIELDS: Record<string, DynamicField[]> = {
@@ -121,91 +185,86 @@ function validateForm(fields: DynamicField[], values: Record<string, string>): R
   return errors;
 }
 
-const COMPANY_REQUIRED_KEYS = ["name", "code", "industryType", "manufacturingType", "defaultTimezone", "defaultUnits", "defaultShiftModel"];
+function isWorkflowManagedTable(tableType: string | null | undefined): boolean {
+  return !!tableType && READ_ONLY_TABLE_TYPES.has(tableType);
+}
 
-const buildCompanyInput = (form: Record<string, string>) => ({
-  code: form.code || null,
-  name: form.name || null,
-  description: form.description || null,
-  status: form.status || null,
-  statusId: form.statusId || null,
-  address: form.address || null,
-  city: form.city || null,
-  state: form.state || null,
-  country: form.country || null,
-  phone: form.phone || null,
-  email: form.email || null,
-  website: form.website || null,
-  defaultTimezone: form.defaultTimezone || null,
-  defaultTimezoneId: form.defaultTimezoneId || null,
+function isPeopleTable(tableType: string | null | undefined): boolean {
+  return !!tableType && PEOPLE_TABLE_TYPES.has(tableType);
+}
+
+function statusBadgeClass(isActive: boolean): string {
+  return isActive ? theme.badgeActive : theme.badgeInactive;
+}
+
+function formatDate(value?: string): string {
+  return value ? value.slice(0, 10) : "";
+}
+
+function codeExistsInTable(items: RefItem[], tableType: string, code: string, currentId?: string): boolean {
+  const normalized = code.trim().toLowerCase();
+  if (!normalized) return false;
+  return items.some((item) => item.tableType === tableType && item.id !== currentId && item.code.toLowerCase() === normalized);
+}
+
+const COMPANY_REQUIRED_KEYS: Array<keyof CompanyFormData> = ["name", "code", "industryType", "manufacturingType", "defaultTimezone", "defaultUnits", "defaultShiftModel"];
+
+const buildCompanyInput = (form: CompanyFormData) => ({
+  code: form.code || null, name: form.name || null, description: form.description || null,
+  status: form.status || null, statusId: form.statusId || null, address: form.address || null,
+  city: form.city || null, state: form.state || null, country: form.country || null,
+  phone: form.phone || null, email: form.email || null, website: form.website || null,
+  defaultTimezone: form.defaultTimezone || null, defaultTimezoneId: form.defaultTimezoneId || null,
 });
 
-function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
-  items: RefItem[]; selectedType: string | null; onEdit: (item: RefItem) => void; onAdd: (tt: string) => void; showToast: (msg: string) => void;
+function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, onDelete }: {
+  items: RefItem[]; selectedType: string | null; tableSearch: string;
+  onEdit: (item: RefItem) => void;
+  onToggleActive: (item: RefItem) => void; onDelete: (item: RefItem) => void;
 }) {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [codeFilter, setCodeFilter] = useState<Set<string>>(new Set());
-  const [nameFilter, setNameFilter] = useState<Set<string>>(new Set());
-  const [descFilter, setDescFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<Set<string>>(new Set());
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const typeItems = items.filter((i) => i.tableType === selectedType);
-  const uniqueCodes = [...new Set(typeItems.map((i) => i.code))].sort();
-  const uniqueNames = [...new Set(typeItems.map((i) => i.name))].sort();
-  const uniqueStatuses = ["Active", "Inactive"];
+  const typeItems = useMemo(() => items.filter((i) => i.tableType === selectedType), [items, selectedType]);
+  const workflowManaged = isWorkflowManagedTable(selectedType);
+  const isStaffUsers = selectedType === "staff_user";
+  const isStaffAssignments = selectedType === "staff_assignment";
+  const gridCols = isStaffAssignments
+    ? "grid-cols-[200px_150px_170px_170px_140px_110px_120px]"
+    : isStaffUsers
+      ? "grid-cols-[220px_160px_170px_170px_110px_140px]"
+      : "grid-cols-[220px_minmax(260px,1fr)_120px_220px_100px_110px]";
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
+  const visible = useMemo(() => {
+    let result = typeItems;
+    if (tableSearch) {
+      const q = tableSearch.toLowerCase();
+      result = result.filter((i) => (
+        i.name.toLowerCase().includes(q) ||
+        i.code.toLowerCase().includes(q) ||
+        (i.description || "").toLowerCase().includes(q) ||
+        (i.username || "").toLowerCase().includes(q) ||
+        (i.role || "").toLowerCase().includes(q) ||
+        (i.department || "").toLowerCase().includes(q) ||
+        (i.plant || "").toLowerCase().includes(q) ||
+        (i.shiftTeam || "").toLowerCase().includes(q)
+      ));
     }
-    if (openDropdown) {
-      document.addEventListener("mousedown", handleClick);
-      return () => document.removeEventListener("mousedown", handleClick);
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let cmp = 0;
+        if (sortConfig.key === "code") cmp = a.code.localeCompare(b.code);
+        else if (sortConfig.key === "name") cmp = a.name.localeCompare(b.name);
+        else if (sortConfig.key === "description") cmp = (a.description || "").localeCompare(b.description || "");
+        else if (sortConfig.key === "status") cmp = Number(b.isActive) - Number(a.isActive);
+        else if (sortConfig.key === "role") cmp = (a.role || "").localeCompare(b.role || "");
+        else if (sortConfig.key === "department") cmp = (a.department || "").localeCompare(b.department || "");
+        else if (sortConfig.key === "plant") cmp = (a.plant || "").localeCompare(b.plant || "");
+        else if (sortConfig.key === "shiftTeam") cmp = (a.shiftTeam || "").localeCompare(b.shiftTeam || "");
+        return sortConfig.direction === "desc" ? -cmp : cmp;
+      });
     }
-  }, [openDropdown]);
-
-  const toggleFilterValue = (col: string, value: string) => {
-    const set = col === "code" ? codeFilter : col === "name" ? nameFilter : statusFilter;
-    const setFn = col === "code" ? setCodeFilter : col === "name" ? setNameFilter : setStatusFilter;
-    const upd = new Set(set);
-    if (upd.has(value)) upd.delete(value); else upd.add(value);
-    setFn(upd);
-  };
-
-  const clearFilter = (col: string) => {
-    if (col === "code") setCodeFilter(new Set());
-    else if (col === "name") setNameFilter(new Set());
-    else setStatusFilter(new Set());
-  };
-
-  let visible: RefItem[] = [];
-  for (const item of items) {
-    if (item.tableType !== selectedType) continue;
-    if (statusFilter.size > 0) {
-      const st = item.isActive ? "Active" : "Inactive";
-      if (!statusFilter.has(st)) continue;
-    }
-    if (codeFilter.size > 0 && !codeFilter.has(item.code)) continue;
-    if (nameFilter.size > 0 && !nameFilter.has(item.name)) continue;
-    if (descFilter && !(item.description || "").toLowerCase().includes(descFilter.toLowerCase())) continue;
-    visible.push(item);
-  }
-
-  if (sortConfig) {
-    visible.sort((a, b) => {
-      let cmp = 0;
-      if (sortConfig.key === "code") cmp = a.code.localeCompare(b.code);
-      else if (sortConfig.key === "name") cmp = a.name.localeCompare(b.name);
-      else if (sortConfig.key === "description") cmp = (a.description || "").localeCompare(b.description || "");
-      else if (sortConfig.key === "status") cmp = Number(b.isActive) - Number(a.isActive);
-      return sortConfig.direction === "desc" ? -cmp : cmp;
-    });
-  }
+    return result;
+  }, [typeItems, tableSearch, sortConfig]);
 
   const cycleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -215,212 +274,162 @@ function ItemsList({ items, selectedType, onEdit, onAdd, showToast }: {
     });
   };
 
-  const showEmptyState = visible.length === 0 && codeFilter.size === 0 && nameFilter.size === 0 && statusFilter.size === 0;
-
-  const gridCols = "grid-cols-[120px_260px_minmax(420px,1fr)_120px_48px]";
-
   const SortIcon = ({ col }: { col: string }) => {
     if (sortConfig?.key === col) {
       return sortConfig.direction === "asc"
-        ? <ChevronUp className="h-3 w-3 stroke-current text-slate-500 shrink-0" />
-        : <ChevronDown className="h-3 w-3 stroke-current text-slate-500 shrink-0" />;
+        ? <ChevronUp className="h-3 w-3 stroke-current text-slate-600 shrink-0" />
+        : <ChevronDown className="h-3 w-3 stroke-current text-slate-600 shrink-0" />;
     }
-    return <ChevronsUpDown className="h-3 w-3 stroke-current shrink-0 opacity-70 group-hover:opacity-100 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-opacity" />;
+    return <ChevronsUpDown className="h-3 w-3 stroke-current text-slate-400 shrink-0" />;
   };
 
-  const HeaderCell = ({ col, label, className = "", children }: { col: string; label: string; className?: string; children?: React.ReactNode }) => {
-    const isActive = sortConfig?.key === col;
-    const filters: Record<string, Set<string> | string> = { code: codeFilter, name: nameFilter, description: descFilter, status: statusFilter };
-    const hasFilter = col === "description" ? descFilter.length > 0 : (filters[col] as Set<string>)?.size > 0;
-    return (
-      <div className={`relative ${className}`}>
-        <button type="button" onClick={() => setOpenDropdown(openDropdown === col ? null : col)}
-          className={`w-full flex items-center gap-1 group hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded px-1 -mx-1 ${isActive ? "text-slate-600 dark:text-slate-300" : ""} ${hasFilter ? "text-sky-700 dark:text-sky-400" : ""}`}
-        >
-          <span className="truncate">{label}</span>
-          <SortIcon col={col} />
-          {hasFilter && col !== "description" && (
-            <span className="inline-flex items-center justify-center h-3.5 min-w-3.5 rounded-full bg-sky-200/60 dark:bg-sky-500/20 text-[8px] font-bold px-1">{col === "code" ? codeFilter.size : col === "name" ? nameFilter.size : statusFilter.size}</span>
-          )}
-        </button>
-        {children}
-      </div>
-    );
-  };
+  const Th = ({ col, label, className = "" }: { col: string; label: string; className?: string }) => (
+    <button type="button" onClick={() => cycleSort(col)}
+      className={`flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors ${className}`}>
+      <span>{label}</span>
+      <SortIcon col={col} />
+    </button>
+  );
 
-  const rows: React.ReactNode[] = [];
-  if (!showEmptyState) {
-    for (let idx = 0; idx < visible.length; idx++) {
-      const item = visible[idx];
-      rows.push(
-        <div key={item.id}
-          className={`group grid ${gridCols} gap-0 px-3 transition-colors cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800/50`}
-          style={{ height: "44px" }}
-          onClick={() => onEdit(item)}
-        >
-          <span className="flex items-center gap-1">
-            <span className="inline-flex items-center text-[11px] font-mono font-bold bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 rounded px-1.5 py-0.5 leading-none border border-slate-300/50 dark:border-slate-600/50 tracking-wide" title={`Code: ${item.code}`}>
-              {item.code}
-            </span>
-          </span>
-          <span className="flex items-center text-xs font-semibold truncate text-slate-900 dark:text-slate-100 pr-2" title={item.name}>{item.name}</span>
-          <span className="flex items-center text-[10px] truncate text-slate-400 dark:text-slate-500 leading-tight text-left pr-2" title={item.description || ""}>
-            {item.description || ""}
-          </span>
-          <span className={`flex items-center`}>
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
-              <span className={`inline-block h-1.5 w-1.5 rounded-full ${item.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-              {item.isActive ? 'Active' : 'Inactive'}
-            </span>
-          </span>
-          <span className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity justify-end pr-1">
-            <button type="button" onClick={(e) => {
-              e.stopPropagation();
-              navigator.clipboard.writeText(item.code);
-              setCopiedId(item.id);
-              showToast("Copied");
-              setTimeout(() => setCopiedId((prev) => prev === item.id ? null : prev), 2000);
-            }}
-              className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-            >
-              {copiedId === item.id
-                ? <Check className="h-3 w-3 stroke-current text-emerald-500" />
-                : <Copy className="h-3.5 w-3.5 stroke-current" />
-              }
-            </button>
-            <Pencil className="h-3.5 w-3.5 stroke-current text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300" />
-            <span title="Click to view full details">
-              <ChevronRight className="h-3.5 w-3.5 stroke-current text-slate-300 dark:text-slate-600" />
-            </span>
-          </span>
-        </div>
-      );
-    }
-  }
+  const WorkflowAction = ({ tableType, item }: { tableType: string; item?: RefItem }) => (
+    <a href={WORKFLOW_ACTION_TARGETS[tableType]} title="Open the source workflow for this system-managed table"
+      className={`inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-medium ${theme.buttonSecondary}`}
+      onClick={(e) => e.stopPropagation()}>
+      <ExternalLink className="h-3 w-3 stroke-current" />
+      <span>{item ? "Open" : WORKFLOW_ACTION_LABELS[tableType]}</span>
+    </a>
+  );
 
   return (
-    <div className="flex flex-col min-h-0">
-        <div className="flex flex-col h-full" style={{ minWidth: "860px" }}>
-          <div ref={dropdownRef} className={`grid ${gridCols} gap-0 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-200 dark:border-slate-700 ${theme.subHeader} sticky top-0 z-10 bg-white dark:bg-slate-900`} style={{ height: "32px", lineHeight: "32px" }}>
-            <HeaderCell col="code" label="Code" className="font-mono tracking-normal" />
-            <HeaderCell col="name" label="Name" />
-            <HeaderCell col="description" label="Description" className="text-left" />
-            <HeaderCell col="status" label="Status" />
-            <div />
-          </div>
-          {openDropdown === "code" && (
-            <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-70 flex flex-col">
-                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
-                  <button type="button" onClick={() => cycleSort("code")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
-                  <button type="button" onClick={() => { cycleSort("code"); cycleSort("code"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
-                  {codeFilter.size > 0 && <button type="button" onClick={() => clearFilter("code")} className="text-[10px] text-sky-600 hover:text-sky-700 px-1 py-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-500/10">Clear</button>}
-                </div>
-                <div className="overflow-y-auto flex-1">
-                  {uniqueCodes.map((val) => (
-                    <label key={val} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                      <input type="checkbox" checked={codeFilter.size === 0 || codeFilter.has(val)} onChange={() => toggleFilterValue("code", val)} className="h-3 w-3 rounded border-slate-300 dark:border-slate-600 accent-sky-600" />
-                      <span className="font-mono text-[10px]">{val}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          {openDropdown === "name" && (
-            <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-60 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-70 flex flex-col">
-                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
-                  <button type="button" onClick={() => cycleSort("name")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
-                  <button type="button" onClick={() => { cycleSort("name"); cycleSort("name"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
-                  {nameFilter.size > 0 && <button type="button" onClick={() => clearFilter("name")} className="text-[10px] text-sky-600 hover:text-sky-700 px-1 py-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-500/10">Clear</button>}
-                </div>
-                <div className="overflow-y-auto flex-1">
-                  {uniqueNames.map((val) => (
-                    <label key={val} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                      <input type="checkbox" checked={nameFilter.size === 0 || nameFilter.has(val)} onChange={() => toggleFilterValue("name", val)} className="h-3 w-3 rounded border-slate-300 dark:border-slate-600 accent-sky-600" />
-                      <span className="truncate">{val}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          {openDropdown === "description" && (
-            <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-70 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-2 px-3">
-                <div className="flex items-center gap-2">
-                  <input type="text" value={descFilter} onChange={(e) => setDescFilter(e.target.value)} placeholder="Filter descriptions..."
-                    className="h-7 flex-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[11px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-300" autoFocus
-                  />
-                  {descFilter && (
-                    <button type="button" onClick={() => setDescFilter("")} className="text-[10px] text-sky-600 hover:text-sky-700 shrink-0">Clear</button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          {openDropdown === "status" && (
-            <div className="relative z-50" style={{ marginTop: "-1px" }}>
-              <div className="absolute top-0 left-3 w-45 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl py-1 max-h-70 flex flex-col">
-                <div className="px-2 py-1 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1">
-                  <button type="button" onClick={() => cycleSort("status")} className="flex-1 text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3 w-3" /> Sort</button>
-                  <button type="button" onClick={() => { cycleSort("status"); cycleSort("status"); }} className="text-[10px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 flex items-center gap-1 px-1 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3 w-3" /></button>
-                  {statusFilter.size > 0 && <button type="button" onClick={() => clearFilter("status")} className="text-[10px] text-sky-600 hover:text-sky-700 px-1 py-0.5 rounded hover:bg-sky-50 dark:hover:bg-sky-500/10">Clear</button>}
-                </div>
-                <div className="overflow-y-auto flex-1">
-                  {uniqueStatuses.map((val) => (
-                    <label key={val} className="flex items-center gap-2 px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-300">
-                      <input type="checkbox" checked={statusFilter.size === 0 || statusFilter.has(val)} onChange={() => toggleFilterValue("status", val)} className="h-3 w-3 rounded border-slate-300 dark:border-slate-600 accent-sky-600" />
-                      <span>{val}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          {showEmptyState ? (
-            <div className={`flex flex-col items-center justify-center gap-2 py-12 text-xs ${theme.textMuted}`}>
-              <Database className={`h-8 w-8 stroke-current ${theme.iconSubtle}`} />
-              <span className={`text-sm font-medium ${theme.textSecondary}`}>No records yet</span>
-              <button type="button" onClick={() => onAdd(selectedType!)}
-                className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
-              >
-                <Plus className="h-4 w-4 stroke-current" /> Add {getEntityLabel(selectedType!)}
-              </button>
-            </div>
-          ) : visible.length === 0 ? (
-            <div className={`flex flex-col items-center justify-center gap-2 py-12 text-xs ${theme.textMuted}`}>
-              <Database className={`h-8 w-8 stroke-current ${theme.iconSubtle}`} />
-              <span className={`text-sm font-medium ${theme.textSecondary}`}>No matching records</span>
-            </div>
+    <div className="flex flex-col h-full">
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className={`shrink-0 grid ${gridCols} gap-0 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30`}>
+          {isStaffAssignments ? (
+            <>
+              <Th col="name" label="Staff" />
+              <Th col="role" label="Role" />
+              <Th col="department" label="Department" />
+              <Th col="plant" label="Plant" />
+              <Th col="shiftTeam" label="Shift Team" />
+              <Th col="status" label="Status" />
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Actions</div>
+            </>
+          ) : isStaffUsers ? (
+            <>
+              <Th col="name" label="Name" />
+              <Th col="role" label="Role" />
+              <Th col="department" label="Department" />
+              <Th col="plant" label="Plant" />
+              <Th col="status" label="Status" />
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Actions</div>
+            </>
           ) : (
-            rows
+            <>
+              <Th col="name" label="Name" />
+              <Th col="description" label="Description" />
+              <Th col="status" label="Status" />
+              <Th col="impact" label="Used By" />
+              <Th col="code" label="Code" />
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Actions</div>
+            </>
           )}
         </div>
+        <div className="flex-1 overflow-y-auto">
+          {visible.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-xs text-slate-400">
+              <Database className="h-8 w-8 stroke-current text-slate-200 dark:text-slate-700 mb-2" />
+              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                {typeItems.length === 0 ? "No records yet" : "No matching records"}
+              </span>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+              {visible.map((item) => (
+                <div key={item.id} onClick={() => { if (!workflowManaged) onEdit(item); }}
+                  className={`grid ${gridCols} gap-0 px-3 transition-colors ${workflowManaged ? "cursor-default" : "cursor-pointer"} hover:bg-slate-50 dark:hover:bg-slate-800/40 min-h-0`} style={{ height: "44px" }}>
+                  {isStaffAssignments ? (
+                    <>
+                      <span className="flex items-center text-xs font-semibold truncate text-slate-800 dark:text-slate-200 pr-2" title={item.name}>{item.name}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.role || ""}>{item.role || "-"}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.department || ""}>{item.department || "Unassigned"}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.plant || ""}>{item.plant || "Unassigned"}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.shiftTeam || ""}>{item.shiftTeam || "Not assigned"}</span>
+                    </>
+                  ) : isStaffUsers ? (
+                    <>
+                      <span className="flex min-w-0 flex-col justify-center pr-2">
+                        <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200" title={item.name}>{item.name}</span>
+                        <span className={`truncate text-[9px] font-mono ${theme.textMuted}`} title={item.username || item.code}>{item.username || item.code}</span>
+                      </span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.role || ""}>{item.role || "-"}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.department || ""}>{item.department || "Unassigned"}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.plant || ""}>{item.plant || "Unassigned"}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="flex items-center text-xs font-semibold truncate text-slate-800 dark:text-slate-200 pr-2" title={item.name}>{item.name}</span>
+                      <span className="flex items-center text-[10px] truncate text-slate-400 dark:text-slate-500 leading-tight text-left pr-2">
+                        {item.description || <span className={`${theme.textMuted} italic`}>No description</span>}
+                      </span>
+                    </>
+                  )}
+                  <span className="flex items-center">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ${statusBadgeClass(item.isActive)}`}>
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${item.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      {item.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </span>
+                  {!isStaffUsers && !isStaffAssignments && (
+                    <>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.usageImpact || "No known usage"}>{item.usageImpact || "No known usage"}</span>
+                      <span className="flex items-center overflow-hidden pr-2">
+                        <span className="inline-flex max-w-full items-center truncate rounded border border-slate-200/80 bg-slate-100/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none tracking-wide text-slate-500 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-400" title={item.code}>
+                          {item.code}
+                        </span>
+                      </span>
+                    </>
+                  )}
+                  <span className="flex items-center gap-0.5 justify-end pr-1" onClick={(e) => e.stopPropagation()}>
+                    {workflowManaged ? (
+                      <WorkflowAction tableType={item.tableType} item={item} />
+                    ) : (
+                      <>
+                        <button type="button" onClick={() => onEdit(item)} title="Edit"
+                          className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors">
+                          <Pencil className="h-3 w-3 stroke-current" />
+                        </button>
+                        <button type="button" onClick={() => onToggleActive(item)} title={item.isActive ? "Disable" : "Enable"}
+                          className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors">
+                          {item.isActive ? <EyeOff className="h-3 w-3 stroke-current" /> : <Eye className="h-3 w-3 stroke-current" />}
+                        </button>
+                        <button type="button" onClick={() => onDelete(item)} title="Delete"
+                          className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                          <Trash2 className="h-3 w-3 stroke-current" />
+                        </button>
+                      </>
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup, groupedFiltered, openCompany, selectedType, selectType, openAddItem, itemsLoading, itemsData }: {
-  search: string; setSearch: (v: string) => void; searchRef: React.RefObject<HTMLInputElement | null>; openGroup: string | null; toggleGroup: (g: string) => void;
+function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany, selectedType, selectType, itemsLoading, itemsData }: {
+  openGroup: string | null; toggleGroup: (g: string) => void;
   groupedFiltered: Record<string, RefItem[]>; openCompany: () => void;
-  selectedType: string | null; selectType: (tt: string) => void; openAddItem: (tt: string) => void;
-  itemsLoading: boolean; itemsData: any;
+  selectedType: string | null; selectType: (tt: string) => void;
+  itemsLoading: boolean; itemsData?: { referenceItems: RefItem[] };
 }) {
   return (
     <div className="flex flex-col min-h-0 h-full">
-      <div className={`flex items-center shrink-0 h-12 px-3 border-b border-slate-200 dark:border-slate-700 ${theme.header}`}>
-        <div className="relative flex-1">
-          <Search className="pointer-events-none absolute left-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400 stroke-current" />
-          <input ref={searchRef} type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search"
-            className="h-7 w-full rounded text-[10px] text-slate-700 dark:text-slate-200 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 pl-6 pr-1 outline-none transition-colors" />
-          {search && <button type="button" onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"><X className="h-3 w-3 stroke-current" /></button>}
-        </div>
-      </div>
       <div className="flex-1 overflow-y-auto">
         {itemsLoading && !itemsData ? (
-          <div className={`flex items-center justify-center gap-2 py-8 text-xs ${theme.textMuted}`}><RefreshCw className="h-4 w-4 animate-spin stroke-current" /> Loading...</div>
+          <div className="flex items-center justify-center gap-2 py-8 text-xs text-slate-400"><RefreshCw className="h-4 w-4 animate-spin stroke-current" /> Loading...</div>
         ) : (
           <div>
             {GROUP_ORDER.map((g) => {
@@ -430,28 +439,23 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
               return (
                 <div key={g}>
                   <button type="button" onClick={() => toggleGroup(g)}
-                    className={`flex cursor-pointer items-center gap-2 px-3 transition-colors w-full text-left ${
-                      isOpen ? "" : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40"
-                    }`} style={{ height: "36px" }}
-                  >
-                    <span className="w-4 shrink-0">
-                      <ChevronRight className={`h-3.5 w-3.5 text-slate-400 stroke-current transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
-                    </span>
-                    <span className={`min-w-0 flex-1 text-xs font-medium ${theme.textPrimary} ${isOpen ? "font-semibold" : ""}`}>{GROUP_LABELS[g]}</span>
-                    {uniqueTypes.length > 0 && <span className={`text-[10px] shrink-0 ${theme.textMuted}`}>{uniqueTypes.length}</span>}
+                    className="flex w-full cursor-pointer items-center gap-2 px-3 transition-colors text-left hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
+                    style={{ height: "34px" }}>
+                    <ChevronRight className={`h-3 w-3 text-slate-400 stroke-current shrink-0 transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
+                    <span className="min-w-0 flex-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">{GROUP_LABELS[g]}</span>
+                    <span className="text-[9px] text-slate-400 font-mono shrink-0">{uniqueTypes.length}</span>
                   </button>
-                  <div className={`overflow-hidden transition-all duration-150 ease-in-out ${isOpen ? "max-h-1250" : "max-h-0"}`}>
+                  <div className={`overflow-hidden transition-all duration-150 ease-in-out ${isOpen ? "" : "max-h-0"}`}>
                     {g === "organization" && (
                       <button type="button" onClick={openCompany}
-                        className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-4 ${
+                        className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-3 ${
                           selectedType === "__company__"
-                            ? "bg-slate-100 dark:bg-slate-800 border-emerald-500 dark:border-emerald-400"
+                            ? "bg-emerald-50/60 dark:bg-emerald-500/10 border-emerald-500"
                             : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-transparent"
-                        } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500`}
-                        style={{ paddingLeft: "34px", height: "34px" }}
-                      >
-                        <span className={`flex-1 text-left text-xs font-medium ${theme.textPrimary}`}>Company</span>
-                        <span className={`text-[10px] shrink-0 ${theme.textMuted}`}>setup</span>
+                        }`}
+                        style={{ paddingLeft: "36px", height: "30px" }}>
+                        <span className="flex-1 text-left text-[11px] font-medium text-slate-600 dark:text-slate-300">Company</span>
+                        <span className="text-[9px] text-slate-400">setup</span>
                       </button>
                     )}
                     {uniqueTypes.map((tt) => {
@@ -461,27 +465,24 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
                       const entityStyle = getTableEntityStyle(tt);
                       const EntityIcon = entityStyle.icon;
                       const [entityTextColor, entityBgColor] = entityStyle.color.split(" ");
+                      const workflowManaged = isWorkflowManagedTable(tt);
+                      const hasUsage = typeItems.some((item) => item.usageImpact && item.usageImpact !== "No known usage");
                       return (
                         <button key={tt} type="button" onClick={() => selectType(tt)}
-                          className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-4 ${
+                          className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-3 ${
                             isSelected
                               ? "bg-slate-100 dark:bg-slate-800 border-emerald-500 dark:border-emerald-400"
                               : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-transparent"
-                          } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:focus-visible:ring-slate-500`}
-                          style={{ paddingLeft: "34px", height: "34px" }}
-                        >
-                          <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${entityBgColor}`}>
-                            <EntityIcon className={`h-3 w-3 stroke-current ${entityTextColor}`} />
+                          }`}
+                          style={{ paddingLeft: "36px", height: "30px" }}>
+                          <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${entityBgColor}`}>
+                            <EntityIcon className={`h-2.5 w-2.5 stroke-current ${entityTextColor}`} />
                           </span>
-                          <span className={`flex-1 text-left text-xs truncate ${isSelected ? "font-semibold" : "font-medium"} ${theme.textPrimary}`}>{label}</span>
+                          <span className={`flex-1 text-left text-[11px] truncate ${isSelected ? "font-semibold text-slate-800 dark:text-slate-200" : "font-medium text-slate-600 dark:text-slate-300"}`}>{label}</span>
                           <div className="flex items-center gap-1 shrink-0">
-                            {typeItems.length === 0 && <span className={`text-[10px] ${theme.textWarning}`}>setup</span>}
-                            {typeItems.length > 0 && <span className={`text-[10px] ${theme.textMuted}`}>{typeItems.length}</span>}
-                            <span role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); openAddItem(tt); }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); openAddItem(tt); } }}
-                              className="h-5 w-5 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
-                            >
-                              <Plus className="h-3 w-3 stroke-current" />
-                            </span>
+                            {workflowManaged && <Lock className="h-2.5 w-2.5 stroke-current text-sky-500" aria-label="Managed by workflow" />}
+                            {!workflowManaged && hasUsage && <Info className="h-2.5 w-2.5 stroke-current text-amber-500" aria-label="Used by production data" />}
+                            <span className="text-[9px] text-slate-400 font-mono">{typeItems.length}</span>
                           </div>
                         </button>
                       );
@@ -497,9 +498,9 @@ function ExplorerBrowser({ search, setSearch, searchRef, openGroup, toggleGroup,
   );
 }
 
-export function ReferencesPage() {
-  const navigate = useNavigate();
+export function ReferencesPage({ standalone = true }: { standalone?: boolean }) {
   const [search, setSearch] = useState("");
+  const [tableSearch, setTableSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const [openGroup, setOpenGroup] = useState<string | null>("organization");
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -521,19 +522,7 @@ export function ReferencesPage() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const [companyForm, setCompanyForm] = useState<Record<string, string>>({
-    name: "", code: "", address: "", phone: "", email: "",
-    website: "", description: "", legalName: "", industryType: "",
-    status: "active", operatingSince: "",
-    manufacturingFocus: "", productLines: "", leanMethodology: "",
-    defaultTimezone: "", defaultLanguage: "",
-    defaultCalendar: "", defaultShiftModel: "", weekStartDay: "",
-    adminName: "", adminRole: "",
-    city: "", state: "", country: "", zipcode: "",
-    statusId: "", industryTypeId: "", defaultTimezoneId: "",
-    defaultLanguageId: "", defaultCalendarId: "", defaultShiftModelId: "",
-    weekStartDayId: "", manufacturingType: "", defaultUnits: "", productionCalendar: "",
-  });
+  const [companyForm, setCompanyForm] = useState<CompanyFormData>({ ...EMPTY_REFERENCE_COMPANY_FORM });
   const [companySaving, setCompanySaving] = useState(false);
   const [companyError, setCompanyError] = useState<string | null>(null);
   const [companyErrorDismissed, setCompanyErrorDismissed] = useState(false);
@@ -545,7 +534,7 @@ export function ReferencesPage() {
   const [itemError, setItemError] = useState<string | null>(null);
   const [itemErrorDismissed, setItemErrorDismissed] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<RefItem | null>(null);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: "", visible: false });
 
   const showToast = useCallback((message: string) => {
@@ -553,10 +542,10 @@ export function ReferencesPage() {
     setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000);
   }, []);
 
-  const { data: itemsData, loading: itemsLoading } = useQuery<{ referenceItems: RefItem[] }>(REFERENCE_ITEMS_QUERY, {
+  const { data: itemsData, loading: itemsLoading, refetch: refetchItems } = useQuery<{ referenceItems: RefItem[] }>(REFERENCE_ITEMS_QUERY, {
     variables: { tableType: null }, fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
-  const { data: companyData } = useQuery<{ company: any }>(COMPANY_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: companyData } = useQuery<{ company: CompanyRecord | null }>(COMPANY_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const [updateCompany] = useMutation(UPDATE_COMPANY_MUTATION, { refetchQueries: [COMPANY_QUERY] });
   const [createItem] = useMutation(CREATE_REFERENCE_ITEM_MUTATION, { refetchQueries: [REFERENCE_ITEMS_QUERY] });
   const [updateItem] = useMutation(UPDATE_REFERENCE_ITEM_MUTATION, { refetchQueries: [REFERENCE_ITEMS_QUERY] });
@@ -565,9 +554,14 @@ export function ReferencesPage() {
   const allItems = itemsData?.referenceItems ?? [];
 
   const currentTableType = editingItem?.tableType || itemForm.tableType || selectedType || "";
+  const selectedReadOnly = selectedType ? READ_ONLY_TABLE_TYPES.has(selectedType) : false;
   const activeFields = useMemo(() => getFieldsForType(currentTableType), [currentTableType]);
   const fieldErrors = useMemo(() => validateForm(activeFields, itemForm), [activeFields, itemForm]);
-  const isFormValid = useMemo(() => Object.keys(fieldErrors).length === 0, [fieldErrors]);
+  const codeDuplicate = useMemo(() => {
+    if (!currentTableType || !itemForm.code) return false;
+    return codeExistsInTable(allItems, currentTableType, itemForm.code, editingItem?.id);
+  }, [allItems, currentTableType, itemForm.code, editingItem?.id]);
+  const isFormValid = useMemo(() => Object.keys(fieldErrors).length === 0 && !codeDuplicate, [fieldErrors, codeDuplicate]);
 
   const allItemsFiltered = useMemo(() => {
     if (!search) return allItems;
@@ -597,7 +591,7 @@ export function ReferencesPage() {
       const baseMatch = itemForm.name === editingItem.name && itemForm.code === editingItem.code && itemForm.description === (editingItem.description || "") && itemForm.sortOrder === String(editingItem.sortOrder) && itemForm.isActive === (editingItem.isActive ? "true" : "false");
       if (!baseMatch) return true;
       const specific = ENTITY_SPECIFIC_FIELDS[editingItem.tableType] || [];
-      return specific.some((f) => (itemForm[f.key] ?? "") !== ((editingItem as any)[f.key]?.toString() ?? ""));
+      return specific.some((f) => (itemForm[f.key] ?? "") !== (editingItem[f.key]?.toString() ?? ""));
     }
     if (itemForm.tableType && itemForm.name !== undefined) return itemForm.name !== "" || itemForm.code !== "";
     return false;
@@ -619,15 +613,14 @@ export function ReferencesPage() {
     setItemError(null);
     setItemErrorDismissed(false);
     if (company) setCompanyForm({
-      code: company.code, name: company.name, address: company.address || "",
+      ...EMPTY_REFERENCE_COMPANY_FORM,
+      code: company.code || "", name: company.name || "", address: company.address || "",
       phone: company.phone || "", email: company.email || "",
       website: company.website || "", description: company.description || "",
       legalName: company.legalName || "", industryType: company.industryType || "",
       status: company.status || "active", statusId: company.statusId || "",
       industryTypeId: company.industryTypeId || "",
       operatingSince: company.operatingSince || "",
-      manufacturingFocus: company.manufacturingFocus || "",
-      manufacturingType: company.manufacturingType || "",
       productLines: company.productLines || "",
       leanMethodology: company.leanMethodology || "",
       defaultTimezone: company.defaultTimezone || "",
@@ -640,11 +633,9 @@ export function ReferencesPage() {
       defaultShiftModelId: company.defaultShiftModelId || "",
       weekStartDay: company.weekStartDay || "",
       weekStartDayId: company.weekStartDayId || "",
-      defaultUnits: company.defaultUnits || "",
-      productionCalendar: company.productionCalendar || "",
       adminName: company.adminName || "", adminRole: company.adminRole || "",
       city: company.city || "", state: company.state || "",
-      country: company.country || "", countryId: company.countryId || "",
+      country: company.country || "",
       zipcode: company.zipcode || "",
     });
     setCompanyError(null);
@@ -656,15 +647,14 @@ export function ReferencesPage() {
   useEffect(() => {
     if (!companyEditMode || !company) return;
     setCompanyForm({
-      code: company.code, name: company.name, address: company.address || "",
+      ...EMPTY_REFERENCE_COMPANY_FORM,
+      code: company.code || "", name: company.name || "", address: company.address || "",
       phone: company.phone || "", email: company.email || "",
       website: company.website || "", description: company.description || "",
       legalName: company.legalName || "", industryType: company.industryType || "",
       status: company.status || "active", statusId: company.statusId || "",
       industryTypeId: company.industryTypeId || "",
       operatingSince: company.operatingSince || "",
-      manufacturingFocus: company.manufacturingFocus || "",
-      manufacturingType: company.manufacturingType || "",
       productLines: company.productLines || "",
       leanMethodology: company.leanMethodology || "",
       defaultTimezone: company.defaultTimezone || "",
@@ -677,16 +667,15 @@ export function ReferencesPage() {
       defaultShiftModelId: company.defaultShiftModelId || "",
       weekStartDay: company.weekStartDay || "",
       weekStartDayId: company.weekStartDayId || "",
-      defaultUnits: company.defaultUnits || "",
-      productionCalendar: company.productionCalendar || "",
       adminName: company.adminName || "", adminRole: company.adminRole || "",
       city: company.city || "", state: company.state || "",
-      country: company.country || "", countryId: company.countryId || "",
+      country: company.country || "",
       zipcode: company.zipcode || "",
     });
   }, [companyEditMode, company]);
 
   const openAddItem = (tableType: string) => {
+    if (READ_ONLY_TABLE_TYPES.has(tableType)) return;
     setCompanyEditMode(false);
     setEditingItem(null);
     setItemForm({ tableType, name: "", code: generateCode(), description: "", sortOrder: "0", isActive: "true" });
@@ -697,6 +686,7 @@ export function ReferencesPage() {
   };
 
   const openEditItem = (item: RefItem) => {
+    if (READ_ONLY_TABLE_TYPES.has(item.tableType)) return;
     setCompanyEditMode(false);
     setEditingItem(item);
     setItemForm({
@@ -715,12 +705,11 @@ export function ReferencesPage() {
     setItemError(null);
     setItemErrorDismissed(false);
     setShowUnsavedModal(false);
-    setConfirmDelete(false);
+    setConfirmDelete(null);
   }, []);
 
   const tryClosePanel = useCallback(() => {
-    const formChanged = editingItem
-      ? isItemDirty : itemForm.name !== "" || itemForm.code !== "";
+    const formChanged = editingItem ? isItemDirty : itemForm.name !== "" || itemForm.code !== "";
     if (formChanged && !showUnsavedModal) { setShowUnsavedModal(true); return; }
     closePanel();
   }, [editingItem, itemForm, showUnsavedModal, isItemDirty]);
@@ -734,18 +723,16 @@ export function ReferencesPage() {
         description: itemForm.description || "", sortOrder: parseInt(itemForm.sortOrder) || 0, isActive: itemForm.isActive === "true",
       };
       ENTITY_SPECIFIC_FIELDS[currentTableType]?.forEach(f => { if (itemForm[f.key]) input[f.key] = itemForm[f.key]; });
-      if (currentTableType === "shift_pattern") {
-        const toH = (t: string) => { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; };
-        const s = toH(itemForm.startTime || "0"), e = toH(itemForm.endTime || "0");
-        const bs = toH(itemForm.breakStart || "0"), be = toH(itemForm.breakEnd || "0");
-        const total = e > s ? e - s : 0;
-        const brk = be > bs ? be - bs : 0;
-        input.shiftDuration = total;
-        input.breakDuration = brk;
-        input.workDuration = total - brk;
+      const response = editingItem
+        ? await updateItem({ variables: { id: editingItem.id, input } })
+        : await createItem({ variables: { input } });
+      const responseData = response.data as ReferenceItemMutationResponse | undefined;
+      const errors = editingItem ? responseData?.updateReferenceItem?.errors : responseData?.createReferenceItem?.errors;
+      if (errors?.length) {
+        setItemError(errors.map((error: { message: string }) => error.message).join(", "));
+        setItemSaving(false);
+        return;
       }
-      if (editingItem) await updateItem({ variables: { id: editingItem.id, input } });
-      else await createItem({ variables: { input } });
       closePanel(); showToast("Record saved");
     } catch (e) { setItemError(e instanceof Error ? e.message : "Save failed"); }
     setItemSaving(false);
@@ -755,16 +742,42 @@ export function ReferencesPage() {
   const handleModalDiscard = useCallback(() => { setShowUnsavedModal(false); closePanel(); }, [closePanel]);
   const handleModalCancel = useCallback(() => { setShowUnsavedModal(false); }, []);
 
-  const handleDelete = async () => {
-    if (!editingItem) return;
-    setItemSaving(true); setItemError(null); setItemErrorDismissed(false);
-    try { await deactivateItem({ variables: { id: editingItem.id } }); closePanel(); }
-    catch (e) { setItemError(e instanceof Error ? e.message : "Delete failed"); }
-    setItemSaving(false); setConfirmDelete(false);
+  const handleToggleActive = async (item: RefItem) => {
+    setItemSaving(true);
+    try {
+      const response = await deactivateItem({ variables: { id: item.id } });
+      const responseData = response.data as ReferenceItemMutationResponse | undefined;
+      const errors = responseData?.deactivateReferenceItem?.errors;
+      if (errors?.length) {
+        setItemError(errors.map((error: { message: string }) => error.message).join(", "));
+        setItemSaving(false);
+        return;
+      }
+      showToast(item.isActive ? "Record disabled" : "Record enabled");
+      await refetchItems();
+    } catch (e) {
+      setItemError(e instanceof Error ? e.message : "Toggle failed");
+    }
+    setItemSaving(false);
   };
 
-  const requestDelete = () => setConfirmDelete(true);
-  const cancelDelete = () => setConfirmDelete(false);
+  const handleDelete = async () => {
+    if (!confirmDelete) return;
+    setItemSaving(true); setItemError(null); setItemErrorDismissed(false);
+    try {
+      const response = await deactivateItem({ variables: { id: confirmDelete.id } });
+      const responseData = response.data as ReferenceItemMutationResponse | undefined;
+      const errors = responseData?.deactivateReferenceItem?.errors;
+      if (errors?.length) {
+        setItemError(errors.map((error: { message: string }) => error.message).join(", "));
+        setItemSaving(false);
+        setConfirmDelete(null);
+        return;
+      }
+      closePanel(); showToast("Record deactivated"); await refetchItems();
+    } catch (e) { setItemError(e instanceof Error ? e.message : "Delete failed"); }
+    setItemSaving(false); setConfirmDelete(null);
+  };
 
   const handleFieldChange = (key: string, value: string) => {
     setItemForm((p) => ({ ...p, [key]: value }));
@@ -788,8 +801,7 @@ export function ReferencesPage() {
       await updateCompany({ variables: { input: buildCompanyInput(companyForm) } });
       setCompanyEditMode(false);
       showToast("Record saved");
-    }
-    catch (e) { setCompanyError(e instanceof Error ? e.message : "Save failed"); }
+    } catch (e) { setCompanyError(e instanceof Error ? e.message : "Save failed"); }
     setCompanySaving(false);
   }, [companyForm, updateCompany, showToast]);
 
@@ -811,78 +823,131 @@ export function ReferencesPage() {
 
   const selectedTypeItems: RefItem[] = useMemo(() => {
     if (!selectedType) return [];
-    const result: RefItem[] = [];
-    for (const i of allItems) { if (i.tableType === selectedType) result.push(i); }
-    return result;
+    return allItems.filter((i) => i.tableType === selectedType);
   }, [allItems, selectedType]);
+  const selectedGroupLabel = useMemo(() => {
+    if (!selectedType) return "";
+    const group = Object.entries(TYPE_GROUPS).find(([, types]) => types.includes(selectedType))?.[0];
+    return group ? GROUP_LABELS[group] : "";
+  }, [selectedType]);
+  const selectedDataType = selectedReadOnly ? "Managed by workflow" : selectedTypeItems[0]?.dataType || "Configurable";
+  const selectedUsageContext = selectedReadOnly
+    ? selectedType === "staff_assignment" ? "Managed by staff assignment workflow" : "Managed by staff/user workflow"
+    : selectedTypeItems[0]?.usageContext || "Used by production structure setup";
+  const selectedUpdatedDates = selectedTypeItems.map((item) => item.updatedAt || "").filter(Boolean).sort();
+  const selectedUpdatedAt = selectedUpdatedDates[selectedUpdatedDates.length - 1] || "";
+  const selectedTablePurpose = selectedType === "skill_type"
+    ? "Reusable skills/certifications used by resources, staff and training."
+    : selectedType === "role"
+      ? "Permissions and responsibilities that feed ownership, approvals and manager/supervisor selections."
+      : selectedType === "shift_team"
+        ? "Production crews used by schedules, execution and staff assignments."
+        : selectedType === "staff_user"
+          ? "Staff/user records sourced from the backend user workflow."
+          : selectedType === "staff_assignment"
+            ? "Relationship between staff, role, plant and department that feeds staffing and ownership readiness."
+            : "";
+  const selectedWorkflowActionLabel = selectedType ? WORKFLOW_ACTION_LABELS[selectedType] : "";
+  const selectedWorkflowActionTarget = selectedType ? WORKFLOW_ACTION_TARGETS[selectedType] : "";
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
-      {/* ── Header ── */}
-      <PageHeader
-        icon={<FileSpreadsheet className="h-5 w-5 stroke-current" />}
-        iconClass={theme.iconBoxEmerald}
-        title="Reference Tables"
-        subtitle={`Administrative master-data catalog · ${totalTypes} tables, ${totalItems} records`}
-      >
-        <button type="button" onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60"
-        >
-          <X className="h-4 w-4 stroke-current" />
-          Close
-        </button>
-      </PageHeader>
+      {standalone && (
+        <PageHeader
+          icon={<FileSpreadsheet className="h-5 w-5 stroke-current" />}
+          iconClass={theme.iconBoxEmerald}
+          title="Reference Tables"
+          subtitle={`Administrative master-data catalog · ${totalTypes} tables, ${totalItems} records`}
+        />
+      )}
 
-      {/* ── Explorer Workspace ── */}
-      <div className="grid min-h-0 overflow-hidden" style={{ gridTemplateColumns: "280px 1fr", height: "calc(100vh - 4rem)" }}>
-        {/* ═══ LEFT: Browser ═══ */}
-        <div className="flex flex-col min-h-0 border-r border-slate-200 dark:border-slate-700">
+      {/* ── Toolbar ── */}
+      {standalone && (
+        <div className="shrink-0 flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-10 px-4">
+          <div className="relative" style={{ width: 200 }}>
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current pointer-events-none" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search catalog..."
+              className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-violet-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-violet-500" />
+          </div>
+          {selectedType && !companyEditMode && !editingItem && !(itemForm.tableType && itemForm.name !== undefined) && (
+            <>
+              <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <div className="relative" style={{ width: 200 }}>
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current pointer-events-none" />
+                <input type="text" value={tableSearch} onChange={(e) => setTableSearch(e.target.value)} placeholder="Search records..."
+                  className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-violet-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-violet-500" />
+              </div>
+              <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <span className="text-[11px] text-slate-400">Reference Tables</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+              <span className="text-[11px] text-slate-400">{selectedGroupLabel}</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
+              <span className="text-[10px] text-slate-400 font-mono">{selectedTypeItems.length}</span>
+            </>
+          )}
+          <div className="flex-1" />
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => selectedType && openAddItem(selectedType)} disabled={!selectedType || selectedReadOnly} title={selectedReadOnly ? "Managed by workflow. Open the source workflow to add records." : "Add Record"}
+              className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
+              <Plus className="h-3.5 w-3.5 stroke-current" />
+              <span>Add Record</span>
+            </button>
+            {selectedReadOnly && selectedWorkflowActionTarget && (
+              <a href={selectedWorkflowActionTarget}
+                className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10 transition-colors">
+                <ExternalLink className="h-3.5 w-3.5 stroke-current" />
+                <span>{selectedWorkflowActionLabel}</span>
+              </a>
+            )}
+            <button type="button" onClick={() => refetchItems()} disabled={itemsLoading}
+              className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
+              <RefreshCw className={`h-3.5 w-3.5 stroke-current ${itemsLoading ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Content: 20/80 ── */}
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        {/* LEFT: Catalog (20%) */}
+        <div className="flex flex-col shrink-0 border-r border-slate-200 dark:border-slate-700" style={{ width: "20%", minWidth: 200, maxWidth: 300 }}>
           <ExplorerBrowser
-            search={search} setSearch={setSearch} searchRef={searchRef}
             openGroup={openGroup} toggleGroup={toggleGroup}
             groupedFiltered={groupedFiltered}
             openCompany={openCompany}
             selectedType={selectedType} selectType={selectType}
-            openAddItem={openAddItem}
             itemsLoading={itemsLoading} itemsData={itemsData}
           />
         </div>
 
-        {/* ═══ RIGHT: Preview Workspace ═══ */}
-        <div className={`flex-1 min-h-0 flex flex-col overflow-hidden ${theme.page}`}>
+        {/* RIGHT: Details (80%) */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           {companyEditMode ? (
             <div className="flex h-full flex-col">
-              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 shrink-0 ${theme.header}`} style={{ height: "44px" }}>
+              <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3" style={{ height: "40px" }}>
                 <div className="flex items-center gap-2 min-w-0">
-                  {(() => {
-                    const es = getTableEntityStyle("company");
-                    const Icon = es.icon;
-                    const [tc, bc] = es.color.split(" ");
-                    return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${bc}`}>
-                      <Icon className={`h-3.5 w-3.5 stroke-current ${tc}`} />
-                    </span>;
-                  })()}
-                  <span className={`text-[11px] font-medium ${theme.textMuted}`}>Reference Tables</span>
-                  <span className={`text-[11px] ${theme.textMuted}`}>›</span>
-                  <span className={`text-sm font-semibold ${theme.textPrimary}`}>Company</span>
+                  <span className="text-[11px] text-slate-400">Reference Tables</span>
+                  <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Company</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button type="button" onClick={handleCompanySave} disabled={companySaving}
-                    className="h-8 px-3 rounded text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors"
-                  >
-                    {companySaving ? <RefreshCw className="h-4 w-4 animate-spin stroke-current" /> : <Save className="h-4 w-4 stroke-current" />} Save
+                    className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                    {companySaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />} Save
                   </button>
                   <button type="button" onClick={closeCompanyEdit}
-                    className="h-8 w-8 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
-                  >
-                    <X className="h-4 w-4 stroke-current" />
+                    className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors">
+                    <X className="h-3.5 w-3.5 stroke-current" />
                   </button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto">
-                <CompanyEditor form={companyForm as any} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))} compact
+              <div className="flex-1 overflow-y-auto p-3">
+                <CompanyEditor form={companyForm} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))} compact
                   touchedFields={companyTouched} setTouched={setCompanyTouched} />
                 {companyError && !companyErrorDismissed && (
-                  <div className="mx-3 mb-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
+                  <div className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
                     <span>Save failed</span>
                     <button type="button" onClick={() => setCompanyErrorDismissed(true)} className="text-red-400 hover:text-red-600 ml-2"><X className="h-3 w-3 stroke-current" /></button>
                   </div>
@@ -891,154 +956,120 @@ export function ReferencesPage() {
             </div>
           ) : editingItem || (itemForm.tableType && itemForm.name !== undefined) ? (
             <div className="flex h-full flex-col">
-              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 shrink-0 ${theme.header}`} style={{ height: "44px" }}>
+              <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3" style={{ height: "40px" }}>
                 <div className="flex items-center gap-2 min-w-0">
-                  {(() => {
-                    const es = getTableEntityStyle(currentTableType);
-                    const Icon = es.icon;
-                    const [tc, bc] = es.color.split(" ");
-                    return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${bc}`}>
-                      <Icon className={`h-3.5 w-3.5 stroke-current ${tc}`} />
-                    </span>;
-                  })()}
-                  <span className={`text-[11px] font-medium ${theme.textMuted}`}>Reference Tables</span>
-                  <span className={`text-[11px] ${theme.textMuted}`}>›</span>
-                  <span className={`text-sm font-semibold ${theme.textPrimary} truncate`}>
+                  <span className="text-[11px] text-slate-400">Reference Tables</span>
+                  <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
                     {editingItem ? `Edit ${editingItem.name}` : `Add ${getEntityLabel(currentTableType)}`}
                   </span>
-                  {isItemDirty && <span className={`text-xs ${theme.textWarning}`}>unsaved</span>}
+                  {isItemDirty && <span className="text-[10px] text-amber-600 font-medium">unsaved</span>}
                 </div>
                 <div className="flex items-center gap-1">
-                  {editingItem && (
-                    <button type="button" onClick={requestDelete} disabled={itemSaving}
-                      className="h-8 w-8 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-100/60 dark:hover:bg-red-900/30 disabled:opacity-40 transition-colors" title="Delete">
-                      <Trash2 className="h-4 w-4 stroke-current" />
-                    </button>
-                  )}
                   <button type="submit" form="item-form" disabled={itemSaving || !isFormValid}
-                    className="h-8 px-3 rounded text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors"
-                  >
-                    {itemSaving ? <RefreshCw className="h-4 w-4 animate-spin stroke-current" /> : <Save className="h-4 w-4 stroke-current" />} Save
+                    className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                    {itemSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />} Save
                   </button>
                   <button type="button" onClick={tryClosePanel}
-                    className="h-8 w-8 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
-                  >
-                    <X className="h-4 w-4 stroke-current" />
+                    className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors">
+                    <X className="h-3.5 w-3.5 stroke-current" />
                   </button>
                 </div>
               </div>
-              <form id="item-form" onSubmit={(e) => { e.preventDefault(); handleItemSave(); }} className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
-                {currentTableType === "shift_pattern" && (() => {
-                  const toHours = (t: string) => { const [h, m] = t.split(":").map(Number); return h + (m || 0) / 60; };
-                  const s = toHours(itemForm.startTime || "0");
-                  const e = toHours(itemForm.endTime || "0");
-                  const bs = toHours(itemForm.breakStart || "0");
-                  const be = toHours(itemForm.breakEnd || "0");
-                  const totalDur = e > s ? e - s : 0;
-                  const breakDur = be > bs ? be - bs : 0;
-                  const workDur = totalDur - breakDur;
-                  return (
-                    <div className="space-y-1.5 pt-1 border-t border-slate-200 dark:border-slate-700">
-                      <div className="flex items-center gap-2">
-                        <label className="block text-[9px] font-medium text-slate-400 mb-px w-20">Duration</label>
-                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{totalDur > 0 ? `${totalDur.toFixed(1)}h` : "\u2014"}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="block text-[9px] font-medium text-slate-400 mb-px w-20">Break</label>
-                        <div className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{breakDur > 0 ? `${breakDur.toFixed(1)}h` : "\u2014"}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="block text-[9px] font-medium text-slate-400 mb-px w-20">Work Time</label>
-                        <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">{workDur > 0 ? `${workDur.toFixed(1)}h` : "\u2014"}</div>
-                      </div>
-                    </div>
-                  );
-                })()}
+              <form id="item-form" onSubmit={(e) => { e.preventDefault(); handleItemSave(); }} className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-w-xl">
+                {currentTableType === "shift_pattern" && (
+                  <div className="rounded border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10px] leading-4 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                    Shift times are saved as reference attributes only. Authoritative schedule duration, break duration, and capacity availability must be resolved by schedule/domain services.
+                  </div>
+                )}
                 {activeFields.map((f) => (
                   <div key={f.key}>
-                    <label className="block text-[9px] font-medium text-slate-400 mb-px">
+                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">
                       {f.label}{f.required && <span className="ml-0.5 text-red-500">*</span>}
                     </label>
                     {f.type === "select" && f.options ? (
                       <div className="relative">
                         <select value={itemForm[f.key] ?? ""} onChange={(e) => handleFieldChange(f.key, e.target.value)}
-                          className={`w-full h-7 rounded border px-2 text-[10px] appearance-none cursor-pointer transition-colors ${fieldErrors[f.key] ? "border-red-300" : `${theme.input}`}`}
-                        >
+                          className={`w-full h-8 rounded border px-2.5 text-[11px] appearance-none cursor-pointer transition-colors outline-none ${fieldErrors[f.key] ? "border-red-300" : "border-slate-300 dark:border-slate-600"} bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200`}>
                           {f.options.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 stroke-current" />
-                        {fieldErrors[f.key] && <p className="text-[8px] text-red-500">{fieldErrors[f.key]}</p>}
+                        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 stroke-current" />
+                        {fieldErrors[f.key] && <p className="text-[9px] text-red-500 mt-0.5">{fieldErrors[f.key]}</p>}
                       </div>
                     ) : (
                       <div>
                         <input type="text" value={itemForm[f.key] ?? ""} onChange={(e) => handleFieldChange(f.key, e.target.value)} placeholder={f.placeholder}
-                          className={`w-full h-7 rounded border px-2 text-[10px] transition-colors ${fieldErrors[f.key] ? "border-red-300" : `${theme.input}`}`} />
-                        {fieldErrors[f.key] && <p className="text-[8px] text-red-500">{fieldErrors[f.key]}</p>}
+                          className={`w-full h-8 rounded border px-2.5 text-[11px] transition-colors outline-none ${fieldErrors[f.key] ? "border-red-300" : "border-slate-300 dark:border-slate-600"} bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400`} />
+                        {fieldErrors[f.key] && <p className="text-[9px] text-red-500 mt-0.5">{fieldErrors[f.key]}</p>}
+                        {f.key === "code" && codeDuplicate && <p className="text-[9px] text-red-500 mt-0.5">Code must be unique inside this table</p>}
                       </div>
                     )}
                   </div>
                 ))}
-                {confirmDelete && (
-                  <div className="rounded border border-red-200 bg-red-50 px-2.5 py-2 text-[10px] text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-                    <p className="font-medium mb-1">Delete <strong>{itemForm.name}</strong>?</p>
-                    <div className="flex items-center gap-1.5">
-                      <button type="button" onClick={handleDelete} disabled={itemSaving}
-                        className="rounded px-2 py-1 text-[10px] font-medium text-red-600 hover:bg-red-100/60 dark:text-red-400 dark:hover:bg-red-900/30 disabled:opacity-40 transition-colors">
-                        {itemSaving ? "Deleting..." : "Delete"}
-                      </button>
-                      <button type="button" onClick={cancelDelete}
-                        className="rounded px-2 py-1 text-[10px] font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">
-                        Cancel
-                      </button>
-                    </div>
+                {editingItem && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" onClick={() => setConfirmDelete(editingItem)}
+                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[10px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                      <Trash2 className="h-3 w-3 stroke-current" />
+                      Delete record
+                    </button>
                   </div>
                 )}
                 {itemError && !itemErrorDismissed && (
                   <div className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
-                    <span>Save failed</span>
+                    <span>{itemError}</span>
                     <button type="button" onClick={() => setItemErrorDismissed(true)} className="text-red-400 hover:text-red-600 ml-2"><X className="h-3 w-3 stroke-current" /></button>
                   </div>
                 )}
               </form>
             </div>
           ) : selectedType ? (
-              <div className="flex h-full flex-col">
-              <div className={`flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3 shrink-0 ${theme.header}`} style={{ height: "48px" }}>
-                <div className="flex items-center gap-2 min-w-0">
-                  {(() => {
-                    const es = getTableEntityStyle(selectedType);
-                    const Icon = es.icon;
-                    const [tc, bc] = es.color.split(" ");
-                    return <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${bc}`}>
-                      <Icon className={`h-3.5 w-3.5 stroke-current ${tc}`} />
-                    </span>;
-                  })()}
-                  <span className={`text-[11px] ${theme.textMuted}`}>Reference Tables</span>
-                  <ChevronRight className="h-3 w-3 stroke-current text-slate-300 dark:text-slate-600" />
-                  <span className={`text-sm font-semibold ${theme.textPrimary}`}>{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
-                  <span className={`text-[11px] ${theme.textMuted}`}>{selectedTypeItems.length} records</span>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button type="button" onClick={() => openAddItem(selectedType)}
-                    className="h-8 px-3 rounded text-xs font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
-                  >
-                    <Plus className="h-3.5 w-3.5 stroke-current" /> Add
-                  </button>
+            <div className="flex h-full flex-col">
+              <div className={`shrink-0 border-b px-3 py-2 ${theme.header}`}>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <h2 className={`text-sm font-semibold ${theme.textPrimary}`}>{TABLE_TYPE_LABELS[selectedType] || selectedType}</h2>
+                  <span className={`text-[11px] ${theme.textMuted}`}>{selectedTypeItems.length} record{selectedTypeItems.length !== 1 ? "s" : ""}</span>
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] ${theme.chip}`}>{selectedGroupLabel}</span>
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] ${selectedReadOnly ? theme.infoBanner : theme.badgeActive}`}>
+                    {selectedDataType}
+                  </span>
+                  {isPeopleTable(selectedType) && selectedTablePurpose && (
+                    <span className={`min-w-0 truncate text-[11px] ${theme.textSecondary}`} title={selectedTablePurpose}>{selectedTablePurpose}</span>
+                  )}
+                  {!isPeopleTable(selectedType) && (
+                    <span className={`min-w-0 truncate text-[11px] ${theme.textSecondary}`} title={selectedUsageContext}>{selectedUsageContext}</span>
+                  )}
+                  {selectedUpdatedAt && <span className={`ml-auto text-[10px] ${theme.textMuted}`}>Updated {formatDate(selectedUpdatedAt)}</span>}
                 </div>
               </div>
-              <div className="flex-1 overflow-auto">
-                <ItemsList items={allItems} selectedType={selectedType} onEdit={openEditItem} onAdd={openAddItem} showToast={showToast} />
-              </div>
-              <div className="flex items-center shrink-0 h-15 border-t border-slate-200 dark:border-slate-700 px-3">
-                <span className={`text-[10px] ${theme.textMuted}`}>{selectedTypeItems.length} item{selectedTypeItems.length !== 1 ? "s" : ""}</span>
+              {selectedReadOnly && (
+                <div className={`mx-3 mt-2 flex shrink-0 items-center justify-between gap-2 rounded px-3 py-1.5 text-[10px] ${theme.infoBanner}`}>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Info className="h-3.5 w-3.5 shrink-0 stroke-current" />
+                    <span className="truncate">
+                      {selectedType === "staff_assignment"
+                        ? "Staff assignments are managed from the assignment workflow. Direct edits are disabled to protect ownership and staffing counts."
+                        : "Staff users are managed from the Staff/User workflow. Direct Add/Edit/Delete is disabled here."}
+                    </span>
+                  </div>
+                  {selectedWorkflowActionTarget && (
+                    <a href={selectedWorkflowActionTarget} className={`shrink-0 rounded px-2 py-1 text-[10px] font-medium ${theme.buttonDetails}`}>
+                      {selectedWorkflowActionLabel}
+                    </a>
+                  )}
+                </div>
+              )}
+              <div className="flex-1 min-h-0">
+                <ItemsList items={allItems} selectedType={selectedType} tableSearch={tableSearch} onEdit={openEditItem}
+                  onToggleActive={handleToggleActive} onDelete={(item) => { setEditingItem(item); setConfirmDelete(item); }} />
               </div>
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center px-4">
-                <FileSpreadsheet className="h-10 w-10 stroke-current text-slate-300 mx-auto mb-3" />
-                <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1`}>Reference Tables</h3>
-                <p className={`text-xs ${theme.textMuted} max-w-60 mx-auto leading-relaxed`}>
+                <FileSpreadsheet className="h-10 w-10 stroke-current text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Reference Tables</h3>
+                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-60 mx-auto leading-relaxed">
                   Select a table from the sidebar to browse and manage reference data.
                 </p>
               </div>
@@ -1046,6 +1077,13 @@ export function ReferencesPage() {
           )}
         </div>
       </div>
+
+      {/* ── Footer ── */}
+      {standalone && selectedType && !companyEditMode && !editingItem && !(itemForm.tableType && itemForm.name !== undefined) && (
+        <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center px-5 text-[11px] text-slate-500 dark:text-slate-400 font-medium h-9">
+          <span>{selectedTypeItems.length} record{selectedTypeItems.length !== 1 ? "s" : ""} in {TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
+        </div>
+      )}
 
       {/* Unsaved changes modal */}
       {showUnsavedModal && (
@@ -1063,10 +1101,33 @@ export function ReferencesPage() {
         </div>
       )}
 
+      {/* Delete confirm modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setConfirmDelete(null)} />
+          <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-90 max-w-[90vw]">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Delete {confirmDelete.name}?</h3>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">
+              This record will be deactivated instead of removed. {confirmDelete.usageImpact || "No known usage"}.
+            </p>
+            <div className="flex items-center justify-end gap-1">
+              <button type="button" onClick={handleDelete} disabled={itemSaving}
+                className="rounded px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40">
+                {itemSaving ? "Deactivating..." : "Deactivate"}
+              </button>
+              <button type="button" onClick={() => setConfirmDelete(null)}
+                className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Toast */}
       {toast.visible && (
         <div className="fixed bottom-5 right-5 z-50 bg-emerald-600 text-white px-3 py-2 rounded-lg shadow-lg text-[10px] font-medium flex items-center gap-2">
-          <Save className="h-3 w-3 stroke-current shrink-0" />
+          <Check className="h-3 w-3 stroke-current shrink-0" />
           {toast.message}
         </div>
       )}

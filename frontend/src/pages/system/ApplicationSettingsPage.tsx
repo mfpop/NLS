@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Cog, ChevronDown } from "lucide-react";
 import { GraphqlStatusPage } from "@/pages/graphql-status";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { theme } from "../../styles/themeTokens";
 
 type SettingsTab = "overview" | "graphql-status";
@@ -17,20 +18,12 @@ export function ApplicationSettingsPage() {
   const activeTabLabel = tabs.find((t) => t.value === activeTab)?.label || "Overview";
 
   return (
-    <section className="p-0 m-0">
-      <header className={`flex items-center justify-between border shadow-sm h-16 ${theme.header}`}>
-        <div className="flex items-center gap-4 min-w-0 flex-1">
-          <div className={`inline-flex h-12 w-12 flex-none items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
-            <Cog className="h-5 w-5 stroke-current" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className={`text-2xl font-semibold tracking-tight ${theme.textPrimary}`}>Application Settings</h1>
-            <p className={`mt-1 text-sm ${theme.textSecondary}`}>
-              Manage storage, backups, security, connections, and system functionality dashboard for the control model.
-            </p>
-          </div>
-        </div>
-        <div className="relative flex-none">
+    <AppPageLayout
+      icon={<Cog />}
+      title="Application Settings"
+      subtitle="Manage storage, backups, security, connections, and system functionality dashboard for the control model."
+      toolbar={
+        <div className="relative">
           <button
             className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${theme.buttonSecondary}`}
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -64,9 +57,9 @@ export function ApplicationSettingsPage() {
             </div>
           )}
         </div>
-      </header>
-
-      <div className="mt-4">
+      }
+    >
+      <div className="p-4">
         {activeTab === "overview" && (
           <div className={`rounded-xl border p-6 text-sm shadow-sm ${theme.card} ${theme.textSecondary}`}>
             <p>Application settings overview and configuration options will be displayed here.</p>
@@ -74,6 +67,6 @@ export function ApplicationSettingsPage() {
         )}
         {activeTab === "graphql-status" && <GraphqlStatusPage />}
       </div>
-    </section>
+    </AppPageLayout>
   );
 }

@@ -1,5 +1,7 @@
 import strawberry
 from typing import Optional
+from django.contrib.auth.models import User
+from django.db.models import Q
 
 from api.queries.execution import ExecutionQuery
 from api.queries.improvement import ImprovementQuery
@@ -29,3 +31,11 @@ class Query(
         if user is None:
             return None
         return UserNode.from_user(user)
+
+    @strawberry.field
+    def users(self, search: Optional[str] = None) -> list[UserNode]:
+        qs = User.objects.all().order_by("username")
+        term = (search or "").strip()
+        if term:
+            qs = qs.filter(Q(username__icontains=term) | Q(email__icontains=term) | Q(first_name__icontains=term) | Q(last_name__icontains=term))
+        return [UserNode.from_user(user) for user in qs[:50]]

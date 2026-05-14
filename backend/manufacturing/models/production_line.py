@@ -23,6 +23,31 @@ class ProductionLine(TimeStampedModel):
         "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
         null=True, blank=True, related_name="+",
     )
+    line_type_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    default_calendar_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    week_start_day_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    timezone_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    capacity_basis = models.CharField(max_length=100, blank=True, default="")
+    capacity_uom_id = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    bottleneck_resource_group = models.ForeignKey(
+        "manufacturing.ResourceGroup", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="bottleneck_for_lines",
+    )
     is_constraint = models.BooleanField(default=False)
 
     class Meta:
@@ -33,3 +58,81 @@ class ProductionLine(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+
+
+class ProductionLineProductFamily(TimeStampedModel):
+    production_line = models.ForeignKey(
+        ProductionLine, on_delete=models.CASCADE,
+        related_name="family_assignments",
+        db_index=True,
+    )
+    product_family = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.CASCADE,
+        related_name="pl_family_assignments",
+        db_index=True,
+    )
+    is_primary = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
+    )
+
+    class Meta:
+        db_table = "manufacturing_production_line_family"
+        ordering = ["production_line", "product_family__name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["production_line", "product_family"],
+                name="uq_pl_family",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["production_line", "product_family"]),
+            models.Index(fields=["production_line", "status"]),
+        ]
+        verbose_name = "Line-Family Assignment"
+        verbose_name_plural = "Line-Family Assignments"
+
+    def __str__(self):
+        return f"{self.production_line.name} → {self.product_family.name}"
+
+
+class ProductionLineProductModel(TimeStampedModel):
+    production_line = models.ForeignKey(
+        ProductionLine, on_delete=models.CASCADE,
+        related_name="model_assignments",
+        db_index=True,
+    )
+    product_model = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.CASCADE,
+        related_name="pl_model_assignments",
+        db_index=True,
+    )
+    product_family = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.CASCADE,
+        related_name="pl_model_family_assignments",
+        db_index=True,
+    )
+    is_primary = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
+    )
+
+    class Meta:
+        db_table = "manufacturing_production_line_model"
+        ordering = ["production_line", "product_model__name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["production_line", "product_model"],
+                name="uq_pl_model",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["production_line", "product_model"]),
+            models.Index(fields=["production_line", "product_family"]),
+            models.Index(fields=["production_line", "status"]),
+        ]
+        verbose_name = "Line-Model Assignment"
+        verbose_name_plural = "Line-Model Assignments"
+
+    def __str__(self):
+        return f"{self.production_line.name} → {self.product_model.name}"

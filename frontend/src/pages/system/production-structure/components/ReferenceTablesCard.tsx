@@ -11,6 +11,7 @@ const TABLE_NAME_TO_KEY: Record<string, string> = {
   "Shift Patterns": "shift_pattern",
   Languages: "language",
   Timezones: "timezone",
+  "Industry Types": "industry_type",
   "Manufacturing Types": "manufacturing_type",
   "Work Centers": "work_center_type",
   "Machine Types": "machine_type",
@@ -28,6 +29,8 @@ const TABLE_NAME_TO_KEY: Record<string, string> = {
   "Skill Types": "skill_type",
   Roles: "role",
   "Shift Teams": "shift_team",
+  "Product Models": "product_model",
+  "Production Families": "production_family",
 };
 
 const GROUP_LABELS: Record<string, string> = {
@@ -46,7 +49,7 @@ const GROUP_ICONS: Record<string, typeof Database> = {
 
 const GROUP_DESCRIPTIONS: Record<string, string> = {
   organization: "Calendars, shifts, languages, timezones",
-  manufacturing: "Types, centers, machines, routes, codes",
+  manufacturing: "Types, centers, machines, routes, codes, product models, families",
   material_flow: "Categories, inventory, kanban, containers, units",
   lean_quality: "Downtime, defects, scrap, kaizen categories",
   people: "Skills, roles, shift teams",
@@ -62,20 +65,42 @@ const GROUP_SHORTCUTS: Record<string, string> = {
 
 const CATEGORY_CODE_TO_TABLE_KEY: Record<string, string> = {
   calendar: "production_calendar",
+  production_calendar: "production_calendar",
   shift_model: "shift_pattern",
+  shift_pattern: "shift_pattern",
   language: "language",
+  language_locale: "language",
   timezone: "timezone",
   plant_type: "manufacturing_type",
+  manufacturing_type: "manufacturing_type",
   department_type: "work_center_type",
+  work_center_type: "work_center_type",
   resource_type: "machine_type",
+  machine_type: "machine_type",
   resource_capability: "operation_code",
+  operation_code: "operation_code",
   product_line: "routing_type",
+  routing_type: "routing_type",
   manufacturing_focus: "material_category",
+  material_category: "material_category",
   resource_group_type: "inventory_type",
+  inventory_type: "inventory_type",
   lean_methodology: "kanban_type",
-  industry_type: "container_type",
+  kanban_type: "kanban_type",
+  industry_type: "industry_type",
+  container_type: "container_type",
   schedule: "unit_type",
-  status: "downtime_code",
+  unit_type: "unit_type",
+  status: "status",
+  downtime_code: "downtime_code",
+  defect_code: "defect_code",
+  scrap_reason: "scrap_reason",
+  kaizen_category: "kaizen_category",
+  skill_type: "skill_type",
+  role: "role",
+  shift_team: "shift_team",
+  product_model: "product_model",
+  production_family: "production_family",
 };
 
 const TABLE_KEY_TO_GROUP: Record<string, string> = {
@@ -83,6 +108,7 @@ const TABLE_KEY_TO_GROUP: Record<string, string> = {
   shift_pattern: "organization",
   language: "organization",
   timezone: "organization",
+  industry_type: "organization",
   manufacturing_type: "manufacturing",
   work_center_type: "manufacturing",
   machine_type: "manufacturing",
@@ -100,6 +126,8 @@ const TABLE_KEY_TO_GROUP: Record<string, string> = {
   skill_type: "people",
   role: "people",
   shift_team: "people",
+  product_model: "manufacturing",
+  production_family: "manufacturing",
 };
 
 interface ReferenceTableRow {
@@ -201,12 +229,10 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                     const entityStyle = getTableEntityStyle(table.tableTypeKey);
                     const EntityIcon = entityStyle.icon;
                     const [entityTextColor, entityBgColor] = entityStyle.color.split(" ");
+                    const nextTableType = table.tableTypeKey;
                     return (
                     <button key={table.id} type="button"
                       onClick={() => {
-                        const byName = TABLE_NAME_TO_KEY[table.name];
-                        const byCategory = CATEGORY_CODE_TO_TABLE_KEY[table.categoryCode];
-                        const nextTableType = byName || byCategory || table.tableTypeKey;
                         navigate(`/system/reference-tables/${nextTableType}`);
                       }}
                       className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40"

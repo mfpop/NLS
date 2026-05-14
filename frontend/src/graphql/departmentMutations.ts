@@ -1,22 +1,40 @@
 import { gql } from "@apollo/client";
 
+const DEPARTMENT_FIELDS = `
+  id
+  departmentId
+  code
+  name
+  description
+  status
+  statusId
+  manager
+  managerRef { id name }
+  supervisorName
+  supervisor { id name }
+  employees
+  employeeCount
+  productionLineCount
+  productionLines { id code name plantName status }
+  groupCount
+  groupName
+  resourceGroupCount
+  resourceCount
+  resourceGroups { id code name status resourceCount }
+  createdAt
+  updatedAt
+`;
+
 export const CREATE_DEPARTMENT_MUTATION = gql`
   mutation CreateDepartment($input: DepartmentInput!) {
     createDepartment(input: $input) {
+      ok
       department {
-        id
-        code
-        name
-        status
-        manager
-        employees
-        groupCount
-        resourceCount
-        createdAt
-        updatedAt
+        ${DEPARTMENT_FIELDS}
       }
       errors {
         field
+        code
         message
       }
     }
@@ -26,20 +44,13 @@ export const CREATE_DEPARTMENT_MUTATION = gql`
 export const UPDATE_DEPARTMENT_MUTATION = gql`
   mutation UpdateDepartment($id: String!, $input: DepartmentInput!) {
     updateDepartment(id: $id, input: $input) {
+      ok
       department {
-        id
-        code
-        name
-        status
-        manager
-        employees
-        groupCount
-        resourceCount
-        createdAt
-        updatedAt
+        ${DEPARTMENT_FIELDS}
       }
       errors {
         field
+        code
         message
       }
     }
@@ -54,6 +65,38 @@ export const DELETE_DEPARTMENT_MUTATION = gql`
       message
       errors {
         field
+        message
+      }
+    }
+  }
+`;
+
+export const ASSIGN_DEPARTMENT_TO_LINES_MUTATION = gql`
+  mutation AssignDepartmentToProductionLines($input: AssignDepartmentToLinesInput!) {
+    assignDepartmentToProductionLines(input: $input) {
+      ok
+      department {
+        ${DEPARTMENT_FIELDS}
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const REMOVE_DEPARTMENT_FROM_LINE_MUTATION = gql`
+  mutation RemoveDepartmentFromProductionLine($departmentId: String!, $productionLineId: String!) {
+    removeDepartmentFromProductionLine(departmentId: $departmentId, productionLineId: $productionLineId) {
+      ok
+      department {
+        ${DEPARTMENT_FIELDS}
+      }
+      errors {
+        field
+        code
         message
       }
     }

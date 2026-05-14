@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TrendingUpDown, Layers, Component, Dumbbell, Building2, Activity, Database, ExternalLink, Users, Factory, Info, Plus, Play, AlertTriangle, MapPin, ChevronDown } from "lucide-react";
 import { ENTITY_CONFIG, TYPE_TITLES } from "../config";
+import { formatAppDate } from "@/utils/dateFormat";
 /** Normalize a tree node into flat entity format */
 export function fromTreeNode(node: any): any {
   const meta = node.metadata || {};
@@ -319,9 +320,9 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
 
       {/* ── TIMESTAMPS ── */}
       <div className="flex gap-3 text-[10px] text-slate-400 dark:text-slate-500">
-        <span>Created {new Date(p.createdAt).toLocaleDateString()}</span>
+        <span>Created {formatAppDate(p.createdAt) || "-"}</span>
         <span>·</span>
-        <span>Updated {new Date(p.updatedAt).toLocaleDateString()}</span>
+        <span>Updated {formatAppDate(p.updatedAt) || "-"}</span>
       </div>
     </div>
   );
@@ -399,9 +400,9 @@ function LineDetail({ entity: l, onAction }: { entity: any; onAction?: () => voi
       )}
       {isActive && <ConfigShortcuts entityType="productionLine" />}
       <div className="flex gap-3 text-[10px] text-slate-400 dark:text-slate-500">
-        <span>Created {new Date(l.createdAt).toLocaleDateString()}</span>
+        <span>Created {formatAppDate(l.createdAt) || "-"}</span>
         <span>·</span>
-        <span>Updated {new Date(l.updatedAt).toLocaleDateString()}</span>
+        <span>Updated {formatAppDate(l.updatedAt) || "-"}</span>
       </div>
     </div>
   );

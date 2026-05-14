@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { User, Settings, LogOut, MoreVertical } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
+import { theme } from "@/styles/themeTokens";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -25,13 +26,13 @@ export function SidebarFooterUser() {
       <div className={`absolute bottom-full left-0 right-0 overflow-hidden transition-all duration-150 ${isOpen ? "max-h-[200px]" : "max-h-0"}`}>
         <div className="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 py-1">
           <NavLink to="/system/profile" onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 h-9 px-3 text-[15px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+            className={`flex items-center gap-2.5 h-9 px-3 text-[14px] font-semibold ${theme.navInactive} ${theme.interactiveRowStrong} transition-colors`}
           >
             <User className="h-[18px] w-[18px] stroke-current" />
             Profile
           </NavLink>
           <NavLink to="/system/preferences" onClick={() => setIsOpen(false)}
-            className="flex items-center gap-2.5 h-9 px-3 text-[15px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+            className={`flex items-center gap-2.5 h-9 px-3 text-[14px] font-semibold ${theme.navInactive} ${theme.interactiveRowStrong} transition-colors`}
           >
             <Settings className="h-[18px] w-[18px] stroke-current" />
             Settings
@@ -45,14 +46,14 @@ export function SidebarFooterUser() {
         </div>
       </div>
       <button type="button" onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 w-full h-12 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors outline-none focus:outline-none"
+        className="flex items-center gap-2.5 w-full h-[60px] px-3 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200/30 dark:hover:bg-slate-800/40 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 shrink-0">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-sm font-bold text-slate-800 dark:text-slate-100 shrink-0">
           {initials(user?.username ?? "User")}
         </span>
         <span className="flex flex-col flex-1 min-w-0 text-left leading-snug">
-          <span className="truncate text-[15px] font-semibold text-slate-700 dark:text-slate-300">{user?.username ?? "User"}</span>
-          <span className="truncate text-[12px] text-slate-400 dark:text-slate-500">{user?.role?.replace("_", " ") ?? ""}</span>
+          <span className="truncate text-[14px] font-semibold text-slate-900 dark:text-slate-100">{user?.username ?? "User"}</span>
+          <span className="truncate text-[12px] font-medium text-slate-500 dark:text-slate-400">{user?.role?.replace("_", " ") ?? ""}</span>
         </span>
         <MoreVertical className="h-4 w-4 stroke-current shrink-0 text-slate-400" />
       </button>

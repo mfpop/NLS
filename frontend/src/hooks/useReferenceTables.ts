@@ -1,5 +1,6 @@
 import { useQuery } from "@apollo/client/react";
 import { gql } from "@apollo/client";
+import { useCallback } from "react";
 
 export const REFERENCE_TABLES_LIST_QUERY = gql`
   query ReferenceTablesList {
@@ -69,27 +70,34 @@ export function useReferenceTables() {
     { fetchPolicy: "network-only" }
   );
 
-  const byCategory = (code: string): ReferenceValueNode[] => {
+  const byCategory = useCallback((code: string): ReferenceValueNode[] => {
     if (!data?.referenceTablesList) return [];
     const table = data.referenceTablesList.find((t) => t.categoryCode === code);
     return table?.values ?? [];
-  };
+  }, [data?.referenceTablesList]);
 
-  const getLabel = (categoryCode: string, id: string | null | undefined): string => {
+  const getLabel = useCallback((categoryCode: string, id: string | null | undefined): string => {
     if (!id) return "";
     const values = byCategory(categoryCode);
     const found = values.find((v) => v.id === id);
     return found?.name ?? "";
-  };
+  }, [byCategory]);
 
-  const getMetadata = (categoryCode: string, id: string | null | undefined): Record<string, any> | null => {
+  const getCode = useCallback((categoryCode: string, id: string | null | undefined): string => {
+    if (!id) return "";
+    const values = byCategory(categoryCode);
+    const found = values.find((v) => v.id === id);
+    return found?.code ?? "";
+  }, [byCategory]);
+
+  const getMetadata = useCallback((categoryCode: string, id: string | null | undefined): Record<string, any> | null => {
     if (!id) return null;
     const values = byCategory(categoryCode);
     const found = values.find((v) => v.id === id);
     return found?.metadata ?? null;
-  };
+  }, [byCategory]);
 
-  const filterByMeta = (categoryCode: string, metaKey: string, metaValue: string): ReferenceValueNode[] => {
+  const filterByMeta = useCallback((categoryCode: string, metaKey: string, metaValue: string): ReferenceValueNode[] => {
     const values = byCategory(categoryCode);
     return values.filter((v) => {
       const meta = v.metadata;
@@ -101,9 +109,9 @@ export function useReferenceTables() {
         return false;
       }
     });
-  };
+  }, [byCategory]);
 
-  const findIdByText = (categoryCode: string, text: string): string => {
+  const findIdByText = useCallback((categoryCode: string, text: string): string => {
     if (!text) return "";
     const values = byCategory(categoryCode);
     const lower = text.toLowerCase().trim();
@@ -123,9 +131,9 @@ export function useReferenceTables() {
     found = values.find((v) => v.code && v.code.toLowerCase().includes(lower));
     if (found) return found.id;
     return "";
-  };
+  }, [byCategory]);
 
-  return { data, loading, error, byCategory, getLabel, getMetadata, findIdByText, filterByMeta };
+  return { data, loading, error, byCategory, getLabel, getCode, getMetadata, findIdByText, filterByMeta };
 }
 
 export function useReferenceCategory(categoryCode: string) {

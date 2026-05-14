@@ -1,12 +1,12 @@
 import { Activity } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function LinePerformancePage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Line Performance"
-      description="Track throughput, stability, and flow losses directly on the selected production line."
-      icon={<Activity className="h-5 w-5" />}
+      subtitle="Track throughput, stability, and flow losses directly on the selected production line."
+      icon={<Activity />}
     />
   );
 }

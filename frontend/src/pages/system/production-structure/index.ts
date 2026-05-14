@@ -1,4 +1,12 @@
-export { ProductionComponents } from "./ProductionComponentsPage";
+export { ProductionComponentsCompany } from "./ProductionComponentsCompany";
+export { ProductionComponentsPlants } from "./ProductionComponentsPlants";
+export { ProductionComponentsProductionLines } from "./ProductionComponentsProductionLines";
+export { ProductionComponentsDepartments } from "./ProductionComponentsDepartments";
+export { ProductionComponentsResourceGroup } from "./ProductionComponentsResourceGroup";
+export { ProductionComponentsResources } from "./ProductionComponentsResources";
+export { ProductionComponentsLayout } from "./components/ProductionComponentsLayout";
+export { ProductionComponentsLayout as ProductionComponents } from "./components/ProductionComponentsLayout";
+export { ProductionFlowLayout } from "./ProductionFlowLayout";
 export { ReferencesPage } from "./ReferencesPage";
 export { StructurePage } from "./StructurePage";
 export { EntityVisualSettingsPage } from "./EntityVisualSettingsPage";

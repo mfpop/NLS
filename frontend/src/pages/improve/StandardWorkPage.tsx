@@ -1,12 +1,12 @@
 import { BookOpen } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function StandardWorkPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Standard Work"
-      description="Maintain operating standards, update sequence clarity, and keep execution aligned to the current best method."
-      icon={<BookOpen className="h-5 w-5" />}
+      subtitle="Maintain operating standards, update sequence clarity, and keep execution aligned to the current best method."
+      icon={<BookOpen />}
     />
   );
 }

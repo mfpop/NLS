@@ -26,7 +26,7 @@ import {
   Layers,
   Search,
 } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { theme } from "../../styles/themeTokens";
 import { useProfile } from "@/hooks/useProfile";
 import type { Profile, WorkHistoryEntry, EducationEntry } from "@/types/profile";
@@ -651,8 +651,7 @@ export function UserProfilePage() {
   if (error && !profile) {
     console.error("Profile query error:", error.message);
     return (
-      <div className={`flex h-full flex-col ${theme.page}`}>
-        <ModulePage title="Profile" description="Manage your personal information and account settings." icon={<User className="h-5 w-5" />} />
+      <AppPageLayout title="Profile" subtitle="Manage your personal information and account settings." icon={<User />}>
         <div className="p-4 space-y-3">
           <div className="mx-auto max-w-3xl rounded-3xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
             We couldn&apos;t load the profile right now.
@@ -661,7 +660,7 @@ export function UserProfilePage() {
             {error.message}
           </div>
         </div>
-      </div>
+      </AppPageLayout>
     );
   }
 

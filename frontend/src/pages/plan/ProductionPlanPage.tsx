@@ -1,12 +1,12 @@
 import { FileText } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function ProductionPlanPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Production Plan"
-      description="Define and manage production schedules, batch sizes, and sequencing across all lines."
-      icon={<FileText className="h-5 w-5" />}
+      subtitle="Define and manage production schedules, batch sizes, and sequencing across all lines."
+      icon={<FileText />}
     />
   );
 }

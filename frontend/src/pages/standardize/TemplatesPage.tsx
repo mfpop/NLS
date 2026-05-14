@@ -1,12 +1,12 @@
 import { FileSpreadsheet } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function TemplatesPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Templates"
-      description="Manage reusable templates for work instructions, checklists, forms, and reports."
-      icon={<FileSpreadsheet className="h-5 w-5" />}
+      subtitle="Manage reusable templates for work instructions, checklists, forms, and reports."
+      icon={<FileSpreadsheet />}
     />
   );
 }

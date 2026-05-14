@@ -10,6 +10,16 @@ export const REFERENCE_ITEMS_QUERY = gql`
       description
       isActive
       sortOrder
+      categoryName
+      dataType
+      usageContext
+      usageImpact
+      updatedAt
+      username
+      role
+      department
+      plant
+      shiftTeam
     }
   }
 `;
@@ -25,6 +35,16 @@ export const CREATE_REFERENCE_ITEM_MUTATION = gql`
         description
         isActive
         sortOrder
+        categoryName
+        dataType
+        usageContext
+        usageImpact
+        updatedAt
+        username
+        role
+        department
+        plant
+        shiftTeam
       }
       errors { field message }
     }
@@ -42,6 +62,16 @@ export const UPDATE_REFERENCE_ITEM_MUTATION = gql`
         description
         isActive
         sortOrder
+        categoryName
+        dataType
+        usageContext
+        usageImpact
+        updatedAt
+        username
+        role
+        department
+        plant
+        shiftTeam
       }
       errors { field message }
     }

@@ -1,12 +1,12 @@
 import { BarChart3 } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function CapacityPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Capacity Planning"
-      description="Analyze resource availability, identify bottlenecks, and plan capacity across production lines."
-      icon={<BarChart3 className="h-5 w-5" />}
+      subtitle="Analyze resource availability, identify bottlenecks, and plan capacity across production lines."
+      icon={<BarChart3 />}
     />
   );
 }

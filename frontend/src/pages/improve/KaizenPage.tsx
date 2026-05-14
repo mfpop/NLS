@@ -1,12 +1,12 @@
 import { Sparkles } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function KaizenPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Kaizen"
-      description="Coordinate structured improvement work and keep small-step change visible to the line."
-      icon={<Sparkles className="h-5 w-5" />}
+      subtitle="Coordinate structured improvement work and keep small-step change visible to the line."
+      icon={<Sparkles />}
     />
   );
 }

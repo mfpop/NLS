@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import type { NavEntry } from "./navigationConfig";
 import { isPathActive } from "./navigationConfig";
+import { theme } from "@/styles/themeTokens";
 
 export function SidebarNavGroup({ id, label, icon: Icon, items, pathname, openSection, onToggle, onNavigate }: {
   id: string; label: string; icon: LucideIcon; items: NavEntry[]; pathname: string;
@@ -19,13 +20,15 @@ export function SidebarNavGroup({ id, label, icon: Icon, items, pathname, openSe
   return (
     <div>
       <button type="button" onClick={() => onToggle(id)}
-        className={`flex items-center gap-2.5 w-full h-9 px-3 text-xs font-medium transition-colors outline-none focus:outline-none ${
-          hasActiveChild ? "text-slate-600 dark:text-slate-400 bg-slate-200/30 dark:bg-slate-800/40" : "text-slate-500 dark:text-slate-400"
-        } hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40`}
+        className={`flex items-center gap-2.5 w-full h-9 px-3 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 ${
+          hasActiveChild
+            ? `${theme.textPrimary} bg-transparent border-l-[3px] border-transparent`
+            : `${theme.navInactive} border-l-[3px] border-transparent`
+        } ${theme.interactiveRowStrong}`}
       >
-        <Icon className="h-4.5 w-4.5 stroke-current shrink-0" />
-        <span className="truncate flex-1 text-left text-[15px]">{label}</span>
-        <ChevronDown className={`h-3.5 w-3.5 stroke-current transition-transform duration-150 ${isOpen ? "rotate-0" : "-rotate-90"}`} />
+        <Icon className="h-[17px] w-[17px] stroke-current shrink-0" />
+        <span className="truncate flex-1 text-left text-[14px] leading-5">{label}</span>
+        <ChevronDown className={`h-3.5 w-3.5 stroke-current transition-transform duration-150 ${hasActiveChild || isOpen ? theme.iconStrong : theme.icon} ${isOpen ? "rotate-0" : "-rotate-90"}`} />
       </button>
       <div className={`overflow-hidden transition-all duration-150 ${isOpen ? "max-h-250" : "max-h-0"}`}>
         <div className="py-0.5 space-y-0.5">
@@ -52,11 +55,11 @@ function NavEntryRow({ entry, depth = 0, pathname, onNavigate }: {
   return (
     <div>
       <button type="button" onClick={() => setUserOpen(!userOpen)}
-        className="flex items-center gap-2.5 w-full h-8 pr-3 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors border-l-[3px] border-transparent outline-none focus:outline-none"
+        className={`flex items-center gap-2.5 w-full h-8 pr-3 text-xs font-semibold ${hasActive ? theme.textSecondary : "text-slate-500 dark:text-slate-300/85"} ${theme.interactiveRowStrong} transition-colors border-l-[3px] border-transparent outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40`}
         style={{ paddingLeft: 28 + depth * 12 }}
       >
-        <ChevronRight className={`h-3 w-3 stroke-current shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
-        <span className="truncate flex-1 text-left">{entry.label}</span>
+        <ChevronRight className={`h-3 w-3 stroke-current shrink-0 transition-transform ${hasActive || isOpen ? theme.iconStrong : theme.iconSubtle} ${isOpen ? "rotate-90" : ""}`} />
+        <span className="truncate flex-1 text-left text-[13px] leading-5">{entry.label}</span>
       </button>
       <div className={`overflow-hidden transition-all duration-150 ${isOpen ? "max-h-250" : "max-h-0"}`}>
         <div className="space-y-0.5">

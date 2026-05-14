@@ -112,8 +112,8 @@ class Command(BaseCommand):
                 "default_shift_model": "2-shift (Morn/Aftn)",
                 "week_start_day": "Monday",
                 "default_schedule": "Day Shift",
-                "manufacturing_focus": "Liftgate Assembly, Welding, Painting",
-                "description": "Second manufacturing plant for liftgate production serving the North American market.",
+                "manufacturing_focus": "Liftgate Assembly, Machining, Welding, Painting, Harness, Pipes, Assembly",
+                "description": "Manufacturing facility in Cienega de Flores, Nuevo Leon, serving North American liftgate production. Consolidates Monterrey assembly, machining, fabrication, welding, painting, harness, and pipe operations in one canonical plant record.",
             },
         ]
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@apollo/client/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   PLANTS_QUERY,
   CREATE_PLANT_MUTATION,
@@ -16,6 +16,7 @@ import type {
   UpdatePlantData,
   UpdatePlantVars,
 } from "@/types/plant";
+import { useReferenceTables } from "@/hooks/useReferenceTables";
 
 
 
@@ -53,23 +54,32 @@ export const EMPTY_FORM = {
   name: "",
   code: "",
   status: "active",
+  statusId: "",
   building: "",
   address: "",
   city: "",
   state: "",
   country: "",
+  countryId: "",
   zipcode: "",
   timezone: "America/New_York (EST)",
+  timezoneId: "",
   latitude: "",
   longitude: "",
   plantType: "",
+  plantTypeId: "",
   operatingSince: "",
   managerPhone: "",
   defaultCalendar: "",
+  defaultCalendarId: "",
   defaultShiftModel: "",
+  defaultShiftModelId: "",
   weekStartDay: "",
+  weekStartDayId: "",
   defaultSchedule: "",
+  defaultScheduleId: "",
   manufacturingFocus: "",
+  manufacturingFocusIds: [] as string[],
   managerName: "",
   managerEmail: "",
   description: "",
@@ -81,6 +91,12 @@ export function validatePlantForm(form: typeof EMPTY_FORM, plants: Plant[], edit
   const errors: Record<string, string> = {};
   if (!form.name.trim()) errors.name = "Plant name is required";
   if (!form.code.trim()) errors.code = "Plant code is required";
+  if (!form.statusId.trim()) errors.statusId = "Status is required";
+  if (!form.countryId.trim()) errors.countryId = "Country is required";
+  if (!form.defaultCalendarId.trim()) errors.defaultCalendarId = "Default calendar is required";
+  if (!form.defaultShiftModelId.trim()) errors.defaultShiftModelId = "Default shift model is required";
+  if (!form.weekStartDayId.trim()) errors.weekStartDayId = "Week start day is required";
+  if (!form.timezoneId.trim()) errors.timezoneId = "Timezone is required";
   if (form.code.trim()) {
     const duplicate = plants.find((p) => p.code.toLowerCase() === form.code.trim().toLowerCase() && p.id !== editingId);
     if (duplicate) errors.code = `Code "${form.code}" is already in use by ${duplicate.name}`;
@@ -88,6 +104,10 @@ export function validatePlantForm(form: typeof EMPTY_FORM, plants: Plant[], edit
   if (form.managerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.managerEmail)) {
     errors.managerEmail = "Invalid email format";
   }
+  if (form.managerPhone && !/^[\d\s+\-()]+$/.test(form.managerPhone)) errors.managerPhone = "Invalid phone format";
+  if (form.operatingSince && !/^\d{4}-\d{2}-\d{2}$/.test(form.operatingSince)) errors.operatingSince = "Use YYYY-MM-DD format";
+  if (form.latitude && !Number.isFinite(Number(form.latitude))) errors.latitude = "Latitude must be numeric";
+  if (form.longitude && !Number.isFinite(Number(form.longitude))) errors.longitude = "Longitude must be numeric";
   return errors;
 }
 
@@ -122,8 +142,12 @@ export function usePlants() {
       errorPolicy: "all",
     }
   );
+  const { getCode } = useReferenceTables();
 
-  const plants = gqlData?.plants ?? [];
+  const plants = useMemo(() => {
+    const raw = gqlData?.plants ?? [];
+    return [...raw].sort((a, b) => (a.code || "").localeCompare(b.code || "", undefined, { numeric: true }));
+  }, [gqlData?.plants]);
 
   /* ── Mutations ── */
   const [createMutation, createState] = useMutation<CreatePlantData, CreatePlantVars>(CREATE_PLANT_MUTATION);
@@ -134,7 +158,7 @@ export function usePlants() {
 
   /* ── CRUD helpers ── */
 
-  const savePlant = useCallback(async (form: typeof EMPTY_FORM, editingId?: string | null): Promise<{ ok: boolean; errors?: Record<string, string> }> => {
+  const savePlant = useCallback(async (form: typeof EMPTY_FORM, editingId?: string | null): Promise<{ ok: boolean; plant?: Plant; errors?: Record<string, string> }> => {
     const validation = validatePlantForm(form, gqlData?.plants ?? [], editingId);
     if (Object.keys(validation).length > 0) return { ok: false, errors: validation };
 
@@ -142,10 +166,33 @@ export function usePlants() {
       const input: PlantInput = {
         name: form.name,
         code: form.code,
-        status: form.status,
+        status: form.statusId ? getCode("status", form.statusId) || form.status : form.status,
+        statusId: form.statusId || undefined,
+        plantType: form.plantType || undefined,
+        plantTypeId: form.plantTypeId || undefined,
+        operatingSince: form.operatingSince || undefined,
         building: form.building || undefined,
         address: form.address || undefined,
+        city: form.city || undefined,
+        state: form.state || undefined,
+        country: form.country || undefined,
+        countryId: form.countryId || undefined,
+        zipcode: form.zipcode || undefined,
         timezone: form.timezone || undefined,
+        timezoneId: form.timezoneId || undefined,
+        latitude: form.latitude || undefined,
+        longitude: form.longitude || undefined,
+        managerPhone: form.managerPhone || undefined,
+        defaultCalendar: form.defaultCalendar || undefined,
+        defaultCalendarId: form.defaultCalendarId || undefined,
+        defaultShiftModel: form.defaultShiftModel || undefined,
+        defaultShiftModelId: form.defaultShiftModelId || undefined,
+        weekStartDay: form.weekStartDay || undefined,
+        weekStartDayId: form.weekStartDayId || undefined,
+        defaultSchedule: form.defaultSchedule || undefined,
+        defaultScheduleId: form.defaultScheduleId || undefined,
+        manufacturingFocus: form.manufacturingFocus || undefined,
+        manufacturingFocusIds: form.manufacturingFocusIds.length ? form.manufacturingFocusIds : undefined,
         managerName: form.managerName || undefined,
         managerEmail: form.managerEmail || undefined,
         description: form.description || undefined,
@@ -158,6 +205,8 @@ export function usePlants() {
           data.updatePlant.errors.forEach((e) => { fieldErrors[e.field] = e.message; });
           return { ok: false, errors: fieldErrors };
         }
+        await refetch();
+        return { ok: true, plant: data?.updatePlant?.plant };
       } else {
         const { data } = await createMutation({ variables: { input } });
         if (data?.createPlant?.errors?.length) {
@@ -165,14 +214,14 @@ export function usePlants() {
           data.createPlant.errors.forEach((e) => { fieldErrors[e.field] = e.message; });
           return { ok: false, errors: fieldErrors };
         }
+        await refetch();
+        return { ok: true, plant: data?.createPlant?.plant };
       }
-      await refetch();
-      return { ok: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save plant. Please try again.";
       return { ok: false, errors: { _form: message } };
     }
-  }, [createMutation, updateMutation, refetch, gqlData]);
+  }, [createMutation, updateMutation, refetch, gqlData, getCode]);
 
   const archivePlant = useCallback(async (id: string): Promise<{ success: boolean; inUse: boolean; message: string }> => {
     try {

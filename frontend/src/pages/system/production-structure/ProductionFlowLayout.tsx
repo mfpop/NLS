@@ -1,0 +1,318 @@
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, GripVertical, Plus, Pencil, Trash2, Check } from "lucide-react";
+import { PageHeader } from "@/pages/shared/PageHeader";
+import { theme } from "../../../styles/themeTokens";
+import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
+import { TreeNavigation, CompanyDetailView, PlantDetailView, NodeDetailPanel } from "./components";
+import { findNodeByKey, findNodePathByKey, ADD_ROUTES } from "./config";
+
+const TYPE_ROUTE: Record<string, string> = {
+  company: "company",
+  plant: "plants",
+  productionLine: "line",
+  department: "dept",
+  resourceGroup: "rg",
+  resource: "resource",
+  lineGroup: "line",
+};
+
+function getKeyType(key: string): string {
+  const segment = key.split("/").pop() || key;
+  return segment.split(":")[0] || "";
+}
+
+function getParentKey(key: string): string | null {
+  const lastSlash = key.lastIndexOf("/");
+  return lastSlash > -1 ? key.substring(0, lastSlash) : null;
+}
+
+function getAncestorKeys(key: string): string[] {
+  const ancestors: string[] = [];
+  let parent = getParentKey(key);
+  while (parent) {
+    ancestors.unshift(parent);
+    parent = getParentKey(parent);
+  }
+  return ancestors;
+}
+
+export function ProductionFlowLayout() {
+  const navigate = useNavigate();
+
+  const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set());
+  const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [treePct, setTreePct] = useState(20);
+  const [selectionFilteredOut, setSelectionFilteredOut] = useState(false);
+  const splitRef = useRef<HTMLDivElement>(null);
+
+  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const container = splitRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const onMove = (ev: MouseEvent) => {
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setTreePct(Math.min(Math.max(pct, 20), 50));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
+
+  const { data: overviewData, loading, refetch } = useDataManagementOverview({
+    search: searchQuery || undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    includeTree: true,
+  });
+
+  const treeData = overviewData?.tree ? [overviewData.tree] : [];
+
+  const selectedNode = selectedNodeKey ? findNodeByKey(treeData, selectedNodeKey) : null;
+  const selectedPath = useMemo(() => {
+    if (!selectedNodeKey || treeData.length === 0) return [];
+    return findNodePathByKey(treeData, selectedNodeKey) || [];
+  }, [selectedNodeKey, treeData]);
+
+  const contextCounts = overviewData?.navigationCounts ? {
+    plants: overviewData.navigationCounts.plants,
+    lines: overviewData.navigationCounts.productionLines,
+    departments: overviewData.navigationCounts.departments,
+    groups: overviewData.navigationCounts.resourceGroups,
+    resources: overviewData.navigationCounts.resources,
+  } : null;
+
+  useEffect(() => {
+    if (overviewData?.tree && expandedSet.size === 0 && overviewData.tree.children.length > 0) {
+      const rootKey = `${overviewData.tree.type}:${overviewData.tree.id}`;
+      setExpandedSet(new Set([rootKey]));
+    }
+  }, [overviewData?.tree]);
+
+  useEffect(() => {
+    if (!selectedNodeKey) {
+      setSelectionFilteredOut(false);
+      return;
+    }
+    const exists = treeData.length > 0 ? findNodeByKey(treeData, selectedNodeKey) : null;
+    setSelectionFilteredOut(!exists && !loading);
+    if (!exists && !loading) setSelectedNodeKey(null);
+  }, [treeData, selectedNodeKey, loading]);
+
+  const handleToggleNode = useCallback((key: string) => {
+    setExpandedSet((prev) => {
+      const type = getKeyType(key);
+      const ancestors = getAncestorKeys(key);
+
+      if (prev.has(key)) {
+        const next = new Set(prev);
+        next.delete(key);
+        if (type === "plant") {
+          for (const expandedKey of next) {
+            if (expandedKey.startsWith(`${key}/`)) next.delete(expandedKey);
+          }
+        }
+        return next;
+      }
+
+      const next = new Set(ancestors);
+      next.add(key);
+
+      if (type === "plant") {
+        return next;
+      }
+
+      if (type === "productionLine" || type === "line") {
+        return next;
+      }
+
+      const parentKey = getParentKey(key);
+      if (parentKey) next.add(parentKey);
+      return next;
+    });
+  }, []);
+
+  const handleSelectNode = useCallback((key: string | null) => {
+    setSelectedNodeKey(key);
+    if (key && treeData.length) {
+      const node = findNodeByKey(treeData, key);
+      if (node) {
+        const route = TYPE_ROUTE[node.type];
+        if (route) {
+          navigate(`/system/production-structure/flow/${route}`, { replace: true });
+          return;
+        }
+      }
+    }
+    navigate("/system/production-structure/flow/company", { replace: true });
+  }, [navigate, treeData]);
+
+  const handleNew = useCallback(() => {
+    const route = ADD_ROUTES[selectedNode?.type || "company"];
+    if (route) navigate(route);
+  }, [selectedNode, navigate]);
+
+  const handleDeleteNode = useCallback(() => {
+    if (!selectedNode) return;
+    const route = ADD_ROUTES[selectedNode.type];
+    if (route) navigate(route);
+  }, [selectedNode, navigate]);
+
+  const canDelete = !!selectedNode && selectedNode.type !== "company" && selectedNode.type !== "lineGroup";
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const companyRef = useRef<{ startEditing: () => void; save: () => Promise<void>; cancel: () => void }>(null);
+  const flowToolbarButtonClass = "inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500 disabled:opacity-70";
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
+      <div className="relative">
+        <PageHeader
+          icon={<Database className="h-5 w-5 stroke-current" />}
+          iconClass={theme.iconBoxEmerald}
+          title="Production Structure - Flow"
+          subtitle="Manufacturing hierarchy explorer"
+        />
+        {toast && (
+          <div className="absolute inset-x-0 top-0 flex items-center justify-center pointer-events-none" style={{ height: "100%" }}>
+            <span className={`px-3 py-1 rounded text-xs font-medium pointer-events-auto ${toast.type === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"}`}>
+              {toast.message}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar - Windows Explorer style */}
+      <div className="shrink-0 flex items-center gap-0.5 border-b border-slate-300 bg-white px-2 dark:border-slate-600 dark:bg-slate-900 h-10 select-none">
+        <div className="flex h-full items-center gap-2 pr-2" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current pointer-events-none" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search"
+              className="h-7 w-full border border-slate-300 bg-white pl-3 pr-7 text-xs outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-blue-400" />
+            {searchQuery && (
+              <button type="button" onClick={() => setSearchQuery("")}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <X className="h-3.5 w-3.5 stroke-current" />
+              </button>
+            )}
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-7 w-24 shrink-0 border border-slate-300 bg-white px-2 text-xs outline-none text-slate-600 cursor-pointer dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <span className="h-5 w-px bg-slate-300 dark:bg-slate-600 shrink-0" />
+        <div className="flex min-w-0 flex-1 items-center gap-0.5 pl-3">
+        {isEditingCompany ? (
+          <>
+            <button type="button" onClick={() => companyRef.current?.save()} title="Save"
+              className="inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors">
+              <Check className="h-4 w-4 stroke-current" />
+              <span className="hidden sm:inline">Save</span>
+            </button>
+            <button type="button" onClick={() => companyRef.current?.cancel()} title="Cancel"
+              className="inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+              <X className="h-4 w-4 stroke-current" />
+              <span className="hidden sm:inline">Cancel</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button type="button" onClick={handleNew} title="New"
+              className={flowToolbarButtonClass}>
+              <Plus className="h-4 w-4 stroke-current" />
+              <span className="hidden sm:inline">New</span>
+            </button>
+            <button type="button" onClick={() => companyRef.current?.startEditing()} title="Edit" disabled={!selectedNode}
+              className={flowToolbarButtonClass}>
+              <Pencil className="h-4 w-4 stroke-current" />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
+            <button type="button" onClick={handleDeleteNode} title="Delete" disabled={!canDelete}
+              className={flowToolbarButtonClass}>
+              <Trash2 className="h-4 w-4 stroke-current" />
+              <span className="hidden sm:inline">Delete</span>
+            </button>
+            <button type="button" onClick={() => refetch()} title="Refresh"
+              className="inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+              <RefreshCw className={`h-4 w-4 stroke-current ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          </>
+        )}
+        {selectionFilteredOut && <span className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">Selection filtered out</span>}
+        </div>
+      </div>
+
+      {/* Content - resizable split */}
+      <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Tree column */}
+        <div className="flex flex-col min-h-0 overflow-hidden" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
+          <div className="flex-1 min-h-0 overflow-auto">
+            <TreeNavigation
+              data={treeData || []} selectedKey={selectedNodeKey} expandedSet={expandedSet}
+              onToggleNode={handleToggleNode} onSelectNode={handleSelectNode}
+              onContextMenu={() => {}} isLoading={loading && !treeData.length}
+            />
+          </div>
+        </div>
+
+        {/* Resizable divider */}
+        <div onMouseDown={handleSplitMouseDown}
+          className="flex shrink-0 cursor-col-resize items-center justify-center bg-slate-200/60 hover:bg-blue-300/60 dark:bg-slate-700/60 dark:hover:bg-blue-500/30 transition-colors"
+          style={{ width: 4 }}>
+          <GripVertical className="h-3 w-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
+        </div>
+
+        {/* Detail column */}
+        <div className="flex flex-col min-h-0 min-w-0" style={{ flex: 1 }}>
+          {selectedNode ? (
+            selectedNode.type === "company" ? (
+              <CompanyDetailView ref={companyRef} simple onEditChange={setIsEditingCompany} />
+            ) : selectedNode.type === "plant" ? (
+              <PlantDetailView plantId={selectedNode.id} />
+            ) : (
+              <NodeDetailPanel
+                selectedNode={selectedNode}
+                selectedNodeKey={selectedNodeKey}
+                selectedPath={selectedPath}
+                contextCounts={contextCounts}
+                workspaceMode="view"
+              />
+            )
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center text-slate-400 gap-2">
+              <Database className="h-8 w-8 stroke-current text-slate-300" />
+              <span className="text-sm font-medium">Select an element from the production structure</span>
+              <span className="text-xs">Click on a node in the tree to view its details</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-5 px-5 text-xs text-slate-500 dark:text-slate-300 font-medium h-10">
+        <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-blue-500 stroke-current" /> Plant</span>
+        <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-amber-500 stroke-current" /> Line</span>
+        <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-purple-500 stroke-current" /> Dept</span>
+        <span className="flex items-center gap-1.5"><Component className="h-3.5 w-3.5 text-rose-500 stroke-current" /> RG</span>
+        <span className="flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-gray-500 stroke-current" /> Resource</span>
+      </div>
+    </div>
+  );
+}

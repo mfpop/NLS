@@ -2,13 +2,13 @@ from .entity_status import EntityStatus
 from .company import Company
 from .plant import Plant
 from .department import Department
-from .production_line import ProductionLine
+from .production_line import ProductionLine, ProductionLineProductFamily, ProductionLineProductModel
 from .assignment import ProductionLineDepartmentAssignment
 from .resource_group import ResourceGroup
 from .resource import Resource
 from .scheduling import Schedule, Shift, ScheduleAssignment
 from .reference import ReferenceCategory, ReferenceValue, ResourceType, VisualIdentity
-from .routing import ProductModel, ProcessFlow, ProcessStep
+from .routing import ProductModel, ProcessFlow, ProcessStep, Routing, RoutingStep, RoutingStatus, ScheduleSource
 from .profile import Profile
 from .role import UserRole
 
@@ -24,6 +24,8 @@ __all__ = [
     "Department",
     "ProductionLine",
     "ProductionLineDepartmentAssignment",
+    "ProductionLineProductFamily",
+    "ProductionLineProductModel",
     "ResourceGroup",
     "Resource",
     "Schedule",
@@ -36,6 +38,10 @@ __all__ = [
     "ProductModel",
     "ProcessFlow",
     "ProcessStep",
+    "Routing",
+    "RoutingStep",
+    "RoutingStatus",
+    "ScheduleSource",
     "Profile",
     "UserRole",
     # Legacy

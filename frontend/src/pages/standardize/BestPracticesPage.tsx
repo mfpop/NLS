@@ -1,12 +1,12 @@
 import { Award } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function BestPracticesPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Best Practices"
-      description="Capture, share, and promote best practices to standardize excellence across the organization."
-      icon={<Award className="h-5 w-5" />}
+      subtitle="Capture, share, and promote best practices to standardize excellence across the organization."
+      icon={<Award />}
     />
   );
 }

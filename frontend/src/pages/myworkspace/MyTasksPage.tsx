@@ -1,12 +1,12 @@
 import { ListChecks } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function MyTasksPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="My Tasks"
-      description="Track your assigned actions, open kaizens, and improvement items across the plant."
-      icon={<ListChecks className="h-5 w-5" />}
+      subtitle="Track your assigned actions, open kaizens, and improvement items across the plant."
+      icon={<ListChecks />}
     />
   );
 }

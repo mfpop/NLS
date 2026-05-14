@@ -109,13 +109,18 @@ const matchers: Matcher[] = [
   },
   {
     key: "system-flow",
-    matches: (path) => path.startsWith("/system/production-structure") || path.startsWith("/system/production-structure/flow"),
+    matches: (path) => path === "/system/production-structure" || path === "/system/production-structure/flow",
     load: () => import("@/pages/system/ProductionStructurePage"),
+  },
+  {
+    key: "system-flow-components",
+    matches: (path) => path.startsWith("/system/production-structure/flow/"),
+    load: () => import("@/pages/system/production-structure/ProductionFlowLayout"),
   },
   {
     key: "system-components",
     matches: (path) => path.startsWith("/system/production-structure/components"),
-    load: () => import("@/pages/system/production-structure/ProductionComponentsPage"),
+    load: () => import("@/pages/system/production-structure/components/ProductionComponentsLayout"),
   },
   {
     key: "system-references",
@@ -126,6 +131,11 @@ const matchers: Matcher[] = [
     key: "system-settings",
     matches: (path) => path.startsWith("/system/application-settings"),
     load: () => import("@/pages/system/ApplicationSettingsPage"),
+  },
+  {
+    key: "routing-editor",
+    matches: (path) => path.startsWith("/system/production-structure/flow/routing"),
+    load: () => import("@/pages/system/production-structure/RoutingEditorPage"),
   },
 ];
 

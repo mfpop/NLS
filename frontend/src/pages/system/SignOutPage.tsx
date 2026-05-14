@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { useAuth } from "@/auth/AuthContext";
 
 export function SignOutPage() {
@@ -15,10 +15,10 @@ export function SignOutPage() {
   }, [logout, navigate]);
 
   return (
-    <ModulePage
+    <AppPageLayout
       title="Sign Out"
-      description="You have been signed out. Redirecting to login..."
-      icon={<LogOut className="h-5 w-5" />}
+      subtitle="You have been signed out. Redirecting to login..."
+      icon={<LogOut />}
     />
   );
 }

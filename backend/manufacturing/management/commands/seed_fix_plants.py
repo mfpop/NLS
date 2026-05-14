@@ -3,10 +3,11 @@ from manufacturing.models.plant import Plant
 
 
 PLANTS = {
-    "MP-01": {
+    "PP-01": {
         "name": "Tijuana Plant",
-        "building": "Blvd. de los Insurgentes 20230",
-        "address": "22244, Tijuana, Baja California",
+        "status": "ACTIVE",
+        "building": "Tijuana Manufacturing Campus",
+        "address": "Blvd. de los Insurgentes 20230",
         "city": "Tijuana", "state": "Baja California", "country": "Mexico",
         "zipcode": "22244",
         "timezone": "America/Tijuana",
@@ -24,7 +25,8 @@ PLANTS = {
         "description": "Primary manufacturing facility for liftgate production serving the western US and Mexico markets.",
     },
     "WP-01": {
-        "name": "Warehouse 15",
+        "name": "WH15 Warehouse",
+        "status": "ACTIVE",
         "building": "Warehouse 15",
         "address": "789 Logistics Ave",
         "city": "Chicago", "state": "IL", "country": "USA",
@@ -44,14 +46,15 @@ PLANTS = {
         "description": "Storage and kitting facility. Currently inactive pending reconfiguration.",
     },
     "POWNIW4": {
-        "name": "Greenleaf Plant",
+        "name": "Greenleaf WareHouse",
+        "status": "ACTIVE",
         "building": "Greenleaf Industrial Park",
         "address": "1200 Greenleaf Blvd",
         "city": "Greenleaf", "state": "California", "country": "USA",
         "zipcode": "90210",
         "timezone": "America/Los_Angeles",
         "latitude": "33.9425", "longitude": "-118.2550",
-        "plant_type": "Manufacturing",
+        "plant_type": "Warehouse",
         "operating_since": "2015-03-01",
         "manager_name": "Tom Green",
         "manager_email": "tom.green@leansync.com",
@@ -65,6 +68,7 @@ PLANTS = {
     },
     "MT-01": {
         "name": "Monterrey Plant",
+        "status": "ACTIVE",
         "building": "ADN 2 Industrial Park",
         "address": "Autopista Monterrey-Laredo km 30",
         "city": "Ci\u00e9nega de Flores", "state": "Nuevo Le\u00f3n", "country": "Mexico",
@@ -80,8 +84,8 @@ PLANTS = {
         "default_shift_model": "2-shift (Morn/Aftn)",
         "week_start_day": "Monday",
         "default_schedule": "Day Shift",
-        "manufacturing_focus": "Liftgate Assembly, Welding, Painting, Harness, Pipes, Assembly",
-        "description": "Second manufacturing plant for liftgate production serving the North American market. Includes assembly and fabrication lines supporting main plant production.",
+        "manufacturing_focus": "Liftgate Assembly, Machining, Welding, Painting, Harness, Pipes, Assembly",
+        "description": "Manufacturing facility in Cienega de Flores, Nuevo Leon, serving North American liftgate production. Consolidates Monterrey assembly, machining, fabrication, welding, painting, harness, and pipe operations in one canonical plant record.",
     },
 }
 

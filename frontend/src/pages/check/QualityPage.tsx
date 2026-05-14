@@ -1,12 +1,12 @@
 import { ShieldCheck } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function QualityPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Quality Control"
-      description="Monitor product quality, track defects, and enforce quality standards across production."
-      icon={<ShieldCheck className="h-5 w-5" />}
+      subtitle="Monitor product quality, track defects, and enforce quality standards across production."
+      icon={<ShieldCheck />}
     />
   );
 }

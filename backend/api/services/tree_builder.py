@@ -7,6 +7,12 @@ def _matches_search(value: str, term: str) -> bool:
     return term in (value or "").lower()
 
 
+def _matches_status(value: str, status: str | None) -> bool:
+    if not status or status == "all":
+        return True
+    return (value or "").lower() == status.lower()
+
+
 def build_plant_tree(plant, status=None, search=None):
     """Build the full production tree: Plant → ProductionLines → Departments → ResourceGroups → Resources."""
     lines_qs = ProductionLine.objects.filter(plant=plant).prefetch_related(
@@ -17,7 +23,7 @@ def build_plant_tree(plant, status=None, search=None):
     )
 
     if status and status != "all":
-        lines_qs = lines_qs.filter(status=status)
+        lines_qs = lines_qs.filter(status__iexact=status)
 
     # Scope departments to this plant through line assignments.
     all_depts = list(
@@ -65,6 +71,8 @@ def build_plant_tree(plant, status=None, search=None):
 
         dept_nodes = []
         for dept in assigned_depts:
+            if not _matches_status(dept.status, status):
+                continue
             rgs = rg_by_dept_id.get(dept.id, [])
 
             if search_term and not _matches_search(dept.name, search_term) and not _matches_search(dept.code, search_term):
@@ -78,7 +86,9 @@ def build_plant_tree(plant, status=None, search=None):
 
             rg_nodes = []
             for rg in rgs:
-                resources = list(rg.resources.all())
+                if not _matches_status(rg.status, status):
+                    continue
+                resources = [r for r in rg.resources.all() if _matches_status(r.status, status)]
                 if search_term and not _matches_search(rg.name, search_term) and not _matches_search(rg.code, search_term):
                     resources = [
                         r
@@ -142,3 +152,5 @@ def build_plant_tree(plant, status=None, search=None):
         })
 
     return [StructureChildNode.from_tree(c) for c in tree_children]
+
+

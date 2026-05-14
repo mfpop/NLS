@@ -57,6 +57,14 @@ export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
                 code
                 status
                 childCount
+                  children {
+                    id
+                    type
+                    name
+                    code
+                    status
+                    childCount
+                  }
               }
             }
           }

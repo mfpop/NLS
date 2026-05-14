@@ -33,6 +33,12 @@ export const ENTITY_CONFIG: Record<string, EntityConfigItem> = {
     borderTop: "border-t-amber-400",
     label: "Line",
   },
+  lineGroup: {
+    icon: TrendingUpDown,
+    color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-500/10",
+    borderTop: "border-t-amber-400",
+    label: "Line Group",
+  },
   department: {
     icon: Layers,
     color: "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-500/10",
@@ -62,6 +68,7 @@ export const ENTITY_CONFIG: Record<string, EntityConfigItem> = {
 export const TYPE_TITLES: Record<string, string> = {
   productionLine: "Production Line",
   line: "Line",
+  lineGroup: "Line Group",
   department: "Department",
   resourceGroup: "Resource Group",
   group: "Resource Group",
@@ -73,6 +80,7 @@ export const TYPE_TITLES: Record<string, string> = {
 export const CHILD_TYPE_MAP: Record<string, string> = {
   company: "Plant",
   plant: "Production Line",
+  lineGroup: "Production Line",
   productionLine: "Department",
   line: "Department",
   department: "Resource Group",
@@ -124,6 +132,10 @@ export const TABLE_ENTITY_MAP: Record<string, string> = {
   skill_type: "resourceGroup",
   role: "resourceGroup",
   shift_team: "resourceGroup",
+  staff_user: "department",
+  staff_assignment: "department",
+  product_model: "productionLine",
+  production_family: "productionLine",
 };
 
 export function getTableEntityStyle(tableType: string): EntityConfigItem {

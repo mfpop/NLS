@@ -9,9 +9,36 @@ const DEPT_FIELDS = `
   status
   statusId
   manager
+  managerRef {
+    id
+    name
+  }
+  supervisorName
+  supervisor {
+    id
+    name
+  }
   employees
+  employeeCount
+  productionLineCount
+  productionLines {
+    id
+    code
+    name
+    plantName
+    status
+  }
   groupCount
   groupName
+  resourceGroupCount
+  resourceCount
+  resourceGroups {
+    id
+    code
+    name
+    status
+    resourceCount
+  }
   createdAt
   updatedAt
 `;
@@ -23,11 +50,23 @@ const RG_FIELDS = `
   description
   status
   statusId
+  statusRef {
+    id
+    name
+    code
+    isActive
+  }
   departmentId
   departmentName
   members
   leader
   groupTypeId
+  groupTypeRef {
+    id
+    name
+    code
+    isActive
+  }
   resourceCount
   resourceType
   createdAt
@@ -71,13 +110,9 @@ const LINE_FIELDS = `
 `;
 
 export const DEPARTMENTS_QUERY = gql`
-  query Departments($productionLineId: String, $status: String, $limit: Int, $offset: Int) {
-    departments(productionLineId: $productionLineId, status: $status, limit: $limit, offset: $offset) {
-      items {
-        ${DEPT_FIELDS}
-      }
-      total
-      hasMore
+  query Departments($productionLineId: String, $status: String, $search: String, $limit: Int, $offset: Int) {
+    departments(productionLineId: $productionLineId, status: $status, search: $search, limit: $limit, offset: $offset) {
+      ${DEPT_FIELDS}
     }
   }
 `;

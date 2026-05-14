@@ -15,6 +15,7 @@ class Department(TimeStampedModel):
         null=True, blank=True, related_name="+",
     )
     manager = models.CharField(max_length=200, blank=True, default="")
+    supervisor = models.CharField(max_length=200, blank=True, default="")
     employees = models.IntegerField(default=0)
     department_type_id = models.ForeignKey(
         "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
@@ -26,6 +27,11 @@ class Department(TimeStampedModel):
         ordering = ["name"]
         verbose_name = "Department"
         verbose_name_plural = "Departments"
+        indexes = [
+            models.Index(fields=["code"], name="mfg_dept_code_idx"),
+            models.Index(fields=["status"], name="mfg_dept_status_idx"),
+            models.Index(fields=["name"], name="mfg_dept_name_idx"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"

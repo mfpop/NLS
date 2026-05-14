@@ -1,12 +1,12 @@
 import { ScrollText } from "lucide-react";
-import { ModulePage } from "@/pages/shared/ModulePage";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 export function ProceduresPage() {
   return (
-    <ModulePage
+    <AppPageLayout
       title="Procedures"
-      description="Create, maintain, and distribute standard operating procedures across the organization."
-      icon={<ScrollText className="h-5 w-5" />}
+      subtitle="Create, maintain, and distribute standard operating procedures across the organization."
+      icon={<ScrollText />}
     />
   );
 }

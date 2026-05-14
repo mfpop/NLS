@@ -32,6 +32,17 @@ export function TreeNodeComponent({
   const cfg = ENTITY_CONFIG[node.type] || ENTITY_CONFIG.resource;
   const Icon = cfg.icon;
   const indentPx = isRoot ? 4 : 12 + (depth - 1) * 12;
+  const countLabel = node.type === "plant"
+    ? `${node.childCount ?? 0} line${node.childCount === 1 ? "" : "s"}`
+    : node.type === "productionLine" || node.type === "line"
+      ? `${node.childCount ?? 0} dept${node.childCount === 1 ? "" : "s"}`
+      : node.type === "department"
+        ? `${node.childCount ?? 0} RG`
+        : node.type === "resourceGroup" || node.type === "group"
+          ? `${node.childCount ?? 0} res`
+          : node.type === "resource"
+            ? node.status
+            : (node.childCount ?? 0) > 0 ? String(node.childCount) : "";
 
   return (
     <div>
@@ -91,8 +102,8 @@ export function TreeNodeComponent({
               node.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-500"
             }`}
           />
-          {(node.childCount ?? 0) > 0 && (
-            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{node.childCount}</span>
+          {countLabel && (
+            <span className="ml-auto shrink-0 text-[10px] font-medium text-slate-500 dark:text-slate-400">{countLabel}</span>
           )}
         </div>
       </div>

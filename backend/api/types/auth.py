@@ -7,6 +7,7 @@ from manufacturing.models import UserRole
 @strawberry.type
 class UserNode:
     id: strawberry.ID
+    name: str
     username: str
     email: str
     role: str
@@ -26,6 +27,7 @@ class UserNode:
             department = ""
         return cls(
             id=strawberry.ID(str(user.id)),
+            name=user.get_full_name() or user.username,
             username=user.username,
             email=user.email,
             role=role,

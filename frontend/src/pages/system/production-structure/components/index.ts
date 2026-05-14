@@ -25,3 +25,5 @@ export { CompanyOverview } from "./CompanyOverview";
 export type { CompanyOverviewData } from "./CompanyOverview";
 export { CompanyDetailView } from "./CompanyDetailView";
 export { PlantDetailView } from "./PlantDetailView";
+export { ProductionLineProductScopeSummary } from "./ProductionLineProductScopeSummary";
+export { ToolbarProvider, useToolbar } from "./ToolbarContext";

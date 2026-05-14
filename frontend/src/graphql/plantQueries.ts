@@ -7,6 +7,12 @@ const PLANT_FIELDS = `
   description
   status
   statusId
+  statusRef {
+    id
+    name
+    code
+    isActive
+  }
   building
   address
   city
@@ -31,6 +37,12 @@ const PLANT_FIELDS = `
   defaultSchedule
   defaultScheduleId
   manufacturingFocus
+  manufacturingFocusRefs {
+    id
+    name
+    code
+    isActive
+  }
   managerName
   managerEmail
   lineCount

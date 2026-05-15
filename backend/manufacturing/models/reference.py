@@ -28,9 +28,12 @@ class ReferenceValue(models.Model):
     )
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
-    description = models.TextField(blank=True, default="")
+    description = models.TextField(default="")
+    usage_context = models.TextField(default="")
     sort_order = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    is_system_managed = models.BooleanField(default=False)
+    is_configurable = models.BooleanField(default=True)
     metadata = models.JSONField(blank=True, default=dict)
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
@@ -42,6 +45,12 @@ class ReferenceValue(models.Model):
         db_table = "manufacturing_reference_value"
         ordering = ["category", "sort_order", "name"]
         unique_together = [("category", "code")]
+        constraints = [
+            models.CheckConstraint(condition=~models.Q(code=""), name="ref_value_code_not_empty"),
+            models.CheckConstraint(condition=~models.Q(name=""), name="ref_value_name_not_empty"),
+            models.CheckConstraint(condition=~models.Q(description=""), name="ref_value_description_not_empty"),
+            models.CheckConstraint(condition=~models.Q(usage_context=""), name="ref_value_usage_context_not_empty"),
+        ]
         verbose_name = "Reference Value"
         verbose_name_plural = "Reference Values"
 

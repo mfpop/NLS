@@ -11,6 +11,8 @@ from manufacturing.models import (
     ReferenceCategory, ReferenceValue, ResourceType, VisualIdentity,
     ProductModel, ProcessFlow, ProcessStep,
     Routing, RoutingStep, RoutingStatus,
+    Material, BOM, BOMItem, InventoryLocation, OperationInput, OperationOutput, MaterialMovementRule,
+    CapacityPlan, CapacityPlanInput as CapacityPlanInputModel, CapacityPlanResult as CapacityPlanResultModel, CapacityScenario,
 )
 
 # ── Shared interfaces ──
@@ -193,6 +195,8 @@ class CompanyNode:
 @strawberry.type
 class PlantNode:
     id: strawberry.ID
+    company_id: strawberry.ID = strawberry.field(name="companyId")
+    company_name: str = strawberry.field(name="companyName")
     code: str
     name: str
     description: str
@@ -269,7 +273,10 @@ class PlantNode:
 
         mfg_refs = list(obj.manufacturing_focus_refs.all()) if obj.pk else []
         return cls(
-            id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            id=strawberry.ID(str(obj.id)),
+            company_id=strawberry.ID(str(obj.company_id)),
+            company_name=obj.company.name if obj.company_id else "",
+            code=obj.code, name=obj.name,
             description=obj.description, status=obj.status,
             status_id=str(obj.status_id_id) if obj.status_id_id else None,
             status_ref=_ref_val(obj.status_id) if obj.status_id_id else None,
@@ -441,6 +448,9 @@ class ProductionLineNode:
     resource_count: typing.Optional[int] = strawberry.field(name="resourceCount", default=0)
     department_links: list[ProductionLineDepartmentLinkNode] = strawberry.field(name="departmentLinks", default_factory=list)
     models_produced: typing.Optional[list[str]] = strawberry.field(name="modelsProduced", default_factory=list)
+    flow_routing_status: str = strawberry.field(name="flowRoutingStatus")
+    active_flow_route_id: typing.Optional[str] = strawberry.field(name="activeFlowRouteId", default=None)
+    active_flow_route_version: typing.Optional[str] = strawberry.field(name="activeFlowRouteVersion", default=None)
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
@@ -530,6 +540,10 @@ class ProductionLineNode:
             group_count=group_count,
             resource_count=resource_count,
             department_links=department_links,
+            models_produced=[a.product_model.name for a in model_assignments if a.product_model],
+            flow_routing_status="CONFIGURED" if obj.routings.filter(status="ACTIVE").exists() else "MISSING",
+            active_flow_route_id=str(obj.routings.filter(status="ACTIVE").values_list("id", flat=True).first()) if obj.routings.filter(status="ACTIVE").exists() else None,
+            active_flow_route_version=obj.routings.filter(status="ACTIVE").values_list("version", flat=True).first() or None,
             created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
         )
 
@@ -539,6 +553,7 @@ class ProductionLineNode:
 @strawberry.type
 class ProductionLineDepartmentAssignmentNode:
     id: strawberry.ID
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
     production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
     department_id: strawberry.ID = strawberry.field(name="departmentId")
     sequence: int
@@ -550,6 +565,7 @@ class ProductionLineDepartmentAssignmentNode:
     def from_db(cls, obj: ProductionLineDepartmentAssignment) -> "ProductionLineDepartmentAssignmentNode":
         return cls(
             id=strawberry.ID(str(obj.id)),
+            plant_id=strawberry.ID(str(obj.plant_id)),
             production_line_id=strawberry.ID(str(obj.production_line_id)),
             department_id=strawberry.ID(str(obj.department_id)),
             sequence=obj.sequence, status=obj.status,
@@ -570,6 +586,7 @@ class DepartmentProductionLineNode:
     id: strawberry.ID
     code: str
     name: str
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
     plant_name: str = strawberry.field(name="plantName")
     status: str
 
@@ -588,6 +605,8 @@ class DepartmentNode:
     id: strawberry.ID
     code: str
     name: str
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
+    plant: PlantNode
     description: str
     status: str
     status_id: typing.Optional[str] = strawberry.field(name="statusId", default=None)
@@ -647,6 +666,7 @@ class DepartmentNode:
                 id=strawberry.ID(str(line.id)),
                 code=line.code,
                 name=line.name,
+                plant_id=strawberry.ID(str(line.plant_id)),
                 plant_name=line.plant.name if line.plant else "",
                 status=assignment.status,
             ))
@@ -668,6 +688,8 @@ class DepartmentNode:
         supervisor_ref = person_ref(supervisor_name)
         return cls(
             id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
+            plant_id=strawberry.ID(str(obj.plant_id)),
+            plant=PlantNode.from_db(obj.plant),
             description=obj.description, status=obj.status,
             status_id=str(obj.status_id_id) if obj.status_id_id else None,
             status_ref=_ref_val(obj.status_id) if obj.status_id_id else None,
@@ -702,12 +724,24 @@ class ResourceGroupNode:
     status: str
     status_id: typing.Optional[str] = strawberry.field(name="statusId", default=None)
     status_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="statusRef", default=None)
+    company_id: typing.Optional[str] = strawberry.field(name="companyId", default=None)
+    company_name: str = strawberry.field(name="companyName", default="")
     department_id: typing.Optional[str] = strawberry.field(name="departmentId")
     department_name: str = strawberry.field(name="departmentName")
+    plant_id: typing.Optional[str] = strawberry.field(name="plantId", default=None)
+    plant_name: str = strawberry.field(name="plantName", default="")
     members: int
     leader: str
+    supervisor: str
     group_type_id: typing.Optional[str] = strawberry.field(name="groupTypeId", default=None)
     group_type_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="groupTypeRef", default=None)
+    capability_type: str = strawberry.field(name="capabilityType")
+    shift_pattern_id: typing.Optional[str] = strawberry.field(name="shiftPatternId", default=None)
+    shift_pattern_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="shiftPatternRef", default=None)
+    capacity_model: str = strawberry.field(name="capacityModel")
+    oee_target: typing.Optional[float] = strawberry.field(name="oeeTarget", default=None)
+    is_bottleneck: bool = strawberry.field(name="isBottleneck")
+    is_constraint: bool = strawberry.field(name="isConstraint")
     resource_count: typing.Optional[int] = strawberry.field(name="resourceCount", default=0)
     resource_type: typing.Optional[str] = strawberry.field(name="resourceType", default="")
     created_at: str = strawberry.field(name="createdAt")
@@ -715,19 +749,60 @@ class ResourceGroupNode:
 
     @classmethod
     def from_db(cls, obj: ResourceGroup) -> "ResourceGroupNode":
+        dept = obj.department if obj.department_id else None
+        plant = dept.plant if dept and dept.plant_id else None
+        company = plant.company if plant and plant.company_id else None
+        res_count = obj.resources.count()
         return cls(
             id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name,
             description=obj.description, status=obj.status,
             status_id=str(obj.status_id_id) if obj.status_id_id else None,
             status_ref=_ref_val(obj.status_id) if obj.status_id_id else None,
-            department_id=str(obj.department_id) if obj.department_id else None,
-            department_name=obj.department.name if obj.department else "",
-            members=obj.members, leader=obj.leader,
+            company_id=str(company.id) if company else None,
+            company_name=company.name if company else "",
+            department_id=str(dept.id) if dept else None,
+            department_name=dept.name if dept else "",
+            plant_id=str(plant.id) if plant else None,
+            plant_name=plant.name if plant else "",
+            members=obj.members, leader=obj.leader, supervisor=obj.supervisor,
             group_type_id=str(obj.group_type_id_id) if obj.group_type_id_id else None,
             group_type_ref=_ref_val(obj.group_type_id) if obj.group_type_id_id else None,
-            resource_count=0,
-            resource_type="",
+            capability_type=obj.capability_type,
+            shift_pattern_id=str(obj.shift_pattern_id_id) if obj.shift_pattern_id_id else None,
+            shift_pattern_ref=_ref_val(obj.shift_pattern_id) if obj.shift_pattern_id_id else None,
+            capacity_model=obj.capacity_model,
+            oee_target=obj.oee_target,
+            is_bottleneck=obj.is_bottleneck,
+            is_constraint=obj.is_constraint,
+            resource_count=res_count,
+            resource_type=obj.capability_type if obj.capability_type else "",
             created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class ResourceGroupFlowUsageNode:
+    production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
+    production_line_name: str = strawberry.field(name="productionLineName")
+    routing_id: strawberry.ID = strawberry.field(name="routingId")
+    routing_version: str = strawberry.field(name="routingVersion")
+    routing_status: str = strawberry.field(name="routingStatus")
+    step_sequence: int = strawberry.field(name="stepSequence")
+    step_id: strawberry.ID = strawberry.field(name="stepId")
+    cycle_time_sec: float = strawberry.field(name="cycleTimeSec")
+
+    @classmethod
+    def from_db(cls, step: "RoutingStep") -> "ResourceGroupFlowUsageNode":
+        routing = step.routing
+        return cls(
+            production_line_id=strawberry.ID(str(routing.production_line_id)),
+            production_line_name=routing.production_line.name if routing.production_line else "",
+            routing_id=strawberry.ID(str(routing.id)),
+            routing_version=routing.version,
+            routing_status=routing.status,
+            step_sequence=step.sequence,
+            step_id=strawberry.ID(str(step.id)),
+            cycle_time_sec=step.cycle_time_sec,
         )
 
 
@@ -744,6 +819,10 @@ class ResourceNode:
     status_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="statusRef", default=None)
     resource_group_id: strawberry.ID = strawberry.field(name="resourceGroupId")
     resource_group_name: str = strawberry.field(name="resourceGroupName")
+    department_id: typing.Optional[str] = strawberry.field(name="departmentId", default=None)
+    department_name: str = strawberry.field(name="departmentName", default="")
+    plant_id: typing.Optional[str] = strawberry.field(name="plantId", default=None)
+    plant_name: str = strawberry.field(name="plantName", default="")
     resource_type_id: typing.Optional[str] = strawberry.field(name="resourceTypeId", default=None)
     resource_type_ref: typing.Optional["ReferenceValueNode"] = strawberry.field(name="resourceTypeRef", default=None)
     capabilities: typing.Optional[list["ReferenceValueNode"]] = strawberry.field(default_factory=list)
@@ -764,6 +843,10 @@ class ResourceNode:
             status_ref=_ref_val(obj.status_id) if obj.status_id_id else None,
             resource_group_id=strawberry.ID(str(obj.resource_group_id)),
             resource_group_name=obj.resource_group.name if obj.resource_group else "",
+            department_id=str(obj.resource_group.department_id) if obj.resource_group_id else None,
+            department_name=obj.resource_group.department.name if obj.resource_group_id else "",
+            plant_id=str(obj.resource_group.department.plant_id) if obj.resource_group_id else None,
+            plant_name=obj.resource_group.department.plant.name if obj.resource_group_id else "",
             resource_type_id=str(obj.resource_type_id_id) if obj.resource_type_id_id else None,
             resource_type_ref=_ref_val(obj.resource_type_id) if obj.resource_type_id_id else None,
             capabilities=[_ref_val(rv) for rv in caps],
@@ -897,8 +980,11 @@ class ReferenceValueNode:
     code: str
     name: str
     description: str
+    usage_context: str = strawberry.field(name="usageContext")
     sort_order: int = strawberry.field(name="sortOrder")
     is_active: bool = strawberry.field(name="isActive")
+    is_system_managed: bool = strawberry.field(name="isSystemManaged")
+    is_configurable: bool = strawberry.field(name="isConfigurable")
     metadata: typing.Optional[str] = None
     status: str
     created_at: str = strawberry.field(name="createdAt")
@@ -909,7 +995,10 @@ class ReferenceValueNode:
         return cls(
             id=strawberry.ID(str(obj.id)), category_id=strawberry.ID(str(obj.category_id)),
             code=obj.code, name=obj.name, description=obj.description,
+            usage_context=obj.usage_context or "",
             sort_order=obj.sort_order, is_active=obj.is_active,
+            is_system_managed=obj.is_system_managed,
+            is_configurable=obj.is_configurable,
             metadata=json.dumps(obj.metadata) if obj.metadata else None,
             status=obj.status,
             created_at=_iso(obj.created_at), updated_at=_iso(obj.updated_at),
@@ -1269,6 +1358,7 @@ class ProductionLineInput:
 
 @strawberry.input
 class DepartmentInput:
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
     code: str
     name: str
     description: typing.Optional[str] = ""
@@ -1289,7 +1379,14 @@ class ResourceGroupInput:
     status_id: typing.Optional[str] = strawberry.field(name="statusId", default=None)
     members: typing.Optional[int] = 0
     leader: typing.Optional[str] = ""
+    supervisor: typing.Optional[str] = ""
     group_type_id: typing.Optional[str] = strawberry.field(name="groupTypeId", default=None)
+    capability_type: typing.Optional[str] = strawberry.field(name="capabilityType", default="SHARED")
+    shift_pattern_id: typing.Optional[str] = strawberry.field(name="shiftPatternId", default=None)
+    capacity_model: typing.Optional[str] = strawberry.field(name="capacityModel", default="")
+    oee_target: typing.Optional[float] = strawberry.field(name="oeeTarget", default=None)
+    is_bottleneck: typing.Optional[bool] = strawberry.field(name="isBottleneck", default=False)
+    is_constraint: typing.Optional[bool] = strawberry.field(name="isConstraint", default=False)
 
 @strawberry.input
 class ResourceInput:
@@ -1500,6 +1597,9 @@ class RoutingStepNode:
     quality_checkpoint: bool = strawberry.field(name="qualityCheckpoint")
     rework_allowed: bool = strawberry.field(name="reworkAllowed")
     notes: str
+    material_inputs: list["MaterialFlowItemNode"] = strawberry.field(name="materialInputs")
+    material_outputs: list["MaterialFlowItemNode"] = strawberry.field(name="materialOutputs")
+    movement_rule: typing.Optional["MaterialMovementRuleNode"] = strawberry.field(name="movementRule", default=None)
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
@@ -1528,6 +1628,9 @@ class RoutingStepNode:
             quality_checkpoint=obj.quality_checkpoint,
             rework_allowed=obj.rework_allowed,
             notes=obj.notes,
+            material_inputs=[MaterialFlowItemNode.from_input(item) for item in obj.material_inputs.all()],
+            material_outputs=[MaterialFlowItemNode.from_output(item) for item in obj.material_outputs.all()],
+            movement_rule=MaterialMovementRuleNode.from_db(obj.material_movement_rule) if hasattr(obj, "material_movement_rule") else None,
             created_at=_iso(obj.created_at),
             updated_at=_iso(obj.updated_at),
         )
@@ -1589,6 +1692,184 @@ class RoutingSummaryNode:
     updated_at: typing.Optional[str] = strawberry.field(name="updatedAt", default=None)
 
 
+@strawberry.type
+class FlowValidationMessageNode:
+    field: str
+    code: str
+    message: str
+
+    @classmethod
+    def from_dict(cls, item: dict) -> "FlowValidationMessageNode":
+        return cls(field=item.get("field", "_form"), code=item.get("code", "VALIDATION"), message=item.get("message", "Validation issue"))
+
+
+@strawberry.type
+class InventoryLocationNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    location_type: str = strawberry.field(name="locationType")
+    status: str
+
+    @classmethod
+    def from_db(cls, obj: InventoryLocation) -> "InventoryLocationNode":
+        return cls(id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name, location_type=obj.location_type, status=obj.status)
+
+
+@strawberry.type
+class MaterialNode:
+    id: strawberry.ID
+    code: str
+    name: str
+    material_state: str = strawberry.field(name="materialState")
+    status: str
+
+    @classmethod
+    def from_db(cls, obj: Material) -> "MaterialNode":
+        return cls(id=strawberry.ID(str(obj.id)), code=obj.code, name=obj.name, material_state=obj.material_state, status=obj.status)
+
+
+@strawberry.type
+class MaterialFlowItemNode:
+    id: strawberry.ID
+    material_id: strawberry.ID = strawberry.field(name="materialId")
+    material_code: str = strawberry.field(name="materialCode")
+    material_name: str = strawberry.field(name="materialName")
+    quantity: float
+    material_state: str = strawberry.field(name="materialState")
+    location_id: typing.Optional[strawberry.ID] = strawberry.field(name="locationId", default=None)
+    location_name: typing.Optional[str] = strawberry.field(name="locationName", default=None)
+
+    @classmethod
+    def from_input(cls, obj: OperationInput) -> "MaterialFlowItemNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            material_id=strawberry.ID(str(obj.material_id)),
+            material_code=obj.material.code,
+            material_name=obj.material.name,
+            quantity=obj.quantity,
+            material_state=obj.material_state,
+            location_id=strawberry.ID(str(obj.source_location_id)) if obj.source_location_id else None,
+            location_name=obj.source_location.name if obj.source_location else None,
+        )
+
+    @classmethod
+    def from_output(cls, obj: OperationOutput) -> "MaterialFlowItemNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            material_id=strawberry.ID(str(obj.material_id)),
+            material_code=obj.material.code,
+            material_name=obj.material.name,
+            quantity=obj.quantity,
+            material_state=obj.material_state,
+            location_id=strawberry.ID(str(obj.target_location_id)) if obj.target_location_id else None,
+            location_name=obj.target_location.name if obj.target_location else None,
+        )
+
+
+@strawberry.type
+class MaterialMovementRuleNode:
+    id: strawberry.ID
+    rule_type: str = strawberry.field(name="ruleType")
+    source_location_id: typing.Optional[strawberry.ID] = strawberry.field(name="sourceLocationId", default=None)
+    source_location_name: typing.Optional[str] = strawberry.field(name="sourceLocationName", default=None)
+    destination_location_id: typing.Optional[strawberry.ID] = strawberry.field(name="destinationLocationId", default=None)
+    destination_location_name: typing.Optional[str] = strawberry.field(name="destinationLocationName", default=None)
+    notes: str
+
+    @classmethod
+    def from_db(cls, obj: MaterialMovementRule) -> "MaterialMovementRuleNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            rule_type=obj.rule_type,
+            source_location_id=strawberry.ID(str(obj.source_location_id)) if obj.source_location_id else None,
+            source_location_name=obj.source_location.name if obj.source_location else None,
+            destination_location_id=strawberry.ID(str(obj.destination_location_id)) if obj.destination_location_id else None,
+            destination_location_name=obj.destination_location.name if obj.destination_location else None,
+            notes=obj.notes,
+        )
+
+
+@strawberry.type
+class ProcessFlowOperationNode:
+    sequence: int
+    department_name: typing.Optional[str] = strawberry.field(name="departmentName", default=None)
+    resource_group_id: typing.Optional[strawberry.ID] = strawberry.field(name="resourceGroupId", default=None)
+    resource_group_name: typing.Optional[str] = strawberry.field(name="resourceGroupName", default=None)
+    cycle_time_sec: float = strawberry.field(name="cycleTimeSec")
+    inputs: list[MaterialFlowItemNode]
+    outputs: list[MaterialFlowItemNode]
+
+    @classmethod
+    def from_step(cls, obj: RoutingStep) -> "ProcessFlowOperationNode":
+        return cls(
+            sequence=obj.sequence,
+            department_name=obj.department.name if obj.department else None,
+            resource_group_id=strawberry.ID(str(obj.resource_group_id)) if obj.resource_group_id else None,
+            resource_group_name=obj.resource_group.name if obj.resource_group else None,
+            cycle_time_sec=obj.cycle_time_sec,
+            inputs=[MaterialFlowItemNode.from_input(item) for item in obj.material_inputs.all()],
+            outputs=[MaterialFlowItemNode.from_output(item) for item in obj.material_outputs.all()],
+        )
+
+
+@strawberry.type
+class BOMItemNode:
+    material_id: strawberry.ID = strawberry.field(name="materialId")
+    material_code: str = strawberry.field(name="materialCode")
+    material_name: str = strawberry.field(name="materialName")
+    quantity: float
+    scrap_factor: float = strawberry.field(name="scrapFactor")
+
+    @classmethod
+    def from_db(cls, obj: BOMItem) -> "BOMItemNode":
+        return cls(
+            material_id=strawberry.ID(str(obj.material_id)),
+            material_code=obj.material.code,
+            material_name=obj.material.name,
+            quantity=obj.quantity,
+            scrap_factor=obj.scrap_factor,
+        )
+
+
+@strawberry.type
+class BOMNode:
+    id: strawberry.ID
+    version: str
+    status: str
+    items: list[BOMItemNode]
+
+    @classmethod
+    def from_db(cls, obj: BOM) -> "BOMNode":
+        return cls(id=strawberry.ID(str(obj.id)), version=obj.version, status=obj.status, items=[BOMItemNode.from_db(item) for item in obj.items.all()])
+
+
+@strawberry.type
+class ProductionLineFlowContextNode:
+    ok: bool
+    message: typing.Optional[str] = None
+    is_blocked: bool = strawberry.field(name="isBlocked", default=False)
+    routing: typing.Optional[RoutingNode] = None
+    operations: list[ProcessFlowOperationNode] = strawberry.field(default_factory=list)
+    bom: typing.Optional[BOMNode] = None
+    inventory_locations: list[InventoryLocationNode] = strawberry.field(name="inventoryLocations", default_factory=list)
+    validations: list[FlowValidationMessageNode] = strawberry.field(default_factory=list)
+
+    @classmethod
+    def from_service(cls, data: dict) -> "ProductionLineFlowContextNode":
+        routing = data.get("routing")
+        return cls(
+            ok=data.get("ok", False),
+            message=data.get("message"),
+            is_blocked=data.get("is_blocked", False),
+            routing=RoutingNode.from_db(routing) if routing else None,
+            operations=[ProcessFlowOperationNode.from_step(step) for step in routing.steps.all().order_by("sequence")] if routing else [],
+            bom=BOMNode.from_db(data["bom"]) if data.get("bom") else None,
+            inventory_locations=[InventoryLocationNode.from_db(location) for location in data.get("inventory_locations", [])],
+            validations=[FlowValidationMessageNode.from_dict(item) for item in data.get("validations", [])],
+        )
+
+
 @strawberry.input
 class RoutingInput:
     production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
@@ -1602,7 +1883,25 @@ class RoutingInput:
 
 
 @strawberry.input
+class OperationMaterialInput:
+    id: typing.Optional[str] = strawberry.field(default=None)
+    material_id: typing.Optional[str] = strawberry.field(name="materialId", default=None)
+    quantity: float = 1
+    material_state: typing.Optional[str] = strawberry.field(name="materialState", default=None)
+    location_id: typing.Optional[str] = strawberry.field(name="locationId", default=None)
+
+
+@strawberry.input
+class MaterialMovementRuleInput:
+    rule_type: typing.Optional[str] = strawberry.field(name="ruleType", default=None)
+    source_location_id: typing.Optional[str] = strawberry.field(name="sourceLocationId", default=None)
+    destination_location_id: typing.Optional[str] = strawberry.field(name="destinationLocationId", default=None)
+    notes: typing.Optional[str] = ""
+
+
+@strawberry.input
 class RoutingStepInput:
+    id: typing.Optional[str] = strawberry.field(default=None)
     routing_id: typing.Optional[strawberry.ID] = strawberry.field(name="routingId", default=None)
     sequence: int
     department_id: typing.Optional[str] = strawberry.field(name="departmentId", default=None)
@@ -1620,6 +1919,9 @@ class RoutingStepInput:
     quality_checkpoint: typing.Optional[bool] = strawberry.field(name="qualityCheckpoint", default=False)
     rework_allowed: typing.Optional[bool] = strawberry.field(name="reworkAllowed", default=False)
     notes: typing.Optional[str] = ""
+    material_inputs: list[OperationMaterialInput] = strawberry.field(name="materialInputs", default_factory=list)
+    material_outputs: list[OperationMaterialInput] = strawberry.field(name="materialOutputs", default_factory=list)
+    movement_rule: typing.Optional[MaterialMovementRuleInput] = strawberry.field(name="movementRule", default=None)
 
 
 @strawberry.type
@@ -1649,6 +1951,17 @@ class ReorderStepsInput:
     ordered_step_ids: list[str] = strawberry.field(name="orderedStepIds")
 
 
+@strawberry.input
+class SaveRoutingInput:
+    routing_id: typing.Optional[strawberry.ID] = strawberry.field(name="routingId", default=None)
+    production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
+    product_family_id: typing.Optional[str] = strawberry.field(name="productFamilyId", default=None)
+    product_model_id: typing.Optional[str] = strawberry.field(name="productModelId", default=None)
+    version: typing.Optional[str] = "1.0"
+    notes: typing.Optional[str] = ""
+    steps: list[RoutingStepInput]
+
+
 @strawberry.type
 class StepCapacityNode:
     sequence: int
@@ -1661,6 +1974,349 @@ class StepCapacityNode:
     load_percent: float = strawberry.field(name="loadPercent")
     capacity_gap_units: float = strawberry.field(name="capacityGapUnits")
     is_bottleneck: bool = strawberry.field(name="isBottleneck")
+
+
+@strawberry.type
+class YamazumiStepNode:
+    sequence: int
+    department_name: typing.Optional[str] = strawberry.field(name="departmentName", default=None)
+    resource_group_name: typing.Optional[str] = strawberry.field(name="resourceGroupName", default=None)
+    resource_name: typing.Optional[str] = strawberry.field(name="resourceName", default=None)
+    standard_work_name: typing.Optional[str] = strawberry.field(name="standardWorkName", default=None)
+    cycle_time_sec: float = strawberry.field(name="cycleTimeSec")
+    setup_time_sec: float = strawberry.field(name="setupTimeSec")
+    changeover_time_sec: float = strawberry.field(name="changeoverTimeSec")
+    work_content_sec: float = strawberry.field(name="workContentSec")
+    takt_time_sec: float = strawberry.field(name="taktTimeSec")
+    load_percent: float = strawberry.field(name="loadPercent")
+    required_operators: int = strawberry.field(name="requiredOperators")
+    is_bottleneck: bool = strawberry.field(name="isBottleneck")
+    is_overloaded: bool = strawberry.field(name="isOverloaded")
+
+
+@strawberry.type
+class YamazumiAnalysisNode:
+    ok: bool
+    message: str
+    routing_id: typing.Optional[strawberry.ID] = strawberry.field(name="routingId", default=None)
+    routing_status: str = strawberry.field(name="routingStatus", default="")
+    routing_version: str = strawberry.field(name="routingVersion", default="")
+    production_line_id: typing.Optional[strawberry.ID] = strawberry.field(name="productionLineId", default=None)
+    product_model_id: typing.Optional[strawberry.ID] = strawberry.field(name="productModelId", default=None)
+    planned_quantity: int = strawberry.field(name="plannedQuantity")
+    net_available_time_sec: float = strawberry.field(name="netAvailableTimeSec")
+    takt_time_sec: float = strawberry.field(name="taktTimeSec")
+    total_work_content_sec: float = strawberry.field(name="totalWorkContentSec")
+    bottleneck_step_name: str = strawberry.field(name="bottleneckStepName", default="")
+    balance_loss_percent: float = strawberry.field(name="balanceLossPercent")
+    operators_required: int = strawberry.field(name="operatorsRequired")
+    overloaded_resources: list[str] = strawberry.field(name="overloadedResources", default_factory=list)
+    steps: list[YamazumiStepNode] = strawberry.field(default_factory=list)
+
+
+@strawberry.type
+class CapacityWarningNode:
+    message: str
+
+
+@strawberry.type
+class CapacityLoadRowNode:
+    level: str
+    area: str
+    available_capacity_minutes: float = strawberry.field(name="availableCapacityMinutes")
+    required_capacity_minutes: float = strawberry.field(name="requiredCapacityMinutes")
+    utilization_percent: float = strawberry.field(name="utilizationPercent")
+    gap_minutes: float = strawberry.field(name="gapMinutes")
+    status: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "CapacityLoadRowNode":
+        return cls(
+            level=data.get("level", ""),
+            area=data.get("area", ""),
+            available_capacity_minutes=float(data.get("availableCapacityMinutes", 0) or 0),
+            required_capacity_minutes=float(data.get("requiredCapacityMinutes", 0) or 0),
+            utilization_percent=float(data.get("utilizationPercent", 0) or 0),
+            gap_minutes=float(data.get("gapMinutes", 0) or 0),
+            status=data.get("status", "MISSING_DATA"),
+        )
+
+
+@strawberry.type
+class CapacityConstraintNode:
+    severity: str
+    source: str
+    type: str
+    message: str
+    affected: str
+    recommended_action: str = strawberry.field(name="recommendedAction")
+    action: str
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "CapacityConstraintNode":
+        return cls(
+            severity=data.get("severity", "WARNING"),
+            source=data.get("source", ""),
+            type=data.get("type", ""),
+            message=data.get("message", ""),
+            affected=data.get("affected", ""),
+            recommended_action=data.get("recommendedAction", ""),
+            action=data.get("action", ""),
+        )
+
+
+@strawberry.type
+class CapacityYamazumiItemNode:
+    step_id: str = strawberry.field(name="stepId")
+    sequence: int
+    department_name: str = strawberry.field(name="departmentName")
+    resource_group_name: str = strawberry.field(name="resourceGroupName")
+    resource_name: str = strawberry.field(name="resourceName")
+    standard_work_name: str = strawberry.field(name="standardWorkName")
+    operator: int
+    cycle_time_seconds: float = strawberry.field(name="cycleTimeSeconds")
+    manual_time_seconds: float = strawberry.field(name="manualTimeSeconds")
+    auto_time_seconds: float = strawberry.field(name="autoTimeSeconds")
+    setup_inclusive_seconds: float = strawberry.field(name="setupInclusiveSeconds")
+    work_content_seconds: float = strawberry.field(name="workContentSeconds")
+    takt_time_seconds: float = strawberry.field(name="taktTimeSeconds")
+    load_percent: float = strawberry.field(name="loadPercent")
+    is_bottleneck: bool = strawberry.field(name="isBottleneck")
+    is_overloaded: bool = strawberry.field(name="isOverloaded")
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "CapacityYamazumiItemNode":
+        return cls(
+            step_id=str(data.get("stepId", "")),
+            sequence=int(data.get("sequence", 0) or 0),
+            department_name=data.get("departmentName", ""),
+            resource_group_name=data.get("resourceGroupName", ""),
+            resource_name=data.get("resourceName", ""),
+            standard_work_name=data.get("standardWorkName", ""),
+            operator=int(data.get("operator", 1) or 1),
+            cycle_time_seconds=float(data.get("cycleTimeSeconds", 0) or 0),
+            manual_time_seconds=float(data.get("manualTimeSeconds", 0) or 0),
+            auto_time_seconds=float(data.get("autoTimeSeconds", 0) or 0),
+            setup_inclusive_seconds=float(data.get("setupInclusiveSeconds", 0) or 0),
+            work_content_seconds=float(data.get("workContentSeconds", 0) or 0),
+            takt_time_seconds=float(data.get("taktTimeSeconds", 0) or 0),
+            load_percent=float(data.get("loadPercent", 0) or 0),
+            is_bottleneck=bool(data.get("isBottleneck", False)),
+            is_overloaded=bool(data.get("isOverloaded", False)),
+        )
+
+
+@strawberry.type
+class CapacityYamazumiNode:
+    metric: str
+    takt_time_seconds: float = strawberry.field(name="taktTimeSeconds")
+    balance_loss_percent: float = strawberry.field(name="balanceLossPercent")
+    items: list[CapacityYamazumiItemNode]
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "CapacityYamazumiNode":
+        return cls(
+            metric=data.get("metric", "SETUP_INCLUSIVE"),
+            takt_time_seconds=float(data.get("taktTimeSeconds", 0) or 0),
+            balance_loss_percent=float(data.get("balanceLossPercent", 0) or 0),
+            items=[CapacityYamazumiItemNode.from_dict(item) for item in data.get("items", [])],
+        )
+
+
+@strawberry.type
+class CapacityPlanInputNode:
+    id: strawberry.ID
+    capacity_plan_id: strawberry.ID = strawberry.field(name="capacityPlanId")
+    planned_quantity: int = strawberry.field(name="plannedQuantity")
+    available_time_minutes: float = strawberry.field(name="availableTimeMinutes")
+    break_time_minutes: float = strawberry.field(name="breakTimeMinutes")
+    planned_downtime_minutes: float = strawberry.field(name="plannedDowntimeMinutes")
+    net_available_time_minutes: float = strawberry.field(name="netAvailableTimeMinutes")
+    operators_available: int = strawberry.field(name="operatorsAvailable")
+    efficiency_factor: float = strawberry.field(name="efficiencyFactor")
+    takt_time_seconds: float = strawberry.field(name="taktTimeSeconds")
+
+    @classmethod
+    def from_db(cls, obj: CapacityPlanInputModel) -> "CapacityPlanInputNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            capacity_plan_id=strawberry.ID(str(obj.capacity_plan_id)),
+            planned_quantity=obj.planned_quantity,
+            available_time_minutes=obj.available_time_minutes,
+            break_time_minutes=obj.break_time_minutes,
+            planned_downtime_minutes=obj.planned_downtime_minutes,
+            net_available_time_minutes=obj.net_available_time_minutes,
+            operators_available=obj.operators_available,
+            efficiency_factor=obj.efficiency_factor,
+            takt_time_seconds=obj.takt_time_seconds,
+        )
+
+
+@strawberry.type
+class CapacityPlanResultNode:
+    id: strawberry.ID
+    capacity_plan_id: strawberry.ID = strawberry.field(name="capacityPlanId")
+    total_work_content_seconds: float = strawberry.field(name="totalWorkContentSeconds")
+    required_capacity_minutes: float = strawberry.field(name="requiredCapacityMinutes")
+    available_capacity_minutes: float = strawberry.field(name="availableCapacityMinutes")
+    capacity_utilization_percent: float = strawberry.field(name="capacityUtilizationPercent")
+    bottleneck_step_id: typing.Optional[strawberry.ID] = strawberry.field(name="bottleneckStepId", default=None)
+    bottleneck_step_name: str = strawberry.field(name="bottleneckStepName")
+    bottleneck_resource_id: typing.Optional[strawberry.ID] = strawberry.field(name="bottleneckResourceId", default=None)
+    bottleneck_resource_name: str = strawberry.field(name="bottleneckResourceName")
+    balance_loss_percent: float = strawberry.field(name="balanceLossPercent")
+    operators_required: int = strawberry.field(name="operatorsRequired")
+    feasibility_status: str = strawberry.field(name="feasibilityStatus")
+    warnings: list[CapacityWarningNode]
+    load_rows: list[CapacityLoadRowNode] = strawberry.field(name="loadRows")
+    yamazumi: CapacityYamazumiNode
+    constraints: list[CapacityConstraintNode]
+
+    @classmethod
+    def from_db(cls, obj: CapacityPlanResultModel) -> "CapacityPlanResultNode":
+        bottleneck_step_name = ""
+        if obj.bottleneck_step:
+            bottleneck_step_name = obj.bottleneck_step.standard_work.name if obj.bottleneck_step.standard_work else f"Step {obj.bottleneck_step.sequence}"
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            capacity_plan_id=strawberry.ID(str(obj.capacity_plan_id)),
+            total_work_content_seconds=obj.total_work_content_seconds,
+            required_capacity_minutes=obj.required_capacity_minutes,
+            available_capacity_minutes=obj.available_capacity_minutes,
+            capacity_utilization_percent=obj.capacity_utilization_percent,
+            bottleneck_step_id=strawberry.ID(str(obj.bottleneck_step_id)) if obj.bottleneck_step_id else None,
+            bottleneck_step_name=bottleneck_step_name,
+            bottleneck_resource_id=strawberry.ID(str(obj.bottleneck_resource_id)) if obj.bottleneck_resource_id else None,
+            bottleneck_resource_name=obj.bottleneck_resource.name if obj.bottleneck_resource else "",
+            balance_loss_percent=obj.balance_loss_percent,
+            operators_required=obj.operators_required,
+            feasibility_status=obj.feasibility_status,
+            warnings=[CapacityWarningNode(message=message) for message in (obj.warnings_json or [])],
+            load_rows=[CapacityLoadRowNode.from_dict(row) for row in (obj.load_rows_json or [])],
+            yamazumi=CapacityYamazumiNode.from_dict(obj.yamazumi_json or {}),
+            constraints=[CapacityConstraintNode.from_dict(row) for row in (obj.constraints_json or [])],
+        )
+
+
+@strawberry.type
+class CapacityScenarioNode:
+    id: strawberry.ID
+    capacity_plan_id: strawberry.ID = strawberry.field(name="capacityPlanId")
+    name: str
+    assumptions_json: strawberry.scalars.JSON = strawberry.field(name="assumptionsJson")
+    result_json: strawberry.scalars.JSON = strawberry.field(name="resultJson")
+    is_baseline: bool = strawberry.field(name="isBaseline")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj: CapacityScenario) -> "CapacityScenarioNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            capacity_plan_id=strawberry.ID(str(obj.capacity_plan_id)),
+            name=obj.name,
+            assumptions_json=obj.assumptions_json,
+            result_json=obj.result_json,
+            is_baseline=obj.is_baseline,
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class CapacityPlanNode:
+    id: strawberry.ID
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
+    plant_name: str = strawberry.field(name="plantName")
+    production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
+    production_line_name: str = strawberry.field(name="productionLineName")
+    product_model_id: strawberry.ID = strawberry.field(name="productModelId")
+    product_model_name: str = strawberry.field(name="productModelName")
+    routing_version_id: strawberry.ID = strawberry.field(name="routingVersionId")
+    routing_version: str = strawberry.field(name="routingVersion")
+    planning_horizon_start: str = strawberry.field(name="planningHorizonStart")
+    planning_horizon_end: str = strawberry.field(name="planningHorizonEnd")
+    status: str
+    created_by_name: str = strawberry.field(name="createdByName")
+    updated_by_name: str = strawberry.field(name="updatedByName")
+    calculated_at: typing.Optional[str] = strawberry.field(name="calculatedAt", default=None)
+    approved_at: typing.Optional[str] = strawberry.field(name="approvedAt", default=None)
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+    inputs: typing.Optional[CapacityPlanInputNode] = None
+    result: typing.Optional[CapacityPlanResultNode] = None
+    warnings: list[CapacityWarningNode] = strawberry.field(default_factory=list)
+    constraints: list[CapacityConstraintNode] = strawberry.field(default_factory=list)
+
+    @classmethod
+    def from_db(cls, obj: CapacityPlan) -> "CapacityPlanNode":
+        result = getattr(obj, "result", None)
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            plant_id=strawberry.ID(str(obj.plant_id)),
+            plant_name=obj.plant.name if obj.plant else "",
+            production_line_id=strawberry.ID(str(obj.production_line_id)),
+            production_line_name=obj.production_line.name if obj.production_line else "",
+            product_model_id=strawberry.ID(str(obj.product_model_id)),
+            product_model_name=obj.product_model.name if obj.product_model else "",
+            routing_version_id=strawberry.ID(str(obj.routing_version_id)),
+            routing_version=obj.routing_version.version if obj.routing_version else "",
+            planning_horizon_start=obj.planning_horizon_start.isoformat(),
+            planning_horizon_end=obj.planning_horizon_end.isoformat(),
+            status=obj.status,
+            created_by_name=obj.created_by.get_full_name() or obj.created_by.username if obj.created_by else "",
+            updated_by_name=obj.updated_by.get_full_name() or obj.updated_by.username if obj.updated_by else "",
+            calculated_at=_iso(obj.calculated_at),
+            approved_at=_iso(obj.approved_at),
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+            inputs=CapacityPlanInputNode.from_db(obj.inputs) if hasattr(obj, "inputs") else None,
+            result=CapacityPlanResultNode.from_db(result) if result else None,
+            warnings=[CapacityWarningNode(message=message) for message in (result.warnings_json if result else [])],
+            constraints=[CapacityConstraintNode.from_dict(row) for row in (result.constraints_json if result else [])],
+        )
+
+
+@strawberry.input
+class CapacityPlanCreateInput:
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
+    production_line_id: strawberry.ID = strawberry.field(name="productionLineId")
+    product_model_id: strawberry.ID = strawberry.field(name="productModelId")
+    routing_version_id: strawberry.ID = strawberry.field(name="routingVersionId")
+    planning_horizon_start: str = strawberry.field(name="planningHorizonStart")
+    planning_horizon_end: str = strawberry.field(name="planningHorizonEnd")
+
+
+@strawberry.input
+class CapacityPlanInputUpdateInput:
+    capacity_plan_id: strawberry.ID = strawberry.field(name="capacityPlanId")
+    planned_quantity: int = strawberry.field(name="plannedQuantity")
+    available_time_minutes: float = strawberry.field(name="availableTimeMinutes")
+    break_time_minutes: float = strawberry.field(name="breakTimeMinutes")
+    planned_downtime_minutes: float = strawberry.field(name="plannedDowntimeMinutes")
+    operators_available: int = strawberry.field(name="operatorsAvailable")
+    efficiency_factor: float = strawberry.field(name="efficiencyFactor")
+
+
+@strawberry.input
+class CapacityScenarioInput:
+    capacity_plan_id: strawberry.ID = strawberry.field(name="capacityPlanId")
+    name: str
+    assumptions_json: strawberry.scalars.JSON = strawberry.field(name="assumptionsJson")
+
+
+@strawberry.type
+class CapacityPlanPayload:
+    ok: bool
+    plan: typing.Optional[CapacityPlanNode] = None
+    errors: typing.Optional[list[MutationError]] = None
+
+
+@strawberry.type
+class CapacityScenarioPayload:
+    ok: bool
+    scenario: typing.Optional[CapacityScenarioNode] = None
+    errors: typing.Optional[list[MutationError]] = None
 
 
 def _ref_val(obj) -> typing.Optional["ReferenceValueNode"]:

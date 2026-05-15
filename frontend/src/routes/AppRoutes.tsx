@@ -158,6 +158,10 @@ export function AppRoutes() {
           <Route path="execution/daily-gemba-walk" element={<DailyGembaWalkPage />} />
           <Route path="plan/production-plan" element={<ProductionPlanPage />} />
           <Route path="plan/capacity" element={<CapacityPage />} />
+          <Route path="plan/capacity/load" element={<CapacityPage />} />
+          <Route path="plan/capacity/yamazumi" element={<CapacityPage />} />
+          <Route path="plan/capacity/constraints" element={<CapacityPage />} />
+          <Route path="plan/capacity/scenarios" element={<CapacityPage />} />
           <Route path="check/problems" element={<ProblemsPage />} />
           <Route path="check/actions" element={<ActionsPage />} />
           <Route path="check/audits" element={<AuditsPage />} />

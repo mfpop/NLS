@@ -8,17 +8,20 @@ import {
   UPDATE_ROUTING_MUTATION,
   ACTIVATE_ROUTING_MUTATION,
   ARCHIVE_ROUTING_MUTATION,
+  SAVE_ROUTING_MUTATION,
   CREATE_ROUTING_STEP_MUTATION,
   UPDATE_ROUTING_STEP_MUTATION,
   DELETE_ROUTING_STEP_MUTATION,
   REORDER_ROUTING_STEPS_MUTATION,
   ROUTING_STEP_CAPACITIES_QUERY,
+  YAMAZUMI_ANALYSIS_QUERY,
 } from "@/graphql/routingQueries";
 import type {
   Routing,
   RoutingStep,
   RoutingSummary,
   StepCapacity,
+  YamazumiAnalysis,
   RoutingInput,
   RoutingStepInput,
 } from "@/types/routing";
@@ -103,11 +106,39 @@ export function useStepCapacities(
   };
 }
 
+export function useYamazumiAnalysis(
+  routingId: string | null,
+  plannedQuantity: number,
+  availableTimeMin: number,
+  breakTimeMin: number,
+  downtimeMin: number,
+  operators: number
+) {
+  const canCalculate = !!routingId && plannedQuantity > 0 && availableTimeMin - breakTimeMin - downtimeMin > 0;
+  const { data, loading, error, refetch } = useQuery<{ yamazumiAnalysis: YamazumiAnalysis }>(
+    YAMAZUMI_ANALYSIS_QUERY,
+    {
+      variables: { routingId, plannedQuantity, availableTimeMin, breakTimeMin, downtimeMin, operators },
+      skip: !canCalculate,
+      fetchPolicy: "cache-and-network",
+      errorPolicy: "all",
+    }
+  );
+  return {
+    analysis: data?.yamazumiAnalysis ?? null,
+    loading,
+    error,
+    refetch,
+    canCalculate,
+  };
+}
+
 export function useRoutingMutations() {
   const [createMutation, createState] = useMutation<MutationData>(CREATE_ROUTING_MUTATION);
   const [updateMutation, updateState] = useMutation<MutationData>(UPDATE_ROUTING_MUTATION);
   const [activateMutation] = useMutation<MutationData>(ACTIVATE_ROUTING_MUTATION);
   const [archiveMutation] = useMutation<MutationData>(ARCHIVE_ROUTING_MUTATION);
+  const [saveRoutingMutation] = useMutation<MutationData>(SAVE_ROUTING_MUTATION);
   const [createStepMutation] = useMutation<MutationData>(CREATE_ROUTING_STEP_MUTATION);
   const [updateStepMutation] = useMutation<MutationData>(UPDATE_ROUTING_STEP_MUTATION);
   const [deleteStepMutation] = useMutation<MutationData>(DELETE_ROUTING_STEP_MUTATION);
@@ -175,6 +206,22 @@ export function useRoutingMutations() {
     [archiveMutation]
   );
 
+  const saveRouting = useCallback(
+    async (input: any): Promise<{ ok: boolean; routing?: Routing; errors?: any }> => {
+      try {
+        const { data } = await saveRoutingMutation({ variables: { input } });
+        return {
+          ok: data?.saveRouting?.ok ?? false,
+          routing: data?.saveRouting?.routing ?? null,
+          errors: data?.saveRouting?.errors,
+        };
+      } catch {
+        return { ok: false, errors: [{ field: "_form", code: "ERROR", message: "Failed to save routing" }] };
+      }
+    },
+    [saveRoutingMutation]
+  );
+
   const createStep = useCallback(
     async (input: RoutingStepInput): Promise<{ ok: boolean; step?: RoutingStep; errors?: any }> => {
       try {
@@ -236,6 +283,7 @@ export function useRoutingMutations() {
     updateRouting,
     activateRouting,
     archiveRouting,
+    saveRouting,
     createStep,
     updateStep,
     deleteStep,

@@ -5,7 +5,7 @@ from .entity_status import EntityStatus
 
 class ProductionLine(TimeStampedModel):
     plant = models.ForeignKey(
-        "manufacturing.Plant", on_delete=models.CASCADE,
+        "manufacturing.Plant", on_delete=models.PROTECT,
         related_name="production_lines",
     )
     code = models.CharField(max_length=50)
@@ -55,6 +55,13 @@ class ProductionLine(TimeStampedModel):
         ordering = ["name"]
         verbose_name = "Production Line"
         verbose_name_plural = "Production Lines"
+        indexes = [
+            models.Index(fields=["plant", "code"], name="mfg_line_plant_code_idx"),
+            models.Index(fields=["plant"], name="mfg_line_plant_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=["plant", "code"], name="uq_line_plant_code"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"

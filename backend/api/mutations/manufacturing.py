@@ -1,7 +1,9 @@
 import strawberry
 import typing
 from typing import Optional
+from strawberry.types import Info
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
 from api.types.manufacturing import (
     CompanyNode, CompanyPayload, CompanyInput,
     PlantNode, PlantPayload, PlantInput,
@@ -16,22 +18,28 @@ from api.types.manufacturing import (
     MutationError, DeletePayload,
     RoutingNode, RoutingPayload, RoutingInput,
     RoutingStepNode, RoutingStepPayload, RoutingStepInput,
-    ReorderStepsInput,
+    ReorderStepsInput, SaveRoutingInput,
     ProductFamilyAssignmentNode, ProductModelAssignmentNode,
     ProductFamilyAssignmentPayload, ProductModelAssignmentPayload,
+    CapacityPlanNode, CapacityPlanPayload, CapacityPlanCreateInput, CapacityPlanInputUpdateInput,
+    CapacityScenarioNode, CapacityScenarioPayload, CapacityScenarioInput,
 )
 from api.types.auth import LoginInput, AuthPayload, UserNode
 from api.auth_utils import encode_jwt
 from manufacturing.domain.department_service import DepartmentService, DepartmentServiceError
+from manufacturing.domain.structure_service import StructureService, StructureServiceError
 from manufacturing.models import (
     Company, Plant, Department, ProductionLine, ResourceGroup, Resource,
     ProductionLineDepartmentAssignment, ProductionLineProductFamily, ProductionLineProductModel,
     Schedule, ScheduleAssignment,
-    ReferenceValue, ReferenceCategory, ProductModel,
+    ReferenceValue, ReferenceCategory, ProductModel, UserRole,
     Routing, RoutingStep,
 )
 from manufacturing.domain.plant_structure_rules import validate_plant_input
 from manufacturing.domain.routing_service import RoutingService, RoutingValidationError
+from manufacturing.domain.capacity_service import (
+    CapacityPlanService, CapacityValidationError, ScenarioSimulationService,
+)
 
 
 def _resolve_ref(model, ref_id: Optional[str]):
@@ -73,6 +81,10 @@ def _set_refs(plant, input: PlantInput):
     if input.manufacturing_focus_ids is not None:
         refs = ReferenceValue.objects.filter(id__in=input.manufacturing_focus_ids)
         plant.manufacturing_focus_refs.set(refs)
+
+
+def _structure_error_payload(exc: StructureServiceError):
+    return [MutationError(field=exc.field, code=exc.code, message=exc.message)]
 
 
 def _set_line_refs(line: ProductionLine, input: ProductionLineInput):
@@ -153,8 +165,13 @@ class ReferenceItemInput:
     code: str
     name: str
     description: Optional[str] = ""
+    usage_context: Optional[str] = strawberry.field(name="usageContext", default="")
     is_active: Optional[bool] = strawberry.field(name="isActive", default=True)
     sort_order: Optional[int] = strawberry.field(name="sortOrder", default=0)
+    role: Optional[str] = None
+    department: Optional[str] = None
+    plant: Optional[str] = None
+    email: Optional[str] = None
 
 
 @strawberry.type
@@ -170,8 +187,20 @@ class LegacyReferenceItemResult:
     code: str
     name: str
     description: str
+    usage_context: str = strawberry.field(name="usageContext")
     is_active: bool = strawberry.field(name="isActive")
     sort_order: int = strawberry.field(name="sortOrder")
+    category_name: str = strawberry.field(name="categoryName", default="")
+    data_type: str = strawberry.field(name="dataType", default="Configurable")
+    usage_impact: str = strawberry.field(name="usageImpact", default="")
+    updated_at: str = strawberry.field(name="updatedAt", default="")
+    is_system_managed: bool = strawberry.field(name="isSystemManaged", default=False)
+    is_configurable: bool = strawberry.field(name="isConfigurable", default=True)
+    username: str = ""
+    role: str = ""
+    department: str = ""
+    plant: str = ""
+    email: str = ""
 
     @classmethod
     def from_ref_value(cls, rv: ReferenceValue, table_type: str) -> "LegacyReferenceItemResult":
@@ -181,8 +210,76 @@ class LegacyReferenceItemResult:
             code=rv.code,
             name=rv.name,
             description=rv.description,
+            usage_context=rv.usage_context,
             is_active=rv.is_active,
             sort_order=rv.sort_order,
+            category_name=rv.category.name,
+            data_type="System-managed" if rv.is_system_managed else "Configurable",
+            usage_impact="Available for new production structure records",
+            updated_at=rv.updated_at.isoformat() if rv.updated_at else "",
+            is_system_managed=rv.is_system_managed,
+            is_configurable=rv.is_configurable,
+        )
+
+    @classmethod
+    def from_user(cls, user: User) -> "LegacyReferenceItemResult":
+        try:
+            role_profile = user.role_profile
+            role = role_profile.get_role_display()
+            department = role_profile.department
+            plant = role_profile.plant
+        except UserRole.DoesNotExist:
+            role = "Guest"
+            department = ""
+            plant = ""
+        details = [value for value in (role, department, plant, user.email) if value]
+        return cls(
+            id=strawberry.ID(f"user:{user.id}"),
+            table_type="staff_user",
+            code=user.username,
+            name=user.get_full_name() or user.username,
+            description=" - ".join(details),
+            usage_context="Managed by staff/user workflow",
+            is_active=user.is_active,
+            sort_order=user.id,
+            category_name="People",
+            data_type="Managed by workflow",
+            usage_impact="Used by manager and supervisor assignments",
+            updated_at=user.last_login.isoformat() if user.last_login else user.date_joined.isoformat(),
+            is_system_managed=True,
+            is_configurable=True,
+            username=user.username,
+            role=role,
+            department=department,
+            plant=plant,
+            email=user.email,
+        )
+
+    @classmethod
+    def from_user_role(cls, role: UserRole) -> "LegacyReferenceItemResult":
+        user = role.user
+        department = role.department or "Unassigned department"
+        plant = role.plant or "Unassigned plant"
+        return cls(
+            id=strawberry.ID(f"user_role:{role.id}"),
+            table_type="staff_assignment",
+            code=user.username,
+            name=user.get_full_name() or user.username,
+            description=f"{role.get_role_display()} - {department} - {plant}",
+            usage_context="Managed by staff assignment workflow",
+            is_active=user.is_active,
+            sort_order=role.id,
+            category_name="People",
+            data_type="Managed by workflow",
+            usage_impact=f"Feeds ownership, staffing and employee counts for {department} / {plant}",
+            updated_at=user.last_login.isoformat() if user.last_login else user.date_joined.isoformat(),
+            is_system_managed=True,
+            is_configurable=True,
+            username=user.username,
+            role=role.get_role_display(),
+            department=department,
+            plant=plant,
+            email=user.email,
         )
 
 
@@ -202,13 +299,18 @@ TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
     "industry_type": "industry_type",
     "container_type": "industry_type",
     "unit_type": "schedule",
-    "downtime_code": "status",
-    "defect_code": "status",
-    "scrap_reason": "status",
-    "kaizen_category": "lean_methodology",
-    "skill_type": "resource_capability",
-    "role": "department_type",
-    "shift_team": "shift_model",
+    "downtime_code": "downtime_reason",
+    "defect_code": "defect_type",
+    "scrap_reason": "scrap_reason",
+    "kaizen_category": "lean_value",
+    "priority": "priority",
+    "label_badge": "label_badge",
+    "maintenance_type": "maintenance_type",
+    "material_flow_type": "material_flow_type",
+    "process_type": "process_type",
+    "skill_type": "skill_type",
+    "role": "role",
+    "shift_team": "shift_team",
     "product_model": "product_model",
     "production_family": "production_family",
 }
@@ -218,7 +320,7 @@ def _table_type_to_category(table_type: str) -> str:
     return TABLE_TYPE_TO_CATEGORY.get(table_type, table_type)
 
 
-WORKFLOW_MANAGED_REFERENCE_TABLES = {"staff_user", "staff_assignment"}
+WORKFLOW_MANAGED_REFERENCE_TABLES: set[str] = set()
 
 
 def _validate_reference_item_input(input: ReferenceItemInput, current_id: Optional[str] = None) -> list[MutationError]:
@@ -226,10 +328,20 @@ def _validate_reference_item_input(input: ReferenceItemInput, current_id: Option
     if input.table_type in WORKFLOW_MANAGED_REFERENCE_TABLES:
         errors.append(MutationError(field="tableType", code="WORKFLOW_MANAGED", message="This table is managed by the staff workflow. Direct edits are not allowed."))
         return errors
+    if input.table_type in {"staff_user", "staff_assignment"}:
+        if not input.name.strip():
+            errors.append(MutationError(field="name", code="REQUIRED", message="Name is required"))
+        if input.table_type == "staff_assignment" and not (input.role or "").strip():
+            errors.append(MutationError(field="role", code="REQUIRED", message="Role is required"))
+        return errors
     if not input.code.strip():
         errors.append(MutationError(field="code", code="REQUIRED", message="Code is required"))
     if not input.name.strip():
         errors.append(MutationError(field="name", code="REQUIRED", message="Name is required"))
+    if not (input.description or "").strip():
+        errors.append(MutationError(field="description", code="REQUIRED", message="Description is required"))
+    if not (input.usage_context or "").strip():
+        errors.append(MutationError(field="usageContext", code="REQUIRED", message="Usage context is required"))
     cat_code = _table_type_to_category(input.table_type)
     duplicate = ReferenceValue.objects.filter(category__code=cat_code, code__iexact=input.code.strip())
     if current_id:
@@ -237,6 +349,67 @@ def _validate_reference_item_input(input: ReferenceItemInput, current_id: Option
     if input.code.strip() and duplicate.exists():
         errors.append(MutationError(field="code", code="DUPLICATE", message="Code must be unique inside this table"))
     return errors
+
+
+def _split_full_name(name: str) -> tuple[str, str]:
+    parts = name.strip().split()
+    if not parts:
+        return "", ""
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], " ".join(parts[1:])
+
+
+def _normalize_role(value: str | None) -> str:
+    raw = (value or "").strip()
+    if not raw:
+        return UserRole.RoleType.GUEST
+    choices = dict(UserRole.RoleType.choices)
+    if raw in choices:
+        return raw
+    normalized = raw.lower().replace(" ", "_")
+    if normalized in choices:
+        return normalized
+    for role_value, label in choices.items():
+        if label.lower() == raw.lower():
+            return role_value
+    return UserRole.RoleType.GUEST
+
+
+def _update_staff_user(item_id: str, input: ReferenceItemInput) -> ReferenceItemPayload:
+    try:
+        user_id = item_id.split(":", 1)[1] if item_id.startswith("user:") else item_id
+        user = User.objects.get(id=user_id)
+    except (IndexError, User.DoesNotExist):
+        return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Staff user not found")])
+    if input.name is not None:
+        user.first_name, user.last_name = _split_full_name(input.name)
+    if input.email is not None:
+        user.email = input.email.strip()
+    if input.is_active is not None:
+        user.is_active = input.is_active
+    user.save()
+    return ReferenceItemPayload(item=LegacyReferenceItemResult.from_user(user))
+
+
+def _update_staff_assignment(item_id: str, input: ReferenceItemInput) -> ReferenceItemPayload:
+    try:
+        role_id = item_id.split(":", 1)[1] if item_id.startswith("user_role:") else item_id
+        role_profile = UserRole.objects.select_related("user").get(id=role_id)
+    except (IndexError, UserRole.DoesNotExist):
+        return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Staff assignment not found")])
+    if input.name is not None:
+        role_profile.user.first_name, role_profile.user.last_name = _split_full_name(input.name)
+    if input.email is not None:
+        role_profile.user.email = input.email.strip()
+    if input.is_active is not None:
+        role_profile.user.is_active = input.is_active
+    role_profile.user.save()
+    role_profile.role = _normalize_role(input.role)
+    role_profile.department = (input.department or "").strip()
+    role_profile.plant = (input.plant or "").strip()
+    role_profile.save()
+    return ReferenceItemPayload(item=LegacyReferenceItemResult.from_user_role(role_profile))
 
 
 _REF_TEXT_MAP: dict[str, str] = {
@@ -377,43 +550,24 @@ class ManufacturingMutation:
         return CompanyPayload(ok=True)
 
     @strawberry.mutation
-    def create_plant(self, input: PlantInput) -> PlantPayload:
+    def create_plant(self, input: PlantInput, company_id: Optional[str] = strawberry.UNSET) -> PlantPayload:
         errors = validate_plant_input(input)
         if errors:
             return PlantPayload(ok=False, errors=errors)
-        plant = Plant.objects.create(
-            code=input.code, name=input.name, description=input.description or "",
-            status=input.status or "ACTIVE", building=input.building or "",
-            address=input.address or "", city=input.city or "",
-            state=input.state or "", country=input.country or "",
-            zipcode=input.zipcode or "", timezone=input.timezone or "",
-            latitude=input.latitude or "", longitude=input.longitude or "",
-            plant_type=input.plant_type or "", operating_since=input.operating_since or "",
-            manager_name=input.manager_name or "", manager_email=input.manager_email or "",
-            manager_phone=input.manager_phone or "",
-            default_calendar=input.default_calendar or "",
-            default_shift_model=input.default_shift_model or "",
-            week_start_day=input.week_start_day or "",
-            default_schedule=input.default_schedule or "",
-            manufacturing_focus=input.manufacturing_focus or "",
-        )
-        _set_refs(plant, input)
-        plant.save()
-        return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
+        try:
+            company = None if company_id is strawberry.UNSET else company_id
+            plant = StructureService.create_plant(input, company or str(Company.objects.first().id) if Company.objects.exists() else None)
+            return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
+        except StructureServiceError as exc:
+            return PlantPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
-    def update_plant(self, id: str, input: PlantInput) -> PlantPayload:
+    def update_plant(self, id: str, input: PlantInput, company_id: Optional[str] = strawberry.UNSET) -> PlantPayload:
         try:
-            plant = Plant.objects.get(id=id)
-        except Plant.DoesNotExist:
-            return PlantPayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Plant not found"}])
-        for f in ("code", "name", "description", "status", "building", "address", "city", "state", "country", "zipcode", "timezone", "latitude", "longitude", "plant_type", "operating_since", "manager_name", "manager_email", "manager_phone", "default_calendar", "default_shift_model", "week_start_day", "default_schedule", "manufacturing_focus"):
-            v = getattr(input, f)
-            if v is not None:
-                setattr(plant, f, v)
-        _set_refs(plant, input)
-        plant.save()
-        return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
+            plant = StructureService.update_plant(id, input, None if company_id is strawberry.UNSET else company_id)
+            return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
+        except StructureServiceError as exc:
+            return PlantPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def archive_plant(self, id: str) -> PlantPayload:
@@ -428,36 +582,24 @@ class ManufacturingMutation:
     @strawberry.mutation
     def create_production_line(self, input: ProductionLineInput) -> ProductionLinePayload:
         try:
-            line = ProductionLine.objects.create(
-                plant_id=input.plant_id, code=input.code, name=input.name,
-                description=input.description or "", status=input.status or "ACTIVE",
-                shift_pattern=input.shift_pattern or "", capacity_basis=input.capacity_basis or "",
-                is_constraint=input.is_constraint or False,
-            )
-            _set_line_refs(line, input)
-            line.save()
+            line = StructureService.create_production_line(input)
             _sync_line_product_scope(line, input)
             return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
+        except StructureServiceError as exc:
+            return ProductionLinePayload(ok=False, errors=_structure_error_payload(exc))
         except ValueError as exc:
             return ProductionLinePayload(ok=False, errors=[MutationError(field="productModels", code="VALIDATION", message=str(exc))])
 
     @strawberry.mutation
     def update_production_line(self, id: str, input: ProductionLineInput) -> ProductionLinePayload:
         try:
-            line = ProductionLine.objects.get(id=id)
-        except ProductionLine.DoesNotExist:
-            return ProductionLinePayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Production line not found"}])
-        for f in ("plant_id", "code", "name", "description", "status", "shift_pattern", "capacity_basis", "is_constraint"):
-            v = getattr(input, f)
-            if v is not None:
-                setattr(line, f, v)
-        _set_line_refs(line, input)
-        line.save()
-        try:
+            line = StructureService.update_production_line(id, input)
             _sync_line_product_scope(line, input)
+            return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
+        except StructureServiceError as exc:
+            return ProductionLinePayload(ok=False, errors=_structure_error_payload(exc))
         except ValueError as exc:
             return ProductionLinePayload(ok=False, errors=[MutationError(field="productModels", code="VALIDATION", message=str(exc))])
-        return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
 
     @strawberry.mutation
     def archive_production_line(self, id: str) -> ProductionLinePayload:
@@ -526,10 +668,15 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def assign_department_to_production_line(self, input: AssignDepartmentInput) -> AssignmentPayload:
-        a, _ = ProductionLineDepartmentAssignment.objects.update_or_create(
-            production_line_id=input.production_line_id, department_id=input.department_id,
-            defaults={"sequence": input.sequence or 0, "status": input.status or "ACTIVE"},
-        )
+        try:
+            a = StructureService.assign_department_to_production_line(
+                str(input.production_line_id),
+                str(input.department_id),
+                input.sequence or 0,
+                input.status or "ACTIVE",
+            )
+        except StructureServiceError as exc:
+            return AssignmentPayload(ok=False, errors=_structure_error_payload(exc))
         return AssignmentPayload(ok=True, assignment=ProductionLineDepartmentAssignmentNode.from_db(a))
 
     @strawberry.mutation
@@ -541,38 +688,19 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def create_resource_group(self, input: ResourceGroupInput) -> ResourceGroupPayload:
-        rg = ResourceGroup.objects.create(
-            department_id=input.department_id, code=input.code or "", name=input.name,
-            description=input.description or "", status=input.status or "ACTIVE",
-            members=input.members or 0, leader=input.leader or "",
-        )
-        if input.status_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.status_id)
-            rg.status_id = ref
-        if input.group_type_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.group_type_id)
-            rg.group_type_id = ref
-        rg.save()
-        return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
+        try:
+            rg = StructureService.create_resource_group(input)
+            return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
+        except StructureServiceError as exc:
+            return ResourceGroupPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def update_resource_group(self, id: str, input: ResourceGroupInput) -> ResourceGroupPayload:
         try:
-            rg = ResourceGroup.objects.get(id=id)
-        except ResourceGroup.DoesNotExist:
-            return ResourceGroupPayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Resource group not found"}])
-        for f in ("department_id", "code", "name", "description", "status", "members", "leader"):
-            v = getattr(input, f)
-            if v is not None:
-                setattr(rg, f, v)
-        if input.status_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.status_id)
-            rg.status_id = ref
-        if input.group_type_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.group_type_id)
-            rg.group_type_id = ref
-        rg.save()
-        return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
+            rg = StructureService.update_resource_group(id, input)
+            return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
+        except StructureServiceError as exc:
+            return ResourceGroupPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def archive_resource_group(self, id: str) -> ResourceGroupPayload:
@@ -586,43 +714,19 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def create_resource(self, input: ResourceInput) -> ResourcePayload:
-        res = Resource.objects.create(
-            resource_group_id=input.resource_group_id, code=input.code, name=input.name,
-            description=input.description or "", status=input.status or "ACTIVE",
-        )
-        if input.status_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.status_id)
-            res.status_id = ref
-        if input.resource_type_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.resource_type_id)
-            res.resource_type_id = ref
-        if input.capability_ids is not None:
-            refs = ReferenceValue.objects.filter(id__in=input.capability_ids)
-            res.capabilities.set(refs)
-        res.save()
-        return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
+        try:
+            res = StructureService.create_resource(input)
+            return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
+        except StructureServiceError as exc:
+            return ResourcePayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def update_resource(self, id: str, input: ResourceInput) -> ResourcePayload:
         try:
-            res = Resource.objects.get(id=id)
-        except Resource.DoesNotExist:
-            return ResourcePayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Resource not found"}])
-        for f in ("resource_group_id", "code", "name", "description", "status"):
-            v = getattr(input, f)
-            if v is not None:
-                setattr(res, f, v)
-        if input.status_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.status_id)
-            res.status_id = ref
-        if input.resource_type_id is not None:
-            ref = _resolve_ref(ReferenceValue, input.resource_type_id)
-            res.resource_type_id = ref
-        if input.capability_ids is not None:
-            refs = ReferenceValue.objects.filter(id__in=input.capability_ids)
-            res.capabilities.set(refs)
-        res.save()
-        return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
+            res = StructureService.update_resource(id, input)
+            return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
+        except StructureServiceError as exc:
+            return ResourcePayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def archive_resource(self, id: str) -> ResourcePayload:
@@ -683,6 +787,8 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def create_reference_item(self, input: ReferenceItemInput) -> ReferenceItemPayload:
+        if input.table_type in {"staff_user", "staff_assignment"}:
+            return ReferenceItemPayload(errors=[MutationError(field="tableType", code="UNSUPPORTED", message="Create staff users/assignments from the staff workflow; existing records can be edited here during development.")])
         validation_errors = _validate_reference_item_input(input)
         if validation_errors:
             return ReferenceItemPayload(errors=validation_errors)
@@ -695,7 +801,8 @@ class ManufacturingMutation:
             category=cat,
             code=input.code.strip(),
             name=input.name.strip(),
-            description=input.description or "",
+            description=input.description.strip(),
+            usage_context=input.usage_context.strip(),
             sort_order=input.sort_order or 0,
             is_active=input.is_active if input.is_active is not None else True,
         )
@@ -706,13 +813,20 @@ class ManufacturingMutation:
         validation_errors = _validate_reference_item_input(input, id)
         if validation_errors:
             return ReferenceItemPayload(errors=validation_errors)
+        if input.table_type == "staff_user":
+            return _update_staff_user(id, input)
+        if input.table_type == "staff_assignment":
+            return _update_staff_assignment(id, input)
         try:
             rv = ReferenceValue.objects.get(id=id)
         except ReferenceValue.DoesNotExist:
             return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Reference item not found")])
+        if rv.is_system_managed or not rv.is_configurable:
+            return ReferenceItemPayload(errors=[MutationError(field="id", code="SYSTEM_MANAGED", message="System-managed records cannot be edited here")])
         rv.code = input.code.strip()
         rv.name = input.name.strip()
-        rv.description = input.description or ""
+        rv.description = input.description.strip()
+        rv.usage_context = input.usage_context.strip()
         rv.sort_order = input.sort_order or 0
         if input.is_active is not None:
             rv.is_active = input.is_active
@@ -721,12 +835,28 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def deactivate_reference_item(self, id: str) -> ReferenceItemPayload:
-        if id.startswith("user:") or id.startswith("user_role:"):
-            return ReferenceItemPayload(errors=[MutationError(field="id", code="WORKFLOW_MANAGED", message="System-managed staff records must be changed from the staff workflow")])
+        if id.startswith("user:"):
+            try:
+                user = User.objects.get(id=id.split(":", 1)[1])
+            except (IndexError, User.DoesNotExist):
+                return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Staff user not found")])
+            user.is_active = False
+            user.save(update_fields=["is_active"])
+            return ReferenceItemPayload(item=LegacyReferenceItemResult.from_user(user))
+        if id.startswith("user_role:"):
+            try:
+                role_profile = UserRole.objects.select_related("user").get(id=id.split(":", 1)[1])
+            except (IndexError, UserRole.DoesNotExist):
+                return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Staff assignment not found")])
+            role_profile.user.is_active = False
+            role_profile.user.save(update_fields=["is_active"])
+            return ReferenceItemPayload(item=LegacyReferenceItemResult.from_user_role(role_profile))
         try:
             rv = ReferenceValue.objects.get(id=id)
         except ReferenceValue.DoesNotExist:
             return ReferenceItemPayload(errors=[MutationError(field="id", code="NOT_FOUND", message="Reference item not found")])
+        if rv.is_system_managed or not rv.is_configurable:
+            return ReferenceItemPayload(errors=[MutationError(field="id", code="SYSTEM_MANAGED", message="System-managed records cannot be deactivated here")])
         rv.is_active = False
         rv.save()
         return ReferenceItemPayload(item=LegacyReferenceItemResult.from_ref_value(rv, ""))
@@ -781,6 +911,69 @@ class ManufacturingMutation:
     def archive_routing(self, id: str) -> RoutingPayload:
         try:
             routing = RoutingService.archive_routing(id)
+            return RoutingPayload(ok=True, routing=RoutingNode.from_db(routing))
+        except RoutingValidationError as e:
+            return RoutingPayload(ok=False, errors=[MutationError(field=e.field, code="VALIDATION", message=e.message)])
+
+    @strawberry.mutation
+    def save_routing(self, input: SaveRoutingInput) -> RoutingPayload:
+        try:
+            routing = RoutingService.save_routing({
+                "routing_id": input.routing_id,
+                "production_line_id": input.production_line_id,
+                "product_family_id": input.product_family_id,
+                "product_model_id": input.product_model_id,
+                "version": input.version or "1.0",
+                "notes": input.notes or "",
+                "steps": [
+                    {
+                        "id": step.id,
+                        "sequence": step.sequence,
+                        "department_id": step.department_id,
+                        "resource_group_id": step.resource_group_id,
+                        "resource_id": step.resource_id,
+                        "standard_work_id": step.standard_work_id,
+                        "cycle_time_sec": step.cycle_time_sec,
+                        "setup_time_sec": step.setup_time_sec,
+                        "changeover_time_sec": step.changeover_time_sec,
+                        "required_operators": step.required_operators,
+                        "schedule_source": step.schedule_source or "LINE",
+                        "buffer_type": step.buffer_type,
+                        "wip_min": step.wip_min,
+                        "wip_max": step.wip_max,
+                        "quality_checkpoint": step.quality_checkpoint or False,
+                        "rework_allowed": step.rework_allowed or False,
+                        "notes": step.notes or "",
+                        "material_inputs": [
+                            {
+                                "id": item.id,
+                                "material_id": item.material_id,
+                                "quantity": item.quantity,
+                                "material_state": item.material_state,
+                                "location_id": item.location_id,
+                            }
+                            for item in step.material_inputs
+                        ],
+                        "material_outputs": [
+                            {
+                                "id": item.id,
+                                "material_id": item.material_id,
+                                "quantity": item.quantity,
+                                "material_state": item.material_state,
+                                "location_id": item.location_id,
+                            }
+                            for item in step.material_outputs
+                        ],
+                        "movement_rule": {
+                            "rule_type": step.movement_rule.rule_type,
+                            "source_location_id": step.movement_rule.source_location_id,
+                            "destination_location_id": step.movement_rule.destination_location_id,
+                            "notes": step.movement_rule.notes or "",
+                        } if step.movement_rule else None,
+                    }
+                    for step in input.steps
+                ],
+            })
             return RoutingPayload(ok=True, routing=RoutingNode.from_db(routing))
         except RoutingValidationError as e:
             return RoutingPayload(ok=False, errors=[MutationError(field=e.field, code="VALIDATION", message=e.message)])
@@ -851,6 +1044,73 @@ class ManufacturingMutation:
             return RoutingStepPayload(ok=True)
         except RoutingValidationError as e:
             return RoutingStepPayload(ok=False, errors=[MutationError(field=e.field, code="VALIDATION", message=e.message)])
+
+    # ── Capacity Planning ──
+
+    @strawberry.mutation
+    def create_capacity_plan(self, info: Info, input: CapacityPlanCreateInput) -> CapacityPlanPayload:
+        try:
+            plan = CapacityPlanService.create_plan({
+                "plant_id": input.plant_id,
+                "production_line_id": input.production_line_id,
+                "product_model_id": input.product_model_id,
+                "routing_version_id": input.routing_version_id,
+                "planning_horizon_start": input.planning_horizon_start,
+                "planning_horizon_end": input.planning_horizon_end,
+            }, user=getattr(info.context, "user", None))
+            return CapacityPlanPayload(ok=True, plan=CapacityPlanNode.from_db(plan))
+        except CapacityValidationError as e:
+            return CapacityPlanPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+        except Exception as e:
+            return CapacityPlanPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
+
+    @strawberry.mutation
+    def update_capacity_plan_input(self, info: Info, input: CapacityPlanInputUpdateInput) -> CapacityPlanPayload:
+        try:
+            plan = CapacityPlanService.update_inputs(str(input.capacity_plan_id), {
+                "planned_quantity": input.planned_quantity,
+                "available_time_minutes": input.available_time_minutes,
+                "break_time_minutes": input.break_time_minutes,
+                "planned_downtime_minutes": input.planned_downtime_minutes,
+                "operators_available": input.operators_available,
+                "efficiency_factor": input.efficiency_factor,
+            }, user=getattr(info.context, "user", None))
+            return CapacityPlanPayload(ok=True, plan=CapacityPlanNode.from_db(plan))
+        except CapacityValidationError as e:
+            return CapacityPlanPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def calculate_capacity_plan(self, info: Info, id: str) -> CapacityPlanPayload:
+        try:
+            plan = CapacityPlanService.calculate_plan(id, user=getattr(info.context, "user", None))
+            return CapacityPlanPayload(ok=True, plan=CapacityPlanNode.from_db(plan))
+        except CapacityValidationError as e:
+            return CapacityPlanPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def create_capacity_scenario(self, input: CapacityScenarioInput) -> CapacityScenarioPayload:
+        try:
+            plan = CapacityPlanService._get_plan(str(input.capacity_plan_id))
+            scenario = ScenarioSimulationService.create(plan, input.name, input.assumptions_json or {})
+            return CapacityScenarioPayload(ok=True, scenario=CapacityScenarioNode.from_db(scenario))
+        except CapacityValidationError as e:
+            return CapacityScenarioPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def approve_capacity_plan(self, info: Info, id: str) -> CapacityPlanPayload:
+        try:
+            plan = CapacityPlanService.approve_plan(id, user=getattr(info.context, "user", None))
+            return CapacityPlanPayload(ok=True, plan=CapacityPlanNode.from_db(plan))
+        except CapacityValidationError as e:
+            return CapacityPlanPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def archive_capacity_plan(self, info: Info, id: str) -> CapacityPlanPayload:
+        try:
+            plan = CapacityPlanService.archive_plan(id, user=getattr(info.context, "user", None))
+            return CapacityPlanPayload(ok=True, plan=CapacityPlanNode.from_db(plan))
+        except CapacityValidationError as e:
+            return CapacityPlanPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
 
     # ── Product Family / Model Assignments ──
 

@@ -12,6 +12,7 @@ export interface DepartmentProductionLine {
   id: string;
   name: string;
   code: string;
+  plantId: string;
   plantName: string;
   status?: string;
 }
@@ -26,6 +27,7 @@ export interface DepartmentResourceGroup {
 
 export interface DepartmentNode {
   id: string; name: string; code: string; description?: string; status: "active" | "inactive" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
+  plantId: string; plant?: { id: string; name: string; code: string; status?: string } | null;
   statusId?: string; manager: string; managerRef?: PersonRef | null; supervisor?: PersonRef | null; supervisorName?: string;
   employees: number; employeeCount: number;
   productionLineCount: number; productionLines: DepartmentProductionLine[];
@@ -71,6 +73,7 @@ export function useDepartments(productionLineId?: string | null) {
     async (form: Record<string, any>, editingId?: string | null) => {
       const input = {
         name: form.name,
+        plantId: form.plantId,
         code: form.code?.toUpperCase(),
         status: (form.status || "active").toUpperCase(),
         statusId: form.statusId || null,

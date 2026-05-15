@@ -97,6 +97,9 @@ const LINE_FIELDS = `
     departmentName
   }
   isConstraint
+  flowRoutingStatus
+  activeFlowRouteId
+  activeFlowRouteVersion
   departmentCount
   groupCount
   resourceCount
@@ -202,6 +205,70 @@ export const PRODUCT_MODELS_OPTIONS_QUERY = gql`
         code
         name
         status
+      }
+    }
+  }
+`;
+
+export const PRODUCTION_LINE_FLOW_CONTEXT_QUERY = gql`
+  query ProductionLineFlowContext($productionLineId: String!, $productModelId: String) {
+    productionLineFlowContext(productionLineId: $productionLineId, productModelId: $productModelId) {
+      ok
+      message
+      isBlocked
+      routing {
+        id
+        version
+        status
+        productModelId
+        productModelName
+      }
+      operations {
+        sequence
+        departmentName
+        resourceGroupId
+        resourceGroupName
+        cycleTimeSec
+        inputs {
+          materialId
+          materialCode
+          materialName
+          quantity
+          materialState
+          locationName
+        }
+        outputs {
+          materialId
+          materialCode
+          materialName
+          quantity
+          materialState
+          locationName
+        }
+      }
+      bom {
+        id
+        version
+        status
+        items {
+          materialId
+          materialCode
+          materialName
+          quantity
+          scrapFactor
+        }
+      }
+      inventoryLocations {
+        id
+        code
+        name
+        locationType
+        status
+      }
+      validations {
+        field
+        code
+        message
       }
     }
   }

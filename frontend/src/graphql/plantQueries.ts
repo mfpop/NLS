@@ -2,6 +2,8 @@ import { gql } from "@apollo/client";
 
 const PLANT_FIELDS = `
   id
+  companyId
+  companyName
   code
   name
   description
@@ -54,8 +56,8 @@ const PLANT_FIELDS = `
 `;
 
 export const PLANTS_QUERY = gql`
-  query Plants($status: String, $limit: Int, $offset: Int) {
-    plants(status: $status, limit: $limit, offset: $offset) {
+  query Plants($companyId: String, $status: String, $limit: Int, $offset: Int) {
+    plants(companyId: $companyId, status: $status, limit: $limit, offset: $offset) {
       ${PLANT_FIELDS}
     }
   }

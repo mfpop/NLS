@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 
 export const REFERENCE_ITEMS_QUERY = gql`
   query ReferenceItems($tableType: String) {
-    referenceItems(tableType: $tableType, activeOnly: true) {
+    referenceItems(tableType: $tableType, activeOnly: false) {
       id
       tableType
       code
@@ -15,7 +15,10 @@ export const REFERENCE_ITEMS_QUERY = gql`
       usageContext
       usageImpact
       updatedAt
+      isSystemManaged
+      isConfigurable
       username
+      email
       role
       department
       plant
@@ -40,7 +43,10 @@ export const CREATE_REFERENCE_ITEM_MUTATION = gql`
         usageContext
         usageImpact
         updatedAt
+        isSystemManaged
+        isConfigurable
         username
+        email
         role
         department
         plant
@@ -67,7 +73,10 @@ export const UPDATE_REFERENCE_ITEM_MUTATION = gql`
         usageContext
         usageImpact
         updatedAt
+        isSystemManaged
+        isConfigurable
         username
+        email
         role
         department
         plant

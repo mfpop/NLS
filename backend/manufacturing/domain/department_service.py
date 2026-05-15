@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 from manufacturing.models import (
     Department,
+    Plant,
     ProductionLine,
     ProductionLineDepartmentAssignment,
     ReferenceValue,
@@ -27,6 +28,8 @@ class DepartmentService:
         return Department.objects.prefetch_related(
             "line_assignments__production_line__plant",
             "resource_groups__resources",
+        ).select_related(
+            "plant",
         ).annotate(
             production_line_count=Count("line_assignments", distinct=True),
             resource_group_count=Count("resource_groups", distinct=True),
@@ -41,7 +44,13 @@ class DepartmentService:
         if status and status != "all":
             qs = qs.filter(status__iexact=status)
         if search:
-            qs = qs.filter(Q(name__icontains=search) | Q(code__icontains=search) | Q(manager__icontains=search))
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(code__icontains=search)
+                | Q(manager__icontains=search)
+                | Q(plant__name__icontains=search)
+                | Q(plant__code__icontains=search)
+            )
         return qs.distinct()
 
     @classmethod
@@ -78,12 +87,22 @@ class DepartmentService:
         raise DepartmentServiceError(field, "INVALID", f"{field.title()} must be a valid staff or user reference")
 
     @classmethod
-    def _validate_unique_code(cls, code: str, department_id: str | None = None):
-        qs = Department.objects.filter(code__iexact=code)
+    def _resolve_plant(cls, plant_id: str | None) -> Plant:
+        value = (plant_id or "").strip()
+        if not value:
+            raise DepartmentServiceError("plantId", "REQUIRED", "Plant required")
+        try:
+            return Plant.objects.get(id=value)
+        except Plant.DoesNotExist as exc:
+            raise DepartmentServiceError("plantId", "NOT_FOUND", "Plant not found") from exc
+
+    @classmethod
+    def _validate_unique_code(cls, code: str, plant: Plant, department_id: str | None = None):
+        qs = Department.objects.filter(plant=plant, code__iexact=code)
         if department_id:
             qs = qs.exclude(id=department_id)
         if qs.exists():
-            raise DepartmentServiceError("code", "DUPLICATE", "Department code must be unique")
+            raise DepartmentServiceError("code", "DUPLICATE", "Department code must be unique inside Plant")
 
     @classmethod
     @transaction.atomic
@@ -94,11 +113,13 @@ class DepartmentService:
             raise DepartmentServiceError("name", "REQUIRED", "Name is required")
         if not code:
             raise DepartmentServiceError("code", "REQUIRED", "Code is required")
-        cls._validate_unique_code(code)
+        plant = cls._resolve_plant(input_data.plant_id)
+        cls._validate_unique_code(code, plant)
         manager = cls._validate_person_ref(input_data.manager, "manager")
         supervisor = cls._validate_person_ref(input_data.supervisor, "supervisor")
 
         dept = Department.objects.create(
+            plant=plant,
             code=code,
             name=name,
             description=input_data.description or "",
@@ -120,11 +141,21 @@ class DepartmentService:
             raise DepartmentServiceError("name", "REQUIRED", "Name is required")
         if not code:
             raise DepartmentServiceError("code", "REQUIRED", "Code is required")
-        cls._validate_unique_code(code, department_id)
+        plant = cls._resolve_plant(input_data.plant_id)
+        if str(dept.plant_id) != str(plant.id) and (
+            dept.line_assignments.exists() or dept.resource_groups.exists()
+        ):
+            raise DepartmentServiceError(
+                "plantId",
+                "INVALID",
+                "Cannot change Plant while linked production lines/resource groups exist.",
+            )
+        cls._validate_unique_code(code, plant, department_id)
         manager = cls._validate_person_ref(input_data.manager, "manager")
         supervisor = cls._validate_person_ref(input_data.supervisor, "supervisor")
 
         dept.code = code
+        dept.plant = plant
         dept.name = name
         dept.description = input_data.description or ""
         dept.status = (input_data.status or "ACTIVE").upper()
@@ -165,13 +196,19 @@ class DepartmentService:
         missing = [line_id for line_id in production_line_ids if line_id not in found_ids]
         if missing:
             raise DepartmentServiceError("productionLineIds", "NOT_FOUND", "One or more production lines were not found")
+        if any(line.plant_id != dept.plant_id for line in lines):
+            raise DepartmentServiceError(
+                "productionLineIds",
+                "INVALID_PLANT",
+                "Department and Production Line must belong to the same Plant.",
+            )
 
         ProductionLineDepartmentAssignment.objects.filter(department=dept).exclude(production_line_id__in=found_ids).delete()
         for index, line in enumerate(lines, start=1):
             ProductionLineDepartmentAssignment.objects.update_or_create(
                 production_line=line,
                 department=dept,
-                defaults={"sequence": index, "status": "ACTIVE"},
+                defaults={"plant": dept.plant, "sequence": index, "status": "ACTIVE"},
             )
         return cls.get(department_id)
 

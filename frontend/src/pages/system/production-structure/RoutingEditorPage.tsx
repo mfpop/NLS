@@ -9,6 +9,7 @@ import { DEPARTMENTS_QUERY } from "@/graphql/manufacturingQueries";
 import { RESOURCE_GROUPS_QUERY } from "@/graphql/manufacturingQueries";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { PRODUCTION_LINE_QUERY } from "@/graphql/productionLineQueries";
+import { INVENTORY_LOCATIONS_QUERY, MATERIALS_QUERY } from "@/graphql/routingQueries";
 import { ProductionLineProductScopeSummary } from "./components";
 import type { ProductionLine } from "@/types/productionLine";
 
@@ -46,6 +47,56 @@ function PrimaryButton({ children, onClick, disabled = false, shortcut }: { chil
   );
 }
 
+function buildStepInput(step: RoutingStep, routingId: string) {
+  return {
+    id: step.id,
+    routingId,
+    sequence: step.sequence,
+    departmentId: step.departmentId || null,
+    resourceGroupId: step.resourceGroupId || null,
+    resourceId: step.resourceId || null,
+    standardWorkId: null,
+    cycleTimeSec: Number(step.cycleTimeSec || 0),
+    setupTimeSec: Number(step.setupTimeSec || 0),
+    changeoverTimeSec: Number(step.changeoverTimeSec || 0),
+    requiredOperators: Number(step.requiredOperators || 1),
+    scheduleSource: step.scheduleSource || "LINE",
+    bufferType: step.bufferType || null,
+    wipMin: step.wipMin ?? null,
+    wipMax: step.wipMax ?? null,
+    qualityCheckpoint: !!step.qualityCheckpoint,
+    reworkAllowed: !!step.reworkAllowed,
+    notes: step.notes || "",
+    materialInputs: (step.materialInputs || []).map((item) => ({
+      id: item.id || null,
+      materialId: item.materialId || null,
+      quantity: Number(item.quantity || 1),
+      materialState: item.materialState || "RAW_MATERIAL",
+      locationId: item.locationId || null,
+    })),
+    materialOutputs: (step.materialOutputs || []).map((item) => ({
+      id: item.id || null,
+      materialId: item.materialId || null,
+      quantity: Number(item.quantity || 1),
+      materialState: item.materialState || "WIP",
+      locationId: item.locationId || null,
+    })),
+    movementRule: step.movementRule ? {
+      ruleType: step.movementRule.ruleType || "NEXT_OPERATION",
+      sourceLocationId: step.movementRule.sourceLocationId || null,
+      destinationLocationId: step.movementRule.destinationLocationId || null,
+      notes: step.movementRule.notes || "",
+    } : null,
+  };
+}
+
+function mutationErrorMessage(errors: any, fallback: string) {
+  if (Array.isArray(errors) && errors.length) {
+    return errors.map((error) => error.message).filter(Boolean).join("; ") || fallback;
+  }
+  return fallback;
+}
+
 export function RoutingEditorPage() {
   const { productionLineId, routingId } = useParams<{ productionLineId: string; routingId?: string }>();
   const navigate = useNavigate();
@@ -54,7 +105,7 @@ export function RoutingEditorPage() {
   const isCreate = !routingId || routingId === "new";
 
   const { routing, refetch: refetchRouting } = useRouting(isCreate ? null : routingId!);
-  const { createRouting, updateRouting, activateRouting, createStep, updateStep, deleteStep, saving } = useRoutingMutations();
+  const { saveRouting, activateRouting, saving } = useRoutingMutations();
   const { capacities } = useStepCapacities(routingId || null);
 
   const [localSteps, setLocalSteps] = useState<RoutingStep[]>([]);
@@ -63,6 +114,7 @@ export function RoutingEditorPage() {
   const [confirmClose, setConfirmClose] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"process" | "material" | "bom" | "outputs" | "validation">("process");
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [routingMeta, setRoutingMeta] = useState({
     productFamilyId: "",
@@ -84,8 +136,26 @@ export function RoutingEditorPage() {
   const resourceGroups = rgData?.resourceGroups ?? [];
   const resources = resData?.resources ?? [];
   const productionLine = lineData?.productionLine;
+  const { data: materialData } = useQuery<any>(MATERIALS_QUERY, {
+    variables: { status: "ACTIVE", limit: 500, offset: 0 },
+    fetchPolicy: "cache-and-network",
+  });
+  const { data: locationData } = useQuery<any>(INVENTORY_LOCATIONS_QUERY, {
+    variables: { plantId: productionLine?.plantId || null, status: "ACTIVE", limit: 500, offset: 0 },
+    skip: !productionLine?.plantId,
+    fetchPolicy: "cache-and-network",
+  });
   const lineModels = productionLine?.productModels ?? [];
+  const materials = materialData?.materials ?? [];
+  const inventoryLocations = locationData?.inventoryLocations ?? [];
   const requestedScope = searchParams.get("routingScope");
+  const resolveLineModelId = useCallback((id?: string | null, name?: string | null) => {
+    if (!id && !name) return "";
+    const byId = id ? lineModels.find((model) => model.id === id) : null;
+    if (byId) return byId.id;
+    const normalizedName = (name || "").trim().toLowerCase();
+    return lineModels.find((model) => model.name.trim().toLowerCase() === normalizedName || model.code.trim().toLowerCase() === normalizedName)?.id || "";
+  }, [lineModels]);
   const defaultModelId = requestedScope === "MODEL" && searchParams.get("productModelId")
     ? searchParams.get("productModelId") || ""
     : lineModels.find((model) => model.isPrimary)?.id || "ALL";
@@ -120,13 +190,13 @@ export function RoutingEditorPage() {
       setLocalSteps([...routing.steps].sort((a, b) => a.sequence - b.sequence));
       setRoutingMeta({
         productFamilyId: routing.productFamilyId || "",
-        productModelId: routing.productModelId || "",
+        productModelId: resolveLineModelId(routing.productModelId, routing.productModelName) || routing.productModelId || "",
         version: routing.version,
         notes: routing.notes,
       });
       setDirty(false);
     }
-  }, [routing]);
+  }, [routing, resolveLineModelId]);
 
   useEffect(() => {
     if (!toast) return;
@@ -169,48 +239,27 @@ export function RoutingEditorPage() {
     setSavingState(true);
     try {
       const modelId = routingMeta.productModelId === "ALL" ? null : routingMeta.productModelId || null;
+      const result = await saveRouting({
+        routingId: isCreate ? null : routingId!,
+        productionLineId: productionLineId!,
+        productFamilyId: routingMeta.productFamilyId || null,
+        productModelId: modelId,
+        version: routingMeta.version || "1.0",
+        notes: routingMeta.notes || "",
+        steps: localSteps.map((step) => buildStepInput(step, step.routingId || routingId || "")),
+      });
+      if (!result.ok || !result.routing) {
+        setToast({ message: mutationErrorMessage(result.errors, "Failed to save routing"), type: "error" });
+        setSavingState(false);
+        return;
+      }
       if (isCreate) {
-        const result = await createRouting({
-          productionLineId: productionLineId!,
-          productFamilyId: routingMeta.productFamilyId || null,
-          productModelId: modelId,
-          version: routingMeta.version || "1.0",
-          notes: routingMeta.notes || "",
-        });
-        if (!result.ok) {
-          setToast({ message: "Failed to create routing", type: "error" });
-          setSavingState(false);
-          return;
-        }
-        const newRoutingId = result.routing!.id;
-        for (const step of localSteps) {
-          await createStep({ ...step, routingId: newRoutingId });
-        }
         await refetchRouting();
         setToast({ message: "Routing saved", type: "success" });
         setDirty(false);
         const base = window.location.pathname.includes("/components/") ? "/system/production-structure/components/routing" : "/system/production-structure/flow/routing";
-        navigate(`${base}/${productionLineId}/${newRoutingId}`, { replace: true });
+        navigate(`${base}/${productionLineId}/${result.routing.id}`, { replace: true });
       } else {
-        const result = await updateRouting(routingId!, {
-          productionLineId: productionLineId!,
-          productFamilyId: routingMeta.productFamilyId || null,
-          productModelId: modelId,
-          version: routingMeta.version || "1.0",
-          notes: routingMeta.notes || "",
-        });
-        if (!result.ok) {
-          setToast({ message: "Failed to update routing", type: "error" });
-          setSavingState(false);
-          return;
-        }
-        for (const step of localSteps) {
-          if (step.id.startsWith("new-")) {
-            await createStep({ ...step, routingId: routingId! });
-          } else {
-            await updateStep(step.id, step);
-          }
-        }
         await refetchRouting();
         setToast({ message: "Routing saved", type: "success" });
         setDirty(false);
@@ -219,7 +268,7 @@ export function RoutingEditorPage() {
       setToast({ message: "Failed to save routing", type: "error" });
     }
     setSavingState(false);
-  }, [isCreate, createRouting, routingId, productionLineId, routingMeta, localSteps, updateRouting, createStep, updateStep, refetchRouting, navigate]);
+  }, [isCreate, routingId, productionLineId, routingMeta, localSteps, saveRouting, refetchRouting, navigate]);
 
   const handleActivate = useCallback(async () => {
     if (!routingId) return;
@@ -247,16 +296,13 @@ export function RoutingEditorPage() {
   }, [dirty, navigate, locationState]);
 
   const handleDeleteStep = useCallback(async (stepId: string) => {
-    if (!stepId.startsWith("new-")) {
-      await deleteStep(stepId);
-    }
     setLocalSteps((prev) => {
       const filtered = prev.filter((s) => s.id !== stepId);
       return filtered.map((s, i) => ({ ...s, sequence: i + 1 }));
     });
     setConfirmDelete(null);
     markDirty();
-  }, [deleteStep, markDirty]);
+  }, [markDirty]);
 
   const addStep = useCallback(() => {
     const newSeq = localSteps.length + 1;
@@ -269,6 +315,9 @@ export function RoutingEditorPage() {
       qualityCheckpoint: false,
       reworkAllowed: false,
       notes: "",
+      materialInputs: [],
+      materialOutputs: [],
+      movementRule: null,
       createdAt: "",
       updatedAt: "",
     };
@@ -381,6 +430,59 @@ export function RoutingEditorPage() {
   const filteredRes = (rgId: string | null | undefined) =>
     resources.filter((r: any) => !rgId || r.resourceGroupId === rgId);
 
+  const selectedStep = localSteps.find((step) => step.id === selectedStepId) || localSteps[0] || null;
+  const updateMaterialFlow = useCallback((stepId: string, patch: Partial<RoutingStep>) => {
+    setLocalSteps((prev) => prev.map((step) => step.id === stepId ? { ...step, ...patch } : step));
+    markDirty();
+  }, [markDirty]);
+
+  const addMaterialInput = useCallback(() => {
+    if (!selectedStep) return;
+    updateMaterialFlow(selectedStep.id, {
+      materialInputs: [...(selectedStep.materialInputs || []), { id: `new-input-${Date.now()}`, materialId: null, quantity: 1, materialState: "RAW_MATERIAL", locationId: null }],
+    });
+  }, [selectedStep, updateMaterialFlow]);
+
+  const addMaterialOutput = useCallback(() => {
+    if (!selectedStep) return;
+    updateMaterialFlow(selectedStep.id, {
+      materialOutputs: [...(selectedStep.materialOutputs || []), { id: `new-output-${Date.now()}`, materialId: null, quantity: 1, materialState: "WIP", locationId: null }],
+    });
+  }, [selectedStep, updateMaterialFlow]);
+
+  const updateMaterialItem = useCallback((kind: "input" | "output", itemId: string, field: string, value: any) => {
+    if (!selectedStep) return;
+    const key = kind === "input" ? "materialInputs" : "materialOutputs";
+    updateMaterialFlow(selectedStep.id, {
+      [key]: ((selectedStep as any)[key] || []).map((item: any) => item.id === itemId ? { ...item, [field]: value } : item),
+    } as Partial<RoutingStep>);
+  }, [selectedStep, updateMaterialFlow]);
+
+  const removeMaterialItem = useCallback((kind: "input" | "output", itemId: string) => {
+    if (!selectedStep) return;
+    const key = kind === "input" ? "materialInputs" : "materialOutputs";
+    updateMaterialFlow(selectedStep.id, {
+      [key]: ((selectedStep as any)[key] || []).filter((item: any) => item.id !== itemId),
+    } as Partial<RoutingStep>);
+  }, [selectedStep, updateMaterialFlow]);
+
+  const materialValidationErrors = localSteps.flatMap((step) => {
+    const errs: string[] = [];
+    if (!step.resourceGroupId) errs.push(`Step ${step.sequence}: resource group required`);
+    if (!(step.materialInputs || []).length) errs.push(`Step ${step.sequence}: input material required`);
+    if (!(step.materialOutputs || []).length) errs.push(`Step ${step.sequence}: output material/state required`);
+    (step.materialInputs || []).forEach((item) => {
+      if (!item.materialId) errs.push(`Step ${step.sequence}: input material missing`);
+      if (!item.locationId) errs.push(`Step ${step.sequence}: source location missing`);
+    });
+    (step.materialOutputs || []).forEach((item) => {
+      if (!item.materialId) errs.push(`Step ${step.sequence}: output material missing`);
+      if (!item.materialState) errs.push(`Step ${step.sequence}: output state missing`);
+      if (!item.locationId) errs.push(`Step ${step.sequence}: destination location missing`);
+    });
+    return errs;
+  });
+
   const statusVariant = routing?.status === "ACTIVE" ? "active" : routing?.status === "ARCHIVED" ? "archived" : "draft";
 
   return (
@@ -401,7 +503,7 @@ export function RoutingEditorPage() {
       {/* ── Header (identity only) ── */}
       <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-amber-400 to-amber-500 text-white shadow-sm">
             <Settings2 className="h-4 w-4 stroke-current" />
           </div>
           <div className="flex-1 min-w-0">
@@ -451,7 +553,7 @@ export function RoutingEditorPage() {
         <SecondaryButton onClick={addStep} disabled={(!routingId && isCreate) || (routing?.status === "ARCHIVED")} shortcut="Ctrl+N">
           <Plus className="h-3 w-3 stroke-current" /> Add Step
         </SecondaryButton>
-        <SecondaryButton onClick={() => selectedStepId && deleteStep(selectedStepId).then(() => { setLocalSteps((prev) => prev.filter((s) => s.id !== selectedStepId).map((s, i) => ({ ...s, sequence: i + 1 }))); setDirty(true); setSelectedStepId(null); })} disabled={!selectedStepId}>
+        <SecondaryButton onClick={() => selectedStepId && setConfirmDelete(selectedStepId)} disabled={!selectedStepId}>
           <Trash2 className="h-3 w-3 stroke-current" /> Delete
         </SecondaryButton>
         <SecondaryButton onClick={() => { const idx = localSteps.findIndex((s) => s.id === selectedStepId); if (idx > 0) moveStepUp(idx); }} disabled={!selectedStepId || localSteps.findIndex((s) => s.id === selectedStepId) <= 0}>
@@ -485,8 +587,60 @@ export function RoutingEditorPage() {
         </div>
       )}
 
+      <div className="shrink-0 border-b border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900">
+        <div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800">
+          {[
+            ["process", "Process Flow"],
+            ["material", "Material Flow"],
+            ["bom", "BOM / Inputs"],
+            ["outputs", "Outputs"],
+            ["validation", "Validation"],
+          ].map(([id, label]) => (
+            <button key={id} type="button" onClick={() => setActiveTab(id as any)}
+              className={`h-6 rounded px-2.5 text-[10px] font-semibold transition-colors ${activeTab === id ? "bg-white text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── Steps Table ── */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="grid h-full min-h-0" style={{ gridTemplateColumns: "minmax(0, 1fr) 360px" }}>
+          <div className="min-h-0 overflow-auto">
+        {activeTab === "material" && (
+          <div className="border-b border-slate-100 bg-slate-50 px-3 py-2 text-[10px] text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-semibold text-slate-700 dark:text-slate-200">Material chain:</span>
+              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Warehouse RM</span>
+              <span>→</span>
+              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Line-side/Input</span>
+              <span>→</span>
+              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Operation</span>
+              <span>→</span>
+              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">WIP</span>
+              <span>→</span>
+              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Buffer/FIFO/Kanban or Next Operation</span>
+              <span>→</span>
+              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">FG Warehouse</span>
+            </div>
+          </div>
+        )}
+        {activeTab === "validation" && (
+          <div className="border-b border-slate-100 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+            {[...validationErrors, ...materialValidationErrors].length > 0 ? (
+              <div className="grid gap-1">
+                {[...validationErrors, ...materialValidationErrors].map((error) => (
+                  <div key={error} className="flex items-center gap-2 rounded border border-orange-200 bg-orange-50 px-2 py-1 text-[10px] text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300">
+                    <AlertTriangle className="h-3 w-3 stroke-current" /> {error}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-[10px] text-emerald-700 dark:text-emerald-300"><CheckCircle className="h-3 w-3 stroke-current" /> No validation issues.</div>
+            )}
+          </div>
+        )}
         {localSteps.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <Settings2 className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-2 stroke-current" />
@@ -570,11 +724,9 @@ export function RoutingEditorPage() {
                       </select>
                     </td>
                     <td className="px-1 py-1">
-                      <select value={step.standardWorkId || ""} onChange={(e) => updateStepField(step.id, "standardWorkId", e.target.value || null)}
-                        className="h-6 w-full rounded border border-slate-200 bg-white px-1.5 text-[10px] outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                        <option value="">--</option>
-                        {lineModels.map((m: any) => <option key={m.id} value={m.id}>{m.code}</option>)}
-                      </select>
+                      <span className="block h-6 rounded border border-slate-200 bg-slate-50 px-1.5 py-1 text-[10px] text-slate-400 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500">
+                        Not assigned
+                      </span>
                     </td>
                     <td className="px-1 py-1">
                       <input type="number" min="0" step="0.1" value={step.cycleTimeSec || ""} onChange={(e) => updateStepField(step.id, "cycleTimeSec", parseFloat(e.target.value) || 0)}
@@ -626,6 +778,93 @@ export function RoutingEditorPage() {
             </tbody>
           </table>
         )}
+          </div>
+          <div className="min-h-0 overflow-hidden border-l border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/70">
+            <div className="flex h-full min-h-0 flex-col">
+              <div className="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Step Detail</p>
+                <p className="mt-0.5 truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
+                  {selectedStep ? `Step ${selectedStep.sequence} - ${selectedStep.resourceGroupName || selectedStep.departmentName || "Unassigned"}` : "No step selected"}
+                </p>
+              </div>
+              <div className="min-h-0 flex-1 overflow-auto p-3">
+                {selectedStep ? (
+                  <div className="space-y-3">
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Input Materials</p>
+                        <button type="button" onClick={addMaterialInput} className="text-[10px] font-semibold text-amber-600">+ Add</button>
+                      </div>
+                      {(selectedStep.materialInputs || []).map((item) => (
+                        <div key={item.id} className="mb-1 rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
+                          <select value={item.materialId || ""} onChange={(e) => updateMaterialItem("input", item.id || "", "materialId", e.target.value || null)} className="mb-1 h-6 w-full rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                            <option value="">Input material</option>
+                            {materials.map((material: any) => <option key={material.id} value={material.id}>{material.name} ({material.code})</option>)}
+                          </select>
+                          <div className="grid grid-cols-[1fr_1fr_24px] gap-1">
+                            <input type="number" value={item.quantity || 1} onChange={(e) => updateMaterialItem("input", item.id || "", "quantity", Number(e.target.value || 1))} className="h-6 rounded border border-slate-200 px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+                            <select value={item.locationId || ""} onChange={(e) => updateMaterialItem("input", item.id || "", "locationId", e.target.value || null)} className="h-6 rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                              <option value="">Source</option>
+                              {inventoryLocations.map((location: any) => <option key={location.id} value={location.id}>{location.name}</option>)}
+                            </select>
+                            <button type="button" onClick={() => removeMaterialItem("input", item.id || "")} className="text-red-500"><Trash2 className="h-3 w-3 stroke-current" /></button>
+                          </div>
+                        </div>
+                      ))}
+                      {(selectedStep.materialInputs || []).length === 0 && <p className="text-[10px] text-orange-500">Input material required.</p>}
+                    </div>
+
+                    <div>
+                      <div className="mb-1 flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Outputs / State</p>
+                        <button type="button" onClick={addMaterialOutput} className="text-[10px] font-semibold text-amber-600">+ Add</button>
+                      </div>
+                      {(selectedStep.materialOutputs || []).map((item) => (
+                        <div key={item.id} className="mb-1 rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
+                          <select value={item.materialId || ""} onChange={(e) => updateMaterialItem("output", item.id || "", "materialId", e.target.value || null)} className="mb-1 h-6 w-full rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                            <option value="">Output material</option>
+                            {materials.map((material: any) => <option key={material.id} value={material.id}>{material.name} ({material.code})</option>)}
+                          </select>
+                          <div className="grid grid-cols-[0.7fr_0.9fr_1fr_24px] gap-1">
+                            <input type="number" value={item.quantity || 1} onChange={(e) => updateMaterialItem("output", item.id || "", "quantity", Number(e.target.value || 1))} className="h-6 rounded border border-slate-200 px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
+                            <select value={item.materialState || "WIP"} onChange={(e) => updateMaterialItem("output", item.id || "", "materialState", e.target.value)} className="h-6 rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                              <option value="WIP">WIP</option>
+                              <option value="FINISHED_GOOD">FG</option>
+                              <option value="SCRAP">Scrap</option>
+                              <option value="RAW_MATERIAL">RM</option>
+                            </select>
+                            <select value={item.locationId || ""} onChange={(e) => updateMaterialItem("output", item.id || "", "locationId", e.target.value || null)} className="h-6 rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                              <option value="">Destination</option>
+                              {inventoryLocations.map((location: any) => <option key={location.id} value={location.id}>{location.name}</option>)}
+                            </select>
+                            <button type="button" onClick={() => removeMaterialItem("output", item.id || "")} className="text-red-500"><Trash2 className="h-3 w-3 stroke-current" /></button>
+                          </div>
+                        </div>
+                      ))}
+                      {(selectedStep.materialOutputs || []).length === 0 && <p className="text-[10px] text-orange-500">Output material/state required.</p>}
+                    </div>
+
+                    <div>
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Movement Rule</p>
+                      <select value={selectedStep.movementRule?.ruleType || "NEXT_OPERATION"} onChange={(e) => updateMaterialFlow(selectedStep.id, { movementRule: { ...(selectedStep.movementRule || {}), ruleType: e.target.value } })} className="mb-1 h-6 w-full rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        <option value="LINE_SIDE">Line-side</option>
+                        <option value="BUFFER">Buffer</option>
+                        <option value="SUPERMARKET">Supermarket</option>
+                        <option value="FIFO">FIFO</option>
+                        <option value="KANBAN">Kanban</option>
+                        <option value="NEXT_OPERATION">Next Operation</option>
+                        <option value="FINISHED_GOODS">FG Warehouse</option>
+                      </select>
+                      <textarea value={selectedStep.movementRule?.notes || ""} onChange={(e) => updateMaterialFlow(selectedStep.id, { movementRule: { ...(selectedStep.movementRule || {}), notes: e.target.value } })} placeholder="Scrap/byproduct or material handling notes" className="h-14 w-full rounded border border-slate-200 bg-white px-2 py-1 text-[10px] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400">Select a process step to configure material flow.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Footer Stats ── */}

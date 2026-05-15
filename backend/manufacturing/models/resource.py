@@ -5,10 +5,14 @@ from .entity_status import EntityStatus
 
 class Resource(TimeStampedModel):
     resource_group = models.ForeignKey(
-        "manufacturing.ResourceGroup", on_delete=models.CASCADE,
+        "manufacturing.ResourceGroup", on_delete=models.PROTECT,
         related_name="resources",
     )
-    code = models.CharField(max_length=50, unique=True)
+    department = models.ForeignKey(
+        "manufacturing.Department", on_delete=models.PROTECT,
+        related_name="resources", null=True, blank=True,
+    )
+    code = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
     status = models.CharField(
@@ -32,6 +36,13 @@ class Resource(TimeStampedModel):
         ordering = ["name"]
         verbose_name = "Resource"
         verbose_name_plural = "Resources"
+        indexes = [
+            models.Index(fields=["resource_group", "code"], name="mfg_res_group_code_idx"),
+            models.Index(fields=["resource_group"], name="mfg_res_group_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=["resource_group", "code"], name="uq_resource_group_code"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"

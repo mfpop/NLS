@@ -7,6 +7,7 @@ import { EntityWorkspacePage, DetailSection, type FormMode } from "./components/
 import { PlantDetailView } from "./components/PlantDetailView";
 import { ConfirmDialog } from "./shared";
 import { ReferenceSelect, ReferenceMultiSelect } from "./components/ReferenceSelect";
+import { EntityListItem } from "./components/EntityListItem";
 import { formatAppDate } from "@/utils/dateFormat";
 
 const PER_PAGE = 10;
@@ -457,40 +458,15 @@ export function PlantsPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                    {paginated.map((plant) => (
-                    <div key={plant.id}
-                      role="option"
-                      aria-selected={selectedId === plant.id}
-                      tabIndex={selectedId === plant.id ? 0 : -1}
+                  {paginated.map((plant) => (
+                    <EntityListItem key={plant.id}
+                      name={plant.name} code={plant.code}
+                      meta={[plant.city, plant.state].filter(Boolean).join(", ") || plant.building || "No location"}
+                      icon={<Factory className="h-3.5 w-3.5 stroke-current" />}
+                      selected={selectedId === plant.id}
+                      status={plant.status}
                       onClick={() => selectPlant(plant.id)}
-                      onDoubleClick={() => { selectPlant(plant.id); if (mode === "view") hEdit(); }}
-                      className={`group flex items-center gap-2.5 px-3 cursor-pointer transition-colors duration-100 h-11 ${
-                        selectedId === plant.id
-                          ? "bg-teal-100/80 dark:bg-teal-900/20 border-l-[3px] border-l-teal-500 dark:border-l-teal-400 shadow-sm"
-                          : "hover:bg-slate-100 dark:hover:bg-slate-800/40 border-l-[3px] border-l-transparent"
-                      }`}>
-                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                        selectedId === plant.id
-                          ? "bg-teal-200/80 text-teal-700 dark:bg-teal-500/25 dark:text-teal-300"
-                          : "bg-slate-100 text-slate-500 group-hover:bg-teal-100 group-hover:text-teal-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-teal-900/30 dark:group-hover:text-teal-400"
-                      }`}>
-                        <Factory className="h-3.5 w-3.5 stroke-current" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-xs font-semibold truncate ${selectedId === plant.id ? "text-teal-900 dark:text-teal-200" : "text-slate-800 dark:text-slate-200"}`}>{plant.name}</span>
-                          {plant.code && <span className="text-[8px] font-mono text-slate-400 dark:text-slate-500 shrink-0">{plant.code}</span>}
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`inline-block rounded-full px-1.5 py-[1px] text-[8px] font-semibold uppercase leading-tight ${getPlantStatus(plant).isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"}`}>
-                            {getPlantStatus(plant).label}
-                          </span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{[plant.city, plant.state, plant.country].filter(Boolean).join(", ") || plant.building || "No location"}</span>
-                          <span className="text-slate-300 dark:text-slate-600">·</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{plant.lineCount ?? 0} lines</span>
-                        </div>
-                      </div>
-                    </div>
+                      accentColor="teal" />
                   ))}
                 </div>
               )}

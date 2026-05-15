@@ -5,6 +5,13 @@ const DEPT_FIELDS = `
   departmentId
   code
   name
+  plantId
+  plant {
+    id
+    name
+    code
+    status
+  }
   description
   status
   statusId
@@ -25,6 +32,7 @@ const DEPT_FIELDS = `
     id
     code
     name
+    plantId
     plantName
     status
   }
@@ -47,6 +55,8 @@ const RG_FIELDS = `
   id
   code
   name
+  companyId
+  companyName
   description
   status
   statusId
@@ -58,8 +68,11 @@ const RG_FIELDS = `
   }
   departmentId
   departmentName
+  plantId
+  plantName
   members
   leader
+  supervisor
   groupTypeId
   groupTypeRef {
     id
@@ -67,6 +80,18 @@ const RG_FIELDS = `
     code
     isActive
   }
+  capabilityType
+  shiftPatternId
+  shiftPatternRef {
+    id
+    name
+    code
+    isActive
+  }
+  capacityModel
+  oeeTarget
+  isBottleneck
+  isConstraint
   resourceCount
   resourceType
   createdAt
@@ -82,6 +107,10 @@ const RES_FIELDS = `
   statusId
   resourceGroupId
   resourceGroupName
+  departmentId
+  departmentName
+  plantId
+  plantName
   resourceTypeId
   utilization
   opStatus

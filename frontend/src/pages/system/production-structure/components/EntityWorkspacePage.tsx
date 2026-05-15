@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, useRef, useCallback, type ReactNode } from "react";
 
 interface EntityWorkspacePageProps {
   toolbar: ReactNode;
@@ -8,14 +8,44 @@ interface EntityWorkspacePageProps {
 }
 
 export function EntityWorkspacePage({ toolbar, list, detail, footer }: EntityWorkspacePageProps) {
+  const [leftWidth, setLeftWidth] = useState(280);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isDragging.current = true;
+    const startX = e.clientX;
+    const startWidth = leftWidth;
+
+    const onMove = (ev: MouseEvent) => {
+      if (!isDragging.current || !containerRef.current) return;
+      const newWidth = Math.max(180, Math.min(500, startWidth + (ev.clientX - startX)));
+      setLeftWidth(newWidth);
+    };
+
+    const onUp = () => {
+      isDragging.current = false;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [leftWidth]);
+
   return (
     <div className="flex flex-col overflow-hidden h-full p-0 m-0">
       {toolbar}
-      <div className="flex flex-1 min-h-0 overflow-hidden p-0 m-0">
-        <div className="flex flex-col overflow-hidden min-w-0" style={{ flex: "0 0 280px", width: 280 }}>
+      <div ref={containerRef} className="flex flex-1 min-h-0 overflow-hidden p-0 m-0">
+        <div className="flex flex-col overflow-hidden min-w-0" style={{ flex: "0 0 auto", width: leftWidth }}>
           {list}
         </div>
-        <div onMouseDown={() => {}} className="flex shrink-0 cursor-col-resize items-center justify-center bg-slate-200/60 hover:bg-blue-300/60 dark:bg-slate-700/60 dark:hover:bg-blue-500/30 transition-colors" style={{ width: 4 }}>
+        <div onMouseDown={handleMouseDown} className="flex shrink-0 cursor-col-resize items-center justify-center bg-slate-200/60 hover:bg-blue-300/60 dark:bg-slate-700/60 dark:hover:bg-blue-500/30 transition-colors" style={{ width: 4 }}>
           <svg className="h-3 w-3 text-slate-400 dark:text-slate-500 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>
         </div>
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
@@ -69,7 +99,7 @@ export function FormField({ field, value, onChange, mode, error }: {
   error?: string;
 }) {
   const isEditable = mode === "edit" || mode === "create";
-  const baseInput = "h-8 w-full rounded border border-slate-300 bg-white px-3 text-xs outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-emerald-400";
+  const baseInput = "h-8 w-full border border-slate-300 bg-white px-3 text-xs outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-emerald-400";
 
   if (field.type === "readonly" || (!isEditable && field.type !== "select")) {
     const val = value ?? "";
@@ -85,7 +115,7 @@ export function FormField({ field, value, onChange, mode, error }: {
       <DetailRow label={field.label}>
         {isEditable ? (
           <textarea value={value ?? ""} onChange={(e) => onChange(field.key, e.target.value)} placeholder={field.placeholder}
-            className="h-20 w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs outline-none text-slate-700 placeholder-slate-400 resize-none focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-emerald-400" />
+            className="h-20 w-full border border-slate-300 bg-white px-3 py-1.5 text-xs outline-none text-slate-700 placeholder-slate-400 resize-none focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-emerald-400" />
         ) : (
           <span className="text-sm text-slate-900 dark:text-slate-100 whitespace-pre-wrap">{value || "-"}</span>
         )}

@@ -67,6 +67,9 @@ export interface ProductionLine {
   bottleneckResourceGroup?: string | null;
   resourceGroupOptions?: Array<{ id: string; code: string; name: string; departmentName: string }>;
   isConstraint: boolean;
+  flowRoutingStatus: string;
+  activeFlowRouteId?: string | null;
+  activeFlowRouteVersion?: string | null;
   departmentCount?: number;
   groupCount?: number;
   resourceCount?: number;
@@ -110,6 +113,65 @@ export interface ProductionLinesQueryVars {
 
 export interface ProductionLineQueryVars {
   id: string;
+}
+
+export interface FlowValidationMessage {
+  field: string;
+  code: string;
+  message: string;
+}
+
+export interface InventoryLocation {
+  id: string;
+  code: string;
+  name: string;
+  locationType: string;
+  status: string;
+}
+
+export interface MaterialFlowItem {
+  materialId: string;
+  materialCode: string;
+  materialName: string;
+  quantity: number;
+  materialState: string;
+  locationName?: string | null;
+}
+
+export interface ProcessFlowOperation {
+  sequence: number;
+  departmentName?: string | null;
+  resourceGroupId?: string | null;
+  resourceGroupName?: string | null;
+  cycleTimeSec: number;
+  inputs: MaterialFlowItem[];
+  outputs: MaterialFlowItem[];
+}
+
+export interface BOMItem {
+  materialId: string;
+  materialCode: string;
+  materialName: string;
+  quantity: number;
+  scrapFactor: number;
+}
+
+export interface BOMContext {
+  id: string;
+  version: string;
+  status: string;
+  items: BOMItem[];
+}
+
+export interface ProductionLineFlowContext {
+  ok: boolean;
+  message?: string | null;
+  isBlocked: boolean;
+  routing?: { id: string; version: string; status: string; productModelId?: string | null; productModelName?: string | null } | null;
+  operations: ProcessFlowOperation[];
+  bom?: BOMContext | null;
+  inventoryLocations: InventoryLocation[];
+  validations: FlowValidationMessage[];
 }
 
 /* ── Mock data for fallback ── */

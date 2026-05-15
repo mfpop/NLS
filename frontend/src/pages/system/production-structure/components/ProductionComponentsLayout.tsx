@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Search, X, Plus, Pencil, Trash2, RefreshCw, Database, Check } from "lucide-react";
+import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Search, X, Plus, Pencil, Trash2, RefreshCw, Database, Check, Info } from "lucide-react";
 import { ToolbarProvider, useToolbar, useToolbarActions } from "./ToolbarContext";
 import { theme } from "@/styles/themeTokens";
 
@@ -171,22 +171,39 @@ function Footer() {
   );
 }
 
-export function ProductionComponentsLayout() {
+function ProductionComponentsShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const lastSegment = location.pathname.replace(/\/+$/, "").split("/").pop() || "";
   const tab = lastSegment === "components" ? "company" : lastSegment;
   const currentItem = NAV_ITEMS.find((i) => i.key === tab) || NAV_ITEMS[0];
+  const { systemMessage, clearSystemMessage } = useToolbar();
+  const messageClass = systemMessage?.type === "success"
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+    : systemMessage?.type === "error"
+      ? "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
+      : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
 
   return (
-    <ToolbarProvider>
-      <div className="flex flex-col overflow-hidden h-full">
-        <PageHeader
-          icon={<currentItem.Icon className="h-5 w-5 stroke-current" />}
-          iconClass={`${currentItem.bgInactive} ${currentItem.colorInactive}`}
-          title={getTitle(tab)}
-          subtitle={currentItem.subtitle}
-        />
+    <div className="flex flex-col overflow-hidden h-full">
+        <div className="relative shrink-0">
+          <PageHeader
+            icon={<currentItem.Icon className="h-5 w-5 stroke-current" />}
+            iconClass={`${currentItem.bgInactive} ${currentItem.colorInactive}`}
+            title={getTitle(tab)}
+            subtitle={currentItem.subtitle}
+          />
+          {systemMessage && (
+            <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center px-64">
+              <button type="button" onClick={clearSystemMessage}
+                className={`pointer-events-auto inline-flex max-w-full items-center gap-1.5 truncate rounded-full border px-3 py-1.5 text-xs font-semibold shadow-sm ${messageClass}`}
+                title={systemMessage.message}>
+                <Info className="h-3.5 w-3.5 shrink-0 stroke-current" />
+                <span className="truncate">{systemMessage.message}</span>
+              </button>
+            </div>
+          )}
+        </div>
         <Toolbar />
         <div className="flex flex-1 overflow-hidden p-0 m-0">
           <div className="flex flex-col shrink-0" style={{ width: 24, maxWidth: 24 }}>
@@ -223,7 +240,14 @@ export function ProductionComponentsLayout() {
           </div>
         </div>
         <Footer />
-      </div>
+    </div>
+  );
+}
+
+export function ProductionComponentsLayout() {
+  return (
+    <ToolbarProvider>
+      <ProductionComponentsShell />
     </ToolbarProvider>
   );
 }

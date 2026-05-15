@@ -1,133 +1,118 @@
 import { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, CheckCircle, Component, Layers, Search, Users, User, Dumbbell, Plus } from "lucide-react";
-import { Pagination } from "./components";
+import { AlertTriangle, CheckCircle, Search, Component, Users, User, Dumbbell, Calendar, Factory, Layers, Activity, Zap, Clock, Gauge, Server, Plus } from "lucide-react";
+import { Pagination, EntityListItem } from "./components";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { DEPARTMENTS_QUERY, RESOURCE_GROUPS_QUERY, RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { CREATE_RESOURCE_GROUP, UPDATE_RESOURCE_GROUP, DELETE_RESOURCE_GROUP } from "@/graphql/dataManagementMutations";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
-import { EntityWorkspacePage, DetailSection, type FormMode } from "./components/EntityWorkspacePage";
+import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
 import { ConfirmDialog } from "./shared";
 import { ReferenceSelect } from "./components/ReferenceSelect";
 import { formatAppDate } from "@/utils/dateFormat";
 
 const PER_PAGE = 10;
 
-type EntityRef = {
-  id: string;
-  name: string;
-  code?: string;
-  isActive?: boolean;
-};
+type EntityRef = { id: string; name: string; code?: string; isActive?: boolean };
 
 type ListResult<T> = T[] | { items?: T[] };
 
-interface Department {
-  id: string;
-  name: string;
-  plantName?: string;
-}
+interface Department { id: string; name: string; plantName?: string }
 
 interface Resource {
-  id: string;
-  code?: string;
-  name?: string;
-  status?: string;
-  resourceTypeId?: string;
-  shiftPattern?: string;
+  id: string; code?: string; name?: string; status?: string;
+  resourceTypeId?: string; shiftPattern?: string; utilization?: number;
+  opStatus?: string; departmentId?: string; departmentName?: string;
+  resourceGroupId?: string;
 }
 
 interface ResourceGroup {
-  id: string;
-  code?: string;
-  name?: string;
-  description?: string;
-  status?: string;
-  statusId?: string;
-  statusRef?: EntityRef | null;
-  departmentId?: string;
-  departmentName?: string;
-  plantName?: string;
-  members?: number | string;
-  leader?: string;
-  groupTypeId?: string;
-  groupTypeRef?: EntityRef | null;
-  resourceCount?: number;
-  resourceType?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  id: string; code?: string; name?: string; description?: string;
+  status?: string; statusId?: string; statusRef?: EntityRef | null;
+  departmentId?: string; departmentName?: string; plantName?: string;
+  members?: number | string; leader?: string; supervisor?: string;
+  groupTypeId?: string; groupTypeRef?: EntityRef | null;
+  capabilityType?: string; shiftPatternId?: string;
+  shiftPatternRef?: EntityRef | null; capacityModel?: string;
+  oeeTarget?: number | null; isBottleneck?: boolean; isConstraint?: boolean;
+  resourceCount?: number; resourceType?: string;
+  createdAt?: string; updatedAt?: string;
 }
 
 interface ResourceGroupForm {
-  name: string;
-  code: string;
-  description: string;
-  statusId: string;
-  groupTypeId: string;
-  departmentId: string;
-  leader: string;
-  members: string;
+  name: string; code: string; description: string; statusId: string;
+  groupTypeId: string; departmentId: string; leader: string; supervisor: string;
+  members: string; capabilityType: string; shiftPatternId: string;
+  capacityModel: string; oeeTarget: string; isBottleneck: boolean; isConstraint: boolean;
 }
 
-interface MutationError {
-  field?: string | null;
-  code?: string;
-  message: string;
-}
-
-interface ResourceGroupPayload {
-  ok: boolean;
-  resourceGroup?: ResourceGroup | null;
-  errors?: MutationError[];
-}
+interface MutationError { field?: string | null; code?: string; message: string }
+interface ResourceGroupPayload { ok: boolean; resourceGroup?: ResourceGroup | null; errors?: MutationError[] }
 
 interface ResourceGroupInput {
-  departmentId: string;
-  code: string;
-  name: string;
-  description: string;
-  statusId: string;
-  members: number;
-  leader: string;
-  groupTypeId: string | null;
+  departmentId: string; code: string; name: string; description: string;
+  statusId: string; members: number; leader: string; supervisor: string;
+  groupTypeId: string | null; capabilityType: string; shiftPatternId: string | null;
+  capacityModel: string; oeeTarget: number | null; isBottleneck: boolean; isConstraint: boolean;
 }
+
+const CAPABILITY_ICONS: Record<string, string> = {
+  SHARED: "Shared", DEDICATED: "Dedicated", CONSTRAINT: "Constraint",
+  PACEMAKER: "Pacemaker", MANUAL: "Manual", AUTOMATED: "Automated",
+};
+
+const CAPABILITY_COLORS: Record<string, string> = {
+  SHARED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20",
+  DEDICATED: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20",
+  CONSTRAINT: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20",
+  PACEMAKER: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
+  MANUAL: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/20",
+  AUTOMATED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20",
+};
 
 function listItems<T>(value: ListResult<T> | null | undefined): T[] {
   return Array.isArray(value) ? value : (value?.items ?? []);
 }
 
 const ET: Record<string, string> = {
-  description: "No description",
-  groupTypeId: "No type assigned",
-  departmentId: "No department assigned",
-  members: "Not configured",
-  leader: "Not assigned",
-  resourceCount: "No resources assigned",
-  defaultCalendar: "No calendar assigned",
-  shiftModel: "Not configured",
-  weekStartDay: "Not configured",
-  timezone: "Department default",
-  capacityBasis: "Not configured",
-  uom: "Not configured",
-  standardCapacity: "Not set",
-  effectiveFrom: "Not configured",
-  effectiveTo: "Not configured",
-  bottleneck: "No bottleneck assigned",
-  isConstraint: "No",
+  description: "No description", groupTypeId: "No type assigned",
+  departmentId: "No department assigned", members: "Not configured",
+  leader: "Not assigned", supervisor: "Not assigned",
+  resourceCount: "No resources assigned", capabilityType: "Not set",
+  capacityModel: "Not configured", oeeTarget: "Not set",
+  shiftPatternId: "Not configured",
 };
+
+function CapabilityBadge({ type }: { type?: string | null }) {
+  const label = (type && CAPABILITY_ICONS[type]) ? CAPABILITY_ICONS[type] : type || "Unknown";
+  const color = CAPABILITY_COLORS[type || ""] || CAPABILITY_COLORS.SHARED;
+  return <span className={`inline-flex items-center rounded-full px-2 py-px text-[9px] font-semibold uppercase tracking-wider border ${color}`}>{label}</span>;
+}
+
+function ValidationPill({ ok, label, onClick }: { ok: boolean; label: string; onClick?: () => void }) {
+  const colors = ok
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+    : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300";
+  return (
+    <button type="button" onClick={onClick} disabled={!onClick}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition-colors ${colors} ${onClick ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}>
+      {ok ? <CheckCircle className="h-3 w-3 stroke-current shrink-0" /> : <AlertTriangle className="h-3 w-3 stroke-current shrink-0" />}
+      {label}
+    </button>
+  );
+}
 
 function InlineRow({ label, value, icon, action }: { label: string; value: React.ReactNode; icon?: React.ReactNode; action?: { text: string; onClick: () => void; icon?: React.ReactNode } }) {
   return (
-    <div className="grid items-center gap-2" style={{ gridTemplateColumns: "120px minmax(0,1fr) auto" }}>
+    <div className="grid items-center gap-2" style={{ gridTemplateColumns: "110px minmax(0,1fr) auto" }}>
       <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate">
         {icon && <span className="shrink-0">{icon}</span>}
         {label}
       </span>
       <span className="text-[12px] font-medium text-slate-800 dark:text-slate-200 min-w-0 truncate">{value}</span>
       {action ? (
-        <button type="button" onClick={action.onClick} className="inline-flex items-center gap-1 text-[10px] font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 whitespace-nowrap text-left transition-colors">
-          {action.icon}
-          {action.text}
+        <button type="button" onClick={action.onClick} className="inline-flex items-center gap-1 text-[10px] font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 whitespace-nowrap transition-colors">
+          {action.icon}{action.text}
         </button>
       ) : <span />}
     </div>
@@ -146,21 +131,64 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
   return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1 w-1 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
 }
 
-function SetupSignal({ ok, label }: { ok: boolean; label: string }) {
+function KpiCard({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[10px] font-medium ${
-      ok
-        ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
-        : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300"
-    }`}>
-      {ok ? <CheckCircle className="h-3 w-3 stroke-current" /> : <AlertTriangle className="h-3 w-3 stroke-current" />}
-      {label}
-    </span>
+    <div className="flex items-center gap-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/30 px-2.5 py-1.5 min-h-8">
+      {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
+      <div className="min-w-0">
+        <div className="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</div>
+        <div className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 truncate">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}>
+      <div className="mb-1.5 flex min-h-6 items-center gap-2">
+        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SecondaryActionButton({ children, onClick, disabled = false }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled}
+      className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+      {children}
+    </button>
+  );
+}
+
+function ResourceCard({ resource }: { resource: Resource }) {
+  const statusDot = resource.status === "active"
+    ? "bg-emerald-500" : resource.status === "inactive"
+    ? "bg-slate-300" : "bg-red-400";
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-white px-2.5 py-1.5 shadow-xs hover:border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-600">
+      <div className={`h-2 w-2 shrink-0 rounded-full ${statusDot}`} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate">{resource.name || "-"}</span>
+          {resource.code && <span className="shrink-0 font-mono text-[8px] text-slate-400 dark:text-slate-500">{resource.code}</span>}
+        </div>
+        <div className="flex items-center gap-2 text-[9px] text-slate-400 dark:text-slate-500">
+          {resource.opStatus && <span className="flex items-center gap-0.5"><Activity className="h-2.5 w-2.5" />{resource.opStatus}</span>}
+          {resource.utilization != null && <span className="flex items-center gap-0.5"><Gauge className="h-2.5 w-2.5" />{resource.utilization}%</span>}
+          {resource.shiftPattern && <span className="flex items-center gap-0.5"><Calendar className="h-2.5 w-2.5" />{resource.shiftPattern}</span>}
+        </div>
+      </div>
+      <Badge label={resource.status || "active"} variant={resource.status === "active" ? "active" : "inactive"} />
+    </div>
   );
 }
 
 export function ResourceGroupsPage() {
-  const { search, statusFilter, setFooterContent, setToolbarVariant } = useToolbar();
+  const { search, statusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -170,14 +198,10 @@ export function ResourceGroupsPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [form, setForm] = useState<ResourceGroupForm>({
-    name: "",
-    code: "",
-    description: "",
-    statusId: "",
-    groupTypeId: "",
-    departmentId: "",
-    leader: "",
-    members: "",
+    name: "", code: "", description: "", statusId: "",
+    groupTypeId: "", departmentId: "", leader: "", supervisor: "",
+    members: "", capabilityType: "SHARED", shiftPatternId: "",
+    capacityModel: "", oeeTarget: "", isBottleneck: false, isConstraint: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [mutationError, setMutationError] = useState<string | null>(null);
@@ -187,9 +211,7 @@ export function ResourceGroupsPage() {
   const { data: departmentsData } = useQuery<{ departments: ListResult<Department> }>(DEPARTMENTS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const { data: resourcesData, loading: resourcesLoading } = useQuery<{ resources: ListResult<Resource> }>(RESOURCES_QUERY, {
     variables: { resourceGroupId: selectedId || undefined },
-    skip: !selectedId,
-    fetchPolicy: "cache-and-network",
-    errorPolicy: "all",
+    skip: !selectedId, fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
   const [createRG] = useMutation<{ createResourceGroup: ResourceGroupPayload }, { input: ResourceGroupInput }>(CREATE_RESOURCE_GROUP);
   const [updateRG] = useMutation<{ updateResourceGroup: ResourceGroupPayload }, { id: string; input: ResourceGroupInput }>(UPDATE_RESOURCE_GROUP);
@@ -206,36 +228,30 @@ export function ResourceGroupsPage() {
     .filter((g) => !search || (g.name ?? "").toLowerCase().includes(search.toLowerCase()));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? groups.find((g) => g.id === selectedId) ?? null : null;
-
   const departmentOptions = departments.map((d) => ({ label: d.name, value: d.id }));
 
   const clearForm = useCallback(() => {
     setForm({
-      name: "",
-      code: "",
-      description: "",
-      statusId: "",
-      groupTypeId: "",
-      departmentId: "",
-      leader: "",
-      members: "",
+      name: "", code: "", description: "", statusId: "",
+      groupTypeId: "", departmentId: "", leader: "", supervisor: "",
+      members: "", capabilityType: "SHARED", shiftPatternId: "",
+      capacityModel: "", oeeTarget: "", isBottleneck: false, isConstraint: false,
     });
-    setErrors({});
-    setMutationError(null);
+    setErrors({}); setMutationError(null);
   }, []);
 
   const loadForm = useCallback((g: ResourceGroup) => {
     setForm({
-      name: g.name || "",
-      code: g.code || "",
-      description: g.description || "",
-      statusId: g.statusId || "",
-      groupTypeId: g.groupTypeId || "",
-      departmentId: g.departmentId || "",
-      leader: g.leader || "", members: String(g.members ?? ""),
+      name: g.name || "", code: g.code || "", description: g.description || "",
+      statusId: g.statusId || "", groupTypeId: g.groupTypeId || "",
+      departmentId: g.departmentId || "", leader: g.leader || "",
+      supervisor: g.supervisor || "", members: String(g.members ?? ""),
+      capabilityType: g.capabilityType || "SHARED",
+      shiftPatternId: g.shiftPatternId || "", capacityModel: g.capacityModel || "",
+      oeeTarget: g.oeeTarget != null ? String(g.oeeTarget) : "",
+      isBottleneck: !!g.isBottleneck, isConstraint: !!g.isConstraint,
     });
-    setErrors({});
-    setMutationError(null);
+    setErrors({}); setMutationError(null);
   }, []);
 
   const hNew = useCallback(() => { clearForm(); setSelectedId(null); setMode("create"); }, [clearForm]);
@@ -248,18 +264,19 @@ export function ResourceGroupsPage() {
     if (!form.name?.trim()) errs.name = "Required";
     if (!form.code?.trim()) errs.code = "Required";
     if (!form.departmentId) errs.departmentId = "Required";
-    if (!form.groupTypeId?.trim()) errs.groupTypeId = "Required";
-    if (!form.statusId?.trim()) errs.statusId = "Required";
-    if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-    const input = {
-      departmentId: form.departmentId,
-      code: form.code.trim(),
-      name: form.name.trim(),
-      description: form.description || "",
-      statusId: form.statusId,
-      members: Number(form.members) || 0,
-      leader: form.leader || "",
-      groupTypeId: form.groupTypeId || null,
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs); showSystemMessage("Please fix the validation errors", "error"); return;
+    }
+    const input: ResourceGroupInput = {
+      departmentId: form.departmentId, code: form.code.trim(), name: form.name.trim(),
+      description: form.description || "", statusId: form.statusId,
+      members: Number(form.members) || 0, leader: form.leader || "",
+      supervisor: form.supervisor || "", groupTypeId: form.groupTypeId || null,
+      capabilityType: form.capabilityType || "SHARED",
+      shiftPatternId: form.shiftPatternId || null,
+      capacityModel: form.capacityModel || "",
+      oeeTarget: form.oeeTarget ? Number(form.oeeTarget) : null,
+      isBottleneck: form.isBottleneck, isConstraint: form.isConstraint,
     };
     let payload: ResourceGroupPayload | undefined;
     if (mode === "edit" && selectedId) {
@@ -271,17 +288,14 @@ export function ResourceGroupsPage() {
     }
     if (!payload?.ok) {
       const nextErrors: Record<string, string> = {};
-      for (const err of payload?.errors ?? []) {
-        if (err.field) nextErrors[err.field] = err.message;
-      }
+      for (const err of payload?.errors ?? []) { if (err.field) nextErrors[err.field] = err.message; }
       setErrors(nextErrors);
-      setMutationError(payload?.errors?.[0]?.message || "Resource group could not be saved.");
-      return;
+      const message = payload?.errors?.[0]?.message || "Resource group could not be saved.";
+      setMutationError(message); showSystemMessage(message, "error"); return;
     }
     if (payload.resourceGroup?.id) setSelectedId(payload.resourceGroup.id);
-    await refetchRG();
-    setMode("view");
-  }, [form, mode, selectedId, createRG, updateRG, refetchRG]);
+    await refetchRG(); setMode("view"); showSystemMessage("Resource group saved", "success");
+  }, [form, mode, selectedId, createRG, updateRG, refetchRG, showSystemMessage]);
 
   const hDelete = useCallback(async () => {
     if (!confirmDelete) return;
@@ -289,12 +303,12 @@ export function ResourceGroupsPage() {
     const result = await deleteRG({ variables: { id: confirmDelete } });
     const payload = result.data?.archiveResourceGroup;
     if (!payload?.ok) {
-      setMutationError(payload?.errors?.[0]?.message || "Resource group could not be archived.");
-      setConfirmDelete(null);
-      return;
+      const message = payload?.errors?.[0]?.message || "Resource group could not be archived.";
+      setMutationError(message); showSystemMessage(message, "error"); setConfirmDelete(null); return;
     }
     setSelectedId(null); await refetchRG(); setConfirmDelete(null);
-  }, [confirmDelete, deleteRG, refetchRG]);
+    showSystemMessage("Resource group archived", "success");
+  }, [confirmDelete, deleteRG, refetchRG, showSystemMessage]);
 
   useEffect(() => {
     setToolbarVariant("splitListDetail");
@@ -310,8 +324,8 @@ export function ResourceGroupsPage() {
     setFooterContent(`${filtered.length} RG${filtered.length !== 1 ? "s" : ""}`);
   }, [mode, sel, filtered.length, hSave, hCancel, hNew, hEdit, registerActions, refetchRG, setToolbarVariant]);
 
-  const g = (k: keyof ResourceGroupForm) => form[k] ?? "";
-  const s = (k: keyof ResourceGroupForm, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const g = (k: keyof ResourceGroupForm) => String(form[k] ?? "");
+  const s = (k: keyof ResourceGroupForm, v: any) => setForm((p) => ({ ...p, [k]: v }));
   const isForm = mode === "edit" || mode === "create";
   const ev = (k: string, v: string | number | null | undefined) =>
     v !== null && v !== undefined && String(v).trim()
@@ -325,7 +339,7 @@ export function ResourceGroupsPage() {
   const renderDetail = () => {
     if (mode !== "create" && !sel) {
       return (
-        <div className="flex flex-1 items-center justify-center bg-white dark:bg-slate-900 h-full">
+        <div className="flex flex-1 items-center justify-center bg-slate-50/50 dark:bg-slate-900/50 h-full">
           <div className="text-center max-w-xs">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-500/10">
               <Component className="h-5 w-5 text-rose-400 dark:text-rose-300 stroke-current" />
@@ -341,222 +355,220 @@ export function ResourceGroupsPage() {
     const code = mode !== "create" ? sel!.code : undefined;
     const rg: Partial<ResourceGroup> = sel ?? {};
     const deptName = rg.departmentName || "";
-    const typeName = rg.groupTypeRef?.name || (rg.groupTypeId ? rg.groupTypeId : ET.groupTypeId);
-    const statusName = rg.statusRef?.name || (rg.status === "active" ? "Active" : "Inactive");
-    const membersCount = Number(rg.members ?? 0);
+    const plantName = rg.plantName || "";
+    const typeName = rg.groupTypeRef?.name || rg.groupTypeId || "";
     const resourceCount = Number(rg.resourceCount ?? 0);
-    const configType = rg.groupTypeId ? "Configured" : "Missing";
-    const configDept = rg.departmentId ? "Configured" : "Missing";
-    const configResources = resourceCount > 0 ? "Configured" : "Missing";
-    const selectedDepartment = departments.find((d) => d.id === (isForm ? form.departmentId : rg.departmentId));
-    const hierarchyPlant = rg.plantName || selectedDepartment?.plantName || "Resolved through department";
-    const persistedMasterFields = mode === "create"
-      ? "Create the capability record first. Resource assignment and schedule/capacity configuration are managed in their dedicated workflows."
-      : "This form saves identity, department, type, leader, and member count. Resource assignment and schedule/capacity defaults are managed in their dedicated workflows.";
+
+    const leanValid = {
+      department: !!rg.departmentId,
+      type: !!rg.groupTypeId,
+      resources: resourceCount > 0,
+      leader: !!rg.leader,
+      capability: !!rg.capabilityType,
+      shift: !!rg.shiftPatternId,
+    };
+
+    const schedules = new Set(assignedResources.map((r) => r.shiftPattern).filter(Boolean));
+    const mixedSchedule = schedules.size > 1;
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         <div className="shrink-0 px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-400 to-rose-500 text-white shadow-sm">
+          <div className="flex items-stretch gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-rose-400 to-rose-500 text-white shadow-sm">
               <Component className="h-4 w-4 stroke-current" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h2>
-                {code && <span className="text-[9px] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-px rounded text-slate-400 dark:text-slate-500">{code}</span>}
-                {isForm && <Badge label="Editing" variant="rose" />}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="truncate text-[16px] font-bold leading-5 text-slate-900 dark:text-slate-100">{title}</h2>
+                {code && <span className="shrink-0 rounded bg-slate-100 px-1.5 py-px font-mono text-[9px] text-slate-400 dark:bg-slate-800 dark:text-slate-500">{code}</span>}
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 flex-wrap">
-                <span><Layers className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{deptName || "No department"}</span>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <span className="flex items-center gap-0.5"><Factory className="h-2.5 w-2.5 stroke-current" />{plantName || "Plant N/A"}</span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="flex items-center gap-0.5"><Layers className="h-2.5 w-2.5 stroke-current" />{deptName || "No department"}</span>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span>{typeName}</span>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span>{statusName}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span>{resourceCount} Res</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
-                <span>{membersCount} Members</span>
+                <CapabilityBadge type={rg.capabilityType} />
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[9px]">
-                <span className="text-slate-400 dark:text-slate-500 uppercase tracking-wider">Master data readiness</span>
-                <Badge label={configType} variant={configType === "Configured" ? "active" : "inactive"} />
-                <Badge label={configDept} variant={configDept === "Configured" ? "active" : "inactive"} />
-                <Badge label={configResources} variant={configResources === "Configured" ? "active" : "warning"} />
-              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{resourceCount} Res</span>
+              {rg.isBottleneck && <CapabilityBadge type="CONSTRAINT" />}
+              {rg.isConstraint && <Badge label="Constraint" variant="warning" />}
+              <Badge label={rg.status || "active"} variant={rg.status === "active" ? "active" : "inactive"} />
+              {isForm && <Badge label="Editing" variant="rose" />}
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto flex flex-col min-h-0">
-          <div className="p-3 pb-0 flex flex-col flex-1 min-h-0">
-            {mutationError && (
-              <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-                {mutationError}
-              </div>
-            )}
-            <div className="grid grid-cols-2 gap-3 flex-1 min-h-0">
-              {/* LEFT */}
-              <div className="flex flex-col min-h-0" style={{ gap: 8 }}>
-                <div className="shrink-0">
-                  <DetailSection title="Identity">
-                    {isForm ? (
-                      <div className="space-y-1.5">
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <div>
-                            <input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Name *" className={iCls} />
-                            {errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>}
-                          </div>
-                          <div>
-                            <input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Code *" className={iCls} />
-                            {errors.code && <p className="text-[9px] text-red-500 mt-0.5">{errors.code}</p>}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <ReferenceSelect categoryCode="status" label="Status" value={g("statusId")} onChange={(v) => s("statusId", v)} required placeholder="Select status" error={errors.statusId} />
-                          <ReferenceSelect categoryCode="resource_group_type" label="Type" value={g("groupTypeId")} onChange={(v) => s("groupTypeId", v)} required placeholder="Select type" error={errors.groupTypeId} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Department<span className="ml-0.5 text-red-500">*</span></label>
-                          <select value={g("departmentId")} onChange={(e) => s("departmentId", e.target.value)} className={sCls}>
-                            <option value="">Select department</option>
-                            {departmentOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                          </select>
-                          {errors.departmentId && <p className="text-[9px] text-red-500 mt-0.5">{errors.departmentId}</p>}
-                        </div>
-                        <textarea
-                          value={g("description")}
-                          onChange={(e) => s("description", e.target.value)}
-                          placeholder="Description"
-                          rows={2}
-                          className="h-9 w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] outline-none resize-none transition-all focus:border-rose-400 focus:ring-2 focus:ring-rose-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                        />
-                        <p className="rounded-md bg-slate-50 px-2 py-1 text-[10px] leading-4 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
-                          {persistedMasterFields}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
-                        <div className="space-y-px">
-                          <InlineRow label="Name" value={rg.name} />
-                          <InlineRow label="Code" value={rg.code} />
-                          <InlineRow label="Status" value={rg.statusRef?.name || rg.status || "Active"} />
-                          <InlineRow label="Department" value={deptName || ev("departmentId", null)} action={!deptName ? mkAct("Assign", <Plus className="h-2.5 w-2.5" />) : undefined} />
-                          <InlineRow label="Type" value={ev("groupTypeId", rg.groupTypeRef?.name || rg.groupTypeId)} action={!rg.groupTypeId ? mkAct("Assign", <Plus className="h-2.5 w-2.5" />) : undefined} />
-                          <InlineRow label="Description" value={rg.description?.trim() ? rg.description : <span className="text-slate-400 dark:text-slate-500 italic text-[11px]">No description</span>} action={!rg.description?.trim() ? mkAct("Add", <Plus className="h-2.5 w-2.5" />) : undefined} />
-                        </div>
-                      </div>
-                    )}
-                  </DetailSection>
-                </div>
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {mutationError && mode !== "view" && (
+            <div className="shrink-0 px-4 pt-2">
+              <p className="text-[10px] font-medium text-red-600 dark:text-red-400">{mutationError}</p>
+            </div>
+          )}
 
-                <div className="shrink-0">
-                  <DetailSection title="Management">
-                    {isForm ? (
-                      <div className="space-y-1.5">
-                        <input type="text" value={g("leader")} onChange={(e) => s("leader", e.target.value)} placeholder="Team leader" className={iCls} />
-                        <input type="number" value={g("members")} onChange={(e) => s("members", e.target.value)} placeholder="Members" className={iCls} />
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
-                        <div className="space-y-px">
-                          <InlineRow label="Leader" value={ev("leader", rg.leader)} icon={<User className="h-2.5 w-2.5" />} />
-                          <InlineRow label="Members" value={rg.members ?? 0} icon={<Users className="h-2.5 w-2.5" />} />
-                        </div>
-                      </div>
-                    )}
-                  </DetailSection>
-                </div>
+          <div className="flex-1 flex min-h-0 overflow-hidden p-3 gap-3">
+            {/* ── LEFT COLUMN ── */}
+            <div className="flex flex-col min-h-0 w-1/3 gap-2 overflow-y-auto">
+              <SectionCard title="Identity">
+                {isForm ? (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div><input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Name *" className={iCls} />{errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>}</div>
+                      <div><input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Code *" className={iCls} />{errors.code && <p className="text-[9px] text-red-500 mt-0.5">{errors.code}</p>}</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <ReferenceSelect categoryCode="status" label="Status" value={g("statusId")} onChange={(v) => s("statusId", v)} required placeholder="Select status" error={errors.statusId} />
+                      <ReferenceSelect categoryCode="resource_group_type" label="Type" value={g("groupTypeId")} onChange={(v) => s("groupTypeId", v)} required placeholder="Select type" error={errors.groupTypeId} />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Department<span className="ml-0.5 text-red-500">*</span></label>
+                      <select value={g("departmentId")} onChange={(e) => s("departmentId", e.target.value)} className={sCls}>
+                        <option value="">Select department</option>
+                        {departmentOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                      {errors.departmentId && <p className="text-[9px] text-red-500 mt-0.5">{errors.departmentId}</p>}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                    <div className="space-y-px">
+                      <InlineRow label="Name" value={rg.name} />
+                      <InlineRow label="Code" value={rg.code} />
+                      <InlineRow label="Status" value={rg.statusRef?.name || rg.status || "Active"} />
+                      <InlineRow label="Department" value={deptName} icon={<Layers className="h-2.5 w-2.5" />} />
+                      <InlineRow label="Type" value={ev("groupTypeId", rg.groupTypeRef?.name || rg.groupTypeId)} />
+                      <InlineRow label="Capability" value={<CapabilityBadge type={rg.capabilityType} />} />
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
 
-                <div className="flex-1 min-h-0">
-                  <DetailSection title="Hierarchy / Flow">
-                    <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
-                      <div className="space-y-px">
-                        <InlineRow label="Plant" value={hierarchyPlant} />
-                        <InlineRow label="Department" value={deptName || "-"} />
-                        <InlineRow label="Resources" value={rg.resourceCount ?? 0} />
-                        <InlineRow label="Physical capability" value={resourceCount > 0 ? "Defined by assigned resources" : "Not usable until resources are assigned"} />
+              <SectionCard title="Management">
+                {isForm ? (
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div><input type="text" value={g("leader")} onChange={(e) => s("leader", e.target.value)} placeholder="Team leader" className={iCls} /></div>
+                      <div><input type="text" value={g("supervisor")} onChange={(e) => s("supervisor", e.target.value)} placeholder="Supervisor" className={iCls} /></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div><input type="number" value={g("members")} onChange={(e) => s("members", e.target.value)} placeholder="Members" className={iCls} /></div>
+                      <ReferenceSelect categoryCode="shift_model" label="Shift" value={g("shiftPatternId")} onChange={(v) => s("shiftPatternId", v)} placeholder="Select shift" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Capacity Model</label>
+                        <input type="text" value={g("capacityModel")} onChange={(e) => s("capacityModel", e.target.value)} placeholder="e.g. Takt, Rate" className={iCls} />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">OEE Target (%)</label>
+                        <input type="number" value={g("oeeTarget")} onChange={(e) => s("oeeTarget", e.target.value)} placeholder="85" className={iCls} step="0.1" />
                       </div>
                     </div>
-                  </DetailSection>
-                </div>
-              </div>
-
-              {/* RIGHT */}
-              <div className="flex flex-col min-h-0" style={{ gap: 8 }}>
-                <div className="shrink-0">
-                  <DetailSection title="Lean Setup">
-                    <div className="rounded-lg bg-slate-50/50 p-2 dark:bg-slate-800/30">
-                      <div className="grid grid-cols-2 gap-2">
-                        <SetupSignal ok={!!rg.departmentId} label="Department linked" />
-                        <SetupSignal ok={!!rg.groupTypeId} label="Capability typed" />
-                        <SetupSignal ok={resourceCount > 0} label="Resources assigned" />
-                        <SetupSignal ok={!!rg.leader || membersCount > 0} label="Ownership defined" />
-                      </div>
-                      <p className="mt-2 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
-                        Resource groups represent shared physical capability. Product routing should reference this capability through process-step assignments, while execution remains traceable to the actual resource.
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+                        <input type="checkbox" checked={!!form.isBottleneck} onChange={(e) => s("isBottleneck", e.target.checked)} className="h-3 w-3" /> Bottleneck
+                      </label>
+                      <label className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+                        <input type="checkbox" checked={!!form.isConstraint} onChange={(e) => s("isConstraint", e.target.checked)} className="h-3 w-3" /> Constraint
+                      </label>
                     </div>
-                  </DetailSection>
-                </div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                    <div className="space-y-px">
+                      <InlineRow label="Leader" value={ev("leader", rg.leader)} icon={<User className="h-2.5 w-2.5" />} action={!rg.leader ? mkAct("Assign", <User className="h-2.5 w-2.5" />) : undefined} />
+                      <InlineRow label="Supervisor" value={ev("supervisor", rg.supervisor)} icon={<User className="h-2.5 w-2.5" />} />
+                      <InlineRow label="Members" value={rg.members ?? 0} icon={<Users className="h-2.5 w-2.5" />} />
+                      <InlineRow label="Shift" value={rg.shiftPatternRef?.name || ev("shiftPatternId", null)} icon={<Calendar className="h-2.5 w-2.5" />} />
+                      <InlineRow label="Capacity" value={ev("capacityModel", rg.capacityModel)} icon={<Gauge className="h-2.5 w-2.5" />} />
+                      <InlineRow label="OEE Target" value={rg.oeeTarget != null ? `${rg.oeeTarget}%` : ev("oeeTarget", null)} />
+                      <div className="flex gap-1.5 pt-1">
+                        {rg.isBottleneck && <Badge label="Bottleneck" variant="warning" />}
+                        {rg.isConstraint && <Badge label="Constraint" variant="rose" />}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
 
-                <div className="flex-1 min-h-0">
-                  <DetailSection title="Resources">
-                    {resourcesLoading ? (
-                      <div className="flex h-24 items-center justify-center rounded-lg bg-slate-50/50 text-xs text-slate-400 dark:bg-slate-800/30">
-                        Loading assigned resources...
-                      </div>
-                    ) : !rg.resourceCount ? (
-                      <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-2.5 text-center bg-slate-50/30 dark:bg-slate-800/20" style={{ minHeight: 56, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400">No resources assigned. Add resources to define the group capability.</p>
-                        <button type="button" onClick={() => navigate("/system/production-structure/components/resource")} className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-rose-500 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-rose-600 transition-colors shadow-sm"><Dumbbell className="h-2.5 w-2.5 stroke-current" /> Manage Resources</button>
-                      </div>
-                    ) : assignedResources.length === 0 ? (
-                      <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[10px] leading-4 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
-                        The group reports {resourceCount} assigned resource{resourceCount !== 1 ? "s" : ""}, but the resource list is not available from the current read model. Open Resources to verify assignments.
-                        <button type="button" onClick={() => navigate("/system/production-structure/components/resource")} className="mt-2 inline-flex items-center gap-1 rounded-md bg-amber-600 px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-amber-700 transition-colors">
-                          <Dumbbell className="h-2.5 w-2.5 stroke-current" /> Open Resources
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
-                        <table className="w-full text-[11px]">
-                          <thead><tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                            <th className="text-left px-2 py-1 font-medium">Resource</th>
-                            <th className="text-left px-2 py-1 font-medium">Code</th>
-                            <th className="text-left px-2 py-1 font-medium">Type</th>
-                            <th className="text-left px-2 py-1 font-medium">Status</th>
-                            <th className="text-right px-2 py-1 font-medium w-16">Act.</th>
-                          </tr></thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                            {assignedResources.slice(0, 5).map((resource) => (
-                              <tr key={resource.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                                <td className="px-2 py-1 font-medium text-slate-800 dark:text-slate-200">{resource.name || "-"}</td>
-                                <td className="px-2 py-1 font-mono text-[10px] text-slate-500 dark:text-slate-400">{resource.code || "-"}</td>
-                                <td className="px-2 py-1 text-slate-500 dark:text-slate-400">{resource.resourceTypeId || "-"}</td>
-                                <td className="px-2 py-1"><Badge label={resource.status || "active"} variant={resource.status === "active" ? "active" : "inactive"} /></td>
-                                <td className="px-2 py-1 text-right text-slate-400">{resource.shiftPattern ? "Scheduled" : "-"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {assignedResources.length > 5 && (
-                          <button type="button" onClick={() => navigate("/system/production-structure/components/resource")} className="w-full border-t border-slate-100 px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800">
-                            View all {assignedResources.length} resources
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </DetailSection>
+              <SectionCard title="Used In Production Flows">
+                <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Referenced by routing steps across production lines.</p>
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Open routing editor to view full step assignments.</p>
                 </div>
-              </div>
+              </SectionCard>
+
+              <SectionCard title="Capacity">
+                <div className="grid grid-cols-2 gap-1.5">
+                  <KpiCard label="Total Cycle" value={assignedResources.reduce((s, r) => s + (r.utilization ?? 0), 0) > 0 ? `${assignedResources.reduce((s, r) => s + (r.utilization ?? 0), 0)}s` : "—"} icon={<Clock className="h-3 w-3" />} />
+                  <KpiCard label="Utilization" value={assignedResources.length > 0 ? `${Math.round(assignedResources.reduce((s, r) => s + (r.utilization ?? 0), 0) / assignedResources.length)}%` : "—"} icon={<Activity className="h-3 w-3" />} />
+                  <KpiCard label="Active" value={`${assignedResources.filter((r) => r.status === "active").length}/${assignedResources.length}`} icon={<Server className="h-3 w-3" />} />
+                  <KpiCard label="OEE Target" value={rg.oeeTarget != null ? `${rg.oeeTarget}%` : "—"} icon={<Zap className="h-3 w-3" />} />
+                </div>
+              </SectionCard>
+
+              {mixedSchedule && (
+                <SectionCard title="Schedule">
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                    <AlertTriangle className="h-3 w-3 shrink-0 stroke-current" />
+                    <span>Mixed Schedule — resources have {schedules.size} different shift patterns</span>
+                  </div>
+                </SectionCard>
+              )}
             </div>
 
-            <div className="mt-auto pt-2 pb-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-4 text-[9px] text-slate-400 dark:text-slate-500">
-              <span>Created <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(rg.createdAt) || "-"}</span></span>
-              <span>Updated <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(rg.updatedAt) || "-"}</span></span>
-              {rg.leader && <span className="flex items-center gap-0.5"><User className="h-2.5 w-2.5 stroke-current" />{rg.leader}</span>}
+            {/* ── RIGHT COLUMN ── */}
+            <div className="flex flex-col min-h-0 flex-1 gap-2">
+              <SectionCard title="Lean Setup">
+                <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    <ValidationPill ok={leanValid.department} label="Department" onClick={() => { if (!isForm) hEdit(); }} />
+                    <ValidationPill ok={leanValid.type} label="Capability Type" onClick={() => { if (!isForm) hEdit(); }} />
+                    <ValidationPill ok={leanValid.resources} label="Resources" onClick={() => { if (!isForm) hEdit(); }} />
+                    <ValidationPill ok={leanValid.leader} label="Ownership" onClick={() => { if (!isForm) hEdit(); }} />
+                    <ValidationPill ok={leanValid.capability} label="Capability" />
+                    <ValidationPill ok={leanValid.shift} label="Schedule" onClick={() => { if (!isForm) hEdit(); }} />
+                  </div>
+                </div>
+              </SectionCard>
+
+              <SectionCard title={`Resources (${assignedResources.length})`} className="flex-1 flex flex-col min-h-0"
+                action={
+                  <SecondaryActionButton onClick={() => navigate("/system/production-structure/components/resource")}>
+                    <Dumbbell className="h-3 w-3 stroke-current" /> Manage
+                  </SecondaryActionButton>
+                }>
+                {resourcesLoading ? (
+                  <div className="flex items-center justify-center py-8 text-xs text-slate-400">
+                    <div className="h-2 w-2 rounded-full bg-rose-400 animate-bounce mr-2" />Loading...
+                  </div>
+                ) : assignedResources.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-lg">
+                    <Dumbbell className="h-5 w-5 text-slate-300 dark:text-slate-600 mb-1.5 stroke-current" />
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2">No resources assigned</p>
+                    <SecondaryActionButton onClick={() => navigate("/system/production-structure/components/resource")}>
+                      <Plus className="h-3 w-3 stroke-current" /> Add Resources
+                    </SecondaryActionButton>
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-y-auto space-y-1.5 pr-0.5">
+                    {assignedResources.map((resource) => (
+                      <ResourceCard key={resource.id} resource={resource} />
+                    ))}
+                  </div>
+                )}
+              </SectionCard>
             </div>
+          </div>
+
+          <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 px-4 py-1.5 flex items-center gap-4 text-[9px] text-slate-400 dark:text-slate-500">
+            <span>Created <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(rg.createdAt) || "-"}</span></span>
+            <span>Updated <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(rg.updatedAt) || "-"}</span></span>
+            {rg.leader && <span className="flex items-center gap-0.5"><User className="h-2.5 w-2.5 stroke-current" />{rg.leader}</span>}
           </div>
         </div>
       </div>
@@ -566,7 +578,7 @@ export function ResourceGroupsPage() {
   return (
     <>
       {confirmDelete && (
-        <ConfirmDialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Delete resource group?" message="This action cannot be undone." onConfirm={hDelete} />
+        <ConfirmDialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Archive resource group?" message="This action cannot be undone." onConfirm={hDelete} />
       )}
       <EntityWorkspacePage
         toolbar={null}
@@ -588,44 +600,14 @@ export function ResourceGroupsPage() {
               ) : (
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
                   {paginated.map((g) => (
-                    <div
-                      key={g.id}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setSelectedId(g.id);
-                          if (mode === "create") { clearForm(); setMode("view"); }
-                        }
-                      }}
+                    <EntityListItem key={g.id}
+                      name={g.name || ""} code={g.code}
+                      meta={g.departmentName || "Department required"}
+                      icon={<Component className="h-3.5 w-3.5 stroke-current" />}
+                      selected={selectedId === g.id}
+                      status={g.status}
                       onClick={() => { setSelectedId(g.id); if (mode === "create") { clearForm(); setMode("view"); } }}
-                      className={`group flex items-center gap-2 px-3 cursor-pointer transition-all duration-150 h-11 outline-none ${
-                        selectedId === g.id
-                          ? "bg-gradient-to-r from-rose-50 to-white dark:from-rose-900/15 dark:to-slate-900 border-l-[3px] border-l-rose-500 dark:border-l-rose-400 ring-1 ring-rose-100 dark:ring-rose-500/20"
-                          : "hover:bg-slate-50 dark:hover:bg-slate-800/30 border-l-[3px] border-l-transparent"
-                      }`}
-                    >
-                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${selectedId === g.id ? "bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400" : "bg-slate-50 text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-500 dark:bg-slate-800 dark:text-slate-500"}`}>
-                        <Component className="h-3.5 w-3.5 stroke-current" />
-                      </div>
-                      <div className="min-w-0 flex-1 grid items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1.2fr) minmax(0,0.9fr) auto auto" }}>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className={`text-[11px] font-semibold truncate ${selectedId === g.id ? "text-rose-800 dark:text-rose-300" : "text-slate-800 dark:text-slate-200"}`}>{g.name}</span>
-                            {g.code && <span className="text-[7px] font-mono text-slate-400 dark:text-slate-500 shrink-0">{g.code}</span>}
-                          </div>
-                        </div>
-                        <div className="min-w-0 text-[9px] text-slate-400 dark:text-slate-500 truncate">
-                          {g.departmentName || "No department"}
-                        </div>
-                        <div className="flex items-center justify-end gap-1">
-                          {g.groupTypeId ? <Badge label={g.groupTypeRef?.name || "Typed"} variant="default" /> : <Badge label="Type missing" variant="warning" />}
-                        </div>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap text-right">{g.resourceCount ?? 0} Res</span>
-                      </div>
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${g.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
-                    </div>
+                      accentColor="rose" />
                   ))}
                 </div>
               )}

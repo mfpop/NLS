@@ -4,7 +4,12 @@ from .entity_status import EntityStatus
 
 
 class Department(TimeStampedModel):
-    code = models.CharField(max_length=50, unique=True)
+    plant = models.ForeignKey(
+        "manufacturing.Plant",
+        on_delete=models.PROTECT,
+        related_name="departments",
+    )
+    code = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
     status = models.CharField(
@@ -28,9 +33,13 @@ class Department(TimeStampedModel):
         verbose_name = "Department"
         verbose_name_plural = "Departments"
         indexes = [
+            models.Index(fields=["plant", "code"], name="mfg_dept_plant_code_idx"),
             models.Index(fields=["code"], name="mfg_dept_code_idx"),
             models.Index(fields=["status"], name="mfg_dept_status_idx"),
             models.Index(fields=["name"], name="mfg_dept_name_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=["plant", "code"], name="uq_department_plant_code"),
         ]
 
     def __str__(self):

@@ -23,8 +23,61 @@ const ROUTING_STEP_FIELDS = `
   qualityCheckpoint
   reworkAllowed
   notes
+  materialInputs {
+    id
+    materialId
+    materialCode
+    materialName
+    quantity
+    materialState
+    locationId
+    locationName
+  }
+  materialOutputs {
+    id
+    materialId
+    materialCode
+    materialName
+    quantity
+    materialState
+    locationId
+    locationName
+  }
+  movementRule {
+    id
+    ruleType
+    sourceLocationId
+    sourceLocationName
+    destinationLocationId
+    destinationLocationName
+    notes
+  }
   createdAt
   updatedAt
+`;
+
+export const MATERIALS_QUERY = gql`
+  query Materials($status: String, $limit: Int, $offset: Int) {
+    materials(status: $status, limit: $limit, offset: $offset) {
+      id
+      code
+      name
+      materialState
+      status
+    }
+  }
+`;
+
+export const INVENTORY_LOCATIONS_QUERY = gql`
+  query InventoryLocations($plantId: String, $status: String, $limit: Int, $offset: Int) {
+    inventoryLocations(plantId: $plantId, status: $status, limit: $limit, offset: $offset) {
+      id
+      code
+      name
+      locationType
+      status
+    }
+  }
 `;
 
 const ROUTING_FIELDS = `
@@ -99,6 +152,58 @@ export const ROUTING_STEP_CAPACITIES_QUERY = gql`
   }
 `;
 
+export const YAMAZUMI_ANALYSIS_QUERY = gql`
+  query YamazumiAnalysis(
+    $routingId: String!
+    $plannedQuantity: Int!
+    $availableTimeMin: Float!
+    $breakTimeMin: Float
+    $downtimeMin: Float
+    $operators: Int
+  ) {
+    yamazumiAnalysis(
+      routingId: $routingId
+      plannedQuantity: $plannedQuantity
+      availableTimeMin: $availableTimeMin
+      breakTimeMin: $breakTimeMin
+      downtimeMin: $downtimeMin
+      operators: $operators
+    ) {
+      ok
+      message
+      routingId
+      routingStatus
+      routingVersion
+      productionLineId
+      productModelId
+      plannedQuantity
+      netAvailableTimeSec
+      taktTimeSec
+      totalWorkContentSec
+      bottleneckStepName
+      balanceLossPercent
+      operatorsRequired
+      overloadedResources
+      steps {
+        sequence
+        departmentName
+        resourceGroupName
+        resourceName
+        standardWorkName
+        cycleTimeSec
+        setupTimeSec
+        changeoverTimeSec
+        workContentSec
+        taktTimeSec
+        loadPercent
+        requiredOperators
+        isBottleneck
+        isOverloaded
+      }
+    }
+  }
+`;
+
 export const CREATE_ROUTING_MUTATION = gql`
   mutation CreateRouting($input: RoutingInput!) {
     createRouting(input: $input) {
@@ -150,6 +255,22 @@ export const ACTIVATE_ROUTING_MUTATION = gql`
 export const ARCHIVE_ROUTING_MUTATION = gql`
   mutation ArchiveRouting($id: String!) {
     archiveRouting(id: $id) {
+      ok
+      routing {
+        ${ROUTING_FIELDS}
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const SAVE_ROUTING_MUTATION = gql`
+  mutation SaveRouting($input: SaveRoutingInput!) {
+    saveRouting(input: $input) {
       ok
       routing {
         ${ROUTING_FIELDS}

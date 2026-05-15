@@ -26,6 +26,9 @@ interface StateContextValue {
   setFooterContent: (v: string) => void;
   entityContext: string;
   setEntityContext: (v: string) => void;
+  systemMessage: { message: string; type: "success" | "error" | "info" } | null;
+  showSystemMessage: (message: string, type?: "success" | "error" | "info") => void;
+  clearSystemMessage: () => void;
 }
 
 const StateContext = createContext<StateContextValue>({
@@ -39,6 +42,9 @@ const StateContext = createContext<StateContextValue>({
   setFooterContent: () => {},
   entityContext: "",
   setEntityContext: () => {},
+  systemMessage: null,
+  showSystemMessage: () => {},
+  clearSystemMessage: () => {},
 });
 
 const ActionsContext = createContext<ToolbarActions>({});
@@ -66,14 +72,33 @@ export function ToolbarProvider({ children }: { children: ReactNode }) {
   const [toolbarVariant, setToolbarVariant] = useState<"default" | "splitListDetail">("default");
   const [footerContent, setFooterContent] = useState("");
   const [entityContext, setEntityContext] = useState("");
+  const [systemMessage, setSystemMessage] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
   const [actions, setActions] = useState<ToolbarActions>({});
   const actionsRef = useRef<ToolbarActions>({});
+  const messageTimerRef = useRef<number | null>(null);
 
   const registerActions = useCallback((a: ToolbarActions) => {
     if (!shallowEqual(actionsRef.current, a)) {
       actionsRef.current = a;
       setActions(a);
     }
+  }, []);
+
+  const clearSystemMessage = useCallback(() => {
+    if (messageTimerRef.current !== null) {
+      window.clearTimeout(messageTimerRef.current);
+      messageTimerRef.current = null;
+    }
+    setSystemMessage(null);
+  }, []);
+
+  const showSystemMessage = useCallback((message: string, type: "success" | "error" | "info" = "info") => {
+    if (messageTimerRef.current !== null) window.clearTimeout(messageTimerRef.current);
+    setSystemMessage({ message, type });
+    messageTimerRef.current = window.setTimeout(() => {
+      setSystemMessage(null);
+      messageTimerRef.current = null;
+    }, 5000);
   }, []);
 
   const stateValue = useMemo(() => ({
@@ -87,7 +112,10 @@ export function ToolbarProvider({ children }: { children: ReactNode }) {
     setFooterContent,
     entityContext,
     setEntityContext,
-  }), [search, statusFilter, toolbarVariant, footerContent, entityContext]);
+    systemMessage,
+    showSystemMessage,
+    clearSystemMessage,
+  }), [search, statusFilter, toolbarVariant, footerContent, entityContext, systemMessage, showSystemMessage, clearSystemMessage]);
 
   return (
     <StateContext.Provider value={stateValue}>

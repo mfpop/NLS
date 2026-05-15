@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Dumbbell, Component, Search, Calendar, Clock, MapPin, Wrench, Cpu, Info, AlertTriangle, CheckCircle, Activity, Settings, BarChart, Shield } from "lucide-react";
-import { Pagination } from "./components";
+import { Pagination, EntityListItem } from "./components";
 import { useQuery } from "@apollo/client/react";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
@@ -150,30 +150,38 @@ export function ResourcesPage() {
       <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         {/* ── HEADER ── */}
         <div className="shrink-0 px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-400 to-slate-500 text-white shadow-sm">
+          <div className="flex items-stretch gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-slate-400 to-slate-500 text-white shadow-sm">
               <Dumbbell className="h-5 w-5 stroke-current" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h2>
-                {code && <span className="text-[9px] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-px rounded text-slate-400 dark:text-slate-500">{code}</span>}
-                <Badge label={r.status || "active"} variant={r.status === "active" ? "active" : "inactive"} />
-                <ReadinessBadge level={readiness.level} />
-                {missingCount > 0 && <span className="text-[9px] text-slate-400">{missingCount} gap{missingCount !== 1 ? "s" : ""}</span>}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 flex-wrap">
-                <span><Component className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{rgName || "No RG"}</span>
+            <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <div className="min-w-0 justify-self-start">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h2 className="truncate text-[16px] font-bold leading-5 text-slate-900 dark:text-slate-100">{title}</h2>
+                  {code && <span className="shrink-0 rounded bg-slate-100 px-1 py-px font-mono text-[9px] text-slate-400 dark:bg-slate-800 dark:text-slate-500">{code}</span>}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                  <span><Component className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{rgName || "No RG"}</span>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span><Activity className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{r.utilization != null ? `${r.utilization}% activity` : "No activity data"}</span>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span>{r.resourceTypeId || "No type"}</span>
               </div>
-            </div>
-            <div className="shrink-0">
-              <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-500 dark:border-slate-600 dark:text-slate-400">
-                <Settings className="h-3 w-3 stroke-current" /> Read model
-              </span>
+              </div>
+              <div className="flex min-h-10 items-center justify-center justify-self-center self-stretch text-center">
+                {missingCount > 0 && (
+                  <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center text-[9px] font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" title="Resource has readiness gaps">
+                    <AlertTriangle className="h-3 w-3 stroke-current" /> {missingCount} gap{missingCount !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+              <div className="flex min-h-10 min-w-0 flex-wrap items-center justify-end gap-1.5 justify-self-end self-stretch text-center">
+                <Badge label={r.status || "active"} variant={r.status === "active" ? "active" : "inactive"} />
+                <ReadinessBadge level={readiness.level} />
+                <span className="inline-flex items-center justify-center gap-1 rounded-md border border-slate-200 px-2.5 py-1.5 text-center text-[10px] font-semibold text-slate-500 dark:border-slate-600 dark:text-slate-400">
+                  <Settings className="h-3 w-3 stroke-current" /> Read model
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -307,47 +315,16 @@ export function ResourcesPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                  {paginated.map((res) => {
-                    const rd = computeReadiness(res);
-                    return (
-                      <div
-                        key={res.id}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            selectResource(res.id);
-                          }
-                        }}
-                        onClick={() => selectResource(res.id)}
-                        className={`group flex items-center gap-2 px-3 cursor-pointer transition-all duration-150 h-11 ${
-                          selectedId === res.id ? "bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 border-l-[3px] border-l-slate-500 dark:border-l-slate-400" : "hover:bg-slate-50 dark:hover:bg-slate-800/30 border-l-[3px] border-l-transparent"
-                        }`}>
-                        <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${selectedId === res.id ? "bg-slate-200 text-slate-600 dark:bg-slate-600 dark:text-slate-300" : "bg-slate-100 text-slate-400 group-hover:bg-slate-200 group-hover:text-slate-500 dark:bg-slate-800 dark:text-slate-500 dark:group-hover:bg-slate-700"}`}>
-                          <Dumbbell className="h-3.5 w-3.5 stroke-current" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1">
-                            <span className={`text-[11px] font-semibold truncate ${selectedId === res.id ? "text-slate-800 dark:text-slate-300" : "text-slate-800 dark:text-slate-200"}`}>{res.name}</span>
-                            {res.code && <span className="text-[7px] font-mono text-slate-400 dark:text-slate-500 shrink-0">{res.code}</span>}
-                            {rd.level === "incomplete" && <span title="Incomplete configuration"><AlertTriangle className="h-2.5 w-2.5 text-amber-400 shrink-0 stroke-current" /></span>}
-                            {rd.level === "partial" && <span title="Partially configured"><Info className="h-2.5 w-2.5 text-slate-400 shrink-0 stroke-current" /></span>}
-                          </div>
-                          <div className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500 mt-px">
-                            <span className="truncate">{res.resourceGroupName || "No RG"}</span>
-                            <span className="text-slate-300 dark:text-slate-600">·</span>
-                            <span>{res.resourceTypeId || "No type"}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {!res.shiftPattern && !res.defaultCalendar && <span title="No schedule visible"><Clock className="h-2.5 w-2.5 text-amber-300 dark:text-amber-600 stroke-current" /></span>}
-                          {!res.capacityBasis && !res.standardCapacity && <span title="No capacity visible"><BarChart className="h-2.5 w-2.5 text-amber-300 dark:text-amber-600 stroke-current" /></span>}
-                        </div>
-                        <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${res.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
-                      </div>
-                    );
-                  })}
+                  {paginated.map((res) => (
+                    <EntityListItem key={res.id}
+                      name={res.name || ""} code={res.code}
+                      meta={res.resourceGroupName || "Resource group required"}
+                      icon={<Dumbbell className="h-3.5 w-3.5 stroke-current" />}
+                      selected={selectedId === res.id}
+                      status={res.status}
+                      onClick={() => selectResource(res.id)}
+                      accentColor="slate" />
+                  ))}
                 </div>
               )}
             </div>

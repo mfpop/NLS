@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
-import { Check, TrendingUpDown, Factory, Search, ExternalLink } from "lucide-react";
-import { Pagination, ProductionLineProductScopeSummary } from "./components";
-import { useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
+import { AlertTriangle, Check, TrendingUpDown, Factory, Search, ExternalLink } from "lucide-react";
+import { Pagination, ProductionLineProductScopeSummary, EntityListItem } from "./components";
+import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
 import { useRoutingSummary } from "@/hooks/useRouting";
 import type { ProductionLine } from "@/types/productionLine";
 
@@ -212,20 +212,22 @@ function ScheduleSection({ isForm, sCls, g, s, sel, errors, setShiftModel, hasCa
   );
 }
 
-function RoutingOperationsView({ sel }: { sel: any }) {
+function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: boolean }) {
   const { summary } = useRoutingSummary(sel?.id ?? null);
   const bnName = summary?.bottleneckStepName ? `${summary.bottleneckStepName}${summary.bottleneckResourceGroupName ? ` (${summary.bottleneckResourceGroupName})` : ""}` : null;
   return (
-    <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+    <div className="rounded-lg bg-slate-50/50 p-1.5 dark:bg-slate-800/30">
       <div className="space-y-px">
         <ProductionLineProductScopeSummary
           family={sel?.productFamily ?? sel?.productFamilies?.find((f: any) => f.isPrimary) ?? sel?.productFamilies?.[0] ?? null}
           models={sel?.productModels ?? []}
           primaryModelId={sel?.primaryModelId || sel?.primaryProductModel?.id}
+          maxVisibleModels={compact ? 2 : 4}
+          showPrimaryRow={!compact}
           onMoreModels={() => {}}
         />
-        <InlineRow label="Capacity" value={sel?.capacityBasis ? sel.capacityBasis : <Badge label="Not configured" variant="inactive" />} />
-        <InlineRow label="UoM" value={sel?.capacityUom ? sel.capacityUom : <Badge label="Not configured" variant="inactive" />} />
+        {!compact && <InlineRow label="Capacity" value={sel?.capacityBasis ? sel.capacityBasis : <Badge label="Not configured" variant="inactive" />} />}
+        {!compact && <InlineRow label="UoM" value={sel?.capacityUom ? sel.capacityUom : <Badge label="Not configured" variant="inactive" />} />}
         <InlineRow label="Bottleneck" value={bnName || <Badge label="N/A" variant="inactive" />} />
       </div>
       <div className="flex items-center gap-2 pt-1 mt-1 border-t border-slate-100 dark:border-slate-700 text-[10px]">
@@ -236,7 +238,7 @@ function RoutingOperationsView({ sel }: { sel: any }) {
   );
 }
 
-function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, returnContext }: { productionLine: ProductionLine | null; navigate: (path: string, options?: any) => void; isNew?: boolean; returnContext?: { searchText: string; statusFilter: string } }) {
+function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, isEditing = false, returnContext }: { productionLine: ProductionLine | null; navigate: (path: string, options?: any) => void; isNew?: boolean; isEditing?: boolean; returnContext?: { searchText: string; statusFilter: string } }) {
   const productionLineId = productionLine?.id ?? null;
   const { summary, loading } = useRoutingSummary(productionLineId);
 
@@ -253,8 +255,9 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, r
       mode: "view",
     };
     const routeState = { from: window.location.pathname + window.location.search, returnState };
-    if (summary?.routingId) {
-      nav(`/system/production-structure/components/routing/${productionLineId}/${summary.routingId}`, { state: routeState });
+    const existingRoutingId = productionLine?.activeFlowRouteId || summary?.routingId;
+    if (existingRoutingId) {
+      nav(`/system/production-structure/components/routing/${productionLineId}/${existingRoutingId}`, { state: routeState });
     } else {
       const params = new URLSearchParams();
       const familyId = productionLine?.productFamilyId || productionLine?.productFamily?.id;
@@ -267,16 +270,14 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, r
       }
       nav(`/system/production-structure/components/routing/${productionLineId}${params.toString() ? `?${params.toString()}` : ""}`, { state: routeState });
     }
-  }, [productionLineId, productionLine, summary, nav, returnContext]);
+  }, [productionLineId, productionLine, summary?.routingId, nav, returnContext]);
 
-  const isInvalid = summary?.status === "INVALID";
-  const isConfigured = summary?.status === "CONFIGURED" || summary?.status === "ACTIVE";
+  const hasFlow = !!(productionLine?.activeFlowRouteId || summary?.routingId);
 
-  let statusLabel = "Missing";
+  let statusLabel = "MISSING";
   let statusVariant: "inactive" | "active" | "warning" = "inactive";
-  let buttonLabel = "Create";
-  if (isInvalid) { statusLabel = "Invalid"; statusVariant = "warning"; buttonLabel = "Fix"; }
-  if (isConfigured) { statusLabel = "Configured"; statusVariant = "active"; buttonLabel = "Open"; }
+  let buttonLabel = "+ Create Flow";
+  if (hasFlow) { statusLabel = "CONFIGURED"; statusVariant = "active"; buttonLabel = isEditing ? "Edit Flow" : "Open Flow"; }
   const primaryModel = productionLine?.primaryProductModel || productionLine?.productModels?.find((model) => model.id === productionLine?.primaryModelId || model.isPrimary) || null;
   const displaySummary = summary ?? {
     sequenceCount: 0,
@@ -311,10 +312,10 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, r
               <InlineRow label="Last Dept" value={displaySummary.lastDepartmentName || <span className="text-slate-400 text-[11px]">None</span>} />
               {displaySummary.bottleneckStepName && <InlineRow label="Bottleneck" value={`${displaySummary.bottleneckStepName}${displaySummary.bottleneckResourceGroupName ? ` (${displaySummary.bottleneckResourceGroupName})` : ""}`} />}
               <InlineRow label="Constraint" value={displaySummary.constraintStatus || "-"} />
-              <InlineRow label="Message" value={displaySummary.message || (isConfigured ? "Routing configured." : isInvalid ? "Routing has validation errors." : "No routing steps configured.")} />
+              <InlineRow label="Message" value={displaySummary.message || (hasFlow ? "Routing configured." : "No routing steps configured.")} />
             </div>
           )}
-          {isInvalid && (
+          {summary?.status === "INVALID" && (
             <div className="flex items-center gap-1.5 pt-1 mt-1 border-t border-slate-100 dark:border-slate-700">
               <span className="text-[10px] text-orange-600 dark:text-orange-400">Routing has validation errors</span>
             </div>
@@ -325,11 +326,295 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, r
   );
 }
 
+function getLineListReadiness(line: ProductionLine): { icon: string; label: string; tone: "ready" | "partial" | "blocked"; reason: string } {
+  const hasModel = (line.productModelCount ?? line.productModels?.length ?? 0) > 0 || !!line.primaryProductModel || !!line.primaryModelId;
+  const hasFlow = !!line.activeFlowRouteId || line.flowRoutingStatus === "CONFIGURED";
+  if (!hasFlow) return { icon: "✕", label: "Blocked", tone: "blocked", reason: "Missing flow" };
+  if (!hasModel) return { icon: "!", label: "Partial", tone: "partial", reason: "No product model" };
+  return { icon: "✓", label: "Ready", tone: "ready", reason: "Configured baseline" };
+}
+
+function FlowContextSections({ productionLine, navigate: nav, isNew = false, returnContext, onAssignModel }: { productionLine: ProductionLine | null; navigate: (path: string, options?: any) => void; isNew?: boolean; returnContext?: { searchText: string; statusFilter: string }; onAssignModel?: () => void }) {
+  const productionLineId = productionLine?.id ?? null;
+  const primaryModel = productionLine?.primaryProductModel || productionLine?.productModels?.find((model) => model.id === productionLine?.primaryModelId || model.isPrimary) || null;
+  const { context, loading } = useProductionLineFlowContext(productionLineId, primaryModel?.id ?? null);
+
+  const openRouting = useCallback(() => {
+    if (!productionLineId) return;
+    const returnState = {
+      restoreSelectedProductionLineId: productionLineId,
+      selectedProductModelId: primaryModel?.id ?? null,
+      searchText: returnContext?.searchText ?? "",
+      statusFilter: returnContext?.statusFilter ?? "all",
+      mode: "view",
+    };
+    const routeState = { from: window.location.pathname + window.location.search, returnState };
+    const existingRoutingId = productionLine?.activeFlowRouteId || context?.routing?.id;
+    if (existingRoutingId) {
+      nav(`/system/production-structure/components/routing/${productionLineId}/${existingRoutingId}`, { state: routeState });
+      return;
+    }
+    const params = new URLSearchParams();
+    const familyId = productionLine?.productFamilyId || productionLine?.productFamily?.id;
+    if (familyId) params.set("productFamilyId", familyId);
+    if (primaryModel?.id) {
+      params.set("productModelId", primaryModel.id);
+      params.set("routingScope", "MODEL");
+    }
+    params.set("version", "1.0");
+    nav(`/system/production-structure/components/routing/${productionLineId}${params.toString() ? `?${params.toString()}` : ""}`, { state: routeState });
+  }, [context?.routing?.id, productionLine?.activeFlowRouteId, nav, primaryModel?.id, productionLine, productionLineId, returnContext]);
+
+  const operations = context?.operations ?? [];
+  const validations = context?.validations ?? [];
+  const bomItems = context?.bom?.items ?? [];
+  const materialStates = Array.from(new Set(operations.flatMap((operation) => [...operation.inputs, ...operation.outputs].map((item) => item.materialState))));
+  const inputLocations = Array.from(new Set(operations.flatMap((operation) => operation.inputs.map((item) => item.locationName).filter(Boolean))));
+  const fgDestinations = Array.from(new Set(operations.flatMap((operation) => operation.outputs.filter((item) => item.materialState === "FINISHED_GOOD").map((item) => item.locationName).filter(Boolean))));
+  const outputCount = operations.reduce((sum, operation) => sum + operation.outputs.length, 0);
+  const inputCount = operations.reduce((sum, operation) => sum + operation.inputs.length, 0);
+  const missingMaterialBins = operations.reduce((sum, operation) => (
+    sum
+    + operation.inputs.filter((item) => !item.locationName).length
+    + operation.outputs.filter((item) => !item.locationName).length
+  ), 0);
+  const routingIssues = validations.filter((item) => item.code.includes("ROUTING") || item.code.includes("STEP") || item.code.includes("SEQUENCE") || item.code.includes("DEPT"));
+  const bomIssues = validations.filter((item) => item.code.includes("BOM"));
+  const materialIssues = validations.filter((item) => item.code.includes("MATERIAL") || item.code.includes("LOCATION") || item.code.includes("TRANSFORMATION"));
+  const resourceIssues = validations.filter((item) => item.code.includes("RESOURCE") || item.code.includes("CAPACITY") || item.code.includes("CONSTRAINT"));
+  const validationGroups = [
+    { label: "Routing errors", items: routingIssues },
+    { label: "BOM errors", items: bomIssues },
+    { label: "Material flow errors", items: materialIssues },
+    { label: "Resource/capacity errors", items: resourceIssues },
+  ];
+
+  const hasModel = !!primaryModel || (productionLine?.productModelCount ?? 0) > 0 || (productionLine?.productModels?.length ?? 0) > 0;
+  const hasFamily = !!(productionLine?.productFamily || productionLine?.productFamilyId || (productionLine?.productFamilies?.length ?? 0) > 0);
+  const routingOk = !!(productionLine?.activeFlowRouteId || context?.routing?.id);
+  const bomOk = !!context?.bom && context.bom.status === "ACTIVE";
+  const materialOk = inputCount > 0 && outputCount > 0 && missingMaterialBins === 0;
+  const blocked = !routingOk || !hasModel || !bomOk;
+  const partial = !blocked && !materialOk;
+  const readiness = blocked ? "Blocked" : partial ? "Partial" : "Ready";
+  const readinessVariant = blocked ? "warning" : partial ? "amber" : "active";
+  const readinessIcon = blocked ? "✕" : partial ? "!" : "✓";
+  const missingReasons = [
+    !routingOk ? "Missing Flow" : null,
+    !hasModel ? "Missing Models" : null,
+    !materialOk ? "Missing Material Flow" : null,
+    !bomOk ? "Missing BOM" : null,
+  ].filter(Boolean) as string[];
+  const readinessSummary = `Line Readiness: ${Math.round(([hasModel, routingOk, materialOk, bomOk].filter(Boolean).length / 4) * 100)}%`;
+  const longestCycle = operations.reduce((max, operation) => Math.max(max, operation.cycleTimeSec || 0), 0);
+  const primaryAction = !hasModel
+    ? { label: "Assign Product Model", action: onAssignModel ?? openRouting }
+    : !routingOk
+      ? { label: "Create Process Flow", action: openRouting }
+      : !bomOk
+      ? { label: "Create BOM", action: openRouting }
+      : !materialOk
+        ? { label: "Define Material Flow", action: openRouting }
+        : { label: "Edit Process Flow", action: openRouting };
+  const topIssues = [
+    !hasFamily ? { code: "MISSING_FAMILY", message: "No product family assigned.", action: "Select Product Family", onClick: onAssignModel ?? openRouting } : null,
+    !hasModel ? { code: "MISSING_MODEL", message: "No product model assigned.", action: "Assign Product Model", onClick: onAssignModel ?? openRouting } : null,
+    !routingOk ? { code: "MISSING_FLOW", message: "No process flow defined.", action: "Create Process Flow", onClick: openRouting } : null,
+    !bomOk ? { code: "MISSING_BOM", message: "Line cannot run: product model has no active BOM.", action: "Create BOM" } : null,
+    !materialOk ? { code: "MATERIAL_FLOW", message: "No material flow defined.", action: "Define Material Flow", onClick: openRouting } : null,
+    ...validations.slice(0, 2).map((item) => ({ code: item.code, message: item.message, action: "Fix" })),
+  ].filter(Boolean) as Array<{ code: string; message: string; action: string; onClick?: () => void }>;
+  const setupSteps = [
+    { label: "Assign Product Family", done: hasFamily, action: onAssignModel ?? openRouting },
+    { label: "Create Process Flow", done: routingOk, action: openRouting },
+    { label: "Define Material Flow", done: materialOk, action: openRouting },
+    { label: "Validate", done: !validations.length && !blocked && !partial, action: openRouting },
+  ];
+  const nextStepIndex = setupSteps.findIndex((step) => !step.done);
+  const currentStep = nextStepIndex >= 0 ? nextStepIndex + 1 : setupSteps.length;
+
+  return (
+    <div className="grid h-full min-h-0 grid-cols-12 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0, 1fr) 132px" }}>
+      <section className={`col-span-12 rounded-xl border px-4 py-3 shadow-sm ${blocked ? "border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10" : partial ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "border-emerald-300 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"}`}>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          <div className="flex items-center justify-start gap-3">
+            <span className={`flex h-11 w-11 items-center justify-center rounded-full text-xl font-black shadow-sm ${blocked ? "bg-red-600 text-white" : partial ? "bg-amber-500 text-white" : "bg-emerald-600 text-white"}`} title={`Line readiness: ${readiness}`}>{readinessIcon}</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[20px] font-black leading-5 text-slate-900 dark:text-slate-100">{readiness}</span>
+                <Badge label={readinessSummary} variant={readinessVariant as any} />
+              </div>
+              <p className="mt-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">{blocked ? `Line cannot run due to: ${missingReasons.join(", ") || "blocking issues"}.` : partial ? "Line can be reviewed but material readiness is incomplete." : "Line is runnable with current flow and material setup."}</p>
+            </div>
+          </div>
+          <div className="justify-self-center text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Setup Progress</div>
+            <div className="mt-1 text-sm font-black text-slate-900 dark:text-slate-100">Step {currentStep} of 4</div>
+            <div className="mt-1 flex justify-center gap-1">
+              {setupSteps.map((step, index) => (
+                <button key={step.label} type="button" onClick={step.action} title={step.label} className={`h-2.5 w-8 rounded-full ${step.done ? "bg-emerald-500" : index === nextStepIndex ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"}`} />
+              ))}
+            </div>
+          </div>
+          <div className="flex min-w-0 flex-col gap-1 justify-self-end">
+            {topIssues.length ? topIssues.slice(0, 4).map((issue) => (
+              <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting} className="grid min-w-[280px] grid-cols-[16px_1fr_auto] items-center gap-2 rounded-lg border border-white/70 bg-white/90 px-2.5 py-1.5 text-left text-[11px] font-semibold text-slate-800 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100" title={issue.message}>
+                <span className="text-red-600 dark:text-red-300">✕</span>
+                <span className="truncate">{issue.message}</span>
+                <span className="shrink-0 text-amber-700 dark:text-amber-300">{issue.action}</span>
+              </button>
+            )) : <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">No blocking issues.</span>}
+          </div>
+        </div>
+        <div className="mt-2 flex justify-center">
+          <button type="button" onClick={primaryAction.action} className="inline-flex h-8 items-center rounded-lg bg-slate-900 px-4 text-[11px] font-bold text-white shadow-sm transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">
+            {primaryAction.label}
+          </button>
+        </div>
+      </section>
+
+      <SectionCard title="Process Flow" className="col-span-8 row-span-2 flex h-full min-h-0 flex-col overflow-hidden" action={routingOk ? (
+        <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}>
+          <ExternalLink className="h-3 w-3 stroke-current" /> Edit Process Flow
+        </SecondaryActionButton>
+      ) : undefined}>
+        {loading ? <p className="text-[10px] text-slate-400">Loading flow context...</p> : operations.length > 0 ? (
+          <div className="min-h-0 flex-1 overflow-auto">
+            <div className="flex min-h-full flex-wrap items-center gap-2">
+              {operations.map((operation, index) => {
+                const missingInput = operation.inputs.length === 0;
+                const missingOutput = operation.outputs.length === 0;
+                const broken = missingInput || missingOutput;
+                const bottleneck = operation.cycleTimeSec === longestCycle && longestCycle > 0;
+                const inputLabel = missingInput ? "No Input Material" : operation.inputs.map((item) => item.materialCode || item.materialName).join(", ");
+                const outputLabel = missingOutput ? "No Output Defined" : operation.outputs.map((item) => `${item.materialCode || item.materialName} ${item.materialState}`).join(", ");
+                return (
+                  <div key={operation.sequence} className="flex items-center gap-2">
+                    <button type="button" onClick={openRouting} tabIndex={0}
+                      className={`min-w-[150px] max-w-[190px] rounded-lg border px-2 py-2 text-left shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-amber-400 ${broken ? "border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10" : bottleneck ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"}`}
+                      title={`Operation ${operation.sequence}: ${operation.resourceGroupName || operation.departmentName || "Unassigned"}`}>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400">#{operation.sequence}</span>
+                        {bottleneck && <Badge label="Bottleneck" variant="warning" />}
+                        {broken && <Badge label="Broken" variant="warning" />}
+                      </div>
+                      <p className="truncate text-[12px] font-bold text-slate-900 dark:text-slate-100">{operation.resourceGroupName || operation.departmentName || "Unassigned operation"}</p>
+                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{operation.cycleTimeSec}s cycle</p>
+                      <div className="mt-1 space-y-0.5">
+                        <div className={`truncate rounded px-1.5 py-0.5 text-[9px] font-semibold ${missingInput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}>IN: {inputLabel}</div>
+                        <div className={`truncate rounded px-1.5 py-0.5 text-[9px] font-semibold ${missingOutput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}>OUT: {outputLabel}</div>
+                      </div>
+                    </button>
+                    {index < operations.length - 1 && <span className="text-slate-300 dark:text-slate-600">→</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <div className="max-w-md text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                <TrendingUpDown className="h-5 w-5 stroke-current" />
+              </div>
+              <h4 className="text-sm font-black text-slate-900 dark:text-slate-100">Create your first process flow</h4>
+              <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">Production lines require process flow, model, and materials before they can run.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-left text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800">Step 1 → Add Resource Group</div>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800">Step 2 → Connect flow</div>
+              </div>
+              <button type="button" onClick={openRouting} className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-600">Create Process Flow</button>
+            </div>
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard title="Material Flow" className="col-span-4 flex min-h-0 flex-col overflow-hidden" action={!materialOk ? (
+        <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}>
+          <ExternalLink className="h-3 w-3 stroke-current" /> Define Material Flow
+        </SecondaryActionButton>
+      ) : undefined}>
+        <div className="max-h-[160px] overflow-y-auto overflow-x-hidden">
+          {!materialOk ? (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 stroke-current dark:text-amber-300" />
+                <div>
+                  <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100">No materials available</p>
+                  <p className="mt-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">Define input RM, WIP outputs, FG destination, and material bins.</p>
+                  <button type="button" onClick={openRouting} className="mt-2 rounded bg-white px-2 py-1 text-[10px] font-bold text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300">Define Material Flow</button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="mb-1 flex flex-wrap gap-1">
+                {materialStates.map((state) => <Badge key={state} label={state} variant={state === "FINISHED_GOOD" ? "active" : "default"} />)}
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                <div className="space-y-0.5">
+                  <InlineRow label="BOM" value={context?.bom ? `${context.bom.status} · ${bomItems.length} materials` : <Badge label="Blocking Flow" variant="warning" />} />
+                  <InlineRow label="RM bins" value={inputLocations.length ? inputLocations.join(", ") : <Badge label="Missing" variant="warning" />} />
+                  <InlineRow label="WIP" value={operations.filter((operation) => operation.outputs.some((item) => item.materialState === "WIP")).length} />
+                </div>
+                <div className="space-y-0.5">
+                  <InlineRow label="Outputs" value={outputCount} />
+                  <InlineRow label="FG dest." value={fgDestinations.length ? fgDestinations.join(", ") : <Badge label="Missing" variant="warning" />} />
+                  <InlineRow label="Bins" value={missingMaterialBins ? <Badge label={`${missingMaterialBins} missing`} variant="warning" /> : <Badge label="OK" variant="active" />} />
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Setup Steps" className="col-span-4 flex min-h-0 flex-col overflow-hidden">
+        <div className="space-y-1">
+          {setupSteps.map((step, index) => (
+            <button key={step.label} type="button" onClick={step.action} className={`grid w-full grid-cols-[18px_1fr_auto] items-center gap-2 rounded-lg border px-2 py-1.5 text-left text-[10px] font-semibold ${step.done ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300" : index === nextStepIndex ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}`}>
+              <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
+              <span>{step.label}</span>
+              <span className="text-[9px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
+            </button>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard title={validations.length ? "Validation Actions" : "Validation"} className="col-span-4 flex min-h-0 flex-col overflow-hidden">
+        {validations.length > 0 ? (
+          <div className="max-h-[132px] overflow-y-auto overflow-x-hidden space-y-1">
+            {validationGroups.map((group) => (
+              <div key={group.label} className="rounded border border-slate-200 bg-slate-50/70 p-1 dark:border-slate-700 dark:bg-slate-800/30">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{group.label}</span>
+                  <Badge label={`${group.items.length}`} variant={group.items.length ? "warning" : "active"} />
+                </div>
+                {group.items.length ? group.items.map((item) => (
+                  <div key={`${group.label}-${item.field}-${item.code}-${item.message}`} className="grid grid-cols-[46px_74px_1fr_auto] items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[9px] dark:bg-slate-900">
+                    <Badge label="Critical" variant="warning" />
+                    <span className="truncate font-mono text-slate-500 dark:text-slate-400">{item.code}</span>
+                    <span className="min-w-0 truncate text-slate-700 dark:text-slate-200" title={item.message}>{item.message}</span>
+                    <button type="button" onClick={openRouting} className="text-[9px] font-semibold text-amber-700 dark:text-amber-300">Fix</button>
+                  </div>
+                )) : <div className="text-[9px] text-slate-400">No issues.</div>}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-[10px] text-emerald-700 dark:text-emerald-300">
+            <Check className="h-3 w-3 stroke-current" /> No blocking flow validation issues.
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
 function InlineRow({ label, value, action }: { label: string; value: React.ReactNode; action?: { text: string; onClick: () => void } }) {
   return (
-    <div className="grid items-center gap-2" style={{ gridTemplateColumns: "120px 1fr auto" }}>
+    <div className="grid min-h-5 items-center gap-2" style={{ gridTemplateColumns: "110px 1fr auto" }}>
       <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate">{label}</span>
-      <span className="text-[12px] font-medium text-slate-800 dark:text-slate-200 min-w-0 truncate">{value}</span>
+      <span className="min-w-0 truncate text-[11px] font-medium text-slate-800 dark:text-slate-200">{value}</span>
       {action ? <SecondaryActionButton onClick={action.onClick}>{action.text}</SecondaryActionButton> : <span />}
     </div>
   );
@@ -337,9 +622,9 @@ function InlineRow({ label, value, action }: { label: string; value: React.React
 
 function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}>
-      <div className="mb-1.5 flex min-h-6 items-center gap-2">
-        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{title}</h3>
+    <section className={`rounded-lg border border-slate-200 bg-white p-3 pt-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}>
+      <div className="mb-2 flex min-h-5 items-center gap-2">
+        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</h3>
         {action}
       </div>
       {children}
@@ -350,7 +635,7 @@ function SectionCard({ title, action, children, className = "" }: { title: strin
 function SecondaryActionButton({ children, onClick, disabled = false }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+      className="inline-flex h-5 items-center gap-1 rounded border border-slate-200 bg-white px-1.5 text-[9px] font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
       {children}
     </button>
   );
@@ -447,7 +732,7 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
 
 export function ProductionLinesPage() {
   const navigate = useNavigate();
-  const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setEntityContext, setToolbarVariant } = useToolbar();
+  const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setEntityContext, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const { lines, loading, saveLine, archiveLine, refetch, plants } = useProductionLines(500);
   const { values: statusValues } = useReferenceCategory("status");
@@ -462,7 +747,6 @@ export function ProductionLinesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [pendingSelId, setPendingSelId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [editState, setEditState] = useState({ dirty: false, saving: false });
 
   useEffect(() => { setEntityContext("Line"); }, [setEntityContext]);
@@ -521,12 +805,6 @@ export function ProductionLinesPage() {
     const shift = form.shiftPatternRef || shiftValues.find((v) => v.id === form.shiftPatternId) || null;
     return getShiftCapacityBasis(shift);
   }, [form.shiftPatternId, form.shiftPatternRef, shiftValues]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   const clearForm = useCallback(() => {
     setForm({ ...EMPTY_LINE_FORM });
@@ -606,26 +884,32 @@ export function ProductionLinesPage() {
     }
     const rgId = fv("bottleneckResourceGroupId");
     if (rgId && !sel?.resourceGroupOptions?.some((rg) => rg.id === rgId)) errs.bottleneckResourceGroupId = "Resource group must belong to this line";
-    if (Object.keys(errs).length > 0) { setErrors(errs); setEditState((p) => ({ ...p, saving: false })); return; }
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      showSystemMessage(errs._form || "Please fix the validation errors", "error");
+      setEditState((p) => ({ ...p, saving: false }));
+      return;
+    }
     const r = await saveLine({ ...EMPTY_LINE_FORM, ...form, isConstraint: !!form.isConstraint, status: (fv("status") || "active") as "active" | "inactive" }, mode === "edit" ? selectedId : null);
     setEditState((p) => ({ ...p, saving: false }));
     if (r.ok) {
       await refetch();
       if (r.line?.id) setSelectedId(r.line.id);
-      setToast({ message: warnings.length > 0 ? `Draft saved with warnings: ${warnings.join(", ")}` : "Production line saved", type: "success" });
+      showSystemMessage(warnings.length > 0 ? `Draft saved with warnings: ${warnings.join(", ")}` : "Production line saved", "success");
       setEditState((p) => ({ ...p, dirty: false }));
       setMode("view");
     } else {
       setErrors(r.errors ?? { _form: "Failed to save production line" });
-      setToast({ message: "Failed to save production line", type: "error" });
+      showSystemMessage(r.errors?._form || "Failed to save production line", "error");
     }
-  }, [form, mode, selectedId, saveLine, refetch, lines, sel, availableFamilyModels, selectedRoutingSummary]);
+  }, [form, mode, selectedId, saveLine, refetch, lines, sel, availableFamilyModels, selectedRoutingSummary, showSystemMessage]);
 
   const hDelete = useCallback(async () => {
     if (!confirmDelete) return;
     await archiveLine(confirmDelete);
     setSelectedId(null); await refetch(); setConfirmDelete(null);
-  }, [confirmDelete, archiveLine, refetch]);
+    showSystemMessage("Production line archived", "success");
+  }, [confirmDelete, archiveLine, refetch, showSystemMessage]);
 
   const selectLine = useCallback((id: string) => {
     if (editState.dirty) { setPendingSelId(id); return; }
@@ -732,32 +1016,42 @@ export function ProductionLinesPage() {
     const plantName = mode === "create" ? (plants.find((p: any) => p.id === g("plantId"))?.name || "") : sel?.plantName || "";
     const isNew = mode === "create";
     const lt = mode === "create" ? "" : sel?.lineType;
+    const missingLineSetup = !plantName || !lt || (sel?.departmentCount ?? 0) === 0 || (sel?.groupCount ?? 0) === 0 || (sel?.resourceCount ?? 0) === 0;
 
     return (
       <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         {/* ── HEADER ── */}
         <div className="shrink-0 px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-500 text-white shadow-sm">
+          <div className="flex items-stretch gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-amber-400 to-amber-500 text-white shadow-sm">
               <TrendingUpDown className="h-4 w-4 stroke-current" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h2>
-                {code && <span className="text-[9px] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-px rounded text-slate-400 dark:text-slate-500">{code}</span>}
-                {isForm && <Badge label="Editing" variant="amber" />}
-                {isNew && <Badge label="New" variant="default" />}
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 flex-wrap">
-                <span><Factory className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{plantName}</span>
+            <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <div className="min-w-0 justify-self-start">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h2 className="truncate text-[16px] font-bold leading-5 text-slate-900 dark:text-slate-100">{title}</h2>
+                  {code && <span className="shrink-0 rounded bg-slate-100 px-1 py-px font-mono text-[9px] text-slate-400 dark:bg-slate-800 dark:text-slate-500">{code}</span>}
+                </div>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <span><Factory className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{plantName || "Plant required"}</span>
                 <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span>{ev("lineType", lt)}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                </div>
+              </div>
+              <div className="flex min-h-9 items-center justify-center justify-self-center self-stretch text-center">
+                {missingLineSetup && (
+                  <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center text-[9px] font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" title="Line setup has readiness gaps">
+                    <AlertTriangle className="h-3 w-3 stroke-current" /> Setup gaps
+                  </span>
+                )}
+              </div>
+              <div className="flex min-h-9 min-w-0 flex-wrap items-center justify-end gap-1.5 justify-self-end self-stretch text-center">
                 <Badge label={sel?.status || "active"} variant={sel?.status === "active" ? "active" : "inactive"} />
-                <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium ${(sel?.departmentCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.departmentCount ?? 0} Dept</span>
                 <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium ${(sel?.groupCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.groupCount ?? 0} RG</span>
                 <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.resourceCount ?? 0} Res</span>
+                {isForm && <Badge label="Editing" variant="amber" />}
+                {isNew && <Badge label="New" variant="default" />}
               </div>
             </div>
           </div>
@@ -765,12 +1059,9 @@ export function ProductionLinesPage() {
 
         {/* ── BODY ── */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden p-2">
-            <div className="grid h-full min-h-0 grid-cols-2 gap-1.5">
-
-              {/* ── LEFT ── */}
-              <div className="flex min-h-0 flex-col overflow-hidden pr-1" style={{ gap: 6 }}>
-                <div className="shrink-0">
+          <div className="flex-1 overflow-hidden p-1.5">
+            <div className="grid h-full min-h-0 grid-cols-12 gap-1.5 overflow-hidden" style={{ gridTemplateRows: isForm ? "170px 148px minmax(150px, auto)" : "minmax(0, 1fr) 118px" }}>
+                {isForm && <div className="col-span-4 min-h-0 overflow-hidden">
                   <SectionCard title="Identity">
                     {isForm ? (
                       <div className="space-y-2">
@@ -827,16 +1118,19 @@ export function ProductionLinesPage() {
                       </div>
                     )}
                   </SectionCard>
-                </div>
+                </div>}
 
-                <ScheduleSection isForm={isForm} sCls={sCls} g={g} s={s} sel={sel} errors={errors} setShiftModel={setShiftModel} hasCal={hasCal} capacityBasisInfo={capacityBasisInfo} />
+                {isForm && <div className="col-span-4 min-h-0 overflow-hidden">
+                  <ScheduleSection isForm={isForm} sCls={sCls} g={g} s={s} sel={sel} errors={errors} setShiftModel={setShiftModel} hasCal={hasCal} capacityBasisInfo={capacityBasisInfo} />
+                </div>}
 
-                <RoutingSummarySection productionLine={sel} navigate={navigate} isNew={mode === "create"} returnContext={{ searchText: search, statusFilter }} />
-              </div>
+                {!isForm && <FlowContextSections productionLine={sel} navigate={navigate} returnContext={{ searchText: search, statusFilter }} onAssignModel={() => setMode("edit")} />}
 
-              {/* ── RIGHT ── */}
-              <div className="flex min-h-0 flex-col overflow-hidden" style={{ gap: 6 }}>
-                <div className="shrink-0">
+                {isForm && <div className="col-span-4 min-h-0 overflow-hidden">
+                  <RoutingSummarySection productionLine={sel} navigate={navigate} isNew={mode === "create"} isEditing={mode === "edit"} returnContext={{ searchText: search, statusFilter }} />
+                </div>}
+
+                  <div className={`${isForm ? "col-span-3" : "col-span-3"} min-h-0 overflow-hidden`}>
                   <SectionCard title="Operations">
                     {isForm ? (
                       <div className="space-y-1.5">
@@ -884,25 +1178,38 @@ export function ProductionLinesPage() {
                         </div>
                       </div>
                     ) : (
-                      <RoutingOperationsView sel={sel} />
+                      (sel?.productFamilyCount ?? sel?.productFamilies?.length ?? 0) === 0 ? (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 stroke-current dark:text-amber-300" />
+                            <div>
+                              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100">No product family assigned</p>
+                              <p className="mt-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">Select a product family before assigning models and creating flow.</p>
+                              <button type="button" onClick={() => setMode("edit")} className="mt-2 rounded bg-white px-2 py-1 text-[10px] font-bold text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300">Select Product Family</button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <RoutingOperationsView sel={sel} compact />
+                      )
                     )}
                   </SectionCard>
                 </div>
 
-                <div className="min-h-0 flex-1">
+                  <div className={`${isForm ? "col-span-4" : "col-span-4"} min-h-0 overflow-hidden`}>
                   <SectionCard title="Departments" action={
                     hasDepts && sel?.id ? <SecondaryActionButton onClick={() => navigate(`/system/production-structure/components/dept?lineId=${sel.id}`)}>Open Departments</SecondaryActionButton> : undefined
                   } className="flex h-full min-h-0 flex-col">
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">Departments define available line structure. Routing defines ordered process flow.</p>
+                    <p className="text-[10px] leading-3 text-slate-400 dark:text-slate-500">Departments define available line structure. Routing defines ordered process flow.</p>
                     {mode === "create" ? (
                       <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Save production line before assigning departments.</p>
                     ) : hasDepts ? (
-                      <div className="mt-1 min-h-0 flex-1 overflow-auto">
+                      <div className="mt-1 min-h-0 flex-1 overflow-hidden">
                         {departmentLinks.length > 0 ? (
                           <div className="space-y-1">
                             {departmentLinks.map((link) => (
                               <button key={link.id} onClick={() => navigate(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
-                                className="grid w-full grid-cols-[32px_1fr_auto_auto] items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-left text-[10px] text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+                                className="grid w-full grid-cols-[28px_1fr_auto_auto] items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-left text-[10px] text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
                                 <span className="font-mono text-[9px] text-slate-400">{link.sequence}</span>
                                 <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
                                 <span className="text-slate-400 dark:text-slate-500">{link.resourceGroups} RG</span>
@@ -918,11 +1225,33 @@ export function ProductionLinesPage() {
                         )}
                       </div>
                     ) : (
-                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">No departments linked.</p>
+                      <div className="mt-1 rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
+                        <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100">No departments linked</p>
+                        <p className="mt-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">Departments define available resource groups for process flow.</p>
+                        {sel?.id && <button type="button" onClick={() => navigate(`/system/production-structure/components/dept?lineId=${sel.id}`)} className="mt-2 rounded bg-white px-2 py-1 text-[10px] font-bold text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300">Assign Departments</button>}
+                      </div>
                     )}
                   </SectionCard>
                 </div>
-              </div>
+                {!isForm && (
+                  <div className="col-span-5 grid min-h-0 grid-cols-2 gap-1.5 overflow-hidden">
+                    <SectionCard title="Identity" className="min-h-0 overflow-hidden">
+                      <div className="space-y-px">
+                        <InlineRow label="Name" value={sel?.name} />
+                        <InlineRow label="Code" value={sel?.code} />
+                        <InlineRow label="Plant" value={sel?.plantName} />
+                        <InlineRow label="Type" value={lt ? lt : <Badge label="Not assigned" variant="inactive" />} />
+                      </div>
+                    </SectionCard>
+                    <SectionCard title="Schedule" className="min-h-0 overflow-hidden">
+                      <div className="space-y-px">
+                        <InlineRow label="Calendar" value={sel?.defaultCalendar || <Badge label="Not assigned" variant="inactive" />} />
+                        <InlineRow label="Shift" value={sel?.shiftPattern || <Badge label="Not configured" variant="inactive" />} />
+                        <InlineRow label="Timezone" value={sel?.timezone || "Plant default"} />
+                      </div>
+                    </SectionCard>
+                  </div>
+                )}
             </div>
           </div>
           <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-4 px-3 py-1.5 text-[9px] text-slate-400 dark:text-slate-500">
@@ -961,45 +1290,30 @@ export function ProductionLinesPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                    {paginated.map((ln: ProductionLine) => (
-                    <div key={ln.id}
-                      role="option"
-                      aria-selected={selectedId === ln.id}
-                      tabIndex={selectedId === ln.id ? 0 : -1}
-                      onClick={() => selectLine(ln.id)}
-                      className={`group flex items-center gap-2.5 px-3 cursor-pointer transition-colors duration-100 h-12 ${
-                        selectedId === ln.id
-                          ? "bg-amber-100/80 dark:bg-amber-900/20 border-l-[3px] border-l-amber-500 dark:border-l-amber-400 shadow-sm"
-                          : "hover:bg-slate-100 dark:hover:bg-slate-800/40 border-l-[3px] border-l-transparent"
-                      }`}>
-                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                        selectedId === ln.id
-                          ? "bg-amber-200/80 text-amber-700 dark:bg-amber-500/25 dark:text-amber-300"
-                          : "bg-slate-100 text-slate-500 group-hover:bg-amber-100 group-hover:text-amber-600 dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-amber-900/30 dark:group-hover:text-amber-400"
-                      }`}>
-                        <TrendingUpDown className="h-3.5 w-3.5 stroke-current" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`text-xs font-bold truncate ${selectedId === ln.id ? "text-amber-900 dark:text-amber-200" : "text-slate-800 dark:text-slate-200"}`}>{ln.name}</span>
-                          {ln.code && <span className="text-[8px] font-mono bg-slate-100 dark:bg-slate-800 px-1 py-px rounded text-slate-400 dark:text-slate-500 shrink-0">{ln.code}</span>}
-                        </div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase leading-tight ${ln.status === "active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"}`}>
-                            {ln.status === "active" ? "Active" : "Inactive"}
+                  {paginated.map((ln: ProductionLine) => {
+                    const readiness = getLineListReadiness(ln);
+                    return (
+                      <EntityListItem key={ln.id}
+                        name={ln.name} code={ln.code}
+                        meta={`${ln.plantName || "Plant required"} · ${readiness.reason}`}
+                        icon={<TrendingUpDown className="h-3.5 w-3.5 stroke-current" />}
+                        selected={selectedId === ln.id}
+                        status={ln.status}
+                        onClick={() => selectLine(ln.id)}
+                        accentColor="amber"
+                        issueTags={
+                          <span title={`${readiness.label}: ${readiness.reason}`} className={`ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black ${
+                            readiness.tone === "ready"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                              : readiness.tone === "partial"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+                                : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300"
+                          }`}>
+                            {readiness.icon}
                           </span>
-                          <span className="text-slate-300 dark:text-slate-600">·</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{ln.plantName || "No plant"}</span>
-                          <span className="text-slate-300 dark:text-slate-600">·</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{ln.departmentCount ?? 0} Dept</span>
-                          <span className="text-slate-300 dark:text-slate-600">·</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{ln.groupCount ?? 0} RG</span>
-                          <span className="text-slate-300 dark:text-slate-600">·</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{ln.resourceCount ?? 0} Res</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                        } />
+                    );
+                  })}
                 </div>
               )}
             </div>

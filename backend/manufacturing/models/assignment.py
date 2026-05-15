@@ -4,12 +4,16 @@ from .entity_status import EntityStatus
 
 
 class ProductionLineDepartmentAssignment(models.Model):
+    plant = models.ForeignKey(
+        "manufacturing.Plant", on_delete=models.PROTECT,
+        related_name="line_department_assignments",
+    )
     production_line = models.ForeignKey(
-        "manufacturing.ProductionLine", on_delete=models.CASCADE,
+        "manufacturing.ProductionLine", on_delete=models.PROTECT,
         related_name="department_assignments",
     )
     department = models.ForeignKey(
-        "manufacturing.Department", on_delete=models.CASCADE,
+        "manufacturing.Department", on_delete=models.PROTECT,
         related_name="line_assignments",
     )
     sequence = models.IntegerField(default=0, validators=[MinValueValidator(0)])
@@ -23,6 +27,11 @@ class ProductionLineDepartmentAssignment(models.Model):
         db_table = "manufacturing_production_line_department"
         ordering = ["production_line", "sequence"]
         unique_together = [("production_line", "department")]
+        indexes = [
+            models.Index(fields=["plant"], name="mfg_pld_plant_idx"),
+            models.Index(fields=["production_line"], name="mfg_pld_line_idx"),
+            models.Index(fields=["department"], name="mfg_pld_dept_idx"),
+        ]
         verbose_name = "Line-Department Assignment"
         verbose_name_plural = "Line-Department Assignments"
 

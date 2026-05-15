@@ -5,7 +5,11 @@ from .entity_status import EntityStatus
 
 
 class Plant(TimeStampedModel):
-    code = models.CharField(max_length=50, unique=True)
+    company = models.ForeignKey(
+        "manufacturing.Company", on_delete=models.PROTECT,
+        related_name="plants",
+    )
+    code = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
     status = models.CharField(
@@ -72,6 +76,9 @@ class Plant(TimeStampedModel):
         ordering = ["name"]
         verbose_name = "Plant"
         verbose_name_plural = "Plants"
+        constraints = [
+            models.UniqueConstraint(fields=["company", "code"], name="uq_plant_company_code"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"

@@ -1,3 +1,24 @@
+export interface MaterialFlowItem {
+  id?: string;
+  materialId?: string | null;
+  materialCode?: string | null;
+  materialName?: string | null;
+  quantity: number;
+  materialState?: string | null;
+  locationId?: string | null;
+  locationName?: string | null;
+}
+
+export interface MaterialMovementRule {
+  id?: string;
+  ruleType?: string | null;
+  sourceLocationId?: string | null;
+  sourceLocationName?: string | null;
+  destinationLocationId?: string | null;
+  destinationLocationName?: string | null;
+  notes?: string;
+}
+
 export interface RoutingStep {
   id: string;
   routingId: string;
@@ -21,6 +42,9 @@ export interface RoutingStep {
   qualityCheckpoint: boolean;
   reworkAllowed: boolean;
   notes: string;
+  materialInputs: MaterialFlowItem[];
+  materialOutputs: MaterialFlowItem[];
+  movementRule?: MaterialMovementRule | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -69,6 +93,42 @@ export interface StepCapacity {
   loadPercent: number;
   capacityGapUnits: number;
   isBottleneck: boolean;
+}
+
+export interface YamazumiStep {
+  sequence: number;
+  departmentName?: string | null;
+  resourceGroupName?: string | null;
+  resourceName?: string | null;
+  standardWorkName?: string | null;
+  cycleTimeSec: number;
+  setupTimeSec: number;
+  changeoverTimeSec: number;
+  workContentSec: number;
+  taktTimeSec: number;
+  loadPercent: number;
+  requiredOperators: number;
+  isBottleneck: boolean;
+  isOverloaded: boolean;
+}
+
+export interface YamazumiAnalysis {
+  ok: boolean;
+  message: string;
+  routingId?: string | null;
+  routingStatus: string;
+  routingVersion: string;
+  productionLineId?: string | null;
+  productModelId?: string | null;
+  plannedQuantity: number;
+  netAvailableTimeSec: number;
+  taktTimeSec: number;
+  totalWorkContentSec: number;
+  bottleneckStepName: string;
+  balanceLossPercent: number;
+  operatorsRequired: number;
+  overloadedResources: string[];
+  steps: YamazumiStep[];
 }
 
 export interface MutationError {

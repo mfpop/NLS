@@ -7,6 +7,8 @@ from manufacturing.models import (
     Routing, RoutingStep, RoutingStatus,
     ProductionLine, Department, ResourceGroup, Resource,
     ReferenceValue, ProductModel, ProcessFlow,
+    BOM, InventoryLocation, Material, OperationInput, OperationOutput, MaterialMovementRule,
+    MaterialState, MaterialMovementRuleType,
 )
 
 
@@ -28,6 +30,47 @@ def _resolve_ref(model_class, ref_id: Optional[str]):
         return model_class.objects.get(id=ref_id)
     except model_class.DoesNotExist:
         raise RoutingValidationError(f"{model_class.__name__} with id {ref_id} not found", ref_id)
+
+
+def _resolve_product_model(ref_id: Optional[str]) -> Optional[ProductModel]:
+    if not ref_id:
+        return None
+    try:
+        return ProductModel.objects.get(id=ref_id)
+    except ProductModel.DoesNotExist:
+        pass
+    try:
+        ref = ReferenceValue.objects.get(id=ref_id, category__code="product_model")
+    except ReferenceValue.DoesNotExist:
+        raise RoutingValidationError(f"Product model with id {ref_id} not found", "productModelId")
+
+    model, _ = ProductModel.objects.get_or_create(
+        code=ref.code,
+        defaults={
+            "name": ref.name,
+            "description": ref.description or "",
+            "status": "ACTIVE" if ref.is_active else "INACTIVE",
+        },
+    )
+    updated = False
+    if model.name != ref.name:
+        model.name = ref.name
+        updated = True
+    if ref.description and model.description != ref.description:
+        model.description = ref.description
+        updated = True
+    if updated:
+        model.save()
+    return model
+
+
+def _resolve_optional_process_flow(ref_id: Optional[str]) -> Optional[ProcessFlow]:
+    if not ref_id:
+        return None
+    try:
+        return ProcessFlow.objects.get(id=ref_id)
+    except ProcessFlow.DoesNotExist:
+        return None
 
 
 def _parse_date(val: Optional[str]) -> Optional[date]:
@@ -54,10 +97,15 @@ class RoutingService:
         except ProductionLine.DoesNotExist:
             raise RoutingValidationError("Production line not found", "productionLineId")
 
+        if Routing.objects.filter(production_line_id=pl_id, status=RoutingStatus.ACTIVE).exists():
+            raise RoutingValidationError(
+                "Production line already has an active flow/routing.", "productionLineId"
+            )
+
         pf_id = input_data.get("product_family_id")
         pf = _resolve_ref(ReferenceValue, pf_id) if pf_id else None
         pm_id = input_data.get("product_model_id")
-        pm = _resolve_ref(ProductModel, pm_id) if pm_id else None
+        pm = _resolve_product_model(pm_id)
 
         routing = Routing.objects.create(
             production_line_id=pl_id,
@@ -91,7 +139,7 @@ class RoutingService:
             routing.product_family = _resolve_ref(ReferenceValue, pf_id) if pf_id else None
         if "product_model_id" in input_data:
             pm_id = input_data["product_model_id"]
-            routing.product_model = _resolve_ref(ProductModel, pm_id) if pm_id else None
+            routing.product_model = _resolve_product_model(pm_id)
         if "version" in input_data:
             routing.version = input_data["version"]
         if "effective_from" in input_data:
@@ -119,16 +167,11 @@ class RoutingService:
             msg = "; ".join(e["message"] for e in errors)
             raise RoutingValidationError(f"Cannot activate: {msg}", "_form")
 
-        # Deactivate any other ACTIVE routing for same line + product
-        conflicts = Routing.objects.filter(
+        # Deactivate any other ACTIVE routing for same line (one active route per line)
+        Routing.objects.filter(
             production_line=routing.production_line,
             status=RoutingStatus.ACTIVE,
-        )
-        if routing.product_model:
-            conflicts = conflicts.filter(product_model=routing.product_model)
-        if routing.product_family:
-            conflicts = conflicts.filter(product_family=routing.product_family)
-        conflicts.exclude(id=routing.id).update(status=RoutingStatus.DRAFT)
+        ).exclude(id=routing.id).update(status=RoutingStatus.DRAFT)
 
         routing.status = RoutingStatus.ACTIVE
         routing.save()
@@ -185,7 +228,7 @@ class RoutingService:
                 raise RoutingValidationError(
                     "Resource does not belong to selected resource group", "resourceId"
                 )
-        sw = _resolve_ref(ProcessFlow, sw_id) if sw_id else None
+        sw = _resolve_optional_process_flow(sw_id)
 
         step = RoutingStep.objects.create(
             routing=routing,
@@ -240,7 +283,7 @@ class RoutingService:
                 )
         if "standard_work_id" in input_data:
             sw_id = input_data["standard_work_id"]
-            step.standard_work = _resolve_ref(ProcessFlow, sw_id) if sw_id else None
+            step.standard_work = _resolve_optional_process_flow(sw_id)
         if "cycle_time_sec" in input_data:
             step.cycle_time_sec = input_data["cycle_time_sec"]
         if "setup_time_sec" in input_data:
@@ -266,6 +309,115 @@ class RoutingService:
 
         step.save()
         return step
+
+    @staticmethod
+    @transaction.atomic
+    def save_routing(input_data: dict) -> Routing:
+        routing_id = input_data.get("routing_id")
+        if routing_id:
+            routing = RoutingService.update_routing(routing_id, input_data)
+        else:
+            routing = RoutingService.create_routing(input_data)
+
+        if routing.status == RoutingStatus.ARCHIVED:
+            raise RoutingValidationError("Cannot modify archived routing", "_form")
+
+        submitted_steps = input_data.get("steps") or []
+        existing_steps = {
+            str(step.id): step
+            for step in RoutingStep.objects.filter(routing=routing).select_related("routing")
+        }
+        kept_step_ids: set[str] = set()
+
+        for index, step_data in enumerate(submitted_steps, start=1):
+            normalized = dict(step_data)
+            normalized["sequence"] = index
+            step_id = str(normalized.get("id") or "")
+            if step_id and not step_id.startswith("new-"):
+                step = existing_steps.get(step_id)
+                if not step:
+                    raise RoutingValidationError(f"Step {index} no longer exists", "steps")
+                RoutingService.update_step(step_id, normalized)
+                kept_step_ids.add(step_id)
+            else:
+                step = RoutingService.add_step(str(routing.id), normalized)
+                kept_step_ids.add(str(step.id))
+            RoutingService._save_step_material_flow(step, normalized)
+
+        for step_id, step in existing_steps.items():
+            if step_id not in kept_step_ids:
+                step.delete()
+
+        remaining = RoutingStep.objects.filter(routing=routing).order_by("sequence", "id")
+        for index, step in enumerate(remaining, start=1):
+            if step.sequence != index:
+                step.sequence = index
+                step.save()
+
+        return Routing.objects.select_related(
+            "production_line", "product_model", "product_family"
+        ).prefetch_related(
+            "steps__department", "steps__resource_group", "steps__resource", "steps__standard_work",
+            "steps__material_inputs__material", "steps__material_inputs__source_location",
+            "steps__material_outputs__material", "steps__material_outputs__target_location",
+            "steps__material_movement_rule__source_location", "steps__material_movement_rule__destination_location",
+        ).get(id=routing.id)
+
+    @staticmethod
+    def _save_step_material_flow(step: RoutingStep, step_data: dict) -> None:
+        def resolve_material(material_id: Optional[str]) -> Material:
+            material = _resolve_ref(Material, material_id)
+            if material.status != "ACTIVE":
+                raise RoutingValidationError("Material is inactive", "materialId")
+            return material
+
+        def resolve_location(location_id: Optional[str], field: str) -> InventoryLocation:
+            location = _resolve_ref(InventoryLocation, location_id)
+            if location.status != "ACTIVE":
+                raise RoutingValidationError("Inventory location is inactive", field)
+            if location.plant_id != step.routing.production_line.plant_id:
+                raise RoutingValidationError("Inventory location must belong to the routing plant", field)
+            return location
+
+        OperationInput.objects.filter(routing_step=step).delete()
+        for item in step_data.get("material_inputs") or []:
+            material = resolve_material(item.get("material_id"))
+            location = resolve_location(item.get("location_id"), "sourceLocationId")
+            OperationInput.objects.create(
+                routing_step=step,
+                material=material,
+                quantity=item.get("quantity") or 1,
+                material_state=item.get("material_state") or MaterialState.RAW_MATERIAL,
+                source_location=location,
+            )
+
+        OperationOutput.objects.filter(routing_step=step).delete()
+        for item in step_data.get("material_outputs") or []:
+            material = resolve_material(item.get("material_id"))
+            location = resolve_location(item.get("location_id"), "destinationLocationId")
+            OperationOutput.objects.create(
+                routing_step=step,
+                material=material,
+                quantity=item.get("quantity") or 1,
+                material_state=item.get("material_state") or MaterialState.WIP,
+                target_location=location,
+            )
+
+        rule_data = step_data.get("movement_rule") or {}
+        if rule_data:
+            source_location = resolve_location(rule_data.get("source_location_id"), "sourceLocationId")
+            destination_location = resolve_location(rule_data.get("destination_location_id"), "destinationLocationId")
+            MaterialMovementRule.objects.update_or_create(
+                routing_step=step,
+                defaults={
+                    "rule_type": rule_data.get("rule_type") or MaterialMovementRuleType.NEXT_OPERATION,
+                    "source_location": source_location,
+                    "destination_location": destination_location,
+                    "notes": rule_data.get("notes") or "",
+                },
+            )
+        else:
+            MaterialMovementRule.objects.filter(routing_step=step).delete()
 
     @staticmethod
     @transaction.atomic
@@ -338,8 +490,32 @@ class RoutingService:
         for s in steps:
             if not s.department:
                 errors.append(_error(f"step_{s.sequence}", "MISSING_DEPT", f"Step {s.sequence} has no department"))
+            if not s.resource_group:
+                errors.append(_error(f"step_{s.sequence}", "MISSING_RESOURCE_GROUP", f"Step {s.sequence} has no resource group"))
             if s.cycle_time_sec <= 0:
                 errors.append(_error(f"step_{s.sequence}", "INVALID_CT", f"Step {s.sequence} cycle time must be > 0"))
+            if s.resource_group and s.resource_group.status != "ACTIVE":
+                errors.append(_error(f"step_{s.sequence}", "INACTIVE_RESOURCE_GROUP", f"Step {s.sequence} uses inactive resource group"))
+            if s.resource and s.resource.status != "ACTIVE":
+                errors.append(_error(f"step_{s.sequence}", "INACTIVE_RESOURCE", f"Step {s.sequence} uses inactive resource"))
+            inputs = list(s.material_inputs.select_related("material", "source_location"))
+            outputs = list(s.material_outputs.select_related("material", "target_location"))
+            if not inputs:
+                errors.append(_error(f"step_{s.sequence}", "MISSING_INPUT_MATERIAL", f"Step {s.sequence} has no input material"))
+            if not outputs:
+                errors.append(_error(f"step_{s.sequence}", "MISSING_OUTPUT_MATERIAL", f"Step {s.sequence} has no output material/state"))
+            for item in inputs:
+                if item.material.status != "ACTIVE":
+                    errors.append(_error(f"step_{s.sequence}", "INACTIVE_MATERIAL", f"Step {s.sequence} input material is inactive"))
+                if not item.source_location or item.source_location.status != "ACTIVE":
+                    errors.append(_error(f"step_{s.sequence}", "MISSING_SOURCE_LOCATION", f"Step {s.sequence} has missing/inactive source location"))
+            for item in outputs:
+                if item.material.status != "ACTIVE":
+                    errors.append(_error(f"step_{s.sequence}", "INACTIVE_MATERIAL", f"Step {s.sequence} output material is inactive"))
+                if not item.material_state:
+                    errors.append(_error(f"step_{s.sequence}", "MISSING_OUTPUT_STATE", f"Step {s.sequence} has missing output material state"))
+                if not item.target_location or item.target_location.status != "ACTIVE":
+                    errors.append(_error(f"step_{s.sequence}", "MISSING_DESTINATION_LOCATION", f"Step {s.sequence} has missing/inactive destination location"))
 
         # Check resource group belongs to department
         for s in steps:
@@ -354,20 +530,92 @@ class RoutingService:
                     f"Step {s.sequence}: resource does not belong to resource group"
                 ))
 
-        # Check active routing conflict
+        # Check active routing conflict (one active route per line)
         if routing.status == RoutingStatus.ACTIVE:
-            conflicts = Routing.objects.filter(
+            if Routing.objects.filter(
                 production_line=routing.production_line,
                 status=RoutingStatus.ACTIVE,
-            ).exclude(id=routing.id)
-            if routing.product_model:
-                conflicts = conflicts.filter(product_model=routing.product_model)
-            if routing.product_family:
-                conflicts = conflicts.filter(product_family=routing.product_family)
-            if conflicts.exists():
-                errors.append(_error("status", "CONFLICT", "An active routing already exists for this line/product"))
+            ).exclude(id=routing.id).exists():
+                errors.append(_error("status", "CONFLICT", "An active routing already exists for this line"))
 
         return errors
+
+    @staticmethod
+    def validate_line_flow_context(production_line_id: str, product_model_id: Optional[str] = None) -> list[dict]:
+        try:
+            production_line = ProductionLine.objects.get(id=production_line_id)
+        except ProductionLine.DoesNotExist:
+            return [_error("productionLineId", "NOT_FOUND", "Production line not found")]
+
+        errors = []
+        model = _resolve_product_model(product_model_id) if product_model_id else None
+        routing_qs = Routing.objects.filter(production_line=production_line)
+        if model:
+            routing_qs = routing_qs.filter(product_model=model)
+        routing = routing_qs.prefetch_related(
+            "steps__resource_group", "steps__material_inputs", "steps__material_outputs"
+        ).order_by("-status", "-updated_at").first()
+
+        if model and not BOM.objects.filter(product_model=model, status=RoutingStatus.ACTIVE).exists():
+            errors.append(_error("bom", "MISSING_BOM", "Selected product model has no active BOM"))
+        if not routing:
+            errors.append(_error("routing", "MISSING_ROUTING", "Selected line/model has no routing"))
+        else:
+            errors.extend(RoutingService.validate_routing(str(routing.id)))
+            steps = list(routing.steps.all().order_by("sequence"))
+            for step in steps:
+                if step.resource_group and step.resource_group.status != "ACTIVE":
+                    errors.append(_error(f"step_{step.sequence}", "INACTIVE_RESOURCE_GROUP", f"Step {step.sequence} uses inactive resource group"))
+                for op_input in step.material_inputs.all():
+                    if not op_input.source_location:
+                        errors.append(_error(f"step_{step.sequence}", "MISSING_INVENTORY_LOCATION", f"Step {step.sequence} input has no source inventory location"))
+                for op_output in step.material_outputs.all():
+                    if not op_output.target_location:
+                        errors.append(_error(f"step_{step.sequence}", "MISSING_INVENTORY_LOCATION", f"Step {step.sequence} output has no target inventory location"))
+                if step.material_inputs.exists() and not step.material_outputs.exists():
+                    errors.append(_error(f"step_{step.sequence}", "BROKEN_MATERIAL_TRANSFORMATION", f"Step {step.sequence} consumes material but has no output"))
+
+        if not InventoryLocation.objects.filter(plant=production_line.plant, status="ACTIVE").exists():
+            errors.append(_error("inventoryLocation", "MISSING_INVENTORY_LOCATION", "Plant has no active inventory locations"))
+        return errors
+
+    @staticmethod
+    def get_line_flow_context(production_line_id: str, product_model_id: Optional[str] = None) -> dict:
+        try:
+            production_line = ProductionLine.objects.get(id=production_line_id)
+        except ProductionLine.DoesNotExist:
+            return {"ok": False, "message": "Production line not found"}
+
+        model = _resolve_product_model(product_model_id) if product_model_id else None
+        routing_qs = Routing.objects.filter(production_line=production_line)
+        if model:
+            routing_qs = routing_qs.filter(product_model=model)
+        routing = routing_qs.select_related("product_model").prefetch_related(
+            "steps__department",
+            "steps__resource_group",
+            "steps__material_inputs__material",
+            "steps__material_inputs__source_location",
+            "steps__material_outputs__material",
+            "steps__material_outputs__target_location",
+        ).order_by("-status", "-updated_at").first()
+
+        bom = None
+        if model:
+            bom = BOM.objects.filter(product_model=model).prefetch_related("items__material").order_by("-status", "-updated_at").first()
+
+        locations = InventoryLocation.objects.filter(plant=production_line.plant).order_by("location_type", "name")
+        validations = RoutingService.validate_line_flow_context(production_line_id, product_model_id)
+        blocking_codes = {"MISSING_BOM", "MISSING_ROUTING", "INVALID_SEQUENCE", "INACTIVE_RESOURCE_GROUP", "MISSING_INVENTORY_LOCATION", "BROKEN_MATERIAL_TRANSFORMATION"}
+        return {
+            "ok": True,
+            "production_line": production_line,
+            "product_model": model,
+            "routing": routing,
+            "bom": bom,
+            "inventory_locations": list(locations),
+            "validations": validations,
+            "is_blocked": any(error["code"] in blocking_codes for error in validations),
+        }
 
     # ── Summary ──
 

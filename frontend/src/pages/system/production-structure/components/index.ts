@@ -27,3 +27,4 @@ export { CompanyDetailView } from "./CompanyDetailView";
 export { PlantDetailView } from "./PlantDetailView";
 export { ProductionLineProductScopeSummary } from "./ProductionLineProductScopeSummary";
 export { ToolbarProvider, useToolbar } from "./ToolbarContext";
+export { EntityListItem } from "./EntityListItem";

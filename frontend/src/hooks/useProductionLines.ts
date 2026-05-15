@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@apollo/client/react";
 import { useState, useCallback } from "react";
 import {
   PRODUCTION_LINES_QUERY,
+  PRODUCTION_LINE_FLOW_CONTEXT_QUERY,
   CREATE_PRODUCTION_LINE_MUTATION,
   UPDATE_PRODUCTION_LINE_MUTATION,
   ARCHIVE_PRODUCTION_LINE_MUTATION,
@@ -15,7 +16,7 @@ import {
   SET_PRIMARY_MODEL_MUTATION,
 } from "@/graphql/productionLineMutations";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
-import type { ProductionLine, ProductionLinesQueryData, ProductionLinesQueryVars, ProductFamilyAssignment, ProductModelAssignment } from "@/types/productionLine";
+import type { ProductionLine, ProductionLineFlowContext, ProductionLinesQueryData, ProductionLinesQueryVars, ProductFamilyAssignment, ProductModelAssignment } from "@/types/productionLine";
 import type { Plant } from "@/types/plant";
 
 type MutationData = Record<string, any>;
@@ -23,6 +24,24 @@ type MutationData = Record<string, any>;
 let globalPlantsCache: Plant[] = [];
 export function getGlobalPlants(): Plant[] {
   return globalPlantsCache;
+}
+
+export function useProductionLineFlowContext(productionLineId?: string | null, productModelId?: string | null) {
+  const { data, loading, error, refetch } = useQuery<{ productionLineFlowContext: ProductionLineFlowContext }>(
+    PRODUCTION_LINE_FLOW_CONTEXT_QUERY,
+    {
+      variables: { productionLineId, productModelId },
+      skip: !productionLineId,
+      fetchPolicy: "cache-and-network",
+      errorPolicy: "all",
+    }
+  );
+  return {
+    context: data?.productionLineFlowContext ?? null,
+    loading,
+    error,
+    refetch,
+  };
 }
 
 /* ── Default form ── */

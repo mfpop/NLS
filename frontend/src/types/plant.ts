@@ -1,5 +1,7 @@
 export interface Plant {
   id: string;
+  companyId: string;
+  companyName: string;
   code: string;
   name: string;
   status: string;

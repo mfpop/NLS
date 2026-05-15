@@ -1,10 +1,14 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, GripVertical, Plus, Pencil, Trash2, Check } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import { TreeNavigation, CompanyDetailView, PlantDetailView, NodeDetailPanel } from "./components";
+import { DepartmentsPage } from "./DepartmentsPage";
+import { ProductionLinesPage } from "./ProductionLinesPage";
+import { ResourceGroupsPage } from "./ResourceGroupsPage";
+import { ResourcesPage } from "./ResourcesPage";
 import { findNodeByKey, findNodePathByKey, ADD_ROUTES } from "./config";
 
 const TYPE_ROUTE: Record<string, string> = {
@@ -39,6 +43,11 @@ function getAncestorKeys(key: string): string[] {
 
 export function ProductionFlowLayout() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlDepartmentId = searchParams.get("departmentId");
+  const urlLineId = searchParams.get("productionLineId");
+  const urlRgId = searchParams.get("resourceGroupId");
+  const urlResourceId = searchParams.get("resourceId");
 
   const [expandedSet, setExpandedSet] = useState<Set<string>>(new Set());
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
@@ -146,6 +155,22 @@ export function ProductionFlowLayout() {
     if (key && treeData.length) {
       const node = findNodeByKey(treeData, key);
       if (node) {
+        if (node.type === "department") {
+          navigate(`/system/production-structure/flow/dept?departmentId=${node.id}`, { replace: true });
+          return;
+        }
+        if (node.type === "productionLine" || node.type === "line") {
+          navigate(`/system/production-structure/flow/line?productionLineId=${node.id}`, { replace: true });
+          return;
+        }
+        if (node.type === "resourceGroup" || node.type === "group") {
+          navigate(`/system/production-structure/flow/rg?resourceGroupId=${node.id}`, { replace: true });
+          return;
+        }
+        if (node.type === "resource") {
+          navigate(`/system/production-structure/flow/resource?resourceId=${node.id}`, { replace: true });
+          return;
+        }
         const route = TYPE_ROUTE[node.type];
         if (route) {
           navigate(`/system/production-structure/flow/${route}`, { replace: true });
@@ -281,11 +306,27 @@ export function ProductionFlowLayout() {
 
         {/* Detail column */}
         <div className="flex flex-col min-h-0 min-w-0" style={{ flex: 1 }}>
-          {selectedNode ? (
+          {urlDepartmentId ? (
+            <DepartmentsPage />
+          ) : urlLineId ? (
+            <ProductionLinesPage />
+          ) : urlRgId ? (
+            <ResourceGroupsPage />
+          ) : urlResourceId ? (
+            <ResourcesPage />
+          ) : selectedNode ? (
             selectedNode.type === "company" ? (
               <CompanyDetailView ref={companyRef} simple onEditChange={setIsEditingCompany} />
             ) : selectedNode.type === "plant" ? (
               <PlantDetailView plantId={selectedNode.id} />
+            ) : selectedNode.type === "department" ? (
+              <DepartmentsPage />
+            ) : selectedNode.type === "productionLine" || selectedNode.type === "line" ? (
+              <ProductionLinesPage />
+            ) : selectedNode.type === "resourceGroup" || selectedNode.type === "group" ? (
+              <ResourceGroupsPage />
+            ) : selectedNode.type === "resource" ? (
+              <ResourcesPage />
             ) : (
               <NodeDetailPanel
                 selectedNode={selectedNode}

@@ -105,7 +105,18 @@ export const sidebarEntries: SidebarEntry[] = [
     icon: ClipboardList,
     items: [
       { type: "item", label: "Production Plan", to: "/plan/production-plan", icon: FileText },
-      { type: "item", label: "Capacity Planning", to: "/plan/capacity", icon: BarChart3 },
+      {
+        type: "group",
+        label: "Capacity",
+        icon: BarChart3,
+        items: [
+          { type: "item", label: "Overview", to: "/plan/capacity", icon: BarChart3 },
+          { type: "item", label: "Load", to: "/plan/capacity/load", icon: Activity },
+          { type: "item", label: "Yamazumi", to: "/plan/capacity/yamazumi", icon: Activity },
+          { type: "item", label: "Constraints", to: "/plan/capacity/constraints", icon: CircleAlert },
+          { type: "item", label: "Scenarios", to: "/plan/capacity/scenarios", icon: Sparkles },
+        ],
+      },
     ],
   },
   {

@@ -3,10 +3,11 @@ import { useQuery, useMutation } from "@apollo/client/react";
 import { useParams } from "react-router-dom";
 import {
   Database, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
-  Pencil, Trash2, Save, FileSpreadsheet, Check, ChevronsUpDown, EyeOff, Eye,
-  Lock, ExternalLink, Info,
+  Trash2, Save, FileSpreadsheet, ChevronsUpDown,
+  Lock, Info,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { useToolbar } from "./components/ToolbarContext";
 import { theme } from "../../../styles/themeTokens";
 import { COMPANY_QUERY, UPDATE_COMPANY_MUTATION } from "@/graphql/companyQueries";
 import { REFERENCE_ITEMS_QUERY, CREATE_REFERENCE_ITEM_MUTATION, UPDATE_REFERENCE_ITEM_MUTATION, DEACTIVATE_REFERENCE_ITEM_MUTATION } from "@/graphql/referenceItemQueries";
@@ -26,7 +27,10 @@ interface RefItem {
   usageContext?: string;
   usageImpact?: string;
   updatedAt?: string;
+  isSystemManaged?: boolean;
+  isConfigurable?: boolean;
   username?: string;
+  email?: string;
   role?: string;
   department?: string;
   plant?: string;
@@ -74,7 +78,8 @@ const TABLE_TYPE_LABELS: Record<string, string> = {
   production_calendar: "Production Calendars", shift_pattern: "Shift Patterns", language: "Languages", timezone: "Timezones", industry_type: "Industry Types",
   manufacturing_type: "Manufacturing Types", work_center_type: "Work Centers", machine_type: "Machine Types", operation_code: "Operation Codes", routing_type: "Routing Types",
   material_category: "Material Categories", inventory_type: "Inventory Types", kanban_type: "Kanban Types", container_type: "Container Types", unit_type: "Unit Types",
-  downtime_code: "Downtime Codes", defect_code: "Defect Codes", scrap_reason: "Scrap Reasons", kaizen_category: "Kaizen Categories",
+  downtime_code: "Downtime Reasons", defect_code: "Quality Defect Types", scrap_reason: "Scrap Reasons", kaizen_category: "Lean / Quality Values",
+  priority: "Priorities", label_badge: "Labels / Badges", maintenance_type: "Maintenance Types", material_flow_type: "Material Flow Types", process_type: "Process Types",
   skill_type: "Skill Types", role: "Roles", shift_team: "Shift Teams", staff_user: "Staff Users", staff_assignment: "Staff Assignments",
   product_model: "Product Models",
   production_family: "Production Families",
@@ -84,7 +89,8 @@ const TABLE_TYPE_SINGULAR: Record<string, string> = {
   production_calendar: "Production Calendar", shift_pattern: "Shift Pattern", language: "Language", timezone: "Timezone", industry_type: "Industry Type",
   manufacturing_type: "Manufacturing Type", work_center_type: "Work Center", machine_type: "Machine Type", operation_code: "Operation Code", routing_type: "Routing Type",
   material_category: "Material Category", inventory_type: "Inventory Type", kanban_type: "Kanban Type", container_type: "Container Type", unit_type: "Unit Type",
-  downtime_code: "Downtime Code", defect_code: "Defect Code", scrap_reason: "Scrap Reason", kaizen_category: "Kaizen Category",
+  downtime_code: "Downtime Reason", defect_code: "Quality Defect Type", scrap_reason: "Scrap Reason", kaizen_category: "Lean / Quality Value",
+  priority: "Priority", label_badge: "Label / Badge", maintenance_type: "Maintenance Type", material_flow_type: "Material Flow Type", process_type: "Process Type",
   skill_type: "Skill Type", role: "Role", shift_team: "Shift Team", staff_user: "Staff User", staff_assignment: "Staff Assignment",
   product_model: "Product Model",
   production_family: "Product Family",
@@ -94,28 +100,20 @@ const TYPE_GROUPS: Record<string, string[]> = {
   organization: ["production_calendar", "shift_pattern", "language", "timezone", "industry_type"],
   manufacturing: ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type", "product_model", "production_family"],
   material_flow: ["material_category", "inventory_type", "kanban_type", "container_type", "unit_type"],
-  lean_quality: ["downtime_code", "defect_code", "scrap_reason", "kaizen_category"],
+  lean_quality: ["downtime_code", "defect_code", "scrap_reason", "kaizen_category", "priority", "label_badge", "maintenance_type", "material_flow_type", "process_type"],
   people: ["skill_type", "role", "shift_team", "staff_user", "staff_assignment"],
 };
 
 const GROUP_ORDER = ["organization", "manufacturing", "material_flow", "lean_quality", "people"];
-const READ_ONLY_TABLE_TYPES = new Set(["staff_user", "staff_assignment"]);
+const READ_ONLY_TABLE_TYPES = new Set<string>();
 const PEOPLE_TABLE_TYPES = new Set(["skill_type", "role", "shift_team", "staff_user", "staff_assignment"]);
-const WORKFLOW_ACTION_LABELS: Record<string, string> = {
-  staff_user: "Open Staff Management",
-  staff_assignment: "Open Assignments Workflow",
-};
-const WORKFLOW_ACTION_TARGETS: Record<string, string> = {
-  staff_user: "/system/profile",
-  staff_assignment: "/system/production-structure/references/staff_assignment",
-};
-
 function generateCode(): string { return `R${Math.random().toString(36).slice(2, 8).toUpperCase()}`; }
 
 const BASE_FIELDS: DynamicField[] = [
   { key: "name", label: "Name", required: true },
   { key: "code", label: "Code", required: true },
-  { key: "description", label: "Description" },
+  { key: "description", label: "Description", required: true },
+  { key: "usageContext", label: "Usage Context", required: true },
   { key: "sortOrder", label: "Sort Order" },
   { key: "isActive", label: "Status", type: "select", options: [{ label: "Active", value: "true" }, { label: "Inactive", value: "false" }] },
 ];
@@ -139,6 +137,11 @@ const TYPE_PLACEHOLDERS: Record<string, Partial<Record<string, string>>> = {
   defect_code: { name: "e.g. Dimension Out of Spec", code: "e.g. DIM" },
   scrap_reason: { name: "e.g. Material Defect", code: "e.g. MATL" },
   kaizen_category: { name: "e.g. Safety Improvement", code: "e.g. SAFETY" },
+  priority: { name: "e.g. Critical", code: "e.g. CRITICAL" },
+  label_badge: { name: "e.g. At Risk", code: "e.g. AT_RISK" },
+  maintenance_type: { name: "e.g. Preventive Maintenance", code: "e.g. PM" },
+  material_flow_type: { name: "e.g. Kanban", code: "e.g. KANBAN" },
+  process_type: { name: "e.g. Welding", code: "e.g. WELD" },
   skill_type: { name: "e.g. Machine Operator", code: "e.g. OPER" },
   role: { name: "e.g. Operator", code: "e.g. OP" },
   shift_team: { name: "e.g. Team A (Day)", code: "e.g. A" },
@@ -149,6 +152,19 @@ const TYPE_PLACEHOLDERS: Record<string, Partial<Record<string, string>>> = {
 };
 
 const ENTITY_SPECIFIC_FIELDS: Record<string, DynamicField[]> = {
+  staff_user: [{ key: "email", label: "Email", placeholder: "e.g. operator@plant.com" }],
+  staff_assignment: [
+    { key: "email", label: "Email", placeholder: "e.g. operator@plant.com" },
+    { key: "role", label: "Role", required: true, type: "select", options: [
+      { label: "Database Admin", value: "db_admin" },
+      { label: "Application Owner", value: "app_owner" },
+      { label: "Department Manager", value: "dept_manager" },
+      { label: "Supervisor", value: "supervisor" },
+      { label: "Guest", value: "guest" },
+    ]},
+    { key: "department", label: "Department", placeholder: "e.g. Assembly" },
+    { key: "plant", label: "Plant", placeholder: "e.g. Tijuana Plant" },
+  ],
   timezone: [{ key: "utcOffset", label: "UTC Offset", placeholder: "e.g. UTC-5 (EST)" }, { key: "region", label: "Region", placeholder: "e.g. Americas" }],
   language: [{ key: "localeCode", label: "Locale Code", placeholder: "e.g. en-US" }],
   shift_pattern: [
@@ -171,6 +187,20 @@ const ENTITY_SPECIFIC_FIELDS: Record<string, DynamicField[]> = {
 };
 
 function getFieldsForType(tableType: string): DynamicField[] {
+  if (tableType === "staff_user") {
+    return [
+      { key: "name", label: "Name", required: true },
+      { key: "email", label: "Email", placeholder: "e.g. operator@plant.com" },
+      { key: "isActive", label: "Status", type: "select", options: [{ label: "Active", value: "true" }, { label: "Inactive", value: "false" }] },
+    ];
+  }
+  if (tableType === "staff_assignment") {
+    return [
+      { key: "name", label: "Name", required: true },
+      ...(ENTITY_SPECIFIC_FIELDS.staff_assignment ?? []),
+      { key: "isActive", label: "Status", type: "select", options: [{ label: "Active", value: "true" }, { label: "Inactive", value: "false" }] },
+    ];
+  }
   const specific = ENTITY_SPECIFIC_FIELDS[tableType] ?? [];
   const ph = TYPE_PLACEHOLDERS[tableType] ?? {};
   const fields = [...BASE_FIELDS.slice(0, 3), ...specific, ...BASE_FIELDS.slice(3)];
@@ -207,6 +237,36 @@ function codeExistsInTable(items: RefItem[], tableType: string, code: string, cu
   return items.some((item) => item.tableType === tableType && item.id !== currentId && item.code.toLowerCase() === normalized);
 }
 
+function belongsToSelectedTable(item: RefItem, tableType: string | null): boolean {
+  if (!tableType || item.tableType !== tableType) return false;
+  if (tableType === "staff_user") return item.id.startsWith("user:");
+  if (tableType === "staff_assignment") return item.id.startsWith("user_role:");
+  if (tableType === "shift_team" || tableType === "skill_type" || tableType === "role") {
+    return item.id.startsWith(`${tableType}:`) || item.tableType === tableType;
+  }
+  return true;
+}
+
+function buildItemForm(item: RefItem): Record<string, string> {
+  const form: Record<string, string> = {
+    tableType: item.tableType,
+    name: item.name,
+    code: item.code,
+    description: item.description || "",
+    usageContext: item.usageContext || "",
+    sortOrder: String(item.sortOrder),
+    isActive: item.isActive ? "true" : "false",
+    email: item.email || "",
+    role: item.role || "",
+    department: item.department || "",
+    plant: item.plant || "",
+  };
+  for (const field of ENTITY_SPECIFIC_FIELDS[item.tableType] || []) {
+    form[field.key] = item[field.key]?.toString() ?? "";
+  }
+  return form;
+}
+
 const COMPANY_REQUIRED_KEYS: Array<keyof CompanyFormData> = ["name", "code", "industryType", "manufacturingType", "defaultTimezone", "defaultUnits", "defaultShiftModel"];
 
 const buildCompanyInput = (form: CompanyFormData) => ({
@@ -217,22 +277,21 @@ const buildCompanyInput = (form: CompanyFormData) => ({
   defaultTimezone: form.defaultTimezone || null, defaultTimezoneId: form.defaultTimezoneId || null,
 });
 
-function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, onDelete }: {
+function ItemsList({ items, selectedType, tableSearch, onEdit }: {
   items: RefItem[]; selectedType: string | null; tableSearch: string;
   onEdit: (item: RefItem) => void;
-  onToggleActive: (item: RefItem) => void; onDelete: (item: RefItem) => void;
 }) {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
 
-  const typeItems = useMemo(() => items.filter((i) => i.tableType === selectedType), [items, selectedType]);
+  const typeItems = useMemo(() => items.filter((i) => belongsToSelectedTable(i, selectedType)), [items, selectedType]);
   const workflowManaged = isWorkflowManagedTable(selectedType);
   const isStaffUsers = selectedType === "staff_user";
   const isStaffAssignments = selectedType === "staff_assignment";
   const gridCols = isStaffAssignments
-    ? "grid-cols-[200px_150px_170px_170px_140px_110px_120px]"
+    ? "grid-cols-[220px_170px_190px_190px_160px_110px]"
     : isStaffUsers
-      ? "grid-cols-[220px_160px_170px_170px_110px_140px]"
-      : "grid-cols-[220px_minmax(260px,1fr)_120px_220px_100px_110px]";
+      ? "grid-cols-[240px_180px_190px_190px_110px]"
+      : "grid-cols-[220px_minmax(260px,1fr)_minmax(240px,1fr)_120px_220px_100px]";
 
   const visible = useMemo(() => {
     let result = typeItems;
@@ -242,6 +301,10 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
         i.name.toLowerCase().includes(q) ||
         i.code.toLowerCase().includes(q) ||
         (i.description || "").toLowerCase().includes(q) ||
+        (i.usageContext || "").toLowerCase().includes(q) ||
+        (i.usageImpact || "").toLowerCase().includes(q) ||
+        (i.categoryName || "").toLowerCase().includes(q) ||
+        (i.dataType || "").toLowerCase().includes(q) ||
         (i.username || "").toLowerCase().includes(q) ||
         (i.role || "").toLowerCase().includes(q) ||
         (i.department || "").toLowerCase().includes(q) ||
@@ -291,15 +354,6 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
     </button>
   );
 
-  const WorkflowAction = ({ tableType, item }: { tableType: string; item?: RefItem }) => (
-    <a href={WORKFLOW_ACTION_TARGETS[tableType]} title="Open the source workflow for this system-managed table"
-      className={`inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-medium ${theme.buttonSecondary}`}
-      onClick={(e) => e.stopPropagation()}>
-      <ExternalLink className="h-3 w-3 stroke-current" />
-      <span>{item ? "Open" : WORKFLOW_ACTION_LABELS[tableType]}</span>
-    </a>
-  );
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 flex flex-col min-h-0">
@@ -312,7 +366,6 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
               <Th col="plant" label="Plant" />
               <Th col="shiftTeam" label="Shift Team" />
               <Th col="status" label="Status" />
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Actions</div>
             </>
           ) : isStaffUsers ? (
             <>
@@ -321,16 +374,15 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
               <Th col="department" label="Department" />
               <Th col="plant" label="Plant" />
               <Th col="status" label="Status" />
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Actions</div>
             </>
           ) : (
             <>
               <Th col="name" label="Name" />
               <Th col="description" label="Description" />
+              <Th col="usageContext" label="Usage Context" />
               <Th col="status" label="Status" />
               <Th col="impact" label="Used By" />
               <Th col="code" label="Code" />
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">Actions</div>
             </>
           )}
         </div>
@@ -369,8 +421,9 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
                     <>
                       <span className="flex items-center text-xs font-semibold truncate text-slate-800 dark:text-slate-200 pr-2" title={item.name}>{item.name}</span>
                       <span className="flex items-center text-[10px] truncate text-slate-400 dark:text-slate-500 leading-tight text-left pr-2">
-                        {item.description || <span className={`${theme.textMuted} italic`}>No description</span>}
+                        {item.description}
                       </span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.usageContext || ""}>{item.usageContext}</span>
                     </>
                   )}
                   <span className="flex items-center">
@@ -381,7 +434,7 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
                   </span>
                   {!isStaffUsers && !isStaffAssignments && (
                     <>
-                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.usageImpact || "No known usage"}>{item.usageImpact || "No known usage"}</span>
+                      <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.usageImpact || ""}>{item.usageImpact}</span>
                       <span className="flex items-center overflow-hidden pr-2">
                         <span className="inline-flex max-w-full items-center truncate rounded border border-slate-200/80 bg-slate-100/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none tracking-wide text-slate-500 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-400" title={item.code}>
                           {item.code}
@@ -389,26 +442,6 @@ function ItemsList({ items, selectedType, tableSearch, onEdit, onToggleActive, o
                       </span>
                     </>
                   )}
-                  <span className="flex items-center gap-0.5 justify-end pr-1" onClick={(e) => e.stopPropagation()}>
-                    {workflowManaged ? (
-                      <WorkflowAction tableType={item.tableType} item={item} />
-                    ) : (
-                      <>
-                        <button type="button" onClick={() => onEdit(item)} title="Edit"
-                          className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors">
-                          <Pencil className="h-3 w-3 stroke-current" />
-                        </button>
-                        <button type="button" onClick={() => onToggleActive(item)} title={item.isActive ? "Disable" : "Enable"}
-                          className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors">
-                          {item.isActive ? <EyeOff className="h-3 w-3 stroke-current" /> : <Eye className="h-3 w-3 stroke-current" />}
-                        </button>
-                        <button type="button" onClick={() => onDelete(item)} title="Delete"
-                          className="h-6 w-6 flex items-center justify-center rounded text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                          <Trash2 className="h-3 w-3 stroke-current" />
-                        </button>
-                      </>
-                    )}
-                  </span>
                 </div>
               ))}
             </div>
@@ -466,7 +499,7 @@ function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany,
                       const EntityIcon = entityStyle.icon;
                       const [entityTextColor, entityBgColor] = entityStyle.color.split(" ");
                       const workflowManaged = isWorkflowManagedTable(tt);
-                      const hasUsage = typeItems.some((item) => item.usageImpact && item.usageImpact !== "No known usage");
+                      const hasUsage = typeItems.some((item) => item.usageImpact);
                       return (
                         <button key={tt} type="button" onClick={() => selectType(tt)}
                           className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-3 ${
@@ -499,6 +532,7 @@ function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany,
 }
 
 export function ReferencesPage({ standalone = true }: { standalone?: boolean }) {
+  const { showSystemMessage } = useToolbar();
   const [search, setSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -535,12 +569,11 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const [itemErrorDismissed, setItemErrorDismissed] = useState(false);
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<RefItem | null>(null);
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: "", visible: false });
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
   const showToast = useCallback((message: string) => {
-    setToast({ message, visible: true });
-    setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 3000);
-  }, []);
+    showSystemMessage(message, "success");
+  }, [showSystemMessage]);
 
   const { data: itemsData, loading: itemsLoading, refetch: refetchItems } = useQuery<{ referenceItems: RefItem[] }>(REFERENCE_ITEMS_QUERY, {
     variables: { tableType: null }, fetchPolicy: "cache-and-network", errorPolicy: "all",
@@ -552,6 +585,10 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const [deactivateItem] = useMutation(DEACTIVATE_REFERENCE_ITEM_MUTATION, { refetchQueries: [REFERENCE_ITEMS_QUERY] });
   const company = companyData?.company;
   const allItems = itemsData?.referenceItems ?? [];
+  const selectedRecord = useMemo(() => {
+    if (!selectedRecordId) return null;
+    return allItems.find((item) => item.id === selectedRecordId) || null;
+  }, [allItems, selectedRecordId]);
 
   const currentTableType = editingItem?.tableType || itemForm.tableType || selectedType || "";
   const selectedReadOnly = selectedType ? READ_ONLY_TABLE_TYPES.has(selectedType) : false;
@@ -602,6 +639,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const selectType = (tt: string) => {
     setCompanyEditMode(false);
     setEditingItem(null);
+    setSelectedRecordId(null);
     setItemForm({});
     setSelectedType(tt);
   };
@@ -609,6 +647,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const openCompany = () => {
     setSelectedType(null);
     setEditingItem(null);
+    setSelectedRecordId(null);
     setItemForm({});
     setItemError(null);
     setItemErrorDismissed(false);
@@ -678,7 +717,8 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
     if (READ_ONLY_TABLE_TYPES.has(tableType)) return;
     setCompanyEditMode(false);
     setEditingItem(null);
-    setItemForm({ tableType, name: "", code: generateCode(), description: "", sortOrder: "0", isActive: "true" });
+    setSelectedRecordId(null);
+    setItemForm({ tableType, name: "", code: generateCode(), description: "", usageContext: "", sortOrder: "0", isActive: "true" });
     setItemError(null);
     setItemErrorDismissed(false);
     setShowUnsavedModal(false);
@@ -689,10 +729,9 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
     if (READ_ONLY_TABLE_TYPES.has(item.tableType)) return;
     setCompanyEditMode(false);
     setEditingItem(item);
-    setItemForm({
-      tableType: item.tableType, name: item.name, code: item.code, description: item.description || "",
-      sortOrder: String(item.sortOrder), isActive: item.isActive ? "true" : "false",
-    });
+    setSelectedRecordId(item.id);
+    setSelectedType(item.tableType);
+    setItemForm(buildItemForm(item));
     setItemError(null);
     setItemErrorDismissed(false);
     setShowUnsavedModal(false);
@@ -701,6 +740,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const closePanel = useCallback(() => {
     setCompanyEditMode(false);
     setEditingItem(null);
+    setSelectedRecordId(null);
     setItemForm({});
     setItemError(null);
     setItemErrorDismissed(false);
@@ -714,13 +754,26 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
     closePanel();
   }, [editingItem, itemForm, showUnsavedModal, isItemDirty]);
 
+  useEffect(() => {
+    if (!editingItem || !selectedRecordId) return;
+    if (!selectedRecord) {
+      closePanel();
+      return;
+    }
+    if (selectedRecord.tableType !== editingItem.tableType) return;
+    setEditingItem(selectedRecord);
+    if (!isItemDirty) setItemForm(buildItemForm(selectedRecord));
+  }, [selectedRecord, selectedRecordId, editingItem, isItemDirty, closePanel]);
+
   const handleItemSave = useCallback(async () => {
     if (!isFormValid) return;
     setItemSaving(true); setItemError(null); setItemErrorDismissed(false);
     try {
       const input: Record<string, unknown> = {
         tableType: itemForm.tableType, code: itemForm.code, name: itemForm.name,
-        description: itemForm.description || "", sortOrder: parseInt(itemForm.sortOrder) || 0, isActive: itemForm.isActive === "true",
+        description: itemForm.description || "", usageContext: itemForm.usageContext || "",
+        sortOrder: parseInt(itemForm.sortOrder) || 0, isActive: itemForm.isActive === "true",
+        email: itemForm.email || "", role: itemForm.role || "", department: itemForm.department || "", plant: itemForm.plant || "",
       };
       ENTITY_SPECIFIC_FIELDS[currentTableType]?.forEach(f => { if (itemForm[f.key]) input[f.key] = itemForm[f.key]; });
       const response = editingItem
@@ -741,25 +794,6 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const handleModalSave = useCallback(async () => { setShowUnsavedModal(false); await handleItemSave(); }, [handleItemSave]);
   const handleModalDiscard = useCallback(() => { setShowUnsavedModal(false); closePanel(); }, [closePanel]);
   const handleModalCancel = useCallback(() => { setShowUnsavedModal(false); }, []);
-
-  const handleToggleActive = async (item: RefItem) => {
-    setItemSaving(true);
-    try {
-      const response = await deactivateItem({ variables: { id: item.id } });
-      const responseData = response.data as ReferenceItemMutationResponse | undefined;
-      const errors = responseData?.deactivateReferenceItem?.errors;
-      if (errors?.length) {
-        setItemError(errors.map((error: { message: string }) => error.message).join(", "));
-        setItemSaving(false);
-        return;
-      }
-      showToast(item.isActive ? "Record disabled" : "Record enabled");
-      await refetchItems();
-    } catch (e) {
-      setItemError(e instanceof Error ? e.message : "Toggle failed");
-    }
-    setItemSaving(false);
-  };
 
   const handleDelete = async () => {
     if (!confirmDelete) return;
@@ -823,7 +857,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
 
   const selectedTypeItems: RefItem[] = useMemo(() => {
     if (!selectedType) return [];
-    return allItems.filter((i) => i.tableType === selectedType);
+    return allItems.filter((i) => belongsToSelectedTable(i, selectedType));
   }, [allItems, selectedType]);
   const selectedGroupLabel = useMemo(() => {
     if (!selectedType) return "";
@@ -831,9 +865,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
     return group ? GROUP_LABELS[group] : "";
   }, [selectedType]);
   const selectedDataType = selectedReadOnly ? "Managed by workflow" : selectedTypeItems[0]?.dataType || "Configurable";
-  const selectedUsageContext = selectedReadOnly
-    ? selectedType === "staff_assignment" ? "Managed by staff assignment workflow" : "Managed by staff/user workflow"
-    : selectedTypeItems[0]?.usageContext || "Used by production structure setup";
+  const selectedUsageContext = selectedTypeItems[0]?.usageContext || "";
   const selectedUpdatedDates = selectedTypeItems.map((item) => item.updatedAt || "").filter(Boolean).sort();
   const selectedUpdatedAt = selectedUpdatedDates[selectedUpdatedDates.length - 1] || "";
   const selectedTablePurpose = selectedType === "skill_type"
@@ -847,9 +879,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
           : selectedType === "staff_assignment"
             ? "Relationship between staff, role, plant and department that feeds staffing and ownership readiness."
             : "";
-  const selectedWorkflowActionLabel = selectedType ? WORKFLOW_ACTION_LABELS[selectedType] : "";
-  const selectedWorkflowActionTarget = selectedType ? WORKFLOW_ACTION_TARGETS[selectedType] : "";
-
+  const itemEditorOpen = Boolean(editingItem || (itemForm.tableType && itemForm.name !== undefined));
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
       {standalone && (
@@ -869,7 +899,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search catalog..."
               className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-violet-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-violet-500" />
           </div>
-          {selectedType && !companyEditMode && !editingItem && !(itemForm.tableType && itemForm.name !== undefined) && (
+          {selectedType && !companyEditMode && !itemEditorOpen && (
             <>
               <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
               <div className="relative" style={{ width: 200 }}>
@@ -886,25 +916,57 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
               <span className="text-[10px] text-slate-400 font-mono">{selectedTypeItems.length}</span>
             </>
           )}
+          {selectedType && !companyEditMode && itemEditorOpen && (
+            <>
+              <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <span className="text-[11px] text-slate-400">Reference Tables</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+              <span className="text-[11px] text-slate-400">{selectedGroupLabel}</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
+              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">
+                {editingItem ? `Edit ${editingItem.name}` : `Add ${getEntityLabel(currentTableType)}`}
+              </span>
+              {isItemDirty && <span className="text-[10px] text-amber-600 font-medium">unsaved</span>}
+            </>
+          )}
           <div className="flex-1" />
           <div className="flex items-center gap-1">
-            <button type="button" onClick={() => selectedType && openAddItem(selectedType)} disabled={!selectedType || selectedReadOnly} title={selectedReadOnly ? "Managed by workflow. Open the source workflow to add records." : "Add Record"}
-              className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
-              <Plus className="h-3.5 w-3.5 stroke-current" />
-              <span>Add Record</span>
-            </button>
-            {selectedReadOnly && selectedWorkflowActionTarget && (
-              <a href={selectedWorkflowActionTarget}
-                className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-500/10 transition-colors">
-                <ExternalLink className="h-3.5 w-3.5 stroke-current" />
-                <span>{selectedWorkflowActionLabel}</span>
-              </a>
+            {itemEditorOpen ? (
+              <>
+                {editingItem && (
+                  <button type="button" onClick={() => setConfirmDelete(editingItem)} disabled={itemSaving}
+                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:pointer-events-none disabled:opacity-40">
+                    <Trash2 className="h-3.5 w-3.5 stroke-current" />
+                    <span>Delete</span>
+                  </button>
+                )}
+                <button type="submit" form="item-form" disabled={itemSaving || !isFormValid}
+                  className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                  {itemSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />}
+                  <span>Save</span>
+                </button>
+                <button type="button" onClick={tryClosePanel}
+                  className="h-7 px-2.5 rounded text-[11px] font-medium inline-flex items-center gap-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+                  <X className="h-3.5 w-3.5 stroke-current" />
+                  <span>Cancel</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => selectedType && openAddItem(selectedType)} disabled={!selectedType || selectedReadOnly} title={selectedReadOnly ? "Managed by workflow. Open the source workflow to add records." : "Add Record"}
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
+                  <Plus className="h-3.5 w-3.5 stroke-current" />
+                  <span>Add Record</span>
+                </button>
+                <button type="button" onClick={() => refetchItems()} disabled={itemsLoading}
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
+                  <RefreshCw className={`h-3.5 w-3.5 stroke-current ${itemsLoading ? "animate-spin" : ""}`} />
+                  <span>Refresh</span>
+                </button>
+              </>
             )}
-            <button type="button" onClick={() => refetchItems()} disabled={itemsLoading}
-              className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
-              <RefreshCw className={`h-3.5 w-3.5 stroke-current ${itemsLoading ? "animate-spin" : ""}`} />
-              <span>Refresh</span>
-            </button>
           </div>
         </div>
       )}
@@ -956,26 +1018,6 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
             </div>
           ) : editingItem || (itemForm.tableType && itemForm.name !== undefined) ? (
             <div className="flex h-full flex-col">
-              <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3" style={{ height: "40px" }}>
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[11px] text-slate-400">Reference Tables</span>
-                  <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 truncate">
-                    {editingItem ? `Edit ${editingItem.name}` : `Add ${getEntityLabel(currentTableType)}`}
-                  </span>
-                  {isItemDirty && <span className="text-[10px] text-amber-600 font-medium">unsaved</span>}
-                </div>
-                <div className="flex items-center gap-1">
-                  <button type="submit" form="item-form" disabled={itemSaving || !isFormValid}
-                    className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors">
-                    {itemSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />} Save
-                  </button>
-                  <button type="button" onClick={tryClosePanel}
-                    className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors">
-                    <X className="h-3.5 w-3.5 stroke-current" />
-                  </button>
-                </div>
-              </div>
               <form id="item-form" onSubmit={(e) => { e.preventDefault(); handleItemSave(); }} className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-w-xl">
                 {currentTableType === "shift_pattern" && (
                   <div className="rounded border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10px] leading-4 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
@@ -1006,15 +1048,6 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
                     )}
                   </div>
                 ))}
-                {editingItem && (
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <button type="button" onClick={() => setConfirmDelete(editingItem)}
-                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[10px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                      <Trash2 className="h-3 w-3 stroke-current" />
-                      Delete record
-                    </button>
-                  </div>
-                )}
                 {itemError && !itemErrorDismissed && (
                   <div className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
                     <span>{itemError}</span>
@@ -1052,16 +1085,10 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
                         : "Staff users are managed from the Staff/User workflow. Direct Add/Edit/Delete is disabled here."}
                     </span>
                   </div>
-                  {selectedWorkflowActionTarget && (
-                    <a href={selectedWorkflowActionTarget} className={`shrink-0 rounded px-2 py-1 text-[10px] font-medium ${theme.buttonDetails}`}>
-                      {selectedWorkflowActionLabel}
-                    </a>
-                  )}
                 </div>
               )}
               <div className="flex-1 min-h-0">
-                <ItemsList items={allItems} selectedType={selectedType} tableSearch={tableSearch} onEdit={openEditItem}
-                  onToggleActive={handleToggleActive} onDelete={(item) => { setEditingItem(item); setConfirmDelete(item); }} />
+                <ItemsList items={allItems} selectedType={selectedType} tableSearch={tableSearch} onEdit={openEditItem} />
               </div>
             </div>
           ) : (
@@ -1108,7 +1135,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
           <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-90 max-w-[90vw]">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Delete {confirmDelete.name}?</h3>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">
-              This record will be deactivated instead of removed. {confirmDelete.usageImpact || "No known usage"}.
+              This record will be deactivated instead of removed. {confirmDelete.usageImpact}.
             </p>
             <div className="flex items-center justify-end gap-1">
               <button type="button" onClick={handleDelete} disabled={itemSaving}
@@ -1124,13 +1151,6 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
         </div>
       )}
 
-      {/* Toast */}
-      {toast.visible && (
-        <div className="fixed bottom-5 right-5 z-50 bg-emerald-600 text-white px-3 py-2 rounded-lg shadow-lg text-[10px] font-medium flex items-center gap-2">
-          <Check className="h-3 w-3 stroke-current shrink-0" />
-          {toast.message}
-        </div>
-      )}
     </div>
   );
 }

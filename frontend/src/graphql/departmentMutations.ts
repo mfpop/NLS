@@ -5,6 +5,8 @@ const DEPARTMENT_FIELDS = `
   departmentId
   code
   name
+  plantId
+  plant { id name code status }
   description
   status
   statusId
@@ -15,7 +17,7 @@ const DEPARTMENT_FIELDS = `
   employees
   employeeCount
   productionLineCount
-  productionLines { id code name plantName status }
+  productionLines { id code name plantId plantName status }
   groupCount
   groupName
   resourceGroupCount

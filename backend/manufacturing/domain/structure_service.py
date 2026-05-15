@@ -45,26 +45,35 @@ class StructureService:
             raise StructureServiceError("companyId", "NOT_FOUND", "Company not found") from exc
 
     @classmethod
-    def _plant(cls, plant_id: str | None) -> Plant:
+    def _plant(cls, plant_id: str | None, for_update: bool = False) -> Plant:
         value = cls._required(plant_id, "plantId", "Plant")
+        qs = Plant.objects
+        if for_update:
+            qs = qs.select_for_update()
         try:
-            return Plant.objects.get(id=value)
+            return qs.get(id=value)
         except Plant.DoesNotExist as exc:
             raise StructureServiceError("plantId", "NOT_FOUND", "Plant not found") from exc
 
     @classmethod
-    def _department(cls, department_id: str | None) -> Department:
+    def _department(cls, department_id: str | None, for_update: bool = False) -> Department:
         value = cls._required(department_id, "departmentId", "Department")
+        qs = Department.objects
+        if for_update:
+            qs = qs.select_for_update()
         try:
-            return Department.objects.get(id=value)
+            return qs.get(id=value)
         except Department.DoesNotExist as exc:
             raise StructureServiceError("departmentId", "NOT_FOUND", "Department not found") from exc
 
     @classmethod
-    def _resource_group(cls, resource_group_id: str | None) -> ResourceGroup:
+    def _resource_group(cls, resource_group_id: str | None, for_update: bool = False) -> ResourceGroup:
         value = cls._required(resource_group_id, "resourceGroupId", "Resource group")
+        qs = ResourceGroup.objects.select_related("department__plant")
+        if for_update:
+            qs = qs.select_for_update()
         try:
-            return ResourceGroup.objects.select_related("department__plant").get(id=value)
+            return qs.get(id=value)
         except ResourceGroup.DoesNotExist as exc:
             raise StructureServiceError("resourceGroupId", "NOT_FOUND", "Resource group not found") from exc
 
@@ -78,8 +87,169 @@ class StructureService:
 
     @classmethod
     @transaction.atomic
+    def create_company(cls, input_data) -> Company:
+        code = cls._required(input_data.code, "code", "Code").upper()
+        name = cls._required(input_data.name, "name", "Name")
+        cls._validate_unique(Company, {"code__iexact": code}, None, "code", "Company code must be unique")
+        cls._validate_unique(Company, {"name__iexact": name}, None, "name", "Company name must be unique")
+        company = Company.objects.create(
+            code=code,
+            name=name,
+            legal_name=input_data.legal_name or "",
+            description=input_data.description or "",
+            industry_type=input_data.industry_type or "",
+            status=input_data.status or "ACTIVE",
+            address=input_data.address or "",
+            city=input_data.city or "",
+            state=input_data.state or "",
+            country=input_data.country or "",
+            phone=input_data.phone or "",
+            email=input_data.email or "",
+            website=input_data.website or "",
+            operating_since=input_data.operating_since or "",
+            manufacturing_focus=input_data.manufacturing_focus or "",
+            product_lines=input_data.product_lines or "",
+            lean_methodology=input_data.lean_methodology or "",
+            default_timezone=input_data.default_timezone or "",
+            default_language=input_data.default_language or "",
+            default_calendar=input_data.default_calendar or "",
+            default_shift_model=input_data.default_shift_model or "",
+            week_start_day=input_data.week_start_day or "",
+            admin_name=input_data.admin_name or "",
+            admin_role=input_data.admin_role or "",
+            zipcode=input_data.zipcode or "",
+        )
+        cls._set_company_refs(company, input_data)
+        company.save()
+        return company
+
+    @classmethod
+    @transaction.atomic
+    def update_company(cls, company_id: str, input_data) -> Company:
+        try:
+            company = Company.objects.get(id=company_id)
+        except Company.DoesNotExist as exc:
+            raise StructureServiceError("id", "NOT_FOUND", "Company not found") from exc
+        code = cls._required(input_data.code, "code", "Code").upper()
+        name = cls._required(input_data.name, "name", "Name")
+        cls._validate_unique(Company, {"code__iexact": code}, company_id, "code", "Company code must be unique")
+        cls._validate_unique(Company, {"name__iexact": name}, company_id, "name", "Company name must be unique")
+        company.code = code
+        company.name = name
+        for field in (
+            "legal_name", "description", "industry_type", "status", "address", "city", "state",
+            "country", "phone", "email", "website", "operating_since", "manufacturing_focus",
+            "product_lines", "lean_methodology", "default_timezone", "default_language",
+            "default_calendar", "default_shift_model", "week_start_day", "admin_name",
+            "admin_role", "zipcode",
+        ):
+            value = getattr(input_data, field, None)
+            if value is not None:
+                setattr(company, field, value)
+        cls._set_company_refs(company, input_data)
+        company.save()
+        return company
+
+    @classmethod
+    @transaction.atomic
+    def update_primary_company(cls, input_data) -> Company:
+        company = Company.objects.order_by("id").first()
+        if company is None:
+            raise StructureServiceError("id", "NOT_FOUND", "Company not found")
+        return cls.update_company(str(company.id), input_data)
+
+    @classmethod
+    def _set_company_refs(cls, company: Company, input_data):
+        for input_field, model_field, text_field in (
+            ("status_id", "status_id", "status"),
+            ("industry_type_id", "industry_type_id", "industry_type"),
+            ("default_timezone_id", "default_timezone_id", "default_timezone"),
+            ("default_language_id", "default_language_id", "default_language"),
+            ("default_shift_model_id", "default_shift_model_id", "default_shift_model"),
+            ("country_id", "country_id", "country"),
+            ("default_calendar_id", "default_calendar_id", "default_calendar"),
+            ("week_start_day_id", "week_start_day_id", "week_start_day"),
+        ):
+            if getattr(input_data, input_field) is not None:
+                ref = cls._resolve_ref(getattr(input_data, input_field))
+                setattr(company, model_field, ref)
+                if ref and text_field:
+                    setattr(company, text_field, ref.name)
+        if input_data.product_line_ids is not None:
+            company.product_line_refs.set(ReferenceValue.objects.filter(id__in=input_data.product_line_ids))
+        if input_data.lean_methodology_ids is not None:
+            company.lean_methodology_refs.set(ReferenceValue.objects.filter(id__in=input_data.lean_methodology_ids))
+
+    @classmethod
+    @transaction.atomic
+    def delete_company(cls, company_id: str) -> Company:
+        try:
+            company = Company.objects.get(id=company_id)
+        except Company.DoesNotExist as exc:
+            raise StructureServiceError("id", "NOT_FOUND", "Company not found") from exc
+        if company.plants.exists():
+            raise StructureServiceError("id", "IN_USE_PLANTS", "Cannot delete company while Plants exist")
+        company.delete()
+        return company
+
+    @classmethod
+    @transaction.atomic
+    def delete_primary_company(cls) -> Company:
+        company = Company.objects.order_by("id").first()
+        if company is None:
+            raise StructureServiceError("id", "NOT_FOUND", "Company not found")
+        return cls.delete_company(str(company.id))
+
+    @classmethod
+    @transaction.atomic
+    def archive_plant(cls, plant_id: str) -> Plant:
+        plant = cls._plant(plant_id)
+        plant.status = "ARCHIVED"
+        plant.save(update_fields=["status", "updated_at"])
+        return plant
+
+    @classmethod
+    @transaction.atomic
+    def archive_production_line(cls, line_id: str) -> ProductionLine:
+        try:
+            line = ProductionLine.objects.get(id=line_id)
+        except ProductionLine.DoesNotExist as exc:
+            raise StructureServiceError("id", "NOT_FOUND", "Production line not found") from exc
+        line.status = "ARCHIVED"
+        line.save(update_fields=["status", "updated_at"])
+        return line
+
+    @classmethod
+    @transaction.atomic
+    def archive_resource_group(cls, group_id: str) -> ResourceGroup:
+        group = cls._resource_group(group_id, for_update=True)
+        group.status = "ARCHIVED"
+        group.save(update_fields=["status", "updated_at"])
+        return group
+
+    @classmethod
+    @transaction.atomic
+    def archive_resource(cls, resource_id: str) -> Resource:
+        try:
+            resource = Resource.objects.select_for_update().get(id=resource_id)
+        except Resource.DoesNotExist as exc:
+            raise StructureServiceError("id", "NOT_FOUND", "Resource not found") from exc
+        resource.status = "ARCHIVED"
+        resource.save(update_fields=["status", "updated_at"])
+        return resource
+
+    @classmethod
+    @transaction.atomic
+    def archive_department(cls, department_id: str) -> Department:
+        dept = cls._department(department_id)
+        dept.status = "ARCHIVED"
+        dept.save(update_fields=["status", "updated_at"])
+        return dept
+
+    @classmethod
+    @transaction.atomic
     def create_plant(cls, input_data, company_id: str | None = None) -> Plant:
-        company = cls._company(company_id)
+        company = Company.objects.select_for_update().get(id=company_id)
         code = cls._required(input_data.code, "code", "Code").upper()
         name = cls._required(input_data.name, "name", "Name")
         cls._validate_unique(Plant, {"company": company, "code__iexact": code}, None, "code", "Plant code must be unique inside Company")
@@ -179,7 +349,7 @@ class StructureService:
     @classmethod
     @transaction.atomic
     def create_production_line(cls, input_data) -> ProductionLine:
-        plant = cls._plant(input_data.plant_id)
+        plant = cls._plant(input_data.plant_id, for_update=True)
         code = cls._required(input_data.code, "code", "Code").upper()
         name = cls._required(input_data.name, "name", "Name")
         cls._validate_unique(ProductionLine, {"plant": plant, "code__iexact": code}, None, "code", "Production line code must be unique inside Plant")
@@ -201,10 +371,10 @@ class StructureService:
     @transaction.atomic
     def update_production_line(cls, line_id: str, input_data) -> ProductionLine:
         try:
-            line = ProductionLine.objects.get(id=line_id)
+            line = ProductionLine.objects.select_for_update().get(id=line_id)
         except ProductionLine.DoesNotExist as exc:
             raise StructureServiceError("id", "NOT_FOUND", "Production line not found") from exc
-        plant = cls._plant(input_data.plant_id)
+        plant = cls._plant(input_data.plant_id, for_update=True)
         if line.plant_id != plant.id and line.department_assignments.exists():
             raise StructureServiceError("plantId", "INVALID", "Cannot change Plant while departments are assigned")
         code = cls._required(input_data.code, "code", "Code").upper()
@@ -225,8 +395,8 @@ class StructureService:
     @transaction.atomic
     def assign_department_to_production_line(cls, production_line_id: str, department_id: str, sequence: int = 0, status: str = "ACTIVE"):
         try:
-            line = ProductionLine.objects.get(id=production_line_id)
-            dept = Department.objects.get(id=department_id)
+            line = ProductionLine.objects.select_for_update().get(id=production_line_id)
+            dept = Department.objects.select_for_update().get(id=department_id)
         except ProductionLine.DoesNotExist as exc:
             raise StructureServiceError("productionLineId", "NOT_FOUND", "Production line not found") from exc
         except Department.DoesNotExist as exc:
@@ -242,8 +412,17 @@ class StructureService:
 
     @classmethod
     @transaction.atomic
+    def remove_department_from_production_line(cls, production_line_id: str, department_id: str) -> bool:
+        deleted, _ = ProductionLineDepartmentAssignment.objects.filter(
+            production_line_id=production_line_id,
+            department_id=department_id,
+        ).delete()
+        return deleted > 0
+
+    @classmethod
+    @transaction.atomic
     def create_resource_group(cls, input_data) -> ResourceGroup:
-        dept = cls._department(str(input_data.department_id))
+        dept = cls._department(str(input_data.department_id), for_update=True)
         code = cls._required(input_data.code, "code", "Code").upper()
         name = cls._required(input_data.name, "name", "Name")
         cls._validate_unique(ResourceGroup, {"department": dept, "code__iexact": code}, None, "code", "Resource group code must be unique inside Department")
@@ -271,10 +450,10 @@ class StructureService:
     @transaction.atomic
     def update_resource_group(cls, group_id: str, input_data) -> ResourceGroup:
         try:
-            group = ResourceGroup.objects.get(id=group_id)
+            group = ResourceGroup.objects.select_for_update().get(id=group_id)
         except ResourceGroup.DoesNotExist as exc:
             raise StructureServiceError("id", "NOT_FOUND", "Resource group not found") from exc
-        dept = cls._department(str(input_data.department_id))
+        dept = cls._department(str(input_data.department_id), for_update=True)
         if group.department_id != dept.id and (group.resources.exists() or RoutingStep.objects.filter(resource_group_id=group_id).exists()):
             raise StructureServiceError("departmentId", "INVALID",
                                         "Cannot change Department while resources or routing steps exist")
@@ -318,7 +497,6 @@ class StructureService:
         cls._validate_unique(Resource, {"resource_group": group, "code__iexact": code}, None, "code", "Resource code must be unique inside Resource Group")
         resource = Resource.objects.create(
             resource_group=group,
-            department=group.department,
             code=code,
             name=name,
             description=input_data.description or "",
@@ -342,7 +520,6 @@ class StructureService:
         name = cls._required(input_data.name, "name", "Name")
         cls._validate_unique(Resource, {"resource_group": group, "code__iexact": code}, resource_id, "code", "Resource code must be unique inside Resource Group")
         resource.resource_group = group
-        resource.department = group.department
         resource.code = code
         resource.name = name
         resource.description = input_data.description or ""

@@ -8,10 +8,6 @@ class Resource(TimeStampedModel):
         "manufacturing.ResourceGroup", on_delete=models.PROTECT,
         related_name="resources",
     )
-    department = models.ForeignKey(
-        "manufacturing.Department", on_delete=models.PROTECT,
-        related_name="resources", null=True, blank=True,
-    )
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
@@ -42,6 +38,7 @@ class Resource(TimeStampedModel):
         ]
         constraints = [
             models.UniqueConstraint(fields=["resource_group", "code"], name="uq_resource_group_code"),
+            models.UniqueConstraint(fields=["resource_group", "name"], name="uq_resource_group_name"),
         ]
 
     def __str__(self):

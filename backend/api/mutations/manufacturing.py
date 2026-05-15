@@ -495,59 +495,27 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def create_company(self, input: CompanyInput) -> CompanyPayload:
-        if Company.objects.exists():
-            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="DUPLICATE", message="A company already exists")])
-        company = Company.objects.create(
-            code=input.code or "", name=input.name or "",
-            legal_name=input.legal_name or "", description=input.description or "",
-            industry_type=input.industry_type or "", status=input.status or "ACTIVE",
-            address=input.address or "", city=input.city or "",
-            state=input.state or "", country=input.country or "",
-            phone=input.phone or "", email=input.email or "",
-            website=input.website or "", operating_since=input.operating_since or "",
-            manufacturing_focus=input.manufacturing_focus or "",
-            product_lines=input.product_lines or "",
-            lean_methodology=input.lean_methodology or "",
-            default_timezone=input.default_timezone or "",
-            default_language=input.default_language or "",
-            default_calendar=input.default_calendar or "",
-            default_shift_model=input.default_shift_model or "",
-            week_start_day=input.week_start_day or "",
-            admin_name=input.admin_name or "", admin_role=input.admin_role or "",
-            zipcode=input.zipcode or "",
-        )
-        _set_company_refs(company, input)
-        company.save()
-        return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+        try:
+            company = StructureService.create_company(input)
+            return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+        except StructureServiceError as exc:
+            return CompanyPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def update_company(self, input: CompanyInput) -> CompanyPayload:
-        company = Company.objects.first()
-        if not company:
-            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="NOT_FOUND", message="No company found")])
-        for f in ("code", "name", "legal_name", "description", "industry_type", "status",
-                   "address", "city", "state", "country", "phone", "email", "website",
-                   "operating_since", "manufacturing_focus", "product_lines",
-                   "lean_methodology", "default_timezone", "default_language",
-                   "default_calendar", "default_shift_model", "week_start_day",
-                   "admin_name", "admin_role", "zipcode"):
-            v = getattr(input, f)
-            if v is not None:
-                setattr(company, f, v)
-        _set_company_refs(company, input)
-        company.save()
-        return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+        try:
+            company = StructureService.update_primary_company(input)
+            return CompanyPayload(ok=True, company=CompanyNode.from_db(company))
+        except StructureServiceError as exc:
+            return CompanyPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def delete_company(self) -> CompanyPayload:
-        company = Company.objects.first()
-        if not company:
-            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="NOT_FOUND", message="No company found")])
-        from manufacturing.models import Plant
-        if Plant.objects.exists():
-            return CompanyPayload(ok=False, errors=[MutationError(field=None, code="IN_USE", message="Cannot delete company with existing plants. Remove all plants first.")])
-        company.delete()
-        return CompanyPayload(ok=True)
+        try:
+            StructureService.delete_primary_company()
+            return CompanyPayload(ok=True)
+        except StructureServiceError as exc:
+            return CompanyPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def create_plant(self, input: PlantInput, company_id: Optional[str] = strawberry.UNSET) -> PlantPayload:
@@ -572,12 +540,10 @@ class ManufacturingMutation:
     @strawberry.mutation
     def archive_plant(self, id: str) -> PlantPayload:
         try:
-            plant = Plant.objects.get(id=id)
-        except Plant.DoesNotExist:
-            return PlantPayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Plant not found"}])
-        plant.status = "ARCHIVED"
-        plant.save()
-        return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
+            plant = StructureService.archive_plant(id)
+            return PlantPayload(ok=True, plant=PlantNode.from_db(plant))
+        except StructureServiceError as exc:
+            return PlantPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def create_production_line(self, input: ProductionLineInput) -> ProductionLinePayload:
@@ -604,12 +570,10 @@ class ManufacturingMutation:
     @strawberry.mutation
     def archive_production_line(self, id: str) -> ProductionLinePayload:
         try:
-            line = ProductionLine.objects.get(id=id)
-        except ProductionLine.DoesNotExist:
-            return ProductionLinePayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Production line not found"}])
-        line.status = "ARCHIVED"
-        line.save()
-        return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
+            line = StructureService.archive_production_line(id)
+            return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
+        except StructureServiceError as exc:
+            return ProductionLinePayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def create_department(self, input: DepartmentInput) -> DepartmentPayload:
@@ -630,12 +594,10 @@ class ManufacturingMutation:
     @strawberry.mutation
     def archive_department(self, id: str) -> DepartmentPayload:
         try:
-            dept = DepartmentService.get(id)
-            dept.status = "ARCHIVED"
-            dept.save()
-            return DepartmentPayload(ok=True, department=DepartmentNode.from_db(DepartmentService.get(id)))
-        except DepartmentServiceError as exc:
-            return DepartmentPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+            dept = StructureService.archive_department(id)
+            return DepartmentPayload(ok=True, department=DepartmentNode.from_db(dept))
+        except StructureServiceError as exc:
+            return DepartmentPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def delete_department(self, id: str) -> DeletePayload:
@@ -681,10 +643,8 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def remove_department_from_production_line(self, production_line_id: str, department_id: str) -> AssignmentPayload:
-        deleted, _ = ProductionLineDepartmentAssignment.objects.filter(
-            production_line_id=production_line_id, department_id=department_id,
-        ).delete()
-        return AssignmentPayload(ok=deleted > 0)
+        deleted = StructureService.remove_department_from_production_line(production_line_id, department_id)
+        return AssignmentPayload(ok=deleted)
 
     @strawberry.mutation
     def create_resource_group(self, input: ResourceGroupInput) -> ResourceGroupPayload:
@@ -705,12 +665,10 @@ class ManufacturingMutation:
     @strawberry.mutation
     def archive_resource_group(self, id: str) -> ResourceGroupPayload:
         try:
-            rg = ResourceGroup.objects.get(id=id)
-        except ResourceGroup.DoesNotExist:
-            return ResourceGroupPayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Resource group not found"}])
-        rg.status = "ARCHIVED"
-        rg.save()
-        return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
+            rg = StructureService.archive_resource_group(id)
+            return ResourceGroupPayload(ok=True, resource_group=ResourceGroupNode.from_db(rg))
+        except StructureServiceError as exc:
+            return ResourceGroupPayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def create_resource(self, input: ResourceInput) -> ResourcePayload:
@@ -731,12 +689,10 @@ class ManufacturingMutation:
     @strawberry.mutation
     def archive_resource(self, id: str) -> ResourcePayload:
         try:
-            res = Resource.objects.get(id=id)
-        except Resource.DoesNotExist:
-            return ResourcePayload(ok=False, errors=[{"field": "id", "code": "NOT_FOUND", "message": "Resource not found"}])
-        res.status = "ARCHIVED"
-        res.save()
-        return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
+            res = StructureService.archive_resource(id)
+            return ResourcePayload(ok=True, resource=ResourceNode.from_db(res))
+        except StructureServiceError as exc:
+            return ResourcePayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
     def create_schedule(self, input: ScheduleInput) -> SchedulePayload:

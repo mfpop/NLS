@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 from shared.models.base import TimeStampedModel
 from .entity_status import EntityStatus
 
@@ -50,6 +51,18 @@ class ProductionLine(TimeStampedModel):
     )
     is_constraint = models.BooleanField(default=False)
 
+    def clean(self):
+        if self.bottleneck_resource_group_id and self.plant_id:
+            rg_plant_id = self.bottleneck_resource_group.department.plant_id
+            if rg_plant_id != self.plant_id:
+                raise ValidationError(
+                    "Bottleneck resource group must belong to a department in the same plant."
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     class Meta:
         db_table = "manufacturing_production_line"
         ordering = ["name"]
@@ -61,6 +74,8 @@ class ProductionLine(TimeStampedModel):
         ]
         constraints = [
             models.UniqueConstraint(fields=["plant", "code"], name="uq_line_plant_code"),
+            models.UniqueConstraint(fields=["plant", "name"], name="uq_line_plant_name"),
+            models.UniqueConstraint(fields=["id", "plant"], name="uq_line_id_plant"),
         ]
 
     def __str__(self):

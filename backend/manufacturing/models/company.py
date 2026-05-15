@@ -5,7 +5,7 @@ from .entity_status import EntityStatus
 
 class Company(TimeStampedModel):
     code = models.CharField(max_length=50, unique=True)
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     description = models.TextField(blank=True, default="")
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
@@ -76,6 +76,10 @@ class Company(TimeStampedModel):
         ordering = ["name"]
         verbose_name = "Company"
         verbose_name_plural = "Companies"
+        indexes = [
+            models.Index(fields=["name"], name="mfg_company_name_idx"),
+            models.Index(fields=["code"], name="mfg_company_code_idx"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"

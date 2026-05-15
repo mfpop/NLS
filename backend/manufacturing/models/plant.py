@@ -78,6 +78,12 @@ class Plant(TimeStampedModel):
         verbose_name_plural = "Plants"
         constraints = [
             models.UniqueConstraint(fields=["company", "code"], name="uq_plant_company_code"),
+            models.UniqueConstraint(fields=["company", "name"], name="uq_plant_company_name"),
+        ]
+        indexes = [
+            models.Index(fields=["company"], name="mfg_plant_company_idx"),
+            models.Index(fields=["company", "code"], name="mfg_plant_company_code_idx"),
+            models.Index(fields=["status"], name="mfg_plant_status_idx"),
         ]
 
     def __str__(self):

@@ -131,7 +131,7 @@ function FamilyModelSection({ familyValues, availableModels, familyId, modelIds,
         <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-1 dark:border-slate-700 dark:bg-slate-800/30">
           <div>
             <div className="mb-0.5 text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Selected Models</div>
-            <div className="flex max-h-14 flex-wrap gap-1 overflow-y-auto">
+            <div className={`flex flex-wrap gap-1 ${selectedModels.length > 4 ? "max-h-24 overflow-y-auto" : "overflow-visible"}`}>
               {selectedModels.length > 0 ? selectedModels.map((model) => {
                 const primary = primaryModelId === model.id;
                 return (
@@ -216,8 +216,8 @@ function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: b
   const { summary } = useRoutingSummary(sel?.id ?? null);
   const bnName = summary?.bottleneckStepName ? `${summary.bottleneckStepName}${summary.bottleneckResourceGroupName ? ` (${summary.bottleneckResourceGroupName})` : ""}` : null;
   return (
-    <div className="rounded-lg bg-slate-50/50 p-1.5 dark:bg-slate-800/30">
-      <div className="space-y-px">
+    <div className="rounded-lg bg-slate-50/50 p-2 dark:bg-slate-800/30">
+      <div className="space-y-2">
         <ProductionLineProductScopeSummary
           family={sel?.productFamily ?? sel?.productFamilies?.find((f: any) => f.isPrimary) ?? sel?.productFamilies?.[0] ?? null}
           models={sel?.productModels ?? []}
@@ -230,8 +230,8 @@ function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: b
         {!compact && <InlineRow label="UoM" value={sel?.capacityUom ? sel.capacityUom : <Badge label="Not configured" variant="inactive" />} />}
         <InlineRow label="Bottleneck" value={bnName || <Badge label="N/A" variant="inactive" />} />
       </div>
-      <div className="flex items-center gap-2 pt-1 mt-1 border-t border-slate-100 dark:border-slate-700 text-[10px]">
-        <span className="text-slate-400 dark:text-slate-500">Constraint:</span>
+      <div className="mt-2 flex items-center gap-2 border-t border-slate-100 pt-2 text-[12px] dark:border-slate-700">
+        <span className="font-semibold text-slate-500 dark:text-slate-400">Constraint:</span>
         {summary?.constraintStatus === "CONSTRAINT" ? <Badge label="Yes" variant="amber" /> : <Badge label="No" variant="default" />}
       </div>
     </div>
@@ -338,6 +338,14 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   const productionLineId = productionLine?.id ?? null;
   const primaryModel = productionLine?.primaryProductModel || productionLine?.productModels?.find((model) => model.id === productionLine?.primaryModelId || model.isPrimary) || null;
   const { context, loading } = useProductionLineFlowContext(productionLineId, primaryModel?.id ?? null);
+  const scrollToStep = useCallback((stepIndex: number) => {
+    const ids = ["", "flow-canvas-section", "material-flow-section", "validation-section"];
+    const id = ids[stepIndex];
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
 
   const openRouting = useCallback(() => {
     if (!productionLineId) return;
@@ -368,7 +376,6 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   const operations = context?.operations ?? [];
   const validations = context?.validations ?? [];
   const bomItems = context?.bom?.items ?? [];
-  const materialStates = Array.from(new Set(operations.flatMap((operation) => [...operation.inputs, ...operation.outputs].map((item) => item.materialState))));
   const inputLocations = Array.from(new Set(operations.flatMap((operation) => operation.inputs.map((item) => item.locationName).filter(Boolean))));
   const fgDestinations = Array.from(new Set(operations.flatMap((operation) => operation.outputs.filter((item) => item.materialState === "FINISHED_GOOD").map((item) => item.locationName).filter(Boolean))));
   const outputCount = operations.reduce((sum, operation) => sum + operation.outputs.length, 0);
@@ -407,15 +414,6 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   ].filter(Boolean) as string[];
   const readinessSummary = `Line Readiness: ${Math.round(([hasModel, routingOk, materialOk, bomOk].filter(Boolean).length / 4) * 100)}%`;
   const longestCycle = operations.reduce((max, operation) => Math.max(max, operation.cycleTimeSec || 0), 0);
-  const primaryAction = !hasModel
-    ? { label: "Assign Product Model", action: onAssignModel ?? openRouting }
-    : !routingOk
-      ? { label: "Create Process Flow", action: openRouting }
-      : !bomOk
-      ? { label: "Create BOM", action: openRouting }
-      : !materialOk
-        ? { label: "Define Material Flow", action: openRouting }
-        : { label: "Edit Process Flow", action: openRouting };
   const topIssues = [
     !hasFamily ? { code: "MISSING_FAMILY", message: "No product family assigned.", action: "Select Product Family", onClick: onAssignModel ?? openRouting } : null,
     !hasModel ? { code: "MISSING_MODEL", message: "No product model assigned.", action: "Assign Product Model", onClick: onAssignModel ?? openRouting } : null,
@@ -425,206 +423,327 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
     ...validations.slice(0, 2).map((item) => ({ code: item.code, message: item.message, action: "Fix" })),
   ].filter(Boolean) as Array<{ code: string; message: string; action: string; onClick?: () => void }>;
   const setupSteps = [
-    { label: "Assign Product Family", done: hasFamily, action: onAssignModel ?? openRouting },
-    { label: "Create Process Flow", done: routingOk, action: openRouting },
-    { label: "Define Material Flow", done: materialOk, action: openRouting },
-    { label: "Validate", done: !validations.length && !blocked && !partial, action: openRouting },
+    { label: "Assign Product Family", done: hasFamily, action: onAssignModel ?? openRouting, step: 0 },
+    { label: "Create Process Flow", done: routingOk, action: openRouting, step: 1 },
+    { label: "Define Material Flow", done: materialOk, action: openRouting, step: 2 },
+    { label: "Validate", done: !validations.length && !blocked && !partial, action: openRouting, step: 3 },
   ];
   const nextStepIndex = setupSteps.findIndex((step) => !step.done);
   const currentStep = nextStepIndex >= 0 ? nextStepIndex + 1 : setupSteps.length;
+  const [activeTab, setActiveTab] = useState("overview");
+  const tabs = [
+    { key: "overview", label: "Overview" },
+    { key: "flow", label: "Flow & Routing" },
+    { key: "materials", label: "Materials" },
+    { key: "validation", label: "Validation" },
+  ] as const;
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-12 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0, 1fr) 132px" }}>
-      <section className={`col-span-12 rounded-xl border px-4 py-3 shadow-sm ${blocked ? "border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10" : partial ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "border-emerald-300 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10"}`}>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <div className="flex items-center justify-start gap-3">
-            <span className={`flex h-11 w-11 items-center justify-center rounded-full text-xl font-black shadow-sm ${blocked ? "bg-red-600 text-white" : partial ? "bg-amber-500 text-white" : "bg-emerald-600 text-white"}`} title={`Line readiness: ${readiness}`}>{readinessIcon}</span>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[20px] font-black leading-5 text-slate-900 dark:text-slate-100">{readiness}</span>
-                <Badge label={readinessSummary} variant={readinessVariant as any} />
-              </div>
-              <p className="mt-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">{blocked ? `Line cannot run due to: ${missingReasons.join(", ") || "blocking issues"}.` : partial ? "Line can be reviewed but material readiness is incomplete." : "Line is runnable with current flow and material setup."}</p>
-            </div>
-          </div>
-          <div className="justify-self-center text-center">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Setup Progress</div>
-            <div className="mt-1 text-sm font-black text-slate-900 dark:text-slate-100">Step {currentStep} of 4</div>
-            <div className="mt-1 flex justify-center gap-1">
-              {setupSteps.map((step, index) => (
-                <button key={step.label} type="button" onClick={step.action} title={step.label} className={`h-2.5 w-8 rounded-full ${step.done ? "bg-emerald-500" : index === nextStepIndex ? "bg-amber-500" : "bg-slate-200 dark:bg-slate-700"}`} />
-              ))}
-            </div>
-          </div>
-          <div className="flex min-w-0 flex-col gap-1 justify-self-end">
-            {topIssues.length ? topIssues.slice(0, 4).map((issue) => (
-              <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting} className="grid min-w-[280px] grid-cols-[16px_1fr_auto] items-center gap-2 rounded-lg border border-white/70 bg-white/90 px-2.5 py-1.5 text-left text-[11px] font-semibold text-slate-800 shadow-sm transition hover:bg-white dark:border-slate-700 dark:bg-slate-900/90 dark:text-slate-100" title={issue.message}>
-                <span className="text-red-600 dark:text-red-300">✕</span>
-                <span className="truncate">{issue.message}</span>
-                <span className="shrink-0 text-amber-700 dark:text-amber-300">{issue.action}</span>
-              </button>
-            )) : <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">No blocking issues.</span>}
-          </div>
-        </div>
-        <div className="mt-2 flex justify-center">
-          <button type="button" onClick={primaryAction.action} className="inline-flex h-8 items-center rounded-lg bg-slate-900 px-4 text-[11px] font-bold text-white shadow-sm transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">
-            {primaryAction.label}
-          </button>
-        </div>
-      </section>
-
-      <SectionCard title="Process Flow" className="col-span-8 row-span-2 flex h-full min-h-0 flex-col overflow-hidden" action={routingOk ? (
-        <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}>
-          <ExternalLink className="h-3 w-3 stroke-current" /> Edit Process Flow
-        </SecondaryActionButton>
-      ) : undefined}>
-        {loading ? <p className="text-[10px] text-slate-400">Loading flow context...</p> : operations.length > 0 ? (
-          <div className="min-h-0 flex-1 overflow-auto">
-            <div className="flex min-h-full flex-wrap items-center gap-2">
-              {operations.map((operation, index) => {
-                const missingInput = operation.inputs.length === 0;
-                const missingOutput = operation.outputs.length === 0;
-                const broken = missingInput || missingOutput;
-                const bottleneck = operation.cycleTimeSec === longestCycle && longestCycle > 0;
-                const inputLabel = missingInput ? "No Input Material" : operation.inputs.map((item) => item.materialCode || item.materialName).join(", ");
-                const outputLabel = missingOutput ? "No Output Defined" : operation.outputs.map((item) => `${item.materialCode || item.materialName} ${item.materialState}`).join(", ");
-                return (
-                  <div key={operation.sequence} className="flex items-center gap-2">
-                    <button type="button" onClick={openRouting} tabIndex={0}
-                      className={`min-w-[150px] max-w-[190px] rounded-lg border px-2 py-2 text-left shadow-sm outline-none transition focus-visible:ring-2 focus-visible:ring-amber-400 ${broken ? "border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10" : bottleneck ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800"}`}
-                      title={`Operation ${operation.sequence}: ${operation.resourceGroupName || operation.departmentName || "Unassigned"}`}>
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <span className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400">#{operation.sequence}</span>
-                        {bottleneck && <Badge label="Bottleneck" variant="warning" />}
-                        {broken && <Badge label="Broken" variant="warning" />}
-                      </div>
-                      <p className="truncate text-[12px] font-bold text-slate-900 dark:text-slate-100">{operation.resourceGroupName || operation.departmentName || "Unassigned operation"}</p>
-                      <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{operation.cycleTimeSec}s cycle</p>
-                      <div className="mt-1 space-y-0.5">
-                        <div className={`truncate rounded px-1.5 py-0.5 text-[9px] font-semibold ${missingInput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}>IN: {inputLabel}</div>
-                        <div className={`truncate rounded px-1.5 py-0.5 text-[9px] font-semibold ${missingOutput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-200"}`}>OUT: {outputLabel}</div>
-                      </div>
-                    </button>
-                    {index < operations.length - 1 && <span className="text-slate-300 dark:text-slate-600">→</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <div className="max-w-md text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-                <TrendingUpDown className="h-5 w-5 stroke-current" />
-              </div>
-              <h4 className="text-sm font-black text-slate-900 dark:text-slate-100">Create your first process flow</h4>
-              <p className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">Production lines require process flow, model, and materials before they can run.</p>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-left text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800">Step 1 → Add Resource Group</div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800">Step 2 → Connect flow</div>
-              </div>
-              <button type="button" onClick={openRouting} className="mt-3 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-600">Create Process Flow</button>
-            </div>
-          </div>
+    <div className="grid h-full min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "32px 36px minmax(0,1fr)" }}>
+      {/* ── Row 1: Slim 32px status bar ── */}
+      <div className={`flex items-center gap-3 rounded-lg px-2.5 py-1 ${blocked ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300" : partial ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"}`}>
+        <span className="text-[11px] font-bold">{readinessIcon} {readiness}</span>
+        {missingReasons.length > 0 && (
+          <span className="text-[10px] font-medium opacity-80">— {missingReasons.join(", ")}</span>
         )}
-      </SectionCard>
-
-      <SectionCard title="Material Flow" className="col-span-4 flex min-h-0 flex-col overflow-hidden" action={!materialOk ? (
-        <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}>
-          <ExternalLink className="h-3 w-3 stroke-current" /> Define Material Flow
-        </SecondaryActionButton>
-      ) : undefined}>
-        <div className="max-h-[160px] overflow-y-auto overflow-x-hidden">
-          {!materialOk ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 stroke-current dark:text-amber-300" />
-                <div>
-                  <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100">No materials available</p>
-                  <p className="mt-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">Define input RM, WIP outputs, FG destination, and material bins.</p>
-                  <button type="button" onClick={openRouting} className="mt-2 rounded bg-white px-2 py-1 text-[10px] font-bold text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300">Define Material Flow</button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="mb-1 flex flex-wrap gap-1">
-                {materialStates.map((state) => <Badge key={state} label={state} variant={state === "FINISHED_GOOD" ? "active" : "default"} />)}
-              </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
-                <div className="space-y-0.5">
-                  <InlineRow label="BOM" value={context?.bom ? `${context.bom.status} · ${bomItems.length} materials` : <Badge label="Blocking Flow" variant="warning" />} />
-                  <InlineRow label="RM bins" value={inputLocations.length ? inputLocations.join(", ") : <Badge label="Missing" variant="warning" />} />
-                  <InlineRow label="WIP" value={operations.filter((operation) => operation.outputs.some((item) => item.materialState === "WIP")).length} />
-                </div>
-                <div className="space-y-0.5">
-                  <InlineRow label="Outputs" value={outputCount} />
-                  <InlineRow label="FG dest." value={fgDestinations.length ? fgDestinations.join(", ") : <Badge label="Missing" variant="warning" />} />
-                  <InlineRow label="Bins" value={missingMaterialBins ? <Badge label={`${missingMaterialBins} missing`} variant="warning" /> : <Badge label="OK" variant="active" />} />
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Setup Steps" className="col-span-4 flex min-h-0 flex-col overflow-hidden">
-        <div className="space-y-1">
-          {setupSteps.map((step, index) => (
-            <button key={step.label} type="button" onClick={step.action} className={`grid w-full grid-cols-[18px_1fr_auto] items-center gap-2 rounded-lg border px-2 py-1.5 text-left text-[10px] font-semibold ${step.done ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300" : index === nextStepIndex ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}`}>
-              <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
-              <span>{step.label}</span>
-              <span className="text-[9px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
-            </button>
-          ))}
-        </div>
-      </SectionCard>
-
-      <SectionCard title={validations.length ? "Validation Actions" : "Validation"} className="col-span-4 flex min-h-0 flex-col overflow-hidden">
-        {validations.length > 0 ? (
-          <div className="max-h-[132px] overflow-y-auto overflow-x-hidden space-y-1">
-            {validationGroups.map((group) => (
-              <div key={group.label} className="rounded border border-slate-200 bg-slate-50/70 p-1 dark:border-slate-700 dark:bg-slate-800/30">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{group.label}</span>
-                  <Badge label={`${group.items.length}`} variant={group.items.length ? "warning" : "active"} />
-                </div>
-                {group.items.length ? group.items.map((item) => (
-                  <div key={`${group.label}-${item.field}-${item.code}-${item.message}`} className="grid grid-cols-[46px_74px_1fr_auto] items-center gap-1 rounded bg-white px-1.5 py-0.5 text-[9px] dark:bg-slate-900">
-                    <Badge label="Critical" variant="warning" />
-                    <span className="truncate font-mono text-slate-500 dark:text-slate-400">{item.code}</span>
-                    <span className="min-w-0 truncate text-slate-700 dark:text-slate-200" title={item.message}>{item.message}</span>
-                    <button type="button" onClick={openRouting} className="text-[9px] font-semibold text-amber-700 dark:text-amber-300">Fix</button>
-                  </div>
-                )) : <div className="text-[9px] text-slate-400">No issues.</div>}
-              </div>
+        <span className="ml-auto flex items-center gap-1.5">
+          <Badge label={readinessSummary} variant={readinessVariant as any} />
+          <div className="flex items-center gap-0.5">
+            {setupSteps.map((step, index) => (
+              <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }} title={step.label} className={`h-1.5 w-4 rounded-full ${step.done ? "bg-emerald-500" : index === nextStepIndex ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`} />
             ))}
           </div>
-        ) : (
-          <div className="flex items-center gap-2 text-[10px] text-emerald-700 dark:text-emerald-300">
-            <Check className="h-3 w-3 stroke-current" /> No blocking flow validation issues.
+          <span className="text-[8px] font-semibold opacity-70">{currentStep}/4</span>
+        </span>
+      </div>
+
+      {/* ── Row 2: Tab bar (36px) ── */}
+      <div className="flex items-center gap-0.5 border-b border-slate-200 dark:border-slate-700">
+        {tabs.map((tab) => (
+          <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
+            className={`flex h-9 items-center border-b-2 px-3 text-[10px] font-semibold transition-colors ${
+              activeTab === tab.key
+                ? "border-amber-500 bg-amber-50/50 text-slate-900 dark:border-amber-400 dark:bg-amber-500/5 dark:text-slate-100"
+                : "border-transparent text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"
+            }`}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Row 3: Tab content ── */}
+      {activeTab === "overview" && (
+        <div className="grid min-h-0 items-start gap-1.5 overflow-hidden" style={{ gridTemplateColumns: "1fr 1fr" }}>
+          {/* ── LEFT COLUMN: Identity, Operations ── */}
+          <div className="flex flex-col gap-1.5 overflow-hidden">
+            <div className="rounded-lg border border-slate-200/80 bg-white px-3 pb-2 pt-2 shadow-xs dark:border-slate-700/80 dark:bg-slate-900">
+              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Identity & Schedule</div>
+              <div className="space-y-1">
+                <InlineRow label="Name" value={<span className="font-bold text-slate-900">{productionLine?.name || "—"}</span>} />
+                <InlineRow label="Code" value={<span className="font-bold text-slate-900">{productionLine?.code || "—"}</span>} />
+                <InlineRow label="Plant" value={productionLine?.plantName || "—"} />
+                <InlineRow label="Type" value={productionLine?.lineType || "—"} />
+                <InlineRow label="Primary Model" value={productionLine?.primaryProductModel?.name || productionLine?.productModels?.find((m: any) => m.isPrimary)?.name || "—"} />
+                <InlineRow label="Calendar" value={productionLine?.defaultCalendar || "—"} />
+                <InlineRow label="Shift" value={productionLine?.shiftPattern || "—"} />
+                <InlineRow label="Timezone" value={productionLine?.timezone || "Plant default"} />
+                <InlineRow label="Capacity" value={productionLine?.capacityBasis || "—"} />
+                <InlineRow label="UoM" value={productionLine?.capacityUom || "—"} />
+              </div>
+            </div>
+            <SectionCard title="Operations" className="overflow-hidden">
+              <RoutingOperationsView sel={productionLine} compact={false} />
+            </SectionCard>
           </div>
-        )}
-      </SectionCard>
+
+          {/* ── RIGHT COLUMN: Departments, Setup & Issues, Validation Summary ── */}
+          <div className="flex flex-col gap-1.5 overflow-hidden">
+            <SectionCard title="Departments / Structure" className="overflow-hidden" action={
+              productionLine?.id ? <SecondaryActionButton onClick={() => nav(`/system/production-structure/components/dept?lineId=${productionLine.id}`)}>Manage</SecondaryActionButton> : undefined
+            }>
+              {productionLine?.departmentLinks && productionLine.departmentLinks.length > 0 ? (
+                <div className="space-y-1 overflow-hidden">
+                  {productionLine.departmentLinks.slice(0, 6).map((link: any) => (
+                    <button key={link.id} onClick={() => nav(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
+                      className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-[11px] text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+                      <span className="font-mono text-[10px] text-slate-500">{link.sequence}</span>
+                      <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
+                      <span className="text-slate-500">{link.resourceGroups} RG</span>
+                      <span className="text-slate-500">{link.resources} Res</span>
+                    </button>
+                  ))}
+                  {productionLine.departmentLinks.length > 6 && (
+                    <div className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      +{productionLine.departmentLinks.length - 6} more departments
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex min-h-[108px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
+                  <span className="text-[10px] text-slate-500">No departments linked</span>
+                </div>
+              )}
+            </SectionCard>
+            <SectionCard title="Setup & Issues" className="overflow-hidden">
+              <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Setup Steps</div>
+                    {setupSteps.map((step, index) => (
+                      <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }}
+                        className={`flex h-7 w-full items-center gap-2 rounded-md border px-2 text-left text-[10px] font-medium ${step.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300" : index === nextStepIndex ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" : "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}>
+                        <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
+                        <span className="flex-1 truncate">{step.label}</span>
+                        <span className="text-[8px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Issues</div>
+                    {topIssues.length > 0 ? topIssues.slice(0, 4).map((issue) => (
+                      <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
+                        className="flex h-7 w-full items-center gap-2 rounded-md border border-red-100 bg-red-50 px-2 text-left text-[10px] font-medium text-slate-800 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-slate-100">
+                        <span className="text-red-600 dark:text-red-300">✕</span>
+                        <span className="min-w-0 flex-1 truncate">{issue.message}</span>
+                        <span className="shrink-0 whitespace-nowrap text-amber-700 dark:text-amber-300">{issue.action}</span>
+                      </button>
+                    )) : <div className="flex h-7 items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-300"><Check className="h-3 w-3" /> No issues</div>}
+                  </div>
+              </div>
+            </SectionCard>
+            <SectionCard title="Validation Summary" className="overflow-hidden">
+              {validations.length > 0 ? (
+                <div className="space-y-0.5">
+                  {validationGroups.filter((group) => group.items.length > 0 && group.label !== "Routing errors").slice(0, 3).map((group) => (
+                    <div key={group.label} className="flex h-7 items-center justify-between rounded border border-slate-200 bg-slate-50/70 px-2.5 dark:border-slate-700 dark:bg-slate-800/30">
+                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">{group.label}</span>
+                      <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-300">({group.items.length})</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                  <Check className="h-3 w-3" /> No grouped validation issues
+                </div>
+              )}
+            </SectionCard>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "flow" && (
+        <div className="grid min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0,1fr) auto" }}>
+          <div className="grid grid-cols-3 gap-1.5">
+            <SectionCard title="Steps"><div className="text-sm font-bold text-slate-900 dark:text-slate-100">{operations.length}</div></SectionCard>
+            <SectionCard title="Bottleneck"><div className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-100">—</div></SectionCard>
+            <SectionCard title="Status"><Badge label={routingOk ? "Configured" : "Missing"} variant={routingOk ? "active" : "warning"} /></SectionCard>
+          </div>
+          <SectionCard title="Process Flow" className="flex min-h-0 flex-col overflow-hidden" action={
+            <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}>
+              <ExternalLink className="h-3 w-3 stroke-current" /> {routingOk ? "Edit Flow" : "Create Flow"}
+            </SecondaryActionButton>
+          }>
+            {loading ? <p className="text-[10px] text-slate-400">Loading flow context...</p> : operations.length > 0 ? (
+              <div className="relative flex min-h-0 flex-1 flex-wrap items-center justify-center gap-3 overflow-hidden p-3">
+                <div className="pointer-events-none absolute left-8 right-8 top-1/2 h-px bg-slate-200/80 dark:bg-slate-700/70" />
+                {operations.map((operation, index) => {
+                  const missingInput = operation.inputs.length === 0;
+                  const missingOutput = operation.outputs.length === 0;
+                  const broken = missingInput || missingOutput;
+                  const bottleneck = operation.cycleTimeSec === longestCycle && longestCycle > 0;
+                  return (
+                    <div key={operation.sequence} className="relative z-10 flex items-center gap-2">
+                      <button type="button" onClick={openRouting}
+                        className={`min-w-[168px] rounded-xl border-2 px-4 py-3 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.97] ${broken ? "border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10" : bottleneck ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"}`}>
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <span className="font-mono text-[10px] font-bold text-slate-500">#{operation.sequence}</span>
+                          {bottleneck && <Badge label="Bottleneck" variant="warning" />}
+                          {broken && <Badge label="Broken" variant="warning" />}
+                        </div>
+                        <p className="truncate text-[13px] font-bold text-slate-900 dark:text-slate-100">{operation.resourceGroupName || operation.departmentName || "Unassigned"}</p>
+                        <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{operation.cycleTimeSec}s cycle</p>
+                        <div className="mt-1 space-y-0.5">
+                          <div className={`truncate rounded-md px-2 py-0.5 text-[10px] font-semibold ${missingInput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100"}`}>IN: {missingInput ? "No Input" : operation.inputs.map((item) => item.materialCode || item.materialName).join(", ")}</div>
+                          <div className={`truncate rounded-md px-2 py-0.5 text-[10px] font-semibold ${missingOutput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100"}`}>OUT: {missingOutput ? "No Output" : operation.outputs.map((item) => `${item.materialCode || item.materialName} ${item.materialState}`).join(", ")}</div>
+                        </div>
+                      </button>
+                      {index < operations.length - 1 && <span className="text-2xl font-light text-slate-300 dark:text-slate-600">→</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
+                <div className="text-center">
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Create your first process flow</p>
+                  <p className="mt-1 text-[11px] text-slate-500">Define how materials move through resource groups to produce finished goods.</p>
+                  <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew} className="mt-2">Create Process Flow</SecondaryActionButton>
+                </div>
+              </div>
+            )}
+          </SectionCard>
+          {topIssues.length > 0 && (
+            <div className="flex gap-1.5 overflow-hidden">
+              {topIssues.slice(0, 3).map((issue) => (
+                <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
+                  className="flex h-7 items-center gap-2 rounded-md border border-white/70 bg-white px-2 text-left text-[10px] font-medium text-slate-800 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                  <span className="text-red-600 dark:text-red-300">✕</span>
+                  <span className="truncate">{issue.message}</span>
+                  <span className="shrink-0 text-amber-700 dark:text-amber-300">{issue.action}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "materials" && (
+        <div className="grid min-h-0 content-start gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0,1fr)" }}>
+          <div className="grid grid-cols-3 gap-1.5">
+            <SectionCard title="BOM Status">{context?.bom ? <Badge label={context.bom.status} variant={context.bom.status === "ACTIVE" ? "active" : "inactive"} /> : <Badge label="Missing" variant="warning" />}</SectionCard>
+            <SectionCard title="Materials"><div className="text-sm font-bold text-slate-900 dark:text-slate-100">{bomItems.length}</div></SectionCard>
+            <SectionCard title="Locations"><div className="text-sm font-bold text-slate-900 dark:text-slate-100">{inputLocations.length + fgDestinations.length}</div></SectionCard>
+          </div>
+          <SectionCard title="Material Flow" className="min-h-0 overflow-hidden" action={!materialOk ? (
+            <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}><ExternalLink className="h-3 w-3 stroke-current" /> Define Material Flow</SecondaryActionButton>
+          ) : undefined}>
+            {!materialOk ? (
+              <div className="flex min-h-[135px] items-center justify-center rounded-lg border border-dashed border-amber-200 bg-amber-50/60 px-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+                <div className="max-w-md text-center">
+                  <AlertTriangle className="mx-auto h-5 w-5 text-amber-600 dark:text-amber-300" />
+                  <p className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-100">Material flow is incomplete</p>
+                  <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Production lines need input raw material, WIP/FG outputs, and source/destination locations before flow readiness can be trusted.</p>
+                  <div className="mt-2 flex flex-wrap justify-center gap-1">
+                    {["BOM", "RM input", "WIP output", "FG destination", "Bins"].map((item) => (
+                      <span key={item} className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-slate-900/40 dark:text-amber-200 dark:ring-amber-500/20">○ {item}</span>
+                    ))}
+                  </div>
+                  <button type="button" onClick={openRouting} disabled={!productionLineId || isNew} className="mt-2 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">Define Material Flow</button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid min-h-[180px] place-items-center rounded-lg border border-slate-200 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/20">
+                <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                  <span>RM bins: {inputLocations.length || "—"}</span>
+                  <span>→</span>
+                  <span>Process outputs: {outputCount}</span>
+                  <span>→</span>
+                  <span>FG destinations: {fgDestinations.length || "—"}</span>
+                </div>
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      )}
+
+      {activeTab === "validation" && (
+          <div className="grid min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateColumns: "2fr 1fr" }}>
+            <SectionCard title="Validation Groups" className="min-h-0 overflow-hidden">
+            {validations.length > 0 ? (
+              <div className="h-full space-y-1 overflow-hidden">
+                {validationGroups.map((group) => (
+                  <div key={group.label} className="rounded border border-slate-200 bg-slate-50/70 dark:border-slate-700 dark:bg-slate-800/30">
+                    <div className="flex h-8 items-center justify-between px-2.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">{group.label}</span>
+                      <Badge label={`${group.items.length}`} variant={group.items.length ? "warning" : "active"} />
+                    </div>
+                    {group.items.length > 0 && (
+                      <div className="space-y-0.5 px-2 pb-1.5">
+                        {group.items.map((item) => (
+                          <div key={`${group.label}-${item.field}-${item.code}`} className="flex h-8 items-center gap-2 rounded bg-white px-2 text-[10px] dark:bg-slate-900">
+                            <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">{item.code}</span>
+                            <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">{item.message}</span>
+                            <button type="button" onClick={openRouting} className="shrink-0 font-bold text-amber-800 dark:text-amber-200">Fix</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <div className="text-center">
+                  <Check className="mx-auto h-5 w-5 text-emerald-500" />
+                  <p className="mt-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">All validations passed</p>
+                  <p className="text-[10px] text-slate-500">Line is configured and ready.</p>
+                </div>
+              </div>
+            )}
+          </SectionCard>
+          <div className="min-h-0 overflow-hidden">
+            <SectionCard title="Readiness" className="min-h-0 overflow-hidden">
+              <div className="grid grid-cols-2 gap-1.5">
+                {setupSteps.map((step) => (
+                  <div key={step.label} className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium ${step.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300" : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}`}>
+                    <span>{step.done ? "✓" : "○"}</span>
+                    <span className="flex-1 truncate">{step.label}</span>
+                    <span className="text-[8px]">{step.done ? "Ready" : "Missing"}</span>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function InlineRow({ label, value, action }: { label: string; value: React.ReactNode; action?: { text: string; onClick: () => void } }) {
   return (
-    <div className="grid min-h-5 items-center gap-2" style={{ gridTemplateColumns: "110px 1fr auto" }}>
-      <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate">{label}</span>
-      <span className="min-w-0 truncate text-[11px] font-medium text-slate-800 dark:text-slate-200">{value}</span>
+    <div className="grid min-h-5 items-center gap-2" style={{ gridTemplateColumns: "120px 1fr auto" }}>
+      <span className="truncate text-[12px] font-semibold text-slate-400 dark:text-slate-500">{label}</span>
+      <span className="min-w-0 truncate text-[13px] font-medium text-slate-800 dark:text-slate-200">{value}</span>
       {action ? <SecondaryActionButton onClick={action.onClick}>{action.text}</SecondaryActionButton> : <span />}
     </div>
   );
 }
 
-function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
+function SectionCard({ id, title, action, children, className = "" }: { id?: string; title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white p-3 pt-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}>
-      <div className="mb-2 flex min-h-5 items-center gap-2">
-        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{title}</h3>
+    <section id={id} className={`rounded-lg border border-slate-200/80 bg-white px-3 pb-2 pt-2 shadow-xs dark:border-slate-700/80 dark:bg-slate-900 ${className}`}>
+      <div className="mb-1.5 flex min-h-5 items-center gap-2">
+        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{title}</h3>
         {action}
       </div>
       {children}
@@ -632,10 +751,10 @@ function SectionCard({ title, action, children, className = "" }: { title: strin
   );
 }
 
-function SecondaryActionButton({ children, onClick, disabled = false }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
+function SecondaryActionButton({ children, onClick, disabled = false, className = "" }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; className?: string }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className="inline-flex h-5 items-center gap-1 rounded border border-slate-200 bg-white px-1.5 text-[9px] font-semibold text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+      className={`inline-flex h-5 items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 text-[9px] font-semibold text-slate-600 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 ${className}`}>
       {children}
     </button>
   );
@@ -727,7 +846,7 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
     new: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20",
     default: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600",
   };
-  return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1 w-1 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
+  return <span className={`inline-flex items-center rounded-md px-1.5 py-px text-[8px] font-bold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
 }
 
 export function ProductionLinesPage() {
@@ -927,6 +1046,16 @@ export function ProductionLinesPage() {
     if (mode === "edit") return editState.dirty;
     return false;
   }, [mode, form, editState.dirty]);
+  const formValid = useMemo(() => {
+    if (mode !== "edit" && mode !== "create") return true;
+    const selectedModelIds = form.modelIds ?? [];
+    const primaryModelId = form.primaryModelId ?? "";
+    const requiredOk = !!(fv("name") && fv("code") && fv("plantId") && fv("status") && fv("lineTypeId") && form.productFamilyId);
+    const modelsOk = selectedModelIds.length > 0 && (!primaryModelId || selectedModelIds.includes(primaryModelId));
+    const capacityOk = !fv("capacityBasis") || !!fv("capacityUomId");
+    const noVisibleErrors = Object.keys(errors).length === 0;
+    return requiredOk && modelsOk && capacityOk && noVisibleErrors;
+  }, [mode, form, errors]);
 
   const hEdit = useCallback(() => {
     if (sel) {
@@ -939,7 +1068,7 @@ export function ProductionLinesPage() {
   useEffect(() => {
     setToolbarVariant("splitListDetail");
     if (mode === "edit" || mode === "create") {
-      registerActions({ onSave: hSave, onCancel: hCancel, editLabel: "Editing Line", isDirty: dirty, isSaving: editState.saving });
+      registerActions({ onSave: hSave, onCancel: hCancel, editLabel: "Editing Line", isDirty: dirty, isValid: formValid, isSaving: editState.saving });
     } else {
       registerActions({
         onAdd: hNew, onEdit: sel ? hEdit : undefined,
@@ -947,8 +1076,11 @@ export function ProductionLinesPage() {
         onRefresh: () => refetch(), hasSelected: !!sel,
       });
     }
-    setFooterContent(`${filtered.length} line${filtered.length !== 1 ? "s" : ""}`);
-  }, [mode, sel, filtered.length, hSave, hCancel, hNew, hEdit, registerActions, refetch, dirty, editState.saving, setToolbarVariant]);
+    const created = sel?.createdAt ? formatAppDate(sel.createdAt) : null;
+    const updated = sel?.updatedAt ? formatAppDate(sel.updatedAt) : null;
+    const meta = created || updated ? ` · Created ${created || "-"} · Updated ${updated || "-"}` : "";
+    setFooterContent(`${filtered.length} line${filtered.length !== 1 ? "s" : ""}${meta}`);
+  }, [mode, sel, filtered.length, hSave, hCancel, hNew, hEdit, registerActions, refetch, dirty, formValid, editState.saving, setToolbarVariant]);
 
   const g = (k: string) => form[k] ?? "";
   const s = (k: string, v: any) => { setForm((p: any) => ({ ...p, [k]: v })); setEditState((p) => ({ ...p, dirty: true })); };
@@ -1045,11 +1177,11 @@ export function ProductionLinesPage() {
                   </span>
                 )}
               </div>
-              <div className="flex min-h-9 min-w-0 flex-wrap items-center justify-end gap-1.5 justify-self-end self-stretch text-center">
+              <div className="flex min-h-7 items-center gap-1.5 justify-self-end self-stretch">
                 <Badge label={sel?.status || "active"} variant={sel?.status === "active" ? "active" : "inactive"} />
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium ${(sel?.departmentCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.departmentCount ?? 0} Dept</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium ${(sel?.groupCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.groupCount ?? 0} RG</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.resourceCount ?? 0} Res</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.departmentCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.departmentCount ?? 0} Dept</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.groupCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.groupCount ?? 0} RG</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.resourceCount ?? 0} Res</span>
                 {isForm && <Badge label="Editing" variant="amber" />}
                 {isNew && <Badge label="New" variant="default" />}
               </div>
@@ -1058,206 +1190,118 @@ export function ProductionLinesPage() {
         </div>
 
         {/* ── BODY ── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden p-1.5">
-            <div className="grid h-full min-h-0 grid-cols-12 gap-1.5 overflow-hidden" style={{ gridTemplateRows: isForm ? "170px 148px minmax(150px, auto)" : "minmax(0, 1fr) 118px" }}>
-                {isForm && <div className="col-span-4 min-h-0 overflow-hidden">
-                  <SectionCard title="Identity">
-                    {isForm ? (
-                      <div className="space-y-2">
-                        {errors._form && (
-                          <div className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
-                            {errors._form}
-                          </div>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Name <span className="text-red-500">*</span></label>
-                            <input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Line name" className={iCls} />
-                            {errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>}
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Code <span className="text-red-500">*</span></label>
-                            <input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Line code" className={iCls} />
-                            {errors.code && <p className="text-[9px] text-red-500 mt-0.5">{errors.code}</p>}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Plant <span className="text-red-500">*</span></label>
-                            <select value={g("plantId")} onChange={(e) => s("plantId", e.target.value)} className={sCls}><option value="">Select plant</option>{plantOptions.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
-                            {errors.plantId && <p className="text-[9px] text-red-500 mt-0.5">{errors.plantId}</p>}
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Status <span className="text-red-500">*</span></label>
-                            <StatusSelect value={g("statusId")} onChange={(id, codeValue) => {
-                              s("statusId", id);
-                              s("status", codeValue || "active");
-                            }} selectClass={sCls} error={errors.statusId} />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Line Type</label>
-                            <LineTypeSelect value={g("lineTypeId")} onChange={(v) => s("lineTypeId", v)} selectClass={sCls} error={errors.lineTypeId} />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Description</label>
-                          <textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Line description" rows={3} className="h-[60px] w-full border border-slate-200 bg-white px-2 py-1.5 text-[11px] outline-none resize-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
-                        <div className="space-y-px">
-                          <InlineRow label="Name" value={sel?.name} />
-                          <InlineRow label="Code" value={sel?.code} />
-                          <InlineRow label="Plant" value={sel?.plantName} />
-                          <InlineRow label="Type" value={lt ? lt : <Badge label="Not assigned" variant="inactive" />} />
-                        </div>
-                      </div>
-                    )}
-                  </SectionCard>
-                </div>}
-
-                {isForm && <div className="col-span-4 min-h-0 overflow-hidden">
-                  <ScheduleSection isForm={isForm} sCls={sCls} g={g} s={s} sel={sel} errors={errors} setShiftModel={setShiftModel} hasCal={hasCal} capacityBasisInfo={capacityBasisInfo} />
-                </div>}
-
-                {!isForm && <FlowContextSections productionLine={sel} navigate={navigate} returnContext={{ searchText: search, statusFilter }} onAssignModel={() => setMode("edit")} />}
-
-                {isForm && <div className="col-span-4 min-h-0 overflow-hidden">
-                  <RoutingSummarySection productionLine={sel} navigate={navigate} isNew={mode === "create"} isEditing={mode === "edit"} returnContext={{ searchText: search, statusFilter }} />
-                </div>}
-
-                  <div className={`${isForm ? "col-span-3" : "col-span-3"} min-h-0 overflow-hidden`}>
-                  <SectionCard title="Operations">
-                    {isForm ? (
-                      <div className="space-y-1.5">
-                        <FamilyModelSection
-                          familyValues={familyValues}
-                          availableModels={availableFamilyModels}
-                          familyId={g("productFamilyId")}
-                          modelIds={g("modelIds")}
-                          primaryModelId={g("primaryModelId")}
-                          onFamilyChange={setProductFamilyId}
-                          onModelsChange={setModelIds}
-                          onPrimaryModelChange={(id) => s("primaryModelId", id)}
-                          selectClass={sCls}
-                          disabled={!g("productFamilyId")}
-                        />
-                        {errors.productFamilyId && <p className="text-[9px] text-red-500">{errors.productFamilyId}</p>}
-                        {errors.modelIds && <p className="text-[9px] text-red-500">{errors.modelIds}</p>}
-                        {errors.primaryModelId && <p className="text-[9px] text-red-500">{errors.primaryModelId}</p>}
-                        <div className="grid items-start gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-                          <label className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Capacity Basis</label>
-                          <div>
-                            <input type="text" value={g("capacityBasis")} readOnly disabled={!g("shiftPatternId")} placeholder="Select schedule shift first" className={`${iCls} bg-slate-50 text-slate-600 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-800/60 dark:text-slate-300`} />
-                            <p className="mt-0.5 text-[9px] text-slate-400 dark:text-slate-500">Calculated from working hours minus break time.</p>
-                          </div>
-                        </div>
-                        <div className="grid items-start gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-                          <label className="text-[10px] font-medium text-slate-500 dark:text-slate-400">UoM</label>
-                          <RefSelect category="unit_of_measure" value={g("capacityUomId")} onChange={(v) => s("capacityUomId", v)} placeholder="Select UoM" selectClass={sCls} error={errors.capacityUomId} />
-                        </div>
-                        <div className="grid items-start gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-                          <label className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Bottleneck RG</label>
-                          <div>
-                            <select value={g("bottleneckResourceGroupId")} onChange={(e) => s("bottleneckResourceGroupId", e.target.value)} className={sCls}>
-                              <option value="">Select resource group</option>
-                              {(sel?.resourceGroupOptions ?? []).map((rg) => <option key={rg.id} value={rg.id}>{rg.name} {rg.departmentName ? `- ${rg.departmentName}` : ""}</option>)}
-                            </select>
-                            {errors.bottleneckResourceGroupId && <p className="text-[9px] text-red-500 mt-0.5">{errors.bottleneckResourceGroupId}</p>}
-                          </div>
-                        </div>
-                        <div className="grid items-center gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-                          <label className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Constraint Line</label>
-                          <div className="flex h-7 items-center">
-                            <input type="checkbox" checked={!!g("isConstraint")} onChange={(e) => s("isConstraint", e.target.checked)} className="border-slate-300" />
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      (sel?.productFamilyCount ?? sel?.productFamilies?.length ?? 0) === 0 ? (
-                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
-                          <div className="flex items-start gap-2">
-                            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 stroke-current dark:text-amber-300" />
-                            <div>
-                              <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100">No product family assigned</p>
-                              <p className="mt-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">Select a product family before assigning models and creating flow.</p>
-                              <button type="button" onClick={() => setMode("edit")} className="mt-2 rounded bg-white px-2 py-1 text-[10px] font-bold text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300">Select Product Family</button>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <RoutingOperationsView sel={sel} compact />
-                      )
-                    )}
-                  </SectionCard>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-1.5">
+          {isForm ? (
+            <div className="flex min-h-0 flex-col gap-2 overflow-hidden">
+              {errors._form && (
+                <div className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{errors._form}</div>
+              )}
+              {mode === "create" && (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                  Save production line before assigning departments or creating flow.
                 </div>
-
-                  <div className={`${isForm ? "col-span-4" : "col-span-4"} min-h-0 overflow-hidden`}>
-                  <SectionCard title="Departments" action={
-                    hasDepts && sel?.id ? <SecondaryActionButton onClick={() => navigate(`/system/production-structure/components/dept?lineId=${sel.id}`)}>Open Departments</SecondaryActionButton> : undefined
-                  } className="flex h-full min-h-0 flex-col">
-                    <p className="text-[10px] leading-3 text-slate-400 dark:text-slate-500">Departments define available line structure. Routing defines ordered process flow.</p>
-                    {mode === "create" ? (
-                      <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Save production line before assigning departments.</p>
-                    ) : hasDepts ? (
-                      <div className="mt-1 min-h-0 flex-1 overflow-hidden">
-                        {departmentLinks.length > 0 ? (
-                          <div className="space-y-1">
-                            {departmentLinks.map((link) => (
-                              <button key={link.id} onClick={() => navigate(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
-                                className="grid w-full grid-cols-[28px_1fr_auto_auto] items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-left text-[10px] text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-                                <span className="font-mono text-[9px] text-slate-400">{link.sequence}</span>
-                                <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
-                                <span className="text-slate-400 dark:text-slate-500">{link.resourceGroups} RG</span>
-                                <span className="text-slate-400 dark:text-slate-500">{link.resources} Res</span>
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            <Badge label={`${sel?.departmentCount ?? 0} departments`} variant="active" />
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500">No department detail rows returned.</span>
-                          </div>
-                        )}
+              )}
+              <div className="grid min-h-0 items-start gap-1.5 overflow-hidden" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                <div className="flex flex-col gap-1.5 overflow-hidden">
+                  <SectionCard title="Identity" className="overflow-hidden">
+                    <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 items-start gap-2">
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Name <span className="text-red-500">*</span></label>
+                        <input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Line name" className={iCls} />
+                        {errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>}
                       </div>
-                    ) : (
-                      <div className="mt-1 rounded-lg border border-amber-200 bg-amber-50 p-2 dark:border-amber-500/20 dark:bg-amber-500/10">
-                        <p className="text-[11px] font-bold text-slate-900 dark:text-slate-100">No departments linked</p>
-                        <p className="mt-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-300">Departments define available resource groups for process flow.</p>
-                        {sel?.id && <button type="button" onClick={() => navigate(`/system/production-structure/components/dept?lineId=${sel.id}`)} className="mt-2 rounded bg-white px-2 py-1 text-[10px] font-bold text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300">Assign Departments</button>}
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Code <span className="text-red-500">*</span></label>
+                        <input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Line code" className={iCls} />
+                        {errors.code && <p className="text-[9px] text-red-500 mt-0.5">{errors.code}</p>}
                       </div>
-                    )}
-                  </SectionCard>
-                </div>
-                {!isForm && (
-                  <div className="col-span-5 grid min-h-0 grid-cols-2 gap-1.5 overflow-hidden">
-                    <SectionCard title="Identity" className="min-h-0 overflow-hidden">
-                      <div className="space-y-px">
-                        <InlineRow label="Name" value={sel?.name} />
-                        <InlineRow label="Code" value={sel?.code} />
-                        <InlineRow label="Plant" value={sel?.plantName} />
-                        <InlineRow label="Type" value={lt ? lt : <Badge label="Not assigned" variant="inactive" />} />
+                    </div>
+                    <div className="grid grid-cols-2 items-start gap-2">
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Plant <span className="text-red-500">*</span></label>
+                        <select value={g("plantId")} onChange={(e) => s("plantId", e.target.value)} className={sCls}><option value="">Select plant</option>{plantOptions.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
+                        {errors.plantId && <p className="text-[9px] text-red-500 mt-0.5">{errors.plantId}</p>}
                       </div>
-                    </SectionCard>
-                    <SectionCard title="Schedule" className="min-h-0 overflow-hidden">
-                      <div className="space-y-px">
-                        <InlineRow label="Calendar" value={sel?.defaultCalendar || <Badge label="Not assigned" variant="inactive" />} />
-                        <InlineRow label="Shift" value={sel?.shiftPattern || <Badge label="Not configured" variant="inactive" />} />
-                        <InlineRow label="Timezone" value={sel?.timezone || "Plant default"} />
+                      <div>
+                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Status <span className="text-red-500">*</span></label>
+                        <StatusSelect value={g("statusId")} onChange={(id, cv) => { s("statusId", id); s("status", cv || "active"); }} selectClass={sCls} error={errors.statusId} />
                       </div>
-                    </SectionCard>
+                    </div>
+                    <div className="grid grid-cols-2 items-start gap-2">
+                      <LineTypeSelect value={g("lineTypeId")} onChange={(v) => s("lineTypeId", v)} selectClass={sCls} error={errors.lineTypeId} />
+                    </div>
+                    <textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Description" rows={2} className="max-h-[72px] min-h-[52px] w-full resize-none rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" />
                   </div>
-                )}
+                  </SectionCard>
+                  <SectionCard title="Operations" className="overflow-hidden">
+                    <FamilyModelSection
+                      familyValues={familyValues}
+                      availableModels={availableFamilyModels}
+                      familyId={g("productFamilyId")}
+                      modelIds={g("modelIds")}
+                      primaryModelId={g("primaryModelId")}
+                      onFamilyChange={setProductFamilyId}
+                      onModelsChange={setModelIds}
+                      onPrimaryModelChange={(id) => s("primaryModelId", id)}
+                      selectClass={sCls}
+                      disabled={!g("productFamilyId")}
+                    />
+                    {errors.productFamilyId && <p className="text-[9px] text-red-500">{errors.productFamilyId}</p>}
+                    {errors.modelIds && <p className="text-[9px] text-red-500">{errors.modelIds}</p>}
+                    {errors.primaryModelId && <p className="text-[9px] text-red-500">{errors.primaryModelId}</p>}
+                    <div className="mt-2 space-y-1.5">
+                      <InlineRow label="Capacity" value={<input type="text" value={g("capacityBasis")} readOnly disabled={!g("shiftPatternId")} title={capacityBasisInfo ? "Derived from selected shift/calendar" : "Select shift/calendar to derive capacity"} className={`${iCls} bg-slate-50 text-slate-600 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-800/60 dark:text-slate-300`} />} />
+                      <InlineRow label="UoM" value={<RefSelect category="unit_of_measure" value={g("capacityUomId")} onChange={(v) => s("capacityUomId", v)} placeholder="Select UoM" selectClass={sCls} error={errors.capacityUomId} />} />
+                      <InlineRow label="Bottleneck RG" value={
+                        <select value={g("bottleneckResourceGroupId")} onChange={(e) => s("bottleneckResourceGroupId", e.target.value)} className={sCls}>
+                          <option value="">Select</option>
+                          {(sel?.resourceGroupOptions ?? []).map((rg) => <option key={rg.id} value={rg.id}>{rg.name}</option>)}
+                        </select>
+                      } />
+                      <label className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                        <input type="checkbox" checked={!!g("isConstraint")} onChange={(e) => s("isConstraint", e.target.checked)} /> Constraint Line
+                      </label>
+                    </div>
+                  </SectionCard>
+                </div>
+                <div className="flex flex-col gap-1.5 overflow-hidden">
+                  <ScheduleSection isForm={true} sCls={sCls} g={g} s={s} sel={sel} errors={errors} setShiftModel={setShiftModel} hasCal={hasCal} capacityBasisInfo={capacityBasisInfo} />
+                  <RoutingSummarySection productionLine={sel} navigate={navigate} isNew={mode === "create"} isEditing={true} returnContext={{ searchText: search, statusFilter }} />
+                  <SectionCard title="Departments" action={sel?.id ? <SecondaryActionButton onClick={() => navigate(`/system/production-structure/components/dept?lineId=${sel.id}`)}>Manage</SecondaryActionButton> : undefined} className="overflow-hidden">
+                    {mode === "create" ? (
+                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-[10px] font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800/20 dark:text-slate-400">
+                        Save production line before assigning departments or creating flow.
+                      </div>
+                    ) : hasDepts ? (
+                      <div className="space-y-1 overflow-hidden">
+                        {departmentLinks.slice(0, 6).map((link) => (
+                          <button key={link.id} onClick={() => navigate(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
+                            className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-[11px] text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+                            <span className="font-mono text-[10px] text-slate-500">{link.sequence}</span>
+                            <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
+                            <span className="text-slate-500">{link.resourceGroups} RG</span>
+                            <span className="text-slate-500">{link.resources} Res</span>
+                          </button>
+                        ))}
+                        {departmentLinks.length > 6 && (
+                          <div className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                            +{departmentLinks.length - 6} more departments
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-[10px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/20 dark:text-slate-400">
+                        No departments linked.
+                      </div>
+                    )}
+                  </SectionCard>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-4 px-3 py-1.5 text-[9px] text-slate-400 dark:text-slate-500">
-            <span>Created <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(sel?.createdAt) || "-"}</span></span>
-            <span>Updated <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(sel?.updatedAt) || "-"}</span></span>
-          </div>
+          ) : (
+            <FlowContextSections productionLine={sel} navigate={navigate} returnContext={{ searchText: search, statusFilter }} onAssignModel={() => setMode("edit")} />
+          )}
         </div>
       </div>
     );
@@ -1295,7 +1339,7 @@ export function ProductionLinesPage() {
                     return (
                       <EntityListItem key={ln.id}
                         name={ln.name} code={ln.code}
-                        meta={`${ln.plantName || "Plant required"} · ${readiness.reason}`}
+                        meta={ln.plantName || "Plant required"}
                         icon={<TrendingUpDown className="h-3.5 w-3.5 stroke-current" />}
                         selected={selectedId === ln.id}
                         status={ln.status}

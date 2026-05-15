@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q
+from django.core.exceptions import ValidationError
 from shared.models.base import TimeStampedModel
 from .entity_status import EntityStatus
 
@@ -129,18 +129,25 @@ class Routing(TimeStampedModel):
         ordering = ["-created_at"]
         verbose_name = "Routing"
         verbose_name_plural = "Routings"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["production_line", "product_model"],
-                condition=Q(status=RoutingStatus.ACTIVE),
-                name="uq_line_model_active_routing",
-            ),
-        ]
         indexes = [
             models.Index(fields=["production_line", "status"]),
+            models.Index(fields=["production_line", "product_model", "status"], name="mfg_route_line_model_stat_idx"),
             models.Index(fields=["production_line", "product_model"]),
             models.Index(fields=["production_line", "product_family"]),
         ]
+
+    def clean(self):
+        if self.status != RoutingStatus.ACTIVE or not self.production_line_id:
+            return
+        siblings = Routing.objects.filter(
+            production_line_id=self.production_line_id,
+            product_model_id=self.product_model_id,
+            status=RoutingStatus.ACTIVE,
+        )
+        if self.pk:
+            siblings = siblings.exclude(pk=self.pk)
+        if siblings.exists():
+            raise ValidationError("Only one active routing is allowed per production line and product model.")
 
     def __str__(self):
         return f"Routing v{self.version} for {self.production_line.name}"
@@ -280,13 +287,21 @@ class BOM(TimeStampedModel):
     class Meta:
         db_table = "manufacturing_bom"
         ordering = ["product_model", "-created_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["product_model"],
-                condition=Q(status=RoutingStatus.ACTIVE),
-                name="uq_product_model_active_bom",
-            ),
+        indexes = [
+            models.Index(fields=["product_model", "status"], name="mfg_bom_model_status_idx"),
         ]
+
+    def clean(self):
+        if self.status != RoutingStatus.ACTIVE or not self.product_model_id:
+            return
+        siblings = BOM.objects.filter(
+            product_model_id=self.product_model_id,
+            status=RoutingStatus.ACTIVE,
+        )
+        if self.pk:
+            siblings = siblings.exclude(pk=self.pk)
+        if siblings.exists():
+            raise ValidationError("Only one active BOM is allowed per product model.")
 
     def __str__(self):
         return f"BOM {self.product_model} v{self.version}"

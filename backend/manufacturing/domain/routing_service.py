@@ -83,6 +83,112 @@ def _parse_date(val: Optional[str]) -> Optional[date]:
 
 
 class RoutingService:
+    @staticmethod
+    def _routing_scope_filter(routing: Routing) -> dict:
+        return {
+            "production_line_id": routing.production_line_id,
+            "product_model_id": routing.product_model_id,
+        }
+
+    @staticmethod
+    def _lock_routing_siblings(production_line_id: str, product_model_id):
+        return list(
+            Routing.objects.select_for_update().filter(
+                production_line_id=production_line_id,
+                product_model_id=product_model_id,
+            )
+        )
+
+    @staticmethod
+    def _enforce_single_active_routing(routing: Routing, *, deactivate_siblings: bool = True) -> None:
+        if routing.status != RoutingStatus.ACTIVE:
+            return
+        RoutingService._lock_routing_siblings(routing.production_line_id, routing.product_model_id)
+        siblings = Routing.objects.filter(**RoutingService._routing_scope_filter(routing)).exclude(id=routing.id)
+        active_siblings = siblings.filter(status=RoutingStatus.ACTIVE)
+        if deactivate_siblings:
+            active_siblings.update(status=RoutingStatus.DRAFT)
+            return
+        if active_siblings.exists():
+            raise RoutingValidationError(
+                "An active routing already exists for this production line and product model.",
+                "status",
+            )
+
+    @staticmethod
+    def _bom_scope_filter(bom: BOM) -> dict:
+        return {"product_model_id": bom.product_model_id}
+
+    @staticmethod
+    def _lock_bom_siblings(product_model_id: str):
+        return list(BOM.objects.select_for_update().filter(product_model_id=product_model_id))
+
+    @staticmethod
+    def _enforce_single_active_bom(bom: BOM, *, deactivate_siblings: bool = True) -> None:
+        if bom.status != RoutingStatus.ACTIVE:
+            return
+        RoutingService._lock_bom_siblings(bom.product_model_id)
+        siblings = BOM.objects.filter(**RoutingService._bom_scope_filter(bom)).exclude(id=bom.id)
+        active_siblings = siblings.filter(status=RoutingStatus.ACTIVE)
+        if deactivate_siblings:
+            active_siblings.update(status=RoutingStatus.DRAFT)
+            return
+        if active_siblings.exists():
+            raise RoutingValidationError(
+                "An active BOM already exists for this product model.",
+                "status",
+            )
+
+    @staticmethod
+    @transaction.atomic
+    def create_bom(input_data: dict) -> BOM:
+        product_model = _resolve_product_model(input_data.get("product_model_id"))
+        if product_model is None:
+            raise RoutingValidationError("Product model is required", "productModelId")
+        RoutingService._lock_bom_siblings(str(product_model.id))
+        bom = BOM(
+            product_model=product_model,
+            version=input_data.get("version", "1.0"),
+            status=input_data.get("status", RoutingStatus.DRAFT),
+            notes=input_data.get("notes", ""),
+        )
+        RoutingService._enforce_single_active_bom(bom)
+        bom.save()
+        return bom
+
+    @staticmethod
+    @transaction.atomic
+    def update_bom(bom_id: str, input_data: dict) -> BOM:
+        try:
+            bom = BOM.objects.select_for_update().get(id=bom_id)
+        except BOM.DoesNotExist:
+            raise RoutingValidationError("BOM not found", "id")
+        if "product_model_id" in input_data:
+            product_model = _resolve_product_model(input_data.get("product_model_id"))
+            if product_model is None:
+                raise RoutingValidationError("Product model is required", "productModelId")
+            bom.product_model = product_model
+        if "version" in input_data:
+            bom.version = input_data["version"]
+        if "status" in input_data:
+            bom.status = input_data["status"]
+        if "notes" in input_data:
+            bom.notes = input_data["notes"]
+        RoutingService._enforce_single_active_bom(bom)
+        bom.save()
+        return bom
+
+    @staticmethod
+    @transaction.atomic
+    def activate_bom(bom_id: str) -> BOM:
+        try:
+            bom = BOM.objects.select_for_update().get(id=bom_id)
+        except BOM.DoesNotExist:
+            raise RoutingValidationError("BOM not found", "id")
+        bom.status = RoutingStatus.ACTIVE
+        RoutingService._enforce_single_active_bom(bom)
+        bom.save(update_fields=["status", "updated_at"])
+        return bom
 
     # ── Routing CRUD ──
 
@@ -93,21 +199,17 @@ class RoutingService:
         if not pl_id:
             raise RoutingValidationError("Production line is required", "productionLineId")
         try:
-            ProductionLine.objects.get(id=pl_id)
+            ProductionLine.objects.select_for_update().get(id=pl_id)
         except ProductionLine.DoesNotExist:
             raise RoutingValidationError("Production line not found", "productionLineId")
-
-        if Routing.objects.filter(production_line_id=pl_id, status=RoutingStatus.ACTIVE).exists():
-            raise RoutingValidationError(
-                "Production line already has an active flow/routing.", "productionLineId"
-            )
 
         pf_id = input_data.get("product_family_id")
         pf = _resolve_ref(ReferenceValue, pf_id) if pf_id else None
         pm_id = input_data.get("product_model_id")
         pm = _resolve_product_model(pm_id)
+        RoutingService._lock_routing_siblings(pl_id, pm.id if pm else None)
 
-        routing = Routing.objects.create(
+        routing = Routing(
             production_line_id=pl_id,
             product_family=pf,
             product_model=pm,
@@ -117,13 +219,15 @@ class RoutingService:
             effective_to=_parse_date(input_data.get("effective_to")),
             notes=input_data.get("notes", ""),
         )
+        RoutingService._enforce_single_active_routing(routing)
+        routing.save()
         return routing
 
     @staticmethod
     @transaction.atomic
     def update_routing(routing_id: str, input_data: dict) -> Routing:
         try:
-            routing = Routing.objects.get(id=routing_id)
+            routing = Routing.objects.select_for_update().get(id=routing_id)
         except Routing.DoesNotExist:
             raise RoutingValidationError("Routing not found", "id")
 
@@ -151,6 +255,7 @@ class RoutingService:
         if "status" in input_data:
             routing.status = input_data["status"]
 
+        RoutingService._enforce_single_active_routing(routing)
         routing.save()
         return routing
 
@@ -158,7 +263,7 @@ class RoutingService:
     @transaction.atomic
     def activate_routing(routing_id: str) -> Routing:
         try:
-            routing = Routing.objects.get(id=routing_id)
+            routing = Routing.objects.select_for_update().get(id=routing_id)
         except Routing.DoesNotExist:
             raise RoutingValidationError("Routing not found", "id")
 
@@ -167,13 +272,8 @@ class RoutingService:
             msg = "; ".join(e["message"] for e in errors)
             raise RoutingValidationError(f"Cannot activate: {msg}", "_form")
 
-        # Deactivate any other ACTIVE routing for same line (one active route per line)
-        Routing.objects.filter(
-            production_line=routing.production_line,
-            status=RoutingStatus.ACTIVE,
-        ).exclude(id=routing.id).update(status=RoutingStatus.DRAFT)
-
         routing.status = RoutingStatus.ACTIVE
+        RoutingService._enforce_single_active_routing(routing)
         routing.save()
         return routing
 

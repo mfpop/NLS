@@ -1,6 +1,5 @@
 from django.db import migrations, models
 import django.db.models.deletion
-from django.db.models import Q
 
 
 class Migration(migrations.Migration):
@@ -10,14 +9,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddConstraint(
-            model_name="routing",
-            constraint=models.UniqueConstraint(
-                fields=("production_line", "product_model"),
-                condition=Q(("status", "ACTIVE")),
-                name="uq_line_model_active_routing",
-            ),
-        ),
         migrations.CreateModel(
             name="Material",
             fields=[
@@ -171,10 +162,6 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="inventorylocation",
             index=models.Index(fields=["plant", "location_type"], name="mfg_invloc_plant_type_idx"),
-        ),
-        migrations.AddConstraint(
-            model_name="bom",
-            constraint=models.UniqueConstraint(fields=("product_model",), condition=Q(("status", "ACTIVE")), name="uq_product_model_active_bom"),
         ),
         migrations.AddConstraint(
             model_name="bomitem",

@@ -1,4 +1,4 @@
-"""Domain rules for resource capacity constraints."""
+"""Compatibility wrapper."""
 
 
 def has_capacity(planned_load: int, capacity: int) -> bool:

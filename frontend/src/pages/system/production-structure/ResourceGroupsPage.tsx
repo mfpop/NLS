@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, CheckCircle, Search, Component, Users, User, Dumbbell, Calendar, Factory, Layers, Activity, Zap, Clock, Gauge, Server, Plus } from "lucide-react";
+import { AlertTriangle, CheckCircle, Search, Component, Users, User, Dumbbell, Calendar, Factory, Layers, Plus, Activity, Gauge } from "lucide-react";
 import { Pagination, EntityListItem } from "./components";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { DEPARTMENTS_QUERY, RESOURCE_GROUPS_QUERY, RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
@@ -129,18 +129,6 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
     default: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600",
   };
   return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1 w-1 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
-}
-
-function KpiCard({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 rounded-lg bg-slate-50/70 dark:bg-slate-800/30 px-2.5 py-1.5 min-h-8">
-      {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
-      <div className="min-w-0">
-        <div className="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</div>
-        <div className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 truncate">{value}</div>
-      </div>
-    </div>
-  );
 }
 
 function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
@@ -503,11 +491,19 @@ export function ResourceGroupsPage() {
               </SectionCard>
 
               <SectionCard title="Capacity">
-                <div className="grid grid-cols-2 gap-1.5">
-                  <KpiCard label="Total Cycle" value={assignedResources.reduce((s, r) => s + (r.utilization ?? 0), 0) > 0 ? `${assignedResources.reduce((s, r) => s + (r.utilization ?? 0), 0)}s` : "—"} icon={<Clock className="h-3 w-3" />} />
-                  <KpiCard label="Utilization" value={assignedResources.length > 0 ? `${Math.round(assignedResources.reduce((s, r) => s + (r.utilization ?? 0), 0) / assignedResources.length)}%` : "—"} icon={<Activity className="h-3 w-3" />} />
-                  <KpiCard label="Active" value={`${assignedResources.filter((r) => r.status === "active").length}/${assignedResources.length}`} icon={<Server className="h-3 w-3" />} />
-                  <KpiCard label="OEE Target" value={rg.oeeTarget != null ? `${rg.oeeTarget}%` : "—"} icon={<Zap className="h-3 w-3" />} />
+                <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2 text-[10px] text-slate-500 dark:text-slate-400 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-600 dark:text-slate-300 w-24">Model:</span>
+                    <span>{rg.capacityModel || "Not configured"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-600 dark:text-slate-300 w-24">OEE Target:</span>
+                    <span>{rg.oeeTarget != null ? `${rg.oeeTarget}%` : "Not set"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-600 dark:text-slate-300 w-24">Resources:</span>
+                    <span>{resourceCount} assigned</span>
+                  </div>
                 </div>
               </SectionCard>
 

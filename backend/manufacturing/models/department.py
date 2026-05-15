@@ -40,6 +40,8 @@ class Department(TimeStampedModel):
         ]
         constraints = [
             models.UniqueConstraint(fields=["plant", "code"], name="uq_department_plant_code"),
+            models.UniqueConstraint(fields=["plant", "name"], name="uq_department_plant_name"),
+            models.UniqueConstraint(fields=["id", "plant"], name="uq_department_id_plant"),
         ]
 
     def __str__(self):

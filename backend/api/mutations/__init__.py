@@ -1,5 +1,6 @@
 import strawberry
 
+from api.mutations.application import ApplicationSettingsMutation
 from api.mutations.execution import ExecutionMutation
 from api.mutations.improvement import ImprovementMutation
 from api.mutations.manufacturing import ManufacturingMutation
@@ -7,6 +8,7 @@ from api.mutations.manufacturing import ManufacturingMutation
 
 @strawberry.type
 class Mutation(
+    ApplicationSettingsMutation,
     ManufacturingMutation,
     ExecutionMutation,
     ImprovementMutation,

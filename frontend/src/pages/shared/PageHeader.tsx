@@ -11,9 +11,9 @@ interface PageHeaderProps {
 
 export function PageHeader({ icon, iconClass, title, subtitle, children }: PageHeaderProps) {
   return (
-    <header className={`flex shrink-0 items-center justify-between border-b px-5 py-3 ${theme.header}`}>
+    <header className={`flex shrink-0 items-center justify-between px-5 py-3 ${theme.header}`}>
       <div className="flex items-center gap-3 min-w-0">
-        <div className={`inline-flex h-9 w-9 flex-none items-center justify-center rounded-lg ${iconClass || theme.iconBoxEmerald}`}>
+        <div className={`flex-none ${iconClass || "text-primary"}`}>
           {icon}
         </div>
         <div className="min-w-0">

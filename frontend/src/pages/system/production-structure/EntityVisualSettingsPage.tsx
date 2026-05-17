@@ -79,14 +79,14 @@ export function EntityVisualSettingsPage() {
         subtitle="Configure icons, colors, and labels for manufacturing entity types."
       >
         <button type="button" onClick={() => navigate("/system/production-structure")}
-          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-200/60 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700/60">
+          className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:text-muted-foreground hover:bg-muted transition-colors text-muted-foreground hover:text-muted-foreground hover:bg-muted">
           <X className="h-4 w-4 stroke-current" />Close
         </button>
       </PageHeader>
 
       {toast && (
         <div className={`mx-6 mt-2 px-3 py-1.5 rounded-lg text-xs font-medium ${
-          toast.type === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+          toast.type === "success" ? "bg-success text-success bg-success text-success" : "bg-danger text-danger bg-danger text-danger"
         }`}>{toast.message}</div>
       )}
 
@@ -112,10 +112,10 @@ export function EntityVisualSettingsPage() {
                 const isRowDirty = !!editState[s.entityType];
                 const isSaving = saving === s.entityType;
                 return (
-                  <tr key={s.entityType} className={`border-b last:border-b-0 border-slate-100 dark:border-slate-800 ${theme.interactiveRow}`}>
+                  <tr key={s.entityType} className={`border-b last:border-b-0 border-border ${theme.interactiveRow}`}>
                     <td className="px-4 py-2.5">
                       <span className={`font-mono text-[10px] font-medium ${theme.textMuted}`}>{s.entityType}</span>
-                      {s.isSystem && <span className="ml-1.5 text-[8px] text-slate-400 uppercase">system</span>}
+                      {s.isSystem && <span className="ml-1.5 text-[8px] text-muted-foreground uppercase">system</span>}
                     </td>
                     <td className="px-4 py-2.5">
                       <input
@@ -134,12 +134,12 @@ export function EntityVisualSettingsPage() {
                         >
                           {(() => { const I = getIconByKey(e.iconKey); return <I className="h-4 w-4 stroke-current" />; })()}
                           <span className="flex-1 text-left">{getIconLabel(e.iconKey)}</span>
-                          <ChevronDown className="h-3 w-3 stroke-current text-slate-400" />
+                          <ChevronDown className="h-3 w-3 stroke-current text-muted-foreground" />
                         </button>
                         {openIconDropdown === s.entityType && (
                           <>
                             <div className="fixed inset-0 z-10" onClick={() => setOpenIconDropdown(null)} />
-                            <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-lg border bg-white p-2 shadow-lg dark:bg-slate-900 dark:border-slate-700 max-h-48 overflow-y-auto">
+                            <div className="absolute left-0 top-full z-20 mt-1 w-56 rounded-lg border bg-card p-2 shadow-lg bg-muted border-border max-h-48 overflow-y-auto">
                               <div className="grid grid-cols-3 gap-1">
                                 {ALLOWED_ICON_KEYS.map((ik) => {
                                   const I = getIconByKey(ik);
@@ -150,11 +150,11 @@ export function EntityVisualSettingsPage() {
                                       type="button"
                                       onClick={() => { setField(s.entityType, "iconKey", ik); setOpenIconDropdown(null); }}
                                       className={`flex flex-col items-center gap-0.5 rounded-md p-1.5 text-[9px] transition-colors ${
-                                        isSelected ? "bg-slate-100 dark:bg-slate-800" : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        isSelected ? "bg-muted" : "hover:bg-muted hover:bg-muted"
                                       }`}
                                     >
-                                      <I className="h-4 w-4 stroke-current text-slate-600 dark:text-slate-300" />
-                                      <span className="text-slate-500 dark:text-slate-400">{getIconLabel(ik)}</span>
+                                      <I className="h-4 w-4 stroke-current text-muted-foreground" />
+                                      <span className="text-muted-foreground">{getIconLabel(ik)}</span>
                                     </button>
                                   );
                                 })}
@@ -173,12 +173,12 @@ export function EntityVisualSettingsPage() {
                         >
                           <span className={`inline-block h-4 w-4 rounded ${tokens.bg} ${tokens.darkBg}`} />
                           <span className="flex-1 text-left capitalize">{e.colorKey}</span>
-                          <ChevronDown className="h-3 w-3 stroke-current text-slate-400" />
+                          <ChevronDown className="h-3 w-3 stroke-current text-muted-foreground" />
                         </button>
                         {openColorDropdown === s.entityType && (
                           <>
                             <div className="fixed inset-0 z-10" onClick={() => setOpenColorDropdown(null)} />
-                            <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-lg border bg-white p-2 shadow-lg dark:bg-slate-900 dark:border-slate-700">
+                            <div className="absolute left-0 top-full z-20 mt-1 w-48 rounded-lg border bg-card p-2 shadow-lg bg-muted border-border">
                               <div className="grid grid-cols-2 gap-1">
                                 {ALLOWED_COLOR_KEYS.map((ck) => {
                                   const ct = getColorTokens(ck);
@@ -189,12 +189,12 @@ export function EntityVisualSettingsPage() {
                                       type="button"
                                       onClick={() => { setField(s.entityType, "colorKey", ck); setOpenColorDropdown(null); }}
                                       className={`flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[10px] transition-colors ${
-                                        isSelected ? "bg-slate-100 dark:bg-slate-800" : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                                        isSelected ? "bg-muted" : "hover:bg-muted hover:bg-muted"
                                       }`}
                                     >
                                       <span className={`inline-block h-3 w-3 rounded ${ct.bg} ${ct.darkBg}`} />
-                                      <span className="capitalize text-slate-600 dark:text-slate-300">{ck}</span>
-                                      {isSelected && <Check className="h-2.5 w-2.5 stroke-current text-slate-500 ml-auto" />}
+                                      <span className="capitalize text-muted-foreground">{ck}</span>
+                                      {isSelected && <Check className="h-2.5 w-2.5 stroke-current text-muted-foreground ml-auto" />}
                                     </button>
                                   );
                                 })}
@@ -219,10 +219,10 @@ export function EntityVisualSettingsPage() {
                         onClick={() => setField(s.entityType, "isActive", !e.isActive)}
                         disabled={s.isSystem}
                         className={`inline-flex h-5 w-9 rounded-full transition-colors ${
-                          e.isActive ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                          e.isActive ? "bg-success" : "bg-muted"
                         } ${s.isSystem ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                       >
-                        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                        <span className={`inline-block h-4 w-4 rounded-full bg-card shadow-sm transition-transform ${
                           e.isActive ? "translate-x-4.5" : "translate-x-0.5"
                         }`} />
                       </button>
@@ -236,7 +236,7 @@ export function EntityVisualSettingsPage() {
                           type="button"
                           onClick={() => handleSave(s.entityType)}
                           disabled={!isRowDirty || isSaving}
-                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-colors bg-success text-primary-foreground hover:bg-success disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {isSaving ? "..." : <Save className="h-3 w-3 stroke-current" />}
                           Save
@@ -244,7 +244,7 @@ export function EntityVisualSettingsPage() {
                         <button
                           type="button"
                           onClick={() => handleReset(s.entityType)}
-                          className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-medium transition-colors text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                          className="inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-medium transition-colors text-muted-foreground hover:bg-muted hover:bg-muted"
                         >
                           <RotateCcw className="h-3 w-3 stroke-current" /> Reset
                         </button>

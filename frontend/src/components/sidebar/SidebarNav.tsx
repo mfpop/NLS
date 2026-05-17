@@ -4,6 +4,7 @@ import { SidebarNavItem } from "./SidebarNavItem";
 import { SidebarNavGroup } from "./SidebarNavGroup";
 import { sidebarNav, sectionFromPath } from "./navigationConfig";
 import type { TopLevelEntry } from "./navigationConfig";
+import { sidebarNavTokens } from "./sidebarStyles";
 import { useSidebarStore } from "@/stores/sidebar";
 import type { SidebarSectionId } from "@/stores/sidebar";
 
@@ -18,14 +19,15 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   }, [pathname, setOpenSection]);
 
   return (
-    <nav className="flex-1 overflow-y-auto py-1 space-y-0.5 px-2" aria-label="Main navigation">
+    <nav className={sidebarNavTokens.nav} aria-label="Main navigation">
       {sidebarNav.map((entry: TopLevelEntry) => {
         if (entry.type === "item") {
-          return <SidebarNavItem key={entry.to} to={entry.to} icon={entry.icon} label={entry.label} onNavigate={onNavigate} />;
+          return <SidebarNavItem key={entry.to} to={entry.to} icon={entry.icon} label={entry.label} sectionId="control" onNavigate={onNavigate} />;
         }
         return (
           <SidebarNavGroup key={entry.id}
             id={entry.id}
+            sectionId={entry.id}
             label={entry.label}
             icon={entry.icon}
             items={entry.items}

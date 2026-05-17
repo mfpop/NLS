@@ -106,6 +106,9 @@ const ResourcesPage = lazy(() =>
 const ReferencesPage = lazy(() =>
   import("@/pages/system/production-structure/ReferencesPage").then((module) => ({ default: module.ReferencesPage }))
 );
+const ProductMasterDataPage = lazy(() =>
+  import("@/pages/system/product-master-data/ProductMasterDataPage").then((module) => ({ default: module.ProductMasterDataPage }))
+);
 const EntityVisualSettingsPage = lazy(() =>
   import("@/pages/system/production-structure/EntityVisualSettingsPage").then((module) => ({ default: module.EntityVisualSettingsPage }))
 );
@@ -197,6 +200,7 @@ export function AppRoutes() {
           <Route path="system/production-structure/components/routing/:productionLineId" element={<RoutingEditorPage />} />
           <Route path="system/production-structure/components/routing/:productionLineId/:routingId" element={<RoutingEditorPage />} />
           <Route path="system/production-structure/structure" element={<StructurePage />} />
+          <Route path="system/product-master-data" element={<ProductMasterDataPage />} />
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />

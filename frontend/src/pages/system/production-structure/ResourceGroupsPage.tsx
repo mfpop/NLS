@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { theme } from "../../../styles/themeTokens";
 import { AlertTriangle, CheckCircle, Search, Component, Users, User, Dumbbell, Calendar, Factory, Layers, Plus, Activity, Gauge } from "lucide-react";
 import { Pagination, EntityListItem } from "./components";
 import { useQuery, useMutation } from "@apollo/client/react";
@@ -62,12 +63,12 @@ const CAPABILITY_ICONS: Record<string, string> = {
 };
 
 const CAPABILITY_COLORS: Record<string, string> = {
-  SHARED: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/20",
-  DEDICATED: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/20",
-  CONSTRAINT: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-300 dark:border-red-500/20",
-  PACEMAKER: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20",
-  MANUAL: "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-500/10 dark:text-slate-300 dark:border-slate-500/20",
-  AUTOMATED: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20",
+  SHARED: theme.badgeActive,
+  DEDICATED: theme.iconBoxViolet,
+  CONSTRAINT: theme.badgeCritical,
+  PACEMAKER: theme.badgeWarning,
+  MANUAL: theme.chip,
+  AUTOMATED: theme.badgeActive,
 };
 
 function listItems<T>(value: ListResult<T> | null | undefined): T[] {
@@ -91,11 +92,11 @@ function CapabilityBadge({ type }: { type?: string | null }) {
 
 function ValidationPill({ ok, label, onClick }: { ok: boolean; label: string; onClick?: () => void }) {
   const colors = ok
-    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
-    : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300";
+    ? "bg-success/8 text-success border border-success/15"
+    : `${theme.badgeWarning}`;
   return (
     <button type="button" onClick={onClick} disabled={!onClick}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium transition-colors ${colors} ${onClick ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}>
+      className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium transition-colors ${colors} ${onClick ? "cursor-pointer hover:bg-success/10" : "cursor-default"}`}>
       {ok ? <CheckCircle className="h-3 w-3 stroke-current shrink-0" /> : <AlertTriangle className="h-3 w-3 stroke-current shrink-0" />}
       {label}
     </button>
@@ -105,13 +106,13 @@ function ValidationPill({ ok, label, onClick }: { ok: boolean; label: string; on
 function InlineRow({ label, value, icon, action }: { label: string; value: React.ReactNode; icon?: React.ReactNode; action?: { text: string; onClick: () => void; icon?: React.ReactNode } }) {
   return (
     <div className="grid items-center gap-2" style={{ gridTemplateColumns: "110px minmax(0,1fr) auto" }}>
-      <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate">
+      <span className={`flex items-center gap-1 text-[10px] font-medium ${theme.textMuted} truncate`}>
         {icon && <span className="shrink-0">{icon}</span>}
         {label}
       </span>
-      <span className="text-[12px] font-medium text-slate-800 dark:text-slate-200 min-w-0 truncate">{value}</span>
+      <span className={`text-[12px] font-medium ${theme.textPrimary} min-w-0 truncate`}>{value}</span>
       {action ? (
-        <button type="button" onClick={action.onClick} className="inline-flex items-center gap-1 text-[10px] font-medium text-rose-600 hover:text-rose-700 dark:text-rose-400 whitespace-nowrap transition-colors">
+        <button type="button" onClick={action.onClick} className={`inline-flex items-center gap-1 text-[10px] font-medium ${theme.textCritical} hover:text-danger whitespace-nowrap transition-colors`}>
           {action.icon}{action.text}
         </button>
       ) : <span />}
@@ -121,21 +122,21 @@ function InlineRow({ label, value, icon, action }: { label: string; value: React
 
 function Badge({ label, variant = "default" }: { label: string; variant?: "active" | "inactive" | "new" | "default" | "rose" | "warning" }) {
   const m: Record<string, string> = {
-    active: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20",
-    inactive: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
-    rose: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20",
-    warning: "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20",
-    new: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20",
-    default: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600",
+    active: `${theme.badgeActive}`,
+    inactive: `${theme.badgeInactive}`,
+    rose: `${theme.badgeCritical}`,
+    warning: `${theme.badgeWarning}`,
+    new: `${theme.iconBoxBlue}`,
+    default: `${theme.badgeInactive}`,
   };
-  return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1 w-1 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
+  return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className={`inline-block h-1 w-1 rounded-full ${theme.statusActive} mr-1 animate-pulse`} />}{label}</span>;
 }
 
 function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900 ${className}`}>
+    <section className={`rounded-lg border border-border/50 ${theme.surfaceBg} p-2 shadow-sm shadow-foreground/5 ${className}`}>
       <div className="mb-1.5 flex min-h-6 items-center gap-2">
-        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{title}</h3>
+        <h3 className={`flex-1 text-[10px] font-bold uppercase tracking-wider ${theme.textMuted}`}>{title}</h3>
         {action}
       </div>
       {children}
@@ -146,7 +147,7 @@ function SectionCard({ title, action, children, className = "" }: { title: strin
 function SecondaryActionButton({ children, onClick, disabled = false }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className="inline-flex h-6 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+      className={`inline-flex h-6 items-center gap-1 rounded border border-border/60 ${theme.surfaceBg} px-2 text-[10px] font-medium ${theme.textSecondary} transition-colors ${theme.interactiveRow} disabled:cursor-not-allowed disabled:opacity-50`}>
       {children}
     </button>
   );
@@ -154,17 +155,17 @@ function SecondaryActionButton({ children, onClick, disabled = false }: { childr
 
 function ResourceCard({ resource }: { resource: Resource }) {
   const statusDot = resource.status === "active"
-    ? "bg-emerald-500" : resource.status === "inactive"
-    ? "bg-slate-300" : "bg-red-400";
+    ? theme.statusActive : resource.status === "inactive"
+    ? theme.statusInactive : theme.statusInactive;
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-white px-2.5 py-1.5 shadow-xs hover:border-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:border-slate-600">
-      <div className={`h-2 w-2 shrink-0 rounded-full ${statusDot}`} />
+    <div className={`flex items-center gap-2 rounded-lg bg-muted/55 px-2.5 py-1.5 ${theme.interactiveRow}`}>
+      <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDot}`} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate">{resource.name || "-"}</span>
-          {resource.code && <span className="shrink-0 font-mono text-[8px] text-slate-400 dark:text-slate-500">{resource.code}</span>}
+          <span className={`text-[11px] font-semibold ${theme.textPrimary} truncate`}>{resource.name || "-"}</span>
+          {resource.code && <span className={`shrink-0 font-mono text-[8px] ${theme.textMuted}`}>{resource.code}</span>}
         </div>
-        <div className="flex items-center gap-2 text-[9px] text-slate-400 dark:text-slate-500">
+        <div className={`flex items-center gap-2 text-[9px] ${theme.textMuted}`}>
           {resource.opStatus && <span className="flex items-center gap-0.5"><Activity className="h-2.5 w-2.5" />{resource.opStatus}</span>}
           {resource.utilization != null && <span className="flex items-center gap-0.5"><Gauge className="h-2.5 w-2.5" />{resource.utilization}%</span>}
           {resource.shiftPattern && <span className="flex items-center gap-0.5"><Calendar className="h-2.5 w-2.5" />{resource.shiftPattern}</span>}
@@ -175,7 +176,7 @@ function ResourceCard({ resource }: { resource: Resource }) {
   );
 }
 
-export function ResourceGroupsPage() {
+export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
   const { search, statusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const navigate = useNavigate();
@@ -317,23 +318,23 @@ export function ResourceGroupsPage() {
   const isForm = mode === "edit" || mode === "create";
   const ev = (k: string, v: string | number | null | undefined) =>
     v !== null && v !== undefined && String(v).trim()
-      ? <span className="text-slate-800 dark:text-slate-200">{String(v)}</span>
-      : <span className="text-slate-400 dark:text-slate-500 italic text-[11px]">{ET[k] || "-"}</span>;
+      ? <span className={`${theme.textPrimary}`}>{String(v)}</span>
+      : <span className={`${theme.textMuted} italic text-[11px]`}>{ET[k] || "-"}</span>;
   const mkAct = (msg: string, icon?: React.ReactNode) => ({ text: msg, icon, onClick: () => { if (!isForm) hEdit(); } });
 
-  const iCls = "h-7 w-full rounded-md border border-slate-200 bg-white px-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-all focus:border-rose-400 focus:ring-2 focus:ring-rose-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-rose-500 dark:focus:ring-rose-500/20";
-  const sCls = "h-7 w-full rounded-md border border-slate-200 bg-white px-2 text-[11px] outline-none text-slate-700 transition-all focus:border-rose-400 focus:ring-2 focus:ring-rose-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-rose-500 dark:focus:ring-rose-500/20";
+  const iCls = `h-7 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} transition-all ${theme.focusRingCritical}`;
+  const sCls = `h-7 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} transition-all ${theme.focusRingCritical}`;
 
   const renderDetail = () => {
     if (mode !== "create" && !sel) {
       return (
-        <div className="flex flex-1 items-center justify-center bg-slate-50/50 dark:bg-slate-900/50 h-full">
+        <div className={`flex flex-1 items-center justify-center ${theme.page} h-full`}>
           <div className="text-center max-w-xs">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-500/10">
-              <Component className="h-5 w-5 text-rose-400 dark:text-rose-300 stroke-current" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-entity-resource-group-bg">
+              <Component className="h-5 w-5 text-entity-resource-group stroke-current" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Resource Group Details</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">Select a resource group or create a new one to manage its configuration and resources.</p>
+            <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1`}>Resource Group Details</h3>
+            <p className={`text-xs ${theme.textSecondary} leading-relaxed`}>Select a resource group or create a new one to manage its configuration and resources.</p>
           </div>
         </div>
       );
@@ -360,29 +361,29 @@ export function ResourceGroupsPage() {
     const mixedSchedule = schedules.size > 1;
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
-        <div className="shrink-0 px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+      <div className={`flex-1 flex flex-col overflow-hidden ${theme.surfaceBg}`}>
+      <div className="shrink-0 px-4 pt-3 pb-2 border-b border-border/50">
           <div className="flex items-stretch gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-rose-400 to-rose-500 text-white shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-resource-group-bg text-entity-resource-group shadow-sm">
               <Component className="h-4 w-4 stroke-current" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="truncate text-[16px] font-bold leading-5 text-slate-900 dark:text-slate-100">{title}</h2>
-                {code && <span className="shrink-0 rounded bg-slate-100 px-1.5 py-px font-mono text-[9px] text-slate-400 dark:bg-slate-800 dark:text-slate-500">{code}</span>}
+                <h2 className={`truncate text-[16px] font-bold leading-5 ${theme.textPrimary}`}>{title}</h2>
+                {code && <span className={`shrink-0 rounded px-1.5 py-px font-mono text-[9px] ${theme.codeBadge}`}>{code}</span>}
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+              <div className={`mt-1 flex flex-wrap items-center gap-1.5 text-[10px] ${theme.textMuted}`}>
                 <span className="flex items-center gap-0.5"><Factory className="h-2.5 w-2.5 stroke-current" />{plantName || "Plant N/A"}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-muted-foreground">·</span>
                 <span className="flex items-center gap-0.5"><Layers className="h-2.5 w-2.5 stroke-current" />{deptName || "No department"}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-muted-foreground">·</span>
                 <span>{typeName}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-muted-foreground">·</span>
                 <CapabilityBadge type={rg.capabilityType} />
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">{resourceCount} Res</span>
+              <span className={`rounded ${theme.codeBadge} px-1.5 py-0.5 text-[9px] font-medium`}>{resourceCount} Res</span>
               {rg.isBottleneck && <CapabilityBadge type="CONSTRAINT" />}
               {rg.isConstraint && <Badge label="Constraint" variant="warning" />}
               <Badge label={rg.status || "active"} variant={rg.status === "active" ? "active" : "inactive"} />
@@ -394,7 +395,7 @@ export function ResourceGroupsPage() {
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {mutationError && mode !== "view" && (
             <div className="shrink-0 px-4 pt-2">
-              <p className="text-[10px] font-medium text-red-600 dark:text-red-400">{mutationError}</p>
+              <p className={`text-[10px] font-medium ${theme.textCritical}`}>{mutationError}</p>
             </div>
           )}
 
@@ -405,24 +406,24 @@ export function ResourceGroupsPage() {
                 {isForm ? (
                   <div className="space-y-1.5">
                     <div className="grid grid-cols-2 gap-1.5">
-                      <div><input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Name *" className={iCls} />{errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>}</div>
-                      <div><input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Code *" className={iCls} />{errors.code && <p className="text-[9px] text-red-500 mt-0.5">{errors.code}</p>}</div>
+                      <div><input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Name *" className={iCls} />{errors.name && <p className={`text-[9px] ${theme.textCritical} mt-0.5`}>{errors.name}</p>}</div>
+                      <div><input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Code *" className={iCls} />{errors.code && <p className={`text-[9px] ${theme.textCritical} mt-0.5`}>{errors.code}</p>}</div>
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
                       <ReferenceSelect categoryCode="status" label="Status" value={g("statusId")} onChange={(v) => s("statusId", v)} required placeholder="Select status" error={errors.statusId} />
                       <ReferenceSelect categoryCode="resource_group_type" label="Type" value={g("groupTypeId")} onChange={(v) => s("groupTypeId", v)} required placeholder="Select type" error={errors.groupTypeId} />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Department<span className="ml-0.5 text-red-500">*</span></label>
+                      <label className={`block text-[11px] font-semibold ${theme.textSecondary} mb-1`}>Department<span className={`ml-0.5 ${theme.textCritical}`}>*</span></label>
                       <select value={g("departmentId")} onChange={(e) => s("departmentId", e.target.value)} className={sCls}>
                         <option value="">Select department</option>
                         {departmentOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
-                      {errors.departmentId && <p className="text-[9px] text-red-500 mt-0.5">{errors.departmentId}</p>}
+                      {errors.departmentId && <p className={`text-[9px] ${theme.textCritical} mt-0.5`}>{errors.departmentId}</p>}
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
                     <div className="space-y-px">
                       <InlineRow label="Name" value={rg.name} />
                       <InlineRow label="Code" value={rg.code} />
@@ -448,25 +449,25 @@ export function ResourceGroupsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
                       <div>
-                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Capacity Model</label>
+                        <label className={`block text-[10px] font-medium ${theme.textSecondary} mb-0.5`}>Capacity Model</label>
                         <input type="text" value={g("capacityModel")} onChange={(e) => s("capacityModel", e.target.value)} placeholder="e.g. Takt, Rate" className={iCls} />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">OEE Target (%)</label>
+                        <label className={`block text-[10px] font-medium ${theme.textSecondary} mb-0.5`}>OEE Target (%)</label>
                         <input type="number" value={g("oeeTarget")} onChange={(e) => s("oeeTarget", e.target.value)} placeholder="85" className={iCls} step="0.1" />
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+                      <label className={`flex items-center gap-1.5 text-[10px] ${theme.textSecondary}`}>
                         <input type="checkbox" checked={!!form.isBottleneck} onChange={(e) => s("isBottleneck", e.target.checked)} className="h-3 w-3" /> Bottleneck
                       </label>
-                      <label className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+                      <label className={`flex items-center gap-1.5 text-[10px] ${theme.textSecondary}`}>
                         <input type="checkbox" checked={!!form.isConstraint} onChange={(e) => s("isConstraint", e.target.checked)} className="h-3 w-3" /> Constraint
                       </label>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
                     <div className="space-y-px">
                       <InlineRow label="Leader" value={ev("leader", rg.leader)} icon={<User className="h-2.5 w-2.5" />} action={!rg.leader ? mkAct("Assign", <User className="h-2.5 w-2.5" />) : undefined} />
                       <InlineRow label="Supervisor" value={ev("supervisor", rg.supervisor)} icon={<User className="h-2.5 w-2.5" />} />
@@ -484,24 +485,24 @@ export function ResourceGroupsPage() {
               </SectionCard>
 
               <SectionCard title="Used In Production Flows">
-                <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">Referenced by routing steps across production lines.</p>
-                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Open routing editor to view full step assignments.</p>
+                <div className={`rounded-lg p-2 ${theme.subCard}`}>
+                  <p className={`text-[10px] ${theme.textMuted}`}>Referenced by routing steps across production lines.</p>
+                  <p className={`mt-1 text-[10px] ${theme.textMuted}`}>Open routing editor to view full step assignments.</p>
                 </div>
               </SectionCard>
 
               <SectionCard title="Capacity">
-                <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2 text-[10px] text-slate-500 dark:text-slate-400 space-y-1">
+                <div className={`rounded-lg p-2 text-[10px] ${theme.textMuted} space-y-1 ${theme.subCard}`}>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-600 dark:text-slate-300 w-24">Model:</span>
+                    <span className={`font-medium ${theme.textSecondary} w-24`}>Model:</span>
                     <span>{rg.capacityModel || "Not configured"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-600 dark:text-slate-300 w-24">OEE Target:</span>
+                    <span className={`font-medium ${theme.textSecondary} w-24`}>OEE Target:</span>
                     <span>{rg.oeeTarget != null ? `${rg.oeeTarget}%` : "Not set"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-600 dark:text-slate-300 w-24">Resources:</span>
+                    <span className={`font-medium ${theme.textSecondary} w-24`}>Resources:</span>
                     <span>{resourceCount} assigned</span>
                   </div>
                 </div>
@@ -509,7 +510,7 @@ export function ResourceGroupsPage() {
 
               {mixedSchedule && (
                 <SectionCard title="Schedule">
-                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                  <div className={`flex items-center gap-2 rounded-lg px-2 py-1 text-[10px] ${theme.badgeWarning}`}>
                     <AlertTriangle className="h-3 w-3 shrink-0 stroke-current" />
                     <span>Mixed Schedule — resources have {schedules.size} different shift patterns</span>
                   </div>
@@ -520,7 +521,7 @@ export function ResourceGroupsPage() {
             {/* ── RIGHT COLUMN ── */}
             <div className="flex flex-col min-h-0 flex-1 gap-2">
               <SectionCard title="Lean Setup">
-                <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                <div className={`rounded-lg p-2 ${theme.subCard}`}>
                   <div className="grid grid-cols-3 gap-1.5">
                     <ValidationPill ok={leanValid.department} label="Department" onClick={() => { if (!isForm) hEdit(); }} />
                     <ValidationPill ok={leanValid.type} label="Capability Type" onClick={() => { if (!isForm) hEdit(); }} />
@@ -539,13 +540,13 @@ export function ResourceGroupsPage() {
                   </SecondaryActionButton>
                 }>
                 {resourcesLoading ? (
-                  <div className="flex items-center justify-center py-8 text-xs text-slate-400">
-                    <div className="h-2 w-2 rounded-full bg-rose-400 animate-bounce mr-2" />Loading...
+                  <div className={`flex items-center justify-center py-8 text-xs ${theme.textMuted}`}>
+                    <div className={`h-2 w-2 rounded-full ${theme.iconAccent} animate-bounce mr-2`} />Loading...
                   </div>
                 ) : assignedResources.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-lg">
-                    <Dumbbell className="h-5 w-5 text-slate-300 dark:text-slate-600 mb-1.5 stroke-current" />
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-2">No resources assigned</p>
+                  <div className={`flex flex-col items-center justify-center py-8 text-center rounded-lg ${theme.subCard}`}>
+                    <Dumbbell className={`h-5 w-5 ${theme.icon} mb-1.5 stroke-current`} />
+                    <p className={`text-[10px] ${theme.textMuted} mb-2`}>No resources assigned</p>
                     <SecondaryActionButton onClick={() => navigate("/system/production-structure/components/resource")}>
                       <Plus className="h-3 w-3 stroke-current" /> Add Resources
                     </SecondaryActionButton>
@@ -561,9 +562,9 @@ export function ResourceGroupsPage() {
             </div>
           </div>
 
-          <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 px-4 py-1.5 flex items-center gap-4 text-[9px] text-slate-400 dark:text-slate-500">
-            <span>Created <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(rg.createdAt) || "-"}</span></span>
-            <span>Updated <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(rg.updatedAt) || "-"}</span></span>
+          <div className={`shrink-0 border-t border-border/50 px-4 py-1.5 flex items-center gap-4 text-[9px] ${theme.textMuted}`}>
+            <span>Created <span className={`font-medium ${theme.textSecondary}`}>{formatAppDate(rg.createdAt) || "-"}</span></span>
+            <span>Updated <span className={`font-medium ${theme.textSecondary}`}>{formatAppDate(rg.updatedAt) || "-"}</span></span>
             {rg.leader && <span className="flex items-center gap-0.5"><User className="h-2.5 w-2.5 stroke-current" />{rg.leader}</span>}
           </div>
         </div>
@@ -577,24 +578,25 @@ export function ResourceGroupsPage() {
         <ConfirmDialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Archive resource group?" message="This action cannot be undone." onConfirm={hDelete} />
       )}
       <EntityWorkspacePage
+        hideList={embeddedInFlow}
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 h-9 border-b border-slate-200 dark:border-slate-700 flex items-center px-3 bg-white dark:bg-slate-900">
-              <Search className="h-3 w-3 text-slate-400 stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Resource Groups</span>
-              <span className="ml-auto text-[9px] text-slate-400 dark:text-slate-500 font-mono">{filtered.length}</span>
+            <div className="shrink-0 border-b border-border/50 flex items-center p-3 bg-muted">
+              <Search className={`h-3 w-3 ${theme.icon} stroke-current mr-2 shrink-0`} />
+              <span className={`text-[11px] font-medium ${theme.textMuted}`}>Resource Groups</span>
+              <span className={`ml-auto text-[9px] ${theme.textMuted} font-mono`}>{filtered.length}</span>
             </div>
-            <div className="flex-1 overflow-y-auto bg-white pl-2 dark:bg-slate-900">
+            <div className={`flex-1 overflow-y-auto ${theme.surfaceBg} pl-2`}>
               {loading && groups.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-slate-400"><div className="h-2 w-2 rounded-full bg-rose-400 animate-bounce mr-2" />Loading...</div>
+                <div className={`flex items-center justify-center h-24 text-xs ${theme.textMuted}`}><div className={`h-2 w-2 rounded-full ${theme.iconAccent} animate-bounce mr-2`} />Loading...</div>
               ) : paginated.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <Component className="h-4 w-4 text-slate-300 dark:text-slate-600 mb-1.5 stroke-current" />
-                  <p className="text-xs text-slate-400 dark:text-slate-500">No resource groups</p>
+                  <Component className={`h-4 w-4 ${theme.icon} mb-1.5 stroke-current`} />
+                  <p className={`text-xs ${theme.textMuted}`}>No resource groups</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                <div>
                   {paginated.map((g) => (
                     <EntityListItem key={g.id}
                       name={g.name || ""} code={g.code}
@@ -603,12 +605,12 @@ export function ResourceGroupsPage() {
                       selected={selectedId === g.id}
                       status={g.status}
                       onClick={() => { setSelectedId(g.id); if (mode === "create") { clearForm(); setMode("view"); } }}
-                      accentColor="rose" />
+                      entityType="resourceGroup" />
                   ))}
                 </div>
               )}
             </div>
-            <div className="shrink-0 px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div className="shrink-0 flex h-12 items-center border-t border-border/50 bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

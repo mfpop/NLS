@@ -63,12 +63,23 @@ class ScheduleAssignment(models.Model):
 
     entity_type = models.CharField(max_length=30, choices=ENTITY_TYPE_CHOICES)
     entity_id = models.CharField(max_length=50)
+    plant = models.ForeignKey(
+        "manufacturing.Plant", on_delete=models.PROTECT,
+        related_name="schedule_assignments", null=True, blank=True,
+    )
     schedule = models.ForeignKey(
         Schedule, on_delete=models.CASCADE, related_name="assignments",
+        null=True, blank=True,
+    )
+    work_schedule = models.ForeignKey(
+        "manufacturing.WorkSchedule", on_delete=models.CASCADE,
+        related_name="assignments", null=True, blank=True,
     )
     inheritance_mode = models.CharField(
         max_length=20, choices=INHERITANCE_CHOICES, default="NONE",
     )
+    priority = models.IntegerField(default=0)
+    is_active = models.BooleanField(default=True)
     valid_from = models.DateTimeField(null=True, blank=True)
     valid_to = models.DateTimeField(null=True, blank=True)
     status = models.CharField(
@@ -84,6 +95,7 @@ class ScheduleAssignment(models.Model):
         verbose_name_plural = "Schedule Assignments"
         indexes = [
             models.Index(fields=["entity_type", "entity_id"]),
+            models.Index(fields=["plant", "entity_type", "entity_id", "is_active"], name="sched_assign_scope_idx"),
         ]
 
     def __str__(self):

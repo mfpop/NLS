@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { theme } from "../../../../styles/themeTokens";
 
 interface PaginationProps {
   page: number;
@@ -23,14 +24,14 @@ export function Pagination({ page, total, perPage, onChange }: PaginationProps) 
     }
   }
 
-  const btnClass = "inline-flex items-center justify-center h-7 min-w-[28px] rounded-md text-xs font-medium transition-colors";
-  const activeClass = "bg-slate-800 text-white";
-  const inactiveClass = "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800";
+  const btnClass = "inline-flex h-7 min-w-7 items-center justify-center rounded-full text-xs font-medium transition-colors";
+  const activeClass = `${theme.tabActive}`;
+  const inactiveClass = `${theme.textSecondary} ${theme.interactiveRow}`;
 
   return (
-    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-      <span>{start}–{end} of {total}</span>
-      <div className="flex items-center gap-1">
+    <div className={`flex w-full items-center justify-between text-xs ${theme.textSecondary}`}>
+      <span className="shrink-0 font-medium">{start}–{end} of {total}</span>
+      <div className="flex items-center gap-2">
         <button
           type="button"
           disabled={page <= 1}
@@ -41,7 +42,7 @@ export function Pagination({ page, total, perPage, onChange }: PaginationProps) 
         </button>
         {pages.map((p, i) =>
           p === "..." ? (
-            <span key={`e${i}`} className={`${btnClass} cursor-default text-slate-300`}>…</span>
+            <span key={`e${i}`} className={`${btnClass} cursor-default ${theme.textMuted}`}>…</span>
           ) : (
             <button
               key={p}

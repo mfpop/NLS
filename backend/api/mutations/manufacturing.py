@@ -4,6 +4,8 @@ from typing import Optional
 from strawberry.types import Info
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.db import transaction
+from django.core.exceptions import ValidationError
 from api.types.manufacturing import (
     CompanyNode, CompanyPayload, CompanyInput,
     PlantNode, PlantPayload, PlantInput,
@@ -11,6 +13,7 @@ from api.types.manufacturing import (
     DepartmentNode, DepartmentPayload, DepartmentInput,
     ResourceGroupNode, ResourceGroupPayload, ResourceGroupInput,
     ResourceNode, ResourcePayload, ResourceInput,
+    MaterialBinNode, MaterialBinPayload, MaterialBinInput,
     ProductionLineDepartmentAssignmentNode, AssignmentPayload, AssignDepartmentInput, AssignDepartmentToLinesInput,
     ScheduleNode, SchedulePayload, ScheduleInput,
     ScheduleAssignmentNode, ScheduleAssignmentPayload, ScheduleAssignmentInput,
@@ -21,22 +24,36 @@ from api.types.manufacturing import (
     ReorderStepsInput, SaveRoutingInput,
     ProductFamilyAssignmentNode, ProductModelAssignmentNode,
     ProductFamilyAssignmentPayload, ProductModelAssignmentPayload,
+    ProductFamilyInput, ProductFamilyNode, ProductFamilyPayload,
+    ProductModelInput, ProductModelNode, ProductModelPayload,
+    ProductVariantInput, ProductVariantNode, ProductVariantPayload,
+    PartNumberInput, PartNumberNode, PartNumberPayload,
+    BomInput, BOMNode, BomPayload,
     CapacityPlanNode, CapacityPlanPayload, CapacityPlanCreateInput, CapacityPlanInputUpdateInput,
     CapacityScenarioNode, CapacityScenarioPayload, CapacityScenarioInput,
+    WorkScheduleNode, WorkSchedulePayload, WorkScheduleInput, WorkScheduleUpdateInput,
+    WorkShiftInput,     WorkShiftNode, WorkShiftPayload, WorkShiftInput, WorkShiftUpdateInput,
+    CapacityProfileNode, CapacityProfilePayload, CapacityProfileInput, CapacityProfileUpdateInput,
+    CapacityRecalculationJobNode, CapacityRecalculationPayload, CapacityRecalculationInput,
+    CapacitySnapshotNode, LaborRequirementInput, LaborRequirementNode, LaborRequirementPayload,
+    LaborRequirementUpdateInput, OperatorAssignmentInput, OperatorAssignmentNode,
+    OperatorAssignmentPayload, OperatorAssignmentUpdateInput,
 )
 from api.types.auth import LoginInput, AuthPayload, UserNode
 from api.auth_utils import encode_jwt
 from manufacturing.domain.department_service import DepartmentService, DepartmentServiceError
 from manufacturing.domain.structure_service import StructureService, StructureServiceError
+from manufacturing.domain.material_bin_service import MaterialBinService, MaterialBinServiceError
 from manufacturing.models import (
     Company, Plant, Department, ProductionLine, ResourceGroup, Resource,
     ProductionLineDepartmentAssignment, ProductionLineProductFamily, ProductionLineProductModel,
     Schedule, ScheduleAssignment,
     ReferenceValue, ReferenceCategory, ProductModel, UserRole,
-    Routing, RoutingStep,
+    Routing, RoutingStep, LaborRequirement, OperatorAssignment,
 )
 from manufacturing.domain.plant_structure_rules import validate_plant_input
 from manufacturing.domain.routing_service import RoutingService, RoutingValidationError
+from manufacturing.domain.product_identity_service import ProductIdentityError, ProductIdentityService
 from manufacturing.domain.capacity_service import (
     CapacityPlanService, CapacityValidationError, ScenarioSimulationService,
 )
@@ -45,6 +62,23 @@ from manufacturing.domain.capacity_service import (
 def _resolve_ref(model, ref_id: Optional[str]):
     if not ref_id:
         return None
+
+
+def _parse_dt(value: Optional[str]):
+    if not value:
+        return None
+    from datetime import datetime
+    return datetime.fromisoformat(value)
+
+
+def _validation_payload(payload_cls, exc: Exception):
+    if isinstance(exc, ValidationError):
+        return payload_cls(ok=False, errors=[MutationError(field="_form", code="VALIDATION", message="; ".join(exc.messages))])
+    return payload_cls(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
+
+
+def _product_identity_error(payload_cls, exc: ProductIdentityError):
+    return payload_cls(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
     try:
         return model.objects.get(id=ref_id)
     except model.DoesNotExist:
@@ -695,6 +729,56 @@ class ManufacturingMutation:
             return ResourcePayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
+    def create_material_bin(self, input: MaterialBinInput) -> MaterialBinPayload:
+        try:
+            bin_obj = MaterialBinService.create({
+                "plant_id": input.plant_id,
+                "resource_group_id": input.resource_group_id,
+                "code": input.code,
+                "name": input.name,
+                "bin_type": input.bin_type,
+                "material_id": input.material_id,
+                "capacity": input.capacity,
+                "uom_id": input.uom_id,
+                "location_code": input.location_code,
+                "is_active": input.is_active,
+            })
+            return MaterialBinPayload(ok=True, material_bin=MaterialBinNode.from_db(bin_obj))
+        except MaterialBinServiceError as exc:
+            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+        except Exception as exc:
+            return MaterialBinPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
+
+    @strawberry.mutation
+    def update_material_bin(self, id: str, input: MaterialBinInput) -> MaterialBinPayload:
+        try:
+            bin_obj = MaterialBinService.update(id, {
+                "plant_id": input.plant_id,
+                "resource_group_id": input.resource_group_id,
+                "code": input.code,
+                "name": input.name,
+                "bin_type": input.bin_type,
+                "material_id": input.material_id,
+                "capacity": input.capacity,
+                "uom_id": input.uom_id,
+                "location_code": input.location_code,
+                "is_active": input.is_active,
+            })
+            return MaterialBinPayload(ok=True, material_bin=MaterialBinNode.from_db(bin_obj))
+        except MaterialBinServiceError as exc:
+            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+        except Exception as exc:
+            return MaterialBinPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
+
+    @strawberry.mutation
+    def archive_material_bin(self, id: str) -> MaterialBinPayload:
+        try:
+            bin_obj = MaterialBinService.archive(id)
+            return MaterialBinPayload(ok=True, material_bin=MaterialBinNode.from_db(bin_obj))
+        except MaterialBinServiceError as exc:
+            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+
+    @strawberry.mutation
     def create_schedule(self, input: ScheduleInput) -> SchedulePayload:
         s = Schedule.objects.create(
             code=input.code, name=input.name, description=input.description or "",
@@ -727,10 +811,27 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def assign_schedule(self, input: ScheduleAssignmentInput) -> ScheduleAssignmentPayload:
+        if input.work_schedule_id:
+            from manufacturing.domain.schedule_assignment_service import ScheduleAssignmentError, ScheduleAssignmentService
+            try:
+                a = ScheduleAssignmentService.assign(
+                    plant_id=str(input.plant_id or ""),
+                    scope_type=input.entity_type,
+                    scope_id=input.entity_id,
+                    work_schedule_id=str(input.work_schedule_id),
+                    effective_from=input.valid_from,
+                    effective_to=input.valid_to,
+                    priority=input.priority or 0,
+                )
+            except ScheduleAssignmentError as exc:
+                return ScheduleAssignmentPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+            return ScheduleAssignmentPayload(ok=True, assignment=ScheduleAssignmentNode.from_db(a))
+
         a = ScheduleAssignment.objects.create(
             entity_type=input.entity_type, entity_id=input.entity_id,
             schedule_id=input.schedule_id, inheritance_mode=input.inheritance_mode or "NONE",
             valid_from=input.valid_from, valid_to=input.valid_to,
+            priority=input.priority or 0,
         )
         return ScheduleAssignmentPayload(ok=True, assignment=ScheduleAssignmentNode.from_db(a))
 
@@ -820,12 +921,133 @@ class ManufacturingMutation:
     # ── Routing ──
 
     @strawberry.mutation
+    def create_product_family(self, input: ProductFamilyInput) -> ProductFamilyPayload:
+        try:
+            family = ProductIdentityService.create_family(input.__dict__)
+            return ProductFamilyPayload(ok=True, family=ProductFamilyNode.from_db(family))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductFamilyPayload, exc)
+
+    @strawberry.mutation
+    def update_product_family(self, id: str, input: ProductFamilyInput) -> ProductFamilyPayload:
+        try:
+            family = ProductIdentityService.update_family(id, input.__dict__)
+            return ProductFamilyPayload(ok=True, family=ProductFamilyNode.from_db(family))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductFamilyPayload, exc)
+
+    @strawberry.mutation
+    def archive_product_family(self, id: str) -> ProductFamilyPayload:
+        try:
+            family = ProductIdentityService.archive_family(id)
+            return ProductFamilyPayload(ok=True, family=ProductFamilyNode.from_db(family))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductFamilyPayload, exc)
+
+    @strawberry.mutation
+    def create_product_model(self, input: ProductModelInput) -> ProductModelPayload:
+        try:
+            model = ProductIdentityService.create_model(input.__dict__)
+            return ProductModelPayload(ok=True, model=ProductModelNode.from_db(model))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductModelPayload, exc)
+
+    @strawberry.mutation
+    def update_product_model(self, id: str, input: ProductModelInput) -> ProductModelPayload:
+        try:
+            model = ProductIdentityService.update_model(id, input.__dict__)
+            return ProductModelPayload(ok=True, model=ProductModelNode.from_db(model))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductModelPayload, exc)
+
+    @strawberry.mutation
+    def archive_product_model(self, id: str) -> ProductModelPayload:
+        try:
+            model = ProductIdentityService.archive_model(id)
+            return ProductModelPayload(ok=True, model=ProductModelNode.from_db(model))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductModelPayload, exc)
+
+    @strawberry.mutation
+    def create_product_variant(self, input: ProductVariantInput) -> ProductVariantPayload:
+        try:
+            variant = ProductIdentityService.create_variant(input.__dict__)
+            return ProductVariantPayload(ok=True, variant=ProductVariantNode.from_db(variant))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductVariantPayload, exc)
+
+    @strawberry.mutation
+    def update_product_variant(self, id: str, input: ProductVariantInput) -> ProductVariantPayload:
+        try:
+            variant = ProductIdentityService.update_variant(id, input.__dict__)
+            return ProductVariantPayload(ok=True, variant=ProductVariantNode.from_db(variant))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductVariantPayload, exc)
+
+    @strawberry.mutation
+    def archive_product_variant(self, id: str) -> ProductVariantPayload:
+        try:
+            variant = ProductIdentityService.archive_variant(id)
+            return ProductVariantPayload(ok=True, variant=ProductVariantNode.from_db(variant))
+        except ProductIdentityError as exc:
+            return _product_identity_error(ProductVariantPayload, exc)
+
+    @strawberry.mutation
+    def create_part_number(self, input: PartNumberInput) -> PartNumberPayload:
+        try:
+            part = ProductIdentityService.create_part_number(input.__dict__)
+            return PartNumberPayload(ok=True, part_number=PartNumberNode.from_db(part))
+        except ProductIdentityError as exc:
+            return _product_identity_error(PartNumberPayload, exc)
+
+    @strawberry.mutation
+    def update_part_number(self, id: str, input: PartNumberInput) -> PartNumberPayload:
+        try:
+            part = ProductIdentityService.update_part_number(id, input.__dict__)
+            return PartNumberPayload(ok=True, part_number=PartNumberNode.from_db(part))
+        except ProductIdentityError as exc:
+            return _product_identity_error(PartNumberPayload, exc)
+
+    @strawberry.mutation
+    def archive_part_number(self, id: str) -> PartNumberPayload:
+        try:
+            part = ProductIdentityService.archive_part_number(id)
+            return PartNumberPayload(ok=True, part_number=PartNumberNode.from_db(part))
+        except ProductIdentityError as exc:
+            return _product_identity_error(PartNumberPayload, exc)
+
+    @strawberry.mutation
+    def create_bom(self, input: BomInput) -> BomPayload:
+        try:
+            bom = RoutingService.create_bom(input.__dict__)
+            return BomPayload(ok=True, bom=BOMNode.from_db(bom))
+        except RoutingValidationError as exc:
+            return BomPayload(ok=False, errors=[MutationError(field=exc.field, code="VALIDATION", message=exc.message)])
+
+    @strawberry.mutation
+    def update_bom(self, id: str, input: BomInput) -> BomPayload:
+        try:
+            bom = RoutingService.update_bom(id, input.__dict__)
+            return BomPayload(ok=True, bom=BOMNode.from_db(bom))
+        except RoutingValidationError as exc:
+            return BomPayload(ok=False, errors=[MutationError(field=exc.field, code="VALIDATION", message=exc.message)])
+
+    @strawberry.mutation
+    def archive_bom(self, id: str) -> BomPayload:
+        try:
+            bom = RoutingService.update_bom(id, {"status": "ARCHIVED"})
+            return BomPayload(ok=True, bom=BOMNode.from_db(bom))
+        except RoutingValidationError as exc:
+            return BomPayload(ok=False, errors=[MutationError(field=exc.field, code="VALIDATION", message=exc.message)])
+
+    @strawberry.mutation
     def create_routing(self, input: RoutingInput) -> RoutingPayload:
         try:
             routing = RoutingService.create_routing({
                 "production_line_id": input.production_line_id,
                 "product_family_id": input.product_family_id,
                 "product_model_id": input.product_model_id,
+                "part_number_id": input.part_number_id,
                 "version": input.version or "1.0",
                 "status": input.status or "DRAFT",
                 "effective_from": input.effective_from,
@@ -843,6 +1065,7 @@ class ManufacturingMutation:
                 "production_line_id": input.production_line_id,
                 "product_family_id": input.product_family_id,
                 "product_model_id": input.product_model_id,
+                "part_number_id": input.part_number_id,
                 "version": input.version,
                 "effective_from": input.effective_from,
                 "effective_to": input.effective_to,
@@ -879,6 +1102,7 @@ class ManufacturingMutation:
                 "production_line_id": input.production_line_id,
                 "product_family_id": input.product_family_id,
                 "product_model_id": input.product_model_id,
+                "part_number_id": input.part_number_id,
                 "version": input.version or "1.0",
                 "notes": input.notes or "",
                 "steps": [
@@ -907,6 +1131,7 @@ class ManufacturingMutation:
                                 "quantity": item.quantity,
                                 "material_state": item.material_state,
                                 "location_id": item.location_id,
+                                "bin_id": item.bin_id,
                             }
                             for item in step.material_inputs
                         ],
@@ -917,6 +1142,7 @@ class ManufacturingMutation:
                                 "quantity": item.quantity,
                                 "material_state": item.material_state,
                                 "location_id": item.location_id,
+                                "bin_id": item.bin_id,
                             }
                             for item in step.material_outputs
                         ],
@@ -924,6 +1150,8 @@ class ManufacturingMutation:
                             "rule_type": step.movement_rule.rule_type,
                             "source_location_id": step.movement_rule.source_location_id,
                             "destination_location_id": step.movement_rule.destination_location_id,
+                            "source_bin_id": step.movement_rule.source_bin_id,
+                            "destination_bin_id": step.movement_rule.destination_bin_id,
                             "notes": step.movement_rule.notes or "",
                         } if step.movement_rule else None,
                     }
@@ -1025,10 +1253,6 @@ class ManufacturingMutation:
         try:
             plan = CapacityPlanService.update_inputs(str(input.capacity_plan_id), {
                 "planned_quantity": input.planned_quantity,
-                "available_time_minutes": input.available_time_minutes,
-                "break_time_minutes": input.break_time_minutes,
-                "planned_downtime_minutes": input.planned_downtime_minutes,
-                "operators_available": input.operators_available,
                 "efficiency_factor": input.efficiency_factor,
             }, user=getattr(info.context, "user", None))
             return CapacityPlanPayload(ok=True, plan=CapacityPlanNode.from_db(plan))
@@ -1198,3 +1422,277 @@ class ManufacturingMutation:
             return ProductModelAssignmentPayload(ok=True, assignments=[ProductModelAssignmentNode.from_db(a) for a in assignments])
         except Exception as e:
             return ProductModelAssignmentPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
+
+    # ── New Work Schedule & Capacity Profile Mutations ──
+
+    @strawberry.mutation
+    def create_work_schedule(self, info: Info, input: WorkScheduleInput) -> WorkSchedulePayload:
+        from datetime import datetime
+        from manufacturing.domain.schedule_service import ScheduleService, ScheduleValidationError
+        from manufacturing.domain.capacity_cascade_service import CapacityCascadeService
+        try:
+            schedule = ScheduleService.create_schedule(
+                scope_type=input.scope_type,
+                scope_id=input.scope_id,
+                name=input.name,
+                effective_from=datetime.fromisoformat(input.effective_from),
+                effective_to=datetime.fromisoformat(input.effective_to) if input.effective_to else None,
+                timezone=input.timezone or "",
+            )
+            from_dt = datetime.fromisoformat(input.effective_from)
+            to_dt = datetime.fromisoformat(input.effective_to) if input.effective_to else from_dt
+            jobs = CapacityCascadeService.recalculate_from_scope(
+                input.scope_type, input.scope_id, from_dt, to_dt,
+                trigger_type="SCHEDULE_CHANGED",
+            )
+            return WorkSchedulePayload(
+                ok=True,
+                schedule=WorkScheduleNode.from_db(schedule),
+                recalculation_job=CapacityRecalculationJobNode.from_db(jobs[0]) if jobs else None,
+            )
+        except ScheduleValidationError as e:
+            return WorkSchedulePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def update_work_schedule(self, info: Info, id: str, input: WorkScheduleUpdateInput) -> WorkSchedulePayload:
+        from datetime import datetime
+        from manufacturing.domain.schedule_service import ScheduleService, ScheduleValidationError
+        from manufacturing.domain.capacity_cascade_service import CapacityCascadeService
+        try:
+            kwargs = {}
+            if input.name is not None:
+                kwargs["name"] = input.name
+            if input.timezone is not None:
+                kwargs["timezone"] = input.timezone
+            if input.effective_from is not None:
+                kwargs["effective_from"] = datetime.fromisoformat(input.effective_from)
+            if input.effective_to is not None:
+                kwargs["effective_to"] = datetime.fromisoformat(input.effective_to)
+            if input.is_active is not None:
+                kwargs["is_active"] = input.is_active
+
+            schedule = ScheduleService.update_schedule(id, **kwargs)
+            jobs = CapacityCascadeService.recalculate_from_scope(
+                schedule.scope_type, schedule.scope_id,
+                schedule.effective_from, schedule.effective_to or schedule.effective_from,
+                trigger_type="SCHEDULE_CHANGED",
+            )
+            return WorkSchedulePayload(
+                ok=True,
+                schedule=WorkScheduleNode.from_db(schedule),
+                recalculation_job=CapacityRecalculationJobNode.from_db(jobs[0]) if jobs else None,
+            )
+        except ScheduleValidationError as e:
+            return WorkSchedulePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def archive_work_schedule(self, info: Info, id: str) -> WorkSchedulePayload:
+        from manufacturing.domain.schedule_service import ScheduleService, ScheduleValidationError
+        from manufacturing.domain.capacity_cascade_service import CapacityCascadeService
+        try:
+            schedule = ScheduleService.archive_schedule(id)
+            jobs = CapacityCascadeService.recalculate_from_scope(
+                schedule.scope_type, schedule.scope_id,
+                schedule.effective_from, schedule.effective_to or schedule.effective_from,
+                trigger_type="SCHEDULE_CHANGED",
+            )
+            return WorkSchedulePayload(
+                ok=True,
+                schedule=WorkScheduleNode.from_db(schedule),
+                recalculation_job=CapacityRecalculationJobNode.from_db(jobs[0]) if jobs else None,
+            )
+        except ScheduleValidationError as e:
+            return WorkSchedulePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def create_work_shift(self, info: Info, input: WorkShiftInput) -> WorkShiftPayload:
+        from manufacturing.domain.schedule_service import ScheduleService, ScheduleValidationError
+        from datetime import time as dt_time
+        try:
+            parts_s = input.start_time.split(":")
+            parts_e = input.end_time.split(":")
+            start = dt_time(int(parts_s[0]), int(parts_s[1]))
+            end = dt_time(int(parts_e[0]), int(parts_e[1]))
+            shift = ScheduleService.create_shift(
+                schedule_id=input.schedule_id,
+                name=input.name,
+                weekday=input.weekday,
+                start_time=start,
+                end_time=end,
+                paid_minutes=input.paid_minutes,
+                break_minutes=input.break_minutes,
+            )
+            return WorkShiftPayload(ok=True, shift=WorkShiftNode.from_db(shift))
+        except ScheduleValidationError as e:
+            return WorkShiftPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def create_capacity_profile(self, info: Info, input: CapacityProfileInput) -> CapacityProfilePayload:
+        from manufacturing.domain.capacity_service import NewCapacityService, NewCapacityValidationError
+        try:
+            profile = NewCapacityService.create_profile(
+                scope_type=input.scope_type,
+                scope_id=input.scope_id,
+                capacity_mode=input.capacity_mode or "INHERITED",
+                manual_capacity=input.manual_capacity,
+                capacity_uom=input.capacity_uom or "",
+                efficiency_factor=input.efficiency_factor or 1.0,
+                oee_factor=input.oee_factor,
+                takt_factor=input.takt_factor,
+            )
+            return CapacityProfilePayload(ok=True, profile=CapacityProfileNode.from_db(profile))
+        except NewCapacityValidationError as e:
+            return CapacityProfilePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def update_capacity_profile(self, info: Info, id: str, input: CapacityProfileUpdateInput) -> CapacityProfilePayload:
+        from manufacturing.domain.capacity_service import NewCapacityService, NewCapacityValidationError
+        try:
+            kwargs = {}
+            if input.capacity_mode is not None:
+                kwargs["capacity_mode"] = input.capacity_mode
+            if input.manual_capacity is not None:
+                kwargs["manual_capacity"] = input.manual_capacity
+            if input.capacity_uom is not None:
+                kwargs["capacity_uom"] = input.capacity_uom
+            if input.efficiency_factor is not None:
+                kwargs["efficiency_factor"] = input.efficiency_factor
+            if input.oee_factor is not None:
+                kwargs["oee_factor"] = input.oee_factor
+            if input.takt_factor is not None:
+                kwargs["takt_factor"] = input.takt_factor
+            profile = NewCapacityService.update_profile(id, **kwargs)
+            return CapacityProfilePayload(ok=True, profile=CapacityProfileNode.from_db(profile))
+        except NewCapacityValidationError as e:
+            return CapacityProfilePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def archive_capacity_profile(self, info: Info, id: str) -> CapacityProfilePayload:
+        from manufacturing.domain.capacity_service import NewCapacityService, NewCapacityValidationError
+        try:
+            profile = NewCapacityService.archive_profile(id)
+            return CapacityProfilePayload(ok=True, profile=CapacityProfileNode.from_db(profile))
+        except NewCapacityValidationError as e:
+            return CapacityProfilePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def recalculate_capacity(self, info: Info, input: CapacityRecalculationInput) -> CapacityRecalculationPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        from datetime import datetime
+        try:
+            from_dt = datetime.fromisoformat(input.from_datetime)
+            to_dt = datetime.fromisoformat(input.to_datetime)
+            snapshot = NewCapacityService.calculate_scope_capacity(input.scope_type, input.scope_id, from_dt, to_dt)
+            return CapacityRecalculationPayload(
+                ok=True,
+                snapshot=CapacitySnapshotNode.from_db(snapshot),
+            )
+        except Exception as e:
+            return CapacityRecalculationPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
+
+    @strawberry.mutation
+    def recalculate_resource_group_capacity(self, info: Info, resource_group_id: str, from_datetime: str, to_datetime: str) -> CapacitySnapshotNode:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        from datetime import datetime
+        try:
+            from_dt = datetime.fromisoformat(from_datetime)
+            to_dt = datetime.fromisoformat(to_datetime)
+            snapshot = NewCapacityService.calculate_scope_capacity(
+                "RESOURCE_GROUP", resource_group_id, from_dt, to_dt,
+            )
+            return CapacitySnapshotNode.from_db(snapshot)
+        except Exception as e:
+            raise e
+
+    @strawberry.mutation
+    @transaction.atomic
+    def create_labor_requirement(self, info: Info, input: LaborRequirementInput) -> LaborRequirementPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        try:
+            req = NewCapacityService.create_labor_requirement(
+                plant_id=input.plant_id,
+                resource_group_id=input.resource_group_id,
+                routing_step_id=input.routing_step_id,
+                product_model_id=input.product_model_id,
+                operators_required=input.operators_required,
+                labor_minutes_per_unit=input.labor_minutes_per_unit,
+                skill_required_id=input.skill_required_id,
+                effective_from=_parse_dt(input.effective_from),
+                effective_to=_parse_dt(input.effective_to),
+                is_active=True,
+            )
+            return LaborRequirementPayload(ok=True, labor_requirement=LaborRequirementNode.from_db(req))
+        except Exception as exc:
+            return _validation_payload(LaborRequirementPayload, exc)
+
+    @strawberry.mutation
+    @transaction.atomic
+    def update_labor_requirement(self, info: Info, id: str, input: LaborRequirementUpdateInput) -> LaborRequirementPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        try:
+            req = NewCapacityService.update_labor_requirement(id, **{
+                "operators_required": input.operators_required,
+                "labor_minutes_per_unit": input.labor_minutes_per_unit,
+                "skill_required_id": input.skill_required_id,
+                "effective_from": _parse_dt(input.effective_from),
+                "effective_to": _parse_dt(input.effective_to),
+                "is_active": input.is_active,
+            })
+            return LaborRequirementPayload(ok=True, labor_requirement=LaborRequirementNode.from_db(req))
+        except Exception as exc:
+            return _validation_payload(LaborRequirementPayload, exc)
+
+    @strawberry.mutation
+    @transaction.atomic
+    def archive_labor_requirement(self, info: Info, id: str) -> LaborRequirementPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        try:
+            req = NewCapacityService.archive_labor_requirement(id)
+            return LaborRequirementPayload(ok=True, labor_requirement=LaborRequirementNode.from_db(req))
+        except Exception as exc:
+            return _validation_payload(LaborRequirementPayload, exc)
+
+    @strawberry.mutation
+    @transaction.atomic
+    def create_operator_assignment(self, info: Info, input: OperatorAssignmentInput) -> OperatorAssignmentPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        try:
+            assignment = NewCapacityService.create_operator_assignment(
+                plant_id=input.plant_id,
+                operator_id=input.operator_id,
+                resource_group_id=input.resource_group_id,
+                resource_id=input.resource_id,
+                schedule_assignment_id=input.schedule_assignment_id,
+                skill_id=input.skill_id,
+                effective_from=_parse_dt(input.effective_from),
+                effective_to=_parse_dt(input.effective_to),
+                is_active=True,
+            )
+            return OperatorAssignmentPayload(ok=True, operator_assignment=OperatorAssignmentNode.from_db(assignment))
+        except Exception as exc:
+            return _validation_payload(OperatorAssignmentPayload, exc)
+
+    @strawberry.mutation
+    @transaction.atomic
+    def update_operator_assignment(self, info: Info, id: str, input: OperatorAssignmentUpdateInput) -> OperatorAssignmentPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        try:
+            assignment = NewCapacityService.update_operator_assignment(id, **{
+                "skill_id": input.skill_id,
+                "effective_from": _parse_dt(input.effective_from),
+                "effective_to": _parse_dt(input.effective_to),
+                "is_active": input.is_active,
+            })
+            return OperatorAssignmentPayload(ok=True, operator_assignment=OperatorAssignmentNode.from_db(assignment))
+        except Exception as exc:
+            return _validation_payload(OperatorAssignmentPayload, exc)
+
+    @strawberry.mutation
+    @transaction.atomic
+    def archive_operator_assignment(self, info: Info, id: str) -> OperatorAssignmentPayload:
+        from manufacturing.domain.capacity_service import NewCapacityService
+        try:
+            assignment = NewCapacityService.archive_operator_assignment(id)
+            return OperatorAssignmentPayload(ok=True, operator_assignment=OperatorAssignmentNode.from_db(assignment))
+        except Exception as exc:
+            return _validation_payload(OperatorAssignmentPayload, exc)

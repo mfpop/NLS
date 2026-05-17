@@ -32,3 +32,14 @@ export const DASHBOARD_QUERY = gql`
     }
   }
 `;
+
+export const SYSTEM_HEALTH_QUERY = gql`
+  query SystemHealth {
+    systemHealth {
+      graphqlStatus
+      databaseStatus
+      serverTime
+      version
+    }
+  }
+`;

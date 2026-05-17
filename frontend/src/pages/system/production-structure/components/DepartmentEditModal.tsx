@@ -41,7 +41,7 @@ function Field({ label, value, onChange, required, placeholder, type, options }:
   return (
     <div className="space-y-1">
       <label className={`text-[11px] font-semibold uppercase tracking-wide ${theme.textSecondary}`}>
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-danger ml-0.5">*</span>}
       </label>
       {type === "select" && options ? (
         <select
@@ -153,7 +153,7 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-12">
-      <div className="fixed inset-0 bg-black/40" onClick={onClose} />
+      <div className="fixed inset-0 bg-background" onClick={onClose} />
       <div className={`relative z-10 flex w-full max-w-2xl flex-col rounded-xl shadow-2xl border ${theme.modalBg} ${theme.modalBorder} max-h-[85vh]`}>
         {/* ── Header ── */}
         <div className={`flex items-center justify-between rounded-t-xl border-b px-5 py-3 ${theme.subHeader}`}>
@@ -181,7 +181,7 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
             <>
               {/* Error */}
               {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">
+                <div className="rounded-lg border border-danger bg-danger px-4 py-2 text-xs text-danger border-danger bg-danger text-danger">
                   {error}
                 </div>
               )}
@@ -198,8 +198,8 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
                         onClick={() => setSelectedIcon(key)}
                         className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-all ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200 dark:bg-emerald-500/10 dark:ring-emerald-500/30"
-                            : "border-slate-200 hover:border-slate-300 dark:border-slate-600 dark:hover:border-slate-500"
+                            ? "border-success bg-success ring-2 ring-success bg-success ring-success"
+                            : "border-border hover:border-border hover:border-border"
                         }`}
                       >
                         <Icon className="h-4 w-4" />
@@ -242,12 +242,12 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
           <div>
             {confirmDelete ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-red-600 dark:text-red-400">Confirm delete?</span>
+                <span className="text-xs text-danger">Confirm delete?</span>
                 <button
                   type="button"
                   onClick={handleDelete}
                   disabled={saving}
-                  className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  className="rounded-lg bg-danger px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-danger disabled:opacity-50"
                 >
                   {saving ? "Deleting..." : "Yes, Delete"}
                 </button>
@@ -265,7 +265,7 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
                 type="button"
                 onClick={() => setConfirmDelete(true)}
                 disabled={saving || !dept}
-                className={`rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/10`}
+                className={`rounded-lg border border-danger px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger disabled:opacity-50 border-danger text-danger hover:bg-danger`}
               >
                 Delete
               </button>
@@ -284,7 +284,7 @@ export function DepartmentEditModal({ departmentId, open, onClose, onSaved }: De
               type="button"
               onClick={handleSave}
               disabled={saving || !dept || !name.trim() || !code.trim()}
-              className={`rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors`}
+              className={`rounded-lg bg-success px-4 py-1.5 text-xs font-medium text-primary-foreground hover:bg-success disabled:opacity-50 transition-colors`}
             >
               {saving ? "Saving..." : "Save"}
             </button>

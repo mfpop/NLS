@@ -117,9 +117,9 @@ export function UnifiedModal({
             {fields.map((f) => (
               <div key={f.key}>
                 {f.type !== "entityicon" && (
-                  <label className="mb-1 block text-xs text-gray-500 dark:text-slate-400">
+                  <label className="mb-1 block text-xs text-muted-foreground">
                     {f.label}
-                    {f.required && <span className="ml-0.5 text-red-500">*</span>}
+                    {f.required && <span className="ml-0.5 text-danger">*</span>}
                   </label>
                 )}
                 {f.type === "entityicon" ? (
@@ -136,7 +136,7 @@ export function UnifiedModal({
                       onChange={(e) => handleChange(f.key, e.target.value)}
                       className={`w-full h-10 rounded-xl border px-3 pr-8 text-xs appearance-none cursor-pointer transition-colors ${
                         localErrors[f.key]
-                          ? "border-red-300 focus:ring-red-200"
+                          ? "border-danger focus:ring-danger"
                           : `${theme.input} ${theme.focusRing}`
                       }`}
                     >
@@ -145,10 +145,10 @@ export function UnifiedModal({
                         <option key={o.value} value={o.value}>{o.label}</option>
                       ))}
                     </select>
-                    <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 dark:text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                     </svg>
-                    {localErrors[f.key] && <p className="mt-0.5 text-[10px] text-red-500">{localErrors[f.key]}</p>}
+                    {localErrors[f.key] && <p className="mt-0.5 text-[10px] text-danger">{localErrors[f.key]}</p>}
                   </div>
                 ) : (
                   <div>
@@ -159,11 +159,11 @@ export function UnifiedModal({
                       placeholder={f.placeholder}
                       className={`w-full h-10 rounded-xl border px-3 text-xs transition-colors ${
                         localErrors[f.key]
-                          ? "border-red-300 focus:ring-red-200"
+                          ? "border-danger focus:ring-danger"
                           : `${theme.input} ${theme.focusRing}`
                       }`}
                     />
-                    {localErrors[f.key] && <p className="mt-0.5 text-[10px] text-red-500">{localErrors[f.key]}</p>}
+                    {localErrors[f.key] && <p className="mt-0.5 text-[10px] text-danger">{localErrors[f.key]}</p>}
                   </div>
                 )}
               </div>
@@ -177,7 +177,7 @@ export function UnifiedModal({
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); onConfigureStructure?.(); }}
-                className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors"
               >
                 <GitBranch className="h-3.5 w-3.5 stroke-current" />
                 Configure Structure
@@ -186,20 +186,20 @@ export function UnifiedModal({
 
             {/* Confirm close warning */}
             {showConfirmClose && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+              <div className="rounded-lg border border-warning bg-warning px-3 py-2 text-xs text-warning border-warning bg-warning text-warning">
                 You have unsaved changes.
                 <div className="mt-2 flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowConfirmClose(false)}
-                    className="rounded-md border border-amber-200 bg-white px-2 py-1 text-[10px] font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-500/30 dark:bg-slate-800 dark:text-amber-300 dark:hover:bg-amber-500/20 transition-colors"
+                    className="rounded-md border border-warning bg-card px-2 py-1 text-[10px] font-medium text-warning hover:bg-warning border-warning bg-muted text-warning hover:bg-warning transition-colors"
                   >
                     Keep editing
                   </button>
                   <button
                     type="button"
                     onClick={() => { setDirty(false); onClose(); }}
-                    className="rounded-md bg-amber-600 px-2 py-1 text-[10px] font-medium text-white hover:bg-amber-500 transition-colors"
+                    className="rounded-md bg-warning px-2 py-1 text-[10px] font-medium text-primary-foreground hover:bg-warning transition-colors"
                   >
                     Discard
                   </button>
@@ -215,7 +215,7 @@ export function UnifiedModal({
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); onDelete?.(); }}
-                  className="rounded px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100/60 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+                  className="rounded px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger text-danger hover:bg-danger transition-colors"
                 >
                   Delete
                 </button>
@@ -232,7 +232,7 @@ export function UnifiedModal({
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-lg bg-slate-800 px-4 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 transition-colors active:scale-[0.97] dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg bg-muted px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-muted transition-colors active:scale-[0.97] bg-muted hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? "Saving..." : "Save"}
               </button>

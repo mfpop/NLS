@@ -24,11 +24,11 @@ export function TreeNavigation({
   return (
     <div className={`flex flex-col min-h-0 h-full ${isLoading ? "items-center justify-center" : ""}`}>
       {isLoading ? (
-        <div className="flex items-center justify-center text-slate-400">
+        <div className="flex items-center justify-center text-muted-foreground">
           <span className="text-sm">Loading...</span>
         </div>
       ) : data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-8 px-4 text-center text-slate-400">
+        <div className="flex flex-col items-center justify-center gap-2 py-8 px-4 text-center text-muted-foreground">
           <span className="text-sm font-medium">No entities found</span>
           <span className="text-xs">Create a company to get started</span>
         </div>

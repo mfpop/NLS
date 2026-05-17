@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { theme } from "../../../styles/themeTokens";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, CheckCircle, Plus, Trash2, RefreshCw, AlertTriangle, Settings2 } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
@@ -15,12 +16,12 @@ import type { ProductionLine } from "@/types/productionLine";
 
 const PILL_BASE = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold";
 const PILL_VARIANTS: Record<string, string> = {
-  active: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-  draft: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300",
-  archived: "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400",
-  configured: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-  missing: "bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400",
-  invalid: "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400",
+  active: "bg-success text-success",
+  draft: "bg-muted text-muted-foreground",
+  archived: "bg-danger text-danger",
+  configured: "bg-success text-success",
+  missing: "bg-muted text-muted-foreground",
+  invalid: "bg-warning text-warning",
 };
 
 function PillBadge({ variant = "draft", label }: { variant?: string; label: string }) {
@@ -32,7 +33,7 @@ const shortcutClass = "ml-1 hidden lg:inline text-[8px] opacity-50 font-mono";
 function SecondaryButton({ children, onClick, disabled = false, shortcut }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; shortcut?: string }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled} title={shortcut ? `Shortcut: ${shortcut}` : undefined}
-      className="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2.5 text-[10px] font-medium text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800">
+      className={`inline-flex h-7 items-center gap-1 rounded border border-border ${theme.surfaceBg} px-2.5 text-[10px] font-medium ${theme.textSecondary} transition-colors ${theme.interactiveRow} disabled:cursor-not-allowed disabled:opacity-50`}>
       {children}{shortcut ? <kbd className={shortcutClass}>{shortcut}</kbd> : null}
     </button>
   );
@@ -41,8 +42,8 @@ function SecondaryButton({ children, onClick, disabled = false, shortcut }: { ch
 function PrimaryButton({ children, onClick, disabled = false, shortcut }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; shortcut?: string }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled} title={shortcut ? `Shortcut: ${shortcut}` : undefined}
-      className="inline-flex h-7 items-center gap-1 rounded-md bg-amber-500 px-3 text-[10px] font-semibold text-white shadow-sm transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">
-      {children}{shortcut ? <kbd className={`${shortcutClass} text-white/60`}>{shortcut}</kbd> : null}
+      className={`inline-flex h-7 items-center gap-1 rounded-md bg-warning px-3 text-[10px] font-semibold text-primary-foreground shadow-sm transition-colors hover:brightness-90 disabled:cursor-not-allowed disabled:opacity-50`}>
+      {children}{shortcut ? <kbd className={`${shortcutClass} text-primary-foreground`}>{shortcut}</kbd> : null}
     </button>
   );
 }
@@ -486,10 +487,10 @@ export function RoutingEditorPage() {
   const statusVariant = routing?.status === "ACTIVE" ? "active" : routing?.status === "ARCHIVED" ? "archived" : "draft";
 
   return (
-    <div className="flex h-full flex-col bg-white dark:bg-slate-900">
+    <div className={`flex h-full flex-col ${theme.surfaceBg}`}>
       {toast && (
         <div className={`fixed top-4 right-4 z-50 rounded-lg px-4 py-2 text-xs font-medium shadow-lg ${
-          toast.type === "success" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300"
+          toast.type === "success" ? `${theme.toastSuccess}` : `${theme.toastError}`
         }`}>{toast.message}</div>
       )}
 
@@ -501,18 +502,18 @@ export function RoutingEditorPage() {
       )}
 
       {/* ── Header (identity only) ── */}
-      <div className="shrink-0 border-b border-slate-200 dark:border-slate-700 px-4 py-3">
+      <div className="shrink-0 border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-amber-400 to-amber-500 text-white shadow-sm">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
             <Settings2 className="h-4 w-4 stroke-current" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Flow / Routing</h2>
+              <h2 className={`text-sm font-bold ${theme.textPrimary}`}>Flow / Routing</h2>
               <PillBadge variant={statusVariant} label={routing?.status || "DRAFT"} />
               {!isValid && localSteps.length > 0 && <PillBadge variant="invalid" label="Has errors" />}
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className={`text-[10px] ${theme.textMuted} mt-0.5`}>
               {routing?.productionLineName || "Loading..."}
               {routing?.productModelName && ` · ${routing.productModelName}`}
               {routing?.productFamilyName && ` · ${routing.productFamilyName}`}
@@ -532,12 +533,12 @@ export function RoutingEditorPage() {
       </div>
 
       {/* ── Windows Explorer-style toolbar ── */}
-      <div className="shrink-0 flex items-center gap-1 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+      <div className={`shrink-0 flex items-center gap-1 px-3 py-1.5 border-b border-border ${theme.toolbarBg}`}>
         <SecondaryButton onClick={handleClose} shortcut="Esc">
           <ArrowLeft className="h-3 w-3 stroke-current" /> Back
         </SecondaryButton>
         <select value={routingMeta.productModelId} onChange={(e) => { setRoutingMeta((p) => ({ ...p, productModelId: e.target.value })); markDirty(); }}
-          className="h-7 rounded border border-slate-200 bg-white px-2 text-[10px] outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200">
+          className={`h-7 rounded ${theme.input} px-2 text-[10px] outline-none`}>
           {lineModels.length === 0 ? (
             <option value="" disabled>No models assigned</option>
           ) : (
@@ -548,8 +549,8 @@ export function RoutingEditorPage() {
           )}
         </select>
         <input type="text" value={routingMeta.version} onChange={(e) => { setRoutingMeta((p) => ({ ...p, version: e.target.value })); markDirty(); }}
-          className="h-7 w-14 rounded border border-slate-200 bg-white px-2 text-[10px] outline-none dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 ml-1" />
-        <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1.5" />
+          className="h-7 w-14 rounded border border-border bg-card px-2 text-[10px] outline-none border-border bg-muted text-foreground ml-1" />
+        <div className={`w-px h-5 ${theme.dividerVertical} mx-1.5`} />
         <SecondaryButton onClick={addStep} disabled={(!routingId && isCreate) || (routing?.status === "ARCHIVED")} shortcut="Ctrl+N">
           <Plus className="h-3 w-3 stroke-current" /> Add Step
         </SecondaryButton>
@@ -557,17 +558,17 @@ export function RoutingEditorPage() {
           <Trash2 className="h-3 w-3 stroke-current" /> Delete
         </SecondaryButton>
         <SecondaryButton onClick={() => { const idx = localSteps.findIndex((s) => s.id === selectedStepId); if (idx > 0) moveStepUp(idx); }} disabled={!selectedStepId || localSteps.findIndex((s) => s.id === selectedStepId) <= 0}>
-          <span className="text-[9px]">&#9650;</span> Up
+          <span className="text-[9px]">▲</span> Up
         </SecondaryButton>
         <SecondaryButton onClick={() => { const idx = localSteps.findIndex((s) => s.id === selectedStepId); if (idx >= 0 && idx < localSteps.length - 1) moveStepDown(idx); }} disabled={!selectedStepId || localSteps.findIndex((s) => s.id === selectedStepId) >= localSteps.length - 1}>
-          <span className="text-[9px]">&#9660;</span> Down
+          <span className="text-[9px]">▼</span> Down
         </SecondaryButton>
         <SecondaryButton onClick={handleRefresh} shortcut="Ctrl+R">
           <RefreshCw className="h-3 w-3 stroke-current" /> Refresh
         </SecondaryButton>
-        <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-1.5" />
+        <div className="w-px h-5 bg-muted mx-1.5" />
         <div className="flex-1" />
-        {dirty && <span className="text-[9px] text-amber-500 mr-1">Unsaved changes</span>}
+        {dirty && <span className={`text-[9px] ${theme.textWarning} mr-1`}>Unsaved changes</span>}
         <PrimaryButton onClick={handleSave} disabled={!dirty || savingState} shortcut="Ctrl+S">
           <Save className="h-3.5 w-3.5 stroke-current" /> Save
         </PrimaryButton>
@@ -581,14 +582,14 @@ export function RoutingEditorPage() {
 
       {/* ── Validation Banner ── */}
       {!isValid && localSteps.length > 0 && (
-        <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 bg-orange-50 dark:bg-orange-500/10 border-b border-orange-100 dark:border-orange-500/20">
-          <AlertTriangle className="h-3 w-3 text-orange-500 stroke-current shrink-0" />
-          <span className="text-[10px] text-orange-700 dark:text-orange-300">{validationErrors[0]}</span>
+        <div className={`shrink-0 flex items-center gap-2 px-4 py-1.5 ${theme.warningChip} border-b`}>
+          <AlertTriangle className={`h-3 w-3 ${theme.textWarning} stroke-current shrink-0`} />
+          <span className={`text-[10px] ${theme.textWarning}`}>{validationErrors[0]}</span>
         </div>
       )}
 
-      <div className="shrink-0 border-b border-slate-200 bg-white px-3 py-1.5 dark:border-slate-700 dark:bg-slate-900">
-        <div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-0.5 dark:border-slate-700 dark:bg-slate-800">
+      <div className={`shrink-0 border-b border-border ${theme.surfaceBg} px-3 py-1.5`}>
+        <div className={`inline-flex rounded-md border border-border ${theme.toolbarBg} p-0.5`}>
           {[
             ["process", "Process Flow"],
             ["material", "Material Flow"],
@@ -597,7 +598,7 @@ export function RoutingEditorPage() {
             ["validation", "Validation"],
           ].map(([id, label]) => (
             <button key={id} type="button" onClick={() => setActiveTab(id as any)}
-              className={`h-6 rounded px-2.5 text-[10px] font-semibold transition-colors ${activeTab === id ? "bg-white text-amber-700 shadow-sm dark:bg-slate-900 dark:text-amber-300" : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"}`}>
+              className={`h-6 rounded px-2.5 text-[10px] font-semibold transition-colors ${activeTab === id ? "bg-card text-warning shadow-sm" : `${theme.textMuted} hover:text-muted-foreground dark:hover:text-foreground`}`}>
               {label}
             </button>
           ))}
@@ -609,51 +610,51 @@ export function RoutingEditorPage() {
         <div className="grid h-full min-h-0" style={{ gridTemplateColumns: "minmax(0, 1fr) 360px" }}>
           <div className="min-h-0 overflow-auto">
         {activeTab === "material" && (
-          <div className="border-b border-slate-100 bg-slate-50 px-3 py-2 text-[10px] text-slate-600 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
+          <div className="border-b border-border bg-muted px-3 py-2 text-[10px] text-muted-foreground border-border bg-muted text-muted-foreground">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-semibold text-slate-700 dark:text-slate-200">Material chain:</span>
-              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Warehouse RM</span>
+              <span className="font-semibold text-muted-foreground text-foreground">Material chain:</span>
+              <span className="rounded bg-card px-2 py-0.5 bg-card">Warehouse RM</span>
               <span>→</span>
-              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Line-side/Input</span>
+              <span className="rounded bg-card px-2 py-0.5 bg-card">Line-side/Input</span>
               <span>→</span>
-              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Operation</span>
+              <span className="rounded bg-card px-2 py-0.5 bg-card">Operation</span>
               <span>→</span>
-              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">WIP</span>
+              <span className="rounded bg-card px-2 py-0.5 bg-card">WIP</span>
               <span>→</span>
-              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">Buffer/FIFO/Kanban or Next Operation</span>
+              <span className="rounded bg-card px-2 py-0.5 bg-card">Buffer/FIFO/Kanban or Next Operation</span>
               <span>→</span>
-              <span className="rounded bg-white px-2 py-0.5 dark:bg-slate-900">FG Warehouse</span>
+              <span className="rounded bg-card px-2 py-0.5 bg-card">FG Warehouse</span>
             </div>
           </div>
         )}
         {activeTab === "validation" && (
-          <div className="border-b border-slate-100 bg-white px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
+          <div className="border-b border-border bg-card px-3 py-2 border-border bg-card">
             {[...validationErrors, ...materialValidationErrors].length > 0 ? (
               <div className="grid gap-1">
                 {[...validationErrors, ...materialValidationErrors].map((error) => (
-                  <div key={error} className="flex items-center gap-2 rounded border border-orange-200 bg-orange-50 px-2 py-1 text-[10px] text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-300">
+                  <div key={error} className="flex items-center gap-2 rounded border border-warning bg-warning px-2 py-1 text-[10px] text-warning">
                     <AlertTriangle className="h-3 w-3 stroke-current" /> {error}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-[10px] text-emerald-700 dark:text-emerald-300"><CheckCircle className="h-3 w-3 stroke-current" /> No validation issues.</div>
+              <div className="flex items-center gap-2 text-[10px] text-success"><CheckCircle className="h-3 w-3 stroke-current" /> No validation issues.</div>
             )}
           </div>
         )}
         {localSteps.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <Settings2 className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-2 stroke-current" />
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">No routing steps configured</p>
+            <Settings2 className={`h-8 w-8 ${theme.icon} mb-2 stroke-current`} />
+            <p className={`text-xs ${theme.textMuted} mb-2`}>No routing steps configured</p>
             {isCreate && !routing ? (
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">Save the routing first, then add steps</p>
+              <p className={`text-[10px] ${theme.textMuted} mb-3`}>Save the routing first, then add steps</p>
             ) : null}
             <SecondaryButton onClick={addStep}><Plus className="h-3 w-3 stroke-current" /> Add First Step</SecondaryButton>
           </div>
         ) : (
           <table className="w-full min-w-[1200px] table-fixed border-collapse">
-            <thead className="sticky top-0 z-10 bg-white dark:bg-slate-900">
-              <tr className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-200 dark:border-slate-700">
+            <thead className={`sticky top-0 z-10 ${theme.surfaceBg}`}>
+              <tr className={`text-[9px] font-bold uppercase tracking-wider ${theme.textMuted} border-b border-border`}>
                 <th className="w-8 px-1 py-1.5 text-center">#</th>
                 <th className="w-10 px-1 py-1.5 text-center"></th>
                 <th className="w-[140px] px-1 py-1.5 text-left">Department</th>
@@ -681,72 +682,72 @@ export function RoutingEditorPage() {
                   !step.cycleTimeSec || step.cycleTimeSec <= 0 ? "Cycle time must be greater than 0" : null,
                 ].filter(Boolean) as string[];
                 return (
-                  <tr key={step.id} onClick={() => setSelectedStepId(step.id)} className={`border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/20 group cursor-pointer ${selectedStepId === step.id ? "bg-amber-50/50 dark:bg-amber-900/10" : ""}`}>
+                  <tr key={step.id} onClick={() => setSelectedStepId(step.id)} className={`border-b border-border ${theme.interactiveRow} group cursor-pointer ${selectedStepId === step.id ? "${theme.badgeWarning}" : ""}`}>
                     <td className="px-1 py-1 text-center">
-                      <span className="text-[10px] font-mono text-slate-400">{step.sequence}</span>
+                      <span className={`text-[10px] font-mono ${theme.textMuted}`}>{step.sequence}</span>
                     </td>
                     <td className="px-1 py-1">
                       <div className="flex flex-col items-center gap-0">
                         {rowErrors.length > 0 && (
                           <span title={rowErrors.join("; ")}>
-                            <AlertTriangle className="mb-0.5 h-3 w-3 text-orange-500 stroke-current" />
+                            <AlertTriangle className={`mb-0.5 h-3 w-3 ${theme.textWarning} stroke-current`} />
                           </span>
                         )}
                         <button onClick={() => moveStepUp(index)} disabled={index === 0}
-                          className="h-3 w-4 flex items-center justify-center text-slate-300 hover:text-slate-600 disabled:opacity-20 leading-none">
-                          <span className="text-[7px]">&#9650;</span>
+                          className={`h-3 w-4 flex items-center justify-center ${theme.textMuted} hover:text-muted-foreground disabled:opacity-20 leading-none`}>
+                          <span className="text-[7px]">▲</span>
                         </button>
                         <button onClick={() => moveStepDown(index)} disabled={index === localSteps.length - 1}
-                          className="h-3 w-4 flex items-center justify-center text-slate-300 hover:text-slate-600 disabled:opacity-20 leading-none">
-                          <span className="text-[7px]">&#9660;</span>
+                          className="h-3 w-4 flex items-center justify-center text-muted-foreground hover:text-muted-foreground disabled:opacity-20 leading-none">
+                          <span className="text-[7px]">▼</span>
                         </button>
                       </div>
                     </td>
                     <td className="px-1 py-1">
                       <select value={step.departmentId || ""} onChange={(e) => updateStepField(step.id, "departmentId", e.target.value || null)}
-                        className={`h-6 w-full rounded border bg-white px-1.5 text-[10px] outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:bg-slate-800 dark:text-slate-200 ${!step.departmentId ? "border-red-300 dark:border-red-500/30" : "border-slate-200 dark:border-slate-700"}`}>
+                        className={`h-6 w-full rounded border bg-card px-1.5 text-[10px] outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning bg-muted text-foreground ${!step.departmentId ? "border-danger" : "border-border"}`}>
                         <option value="">--</option>
                         {departments.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
                     </td>
                     <td className="px-1 py-1">
                       <select value={step.resourceGroupId || ""} onChange={(e) => updateStepField(step.id, "resourceGroupId", e.target.value || null)}
-                        className={`h-6 w-full rounded border bg-white px-1.5 text-[10px] outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:bg-slate-800 dark:text-slate-200 ${!step.resourceGroupId ? "border-red-300 dark:border-red-500/30" : "border-slate-200 dark:border-slate-700"}`}>
+                        className={`h-6 w-full rounded border bg-card px-1.5 text-[10px] outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning bg-muted text-foreground ${!step.resourceGroupId ? "border-danger" : "border-border"}`}>
                         <option value="">--</option>
                         {filteredRG(step.departmentId).map((rg: any) => <option key={rg.id} value={rg.id}>{rg.name}</option>)}
                       </select>
                     </td>
                     <td className="px-1 py-1">
                       <select value={step.resourceId || ""} onChange={(e) => updateStepField(step.id, "resourceId", e.target.value || null)}
-                        className="h-6 w-full rounded border border-slate-200 bg-white px-1.5 text-[10px] outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        className="h-6 w-full rounded border border-border bg-card px-1.5 text-[10px] outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning border-border bg-muted text-foreground">
                         <option value="">--</option>
                         {filteredRes(step.resourceGroupId).map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                       </select>
                     </td>
                     <td className="px-1 py-1">
-                      <span className="block h-6 rounded border border-slate-200 bg-slate-50 px-1.5 py-1 text-[10px] text-slate-400 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500">
+                      <span className="block h-6 rounded border border-border bg-muted px-1.5 py-1 text-[10px] text-muted-foreground border-border bg-muted text-muted-foreground">
                         Not assigned
                       </span>
                     </td>
                     <td className="px-1 py-1">
                       <input type="number" min="0" step="0.1" value={step.cycleTimeSec || ""} onChange={(e) => updateStepField(step.id, "cycleTimeSec", parseFloat(e.target.value) || 0)}
-                        className={`h-6 w-full rounded border bg-white px-1.5 text-[10px] text-right outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:bg-slate-800 dark:text-slate-200 ${!step.cycleTimeSec || step.cycleTimeSec <= 0 ? "border-red-300 dark:border-red-500/30" : "border-slate-200 dark:border-slate-700"}`} />
+                        className={`h-6 w-full rounded border bg-card px-1.5 text-[10px] text-right outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning bg-muted text-foreground ${!step.cycleTimeSec || step.cycleTimeSec <= 0 ? "border-danger" : "border-border"}`} />
                     </td>
                     <td className="px-1 py-1">
                       <input type="number" min="0" step="1" value={step.setupTimeSec ?? ""} onChange={(e) => updateStepField(step.id, "setupTimeSec", e.target.value ? parseInt(e.target.value) : null)}
-                        className="h-6 w-full rounded border border-slate-200 bg-white px-1.5 text-[10px] text-right outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" />
+                        className="h-6 w-full rounded border border-border bg-card px-1.5 text-[10px] text-right outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning border-border bg-muted text-foreground" />
                     </td>
                     <td className="px-1 py-1">
                       <input type="number" min="0" step="1" value={step.changeoverTimeSec ?? ""} onChange={(e) => updateStepField(step.id, "changeoverTimeSec", e.target.value ? parseInt(e.target.value) : null)}
-                        className="h-6 w-full rounded border border-slate-200 bg-white px-1.5 text-[10px] text-right outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" />
+                        className="h-6 w-full rounded border border-border bg-card px-1.5 text-[10px] text-right outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning border-border bg-muted text-foreground" />
                     </td>
                     <td className="px-1 py-1">
                       <input type="number" min="0" step="1" value={step.requiredOperators ?? ""} onChange={(e) => updateStepField(step.id, "requiredOperators", e.target.value ? parseInt(e.target.value) : null)}
-                        className="h-6 w-full rounded border border-slate-200 bg-white px-1.5 text-[10px] text-right outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" />
+                        className="h-6 w-full rounded border border-border bg-card px-1.5 text-[10px] text-right outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning border-border bg-muted text-foreground" />
                     </td>
                     <td className="px-1 py-1">
                       <select value={step.scheduleSource} onChange={(e) => updateStepField(step.id, "scheduleSource", e.target.value)}
-                        className="h-6 w-full rounded border border-slate-200 bg-white px-1.5 text-[9px] outline-none transition-colors focus:border-amber-400 focus:ring-1 focus:ring-amber-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                        className="h-6 w-full rounded border border-border bg-card px-1.5 text-[9px] outline-none transition-colors focus:border-warning focus:ring-1 focus:ring-warning border-border bg-muted text-foreground">
                         <option value="LINE">LINE</option>
                         <option value="PLANT">PLANT</option>
                         <option value="DEPARTMENT">DEPT</option>
@@ -764,11 +765,11 @@ export function RoutingEditorPage() {
                         className="h-3 w-3 accent-amber-500" />
                     </td>
                     <td className="px-1 py-1 text-center">
-                      {isBottleneck ? <span className="inline-block rounded bg-red-100 px-1 text-[8px] font-bold text-red-600 dark:bg-red-500/20 dark:text-red-400">BN</span> : <span className="text-slate-300">-</span>}
+                      {isBottleneck ? <span className={`inline-block rounded ${theme.badgeCritical} px-1 text-[8px] font-bold`}>BN</span> : <span className="text-muted-foreground">-</span>}
                     </td>
                     <td className="px-1 py-1 text-center">
                       <button onClick={() => setConfirmDelete(step.id)}
-                        className="inline-flex h-5 w-5 items-center justify-center rounded text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100">
+                        className={`inline-flex h-5 w-5 items-center justify-center rounded ${theme.textMuted} hover:text-danger hover:bg-danger transition-colors opacity-0 group-hover:opacity-100`}>
                         <Trash2 className="h-3 w-3 stroke-current" />
                       </button>
                     </td>
@@ -779,11 +780,11 @@ export function RoutingEditorPage() {
           </table>
         )}
           </div>
-          <div className="min-h-0 overflow-hidden border-l border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/70">
+          <div className="min-h-0 overflow-hidden border-l border-border ${theme.toolbarBg}">
             <div className="flex h-full min-h-0 flex-col">
-              <div className="shrink-0 border-b border-slate-200 px-3 py-2 dark:border-slate-700">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Step Detail</p>
-                <p className="mt-0.5 truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
+              <div className="shrink-0 border-b border-border px-3 py-2 border-border">
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${theme.textMuted}`}>Selected Step Detail</p>
+                <p className={`mt-0.5 truncate text-xs font-semibold ${theme.textPrimary}`}>
                   {selectedStep ? `Step ${selectedStep.sequence} - ${selectedStep.resourceGroupName || selectedStep.departmentName || "Unassigned"}` : "No step selected"}
                 </p>
               </div>
@@ -792,61 +793,61 @@ export function RoutingEditorPage() {
                   <div className="space-y-3">
                     <div>
                       <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Input Materials</p>
-                        <button type="button" onClick={addMaterialInput} className="text-[10px] font-semibold text-amber-600">+ Add</button>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Input Materials</p>
+                        <button type="button" onClick={addMaterialInput} className={`text-[10px] font-semibold ${theme.textWarning}`}>+ Add</button>
                       </div>
                       {(selectedStep.materialInputs || []).map((item) => (
-                        <div key={item.id} className="mb-1 rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
-                          <select value={item.materialId || ""} onChange={(e) => updateMaterialItem("input", item.id || "", "materialId", e.target.value || null)} className="mb-1 h-6 w-full rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <div key={item.id} className="mb-1 rounded border border-border bg-card p-1.5 border-border bg-muted">
+                          <select value={item.materialId || ""} onChange={(e) => updateMaterialItem("input", item.id || "", "materialId", e.target.value || null)} className="mb-1 h-6 w-full rounded border border-border bg-card px-1 text-[10px] border-border bg-card text-foreground">
                             <option value="">Input material</option>
                             {materials.map((material: any) => <option key={material.id} value={material.id}>{material.name} ({material.code})</option>)}
                           </select>
                           <div className="grid grid-cols-[1fr_1fr_24px] gap-1">
-                            <input type="number" value={item.quantity || 1} onChange={(e) => updateMaterialItem("input", item.id || "", "quantity", Number(e.target.value || 1))} className="h-6 rounded border border-slate-200 px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
-                            <select value={item.locationId || ""} onChange={(e) => updateMaterialItem("input", item.id || "", "locationId", e.target.value || null)} className="h-6 rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                            <input type="number" value={item.quantity || 1} onChange={(e) => updateMaterialItem("input", item.id || "", "quantity", Number(e.target.value || 1))} className="h-6 rounded border border-border px-1 text-[10px] border-border bg-card text-foreground" />
+                            <select value={item.locationId || ""} onChange={(e) => updateMaterialItem("input", item.id || "", "locationId", e.target.value || null)} className="h-6 rounded border border-border bg-card px-1 text-[10px] border-border bg-card text-foreground">
                               <option value="">Source</option>
                               {inventoryLocations.map((location: any) => <option key={location.id} value={location.id}>{location.name}</option>)}
                             </select>
-                            <button type="button" onClick={() => removeMaterialItem("input", item.id || "")} className="text-red-500"><Trash2 className="h-3 w-3 stroke-current" /></button>
+                            <button type="button" onClick={() => removeMaterialItem("input", item.id || "")} className="text-danger"><Trash2 className="h-3 w-3 stroke-current" /></button>
                           </div>
                         </div>
                       ))}
-                      {(selectedStep.materialInputs || []).length === 0 && <p className="text-[10px] text-orange-500">Input material required.</p>}
+                      {(selectedStep.materialInputs || []).length === 0 && <p className="text-[10px] text-warning">Input material required.</p>}
                     </div>
 
                     <div>
                       <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Outputs / State</p>
-                        <button type="button" onClick={addMaterialOutput} className="text-[10px] font-semibold text-amber-600">+ Add</button>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Outputs / State</p>
+                        <button type="button" onClick={addMaterialOutput} className="text-[10px] font-semibold text-warning">+ Add</button>
                       </div>
                       {(selectedStep.materialOutputs || []).map((item) => (
-                        <div key={item.id} className="mb-1 rounded border border-slate-200 bg-white p-1.5 dark:border-slate-700 dark:bg-slate-800">
-                          <select value={item.materialId || ""} onChange={(e) => updateMaterialItem("output", item.id || "", "materialId", e.target.value || null)} className="mb-1 h-6 w-full rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        <div key={item.id} className="mb-1 rounded border border-border bg-card p-1.5 border-border bg-muted">
+                          <select value={item.materialId || ""} onChange={(e) => updateMaterialItem("output", item.id || "", "materialId", e.target.value || null)} className="mb-1 h-6 w-full rounded border border-border bg-card px-1 text-[10px] border-border bg-card text-foreground">
                             <option value="">Output material</option>
                             {materials.map((material: any) => <option key={material.id} value={material.id}>{material.name} ({material.code})</option>)}
                           </select>
                           <div className="grid grid-cols-[0.7fr_0.9fr_1fr_24px] gap-1">
-                            <input type="number" value={item.quantity || 1} onChange={(e) => updateMaterialItem("output", item.id || "", "quantity", Number(e.target.value || 1))} className="h-6 rounded border border-slate-200 px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
-                            <select value={item.materialState || "WIP"} onChange={(e) => updateMaterialItem("output", item.id || "", "materialState", e.target.value)} className="h-6 rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                            <input type="number" value={item.quantity || 1} onChange={(e) => updateMaterialItem("output", item.id || "", "quantity", Number(e.target.value || 1))} className="h-6 rounded border border-border px-1 text-[10px] border-border bg-card text-foreground" />
+                            <select value={item.materialState || "WIP"} onChange={(e) => updateMaterialItem("output", item.id || "", "materialState", e.target.value)} className="h-6 rounded border border-border bg-card px-1 text-[10px] border-border bg-card text-foreground">
                               <option value="WIP">WIP</option>
                               <option value="FINISHED_GOOD">FG</option>
                               <option value="SCRAP">Scrap</option>
                               <option value="RAW_MATERIAL">RM</option>
                             </select>
-                            <select value={item.locationId || ""} onChange={(e) => updateMaterialItem("output", item.id || "", "locationId", e.target.value || null)} className="h-6 rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                            <select value={item.locationId || ""} onChange={(e) => updateMaterialItem("output", item.id || "", "locationId", e.target.value || null)} className="h-6 rounded border border-border bg-card px-1 text-[10px] border-border bg-card text-foreground">
                               <option value="">Destination</option>
                               {inventoryLocations.map((location: any) => <option key={location.id} value={location.id}>{location.name}</option>)}
                             </select>
-                            <button type="button" onClick={() => removeMaterialItem("output", item.id || "")} className="text-red-500"><Trash2 className="h-3 w-3 stroke-current" /></button>
+                            <button type="button" onClick={() => removeMaterialItem("output", item.id || "")} className="text-danger"><Trash2 className="h-3 w-3 stroke-current" /></button>
                           </div>
                         </div>
                       ))}
-                      {(selectedStep.materialOutputs || []).length === 0 && <p className="text-[10px] text-orange-500">Output material/state required.</p>}
+                      {(selectedStep.materialOutputs || []).length === 0 && <p className="text-[10px] text-warning">Output material/state required.</p>}
                     </div>
 
                     <div>
-                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Movement Rule</p>
-                      <select value={selectedStep.movementRule?.ruleType || "NEXT_OPERATION"} onChange={(e) => updateMaterialFlow(selectedStep.id, { movementRule: { ...(selectedStep.movementRule || {}), ruleType: e.target.value } })} className="mb-1 h-6 w-full rounded border border-slate-200 bg-white px-1 text-[10px] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Movement Rule</p>
+                      <select value={selectedStep.movementRule?.ruleType || "NEXT_OPERATION"} onChange={(e) => updateMaterialFlow(selectedStep.id, { movementRule: { ...(selectedStep.movementRule || {}), ruleType: e.target.value } })} className="mb-1 h-6 w-full rounded border border-border bg-card px-1 text-[10px] border-border bg-muted text-foreground">
                         <option value="LINE_SIDE">Line-side</option>
                         <option value="BUFFER">Buffer</option>
                         <option value="SUPERMARKET">Supermarket</option>
@@ -855,11 +856,11 @@ export function RoutingEditorPage() {
                         <option value="NEXT_OPERATION">Next Operation</option>
                         <option value="FINISHED_GOODS">FG Warehouse</option>
                       </select>
-                      <textarea value={selectedStep.movementRule?.notes || ""} onChange={(e) => updateMaterialFlow(selectedStep.id, { movementRule: { ...(selectedStep.movementRule || {}), notes: e.target.value } })} placeholder="Scrap/byproduct or material handling notes" className="h-14 w-full rounded border border-slate-200 bg-white px-2 py-1 text-[10px] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200" />
+                      <textarea value={selectedStep.movementRule?.notes || ""} onChange={(e) => updateMaterialFlow(selectedStep.id, { movementRule: { ...(selectedStep.movementRule || {}), notes: e.target.value } })} placeholder="Scrap/byproduct or material handling notes" className="h-14 w-full rounded border border-border bg-card px-2 py-1 text-[10px] border-border bg-muted text-foreground" />
                     </div>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-slate-400">Select a process step to configure material flow.</p>
+                  <p className="text-[10px] text-muted-foreground">Select a process step to configure material flow.</p>
                 )}
               </div>
             </div>
@@ -868,16 +869,16 @@ export function RoutingEditorPage() {
       </div>
 
       {/* ── Footer Stats ── */}
-      <div className="shrink-0 border-t border-slate-100 dark:border-slate-800 px-4 py-2 flex items-center gap-4 text-[9px] text-slate-400 dark:text-slate-500">
+      <div className="shrink-0 border-t border-border px-4 py-2 flex items-center gap-4 text-[9px] ${theme.textMuted}">
         <span>{localSteps.length} step{localSteps.length !== 1 ? "s" : ""}</span>
         {localSteps.length > 0 && (
           <>
-            <span>First: <strong className="text-slate-500 dark:text-slate-400">{localSteps[0]?.departmentName || localSteps[0]?.departmentId ? departments.find((d: any) => d.id === localSteps[0]?.departmentId)?.name || "Unassigned" : "Unassigned"}</strong></span>
-            <span>Last: <strong className="text-slate-500 dark:text-slate-400">{localSteps[localSteps.length - 1]?.departmentName || localSteps[localSteps.length - 1]?.departmentId ? departments.find((d: any) => d.id === localSteps[localSteps.length - 1]?.departmentId)?.name || "Unassigned" : "Unassigned"}</strong></span>
+            <span>First: <strong className="text-muted-foreground">{localSteps[0]?.departmentName || localSteps[0]?.departmentId ? departments.find((d: any) => d.id === localSteps[0]?.departmentId)?.name || "Unassigned" : "Unassigned"}</strong></span>
+            <span>Last: <strong className="text-muted-foreground">{localSteps[localSteps.length - 1]?.departmentName || localSteps[localSteps.length - 1]?.departmentId ? departments.find((d: any) => d.id === localSteps[localSteps.length - 1]?.departmentId)?.name || "Unassigned" : "Unassigned"}</strong></span>
           </>
         )}
-        {!isValid && <span className="text-orange-500">{validationErrors.length} error{validationErrors.length !== 1 ? "s" : ""}</span>}
-        {dirty && <span className="text-amber-500">Unsaved changes</span>}
+        {!isValid && <span className={`${theme.textWarning}`}>{validationErrors.length} error{validationErrors.length !== 1 ? "s" : ""}</span>}
+        {dirty && <span className={`${theme.textWarning}`}>Unsaved changes</span>}
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
     <div className="flex flex-col overflow-hidden h-full">
       <PageHeader icon={icon} iconClass={iconClass} title={title} subtitle={subtitle} />
       {toolbar && (
-        <div className="shrink-0 flex items-center gap-0.5 border-b border-slate-300 bg-white px-2 dark:border-slate-600 dark:bg-slate-900 h-10 select-none">
+        <div className="shrink-0 flex h-10 items-center gap-0.5 border-b border-border bg-card px-2 select-none">
           {toolbar}
         </div>
       )}
@@ -27,7 +27,7 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
         {children}
       </div>
       {footer && (
-        <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-5 px-5 text-xs text-slate-500 dark:text-slate-300 font-medium h-10">
+        <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-5 text-xs font-medium text-muted-foreground">
           {footer}
         </div>
       )}

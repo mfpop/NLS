@@ -24,35 +24,35 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen items-center justify-center bg-muted bg-background">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+        className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm border-border bg-card"
       >
         <img src="/leansynk-logo.svg" alt="LeanSynk" className="mx-auto mb-6 h-14 w-auto" />
 
         {error && (
-          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300">
+          <div className="mb-4 rounded-lg border border-danger bg-danger px-3 py-2 text-sm text-danger border-danger bg-danger text-danger">
             {error}
           </div>
         )}
 
         <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="username">
+          <label className="mb-1 block text-sm font-medium text-foreground text-muted-foreground" htmlFor="username">
             Username
           </label>
           <input
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm border-border bg-muted text-foreground"
             required
             autoFocus
           />
         </div>
 
         <div className="mb-6">
-          <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="password">
+          <label className="mb-1 block text-sm font-medium text-foreground text-muted-foreground" htmlFor="password">
             Password
           </label>
           <input
@@ -60,7 +60,7 @@ export function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            className="w-full rounded-lg border border-border px-3 py-2 text-sm border-border bg-muted text-foreground"
             required
           />
         </div>
@@ -68,14 +68,14 @@ export function LoginPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+          className="w-full rounded-lg bg-success px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-success disabled:opacity-50"
         >
           {submitting ? "Signing in..." : "Sign in"}
         </button>
 
-        <div className="mt-6 border-t border-slate-200 pt-4 dark:border-slate-700">
-          <p className="text-xs text-slate-400 dark:text-slate-500">Demo accounts: admin / owner / manager / supervisor / guest</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">Password: <span className="font-mono">{username}123</span></p>
+        <div className="mt-6 border-t border-border pt-4 border-border">
+          <p className="text-xs text-muted-foreground">Demo accounts: admin / owner / manager / supervisor / guest</p>
+          <p className="text-xs text-muted-foreground">Password: <span className="font-mono">{username}123</span></p>
         </div>
       </form>
     </div>

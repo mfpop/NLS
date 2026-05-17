@@ -1,10 +1,12 @@
-import { Moon, SlidersHorizontal, Sun } from "lucide-react";
+import { Moon, Palette, SlidersHorizontal, Sun } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { useThemeStore } from "@/stores/theme";
 
 export function UserPreferencesPage() {
   const theme = useThemeStore((state) => state.theme);
   const setTheme = useThemeStore((state) => state.setTheme);
+
+  const pillLabel = theme === "dark" ? "Dark active" : theme === "system" ? "System active" : "Light active";
 
   return (
     <AppPageLayout
@@ -21,7 +23,7 @@ export function UserPreferencesPage() {
                 Theme mode
               </h2>
             </div>
-            <span className="preferences-card__pill">{theme === "dark" ? "Dark active" : "Light active"}</span>
+            <span className="preferences-card__pill">{pillLabel}</span>
           </div>
 
           <p className="preferences-card__description">
@@ -58,6 +60,22 @@ export function UserPreferencesPage() {
               <span className="theme-toggle__copy">
                 <span className="theme-toggle__label">Dark</span>
                 <span className="theme-toggle__hint">Lower-glare command center</span>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="radio"
+              aria-checked={theme === "system"}
+              className={"theme-toggle__option" + (theme === "system" ? " theme-toggle__option--active" : "")}
+              onClick={() => setTheme("system")}
+            >
+              <span className="theme-toggle__icon-wrap bg-primary">
+                <Palette className="theme-toggle__icon" />
+              </span>
+              <span className="theme-toggle__copy">
+                <span className="theme-toggle__label">System</span>
+                <span className="theme-toggle__hint">Premium industrial graphite</span>
               </span>
             </button>
           </div>

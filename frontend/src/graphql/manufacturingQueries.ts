@@ -90,12 +90,92 @@ const RG_FIELDS = `
   }
   capacityModel
   oeeTarget
+  assignedResourceCount
   isBottleneck
   isConstraint
   resourceCount
   resourceType
   createdAt
   updatedAt
+  latestCapacity {
+    availableMinutes
+    theoreticalCapacity
+    effectiveCapacity
+    bottleneckCapacity
+    capacityUom
+    machineCapacityUnits
+    laborCapacityUnits
+    effectiveCapacityUnits
+    constraintReason
+    machineAvailableMinutes
+    laborAvailableMinutes
+    operatorsRequired
+    operatorsAvailable
+    snapshotType
+    status
+    version
+    fromDatetime
+    toDatetime
+    calculatedAt
+  }
+  scheduleStatus
+  resolvedScheduleSource
+  resolvedScheduleName
+  resolvedShiftName
+  resolvedSchedule {
+    source
+    calendarName
+    shiftName
+    timezone
+    weekStart
+    isConfigured
+  }
+`;
+
+export const MATERIAL_BIN_FIELDS = `
+  id
+  plantId
+  plantName
+  resourceGroupId
+  resourceGroupName
+  code
+  name
+  binType
+  materialId
+  materialCode
+  materialName
+  capacity
+  uomId
+  uomName
+  locationCode
+  isActive
+  createdAt
+  updatedAt
+`;
+
+export const CAPACITY_SNAPSHOT_FIELDS = `
+  id
+  scopeType
+  scopeId
+  availableMinutes
+  theoreticalCapacity
+  effectiveCapacity
+  bottleneckCapacity
+  capacityUom
+  machineCapacityUnits
+  laborCapacityUnits
+  effectiveCapacityUnits
+  constraintReason
+  machineAvailableMinutes
+  laborAvailableMinutes
+  operatorsRequired
+  operatorsAvailable
+  fromDatetime
+  toDatetime
+  snapshotType
+  status
+  version
+  calculatedAt
 `;
 
 const RES_FIELDS = `
@@ -166,6 +246,48 @@ export const RESOURCE_GROUP_QUERY = gql`
   query ResourceGroup($id: String!) {
     resourceGroup(id: $id) {
       ${RG_FIELDS}
+    }
+  }
+`;
+
+export const MATERIAL_BINS_QUERY = gql`
+  query MaterialBins($plantId: String, $resourceGroupId: String, $binType: String, $isActive: Boolean, $limit: Int, $offset: Int) {
+    materialBins(plantId: $plantId, resourceGroupId: $resourceGroupId, binType: $binType, isActive: $isActive, limit: $limit, offset: $offset) {
+      ${MATERIAL_BIN_FIELDS}
+    }
+  }
+`;
+
+export const CAPACITY_SNAPSHOTS_QUERY = gql`
+  query CapacitySnapshots(
+    $resourceGroupId: String
+    $snapshotType: String
+    $status: String
+    $limit: Int
+    $offset: Int
+  ) {
+    capacitySnapshots(
+      resourceGroupId: $resourceGroupId
+      snapshotType: $snapshotType
+      status: $status
+      limit: $limit
+      offset: $offset
+    ) {
+      items {
+        ${CAPACITY_SNAPSHOT_FIELDS}
+      }
+      total
+      limit
+      offset
+      hasMore
+    }
+  }
+`;
+
+export const MATERIAL_BIN_QUERY = gql`
+  query MaterialBin($id: String!) {
+    materialBin(id: $id) {
+      ${MATERIAL_BIN_FIELDS}
     }
   }
 `;

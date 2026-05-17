@@ -87,7 +87,7 @@ function CardSection({ title, icon, children, cardClass = theme.cardSection, cla
         <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>{icon}</span>
         <h3 className={`text-sm font-bold ${theme.textPrimary} flex-1`}>{title}</h3>
         {collapsible && (
-          <ChevronDown className={`h-4 w-4 text-slate-400 dark:text-slate-500 stroke-current transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 text-muted-foreground stroke-current transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
         )}
       </button>
       {(!collapsible || open) && <div className={bodyClassName}>{children}</div>}
@@ -108,7 +108,7 @@ function SubCard({ title, icon, children, className = "", bodyClassName = "", co
         <span className={`flex h-5 w-5 items-center justify-center rounded ${theme.iconBoxEmerald}`}>{icon}</span>
         <h4 className={`text-xs font-bold ${theme.textSecondary} uppercase tracking-wide flex-1`}>{title}</h4>
         {collapsible && (
-          <ChevronDown className={`h-4 w-4 text-slate-400 dark:text-slate-500 stroke-current transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 text-muted-foreground stroke-current transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
         )}
       </button>
       {(!collapsible || open) && <div className={bodyClassName}>{children}</div>}
@@ -141,7 +141,7 @@ function TextField({ value, onChange, readOnly, error, placeholder, ro, inputTyp
         onChange={handleChange}
         inputMode={inputMode}
         className={`w-full text-[13px] outline-none transition-colors ${error ? theme.fieldErrorBorder : ""} ${ro}`} placeholder={placeholder} />
-      {helper && !readOnly && !error && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 flex items-center gap-1"><HelpCircle className="h-3 w-3 shrink-0" />{helper}</p>}
+      {helper && !readOnly && !error && <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1"><HelpCircle className="h-3 w-3 shrink-0" />{helper}</p>}
       {error && <p className={theme.labelError + " mt-0.5"}>{error}</p>}
     </div>
   );
@@ -188,7 +188,7 @@ function RefField({ value, onChange, readOnly, error, categoryCode, placeholder,
     <div>
       {options.length > 0 ? (
         <select value={value || ""} onChange={(e) => onChange?.(e.target.value)}
-          className="w-full rounded border border-slate-200 bg-white px-2 py-0.5 text-xs outline-none text-slate-700 truncate transition-colors focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-emerald-500">
+          className="w-full rounded border border-border bg-card px-2 py-0.5 text-xs outline-none text-muted-foreground truncate transition-colors focus:border-success focus:ring-2 focus:ring-success border-border bg-muted text-muted-foreground dark:focus:border-success">
           <option value="">{placeholder || "Select..."}</option>
           {options.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -205,7 +205,7 @@ function FieldSet({ configs, form, errors, isEditing, update, ro, textRefs, edit
   update: (k: keyof CompanyFormData, v: string | string[]) => void; ro: string; textRefs: Record<string, string>; editMode?: boolean;
 }) {
   const labelClass = editMode
-    ? "block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5"
+    ? "block text-[11px] font-semibold text-muted-foreground mb-0.5"
     : `block ${theme.label} mb-0.5`;
 
   const helpers: Record<string, string> = {
@@ -293,7 +293,7 @@ function BusinessProfileCard({ form, isEditing, update, roTA, className = "" }: 
                 maxLength={500} placeholder="Brief description of the company, core products, and operational scope."
                 style={{ overflowY: "hidden" }} />
               {form.description?.length >= 450 && (
-                <p className={`text-right text-[11px] mt-0.5 shrink-0 ${(form.description?.length || 0) >= 500 ? "text-red-500" : "text-amber-500"}`}>
+                <p className={`text-right text-[11px] mt-0.5 shrink-0 ${(form.description?.length || 0) >= 500 ? "text-danger" : "text-warning"}`}>
                   {form.description?.length || 0} / 500
                 </p>
               )}
@@ -351,7 +351,7 @@ function ContactAdminCard({ form, errors, isEditing, update, ro, className = "" 
           const val = form[f.key] as string;
           const err = errors[f.key as string];
           const labelClass = isEditing
-            ? "block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5"
+            ? "block text-[11px] font-semibold text-muted-foreground mb-0.5"
             : `block ${theme.label} mb-0.5`;
           return (
             <div key={f.key} className={f.key === "website" ? "col-span-2" : ""}>
@@ -460,30 +460,30 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
           <button type="button" onClick={isEditing ? () => setHqOpen(!hqOpen) : undefined}
             aria-expanded={isEditing ? hqOpen : undefined}
             aria-controls={isEditing ? "section-headquarters" : undefined}
-            className={`flex items-center gap-2 p-3 w-full text-left ${isEditing ? 'cursor-pointer hover:opacity-80' : 'cursor-default'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50`}>
+            className={`flex items-center gap-2 p-3 w-full text-left ${isEditing ? 'cursor-pointer hover:opacity-80' : 'cursor-default'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success`}>
             <span className={`flex h-6 w-6 items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
               <MapPin className={`h-3.5 w-3.5 ${theme.iconAccent}`} />
             </span>
             <h3 className={`text-sm font-bold ${theme.textPrimary} flex-1`}>Headquarters / Main Location</h3>
             {isEditing && (
-              <ChevronDown className={`h-3.5 w-3.5 text-slate-400 dark:text-slate-500 stroke-current transition-transform duration-200 ${hqOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground stroke-current transition-transform duration-200 ${hqOpen ? 'rotate-180' : ''}`} />
             )}
           </button>
           {(!isEditing || hqOpen) && (
           <div className="p-3 pt-0">
             <div className="grid grid-cols-2 gap-x-2 gap-y-2">
               <div className="col-span-2">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-slate-500 dark:text-slate-400' : theme.label} mb-0.5`}>Street Address</label>
+                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>Street Address</label>
                 <TextField value={form.address} onChange={(v) => update("address", v)} readOnly={!isEditing} ro={ro} />
               </div>
               <div className="col-span-1">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-slate-500 dark:text-slate-400' : theme.label} mb-0.5`}>Zip / Postal Code</label>
+                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>Zip / Postal Code</label>
                 <TextField value={form.zipcode} onChange={(v) => update("zipcode", v)} readOnly={!isEditing} error={errors.zipcode} ro={ro} placeholder="90670 / 90670-2221 / A1A 1A1" inputType="text" />
               </div>
             </div>
             <div className="grid grid-cols-3 gap-x-2 gap-y-2 mt-2">
               <div className="min-w-0">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-slate-500 dark:text-slate-400' : theme.label} mb-0.5`}>City</label>
+                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>City</label>
                 {isEditing ? (
                   <ReferenceSelect categoryCode="city" label=""
                     value={form.cityId ?? ""} onChange={onCityChange} placeholder="Select city..."
@@ -493,7 +493,7 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
                 )}
               </div>
               <div className="min-w-0">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-slate-500 dark:text-slate-400' : theme.label} mb-0.5`}>State</label>
+                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>State</label>
                 {isEditing ? (
                   <ReferenceSelect categoryCode="state" label=""
                     value={form.stateId ?? ""} onChange={onStateChange} placeholder="Select state..."
@@ -503,7 +503,7 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
                 )}
               </div>
               <div className="min-w-0">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-slate-500 dark:text-slate-400' : theme.label} mb-0.5`}>Country *</label>
+                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>Country *</label>
                 {isEditing ? (
                   <ReferenceSelect categoryCode="country" label=""
                     value={form.countryId ?? ""} onChange={onCountryChange} placeholder="Select country..." />
@@ -515,7 +515,7 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
             </div>
           </div>)}
         </div>
-        <div className="overflow-hidden border-l border-slate-200 dark:border-slate-700">
+        <div className="overflow-hidden border-l border-border">
             {(() => {
               const lat = resolvedCoords?.lat ?? null;
               const lon = resolvedCoords?.lon ?? null;
@@ -540,7 +540,7 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
               }
 
               if (isResolvingCoords) {
-                return <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-900 text-slate-400 text-xs">Loading map...</div>;
+                return <div className="flex items-center justify-center h-full bg-muted text-muted-foreground text-xs">Loading map...</div>;
               }
 
               const mapQuery = form.address && form.city
@@ -550,20 +550,20 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
                   : "";
 
               if (!mapQuery) {
-                return <div className="flex items-center justify-center h-full bg-slate-50 dark:bg-slate-900 text-slate-400 text-xs">No location data</div>;
+                return <div className="flex items-center justify-center h-full bg-muted text-muted-foreground text-xs">No location data</div>;
               }
 
               return (
-                <div className="flex h-full flex-col bg-slate-50 dark:bg-slate-900 p-2 gap-2">
-                  <div className="flex items-start gap-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-red-500 shrink-0" />
-                    <div className="text-[11px] leading-4 text-slate-700 dark:text-slate-300 wrap-break-word">{mapQuery}</div>
+                <div className="flex h-full flex-col bg-muted p-2 gap-2">
+                  <div className="flex items-start gap-2 rounded border border-border bg-card bg-muted p-2">
+                    <MapPin className="h-4 w-4 mt-0.5 text-danger shrink-0" />
+                    <div className="text-[11px] leading-4 text-muted-foreground wrap-break-word">{mapQuery}</div>
                   </div>
                   <a
                     href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(mapQuery)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-auto inline-flex items-center justify-center rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="mt-auto inline-flex items-center justify-center rounded border border-border bg-card bg-muted px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted hover:bg-muted transition-colors"
                   >
                     Open map
                   </a>
@@ -592,7 +592,7 @@ function GlobalOpsCard({ form, errors, isEditing, update }: {
     const err = errors[key];
     return (
       <div>
-        <label className={`block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5`}>{label}{required ? " *" : ""}</label>
+        <label className={`block text-[11px] font-semibold text-muted-foreground mb-0.5`}>{label}{required ? " *" : ""}</label>
         <RefField value={val} onChange={(v) => update(key as any, v)} readOnly={!isEditing} error={err}
           categoryCode={cat} placeholder={`Select ${label.toLowerCase()}...`} refLabel={textRefs[key] || val} />
       </div>
@@ -668,7 +668,7 @@ function RelatedPlantsCard({ plants, plantsLoading, onSelectPlant, className = "
     <CardSection title="Related Plants" icon={<Factory className="h-3.5 w-3.5" />} className={`flex min-h-0 flex-col ${className}`} bodyClassName="min-h-0 flex-1">
       <div className="h-full min-h-0 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
         <table className="w-full text-left">
-          <thead className="sticky top-0 z-10 bg-white dark:bg-slate-900">
+          <thead className="sticky top-0 z-10 bg-card bg-muted">
             <tr className={`text-[10px] font-semibold ${theme.textMuted} uppercase tracking-wide border-b ${theme.sectionDivider}`}>
               <th className="py-2 pr-2 font-semibold">Name</th>
               <th className="py-2 px-2 font-semibold w-[64px]">Code</th>
@@ -678,13 +678,13 @@ function RelatedPlantsCard({ plants, plantsLoading, onSelectPlant, className = "
               <th className="py-2 pl-2 w-[28px] text-center">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+          <tbody>
             {plants.map((plant: Plant) => {
               const loc = plant.city && plant.state ? `${plant.city}, ${plant.state}${plant.country ? `, ${plant.country}` : ""}` : plant.building || plant.city || "";
               const statusLabel = plant.status === "active" ? "Active" : "Inactive";
               return (
                 <tr key={plant.id} className={`cursor-pointer transition-colors ${theme.tableRow}`} onClick={() => onSelectPlant?.(plant.id)} title={plant.name}>
-                  <td className="py-2 pr-2 text-[12px] font-medium text-slate-800 dark:text-slate-200 truncate max-w-0">{plant.name}</td>
+                  <td className="py-2 pr-2 text-[12px] font-medium text-muted-foreground truncate max-w-0">{plant.name}</td>
                   <td className={`py-2 px-2 text-[11px] font-mono ${theme.textSecondary} truncate`}>{plant.code || "-"}</td>
                   <td className={`py-2 px-2 text-[11px] ${theme.listMeta} truncate hidden sm:table-cell max-w-0`}>{loc || "-"}</td>
                   <td className="py-2 px-2 text-center">
@@ -770,7 +770,7 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
     : `${theme.selectButton} ${theme.textPrimary} ${theme.focusRing}`;
   const roTA = mode === "view"
     ? `read-only border-0 bg-transparent px-0 ${theme.textPrimary} cursor-default resize-none`
-    : `border border-slate-200 dark:border-slate-700 p-2 rounded bg-white dark:bg-slate-900 ${theme.textPrimary} ${theme.focusRing} resize-none`;
+    : `border border-border p-2 rounded bg-card bg-muted ${theme.textPrimary} ${theme.focusRing} resize-none`;
 
   const update = useCallback((key: keyof CompanyFormData, value: string | string[]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -885,11 +885,11 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
           {isEditing && (
             <div className={`flex shrink-0 items-center gap-3 px-4 ${theme.toolbarBg} border-b ${theme.sectionDivider}`} style={{ height: 40 }}>
               <span className={`inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-semibold ${theme.badgeWarning}`}>
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Editing Company
+                <span className="h-1.5 w-1.5 rounded-full bg-warning" /> Editing Company
               </span>
               {dirty && (
                 <span className={`text-[11px] ${theme.textWarning} flex items-center gap-1`}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Unsaved changes
+                  <span className="h-1.5 w-1.5 rounded-full bg-warning" /> Unsaved changes
                 </span>
               )}
               <div className="flex-1" />
@@ -921,7 +921,7 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
         ) : (
           <div className="grid h-full min-h-0 grid-cols-[52fr_48fr] gap-3 p-3" style={{ position: "relative" }}>
             {toast && (
-              <div role="alert" aria-live="polite" className={`absolute top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg text-xs font-medium ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
+              <div role="alert" aria-live="polite" className={`absolute top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg text-xs font-medium ${toast.type === "success" ? "bg-success text-primary-foreground" : "bg-danger text-primary-foreground"}`}>
                 <span className="flex items-center gap-1.5">{toast.type === "success" ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{toast.message}</span>
                 <button type="button" onClick={() => setToast(null)} className="ml-2 inline font-bold leading-none" aria-label="Dismiss">&times;</button>
               </div>

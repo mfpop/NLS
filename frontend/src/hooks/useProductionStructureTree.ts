@@ -67,7 +67,6 @@ export function useProductionStructureTree(plantId: string, search?: string, sta
     data: data?.productionStructureTree ?? null,
     loading,
     error,
-    isMockFallback: false,
     refetch,
   };
 }

@@ -196,7 +196,7 @@ export function ProductionFlowLayout() {
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const companyRef = useRef<{ startEditing: () => void; save: () => Promise<void>; cancel: () => void }>(null);
-  const flowToolbarButtonClass = "inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500 disabled:opacity-70";
+  const flowToolbarButtonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-70 dark:disabled:text-muted-foreground";
 
   useEffect(() => {
     if (!toast) return;
@@ -215,7 +215,7 @@ export function ProductionFlowLayout() {
         />
         {toast && (
           <div className="absolute inset-x-0 top-0 flex items-center justify-center pointer-events-none" style={{ height: "100%" }}>
-            <span className={`px-3 py-1 rounded text-xs font-medium pointer-events-auto ${toast.type === "success" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"}`}>
+            <span className={`px-3 py-1 rounded text-xs font-medium pointer-events-auto ${toast.type === "success" ? "bg-success text-success-foreground" : "bg-danger text-danger-foreground"}`}>
               {toast.message}
             </span>
           </div>
@@ -223,35 +223,35 @@ export function ProductionFlowLayout() {
       </div>
 
       {/* Toolbar - Windows Explorer style */}
-      <div className="shrink-0 flex items-center gap-0.5 border-b border-slate-300 bg-white px-2 dark:border-slate-600 dark:bg-slate-900 h-10 select-none">
+      <div className="flex h-10 shrink-0 select-none items-center gap-0.5 border-b border-border bg-muted px-2">
         <div className="flex h-full items-center gap-2 pr-2" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
           <div className="relative min-w-0 flex-1">
-            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current pointer-events-none" />
+            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search"
-              className="h-7 w-full border border-slate-300 bg-white pl-3 pr-7 text-xs outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-blue-400" />
+              className="h-7 w-full border border-border bg-muted pl-3 pr-7 text-xs text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-ring" />
             {searchQuery && (
               <button type="button" onClick={() => setSearchQuery("")}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
                 <X className="h-3.5 w-3.5 stroke-current" />
               </button>
             )}
           </div>
           <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-7 w-24 shrink-0 border border-slate-300 bg-white px-2 text-xs outline-none text-slate-600 cursor-pointer dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            className="h-7 w-24 shrink-0 cursor-pointer border border-border bg-muted px-2 text-xs text-muted-foreground outline-none">
             <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
           </select>
         </div>
-        <span className="h-5 w-px bg-slate-300 dark:bg-slate-600 shrink-0" />
+        <span className="h-5 w-px bg-muted shrink-0" />
         <div className="flex min-w-0 flex-1 items-center gap-0.5 pl-3">
         {isEditingCompany ? (
           <>
             <button type="button" onClick={() => companyRef.current?.save()} title="Save"
-              className="inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-500/10 transition-colors">
+              className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-success transition-colors hover:bg-success/12">
               <Check className="h-4 w-4 stroke-current" />
               <span className="hidden sm:inline">Save</span>
             </button>
             <button type="button" onClick={() => companyRef.current?.cancel()} title="Cancel"
-              className="inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+              className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted">
               <X className="h-4 w-4 stroke-current" />
               <span className="hidden sm:inline">Cancel</span>
             </button>
@@ -274,13 +274,13 @@ export function ProductionFlowLayout() {
               <span className="hidden sm:inline">Delete</span>
             </button>
             <button type="button" onClick={() => refetch()} title="Refresh"
-              className="inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+              className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted">
               <RefreshCw className={`h-4 w-4 stroke-current ${loading ? "animate-spin" : ""}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
           </>
         )}
-        {selectionFilteredOut && <span className="ml-2 text-[11px] text-slate-400 dark:text-slate-500">Selection filtered out</span>}
+        {selectionFilteredOut && <span className="ml-2 text-[11px] text-muted-foreground">Selection filtered out</span>}
         </div>
       </div>
 
@@ -299,34 +299,34 @@ export function ProductionFlowLayout() {
 
         {/* Resizable divider */}
         <div onMouseDown={handleSplitMouseDown}
-          className="flex shrink-0 cursor-col-resize items-center justify-center bg-slate-200/60 hover:bg-blue-300/60 dark:bg-slate-700/60 dark:hover:bg-blue-500/30 transition-colors"
+          className="flex shrink-0 cursor-col-resize items-center justify-center bg-muted transition-colors hover:bg-primary"
           style={{ width: 4 }}>
-          <GripVertical className="h-3 w-3 text-slate-400 dark:text-slate-500 pointer-events-none" />
+          <GripVertical className="h-3 w-3 text-muted-foreground pointer-events-none" />
         </div>
 
         {/* Detail column */}
         <div className="flex flex-col min-h-0 min-w-0" style={{ flex: 1 }}>
           {urlDepartmentId ? (
-            <DepartmentsPage />
+            <DepartmentsPage embeddedInFlow />
           ) : urlLineId ? (
-            <ProductionLinesPage />
+            <ProductionLinesPage embeddedInFlow />
           ) : urlRgId ? (
-            <ResourceGroupsPage />
+            <ResourceGroupsPage embeddedInFlow />
           ) : urlResourceId ? (
-            <ResourcesPage />
+            <ResourcesPage embeddedInFlow />
           ) : selectedNode ? (
             selectedNode.type === "company" ? (
               <CompanyDetailView ref={companyRef} simple onEditChange={setIsEditingCompany} />
             ) : selectedNode.type === "plant" ? (
               <PlantDetailView plantId={selectedNode.id} />
             ) : selectedNode.type === "department" ? (
-              <DepartmentsPage />
+              <DepartmentsPage embeddedInFlow />
             ) : selectedNode.type === "productionLine" || selectedNode.type === "line" ? (
-              <ProductionLinesPage />
+              <ProductionLinesPage embeddedInFlow />
             ) : selectedNode.type === "resourceGroup" || selectedNode.type === "group" ? (
-              <ResourceGroupsPage />
+              <ResourceGroupsPage embeddedInFlow />
             ) : selectedNode.type === "resource" ? (
-              <ResourcesPage />
+              <ResourcesPage embeddedInFlow />
             ) : (
               <NodeDetailPanel
                 selectedNode={selectedNode}
@@ -337,8 +337,8 @@ export function ProductionFlowLayout() {
               />
             )
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center text-slate-400 gap-2">
-              <Database className="h-8 w-8 stroke-current text-slate-300" />
+            <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground gap-2">
+              <Database className="h-8 w-8 stroke-current text-muted-foreground" />
               <span className="text-sm font-medium">Select an element from the production structure</span>
               <span className="text-xs">Click on a node in the tree to view its details</span>
             </div>
@@ -347,12 +347,12 @@ export function ProductionFlowLayout() {
       </div>
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-5 px-5 text-xs text-slate-500 dark:text-slate-300 font-medium h-10">
-        <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-blue-500 stroke-current" /> Plant</span>
-        <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-amber-500 stroke-current" /> Line</span>
-        <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-purple-500 stroke-current" /> Dept</span>
-        <span className="flex items-center gap-1.5"><Component className="h-3.5 w-3.5 text-rose-500 stroke-current" /> RG</span>
-        <span className="flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-gray-500 stroke-current" /> Resource</span>
+      <div className="shrink-0 border-t border-border bg-muted flex items-center gap-5 px-5 text-xs text-muted-foreground font-medium h-10">
+        <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-entity-plant stroke-current" /> Plant</span>
+        <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-entity-line stroke-current" /> Line</span>
+        <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-entity-department stroke-current" /> Dept</span>
+        <span className="flex items-center gap-1.5"><Component className="h-3.5 w-3.5 text-entity-resource-group stroke-current" /> RG</span>
+        <span className="flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-entity-resource stroke-current" /> Resource</span>
       </div>
     </div>
   );

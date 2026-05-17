@@ -12,6 +12,10 @@ import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
 import type { Plant } from "@/types/plant";
 import type { ProductionLine } from "@/types/productionLine";
 
+function sidebarIndentStyle(depth: number) {
+  return { paddingLeft: `${depth === 0 ? 0.75 : 1.75 + depth * 0.75}rem` };
+}
+
 function initialsFromName(name: string) {
   return name
     .split(" ")
@@ -98,7 +102,7 @@ export function SidebarShell() {
           className={({ isActive }) =>
             "sidebar-row sidebar-row--nav sidebar-row--submenu-item" + (isActive ? " sidebar-row--active" : "")
           }
-          style={{ paddingLeft: `${0.75 + depth * 0.7}rem` }}
+          style={sidebarIndentStyle(depth)}
         >
           <ItemIcon className="sidebar-icon" />
           <span>{item.label}</span>
@@ -116,7 +120,7 @@ export function SidebarShell() {
         <button
           type="button"
           className="sidebar-row sidebar-row--submenu-label sidebar-row--submenu-group-btn"
-          style={{ paddingLeft: `${0.75 + depth * 0.7}rem` }}
+          style={sidebarIndentStyle(depth)}
           aria-expanded={isOpen}
           onClick={() =>
             setOpenNestedGroups((previous) => ({

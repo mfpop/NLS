@@ -32,12 +32,12 @@ export function NodeDetailPanel({
 }: NodeDetailPanelProps) {
   if (!selectedNode) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 py-12 text-slate-400">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800">
-          <Database className="h-4 w-4 stroke-current text-slate-300" />
+      <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+          <Database className="h-4 w-4 stroke-current text-muted-foreground" />
         </div>
-        <span className="text-sm font-semibold text-slate-400">No node selected</span>
-        <span className="text-xs text-slate-400">Select a node from the production tree</span>
+        <span className="text-sm font-semibold text-muted-foreground">No node selected</span>
+        <span className="text-xs text-muted-foreground">Select a node from the production tree</span>
       </div>
     );
   }
@@ -147,7 +147,7 @@ function EditContent({ node, onSave }: { node: DataManagementTreeChild; onSave?:
   const statusLabel = formatStatusLabel(node.status);
   return (
     <div>
-      <div className="flex items-center gap-2 border-b border-amber-200/50 dark:border-amber-500/15 bg-amber-50/20 dark:bg-amber-500/5 px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400">
+      <div className="flex items-center gap-2 border-b border-warning bg-warning px-3 py-1.5 text-xs text-warning">
         Editing {title}
       </div>
       <DetailSection title={`${title} Fields`} bodyClass="px-0 py-0">
@@ -225,7 +225,7 @@ function CreateContent({ node }: { node: DataManagementTreeChild }) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 border-b border-sky-200/50 dark:border-sky-500/15 bg-sky-50/20 dark:bg-sky-500/5 px-3 py-1.5 text-xs text-sky-600 dark:text-sky-400">
+      <div className="flex items-center gap-2 border-b border-info bg-info px-3 py-1.5 text-xs text-info">
         Creating new {childType} under {node.name}
       </div>
       <DetailSection title={`New ${childType}`} bodyClass="px-0 py-0">
@@ -236,9 +236,9 @@ function CreateContent({ node }: { node: DataManagementTreeChild }) {
       </DetailSection>
       <DetailSection title="Parent Context" bodyClass="px-0 py-0">
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[15px]">
-          <div><span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">Parent</span><div className="font-medium text-slate-700 dark:text-slate-200">{node.name}</div></div>
-          <div><span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">Type</span><div className="font-medium text-slate-700 dark:text-slate-200">{parentTitle}</div></div>
-          {node.code && <div><span className="text-[11px] text-slate-400 dark:text-slate-500 block leading-tight">Code</span><div className="font-mono font-medium text-slate-500 dark:text-slate-400">{node.code}</div></div>}
+          <div><span className="text-[11px] text-muted-foreground block leading-tight">Parent</span><div className="font-medium text-muted-foreground">{node.name}</div></div>
+          <div><span className="text-[11px] text-muted-foreground block leading-tight">Type</span><div className="font-medium text-muted-foreground">{parentTitle}</div></div>
+          {node.code && <div><span className="text-[11px] text-muted-foreground block leading-tight">Code</span><div className="font-mono font-medium text-muted-foreground">{node.code}</div></div>}
         </div>
       </DetailSection>
     </div>
@@ -250,7 +250,7 @@ function CreateContent({ node }: { node: DataManagementTreeChild }) {
 function Field({ label, defaultValue, placeholder }: { label: string; defaultValue: string; placeholder?: string }) {
   return (
     <div>
-      <label className="block text-[11px] font-medium text-slate-400 dark:text-slate-500 mb-0.5">{label}</label>
+      <label className="block text-[11px] font-medium text-muted-foreground mb-0.5">{label}</label>
       <input
         type="text"
         defaultValue={defaultValue}

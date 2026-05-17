@@ -5,6 +5,10 @@ from .entity_status import EntityStatus
 
 
 class ProductModel(models.Model):
+    family = models.ForeignKey(
+        "manufacturing.ProductFamily", on_delete=models.PROTECT,
+        related_name="models", null=True, blank=True,
+    )
     code = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
@@ -19,9 +23,102 @@ class ProductModel(models.Model):
         ordering = ["name"]
         verbose_name = "Product Model"
         verbose_name_plural = "Product Models"
+        constraints = [
+            models.UniqueConstraint(fields=["family", "code"], name="uq_product_model_family_code"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.code})"
+
+
+class ProductFamily(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "manufacturing_product_family"
+        ordering = ["name"]
+        verbose_name = "Product Family"
+        verbose_name_plural = "Product Families"
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class ProductVariant(models.Model):
+    model = models.ForeignKey(
+        ProductModel, on_delete=models.PROTECT, related_name="variants",
+    )
+    code = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    configuration_summary = models.TextField(blank=True, default="")
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "manufacturing_product_variant"
+        ordering = ["model", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["model", "code"], name="uq_product_variant_model_code"),
+        ]
+
+    def __str__(self):
+        return f"{self.model.code}-{self.code}"
+
+
+class PartNumber(models.Model):
+    family = models.ForeignKey(
+        ProductFamily, on_delete=models.PROTECT, related_name="part_numbers",
+    )
+    model = models.ForeignKey(
+        ProductModel, on_delete=models.PROTECT, related_name="part_numbers",
+    )
+    variant = models.ForeignKey(
+        ProductVariant, on_delete=models.PROTECT,
+        related_name="part_numbers", null=True, blank=True,
+    )
+    part_number = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, default="")
+    revision = models.CharField(max_length=50, blank=True, default="")
+    uom = models.CharField(max_length=50, blank=True, default="EA")
+    status = models.CharField(
+        max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "manufacturing_part_number"
+        ordering = ["part_number"]
+        indexes = [
+            models.Index(fields=["family", "model", "variant"], name="part_hierarchy_idx"),
+            models.Index(fields=["is_active", "status"], name="part_active_status_idx"),
+        ]
+
+    def clean(self):
+        if self.model_id and self.family_id and self.model.family_id and self.model.family_id != self.family_id:
+            raise ValidationError("Part number family must match product model family.")
+        if self.variant_id and self.variant.model_id != self.model_id:
+            raise ValidationError("Part number variant must belong to the selected product model.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.part_number
 
 
 class ProcessFlow(models.Model):
@@ -30,6 +127,10 @@ class ProcessFlow(models.Model):
     description = models.TextField(blank=True, default="")
     product_model = models.ForeignKey(
         ProductModel, on_delete=models.CASCADE, related_name="process_flows",
+        null=True, blank=True,
+    )
+    part_number = models.ForeignKey(
+        PartNumber, on_delete=models.SET_NULL, related_name="process_flows",
         null=True, blank=True,
     )
     production_line = models.ForeignKey(
@@ -115,6 +216,11 @@ class Routing(TimeStampedModel):
         null=True, blank=True, related_name="routings",
         db_index=True,
     )
+    part_number = models.ForeignKey(
+        PartNumber, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="routings",
+        db_index=True,
+    )
     version = models.CharField(max_length=20, default="1.0")
     status = models.CharField(
         max_length=20, choices=RoutingStatus.choices, default=RoutingStatus.DRAFT,
@@ -132,6 +238,7 @@ class Routing(TimeStampedModel):
         indexes = [
             models.Index(fields=["production_line", "status"]),
             models.Index(fields=["production_line", "product_model", "status"], name="mfg_route_line_model_stat_idx"),
+            models.Index(fields=["production_line", "part_number", "status"], name="mfg_route_line_part_stat_idx"),
             models.Index(fields=["production_line", "product_model"]),
             models.Index(fields=["production_line", "product_family"]),
         ]
@@ -139,15 +246,15 @@ class Routing(TimeStampedModel):
     def clean(self):
         if self.status != RoutingStatus.ACTIVE or not self.production_line_id:
             return
-        siblings = Routing.objects.filter(
-            production_line_id=self.production_line_id,
-            product_model_id=self.product_model_id,
-            status=RoutingStatus.ACTIVE,
-        )
+        siblings = Routing.objects.filter(production_line_id=self.production_line_id, status=RoutingStatus.ACTIVE)
+        if self.part_number_id:
+            siblings = siblings.filter(part_number_id=self.part_number_id)
+        else:
+            siblings = siblings.filter(part_number__isnull=True, product_model_id=self.product_model_id)
         if self.pk:
             siblings = siblings.exclude(pk=self.pk)
         if siblings.exists():
-            raise ValidationError("Only one active routing is allowed per production line and product model.")
+            raise ValidationError("Only one active routing is allowed per production line and part number/model.")
 
     def __str__(self):
         return f"Routing v{self.version} for {self.production_line.name}"
@@ -277,6 +384,10 @@ class BOM(TimeStampedModel):
         ProductModel, on_delete=models.CASCADE, related_name="boms",
         db_index=True,
     )
+    part_number = models.ForeignKey(
+        PartNumber, on_delete=models.SET_NULL,
+        related_name="boms", null=True, blank=True, db_index=True,
+    )
     version = models.CharField(max_length=20, default="1.0")
     status = models.CharField(
         max_length=20, choices=RoutingStatus.choices, default=RoutingStatus.DRAFT,
@@ -289,19 +400,21 @@ class BOM(TimeStampedModel):
         ordering = ["product_model", "-created_at"]
         indexes = [
             models.Index(fields=["product_model", "status"], name="mfg_bom_model_status_idx"),
+            models.Index(fields=["part_number", "status"], name="mfg_bom_part_status_idx"),
         ]
 
     def clean(self):
         if self.status != RoutingStatus.ACTIVE or not self.product_model_id:
             return
-        siblings = BOM.objects.filter(
-            product_model_id=self.product_model_id,
-            status=RoutingStatus.ACTIVE,
-        )
+        siblings = BOM.objects.filter(status=RoutingStatus.ACTIVE)
+        if self.part_number_id:
+            siblings = siblings.filter(part_number_id=self.part_number_id)
+        else:
+            siblings = siblings.filter(part_number__isnull=True, product_model_id=self.product_model_id)
         if self.pk:
             siblings = siblings.exclude(pk=self.pk)
         if siblings.exists():
-            raise ValidationError("Only one active BOM is allowed per product model.")
+            raise ValidationError("Only one active BOM is allowed per part number/model.")
 
     def __str__(self):
         return f"BOM {self.product_model} v{self.version}"
@@ -355,6 +468,70 @@ class InventoryLocation(TimeStampedModel):
         return f"{self.name} ({self.location_type})"
 
 
+class MaterialBinType(models.TextChoices):
+    RM = "RM", "Raw Material"
+    INPUT = "INPUT", "Input"
+    OUTPUT = "OUTPUT", "Output"
+    WIP = "WIP", "WIP"
+    SUPERMARKET = "SUPERMARKET", "Supermarket"
+    FIFO = "FIFO", "FIFO"
+    FG = "FG", "Finished Goods"
+    SCRAP = "SCRAP", "Scrap"
+    QUARANTINE = "QUARANTINE", "Quarantine"
+
+
+class MaterialBin(TimeStampedModel):
+    plant = models.ForeignKey(
+        "manufacturing.Plant", on_delete=models.PROTECT,
+        related_name="material_bins",
+    )
+    resource_group = models.ForeignKey(
+        "manufacturing.ResourceGroup", on_delete=models.PROTECT,
+        related_name="material_bins",
+        null=True, blank=True,
+    )
+    code = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    bin_type = models.CharField(max_length=30, choices=MaterialBinType.choices)
+    material = models.ForeignKey(
+        Material, on_delete=models.SET_NULL,
+        related_name="material_bins",
+        null=True, blank=True,
+    )
+    capacity = models.FloatField(default=0)
+    uom = models.ForeignKey(
+        "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="+",
+    )
+    location_code = models.CharField(max_length=80, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "manufacturing_material_bin"
+        ordering = ["plant", "code"]
+        constraints = [
+            models.UniqueConstraint(fields=["plant", "code"], name="uq_material_bin_plant_code"),
+            models.CheckConstraint(condition=models.Q(capacity__gte=0), name="ck_material_bin_capacity_gte_0"),
+        ]
+        indexes = [
+            models.Index(fields=["plant", "bin_type", "resource_group", "material"], name="mfg_bin_scope_idx"),
+            models.Index(fields=["plant", "is_active"], name="mfg_bin_plant_active_idx"),
+        ]
+
+    def clean(self):
+        if self.resource_group_id and self.plant_id and self.resource_group.department.plant_id != self.plant_id:
+            raise ValidationError("Material bin and resource group must belong to the same plant.")
+        if self.capacity is not None and self.capacity < 0:
+            raise ValidationError("Material bin capacity cannot be negative.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.code} - {self.name}"
+
+
 class OperationInput(TimeStampedModel):
     routing_step = models.ForeignKey(
         RoutingStep, on_delete=models.CASCADE, related_name="material_inputs",
@@ -363,6 +540,11 @@ class OperationInput(TimeStampedModel):
     quantity = models.FloatField(default=1)
     source_location = models.ForeignKey(
         InventoryLocation, on_delete=models.PROTECT,
+        related_name="operation_inputs",
+        null=True, blank=True,
+    )
+    source_bin = models.ForeignKey(
+        MaterialBin, on_delete=models.PROTECT,
         related_name="operation_inputs",
         null=True, blank=True,
     )
@@ -383,6 +565,11 @@ class OperationOutput(TimeStampedModel):
     quantity = models.FloatField(default=1)
     target_location = models.ForeignKey(
         InventoryLocation, on_delete=models.PROTECT,
+        related_name="operation_outputs",
+        null=True, blank=True,
+    )
+    destination_bin = models.ForeignKey(
+        MaterialBin, on_delete=models.PROTECT,
         related_name="operation_outputs",
         null=True, blank=True,
     )
@@ -408,8 +595,18 @@ class MaterialMovementRule(TimeStampedModel):
         related_name="movement_rules_as_source",
         null=True, blank=True,
     )
+    source_bin = models.ForeignKey(
+        MaterialBin, on_delete=models.PROTECT,
+        related_name="movement_rules_as_source",
+        null=True, blank=True,
+    )
     destination_location = models.ForeignKey(
         InventoryLocation, on_delete=models.PROTECT,
+        related_name="movement_rules_as_destination",
+        null=True, blank=True,
+    )
+    destination_bin = models.ForeignKey(
+        MaterialBin, on_delete=models.PROTECT,
         related_name="movement_rules_as_destination",
         null=True, blank=True,
     )

@@ -30,29 +30,29 @@ function getPlantStatus(plant?: Plant | null): { value: string; label: string; i
 function InfoRow({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <div className="group flex items-center gap-2.5 py-[3px]">
-      {icon && <span className="w-3.5 shrink-0 text-slate-400 group-hover:text-slate-500 transition-colors">{icon}</span>}
-      <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 w-24 shrink-0">{label}</span>
-      <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 truncate">{value ?? <span className="text-slate-300 dark:text-slate-600">-</span>}</span>
+      {icon && <span className="w-3.5 shrink-0 text-muted-foreground group-hover:text-muted-foreground transition-colors">{icon}</span>}
+      <span className="text-[11px] font-medium text-muted-foreground w-24 shrink-0">{label}</span>
+      <span className="text-[13px] font-medium text-muted-foreground truncate">{value ?? <span className="text-muted-foreground">-</span>}</span>
     </div>
   );
 }
 
 function Badge({ label, variant = "default" }: { label: string; variant?: "active" | "inactive" | "new" | "default" }) {
   const styles = {
-    active: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20",
-    inactive: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
-    new: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20",
-    default: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600",
+    active: "bg-success text-success bg-success text-success border border-success",
+    inactive: "bg-muted text-muted-foreground bg-muted text-muted-foreground border border-border",
+    new: "bg-primary text-primary bg-primary text-primary border border-primary",
+    default: "bg-muted text-muted-foreground bg-muted text-muted-foreground border border-border",
   };
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${styles[variant]}`}>
-      {normalizeStatus(label) === "active" && <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />}
+      {normalizeStatus(label) === "active" && <span className="inline-block h-1.5 w-1.5 rounded-full bg-success mr-1.5 animate-pulse" />}
       {label}
     </span>
   );
 }
 
-const inputCls = "h-7 w-full rounded-md border border-slate-200 bg-white px-2.5 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-teal-500 dark:focus:ring-teal-500/20";
+const inputCls = "h-7 w-full rounded-md border border-border bg-card px-2.5 text-[11px] outline-none text-foreground placeholder:text-muted-foreground transition-all focus:border-ring focus:ring-2 focus:ring-ring/20";
 
 export function PlantsPage() {
   const { search, statusFilter, setFooterContent, setToolbarVariant } = useToolbar();
@@ -223,13 +223,13 @@ export function PlantsPage() {
   const renderDetail = () => {
     if (mode !== "create" && !sel) {
       return (
-        <div className="flex flex-1 items-center justify-center bg-white dark:bg-slate-900">
+        <div className="flex flex-1 items-center justify-center bg-card bg-muted">
           <div className="text-center max-w-xs">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 dark:bg-teal-500/10">
-              <Factory className="h-6 w-6 text-teal-400 dark:text-teal-300 stroke-current" />
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-entity-plant-bg">
+              <Factory className="h-6 w-6 text-entity-plant stroke-current" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Plant Details</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">Select a plant from the list or create a new one to view its configuration and operational details.</p>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-1">Plant Details</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">Select a plant from the list or create a new one to view its configuration and operational details.</p>
           </div>
         </div>
       );
@@ -256,27 +256,27 @@ export function PlantsPage() {
     }
 
     return (
-      <div className="flex-1 min-h-0 overflow-hidden bg-white dark:bg-slate-900">
+      <div className="flex-1 min-h-0 overflow-hidden bg-card bg-muted">
         <div className="shrink-0 px-3 pt-2">
-          <div className="flex items-start gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-400 to-teal-500 text-white shadow-sm">
+          <div className="flex items-start gap-3 pb-2 border-b border-border">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center text-info">
               <Factory className="h-5 w-5 stroke-current" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center flex-wrap gap-2">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{title}</h2>
-                {code && <span className="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700">{code}</span>}
+                <h2 className="text-sm font-bold text-muted-foreground truncate">{title}</h2>
+                {code && <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border">{code}</span>}
                 <Badge label={isNew ? "New" : selectedStatus.label} variant={isNew ? "new" : (selectedStatus.isActive ? "active" : "inactive")} />
-                {isForm && <span className="text-[10px] font-medium text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 rounded">Editing</span>}
+                {isForm && <span className="text-[10px] font-medium text-success bg-success px-1.5 py-0.5 rounded">Editing</span>}
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Create the physical site record first; structure is added after save.</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Create the physical site record first; structure is added after save.</p>
             </div>
           </div>
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto p-3">
           {mutationError && (
-            <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+            <div className="mb-3 rounded-lg border border-danger bg-danger px-3 py-2 text-xs font-medium text-danger border-danger bg-danger text-danger">
               {mutationError}
             </div>
           )}
@@ -287,23 +287,23 @@ export function PlantsPage() {
                 {isForm ? (
                   <div className="space-y-1.5">
                     <input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Plant name *" className={inputCls} />
-                    {errors.name && <p className="text-[10px] text-red-500 ml-1">{errors.name}</p>}
+                    {errors.name && <p className="text-[10px] text-danger ml-1">{errors.name}</p>}
                     <div className="grid grid-cols-2 gap-1.5">
                       <div>
                         <input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Code *" className={inputCls} />
-                        {errors.code && <p className="text-[10px] text-red-500 ml-1">{errors.code}</p>}
+                        {errors.code && <p className="text-[10px] text-danger ml-1">{errors.code}</p>}
                       </div>
                       <ReferenceSelect categoryCode="status" label="" value={g("statusId") as string} onChange={(v) => s("statusId", v)} includeInactive placeholder="Status *" error={errors.statusId} />
                     </div>
                     <ReferenceSelect categoryCode="plant_type" label="" value={g("plantTypeId") as string} onChange={(v) => s("plantTypeId", v)} placeholder="Plant type / category" />
-                    <textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Description" rows={2} className="h-10 w-full rounded-md border border-slate-200 bg-white px-2.5 py-1 text-[11px] outline-none resize-none transition-all focus:border-teal-400 focus:ring-2 focus:ring-teal-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-teal-500 dark:focus:ring-teal-500/20" />
+                    <textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Description" rows={2} className="h-10 w-full rounded-md border border-border bg-card px-2.5 py-1 text-[11px] outline-none resize-none transition-all focus:border-success focus:ring-2 focus:ring-success border-border bg-muted text-muted-foreground dark:focus:border-success dark:focus:ring-success" />
                     <ReferenceMultiSelect categoryCode="manufacturing_focus" label="" values={form.manufacturingFocusIds ?? []} onChange={(v) => setForm((p) => ({ ...p, manufacturingFocusIds: v }))} showUnselected={false} compact />
-                    <p className="rounded-md bg-teal-50 px-2 py-1 text-[10px] leading-3 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
+                    <p className="rounded-md bg-success px-2 py-1 text-[10px] leading-3 text-success bg-success text-success">
                       Plant is the top physical site. Lines, departments, resource groups, and resources are created in their own component pages after the plant exists.
                     </p>
                   </div>
                 ) : (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2.5 space-y-0.5">
+                  <div className="bg-muted rounded-lg p-2.5 space-y-0.5">
                     <InfoRow label="Name" value={sel?.name} />
                     <InfoRow label="Code" value={sel?.code} />
                     <InfoRow label="Status" value={<Badge label={selectedStatus.label} variant={selectedStatus.isActive ? "active" : "inactive"} />} />
@@ -320,10 +320,10 @@ export function PlantsPage() {
                     <input type="text" value={g("managerName")} onChange={(e) => s("managerName", e.target.value)} placeholder="Manager name" className={inputCls} />
                     <input type="text" value={g("managerEmail")} onChange={(e) => s("managerEmail", e.target.value)} placeholder="Manager email" className={inputCls} />
                     <input type="text" value={g("managerPhone")} onChange={(e) => s("managerPhone", e.target.value)} placeholder="Manager phone" className={inputCls} />
-                    {errors.managerEmail && <p className="text-[10px] text-red-500 ml-1">{errors.managerEmail}</p>}
+                    {errors.managerEmail && <p className="text-[10px] text-danger ml-1">{errors.managerEmail}</p>}
                   </div>
                 ) : (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2.5 space-y-0.5">
+                  <div className="bg-muted rounded-lg p-2.5 space-y-0.5">
                     <InfoRow label="Manager" value={sel?.managerName} icon={<User className="h-2.5 w-2.5 stroke-current" />} />
                     <InfoRow label="Email" value={sel?.managerEmail} icon={<Globe className="h-2.5 w-2.5 stroke-current" />} />
                     <InfoRow label="Phone" value={sel?.managerPhone} icon={<Phone className="h-2.5 w-2.5 stroke-current" />} />
@@ -355,12 +355,12 @@ export function PlantsPage() {
                       <input type="text" value={g("latitude")} onChange={(e) => s("latitude", e.target.value)} placeholder="Latitude" className={inputCls} />
                       <input type="text" value={g("longitude")} onChange={(e) => s("longitude", e.target.value)} placeholder="Longitude" className={inputCls} />
                     </div>
-                    <p className="rounded-md bg-slate-50 px-2 py-1 text-[10px] leading-3 text-slate-500 dark:bg-slate-800/50 dark:text-slate-400">
+                    <p className="rounded-md bg-muted px-2 py-1 text-[10px] leading-3 text-muted-foreground bg-muted text-muted-foreground">
                       Location data is site master data only. It does not drive routing, takt, capacity, or KPI calculations in this UI.
                     </p>
                   </div>
                 ) : (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2.5 space-y-0.5">
+                  <div className="bg-muted rounded-lg p-2.5 space-y-0.5">
                     <InfoRow label="Building" value={sel?.building} icon={<Factory className="h-2.5 w-2.5 stroke-current" />} />
                     <InfoRow label="Address" value={sel?.address} icon={<MapPin className="h-2.5 w-2.5 stroke-current" />} />
                     <InfoRow label="City" value={sel?.city} />
@@ -382,12 +382,12 @@ export function PlantsPage() {
                       <ReferenceSelect categoryCode="week_start_day" label="" value={g("weekStartDayId") as string} onChange={(v) => s("weekStartDayId", v)} placeholder="Week start day *" error={errors.weekStartDayId} />
                       <ReferenceSelect categoryCode="schedule" label="" value={g("defaultScheduleId") as string} onChange={(v) => s("defaultScheduleId", v)} placeholder="Default schedule" />
                     </div>
-                    <p className="rounded-md bg-amber-50 px-2 py-1 text-[10px] leading-3 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                    <p className="rounded-md bg-warning px-2 py-1 text-[10px] leading-3 text-warning bg-warning text-warning">
                       These are plant defaults for later workflows. Authoritative shift duration and calendar calculations remain in domain services.
                     </p>
                   </div>
                 ) : (
-                  <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2.5 space-y-0.5">
+                  <div className="bg-muted rounded-lg p-2.5 space-y-0.5">
                     <InfoRow label="Lines" value={sel?.lineCount ?? 0} icon={<Info className="h-2.5 w-2.5 stroke-current" />} />
                     <InfoRow label="Departments" value={sel?.departmentCount ?? 0} />
                     <InfoRow label="Groups" value={sel?.groupCount ?? 0} />
@@ -397,12 +397,12 @@ export function PlantsPage() {
               </DetailSection>
 
               <DetailSection title="Readiness">
-                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/30 p-2 dark:border-slate-700 dark:bg-slate-800/20">
+                <div className="rounded-lg border border-dashed border-border bg-muted p-2 border-border bg-muted">
                   <div className="flex items-start gap-2">
-                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 stroke-current" />
+                    <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning stroke-current" />
                     <div>
-                      <p className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">After saving this plant</p>
-                      <p className="mt-0.5 text-[10px] leading-3 text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] font-semibold text-muted-foreground">After saving this plant</p>
+                      <p className="mt-0.5 text-[10px] leading-3 text-muted-foreground">
                         Add production lines, then departments, resource groups, and resources. Keep product flow and VSM modeling outside this physical-site record.
                       </p>
                     </div>
@@ -412,9 +412,9 @@ export function PlantsPage() {
             </div>
           </div>
 
-          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-6 text-[10px] text-slate-400 dark:text-slate-500">
-            <span>Created <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(sel?.createdAt) || "-"}</span></span>
-            <span>Updated <span className="font-medium text-slate-500 dark:text-slate-400">{formatAppDate(sel?.updatedAt) || "-"}</span></span>
+          <div className="mt-2 pt-2 border-t border-border flex items-center gap-6 text-[10px] text-muted-foreground">
+            <span>Created <span className="font-medium text-muted-foreground">{formatAppDate(sel?.createdAt) || "-"}</span></span>
+            <span>Updated <span className="font-medium text-muted-foreground">{formatAppDate(sel?.updatedAt) || "-"}</span></span>
           </div>
         </div>
       </div>
@@ -435,29 +435,29 @@ export function PlantsPage() {
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 h-10 border-b border-slate-200 dark:border-slate-700 flex items-center px-3 bg-white dark:bg-slate-900">
-              <Search className="h-3 w-3 text-slate-400 stroke-current mr-2" />
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Plants</span>
-              <span className="ml-auto text-[10px] text-slate-400 dark:text-slate-500 font-mono">{filtered.length}</span>
+            <div className="shrink-0 border-b border-border flex items-center p-3 bg-muted">
+              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2" />
+              <span className="text-xs font-medium text-muted-foreground">Plants</span>
+              <span className="ml-auto text-[10px] text-muted-foreground font-mono">{filtered.length}</span>
             </div>
             {mutationError && mode === "view" && (
-              <div className="border-b border-red-100 bg-red-50 px-3 py-2 text-[11px] font-medium text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+              <div className="border-b border-danger/30 bg-danger/10 px-3 py-2 text-[11px] font-semibold text-danger">
                 {mutationError}
               </div>
             )}
-            <div className="flex-1 overflow-y-auto bg-white pl-2 dark:bg-slate-900">
+            <div className="flex-1 overflow-y-auto bg-muted/50 pl-2">
               {loading && plants.length === 0 ? (
-                <div className="flex items-center justify-center h-32 text-xs text-slate-400">
-                  <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-teal-400 animate-bounce" />Loading...</div>
+                <div className="flex items-center justify-center h-32 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success animate-bounce" />Loading...</div>
                 </div>
               ) : paginated.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-center px-4">
-                  <Factory className="h-5 w-5 text-slate-300 dark:text-slate-600 mb-2 stroke-current" />
-                  <p className="text-xs text-slate-400 dark:text-slate-500">No plants</p>
-                  <p className="text-[10px] text-slate-300 dark:text-slate-600 mt-0.5">Create one to get started</p>
+                  <Factory className="h-5 w-5 text-muted-foreground mb-2 stroke-current" />
+                  <p className="text-xs text-muted-foreground">No plants</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Create one to get started</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                <div>
                   {paginated.map((plant) => (
                     <EntityListItem key={plant.id}
                       name={plant.name} code={plant.code}
@@ -466,7 +466,7 @@ export function PlantsPage() {
                       selected={selectedId === plant.id}
                       status={plant.status}
                       onClick={() => selectPlant(plant.id)}
-                      accentColor="teal" />
+                      entityType="plant" />
                   ))}
                 </div>
               )}

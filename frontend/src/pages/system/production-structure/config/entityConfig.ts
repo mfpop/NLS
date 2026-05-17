@@ -1,4 +1,4 @@
-import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell } from "lucide-react";
+import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Warehouse } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface EntityConfigItem {
@@ -11,57 +11,63 @@ export interface EntityConfigItem {
 export const ENTITY_CONFIG: Record<string, EntityConfigItem> = {
   company: {
     icon: Landmark,
-    color: "text-slate-600 bg-slate-50 dark:text-slate-400 dark:bg-slate-800",
-    borderTop: "border-t-slate-400",
+    color: "text-entity-company bg-entity-company-bg",
+    borderTop: "border-t-entity-company",
     label: "Company",
   },
   plant: {
     icon: Factory,
-    color: "text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-500/10",
-    borderTop: "border-t-teal-400",
+    color: "text-entity-plant bg-entity-plant-bg",
+    borderTop: "border-t-entity-plant",
     label: "Plant",
   },
   productionLine: {
     icon: TrendingUpDown,
-    color: "text-amber-600 bg-transparent dark:text-amber-400",
-    borderTop: "border-t-amber-400",
+    color: "text-entity-line bg-entity-line-bg",
+    borderTop: "border-t-entity-line",
     label: "Production Line",
   },
   line: {
     icon: TrendingUpDown,
-    color: "text-amber-600 bg-transparent dark:text-amber-400",
-    borderTop: "border-t-amber-400",
+    color: "text-entity-line bg-entity-line-bg",
+    borderTop: "border-t-entity-line",
     label: "Line",
   },
   lineGroup: {
     icon: TrendingUpDown,
-    color: "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-500/10",
-    borderTop: "border-t-amber-400",
+    color: "text-entity-line bg-entity-line-bg",
+    borderTop: "border-t-entity-line",
     label: "Line Group",
   },
   department: {
     icon: Layers,
-    color: "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-500/10",
-    borderTop: "border-t-purple-400",
+    color: "text-entity-department bg-entity-department-bg",
+    borderTop: "border-t-entity-department",
     label: "Department",
   },
   resourceGroup: {
     icon: Component,
-    color: "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10",
-    borderTop: "border-t-rose-400",
+    color: "text-entity-resource-group bg-entity-resource-group-bg",
+    borderTop: "border-t-entity-resource-group",
     label: "Resource Group",
   },
   group: {
     icon: Component,
-    color: "text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10",
-    borderTop: "border-t-rose-400",
+    color: "text-entity-resource-group bg-entity-resource-group-bg",
+    borderTop: "border-t-entity-resource-group",
     label: "Resource Group",
   },
   resource: {
     icon: Dumbbell,
-    color: "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-500/10",
-    borderTop: "border-t-gray-400",
+    color: "text-entity-resource bg-entity-resource-bg",
+    borderTop: "border-t-entity-resource",
     label: "Resource",
+  },
+  warehouse: {
+    icon: Warehouse,
+    color: "text-entity-warehouse bg-entity-warehouse-bg",
+    borderTop: "border-t-entity-warehouse",
+    label: "Warehouse",
   },
 };
 
@@ -73,6 +79,7 @@ export const TYPE_TITLES: Record<string, string> = {
   resourceGroup: "Resource Group",
   group: "Resource Group",
   resource: "Resource",
+  warehouse: "Warehouse",
   plant: "Plant",
   company: "Company",
 };
@@ -134,8 +141,6 @@ export const TABLE_ENTITY_MAP: Record<string, string> = {
   shift_team: "resourceGroup",
   staff_user: "department",
   staff_assignment: "department",
-  product_model: "productionLine",
-  production_family: "productionLine",
 };
 
 export function getTableEntityStyle(tableType: string): EntityConfigItem {

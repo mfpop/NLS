@@ -90,10 +90,10 @@ const PILL_VARIANTS: Record<string, string> = {
 };
 
 const PILL_DOTS: Record<string, string> = {
-  active: "bg-emerald-500",
-  inactive: "bg-slate-400",
-  warning: "bg-amber-500",
-  critical: "bg-red-500",
+  active: "bg-success",
+  inactive: "bg-muted",
+  warning: "bg-warning",
+  critical: "bg-danger",
 };
 
 export function PillBadge({ variant = "active", label, dot = true, className = "", ...props }: {
@@ -139,16 +139,16 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function ResourceStatusBadge({ status }: { status: "Running" | "Idle" | "Down" | "Maintenance" }) {
   const styles: Record<string, string> = {
-    Running: theme.badgeActive + " border-emerald-200 dark:border-emerald-500/20",
+    Running: theme.badgeActive + " border-success",
     Idle: theme.badgeInactive,
     Down: theme.badgeCritical,
     Maintenance: theme.badgeWarning,
   };
   const dot: Record<string, string> = {
-    Running: "bg-emerald-500",
-    Idle: "bg-slate-400",
-    Down: "bg-red-500",
-    Maintenance: "bg-amber-500",
+    Running: "bg-success",
+    Idle: "bg-muted",
+    Down: "bg-danger",
+    Maintenance: "bg-warning",
   };
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${styles[status] ?? styles.Idle}`}>
@@ -163,7 +163,7 @@ export function ResourceStatusBadge({ status }: { status: "Running" | "Idle" | "
 export function LoadBar({ pct, size = "sm" }: { pct: number; size?: "sm" | "md" }) {
   const overload = pct > 100;
   const height = size === "md" ? "h-2" : "h-1.5";
-  const color = overload ? "bg-red-500" : pct > 85 ? "bg-amber-500" : "bg-emerald-500";
+  const color = overload ? "bg-danger" : pct > 85 ? "bg-warning" : "bg-success";
   const clamped = Math.min(pct, 100);
   return (
     <div className="flex items-center gap-1.5">
@@ -270,7 +270,7 @@ export function SmartControlTowerLink({ plant, line, department, resource }: { p
 
 export function PrimaryAction({ onClick }: { onClick?: () => void }) {
   return <button type="button" onClick={onClick}
-    className="h-9 px-3 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 text-xs font-medium transition-all duration-150 ease-in-out active:scale-[0.97]">Details</button>;
+    className="h-9 px-3 rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted text-xs font-medium transition-all duration-150 ease-in-out active:scale-[0.97]">Details</button>;
 }
 
 /* •••••• Secondary Actions Dropdown [Legacy] •••••• */
@@ -282,16 +282,16 @@ export function ActionsDropdown({ actions, buttonClass }: { actions: SecondaryAc
   const renderedItems: ReactNode[] = [];
   actions.forEach((a, i) => {
     if (i > 0 && !a.danger && actions[i - 1].danger) {
-      renderedItems.push(<div key={`sep-${i}`} className="my-1 border-t border-slate-100" />);
+      renderedItems.push(<div key={`sep-${i}`} className="my-1 border-t border-border" />);
     }
     renderedItems.push(
       <button key={i} type="button"
         onClick={() => { a.onClick?.(); setOpen(false); }}
         className={`flex w-full items-center gap-2 px-3 py-2.5 text-sm whitespace-nowrap rounded-md transition-all duration-150 ease-in-out ${
-          a.danger ? "text-red-500 hover:bg-red-50" : "text-slate-700 hover:bg-slate-100"
+          a.danger ? "text-danger hover:bg-danger" : "text-muted-foreground hover:bg-muted"
         }`}
       >
-        {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-red-400" : "text-slate-500"}`}>{a.icon}</span>}
+        {a.icon && <span className={`w-4 h-4 shrink-0 ${a.danger ? "text-danger" : "text-muted-foreground"}`}>{a.icon}</span>}
         {a.label}
       </button>
     );
@@ -299,13 +299,13 @@ export function ActionsDropdown({ actions, buttonClass }: { actions: SecondaryAc
   return (
     <div className="relative">
       <button type="button" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-        className={buttonClass ?? "w-9 h-9 rounded-lg border border-slate-300 bg-white text-slate-500 hover:bg-slate-100 transition-all duration-150 ease-in-out inline-flex items-center justify-center"}>
+        className={buttonClass ?? "w-9 h-9 rounded-lg border border-border bg-card text-muted-foreground hover:bg-muted transition-all duration-150 ease-in-out inline-flex items-center justify-center"}>
         <MoreHorizontal className="w-4 h-4 stroke-current" />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1 w-[240px] bg-white border border-slate-200 rounded-xl shadow-lg p-1" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute right-0 top-full z-20 mt-1 w-[240px] bg-card border border-border rounded-xl shadow-lg p-1" onClick={(e) => e.stopPropagation()}>
             {renderedItems}
           </div>
         </>
@@ -338,47 +338,47 @@ export function CrudModal({ open, onClose, title, fields, values, onChange, onSa
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-slate-950/40" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-[480px] -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-100 p-6 shadow-md">
+      <div className="fixed inset-0 z-30 bg-muted" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 z-40 w-[480px] -translate-x-1/2 -translate-y-1/2 bg-card rounded-2xl border border-border p-6 shadow-md">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-all duration-150 ease-in-out">
+          <h3 className="text-sm font-semibold text-muted-foreground">{title}</h3>
+          <button type="button" onClick={onClose} className="text-muted-foreground hover:text-muted-foreground transition-all duration-150 ease-in-out">
             <X className="h-4 w-4 stroke-current" />
           </button>
         </div>
         <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSave(); }} className="space-y-4">
           {fields.map((f) => (
             <div key={f.key}>
-              <label className="mb-1 block text-sm text-slate-500">{f.label}{f.required && <span className="text-red-500 ml-0.5">*</span>}</label>
+              <label className="mb-1 block text-sm text-muted-foreground">{f.label}{f.required && <span className="text-danger ml-0.5">*</span>}</label>
               {f.type === "select" && f.options ? (
                 <div className="relative">
                   <select value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)}
-                    className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 pr-10 text-sm text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all duration-150 ease-in-out cursor-pointer">
+                    className="w-full h-10 rounded-lg border border-border bg-card px-3 pr-10 text-sm text-muted-foreground appearance-none focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-150 ease-in-out cursor-pointer">
                     <option value="">Select...</option>
                     {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
-                  <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                   </svg>
                 </div>
               ) : f.type === "textarea" ? (
                 <textarea value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className="min-h-[60px] w-full h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all duration-150 ease-in-out" />
+                  className="min-h-[60px] w-full h-10 rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-150 ease-in-out" />
               ) : (
                 <input type="text" value={values[f.key] ?? ""} onChange={(e) => onChange(f.key, e.target.value)} placeholder={f.placeholder}
-                  className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all duration-150 ease-in-out" />
+                  className="w-full h-10 rounded-lg border border-border bg-card px-3 text-sm text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-success focus:border-success transition-all duration-150 ease-in-out" />
               )}
             </div>
           ))}
           <div className="flex items-center justify-between pt-2">
             <div>
               {onDelete && (
-                <button type="button" onClick={onDelete} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-50 transition-all duration-150 ease-in-out">Delete</button>
+                <button type="button" onClick={onDelete} className="rounded-lg border border-danger px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger transition-all duration-150 ease-in-out">Delete</button>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150 ease-in-out">Cancel</button>
-              <button type="submit" className="rounded-lg bg-emerald-500 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-all duration-150 ease-in-out shadow-sm">Save</button>
+              <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-all duration-150 ease-in-out">Cancel</button>
+              <button type="submit" className="rounded-lg bg-success px-4 py-1.5 text-sm font-semibold text-primary-foreground hover:bg-success transition-all duration-150 ease-in-out shadow-sm">Save</button>
             </div>
           </div>
         </form>
@@ -401,15 +401,15 @@ export function ConfirmDialog({ open, onClose, title, message, onConfirm, confir
   if (!open) return null;
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-slate-950/40" onClick={onClose} />
-      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl border border-slate-100 p-5 shadow-md">
-        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-        <p className="mt-2 text-xs text-slate-500">{message}</p>
+      <div className="fixed inset-0 z-30 bg-muted" onClick={onClose} />
+      <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 bg-card rounded-2xl border border-border p-5 shadow-md">
+        <h3 className="text-sm font-semibold text-muted-foreground">{title}</h3>
+        <p className="mt-2 text-xs text-muted-foreground">{message}</p>
         <div className="mt-4 flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all duration-150 ease-in-out">Cancel</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted transition-all duration-150 ease-in-out">Cancel</button>
           <button type="button" onClick={() => { onConfirm(); onClose(); }}
-            className={`rounded-lg px-3 py-1.5 text-sm font-semibold text-white transition-all duration-150 ease-in-out ${
-              danger ? "bg-red-600 hover:bg-red-500" : "bg-emerald-500 hover:bg-emerald-600"
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold text-primary-foreground transition-all duration-150 ease-in-out ${
+              danger ? "bg-danger hover:bg-danger" : "bg-success hover:bg-success"
             }`}>{confirmLabel}</button>
         </div>
       </div>

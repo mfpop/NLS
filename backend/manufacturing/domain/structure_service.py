@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from datetime import time
 
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from manufacturing.models import (
     Company,
@@ -12,7 +14,11 @@ from manufacturing.models import (
     Resource,
     ResourceGroup,
     RoutingStep,
+    ScheduleAssignment,
+    WorkSchedule,
+    WorkShift,
 )
+from manufacturing.domain.schedule_assignment_service import ScheduleAssignmentService
 
 
 @dataclass
@@ -84,6 +90,87 @@ class StructureService:
             qs = qs.exclude(id=exclude_id)
         if qs.exists():
             raise StructureServiceError(field, "DUPLICATE", message)
+
+    @staticmethod
+    def _shift_window(shift_ref: ReferenceValue | None) -> tuple[time, time, int]:
+        code = (shift_ref.code if shift_ref else "").lower()
+        name = (shift_ref.name if shift_ref else "").lower()
+        text = f"{code} {name}"
+        if "24" in text or "continuous" in text:
+            return time(0, 0), time(23, 59), 1440
+        if "12" in text:
+            return time(6, 0), time(18, 0), 720
+        if "night" in text:
+            return time(22, 0), time(6, 0), 480
+        if "afternoon" in text or "aftn" in text or "swing" in text:
+            return time(14, 0), time(22, 0), 480
+        return time(6, 0), time(14, 0), 480
+
+    @classmethod
+    def _sync_resource_group_schedule(cls, group: ResourceGroup, shift_ref: ReferenceValue | None) -> None:
+        if not shift_ref:
+            ScheduleAssignment.objects.filter(
+                entity_type="RESOURCE_GROUP",
+                entity_id=str(group.id),
+                work_schedule__isnull=False,
+                is_active=True,
+            ).update(is_active=False, status="ARCHIVED")
+            return
+
+        plant = group.department.plant
+        tz_name = plant.timezone or (plant.timezone_id.name if plant.timezone_id_id else "")
+        schedule = WorkSchedule.objects.filter(
+            scope_type="RESOURCE_GROUP",
+            scope_id=str(group.id),
+        ).order_by("-effective_from", "-id").first()
+        if schedule:
+            schedule.name = f"{group.code} {shift_ref.name}"
+            schedule.timezone = tz_name
+            schedule.effective_to = None
+            schedule.is_active = True
+            schedule.save()
+        else:
+            schedule = WorkSchedule.objects.create(
+                scope_type="RESOURCE_GROUP",
+                scope_id=str(group.id),
+                name=f"{group.code} {shift_ref.name}",
+                timezone=tz_name,
+                effective_from=timezone.now(),
+                effective_to=None,
+                is_active=True,
+            )
+        start, end, paid_minutes = cls._shift_window(shift_ref)
+        WorkShift.objects.filter(schedule=schedule).update(is_active=False)
+        weekdays = range(7) if paid_minutes >= 1440 else range(5)
+        for weekday in weekdays:
+            WorkShift.objects.update_or_create(
+                schedule=schedule,
+                name=shift_ref.name,
+                weekday=weekday,
+                defaults={
+                    "start_time": start,
+                    "end_time": end,
+                    "crosses_midnight": end <= start,
+                    "paid_minutes": paid_minutes,
+                    "break_minutes": 0,
+                    "is_active": True,
+                },
+            )
+        ScheduleAssignment.objects.filter(
+            entity_type="RESOURCE_GROUP",
+            entity_id=str(group.id),
+            work_schedule__isnull=False,
+            is_active=True,
+        ).exclude(work_schedule=schedule).update(is_active=False, status="ARCHIVED")
+        assignment = ScheduleAssignmentService.resolve_assignment("RESOURCE_GROUP", str(group.id))
+        if not assignment or assignment.entity_type != "RESOURCE_GROUP" or assignment.work_schedule_id != schedule.id:
+            ScheduleAssignmentService.assign(
+                plant_id=str(plant.id),
+                scope_type="RESOURCE_GROUP",
+                scope_id=str(group.id),
+                work_schedule_id=str(schedule.id),
+                priority=10,
+            )
 
     @classmethod
     @transaction.atomic
@@ -426,6 +513,7 @@ class StructureService:
         code = cls._required(input_data.code, "code", "Code").upper()
         name = cls._required(input_data.name, "name", "Name")
         cls._validate_unique(ResourceGroup, {"department": dept, "code__iexact": code}, None, "code", "Resource group code must be unique inside Department")
+        shift_ref = cls._resolve_ref(getattr(input_data, "shift_pattern_id", None))
         group = ResourceGroup.objects.create(
             department=dept,
             code=code,
@@ -438,12 +526,13 @@ class StructureService:
             status_id=cls._resolve_ref(input_data.status_id),
             group_type_id=cls._resolve_ref(input_data.group_type_id),
             capability_type=getattr(input_data, "capability_type", "SHARED") or "SHARED",
-            shift_pattern_id=cls._resolve_ref(getattr(input_data, "shift_pattern_id", None)),
+            shift_pattern_id=shift_ref,
             capacity_model=getattr(input_data, "capacity_model", "") or "",
             oee_target=getattr(input_data, "oee_target", None),
             is_bottleneck=getattr(input_data, "is_bottleneck", False) or False,
             is_constraint=getattr(input_data, "is_constraint", False) or False,
         )
+        cls._sync_resource_group_schedule(group, shift_ref)
         return group
 
     @classmethod
@@ -475,8 +564,8 @@ class StructureService:
             group.group_type_id = cls._resolve_ref(input_data.group_type_id)
         if getattr(input_data, "capability_type", None) is not None:
             group.capability_type = input_data.capability_type or "SHARED"
-        if getattr(input_data, "shift_pattern_id", None) is not None:
-            group.shift_pattern_id = cls._resolve_ref(input_data.shift_pattern_id)
+        shift_ref = cls._resolve_ref(getattr(input_data, "shift_pattern_id", None))
+        group.shift_pattern_id = shift_ref
         if getattr(input_data, "capacity_model", None) is not None:
             group.capacity_model = input_data.capacity_model or ""
         if getattr(input_data, "oee_target", None) is not None:
@@ -486,6 +575,7 @@ class StructureService:
         if getattr(input_data, "is_constraint", None) is not None:
             group.is_constraint = input_data.is_constraint
         group.save()
+        cls._sync_resource_group_schedule(group, shift_ref)
         return group
 
     @classmethod

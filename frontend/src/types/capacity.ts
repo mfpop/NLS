@@ -129,9 +129,5 @@ export interface CapacityPlanCreateInput {
 export interface CapacityPlanInputUpdateInput {
   capacityPlanId: string;
   plannedQuantity: number;
-  availableTimeMinutes: number;
-  breakTimeMinutes: number;
-  plannedDowntimeMinutes: number;
-  operatorsAvailable: number;
   efficiencyFactor: number;
 }

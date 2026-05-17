@@ -17,14 +17,8 @@ import {
 } from "@/graphql/productionLineMutations";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import type { ProductionLine, ProductionLineFlowContext, ProductionLinesQueryData, ProductionLinesQueryVars, ProductFamilyAssignment, ProductModelAssignment } from "@/types/productionLine";
-import type { Plant } from "@/types/plant";
 
 type MutationData = Record<string, any>;
-
-let globalPlantsCache: Plant[] = [];
-export function getGlobalPlants(): Plant[] {
-  return globalPlantsCache;
-}
 
 export function useProductionLineFlowContext(productionLineId?: string | null, productModelId?: string | null) {
   const { data, loading, error, refetch } = useQuery<{ productionLineFlowContext: ProductionLineFlowContext }>(
@@ -107,7 +101,6 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     errorPolicy: "all",
   });
 
-  const isMockFallback = !!gqlError;
   const rawData = gqlData?.productionLines;
   const lines: ProductionLine[] = Array.isArray(rawData) ? rawData : (rawData as any)?.items ?? [];
   const totalCount = lines.length;
@@ -242,12 +235,12 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     } catch { return { ok: false, errors: [{ field: "_form", code: "ERROR", message: "Failed to set primary model" }] }; }
   }, [setPrimaryModelMutation]);
 
-  const loading = gqlLoading && !isMockFallback;
+  const loading = gqlLoading;
 
   return {
     lines,
     loading,
-    isMockFallback,
+    error: gqlError,
     saveLoading,
     search,
     setSearch,
@@ -262,7 +255,7 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     removeModel,
     setPrimaryFamily,
     setPrimaryModel,
-    plants: plantsData?.plants ?? getGlobalPlants().map((p) => ({ id: p.id, name: p.name })),
+    plants: plantsData?.plants ?? [],
     totalCount,
   };
 }

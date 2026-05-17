@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useRef } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { prefetchRoute } from "@/routes/routePrefetch";
-import { theme } from "@/styles/themeTokens";
+import { isRouteItemActive } from "./navigationConfig";
+import { sidebarIndent, sidebarNavTokens, sectionColors } from "./sidebarStyles";
 
 const HOVER_PREFETCH_DELAY_MS = 120;
 
-export function SidebarNavItem({ to, icon: Icon, label, depth = 0, onNavigate }: {
-  to: string; icon: LucideIcon; label: string; depth?: number; onNavigate?: () => void;
+export function SidebarNavItem({ to, icon: Icon, label, depth = 0, sectionId, onNavigate }: {
+  to: string; icon: LucideIcon; label: string; depth?: number; sectionId?: string; onNavigate?: () => void;
 }) {
+  const { pathname } = useLocation();
   const hoverTimerRef = useRef<number | null>(null);
 
   const clearHoverTimer = useCallback(() => {
@@ -47,6 +49,9 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, onNavigate }:
     prefetchRoute(to);
   }, [clearHoverTimer, to]);
 
+  const colors = sectionColors[sectionId ?? "control"] ?? sectionColors.control;
+  const isActive = isRouteItemActive(pathname, to);
+
   return (
     <NavLink
       to={to}
@@ -57,17 +62,13 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, onNavigate }:
       onBlur={clearHoverTimer}
       onFocus={handleFocusPrefetch}
       onTouchStart={handleTouchPrefetch}
-      className={({ isActive }) =>
-        `flex items-center gap-2.5 h-8 text-xs transition-colors pr-3 outline-none focus-visible:ring-2 focus-visible:ring-blue-400/40 ${
-isActive
-          ? `${theme.textPrimary} bg-blue-50/80 font-bold dark:bg-blue-500/15 border-l-[3px] border-blue-500 dark:border-blue-400 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.08)]`
-          : `${depth > 0 ? "text-slate-500 dark:text-slate-300/90" : theme.navInactive} font-semibold ${theme.interactiveRowStrong} border-l-[3px] border-transparent`
-        }`
-      }
-      style={{ paddingLeft: depth === 0 ? 12 : 28 + depth * 12 }}
+      className={`${sidebarNavTokens.row} ${isActive ? sidebarNavTokens.active : sidebarNavTokens.inactive} ${
+        isActive ? `${colors.activeBg} ${colors.textActive}` : `${colors.icon} ${colors.hoverBg}`
+      }`}
+      style={{ paddingLeft: sidebarIndent(depth) }}
     >
-      <Icon className="h-[17px] w-[17px] stroke-current shrink-0" />
-      <span className="truncate text-[14px] leading-5">{label}</span>
+      <Icon className={`${sidebarNavTokens.icon} ${isActive ? colors.iconActive : colors.icon}`} />
+      <span className={sidebarNavTokens.label}>{label}</span>
     </NavLink>
   );
 }

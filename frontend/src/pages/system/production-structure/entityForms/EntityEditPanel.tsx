@@ -12,7 +12,7 @@ export function EntityEditPanel({ children, loading, notFound }: EntityEditPanel
   if (loading) {
     return (
       <div className={`flex items-center justify-center h-full ${theme.page}`}>
-        <div className="text-xs text-slate-400 dark:text-slate-500">Loading...</div>
+        <div className="text-xs text-muted-foreground">Loading...</div>
       </div>
     );
   }
@@ -20,7 +20,7 @@ export function EntityEditPanel({ children, loading, notFound }: EntityEditPanel
   if (notFound) {
     return (
       <div className={`flex items-center justify-center h-full ${theme.page}`}>
-        <div className="text-xs text-red-500">Entity not found.</div>
+        <div className="text-xs text-danger">Entity not found.</div>
       </div>
     );
   }

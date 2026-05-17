@@ -10,9 +10,9 @@ interface KpiTileProps {
 export function KpiTile({ label, value, sub, status = "idle" }: KpiTileProps) {
   const tone =
     status === "ok"
-      ? `border-emerald-500 ${theme.iconBoxEmerald}`
+      ? `border-success ${theme.iconBoxEmerald}`
       : status === "warn"
-        ? `border-amber-500 ${theme.badgeWarning}`
+        ? `border-warning ${theme.badgeWarning}`
         : `${theme.card}`;
   return (
     <div className={`rounded-xl border p-4 shadow-sm ${tone}`}>

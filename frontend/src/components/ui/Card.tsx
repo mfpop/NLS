@@ -1,8 +1,9 @@
 import React from 'react';
+import { theme } from "@/styles/themeTokens";
 
 export function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm p-4">
+    <div className={`rounded-lg ${theme.card} p-4`}>
       {children}
     </div>
   );

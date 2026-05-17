@@ -87,7 +87,7 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
     active: theme.badgeActive, inactive: theme.badgeInactive,
     violet: theme.typeDepartment, new: theme.typePlant, default: theme.badgeNeutral,
   };
-  return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1 w-1 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
+  return <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1 w-1 rounded-full bg-success mr-1 animate-pulse" />}{label}</span>;
 }
 
 function SetupSignal({ ok, label, onClick, current = false }: { ok: boolean; label: string; onClick?: () => void; current?: boolean }) {
@@ -100,15 +100,15 @@ function SetupSignal({ ok, label, onClick, current = false }: { ok: boolean; lab
             ? `px-2.5 py-1.5 ${theme.warningChip} shadow-sm`
             : `px-2 py-1 ${theme.badgeWarning}`
       }`}>
-      {ok ? <CheckCircle className="h-2.5 w-2.5 stroke-current shrink-0 text-slate-400 dark:text-slate-500" /> : <ArrowRight className="h-3 w-3 stroke-current shrink-0" />}
-      <span className={`truncate ${ok ? "text-slate-400 dark:text-slate-500" : ""}`}>{label}</span>
+      {ok ? <CheckCircle className="h-2.5 w-2.5 stroke-current shrink-0 text-muted-foreground" /> : <ArrowRight className="h-3 w-3 stroke-current shrink-0" />}
+      <span className={`truncate ${ok ? "text-muted-foreground" : ""}`}>{label}</span>
     </button>
   );
 }
 
 function DeptSection({ title, children, fill = false, alert = false }: { title: string; children: React.ReactNode; fill?: boolean; alert?: boolean }) {
   return (
-    <section className={`min-h-0 rounded-lg ${alert ? "ring-2 ring-amber-300 dark:ring-amber-600" : theme.cardSection} ${fill ? "flex flex-col overflow-hidden" : ""}`}>
+    <section className={`min-h-0 rounded-lg ${alert ? "ring-2 ring-warning ring-warning" : theme.cardSection} ${fill ? "flex flex-col overflow-hidden" : ""}`}>
       <div className={`shrink-0 px-2.5 py-1.5 ${theme.sectionDivider}`}>
         <h3 className={`text-[11px] font-semibold ${theme.textSecondary}`}>{title}</h3>
       </div>
@@ -120,12 +120,12 @@ function DeptSection({ title, children, fill = false, alert = false }: { title: 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className={`mb-0.5 block text-[10px] font-medium ${theme.textSecondary}`}>
-      {children}{required && <span className="ml-0.5 text-red-500">*</span>}
+      {children}{required && <span className="ml-0.5 text-danger">*</span>}
     </label>
   );
 }
 
-export function DepartmentsPage() {
+export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
   const { search, statusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const navigate = useNavigate();
@@ -321,13 +321,13 @@ export function DepartmentsPage() {
   const renderDetail = () => {
     if (mode !== "create" && !sel) {
       return (
-        <div className="flex flex-1 items-center justify-center bg-white dark:bg-slate-900 h-full">
+        <div className="flex flex-1 items-center justify-center bg-card bg-muted h-full">
           <div className="text-center max-w-xs">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 dark:bg-violet-500/10">
-              <Layers className="h-5 w-5 text-violet-400 dark:text-violet-300 stroke-current" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-entity-department-bg">
+              <Layers className="h-5 w-5 text-entity-department stroke-current" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Department Details</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">Select a department or create a new one to manage its lines, staff, and resources.</p>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-1">Department Details</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">Select a department or create a new one to manage its lines, staff, and resources.</p>
           </div>
         </div>
       );
@@ -404,17 +404,17 @@ export function DepartmentsPage() {
     const completeStep = (stepLabel: string) => { showSystemMessage(`Done: ${stepLabel}`, "success"); };
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+      <div className="flex-1 flex flex-col overflow-hidden bg-card bg-muted">
         {/* ── Header: Action Control Panel ── */}
         <div className={`shrink-0 px-4 pt-3 pb-2 ${theme.sectionDivider}`}>
           <div className="flex items-stretch gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-violet-400 to-violet-500 text-white shadow-sm">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center text-accent">
               <Layers className="h-4 w-4 stroke-current" />
             </div>
             <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="min-w-0 justify-self-start">
                 <div className="flex min-w-0 items-center gap-2">
-                  <h2 className="truncate text-[16px] font-bold leading-5 text-slate-900 dark:text-slate-100">{title}</h2>
+                  <h2 className="truncate text-[16px] font-bold leading-5 text-muted-foreground">{title}</h2>
                   {code && <span className={`shrink-0 rounded px-1 py-px font-mono text-[9px] ${theme.codeBadge}`}>{code}</span>}
                   {plantLabel ? (
                     <span className={`shrink-0 rounded px-1 py-px text-[9px] font-medium ${theme.badgeNeutral}`}>{plantLabel}</span>
@@ -469,7 +469,7 @@ export function DepartmentsPage() {
 
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           <div className="flex-1 overflow-hidden p-2 min-h-0">
-            {mutationError && isForm && <p className="mb-2 text-[10px] font-medium text-red-600 dark:text-red-400">{mutationError}</p>}
+            {mutationError && isForm && <p className="mb-2 text-[10px] font-medium text-danger">{mutationError}</p>}
             <div className="grid h-full min-h-0 grid-cols-2 gap-2">
               {/* LEFT */}
               <div className="flex min-h-0 flex-col gap-2 pr-1">
@@ -484,19 +484,19 @@ export function DepartmentsPage() {
                             <option value="">Select plant</option>
                             {plants.filter((p) => p.status === "ACTIVE" || p.status === "active").map((plant) => <option key={plant.id} value={plant.id}>{plant.name} ({plant.code})</option>)}
                           </select>
-                          {(errors.plantId || validationErrors.plantId) && <p className="text-[9px] text-red-500 mt-0.5">{errors.plantId || validationErrors.plantId}</p>}
+                          {(errors.plantId || validationErrors.plantId) && <p className="text-[9px] text-danger mt-0.5">{errors.plantId || validationErrors.plantId}</p>}
                           {plantLocked && <p className={`mt-0.5 text-[9px] ${theme.textMuted}`}>Plant is locked because this department has linked production lines/resource groups/resources.</p>}
                         </div>
                         <div>
                           <FieldLabel required>Name</FieldLabel>
                           <input ref={(element) => { if (form.plantId && !form.name) firstMissingRef.current = element; }} type="text" value={g("name") as string} onChange={(e) => { s("name", e.target.value); if (e.target.value && !form.code) window.setTimeout(() => firstMissingRef.current?.focus(), 0); }} placeholder="e.g. Assembly, Final Welding" className={iCls} />
-                          {(errors.name || validationErrors.name) && <p className="text-[9px] text-red-500 mt-0.5">{errors.name || validationErrors.name}</p>}
+                          {(errors.name || validationErrors.name) && <p className="text-[9px] text-danger mt-0.5">{errors.name || validationErrors.name}</p>}
                         </div>
                         <div className="grid grid-cols-2 gap-1.5">
                           <div>
                             <FieldLabel required>Code</FieldLabel>
                             <input ref={(element) => { if (form.plantId && form.name && !form.code) firstMissingRef.current = element; }} type="text" value={g("code") as string} onChange={(e) => { s("code", e.target.value); }} placeholder="e.g. ASSY, WELD" className={iCls} />
-                            {(errors.code || validationErrors.code) && <p className="text-[9px] text-red-500 mt-0.5">{errors.code || validationErrors.code}</p>}
+                            {(errors.code || validationErrors.code) && <p className="text-[9px] text-danger mt-0.5">{errors.code || validationErrors.code}</p>}
                           </div>
                           <div>
                             <FieldLabel required>Status</FieldLabel>
@@ -504,7 +504,7 @@ export function DepartmentsPage() {
                               <option value="">Select status</option>
                               {statusValues.filter((value) => value.isActive).map((value) => <option key={value.id} value={value.id}>{value.name}</option>)}
                             </select>
-                            {(errors.statusId || validationErrors.statusId) && <p className="text-[9px] text-red-500 mt-0.5">{errors.statusId || validationErrors.statusId}</p>}
+                            {(errors.statusId || validationErrors.statusId) && <p className="text-[9px] text-danger mt-0.5">{errors.statusId || validationErrors.statusId}</p>}
                           </div>
                         </div>
                         <div>
@@ -513,7 +513,7 @@ export function DepartmentsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+                      <div className="bg-muted rounded-lg p-2">
                         <div className="space-y-px">
                           <InlineRow label="Name" value={d.name} />
                           <InlineRow label="Code" value={d.code} />
@@ -570,11 +570,11 @@ export function DepartmentsPage() {
                               <th className="w-16 px-2 py-1 text-right font-medium">Action</th>
                             </tr>
                           </thead>
-                          <tbody className="block max-h-56 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                          <tbody className="block max-h-56 overflow-y-auto">
                             {lineRows.map((line) => (
                                   <tr key={line.id} className="table w-full table-fixed">
                                     {isForm && <td className="px-2 py-1"><input type="checkbox" aria-label={`Link ${line.name}`} checked={line.linked} disabled={!selectedPlantId} onChange={() => toggleLineLink(line.id)} className="h-3 w-3 disabled:opacity-30" /></td>}
-                                    <td className="truncate px-2 py-1 font-medium text-slate-700 dark:text-slate-200">{line.name} <span className={theme.textMuted}>{line.code}</span></td>
+                                    <td className="truncate px-2 py-1 font-medium text-muted-foreground">{line.name} <span className={theme.textMuted}>{line.code}</span></td>
                                     <td className={`truncate px-2 py-1 ${theme.textSecondary}`}>{line.plantName || "-"}</td>
                                     <td className="w-18 px-2 py-1"><Badge label={line.linked ? (line.status || "active").toLowerCase() : "unlinked"} variant={line.linked ? ((line.status || "").toLowerCase() === "inactive" ? "inactive" : "active") : "inactive"} /></td>
                                     <td className="w-16 px-2 py-1 text-right"><button type="button" disabled={!selectedPlantId} onClick={() => navigateWithDirtyCheck(`/system/production-structure/components/line?productionLineId=${line.id}`)} className={`${theme.link} disabled:opacity-40`}>Open</button></td>
@@ -584,7 +584,7 @@ export function DepartmentsPage() {
                         </table>
                       </div>
                     )}
-                    {errors.productionLineIds && <p className="text-[9px] text-red-500 mt-0.5">{errors.productionLineIds}</p>}
+                    {errors.productionLineIds && <p className="text-[9px] text-danger mt-0.5">{errors.productionLineIds}</p>}
                   </DeptSection>
                 </div>
               </div>
@@ -596,10 +596,10 @@ export function DepartmentsPage() {
                   <DeptSection title={`Setup Flow (Step ${currentStep} of ${totalSteps})`}>
                     <div className="mb-2">
                       <div className="flex items-center gap-2 mb-1">
-                        <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-violet-500 dark:bg-violet-400 rounded-full transition-all duration-500" style={{ width: `${readinessPct}%` }} />
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-info rounded-full transition-all duration-500" style={{ width: `${readinessPct}%` }} />
                         </div>
-                        <span className={`text-[10px] font-semibold ${readinessPct >= 100 ? "text-emerald-600" : "text-violet-600 dark:text-violet-400"}`}>{readinessPct}%</span>
+                        <span className={`text-[10px] font-semibold ${readinessPct >= 100 ? "text-success" : "text-info"}`}>{readinessPct}%</span>
                       </div>
                     </div>
                     <div className="flex flex-col gap-1">
@@ -634,7 +634,7 @@ export function DepartmentsPage() {
                               <option value="">Select manager</option>
                               {staffOptions.map((user) => <option key={user.id} value={user.id}>{user.name}{user.role ? ` (${user.role})` : ""}</option>)}
                             </select>
-                            {errors.manager && <p className="text-[9px] text-red-500 mt-0.5">{errors.manager}</p>}
+                            {errors.manager && <p className="text-[9px] text-danger mt-0.5">{errors.manager}</p>}
                           </div>
                           <div>
                             <FieldLabel>Supervisor</FieldLabel>
@@ -642,7 +642,7 @@ export function DepartmentsPage() {
                               <option value="">Select supervisor</option>
                               {staffOptions.map((user) => <option key={user.id} value={user.id}>{user.name}{user.role ? ` (${user.role})` : ""}</option>)}
                             </select>
-                            {errors.supervisor && <p className="text-[9px] text-red-500 mt-0.5">{errors.supervisor}</p>}
+                            {errors.supervisor && <p className="text-[9px] text-danger mt-0.5">{errors.supervisor}</p>}
                           </div>
                         </div>
                         <div>
@@ -668,28 +668,28 @@ export function DepartmentsPage() {
                 <div className="shrink-0">
                   <DeptSection title={`Resource Groups (${groupCount})`}>
                     {!groupCount ? (
-                      <div className="flex min-h-14 items-center justify-between border border-dashed border-slate-200 bg-slate-50/30 px-2.5 py-2 dark:border-slate-700 dark:bg-slate-800/20">
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400">No resource groups linked.</p>
-                        <button type="button" disabled={!canAddStructure} onClick={() => navigateWithDirtyCheck(`/system/production-structure/components/rg?departmentId=${d.id}`)} className={`inline-flex items-center gap-1 bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-500 disabled:opacity-40 dark:bg-slate-800 dark:text-slate-400`}><Plus className="h-2.5 w-2.5 stroke-current" /> Add Resource Group</button>
+                      <div className="flex min-h-14 items-center justify-between border border-dashed border-border bg-muted px-2.5 py-2 border-border bg-muted">
+                        <p className="text-[10px] text-muted-foreground">No resource groups linked.</p>
+                        <button type="button" disabled={!canAddStructure} onClick={() => navigateWithDirtyCheck(`/system/production-structure/components/rg?departmentId=${d.id}`)} className={`inline-flex items-center gap-1 bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground disabled:opacity-40 bg-muted text-muted-foreground`}><Plus className="h-2.5 w-2.5 stroke-current" /> Add Resource Group</button>
                       </div>
                     ) : (
-                      <div className="max-h-52 overflow-auto border border-slate-200 dark:border-slate-700">
+                      <div className="max-h-52 overflow-auto border border-border">
                         <table className="w-full text-[11px]">
-                          <thead><tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                          <thead><tr className="bg-muted text-muted-foreground">
                             <th className="text-left px-2 py-1 font-medium">Resource Group</th>
                             <th className="text-left px-2 py-1 font-medium">Code</th>
                             <th className="text-left px-2 py-1 font-medium">Resources</th>
                             <th className="text-left px-2 py-1 font-medium">Status</th>
                             <th className="text-right px-2 py-1 font-medium w-14">Action</th>
                           </tr></thead>
-                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          <tbody>
                             {resourceGroupRows.map((group) => (
                               <tr key={group.id}>
-                                <td className="px-2 py-1 font-medium text-slate-700 dark:text-slate-200">{group.name}</td>
-                                <td className="px-2 py-1 text-slate-400">{group.code || "-"}</td>
-                                <td className="px-2 py-1 text-slate-500">{group.resourceCount}</td>
+                                <td className="px-2 py-1 font-medium text-muted-foreground">{group.name}</td>
+                                <td className="px-2 py-1 text-muted-foreground">{group.code || "-"}</td>
+                                <td className="px-2 py-1 text-muted-foreground">{group.resourceCount}</td>
                                 <td className="px-2 py-1"><Badge label={group.status.toLowerCase()} variant={group.status.toLowerCase() === "active" ? "active" : "inactive"} /></td>
-                                <td className="px-2 py-1 text-right"><button type="button" onClick={() => navigateWithDirtyCheck(`/system/production-structure/components/rg?departmentId=${d.id}&resourceGroupId=${group.id}`)} className="text-violet-600 dark:text-violet-400"><ExternalLink className="h-3 w-3 stroke-current" /></button></td>
+                                <td className="px-2 py-1 text-right"><button type="button" onClick={() => navigateWithDirtyCheck(`/system/production-structure/components/rg?departmentId=${d.id}&resourceGroupId=${group.id}`)} className="text-info"><ExternalLink className="h-3 w-3 stroke-current" /></button></td>
                               </tr>
                             ))}
                           </tbody>
@@ -715,29 +715,30 @@ export function DepartmentsPage() {
         <ConfirmDialog open={confirmCancel} onClose={() => setConfirmCancel(false)} title="Discard changes?" message="You have unsaved department changes. Discard them?" onConfirm={discardChanges} />
       )}
       <EntityWorkspacePage
+        hideList={embeddedInFlow}
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 h-9 border-b border-slate-200 dark:border-slate-700 flex items-center px-3 bg-white dark:bg-slate-900">
-              <Search className="h-3 w-3 text-slate-400 stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Departments</span>
+            <div className="shrink-0 border-b border-border flex items-center p-3 bg-muted">
+              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2 shrink-0" />
+              <span className="text-[11px] font-medium text-muted-foreground">Departments</span>
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
-                className="ml-2 h-6 min-w-0 max-w-32 rounded border border-slate-200 bg-white px-1 text-[10px] text-slate-500 outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                className="ml-2 h-6 min-w-0 max-w-32 rounded border border-border bg-card px-1 text-[10px] text-muted-foreground outline-none border-border bg-muted text-muted-foreground">
                 <option value="all">All Plants</option>
                 {plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
               </select>
-              <span className="ml-auto text-[9px] text-slate-400 dark:text-slate-500 font-mono">{filtered.length}</span>
+              <span className="ml-auto text-[9px] text-muted-foreground font-mono">{filtered.length}</span>
             </div>
-            <div className="flex-1 overflow-y-auto bg-white pl-2 dark:bg-slate-900">
+            <div className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
               {loading && departments.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-slate-400"><div className="h-2 w-2 rounded-full bg-violet-400 animate-bounce mr-2" />Loading...</div>
+                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-info animate-bounce mr-2" />Loading...</div>
               ) : paginated.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <Layers className="h-4 w-4 text-slate-300 dark:text-slate-600 mb-1.5 stroke-current" />
-                  <p className="text-xs text-slate-400 dark:text-slate-500">No departments</p>
+                  <Layers className="h-4 w-4 text-muted-foreground mb-1.5 stroke-current" />
+                  <p className="text-xs text-muted-foreground">No departments</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                <div>
                   {paginated.map((d: DepartmentNode) => {
                     const deptOwnerOk = !!d.managerRef || !!d.supervisor;
                     const deptLinesOk = (d.productionLineCount ?? 0) > 0;
@@ -761,19 +762,19 @@ export function DepartmentsPage() {
                         selected={selectedId === d.id}
                         status={d.status}
                         onClick={() => selectDepartment(d.id)}
-                        accentColor="violet"
+                        entityType="department"
                         issueTags={issues.length > 0 ? (
-                          <span className="ml-auto inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-amber-500 dark:text-amber-400" title={issues.join(", ")}>
+                          <span className="ml-auto inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-warning" title={issues.join(", ")}>
                             <AlertTriangle className="h-3.5 w-3.5 stroke-current" />
                           </span>
-                        ) : <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" title="All configured" />}
+                        ) : <span className="inline-block h-1.5 w-1.5 rounded-full bg-success shrink-0" title="All configured" />}
                       />
                     );
                   })}
                 </div>
               )}
             </div>
-            <div className="shrink-0 px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div className="shrink-0 flex h-12 items-center border-t border-border bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

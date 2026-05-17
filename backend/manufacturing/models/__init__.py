@@ -9,14 +9,21 @@ from .resource import Resource
 from .scheduling import Schedule, Shift, ScheduleAssignment
 from .reference import ReferenceCategory, ReferenceValue, ResourceType, VisualIdentity
 from .routing import (
-    ProductModel, ProcessFlow, ProcessStep, Routing, RoutingStep, RoutingStatus, ScheduleSource,
-    Material, MaterialState, BOM, BOMItem, InventoryLocation, InventoryLocationType,
+    ProductFamily, ProductModel, ProductVariant, PartNumber,
+    ProcessFlow, ProcessStep, Routing, RoutingStep, RoutingStatus, ScheduleSource,
+    Material, MaterialState, BOM, BOMItem, InventoryLocation, InventoryLocationType, MaterialBin, MaterialBinType,
     OperationInput, OperationOutput, MaterialMovementRule, MaterialMovementRuleType,
     MaterialMovement, MaterialMovementType,
 )
 from .capacity import (
     CapacityPlan, CapacityPlanInput, CapacityPlanResult, CapacityScenario,
     CapacityPlanStatus, FeasibilityStatus,
+)
+from .capacity import (
+    CapacityConstraintReason, CapacityMode, CapacitySnapshotStatus, CapacitySnapshotType, ScheduleScope,
+    WorkSchedule, WorkShift,
+    CapacityProfile, CapacitySnapshot, CapacityRecalculationJob,
+    LaborRequirement, OperatorAssignment,
 )
 from .profile import Profile
 from .role import UserRole
@@ -45,6 +52,9 @@ __all__ = [
     "ResourceType",
     "VisualIdentity",
     "ProductModel",
+    "ProductFamily",
+    "ProductVariant",
+    "PartNumber",
     "ProcessFlow",
     "ProcessStep",
     "Routing",
@@ -57,6 +67,8 @@ __all__ = [
     "BOMItem",
     "InventoryLocation",
     "InventoryLocationType",
+    "MaterialBin",
+    "MaterialBinType",
     "OperationInput",
     "OperationOutput",
     "MaterialMovementRule",
@@ -69,6 +81,18 @@ __all__ = [
     "CapacityScenario",
     "CapacityPlanStatus",
     "FeasibilityStatus",
+    "CapacityConstraintReason",
+    "CapacityMode",
+    "CapacitySnapshotStatus",
+    "CapacitySnapshotType",
+    "ScheduleScope",
+    "WorkSchedule",
+    "WorkShift",
+    "CapacityProfile",
+    "CapacitySnapshot",
+    "CapacityRecalculationJob",
+    "LaborRequirement",
+    "OperatorAssignment",
     "Profile",
     "UserRole",
     # Legacy

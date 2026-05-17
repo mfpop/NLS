@@ -127,9 +127,9 @@ function TreeNodeRow({ node, nodeKey, depth = 0, selectedKey, onSelect }: {
   const isAncestor = open && hasChildren && !isSelected;
   const indent = `${12 + depth * 20}px`;
   const rowClass = isSelected
-    ? "bg-white dark:bg-slate-900 border border-emerald-400 border-l-4 border-l-emerald-500 ring-1 ring-emerald-200 shadow-sm relative z-10"
+    ? "bg-card bg-muted border border-success border-l-4 border-l-success ring-1 ring-success shadow-sm relative z-10"
     : isAncestor
-      ? "bg-emerald-50/10 border-l border-emerald-200/20 shadow-none ring-0"
+      ? "bg-success border-l border-success shadow-none ring-0"
       : `${theme.cardHover} border-l border-transparent shadow-none ring-0`;
 
   return (
@@ -155,7 +155,7 @@ function TreeNodeRow({ node, nodeKey, depth = 0, selectedKey, onSelect }: {
           <span className={`text-sm truncate ${depth === 0 ? "font-semibold" : "font-medium"} ${theme.textPrimary}`}>{node.label}</span>
           {node.code && <span className={`font-mono text-[10px] shrink-0 ${theme.textMuted}`}>{node.code}</span>}
           {node.status && (
-            <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${node.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
+            <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${node.status === "active" ? "bg-success" : "bg-muted"}`} />
           )}
           {(node.childCount ?? 0) > 0 && (
             <span className={`ml-auto text-[10px] font-medium shrink-0 ${theme.textMuted}`}>· {node.childCount}</span>
@@ -237,7 +237,7 @@ export function StructurePage() {
       {/* ── 2-COLUMN BODY ── */}
       <div className="flex-1 grid overflow-hidden p-0" style={{ gridTemplateColumns: "1fr 340px" }}>
         {/* ═══ LEFT COLUMN: Tree Card ═══ */}
-        <div className={`flex flex-col overflow-hidden border-r border-slate-200 dark:border-slate-700 ${theme.page}`}>
+        <div className={`flex flex-col overflow-hidden border-r border-border ${theme.page}`}>
           <div className={`flex items-center justify-between border-b px-4 py-2.5 shrink-0 ${theme.subHeader}`}>
             <h2 className={`text-[11px] font-bold uppercase tracking-wide ${theme.textPrimary}`}>
               Production Structure
@@ -320,12 +320,12 @@ export function StructurePage() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 text-xs text-slate-400 dark:text-slate-500">
+            <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 text-xs text-muted-foreground">
               <Pointer className="h-6 w-6 stroke-current" />
               <span>Select a node to view details</span>
             </div>
           )}
-          <div className="flex items-center shrink-0 h-15 border-t border-slate-200 dark:border-slate-700 px-3">
+          <div className="flex items-center shrink-0 h-15 border-t border-border px-3">
             <span className={`text-[10px] ${theme.textMuted}`}>{selectedNode ? `Node detail` : "No selection"}</span>
           </div>
         </div>

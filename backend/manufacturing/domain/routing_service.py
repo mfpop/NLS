@@ -7,7 +7,8 @@ from manufacturing.models import (
     Routing, RoutingStep, RoutingStatus,
     ProductionLine, Department, ResourceGroup, Resource,
     ReferenceValue, ProductModel, ProcessFlow,
-    BOM, InventoryLocation, Material, OperationInput, OperationOutput, MaterialMovementRule,
+    BOM, InventoryLocation, Material, MaterialBin, OperationInput, OperationOutput, MaterialMovementRule,
+    PartNumber, ProductFamily,
     MaterialState, MaterialMovementRuleType,
 )
 
@@ -44,15 +45,33 @@ def _resolve_product_model(ref_id: Optional[str]) -> Optional[ProductModel]:
     except ReferenceValue.DoesNotExist:
         raise RoutingValidationError(f"Product model with id {ref_id} not found", "productModelId")
 
+    family = None
+    family_code = (ref.metadata or {}).get("family") if isinstance(ref.metadata, dict) else None
+    if family_code:
+        family_ref = ReferenceValue.objects.filter(category__code="production_family", code=family_code).first()
+        family, _ = ProductFamily.objects.get_or_create(
+            code=family_ref.code if family_ref else family_code,
+            defaults={
+                "name": family_ref.name if family_ref else family_code,
+                "description": family_ref.description if family_ref else "",
+                "status": "ACTIVE" if not family_ref or family_ref.is_active else "INACTIVE",
+                "is_active": True if not family_ref else family_ref.is_active,
+            },
+        )
+
     model, _ = ProductModel.objects.get_or_create(
         code=ref.code,
         defaults={
+            "family": family,
             "name": ref.name,
             "description": ref.description or "",
             "status": "ACTIVE" if ref.is_active else "INACTIVE",
         },
     )
     updated = False
+    if family and model.family_id != family.id:
+        model.family = family
+        updated = True
     if model.name != ref.name:
         model.name = ref.name
         updated = True
@@ -62,6 +81,15 @@ def _resolve_product_model(ref_id: Optional[str]) -> Optional[ProductModel]:
     if updated:
         model.save()
     return model
+
+
+def _resolve_part_number(part_id: Optional[str]) -> Optional[PartNumber]:
+    if not part_id:
+        return None
+    try:
+        return PartNumber.objects.select_related("family", "model", "variant").get(id=part_id)
+    except PartNumber.DoesNotExist:
+        raise RoutingValidationError(f"Part number with id {part_id} not found", "partNumberId")
 
 
 def _resolve_optional_process_flow(ref_id: Optional[str]) -> Optional[ProcessFlow]:
@@ -85,25 +113,28 @@ def _parse_date(val: Optional[str]) -> Optional[date]:
 class RoutingService:
     @staticmethod
     def _routing_scope_filter(routing: Routing) -> dict:
+        if routing.part_number_id:
+            return {
+                "production_line_id": routing.production_line_id,
+                "part_number_id": routing.part_number_id,
+            }
         return {
             "production_line_id": routing.production_line_id,
+            "part_number__isnull": True,
             "product_model_id": routing.product_model_id,
         }
 
     @staticmethod
-    def _lock_routing_siblings(production_line_id: str, product_model_id):
-        return list(
-            Routing.objects.select_for_update().filter(
-                production_line_id=production_line_id,
-                product_model_id=product_model_id,
-            )
-        )
+    def _lock_routing_siblings(production_line_id: str, product_model_id, part_number_id=None):
+        qs = Routing.objects.select_for_update().filter(production_line_id=production_line_id)
+        qs = qs.filter(part_number_id=part_number_id) if part_number_id else qs.filter(part_number__isnull=True, product_model_id=product_model_id)
+        return list(qs)
 
     @staticmethod
     def _enforce_single_active_routing(routing: Routing, *, deactivate_siblings: bool = True) -> None:
         if routing.status != RoutingStatus.ACTIVE:
             return
-        RoutingService._lock_routing_siblings(routing.production_line_id, routing.product_model_id)
+        RoutingService._lock_routing_siblings(routing.production_line_id, routing.product_model_id, routing.part_number_id)
         siblings = Routing.objects.filter(**RoutingService._routing_scope_filter(routing)).exclude(id=routing.id)
         active_siblings = siblings.filter(status=RoutingStatus.ACTIVE)
         if deactivate_siblings:
@@ -117,17 +148,20 @@ class RoutingService:
 
     @staticmethod
     def _bom_scope_filter(bom: BOM) -> dict:
+        if bom.part_number_id:
+            return {"part_number_id": bom.part_number_id}
         return {"product_model_id": bom.product_model_id}
 
     @staticmethod
-    def _lock_bom_siblings(product_model_id: str):
-        return list(BOM.objects.select_for_update().filter(product_model_id=product_model_id))
+    def _lock_bom_siblings(product_model_id: str, part_number_id=None):
+        qs = BOM.objects.select_for_update()
+        return list(qs.filter(part_number_id=part_number_id) if part_number_id else qs.filter(part_number__isnull=True, product_model_id=product_model_id))
 
     @staticmethod
     def _enforce_single_active_bom(bom: BOM, *, deactivate_siblings: bool = True) -> None:
         if bom.status != RoutingStatus.ACTIVE:
             return
-        RoutingService._lock_bom_siblings(bom.product_model_id)
+        RoutingService._lock_bom_siblings(bom.product_model_id, bom.part_number_id)
         siblings = BOM.objects.filter(**RoutingService._bom_scope_filter(bom)).exclude(id=bom.id)
         active_siblings = siblings.filter(status=RoutingStatus.ACTIVE)
         if deactivate_siblings:
@@ -142,12 +176,14 @@ class RoutingService:
     @staticmethod
     @transaction.atomic
     def create_bom(input_data: dict) -> BOM:
-        product_model = _resolve_product_model(input_data.get("product_model_id"))
+        part_number = _resolve_part_number(input_data.get("part_number_id"))
+        product_model = part_number.model if part_number else _resolve_product_model(input_data.get("product_model_id"))
         if product_model is None:
             raise RoutingValidationError("Product model is required", "productModelId")
-        RoutingService._lock_bom_siblings(str(product_model.id))
+        RoutingService._lock_bom_siblings(str(product_model.id), part_number.id if part_number else None)
         bom = BOM(
             product_model=product_model,
+            part_number=part_number,
             version=input_data.get("version", "1.0"),
             status=input_data.get("status", RoutingStatus.DRAFT),
             notes=input_data.get("notes", ""),
@@ -168,6 +204,10 @@ class RoutingService:
             if product_model is None:
                 raise RoutingValidationError("Product model is required", "productModelId")
             bom.product_model = product_model
+        if "part_number_id" in input_data:
+            bom.part_number = _resolve_part_number(input_data.get("part_number_id"))
+            if bom.part_number_id:
+                bom.product_model = bom.part_number.model
         if "version" in input_data:
             bom.version = input_data["version"]
         if "status" in input_data:
@@ -205,14 +245,16 @@ class RoutingService:
 
         pf_id = input_data.get("product_family_id")
         pf = _resolve_ref(ReferenceValue, pf_id) if pf_id else None
+        part_number = _resolve_part_number(input_data.get("part_number_id"))
         pm_id = input_data.get("product_model_id")
-        pm = _resolve_product_model(pm_id)
-        RoutingService._lock_routing_siblings(pl_id, pm.id if pm else None)
+        pm = part_number.model if part_number else _resolve_product_model(pm_id)
+        RoutingService._lock_routing_siblings(pl_id, pm.id if pm else None, part_number.id if part_number else None)
 
         routing = Routing(
             production_line_id=pl_id,
             product_family=pf,
             product_model=pm,
+            part_number=part_number,
             version=input_data.get("version", "1.0"),
             status=input_data.get("status", RoutingStatus.DRAFT),
             effective_from=_parse_date(input_data.get("effective_from")),
@@ -244,6 +286,10 @@ class RoutingService:
         if "product_model_id" in input_data:
             pm_id = input_data["product_model_id"]
             routing.product_model = _resolve_product_model(pm_id)
+        if "part_number_id" in input_data:
+            routing.part_number = _resolve_part_number(input_data.get("part_number_id"))
+            if routing.part_number_id:
+                routing.product_model = routing.part_number.model
         if "version" in input_data:
             routing.version = input_data["version"]
         if "effective_from" in input_data:
@@ -458,9 +504,10 @@ class RoutingService:
             "production_line", "product_model", "product_family"
         ).prefetch_related(
             "steps__department", "steps__resource_group", "steps__resource", "steps__standard_work",
-            "steps__material_inputs__material", "steps__material_inputs__source_location",
-            "steps__material_outputs__material", "steps__material_outputs__target_location",
+            "steps__material_inputs__material", "steps__material_inputs__source_location", "steps__material_inputs__source_bin",
+            "steps__material_outputs__material", "steps__material_outputs__target_location", "steps__material_outputs__destination_bin",
             "steps__material_movement_rule__source_location", "steps__material_movement_rule__destination_location",
+            "steps__material_movement_rule__source_bin", "steps__material_movement_rule__destination_bin",
         ).get(id=routing.id)
 
     @staticmethod
@@ -479,40 +526,62 @@ class RoutingService:
                 raise RoutingValidationError("Inventory location must belong to the routing plant", field)
             return location
 
+        def resolve_bin(bin_id: Optional[str], field: str, allowed_types: set[str]) -> MaterialBin:
+            bin_obj = _resolve_ref(MaterialBin, bin_id)
+            if not bin_obj.is_active:
+                raise RoutingValidationError("Material bin is inactive", field)
+            if bin_obj.plant_id != step.routing.production_line.plant_id:
+                raise RoutingValidationError("Material bin must belong to the routing plant", field)
+            if step.resource_group_id and bin_obj.resource_group_id and bin_obj.resource_group_id != step.resource_group_id:
+                raise RoutingValidationError("Material bin must belong to the step resource group", field)
+            if bin_obj.bin_type not in allowed_types:
+                raise RoutingValidationError("Material bin type is not valid for this movement", field)
+            return bin_obj
+
         OperationInput.objects.filter(routing_step=step).delete()
         for item in step_data.get("material_inputs") or []:
             material = resolve_material(item.get("material_id"))
-            location = resolve_location(item.get("location_id"), "sourceLocationId")
+            location = resolve_location(item.get("location_id"), "sourceLocationId") if item.get("location_id") else None
+            source_bin = resolve_bin(item.get("bin_id"), "sourceBinId", {"RM", "INPUT", "WIP", "SUPERMARKET", "FIFO"})
             OperationInput.objects.create(
                 routing_step=step,
                 material=material,
                 quantity=item.get("quantity") or 1,
                 material_state=item.get("material_state") or MaterialState.RAW_MATERIAL,
                 source_location=location,
+                source_bin=source_bin,
             )
 
         OperationOutput.objects.filter(routing_step=step).delete()
         for item in step_data.get("material_outputs") or []:
             material = resolve_material(item.get("material_id"))
-            location = resolve_location(item.get("location_id"), "destinationLocationId")
+            location = resolve_location(item.get("location_id"), "destinationLocationId") if item.get("location_id") else None
+            destination_bin = resolve_bin(item.get("bin_id"), "destinationBinId", {"OUTPUT", "WIP", "SUPERMARKET", "FIFO", "FG", "SCRAP", "QUARANTINE"})
             OperationOutput.objects.create(
                 routing_step=step,
                 material=material,
                 quantity=item.get("quantity") or 1,
                 material_state=item.get("material_state") or MaterialState.WIP,
                 target_location=location,
+                destination_bin=destination_bin,
             )
 
         rule_data = step_data.get("movement_rule") or {}
         if rule_data:
-            source_location = resolve_location(rule_data.get("source_location_id"), "sourceLocationId")
-            destination_location = resolve_location(rule_data.get("destination_location_id"), "destinationLocationId")
+            source_location = resolve_location(rule_data.get("source_location_id"), "sourceLocationId") if rule_data.get("source_location_id") else None
+            destination_location = resolve_location(rule_data.get("destination_location_id"), "destinationLocationId") if rule_data.get("destination_location_id") else None
+            source_bin = resolve_bin(rule_data.get("source_bin_id"), "sourceBinId", {"RM", "INPUT", "WIP", "SUPERMARKET", "FIFO"})
+            destination_bin = resolve_bin(rule_data.get("destination_bin_id"), "destinationBinId", {"OUTPUT", "WIP", "SUPERMARKET", "FIFO", "FG", "SCRAP", "QUARANTINE"})
+            if source_bin.plant_id != destination_bin.plant_id:
+                raise RoutingValidationError("Cross-plant material movement is not allowed", "destinationBinId")
             MaterialMovementRule.objects.update_or_create(
                 routing_step=step,
                 defaults={
                     "rule_type": rule_data.get("rule_type") or MaterialMovementRuleType.NEXT_OPERATION,
                     "source_location": source_location,
                     "destination_location": destination_location,
+                    "source_bin": source_bin,
+                    "destination_bin": destination_bin,
                     "notes": rule_data.get("notes") or "",
                 },
             )
@@ -598,8 +667,8 @@ class RoutingService:
                 errors.append(_error(f"step_{s.sequence}", "INACTIVE_RESOURCE_GROUP", f"Step {s.sequence} uses inactive resource group"))
             if s.resource and s.resource.status != "ACTIVE":
                 errors.append(_error(f"step_{s.sequence}", "INACTIVE_RESOURCE", f"Step {s.sequence} uses inactive resource"))
-            inputs = list(s.material_inputs.select_related("material", "source_location"))
-            outputs = list(s.material_outputs.select_related("material", "target_location"))
+            inputs = list(s.material_inputs.select_related("material", "source_location", "source_bin"))
+            outputs = list(s.material_outputs.select_related("material", "target_location", "destination_bin"))
             if not inputs:
                 errors.append(_error(f"step_{s.sequence}", "MISSING_INPUT_MATERIAL", f"Step {s.sequence} has no input material"))
             if not outputs:
@@ -607,15 +676,31 @@ class RoutingService:
             for item in inputs:
                 if item.material.status != "ACTIVE":
                     errors.append(_error(f"step_{s.sequence}", "INACTIVE_MATERIAL", f"Step {s.sequence} input material is inactive"))
-                if not item.source_location or item.source_location.status != "ACTIVE":
-                    errors.append(_error(f"step_{s.sequence}", "MISSING_SOURCE_LOCATION", f"Step {s.sequence} has missing/inactive source location"))
+                if not item.source_bin or not item.source_bin.is_active:
+                    errors.append(_error(f"step_{s.sequence}", "MISSING_SOURCE_BIN", f"Step {s.sequence} has missing/inactive source bin"))
+                elif item.source_bin.plant_id != routing.production_line.plant_id:
+                    errors.append(_error(f"step_{s.sequence}", "CROSS_PLANT_SOURCE_BIN", f"Step {s.sequence} source bin belongs to another plant"))
+                elif s.resource_group_id and item.source_bin.resource_group_id and item.source_bin.resource_group_id != s.resource_group_id:
+                    errors.append(_error(f"step_{s.sequence}", "INVALID_SOURCE_BIN", f"Step {s.sequence} source bin belongs to another resource group"))
             for item in outputs:
                 if item.material.status != "ACTIVE":
                     errors.append(_error(f"step_{s.sequence}", "INACTIVE_MATERIAL", f"Step {s.sequence} output material is inactive"))
                 if not item.material_state:
                     errors.append(_error(f"step_{s.sequence}", "MISSING_OUTPUT_STATE", f"Step {s.sequence} has missing output material state"))
-                if not item.target_location or item.target_location.status != "ACTIVE":
-                    errors.append(_error(f"step_{s.sequence}", "MISSING_DESTINATION_LOCATION", f"Step {s.sequence} has missing/inactive destination location"))
+                if not item.destination_bin or not item.destination_bin.is_active:
+                    errors.append(_error(f"step_{s.sequence}", "MISSING_DESTINATION_BIN", f"Step {s.sequence} has missing/inactive destination bin"))
+                elif item.destination_bin.plant_id != routing.production_line.plant_id:
+                    errors.append(_error(f"step_{s.sequence}", "CROSS_PLANT_DESTINATION_BIN", f"Step {s.sequence} destination bin belongs to another plant"))
+                elif s.resource_group_id and item.destination_bin.resource_group_id and item.destination_bin.resource_group_id != s.resource_group_id:
+                    errors.append(_error(f"step_{s.sequence}", "INVALID_DESTINATION_BIN", f"Step {s.sequence} destination bin belongs to another resource group"))
+            try:
+                rule = s.material_movement_rule
+            except MaterialMovementRule.DoesNotExist:
+                rule = None
+            if not rule or not rule.source_bin_id or not rule.destination_bin_id:
+                errors.append(_error(f"step_{s.sequence}", "MISSING_MOVEMENT_BINS", f"Step {s.sequence} movement requires source and destination bins"))
+            elif rule.source_bin.plant_id != rule.destination_bin.plant_id:
+                errors.append(_error(f"step_{s.sequence}", "CROSS_PLANT_MOVEMENT", f"Step {s.sequence} moves material across plants"))
 
         # Check resource group belongs to department
         for s in steps:

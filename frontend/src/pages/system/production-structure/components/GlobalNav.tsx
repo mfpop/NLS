@@ -12,17 +12,17 @@ interface GlobalNavProps {
 }
 
 const items = [
-  { label: "Plants", path: "/system/production-structure/plant", icon: Factory, color: "text-blue-600 dark:text-blue-400" },
-  { label: "Lines", path: "/system/production-structure/production-lines", icon: TrendingUpDown, color: "text-amber-600 dark:text-amber-400" },
-  { label: "Depts", path: "/system/production-structure/departments", icon: Layers, color: "text-purple-600 dark:text-purple-400" },
-  { label: "Groups", path: "/system/production-structure/resource-groups", icon: Component, color: "text-rose-600 dark:text-rose-400" },
-  { label: "Resources", path: "/system/production-structure/resources", icon: Dumbbell, color: "text-gray-600 dark:text-gray-400" },
+  { label: "Plants", path: "/system/production-structure/plant", icon: Factory, color: "text-primary" },
+  { label: "Lines", path: "/system/production-structure/production-lines", icon: TrendingUpDown, color: "text-warning" },
+  { label: "Depts", path: "/system/production-structure/departments", icon: Layers, color: "text-info" },
+  { label: "Groups", path: "/system/production-structure/resource-groups", icon: Component, color: "text-danger" },
+  { label: "Resources", path: "/system/production-structure/resources", icon: Dumbbell, color: "text-muted-foreground" },
 ];
 
 export function GlobalNav({ counts }: GlobalNavProps) {
   const navigate = useNavigate();
   return (
-    <nav className="flex flex-col min-h-0 border-r border-slate-200 dark:border-slate-700/50 bg-slate-50/60 dark:bg-slate-900/60 w-14 shrink-0" aria-label="Entity navigation">
+    <nav className="flex flex-col min-h-0 border-r border-border bg-muted w-14 shrink-0" aria-label="Entity navigation">
       <div className="flex flex-col items-center gap-0.5 py-2">
         {items.map((item) => {
           const Icon = item.icon;
@@ -44,11 +44,11 @@ export function GlobalNav({ counts }: GlobalNavProps) {
               key={item.path}
               type="button"
               onClick={() => navigate(item.path)}
-              className="flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group relative"
+              className="flex flex-col items-center justify-center gap-0.5 w-12 h-12 rounded-lg hover:bg-muted hover:bg-muted transition-colors group relative"
               title={`${count} ${item.label} — Click to browse`}
             >
               <Icon className={`h-4 w-4 stroke-current ${item.color}`} />
-              <span className="text-[8px] font-semibold text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors">{count}</span>
+              <span className="text-[8px] font-semibold text-muted-foreground group-hover:text-muted-foreground dark:group-hover:text-muted-foreground transition-colors">{count}</span>
             </button>
           );
         })}

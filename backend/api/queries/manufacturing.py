@@ -21,15 +21,18 @@ from api.types.manufacturing import (
     ScheduleNode, ShiftNode, ScheduleAssignmentNode,
     ReferenceCategoryNode, ReferenceValueNode, ResourceTypeNode, VisualIdentityNode,
     ReferenceTableNode,
-    ProductModelNode, ProductModelByFamilyNode, ProcessFlowNode, ProcessStepNode,
+    ProductFamilyNode, ProductModelNode, ProductVariantNode, PartNumberNode,
+    ProductModelByFamilyNode, ProcessFlowNode, ProcessStepNode, BOMNode,
     PaginatedReferenceCategoryResponse, PaginatedReferenceValueResponse,
     PaginatedShiftResponse, PaginatedScheduleAssignmentResponse,
-    PaginatedVisualIdentityResponse, PaginatedProductModelResponse,
+    PaginatedVisualIdentityResponse, PaginatedProductFamilyResponse, PaginatedProductModelResponse,
+    PaginatedProductVariantResponse, PaginatedPartNumberResponse, PaginatedBOMResponse,
     PaginatedProcessFlowResponse, PaginatedProcessStepResponse,
     ProfileNode, WorkHistoryEntry, EducationEntry,
     RoutingNode, RoutingSummaryNode, RoutingStepNode, StepCapacityNode, YamazumiAnalysisNode, YamazumiStepNode,
-    ProductionLineFlowContextNode, MaterialNode, InventoryLocationNode,
+    ProductionLineFlowContextNode, MaterialNode, MaterialBinNode, InventoryLocationNode,
     CapacityPlanNode, CapacityPlanInputNode, CapacityPlanResultNode, CapacityYamazumiNode, CapacityScenarioNode,
+    CapacityResultNode, CapacitySnapshotNode, PaginatedCapacitySnapshotResponse, WorkScheduleNode, CapacityProfileNode, CapacityRecalculationJobNode,
 )
 
 
@@ -378,7 +381,8 @@ from manufacturing.models import (
     Plant, Department, ProductionLine, ResourceGroup, Resource, Company,
     Schedule, Shift, ScheduleAssignment, UserRole,
     ReferenceCategory, ReferenceValue, ResourceType, VisualIdentity,
-    ProductModel, ProcessFlow, ProcessStep, Material, InventoryLocation,
+    ProductFamily, ProductModel, ProductVariant, PartNumber,
+    ProcessFlow, ProcessStep, Material, InventoryLocation, MaterialBin,
 )
 from api.services.tree_builder import build_plant_tree
 from manufacturing.domain.structure_service import get_structure_counts, get_system_health
@@ -663,16 +667,8 @@ class ManufacturingQuery:
 
     @strawberry.field
     def product_models_by_family(self, family_id: str) -> list[ProductModelByFamilyNode]:
-        try:
-            family = ReferenceValue.objects.get(id=family_id, category__code="production_family")
-        except ReferenceValue.DoesNotExist:
-            return []
-        qs = ReferenceValue.objects.filter(
-            category__code="product_model",
-            is_active=True,
-            metadata__family=family.code,
-        ).order_by("sort_order", "name")
-        return [ProductModelByFamilyNode.from_reference(model, str(family.id)) for model in qs]
+        qs = ProductModel.objects.filter(family_id=family_id, is_active=True).order_by("code", "name")
+        return [ProductModelByFamilyNode.from_product_model(model) for model in qs]
 
     # ── Department ──
     @strawberry.field
@@ -865,14 +861,116 @@ class ManufacturingQuery:
 
     # ── Product Routing ──
     @strawberry.field
-    def product_models(self, limit: Optional[int] = None, offset: Optional[int] = None) -> PaginatedProductModelResponse:
-        qs = ProductModel.objects.all()
+    def product_families(self, status: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> PaginatedProductFamilyResponse:
+        qs = ProductFamily.objects.all()
+        if status and status != "all":
+            qs = qs.filter(status=status)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [ProductFamilyNode.from_db(family) for family in qs[offset:offset + limit]]
+        return PaginatedProductFamilyResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def product_family(self, id: str) -> Optional[ProductFamilyNode]:
+        try:
+            return ProductFamilyNode.from_db(ProductFamily.objects.get(id=id))
+        except ProductFamily.DoesNotExist:
+            return None
+
+    @strawberry.field
+    def product_models(self, family_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> PaginatedProductModelResponse:
+        qs = ProductModel.objects.select_related("family").filter(family__isnull=False)
+        if family_id:
+            qs = qs.filter(family_id=family_id)
         total = qs.count()
         limit, offset = _validate_pagination(limit, offset)
         items = [ProductModelNode.from_db(m) for m in qs[offset:offset + limit]]
         has_more = (offset + limit) < total
         
         return PaginatedProductModelResponse(items=items, total=total, has_more=has_more)
+
+    @strawberry.field
+    def product_model(self, id: str) -> Optional[ProductModelNode]:
+        try:
+            return ProductModelNode.from_db(ProductModel.objects.select_related("family").get(id=id))
+        except ProductModel.DoesNotExist:
+            return None
+
+    @strawberry.field
+    def product_variants(self, model_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> PaginatedProductVariantResponse:
+        qs = ProductVariant.objects.select_related("model", "model__family").filter(model__family__isnull=False)
+        if model_id:
+            qs = qs.filter(model_id=model_id)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [ProductVariantNode.from_db(variant) for variant in qs[offset:offset + limit]]
+        return PaginatedProductVariantResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def product_variant(self, id: str) -> Optional[ProductVariantNode]:
+        try:
+            return ProductVariantNode.from_db(ProductVariant.objects.select_related("model").get(id=id))
+        except ProductVariant.DoesNotExist:
+            return None
+
+    @strawberry.field
+    def part_numbers(
+        self,
+        family_id: Optional[str] = None,
+        model_id: Optional[str] = None,
+        variant_id: Optional[str] = None,
+        search: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> PaginatedPartNumberResponse:
+        qs = PartNumber.objects.select_related("family", "model", "variant").all()
+        if family_id:
+            qs = qs.filter(family_id=family_id)
+        if model_id:
+            qs = qs.filter(model_id=model_id)
+        if variant_id:
+            qs = qs.filter(variant_id=variant_id)
+        if search:
+            qs = qs.filter(
+                Q(part_number__icontains=search)
+                | Q(description__icontains=search)
+                | Q(family__code__icontains=search)
+                | Q(family__name__icontains=search)
+                | Q(model__code__icontains=search)
+                | Q(model__name__icontains=search)
+                | Q(variant__code__icontains=search)
+                | Q(variant__name__icontains=search)
+            )
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [PartNumberNode.from_db(part) for part in qs[offset:offset + limit]]
+        return PaginatedPartNumberResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def part_number(self, id: str) -> Optional[PartNumberNode]:
+        try:
+            return PartNumberNode.from_db(PartNumber.objects.select_related("family", "model", "variant").get(id=id))
+        except PartNumber.DoesNotExist:
+            return None
+
+    @strawberry.field
+    def boms(self, part_number_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> PaginatedBOMResponse:
+        from manufacturing.models import BOM
+        qs = BOM.objects.select_related("product_model", "part_number").prefetch_related("items__material").all()
+        if part_number_id:
+            qs = qs.filter(part_number_id=part_number_id)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [BOMNode.from_db(bom) for bom in qs[offset:offset + limit]]
+        return PaginatedBOMResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def bom(self, id: str) -> Optional[BOMNode]:
+        from manufacturing.models import BOM
+        try:
+            return BOMNode.from_db(BOM.objects.select_related("product_model", "part_number").prefetch_related("items__material").get(id=id))
+        except BOM.DoesNotExist:
+            return None
 
     @strawberry.field
     def process_flows(self, product_model_id: Optional[str] = None, production_line_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> PaginatedProcessFlowResponse:
@@ -1031,10 +1129,42 @@ class ManufacturingQuery:
         return [InventoryLocationNode.from_db(location) for location in qs]
 
     @strawberry.field
-    def routings(self, production_line_id: Optional[str] = None, product_model_id: Optional[str] = None, product_family_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> list[RoutingNode]:
+    def material_bins(
+        self,
+        plant_id: Optional[str] = None,
+        resource_group_id: Optional[str] = None,
+        bin_type: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MaterialBinNode]:
+        qs = MaterialBin.objects.select_related("plant", "resource_group", "material", "uom").all()
+        if plant_id:
+            qs = qs.filter(plant_id=plant_id)
+        if resource_group_id:
+            qs = qs.filter(resource_group_id=resource_group_id)
+        if bin_type:
+            qs = qs.filter(bin_type=bin_type)
+        if is_active is not None:
+            qs = qs.filter(is_active=is_active)
+        if limit:
+            qs = qs[offset:offset + limit] if offset else qs[:limit]
+        return [MaterialBinNode.from_db(bin_obj) for bin_obj in qs]
+
+    @strawberry.field
+    def material_bin(self, id: str) -> Optional[MaterialBinNode]:
+        try:
+            return MaterialBinNode.from_db(
+                MaterialBin.objects.select_related("plant", "resource_group", "material", "uom").get(id=id)
+            )
+        except MaterialBin.DoesNotExist:
+            return None
+
+    @strawberry.field
+    def routings(self, production_line_id: Optional[str] = None, product_model_id: Optional[str] = None, product_family_id: Optional[str] = None, part_number_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> list[RoutingNode]:
         from manufacturing.models import Routing
         qs = Routing.objects.select_related(
-            "production_line", "product_model", "product_family"
+            "production_line", "product_model", "product_family", "part_number"
         ).prefetch_related("steps__department", "steps__resource_group", "steps__resource", "steps__standard_work").all()
         if production_line_id:
             qs = qs.filter(production_line_id=production_line_id)
@@ -1042,6 +1172,8 @@ class ManufacturingQuery:
             qs = qs.filter(product_model_id=product_model_id)
         if product_family_id:
             qs = qs.filter(product_family_id=product_family_id)
+        if part_number_id:
+            qs = qs.filter(part_number_id=part_number_id)
         if limit:
             qs = qs[offset:offset + limit] if offset else qs[:limit]
         return [RoutingNode.from_db(r) for r in qs]
@@ -1051,7 +1183,7 @@ class ManufacturingQuery:
         from manufacturing.models import Routing
         try:
             r = Routing.objects.select_related(
-                "production_line", "product_model", "product_family"
+                "production_line", "product_model", "product_family", "part_number"
             ).prefetch_related(
                 "steps__department", "steps__resource_group", "steps__resource", "steps__standard_work"
             ).get(id=id)
@@ -1147,6 +1279,120 @@ class ManufacturingQuery:
             for scenario in CapacityScenario.objects.filter(capacity_plan_id=capacity_plan_id)
         ]
 
+    # ── New Capacity System Queries ──
+
+    @strawberry.field
+    def capacity_snapshots(
+        self,
+        plant_id: Optional[str] = None,
+        production_line_id: Optional[str] = None,
+        department_id: Optional[str] = None,
+        resource_group_id: Optional[str] = None,
+        resource_id: Optional[str] = None,
+        from_dt: Optional[str] = None,
+        to_dt: Optional[str] = None,
+        snapshot_type: Optional[str] = None,
+        status: Optional[str] = None,
+        limit: Optional[int] = 50,
+        offset: Optional[int] = 0,
+    ) -> PaginatedCapacitySnapshotResponse:
+        from datetime import datetime
+        from manufacturing.models import CapacitySnapshot, Department, ProductionLine, Resource, ResourceGroup
+
+        page_limit = min(max(int(limit or 50), 1), 100)
+        page_offset = max(int(offset or 0), 0)
+        qs = CapacitySnapshot.objects.all()
+
+        scope_filters = []
+        if resource_id:
+            scope_filters.append(("RESOURCE", str(resource_id)))
+        if resource_group_id:
+            scope_filters.append(("RESOURCE_GROUP", str(resource_group_id)))
+        if department_id:
+            scope_filters.append(("DEPARTMENT", str(department_id)))
+        if production_line_id:
+            scope_filters.append(("PRODUCTION_LINE", str(production_line_id)))
+        if plant_id:
+            scope_filters.append(("PLANT", str(plant_id)))
+            line_ids = list(ProductionLine.objects.filter(plant_id=plant_id).values_list("id", flat=True))
+            dept_ids = list(Department.objects.filter(plant_id=plant_id).values_list("id", flat=True))
+            group_ids = list(ResourceGroup.objects.filter(department_id__in=dept_ids).values_list("id", flat=True))
+            resource_ids = list(Resource.objects.filter(resource_group_id__in=group_ids).values_list("id", flat=True))
+            scope_filters.extend(("PRODUCTION_LINE", str(value)) for value in line_ids)
+            scope_filters.extend(("DEPARTMENT", str(value)) for value in dept_ids)
+            scope_filters.extend(("RESOURCE_GROUP", str(value)) for value in group_ids)
+            scope_filters.extend(("RESOURCE", str(value)) for value in resource_ids)
+
+        if scope_filters:
+            q = Q()
+            for scope_type, scope_id in dict.fromkeys(scope_filters):
+                q |= Q(scope_type=scope_type, scope_id=scope_id)
+            qs = qs.filter(q)
+        if snapshot_type:
+            qs = qs.filter(snapshot_type=snapshot_type)
+        if status:
+            qs = qs.filter(status=status)
+        if from_dt:
+            qs = qs.filter(to_datetime__gte=datetime.fromisoformat(from_dt))
+        if to_dt:
+            qs = qs.filter(from_datetime__lte=datetime.fromisoformat(to_dt))
+
+        total = qs.count()
+        items = [
+            CapacitySnapshotNode.from_db(snapshot)
+            for snapshot in qs.order_by("-from_datetime", "-version", "-calculated_at")[page_offset:page_offset + page_limit]
+        ]
+        return PaginatedCapacitySnapshotResponse(
+            items=items,
+            total=total,
+            limit=page_limit,
+            offset=page_offset,
+            has_more=(page_offset + page_limit) < total,
+        )
+
+    def _stored_capacity_result(self, scope_type: str, scope_id: str, from_dt: str, to_dt: str) -> Optional[CapacityResultNode]:
+        from datetime import datetime
+        from manufacturing.models import CapacitySnapshot
+        try:
+            from_dt_parsed = datetime.fromisoformat(from_dt)
+            to_dt_parsed = datetime.fromisoformat(to_dt)
+        except ValueError:
+            return None
+        snapshot = (
+            CapacitySnapshot.objects.filter(
+                scope_type=scope_type,
+                scope_id=scope_id,
+                from_datetime=from_dt_parsed,
+                to_datetime=to_dt_parsed,
+            )
+            .exclude(status="DRAFT")
+            .order_by("-version", "-calculated_at")
+            .first()
+        )
+        if not snapshot:
+            return None
+        return CapacityResultNode(snapshot=CapacitySnapshotNode.from_db(snapshot))
+
+    @strawberry.field
+    def capacity_for_resource(self, resource_id: str, from_dt: str, to_dt: str) -> Optional[CapacityResultNode]:
+        return self._stored_capacity_result("RESOURCE", resource_id, from_dt, to_dt)
+
+    @strawberry.field
+    def capacity_for_resource_group(self, resource_group_id: str, from_dt: str, to_dt: str) -> Optional[CapacityResultNode]:
+        return self._stored_capacity_result("RESOURCE_GROUP", resource_group_id, from_dt, to_dt)
+
+    @strawberry.field
+    def capacity_for_department(self, department_id: str, from_dt: str, to_dt: str) -> Optional[CapacityResultNode]:
+        return self._stored_capacity_result("DEPARTMENT", department_id, from_dt, to_dt)
+
+    @strawberry.field
+    def capacity_for_production_line(self, production_line_id: str, from_dt: str, to_dt: str) -> Optional[CapacityResultNode]:
+        return self._stored_capacity_result("PRODUCTION_LINE", production_line_id, from_dt, to_dt)
+
+    @strawberry.field
+    def capacity_for_plant(self, plant_id: str, from_dt: str, to_dt: str) -> Optional[CapacityResultNode]:
+        return self._stored_capacity_result("PLANT", plant_id, from_dt, to_dt)
+
     @strawberry.field
     def yamazumi_analysis(
         self,
@@ -1157,6 +1403,7 @@ class ManufacturingQuery:
         downtime_min: float = 0,
         operators: int = 1,
     ) -> YamazumiAnalysisNode:
+        from manufacturing.domain.yamazumi_analysis import YamazumiAnalysisInput, YamazumiAnalysisService
         from manufacturing.models import Routing
 
         try:
@@ -1175,107 +1422,47 @@ class ManufacturingQuery:
                 operators_required=0,
             )
 
-        steps = list(routing.steps.all().order_by("sequence"))
-        if not steps:
-            return YamazumiAnalysisNode(
-                ok=False,
-                message="Complete routing in Production Structure → Flow.",
-                routing_id=strawberry.ID(str(routing.id)),
-                routing_status=routing.status,
-                routing_version=routing.version,
-                production_line_id=strawberry.ID(str(routing.production_line_id)),
-                product_model_id=strawberry.ID(str(routing.product_model_id)) if routing.product_model_id else None,
-                planned_quantity=planned_quantity,
-                net_available_time_sec=0,
-                takt_time_sec=0,
-                total_work_content_sec=0,
-                balance_loss_percent=0,
-                operators_required=0,
-            )
-
-        net_available_time_sec = max(0.0, (available_time_min - break_time_min - downtime_min) * 60)
-        if planned_quantity <= 0 or net_available_time_sec <= 0:
-            return YamazumiAnalysisNode(
-                ok=False,
-                message="Complete capacity planning inputs.",
-                routing_id=strawberry.ID(str(routing.id)),
-                routing_status=routing.status,
-                routing_version=routing.version,
-                production_line_id=strawberry.ID(str(routing.production_line_id)),
-                product_model_id=strawberry.ID(str(routing.product_model_id)) if routing.product_model_id else None,
-                planned_quantity=planned_quantity,
-                net_available_time_sec=net_available_time_sec,
-                takt_time_sec=0,
-                total_work_content_sec=0,
-                balance_loss_percent=0,
-                operators_required=0,
-            )
-
-        takt_time_sec = net_available_time_sec / planned_quantity
-        step_nodes: list[YamazumiStepNode] = []
-        total_work_content_sec = 0.0
-        bottleneck = None
-        overloaded: list[str] = []
-        total_required_operators = 0
-
-        for step in steps:
-            work_content_sec = float(step.cycle_time_sec or 0) + float(step.setup_time_sec or 0) + float(step.changeover_time_sec or 0)
-            total_work_content_sec += work_content_sec
-            load_percent = (work_content_sec / takt_time_sec * 100) if takt_time_sec else 0
-            is_overloaded = load_percent > 100
-            required_operators = max(1, int(step.required_operators or 1))
-            total_required_operators += required_operators
-            if is_overloaded:
-                overloaded.append(step.resource.name if step.resource else step.resource_group.name if step.resource_group else f"Step {step.sequence}")
-            if bottleneck is None or work_content_sec > bottleneck[1]:
-                bottleneck = (step, work_content_sec)
-            step_nodes.append(YamazumiStepNode(
-                sequence=step.sequence,
-                department_name=step.department.name if step.department else None,
-                resource_group_name=step.resource_group.name if step.resource_group else None,
-                resource_name=step.resource.name if step.resource else None,
-                standard_work_name=step.standard_work.name if step.standard_work else None,
-                cycle_time_sec=float(step.cycle_time_sec or 0),
-                setup_time_sec=float(step.setup_time_sec or 0),
-                changeover_time_sec=float(step.changeover_time_sec or 0),
-                work_content_sec=work_content_sec,
-                takt_time_sec=takt_time_sec,
-                load_percent=load_percent,
-                required_operators=required_operators,
-                is_bottleneck=False,
-                is_overloaded=is_overloaded,
-            ))
-
-        bottleneck_step = bottleneck[0] if bottleneck else None
-        if bottleneck_step:
-            for node in step_nodes:
-                if node.sequence == bottleneck_step.sequence:
-                    node.is_bottleneck = True
-                    break
-        max_station_work = max((step.work_content_sec for step in step_nodes), default=0)
-        ideal_total = max_station_work * len(step_nodes)
-        balance_loss_percent = ((ideal_total - total_work_content_sec) / ideal_total * 100) if ideal_total else 0
-        operators_required = max(total_required_operators, int((total_work_content_sec / takt_time_sec) + 0.999999))
+        analysis = YamazumiAnalysisService.analyze(YamazumiAnalysisInput(
+            routing=routing,
+            planned_quantity=planned_quantity,
+            available_time_min=available_time_min,
+            break_time_min=break_time_min,
+            downtime_min=downtime_min,
+            operators=operators,
+        ))
+        step_nodes = [YamazumiStepNode(
+            sequence=step["sequence"],
+            department_name=step["department_name"],
+            resource_group_name=step["resource_group_name"],
+            resource_name=step["resource_name"],
+            standard_work_name=step["standard_work_name"],
+            cycle_time_sec=step["cycle_time_sec"],
+            setup_time_sec=step["setup_time_sec"],
+            changeover_time_sec=step["changeover_time_sec"],
+            work_content_sec=step["work_content_sec"],
+            takt_time_sec=step["takt_time_sec"],
+            load_percent=step["load_percent"],
+            required_operators=step["required_operators"],
+            is_bottleneck=step["is_bottleneck"],
+            is_overloaded=step["is_overloaded"],
+        ) for step in analysis["steps"]]
 
         return YamazumiAnalysisNode(
-            ok=True,
-            message="Yamazumi analysis ready.",
-            routing_id=strawberry.ID(str(routing.id)),
-            routing_status=routing.status,
-            routing_version=routing.version,
-            production_line_id=strawberry.ID(str(routing.production_line_id)),
-            product_model_id=strawberry.ID(str(routing.product_model_id)) if routing.product_model_id else None,
-            planned_quantity=planned_quantity,
-            net_available_time_sec=net_available_time_sec,
-            takt_time_sec=takt_time_sec,
-            total_work_content_sec=total_work_content_sec,
-            bottleneck_step_name=(
-                bottleneck_step.standard_work.name if bottleneck_step and bottleneck_step.standard_work else
-                bottleneck_step.resource_group.name if bottleneck_step and bottleneck_step.resource_group else
-                f"Step {bottleneck_step.sequence}" if bottleneck_step else ""
-            ),
-            balance_loss_percent=balance_loss_percent,
-            operators_required=operators_required,
-            overloaded_resources=overloaded,
+            ok=analysis["ok"],
+            message=analysis["message"],
+            routing_id=strawberry.ID(analysis["routing_id"]) if analysis.get("routing_id") else None,
+            routing_status=analysis["routing_status"],
+            routing_version=analysis["routing_version"],
+            production_line_id=strawberry.ID(analysis["production_line_id"]) if analysis.get("production_line_id") else None,
+            product_model_id=strawberry.ID(analysis["product_model_id"]) if analysis.get("product_model_id") else None,
+            planned_quantity=analysis["planned_quantity"],
+            net_available_time_sec=analysis["net_available_time_sec"],
+            takt_time_sec=analysis["takt_time_sec"],
+            total_work_content_sec=analysis["total_work_content_sec"],
+            bottleneck_step_name=analysis["bottleneck_step_name"],
+            balance_loss_percent=analysis["balance_loss_percent"],
+            operators_required=analysis["operators_required"],
+            overloaded_resources=analysis["overloaded_resources"],
             steps=step_nodes,
+            capacity_source=analysis["capacity_source"],
         )

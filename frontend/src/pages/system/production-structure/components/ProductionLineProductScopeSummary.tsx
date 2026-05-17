@@ -1,3 +1,4 @@
+import { theme } from "../../../../styles/themeTokens";
 import type { ProductFamilyAssignment, ProductModelAssignment } from "@/types/productionLine";
 
 interface ProductionLineProductScopeSummaryProps {
@@ -11,7 +12,7 @@ interface ProductionLineProductScopeSummaryProps {
 
 function ScopeChip({ label, primary }: { label: string; primary?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-px text-[11px] font-semibold ${primary ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-px text-[11px] font-semibold ${primary ? theme.badgeActive : theme.chip}`}>
       {label}
       {primary && <span className="text-[8px] opacity-70">PRIMARY</span>}
     </span>
@@ -19,7 +20,7 @@ function ScopeChip({ label, primary }: { label: string; primary?: boolean }) {
 }
 
 function EmptyBadge({ label }: { label: string }) {
-  return <span className="text-[12px] text-slate-500 dark:text-slate-400">{label}</span>;
+  return <span className={`text-[12px] ${theme.textSecondary}`}>{label}</span>;
 }
 
 export function ProductionLineProductScopeSummary({
@@ -37,14 +38,14 @@ export function ProductionLineProductScopeSummary({
   return (
     <div className="space-y-1.5">
       <div className="grid items-start gap-2" style={{ gridTemplateColumns: "120px 1fr" }}>
-        <span className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Product Family</span>
+        <span className={`text-[12px] font-semibold ${theme.textSecondary}`}>Product Family</span>
         <span className="inline-flex min-w-0 flex-wrap gap-1">
           {family ? <ScopeChip label={family.name} /> : <EmptyBadge label="None" />}
         </span>
       </div>
 
       <div className="grid items-start gap-2" style={{ gridTemplateColumns: "120px 1fr" }}>
-        <span className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Product Models</span>
+        <span className={`text-[12px] font-semibold ${theme.textSecondary}`}>Product Models</span>
         <div className="min-w-0">
           {models.length ? (
             <div className="flex flex-wrap gap-1">
@@ -52,7 +53,7 @@ export function ProductionLineProductScopeSummary({
                 <ScopeChip key={model.id} label={model.name || model.code} primary={model.id === primaryModel?.id || model.isPrimary} />
               ))}
               {hiddenCount > 0 && (
-                <button type="button" onClick={onMoreModels} className="rounded-full bg-slate-100 px-2 py-px text-[11px] font-semibold text-slate-600 hover:text-slate-800 dark:bg-slate-700 dark:text-slate-200">
+                <button type="button" onClick={onMoreModels} className={`rounded-full ${theme.chip} ${theme.textPrimary} hover:text-foreground`}>
                   +{hiddenCount} more
                 </button>
               )}
@@ -62,8 +63,8 @@ export function ProductionLineProductScopeSummary({
       </div>
       {showPrimaryRow && (
         <div className="grid items-center gap-2" style={{ gridTemplateColumns: "120px 1fr" }}>
-          <span className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Primary Model</span>
-          <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{primaryModel?.name || "-"}</span>
+          <span className={`text-[12px] font-semibold ${theme.textSecondary}`}>Primary Model</span>
+          <span className={`text-[13px] font-medium ${theme.textPrimary}`}>{primaryModel?.name || "-"}</span>
         </div>
       )}
     </div>

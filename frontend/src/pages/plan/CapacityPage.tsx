@@ -4,7 +4,6 @@ import { BarChart3, CheckCircle2, ExternalLink, RotateCw, Save, X } from "lucide
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { usePlants } from "@/hooks/usePlants";
 import { useProductionLines } from "@/hooks/useProductionLines";
-import { useReferenceCategory, type ReferenceValueNode } from "@/hooks/useReferenceTables";
 import { useRoutings } from "@/hooks/useRouting";
 import { useCapacityPlanMutations, useCapacityPlans, useCapacityScenarios } from "@/hooks/useCapacityPlanning";
 import type { CapacityConstraint, CapacityLoadRow, CapacityPlan, CapacityYamazumiItem } from "@/types/capacity";
@@ -59,21 +58,6 @@ function addDaysIso(days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-function toNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return value;
-  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
-  return null;
-}
-
-function deriveShiftTime(shift?: ReferenceValueNode | null) {
-  if (!shift) return { available: 0, breaks: 0 };
-  const metadata = shift.metadata ?? {};
-  const shifts = toNumber(metadata.shiftCount ?? metadata.shifts) ?? 1;
-  const hours = toNumber(metadata.workingHours ?? metadata.hoursPerShift ?? metadata.shiftHours) ?? 8;
-  const breaks = toNumber(metadata.breakMinutes ?? metadata.breakDurationMinutes) ?? 0;
-  return { available: shifts * hours * 60, breaks: shifts * breaks };
-}
-
 function StatusBadge({ status }: { status: string }) {
   const cls = status === "APPROVED" ? theme.badgeActive : status === "HAS_WARNINGS" ? theme.badgeWarning : status === "ARCHIVED" ? theme.badgeInactive : theme.badgeNeutral;
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>{labelize(status)}</span>;
@@ -118,7 +102,7 @@ function OverviewTab({ plan }: { plan?: CapacityPlan | null }) {
             <Stat label="Planned Quantity" value={inputs?.plannedQuantity ? String(inputs.plannedQuantity) : "-"} />
             <Stat label="Net Available" value={fmtMinutes(inputs?.netAvailableTimeMinutes)} />
             <Stat label="Takt Time" value={fmtSeconds(inputs?.taktTimeSeconds)} warn={!inputs?.taktTimeSeconds} />
-            <Stat label="Operators Available" value={inputs?.operatorsAvailable ? String(inputs.operatorsAvailable) : "-"} />
+            <Stat label="Available Capacity" value={fmtMinutes(result?.availableCapacityMinutes)} />
           </div>
         </section>
         <section className={`rounded-xl p-4 ${theme.card}`}>
@@ -126,7 +110,7 @@ function OverviewTab({ plan }: { plan?: CapacityPlan | null }) {
           <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat label="Utilization" value={result ? fmtPercent(result.capacityUtilizationPercent) : "-"} warn={(result?.capacityUtilizationPercent ?? 0) >= 85} />
             <Stat label="Bottleneck" value={result?.bottleneckResourceName || result?.bottleneckStepName || "-"} />
-            <Stat label="Operators Required" value={result ? String(result.operatorsRequired) : "-"} warn={(result?.operatorsRequired ?? 0) > (inputs?.operatorsAvailable ?? 0)} />
+            <Stat label="Operators Required" value={result ? String(result.operatorsRequired) : "-"} />
             <Stat label="Feasibility" value={labelize(result?.feasibilityStatus) || "-"} warn={result?.feasibilityStatus !== "FEASIBLE"} />
           </div>
         </section>
@@ -152,7 +136,7 @@ function CapacityLoadTab({ rows }: { rows: CapacityLoadRow[] }) {
         <thead className={theme.toolbarBg}>
           <tr>
             {["Area", "Available Capacity", "Required Capacity", "Utilization", "Gap", "Status"].map((head) => (
-              <th key={head} className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{head}</th>
+              <th key={head} className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{head}</th>
             ))}
           </tr>
         </thead>
@@ -179,7 +163,7 @@ function YamazumiTab({ plan, metric }: { plan?: CapacityPlan | null; metric: str
   const items = result?.yamazumi?.items ?? [];
   const maxWork = Math.max(...items.map((item) => item.workContentSeconds), result?.yamazumi?.taktTimeSeconds ?? 0, 1);
   if (!plan?.inputs?.taktTimeSeconds) return <Message type="warning">Complete capacity inputs before Yamazumi analysis.</Message>;
-  if (!items.length) return <Message type="warning">Complete routing in Production Structure → Flow.</Message>;
+  if (!items.length) return <Message type="warning">Complete routing in Manufacturing Structure → Flow.</Message>;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
@@ -200,8 +184,8 @@ function YamazumiTab({ plan, metric }: { plan?: CapacityPlan | null; metric: str
                   <div className={`truncate text-[10px] ${theme.textMuted}`}>Op {item.operator} · {item.departmentName || "No department"}</div>
                 </div>
                 <div className={`relative h-8 rounded ${theme.loadTrack}`}>
-                  <div className="absolute inset-y-0 border-l border-dashed border-emerald-600" style={{ left: `${taktLeft}%` }} />
-                  <div className={`h-8 rounded ${item.isOverloaded ? "bg-amber-500" : item.isBottleneck ? "bg-sky-500" : "bg-emerald-600"}`} style={{ width: `${width}%` }} />
+                  <div className="absolute inset-y-0 border-l border-dashed border-success" style={{ left: `${taktLeft}%` }} />
+                  <div className={`h-8 rounded ${item.isOverloaded ? "bg-warning" : item.isBottleneck ? "bg-accent0" : "bg-success"}`} style={{ width: `${width}%` }} />
                 </div>
                 <div className={`text-right text-xs font-semibold ${theme.textPrimary}`}>{fmtSeconds(item.workContentSeconds)}</div>
               </div>
@@ -283,17 +267,12 @@ export function CapacityPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState({
     plannedQuantity: 0,
-    availableTimeMinutes: 0,
-    breakTimeMinutes: 0,
-    plannedDowntimeMinutes: 0,
-    operatorsAvailable: 1,
     efficiencyFactor: 1,
   });
   const [yamazumiMetric, setYamazumiMetric] = useState("SETUP_INCLUSIVE");
 
   const { plants } = usePlants();
   const { lines, loading: linesLoading } = useProductionLines(500);
-  const { values: shiftValues } = useReferenceCategory("shift_model");
   const { plans, loading: plansLoading, refetch } = useCapacityPlans({ plantId, productionLineId: lineId, productModelId: modelId, status: statusFilter });
   const selectedLine = lines.find((line) => line.id === lineId) as ProductionLine | undefined;
   const modelOptions = selectedLine?.productModels ?? [];
@@ -303,7 +282,7 @@ export function CapacityPage() {
   const lineOptions = useMemo(() => lines.filter((line) => !plantId || line.plantId === plantId), [lines, plantId]);
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId) ?? plans[0] ?? null;
   const planReadOnly = selectedPlan?.status === "APPROVED" || selectedPlan?.status === "ARCHIVED";
-  const saveEnabled = !!plantId && !!lineId && !!modelId && !!routingId && inputs.plannedQuantity > 0 && inputs.availableTimeMinutes - inputs.breakTimeMinutes - inputs.plannedDowntimeMinutes > 0 && !planReadOnly;
+  const saveEnabled = !!plantId && !!lineId && !!modelId && !!routingId && inputs.plannedQuantity > 0 && !planReadOnly;
 
   useEffect(() => {
     if (!plantId && plants[0]?.id) setPlantId(plants[0].id);
@@ -318,10 +297,7 @@ export function CapacityPage() {
     if (!modelOptions.some((model) => model.id === modelId)) {
       setModelId(selectedLine.primaryProductModel?.id || selectedLine.primaryModelId || modelOptions.find((model) => model.isPrimary)?.id || modelOptions[0]?.id || "");
     }
-    const shift = shiftValues.find((value) => value.id === selectedLine.shiftPatternId);
-    const derived = deriveShiftTime(shift);
-    if (!inputs.availableTimeMinutes && derived.available) setInputs((prev) => ({ ...prev, availableTimeMinutes: derived.available, breakTimeMinutes: derived.breaks }));
-  }, [inputs.availableTimeMinutes, modelId, modelOptions, selectedLine, shiftValues]);
+  }, [modelId, modelOptions, selectedLine]);
 
   useEffect(() => {
     if (!routings.some((routing) => routing.id === routingId)) {
@@ -341,10 +317,6 @@ export function CapacityPage() {
     if (selectedPlan.inputs) {
       setInputs({
         plannedQuantity: selectedPlan.inputs.plannedQuantity,
-        availableTimeMinutes: selectedPlan.inputs.availableTimeMinutes,
-        breakTimeMinutes: selectedPlan.inputs.breakTimeMinutes,
-        plannedDowntimeMinutes: selectedPlan.inputs.plannedDowntimeMinutes,
-        operatorsAvailable: selectedPlan.inputs.operatorsAvailable,
         efficiencyFactor: selectedPlan.inputs.efficiencyFactor,
       });
     }
@@ -426,7 +398,7 @@ export function CapacityPage() {
 
   return (
     <AppPageLayout title="Capacity Planning" subtitle="Calculate capacity, takt, constraints, and Yamazumi from production structure and plan data." icon={<BarChart3 />} toolbar={toolbar} footer={footer}>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted bg-background">
         <div className={`shrink-0 border-b px-3 py-2 ${theme.subHeader}`}>
           <div className="flex flex-wrap items-center gap-2">
             <select className={inputClass} value={plantId} onChange={(event) => { setPlantId(event.target.value); setDirty(true); }}><option value="">Plant</option>{plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}</select>
@@ -439,13 +411,10 @@ export function CapacityPage() {
               {["ALL", "DRAFT", "CALCULATED", "HAS_WARNINGS", "APPROVED", "ARCHIVED"].map((status) => <option key={status} value={status}>{labelize(status)}</option>)}
             </select>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-6">
+          <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-3">
             <input className={inputClass} type="number" placeholder="Planned qty" value={inputs.plannedQuantity || ""} onChange={(event) => setInput("plannedQuantity", Number(event.target.value || 0))} />
-            <input className={inputClass} type="number" placeholder="Available min" value={inputs.availableTimeMinutes || ""} onChange={(event) => setInput("availableTimeMinutes", Number(event.target.value || 0))} />
-            <input className={inputClass} type="number" placeholder="Break min" value={inputs.breakTimeMinutes || ""} onChange={(event) => setInput("breakTimeMinutes", Number(event.target.value || 0))} />
-            <input className={inputClass} type="number" placeholder="Downtime min" value={inputs.plannedDowntimeMinutes || ""} onChange={(event) => setInput("plannedDowntimeMinutes", Number(event.target.value || 0))} />
-            <input className={inputClass} type="number" placeholder="Operators" value={inputs.operatorsAvailable || ""} onChange={(event) => setInput("operatorsAvailable", Number(event.target.value || 1))} />
             <input className={inputClass} type="number" step="0.01" placeholder="Efficiency" value={inputs.efficiencyFactor || ""} onChange={(event) => setInput("efficiencyFactor", Number(event.target.value || 1))} />
+            <div className={`flex h-8 items-center rounded border px-2 text-xs ${theme.infoBanner}`}>Schedule capacity is backend-calculated.</div>
           </div>
         </div>
         <div className={`shrink-0 border-b px-3 ${theme.subHeader}`}>
@@ -469,7 +438,7 @@ export function CapacityPage() {
           {linesLoading || plansLoading ? <Message type="info">Loading capacity planning data...</Message> : renderActiveTab()}
           {selectedPlan?.productionLineId ? (
             <Link className={`mt-4 inline-flex items-center gap-1 text-xs font-semibold ${theme.link}`} to={`/system/production-structure/flow/routing/${selectedPlan.productionLineId}/${selectedPlan.routingVersionId}`}>
-              Open Production Structure → Flow <ExternalLink className="h-3.5 w-3.5" />
+              Open Manufacturing Structure → Flow <ExternalLink className="h-3.5 w-3.5" />
             </Link>
           ) : null}
         </div>

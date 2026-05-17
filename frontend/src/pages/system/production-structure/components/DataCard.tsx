@@ -41,8 +41,8 @@ export interface DataCardProps {
 /* ── Readiness Icon ── */
 
 function ReadinessIcon({ ready }: { ready: boolean }) {
-  if (ready) return <CheckCircle className="h-2.5 w-2.5 text-slate-400 stroke-current" />;
-  return <XCircle className="h-2.5 w-2.5 text-slate-400 stroke-current" />;
+  if (ready) return <CheckCircle className="h-2.5 w-2.5 text-muted-foreground stroke-current" />;
+  return <XCircle className="h-2.5 w-2.5 text-muted-foreground stroke-current" />;
 }
 
 /* ── Status Badge ── */
@@ -52,10 +52,10 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
       isActive
-        ? "bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-        : "bg-slate-100 text-slate-500 border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600"
+        ? "bg-success text-success border border-success bg-success text-success border-success"
+        : "bg-muted text-muted-foreground border border-border bg-muted text-muted-foreground border-border"
     }`}>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${isActive ? "bg-success" : "bg-muted"}`} />
       {status}
     </span>
   );
@@ -69,12 +69,12 @@ function ActionButtons({ onEdit, onStructure, onOpen, isLowestLevel }: {
   onOpen?: () => void;
   isLowestLevel?: boolean;
 }) {
-  const secondaryBtn = "inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors";
+  const secondaryBtn = "inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors";
   return (
     <div className="flex items-center gap-1.5">
       {onEdit && (
         <button type="button" onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-          className="inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors"
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded text-xs font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors"
         >
           <Pencil className="h-3.5 w-3.5 stroke-current" />
           Edit
@@ -103,12 +103,12 @@ function ReadinessRow({ items }: { items: ReadinessItem[] }) {
   return (
     <div className="flex flex-wrap items-center gap-1">
       {items.map((item, idx) => (
-        <span key={idx} className="inline-flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+        <span key={idx} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
           <ReadinessIcon ready={item.ready} />
-          <span className="text-slate-400 dark:text-slate-500">{item.label}</span>
+          <span className="text-muted-foreground">{item.label}</span>
         </span>
       ))}
-      <span className="inline-flex items-center gap-1 text-xs text-slate-400 dark:text-slate-500">
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         {allReady ? <CheckCircle className="h-2.5 w-2.5 stroke-current" /> : <XCircle className="h-2.5 w-2.5 stroke-current" />}
         {allReady ? "Ready" : "Not Ready"}
       </span>
@@ -141,7 +141,7 @@ export function DataCard({
       onClick={onClick}
     >
       <div className="flex items-center gap-1">
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconBg || theme.iconBoxSubtle}`}>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center text-muted-foreground">
           {icon}
         </div>
 
@@ -155,17 +155,17 @@ export function DataCard({
           {parentContext && <div className={`text-[11px] ${theme.textMuted}`}>{parentContext}</div>}
 
           {primaryMetrics && primaryMetrics.length > 0 && (
-            <div className="mt-1 text-xs font-medium text-slate-700 dark:text-slate-200">
+            <div className="mt-1 text-xs font-medium text-muted-foreground">
               {primaryMetrics.map((m, idx) => (
-                <span key={idx}>{idx > 0 && <span className="mx-2 text-slate-400 dark:text-slate-500">|</span>}{m.label}: {m.value}</span>
+                <span key={idx}>{idx > 0 && <span className="mx-2 text-muted-foreground">|</span>}{m.label}: {m.value}</span>
               ))}
             </div>
           )}
 
           {metrics.length > 0 && (
-            <div className="mt-1 text-gray-500 text-[11px]">
+            <div className="mt-1 text-muted-foreground text-[11px]">
               {metrics.map((m, idx) => (
-                <span key={idx}>{idx > 0 && <span className="mx-1.5 text-gray-400">|</span>}{m.label}: {m.value}</span>
+                <span key={idx}>{idx > 0 && <span className="mx-1.5 text-muted-foreground">|</span>}{m.label}: {m.value}</span>
               ))}
             </div>
           )}

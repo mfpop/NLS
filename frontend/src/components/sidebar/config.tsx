@@ -174,7 +174,7 @@ export const sidebarEntries: SidebarEntry[] = [
     items: [
       {
         type: "group",
-        label: "Production Structure",
+        label: "Manufacturing Structure",
         icon: Database,
         items: [
           { type: "item", label: "Flow", to: "/system/production-structure", icon: GitBranch },

@@ -186,8 +186,8 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
   const toggleGroup = (g: string) => setOpenGroup(openGroup === g ? null : g);
 
   return (
-    <div className="rounded border border-slate-200/50 dark:border-slate-800">
-      <div className="px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-slate-400 bg-slate-50/40 dark:bg-slate-900/20 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+    <div className="rounded border border-border">
+      <div className="px-2 py-1 text-[8px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted border-b border-border flex items-center justify-between">
         <span>Configuration References</span>
         <span className={`text-[8px] font-normal ${theme.textMuted}`}>{referenceTables.length} tables · {totalEntries} entries</span>
       </div>
@@ -196,32 +196,32 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
         const Icon = GROUP_ICONS[g];
         const isOpen = openGroup === g;
         return (
-          <div key={g} className="border-b border-slate-100/50 dark:border-slate-800/50 last:border-b-0">
+          <div key={g} className="border-b border-border last:border-b-0">
             <button type="button" onClick={() => toggleGroup(g)}
               className={`flex items-center justify-between w-full px-2 py-1 text-left transition-colors ${
-                isOpen ? "bg-slate-100/50 dark:bg-slate-800/50" : "hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+                isOpen ? "bg-muted" : "hover:bg-muted hover:bg-muted"
               }`}
             >
               <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                <ChevronRight className={`h-2.5 w-2.5 text-slate-400 stroke-current shrink-0 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
-                <Icon className="h-3 w-3 stroke-current shrink-0 text-slate-500" />
-                <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-200">{GROUP_LABELS[g]}</span>
+                <ChevronRight className={`h-2.5 w-2.5 text-muted-foreground stroke-current shrink-0 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`} />
+                <Icon className="h-3 w-3 stroke-current shrink-0 text-muted-foreground" />
+                <span className="text-[10px] font-semibold text-muted-foreground">{GROUP_LABELS[g]}</span>
                 <span className={`text-[8px] ${theme.textMuted}`}>{items.length + (g === "organization" ? 1 : 0)}</span>
               </div>
               <span className={`text-[8px] ${theme.textMuted} shrink-0`}>{GROUP_DESCRIPTIONS[g]}</span>
             </button>
             <div className={`overflow-hidden transition-all duration-200 ease-in-out ${isOpen ? "max-h-500" : "max-h-0"}`}>
-              <div className="border-t border-slate-100/50 dark:border-slate-800/50">
+              <div className="border-t border-border">
                 {g === "organization" && (
                   <button type="button" onClick={onSelectCompany}
-                    className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-indigo-50/20 dark:hover:bg-indigo-500/5"
+                    className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-info hover:bg-info"
                   >
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-success text-success bg-success text-success">
                       <Building2 className="h-2.5 w-2.5 stroke-current" />
                     </span>
-                    <span className="flex-1 text-left text-[10px] font-medium text-slate-700 dark:text-slate-200">Company</span>
+                    <span className="flex-1 text-left text-[10px] font-medium text-muted-foreground">Company</span>
                     <span className={`text-[8px] ${theme.textMuted}`}>Organization Settings</span>
-                    <ArrowRight className="h-2.5 w-2.5 text-slate-400 stroke-current" />
+                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground stroke-current" />
                   </button>
                 )}
                 {items.length > 0 ? (
@@ -235,23 +235,23 @@ export function ReferenceTablesCard({ onSelectCompany }: { onSelectCompany?: () 
                       onClick={() => {
                         navigate(`/system/reference-tables/${nextTableType}`);
                       }}
-                      className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/40"
+                      className="flex w-full items-center gap-2 px-2 py-1 transition-colors hover:bg-muted hover:bg-muted"
                     >
                       <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${entityBgColor}`}>
                         <EntityIcon className={`h-2.5 w-2.5 stroke-current ${entityTextColor}`} />
                       </span>
-                      <span className="flex-1 text-left text-[10px] truncate text-slate-600 dark:text-slate-300">{table.name}</span>
+                      <span className="flex-1 text-left text-[10px] truncate text-muted-foreground">{table.name}</span>
                       <span className={`text-[9px] font-medium shrink-0 ${theme.textMuted}`}>{table.entryCount}</span>
-                      <ArrowRight className="h-2.5 w-2.5 text-slate-300 dark:text-slate-600 stroke-current" />
+                      <ArrowRight className="h-2.5 w-2.5 text-muted-foreground stroke-current" />
                     </button>
                     );
                   })
                 ) : (
-                  <div className="px-2 py-2 flex items-center gap-2 text-[9px] text-slate-400">
-                    <Info className="h-3 w-3 stroke-current shrink-0 text-slate-300" />
+                  <div className="px-2 py-2 flex items-center gap-2 text-[9px] text-muted-foreground">
+                    <Info className="h-3 w-3 stroke-current shrink-0 text-muted-foreground" />
                     <span className="flex-1">{GROUP_SHORTCUTS[g]}</span>
                     <button type="button" onClick={() => navigate("/system/production-structure/references")}
-                      className="inline-flex items-center gap-0.5 text-emerald-600 hover:text-emerald-500 font-medium"
+                      className="inline-flex items-center gap-0.5 text-success hover:text-success font-medium"
                     >
                       <Plus className="h-2.5 w-2.5 stroke-current" /> Add
                     </button>

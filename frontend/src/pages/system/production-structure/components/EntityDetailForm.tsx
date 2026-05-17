@@ -34,12 +34,12 @@ export function fromTreeNode(node: any): any {
 function SummaryCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: number; color: string }) {
   if (value === 0) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:bg-slate-900 dark:border-slate-700">
+    <div className="rounded-lg border border-border bg-card p-2.5 bg-muted border-border">
       <div className="flex items-center justify-between gap-2">
         <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${color}`}><Icon className="h-3 w-3 stroke-current" /></span>
         <div className="text-right">
-          <div className="text-base font-bold text-slate-900 dark:text-slate-100">{value}</div>
-          <div className="text-[9px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</div>
+          <div className="text-base font-bold text-muted-foreground">{value}</div>
+          <div className="text-[9px] font-medium text-muted-foreground uppercase tracking-wider">{label}</div>
         </div>
       </div>
     </div>
@@ -50,16 +50,16 @@ function InfoField({ icon: Icon, label, value, muted, action }: { icon: any; lab
   const hasAction = action && (value === "Not set" || value === "" || value.startsWith("Add"));
   return (
     <div className="flex items-center gap-2">
-      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${muted ? "bg-slate-50 text-slate-400 dark:bg-slate-800/50 dark:text-slate-500" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"}`}><Icon className="h-3 w-3" /></div>
+      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${muted ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}><Icon className="h-3 w-3" /></div>
       <div className="min-w-0 flex-1">
-        <div className={`${muted ? "text-[9px] text-slate-400 dark:text-slate-500" : "text-[10px] font-medium text-slate-500 dark:text-slate-400"}`}>{label}</div>
+        <div className={`${muted ? "text-[9px] text-muted-foreground" : "text-[10px] font-medium text-muted-foreground"}`}>{label}</div>
         {hasAction ? (
-          <button type="button" className="text-sm text-blue-600 hover:text-blue-500 font-medium dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+          <button type="button" className="text-sm text-primary hover:text-primary font-medium text-primary hover:text-primary transition-colors">
             {action}
           </button>
         ) : (
-          <div className={`text-sm ${muted ? "text-slate-500 dark:text-slate-400" : "text-slate-900 dark:text-slate-100 font-medium"}`}>
-            {value || <span className="italic text-slate-400 dark:text-slate-500">Not set</span>}
+          <div className={`text-sm ${muted ? "text-muted-foreground" : "text-muted-foreground font-medium"}`}>
+            {value || <span className="italic text-muted-foreground">Not set</span>}
           </div>
         )}
       </div>
@@ -70,8 +70,8 @@ function InfoField({ icon: Icon, label, value, muted, action }: { icon: any; lab
 function CollapsibleSection({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-lg border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-700">
-      <button type="button" onClick={() => setOpen(!open)} className="flex items-center justify-between w-full px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors rounded-t-lg">
+    <div className="rounded-lg border border-border bg-card bg-muted border-border">
+      <button type="button" onClick={() => setOpen(!open)} className="flex items-center justify-between w-full px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:bg-muted hover:bg-muted transition-colors rounded-t-lg">
         <span>{title}</span>
         <ChevronDown className={`h-3.5 w-3.5 stroke-current transition-transform ${open ? "rotate-0" : "-rotate-90"}`} />
       </button>
@@ -92,14 +92,14 @@ function EmptyMetrics({ entityType, onAction, isInactive }: { entityType: string
   };
   const info = labels[entityType] || { label: "No data", action: "" };
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-4 py-8 text-center dark:border-slate-700 dark:bg-slate-800/30">
-      <Info className="h-8 w-8 text-slate-300 dark:text-slate-600 mb-2 stroke-current" />
-      <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{isInactive ? "Activate site first" : info.label}</p>
-      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted px-4 py-8 text-center border-border bg-muted">
+      <Info className="h-8 w-8 text-muted-foreground mb-2 stroke-current" />
+      <p className="text-sm font-medium text-muted-foreground">{isInactive ? "Activate site first" : info.label}</p>
+      <p className="text-xs text-muted-foreground mt-1">
         {isInactive ? "Site must be active before adding structure" : "Start building your production hierarchy"}
       </p>
       {info.action && onAction && !isInactive && (
-        <button type="button" onClick={onAction} className="mt-3 inline-flex items-center gap-1 rounded bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600 transition-colors">
+        <button type="button" onClick={onAction} className="mt-3 inline-flex items-center gap-1 rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary transition-colors">
           <Plus className="h-3 w-3 stroke-current" /> {info.action}
         </button>
       )}
@@ -135,7 +135,7 @@ export function EntityDetailForm({ entityType, entity, onAction, extras }: Entit
     if (entityType === "department") return <DeptDetail entity={entity} onAction={onAction} />;
     if (entityType === "resourceGroup" || entityType === "group") return <RGDetail entity={entity} onAction={onAction} />;
     if (entityType === "resource") return <ResDetail entity={entity} />;
-    return <div className="p-4 text-xs text-slate-500">Unknown entity type</div>;
+    return <div className="p-4 text-xs text-muted-foreground">Unknown entity type</div>;
   })();
 
   const hasExtras = extras && (extras.parentName !== undefined || extras.depth !== undefined || extras.pathLabels || (extras.children && extras.children.length > 0));
@@ -148,33 +148,33 @@ export function EntityDetailForm({ entityType, entity, onAction, extras }: Entit
       {hasExtras && (
         <>
           {extras!.parentName !== undefined && (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
-              <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tree Position</h2>
+            <div className="mt-3 rounded-lg border border-border bg-card p-3 bg-muted border-border">
+              <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tree Position</h2>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                {extras!.parentName && <div><span className="text-[10px] text-slate-400 block">Parent</span><span className="font-medium text-slate-700 dark:text-slate-200">{extras!.parentName}</span></div>}
-                {extras!.depth !== undefined && <div><span className="text-[10px] text-slate-400 block">Depth</span><span className="font-medium text-slate-700 dark:text-slate-200">{extras!.depth}</span></div>}
-                {extras!.pathLabels && <div className="col-span-2"><span className="text-[10px] text-slate-400 block">Path</span><span className="font-medium text-slate-500 truncate block" title={extras!.pathLabels}>{extras!.pathLabels}</span></div>}
+                {extras!.parentName && <div><span className="text-[10px] text-muted-foreground block">Parent</span><span className="font-medium text-muted-foreground">{extras!.parentName}</span></div>}
+                {extras!.depth !== undefined && <div><span className="text-[10px] text-muted-foreground block">Depth</span><span className="font-medium text-muted-foreground">{extras!.depth}</span></div>}
+                {extras!.pathLabels && <div className="col-span-2"><span className="text-[10px] text-muted-foreground block">Path</span><span className="font-medium text-muted-foreground truncate block" title={extras!.pathLabels}>{extras!.pathLabels}</span></div>}
               </div>
             </div>
           )}
 
           {extras!.children && extras!.children.length > 0 && (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
+            <div className="mt-3 rounded-lg border border-border bg-card p-3 bg-muted border-border">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Direct Children</h2>
-                <span className="text-xs text-slate-400">{extras!.children.length}</span>
+                <h2 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Direct Children</h2>
+                <span className="text-xs text-muted-foreground">{extras!.children.length}</span>
               </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div>
                 {extras!.children.map((child: any) => {
                   const childCfg = ENTITY_CONFIG[child.type] || ENTITY_CONFIG.resource;
                   const ChildIcon = childCfg.icon;
                   return (
-                    <div key={child.id} className="flex items-center gap-2 py-1.5 text-sm hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer">
+                    <div key={child.id} className="flex items-center gap-2 py-1.5 text-sm hover:bg-muted hover:bg-muted transition-colors cursor-pointer">
                       <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${childCfg.color}`}><ChildIcon className="h-3 w-3 stroke-current" /></span>
-                      <span className="flex-1 font-medium text-slate-700 dark:text-slate-200 truncate">{child.name}</span>
-                      {child.code && <span className="text-[10px] font-mono text-slate-400">{child.code}</span>}
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${child.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"}`} />
-                      <span className="text-xs text-slate-400 dark:text-slate-500">{TYPE_TITLES[child.type] || child.type}</span>
+                      <span className="flex-1 font-medium text-muted-foreground truncate">{child.name}</span>
+                      {child.code && <span className="text-[10px] font-mono text-muted-foreground">{child.code}</span>}
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${child.status === "active" ? "bg-success" : "bg-muted"}`} />
+                      <span className="text-xs text-muted-foreground">{TYPE_TITLES[child.type] || child.type}</span>
                     </div>
                   );
                 })}
@@ -184,14 +184,14 @@ export function EntityDetailForm({ entityType, entity, onAction, extras }: Entit
 
           {/* ── Extras: Add Child (tree-specific) ── */}
           {extras!.childType && extras!.onAddChild && (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
-              <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Quick Actions</h2>
-              <div className="flex items-center justify-between min-h-9 text-sm hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors rounded px-1">
+            <div className="mt-3 rounded-lg border border-border bg-card p-3 bg-muted border-border">
+              <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Quick Actions</h2>
+              <div className="flex items-center justify-between min-h-9 text-sm hover:bg-muted hover:bg-muted transition-colors rounded px-1">
                 <div className="min-w-0">
-                  <div className="font-medium text-slate-700 dark:text-slate-200">Add {extras!.childType}</div>
-                  <div className="text-[10px] text-slate-400 dark:text-slate-500">Create a new {extras!.childType.toLowerCase()} under this entity</div>
+                  <div className="font-medium text-muted-foreground">Add {extras!.childType}</div>
+                  <div className="text-[10px] text-muted-foreground">Create a new {extras!.childType.toLowerCase()} under this entity</div>
                 </div>
-                <button type="button" onClick={() => extras!.onAddChild!()} className="shrink-0 h-6 px-2 rounded text-[10px] font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">Create</button>
+                <button type="button" onClick={() => extras!.onAddChild!()} className="shrink-0 h-6 px-2 rounded text-[10px] font-medium text-success hover:text-success hover:text-success transition-colors">Create</button>
               </div>
             </div>
           )}
@@ -220,18 +220,18 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
     <div className="space-y-3">
       {/* ── INACTIVE BANNER ── */}
       {!isActive && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+        <div className="rounded-lg border border-warning bg-warning px-4 py-3 border-warning bg-warning">
           <div className="flex items-start justify-between gap-3">
             <div className="flex gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5 stroke-current" />
+              <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5 stroke-current" />
               <div>
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">Site is inactive</p>
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                <p className="text-sm font-semibold text-warning">Site is inactive</p>
+                <p className="text-xs text-warning mt-0.5">
                   Production actions are locked until site is activated. Set site to active to unlock structure management.
                 </p>
               </div>
             </div>
-            <button type="button" className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-600 transition-colors shadow-sm">
+            <button type="button" className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-warning px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-warning transition-colors shadow-sm">
               <Play className="h-3.5 w-3.5 stroke-current" /> Activate
             </button>
           </div>
@@ -240,13 +240,13 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
 
       {/* ── LOCATION MISMATCH FLAG ── */}
       {isActive && p.building && p.timezone && p.address && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50/60 px-3 py-2 dark:border-blue-500/20 dark:bg-blue-500/5">
+        <div className="rounded-lg border border-primary bg-primary px-3 py-2 border-primary bg-primary">
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-blue-500 stroke-current shrink-0" />
-            <span className="text-xs text-blue-700 dark:text-blue-300">
+            <MapPin className="h-4 w-4 text-primary stroke-current shrink-0" />
+            <span className="text-xs text-primary">
               {p.building} · {p.timezone}
             </span>
-            <button type="button" className="ml-auto text-xs font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">Verify address</button>
+            <button type="button" className="ml-auto text-xs font-medium text-primary hover:text-primary">Verify address</button>
           </div>
         </div>
       )}
@@ -257,28 +257,28 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
       ) : (
         <>
           {!isActive && (
-            <div className="rounded-lg border border-slate-200 bg-slate-50/80 px-3 py-2 text-xs text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400">
+            <div className="rounded-lg border border-border bg-muted px-3 py-2 text-xs text-muted-foreground border-border bg-muted text-muted-foreground">
               Metrics are available but site is inactive. Activate to manage structure.
             </div>
           )}
           <div className="grid grid-cols-4 gap-2">
-            <SummaryCard icon={TrendingUpDown} label="Lines" value={p.lineCount} color="bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" />
-            <SummaryCard icon={Layers} label="Depts" value={p.departmentCount} color="bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" />
-            <SummaryCard icon={Component} label="Groups" value={p.groupCount} color="bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" />
-            <SummaryCard icon={Dumbbell} label="Resources" value={p.resourceCount} color="bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400" />
+            <SummaryCard icon={TrendingUpDown} label="Lines" value={p.lineCount} color="bg-warning text-warning bg-warning text-warning" />
+            <SummaryCard icon={Layers} label="Depts" value={p.departmentCount} color="bg-info text-info bg-info text-info" />
+            <SummaryCard icon={Component} label="Groups" value={p.groupCount} color="bg-danger text-danger bg-danger text-danger" />
+            <SummaryCard icon={Dumbbell} label="Resources" value={p.resourceCount} color="bg-muted text-muted-foreground bg-muted text-muted-foreground" />
           </div>
         </>
       )}
 
       {/* ── HIERARCHY MIX ── */}
       {[p.lineCount, p.departmentCount, p.groupCount, p.resourceCount].some((v) => v > 0) && (
-        <div className="rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
-          <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Hierarchy Mix</h2>
+        <div className="rounded-lg border border-border bg-card p-3 bg-muted border-border">
+          <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hierarchy Mix</h2>
           <div className="flex flex-wrap gap-2">
-            {p.lineCount > 0 && <MiniChip icon={TrendingUpDown} value={String(p.lineCount)} label="Lines" color="text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-500/10" />}
-            {p.departmentCount > 0 && <MiniChip icon={Layers} value={String(p.departmentCount)} label="Depts" color="text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-500/10" />}
-            {p.groupCount > 0 && <MiniChip icon={Component} value={String(p.groupCount)} label="Groups" color="text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-500/10" />}
-            {p.resourceCount > 0 && <MiniChip icon={Dumbbell} value={String(p.resourceCount)} label="Resources" color="text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-500/10" />}
+            {p.lineCount > 0 && <MiniChip icon={TrendingUpDown} value={String(p.lineCount)} label="Lines" color="text-warning bg-warning text-warning bg-warning" />}
+            {p.departmentCount > 0 && <MiniChip icon={Layers} value={String(p.departmentCount)} label="Depts" color="text-info bg-info text-info bg-info" />}
+            {p.groupCount > 0 && <MiniChip icon={Component} value={String(p.groupCount)} label="Groups" color="text-danger bg-danger text-danger bg-danger" />}
+            {p.resourceCount > 0 && <MiniChip icon={Dumbbell} value={String(p.resourceCount)} label="Resources" color="text-muted-foreground bg-muted text-muted-foreground bg-muted" />}
           </div>
         </div>
       )}
@@ -311,7 +311,7 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
 
       {p.description && (
         <CollapsibleSection title="Description" defaultOpen={!!p.description}>
-          <p className="text-sm text-slate-700 dark:text-slate-300">{p.description}</p>
+          <p className="text-sm text-muted-foreground">{p.description}</p>
         </CollapsibleSection>
       )}
 
@@ -319,7 +319,7 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
       {isActive && <ConfigShortcuts entityType="plant" />}
 
       {/* ── TIMESTAMPS ── */}
-      <div className="flex gap-3 text-[10px] text-slate-400 dark:text-slate-500">
+      <div className="flex gap-3 text-[10px] text-muted-foreground">
         <span>Created {formatAppDate(p.createdAt) || "-"}</span>
         <span>·</span>
         <span>Updated {formatAppDate(p.updatedAt) || "-"}</span>
@@ -346,16 +346,16 @@ function ConfigShortcuts({ entityType }: { entityType: string }) {
   }
   if (actions.length === 0) return null;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 dark:bg-slate-900 dark:border-slate-700">
-      <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Configuration</h2>
+    <div className="rounded-lg border border-border bg-card p-3 bg-muted border-border">
+      <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Configuration</h2>
       <div className="space-y-1">
         {actions.map((a) => (
-          <div key={a.label} className="flex items-center justify-between min-h-9 text-sm hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors rounded px-1">
+          <div key={a.label} className="flex items-center justify-between min-h-9 text-sm hover:bg-muted hover:bg-muted transition-colors rounded px-1">
             <div className="min-w-0">
-              <div className="font-medium text-slate-700 dark:text-slate-200">{a.label}</div>
-              <div className="text-[10px] text-slate-400 dark:text-slate-500">{a.desc}</div>
+              <div className="font-medium text-muted-foreground">{a.label}</div>
+              <div className="text-[10px] text-muted-foreground">{a.desc}</div>
             </div>
-            <button type="button" onClick={() => navigate(a.route)} className="shrink-0 h-6 px-2 rounded text-[10px] font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors">Open</button>
+            <button type="button" onClick={() => navigate(a.route)} className="shrink-0 h-6 px-2 rounded text-[10px] font-medium text-success hover:text-success hover:text-success transition-colors">Open</button>
           </div>
         ))}
       </div>
@@ -369,10 +369,10 @@ function LineDetail({ entity: l, onAction }: { entity: any; onAction?: () => voi
   return (
     <div className="space-y-3">
       {!isActive && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-500/20 dark:bg-amber-500/10">
+        <div className="rounded-lg border border-warning bg-warning px-3 py-2 border-warning bg-warning">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 stroke-current" />
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-300">Line is inactive · Activate to resume production</p>
+            <AlertTriangle className="h-4 w-4 text-warning shrink-0 stroke-current" />
+            <p className="text-xs font-medium text-warning">Line is inactive · Activate to resume production</p>
           </div>
         </div>
       )}
@@ -380,9 +380,9 @@ function LineDetail({ entity: l, onAction }: { entity: any; onAction?: () => voi
         <EmptyMetrics entityType="productionLine" onAction={onAction} isInactive={!isActive} />
       ) : (
         <div className="grid grid-cols-3 gap-2">
-          <SummaryCard icon={TrendingUpDown} label="Departments" value={l.departmentCount} color="bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" />
-          <SummaryCard icon={Component} label="Groups" value={l.groupCount} color="bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" />
-          <SummaryCard icon={Dumbbell} label="Resources" value={l.resourceCount} color="bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400" />
+          <SummaryCard icon={TrendingUpDown} label="Departments" value={l.departmentCount} color="bg-warning text-warning bg-warning text-warning" />
+          <SummaryCard icon={Component} label="Groups" value={l.groupCount} color="bg-danger text-danger bg-danger text-danger" />
+          <SummaryCard icon={Dumbbell} label="Resources" value={l.resourceCount} color="bg-muted text-muted-foreground bg-muted text-muted-foreground" />
         </div>
       )}
       <CollapsibleSection title="Line Details">
@@ -395,11 +395,11 @@ function LineDetail({ entity: l, onAction }: { entity: any; onAction?: () => voi
       </CollapsibleSection>
       {l.modelsProduced && l.modelsProduced.length > 0 && (
         <CollapsibleSection title="Models Produced" defaultOpen>
-          <div className="flex flex-wrap gap-1">{l.modelsProduced.map((m: string, idx: number) => <span key={idx} className="rounded bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">{m}</span>)}</div>
+          <div className="flex flex-wrap gap-1">{l.modelsProduced.map((m: string, idx: number) => <span key={idx} className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground bg-muted text-muted-foreground">{m}</span>)}</div>
         </CollapsibleSection>
       )}
       {isActive && <ConfigShortcuts entityType="productionLine" />}
-      <div className="flex gap-3 text-[10px] text-slate-400 dark:text-slate-500">
+      <div className="flex gap-3 text-[10px] text-muted-foreground">
         <span>Created {formatAppDate(l.createdAt) || "-"}</span>
         <span>·</span>
         <span>Updated {formatAppDate(l.updatedAt) || "-"}</span>
@@ -414,8 +414,8 @@ function DeptDetail({ entity: d, onAction }: { entity: any; onAction?: () => voi
     <div className="space-y-3">
       {allZero ? <EmptyMetrics entityType="department" onAction={onAction} /> : (
         <div className="grid grid-cols-2 gap-2">
-          <SummaryCard icon={Component} label="Groups" value={d.groupCount} color="bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400" />
-          <SummaryCard icon={Dumbbell} label="Resources" value={d.resourceCount} color="bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400" />
+          <SummaryCard icon={Component} label="Groups" value={d.groupCount} color="bg-info text-info bg-info text-info" />
+          <SummaryCard icon={Dumbbell} label="Resources" value={d.resourceCount} color="bg-muted text-muted-foreground bg-muted text-muted-foreground" />
         </div>
       )}
       <CollapsibleSection title="Department Details">

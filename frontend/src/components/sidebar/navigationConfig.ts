@@ -5,6 +5,7 @@ import {
   Settings, ShieldCheck, Sparkles, TrendingUp, Play, ClipboardList,
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, Award, Ruler, FileSpreadsheet, RefreshCw,
+  Package,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -32,12 +33,6 @@ export interface NavSection {
 }
 
 export type TopLevelEntry = NavLeafItem | NavSection;
-
-export const PLANTS_FALLBACK = [
-  { name: "Main Plant", lines: ["C2-Cylinder Assembly", "STB Units Line", "C2 Units Line"] },
-  { name: "Secondary Plant", lines: ["Harnesses Line", "Pipes Line"] },
-  { name: "Warehouse Plant", lines: ["Kitting Line", "Steps Assembly"] },
-];
 
 export const sidebarNav: TopLevelEntry[] = [
   { type: "item", label: "Control Tower", to: "/", icon: Monitor },
@@ -94,10 +89,11 @@ export const sidebarNav: TopLevelEntry[] = [
     type: "section", id: "system", label: "System", icon: Settings,
     items: [
       {
-        type: "group", label: "Production Structure", icon: Database,
+        type: "group", label: "Manufacturing Structure", icon: Database,
         items: [
           { type: "item", label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
           { type: "item", label: "Components", to: "/system/production-structure/components", icon: Layers },
+          { type: "item", label: "Product Master Data", to: "/system/product-master-data", icon: Package },
         ],
       },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
@@ -137,4 +133,12 @@ export function sectionFromPath(path: string): string | null {
 export function isPathActive(path: string, target: string): boolean {
   if (target === "/") return path === "/";
   return path === target || path.startsWith(target + "/");
+}
+
+export function isRouteItemActive(path: string, target: string): boolean {
+  if (target === "/") return path === "/";
+  if (target === "/system/production-structure/components") {
+    return path === target || path.startsWith(target + "/");
+  }
+  return path === target;
 }

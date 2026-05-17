@@ -1,4 +1,5 @@
 import { ChevronLeft, Plus, Pencil, Trash2, RefreshCw, Funnel } from "lucide-react";
+import { theme } from "../../../../styles/themeTokens";
 import { useState } from "react";
 
 interface ExplorerToolbarProps {
@@ -21,11 +22,11 @@ export function ExplorerToolbar({
   const [filterOpen, setFilterOpen] = useState(false);
 
   return (
-    <div className="flex items-center bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 px-3 h-10 gap-2">
+    <div className={`flex items-center ${theme.subHeader} px-3 h-10 gap-2`}>
       {onBack && (
         <button
           onClick={onBack}
-          className="flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          className={`flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold ${theme.buttonGhost} transition-colors`}
         >
           <ChevronLeft className="h-4 w-4 stroke-current" />
           Back
@@ -35,7 +36,7 @@ export function ExplorerToolbar({
       {onAdd && (
         <button
           onClick={onAdd}
-          className="flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          className={`flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold ${theme.buttonGhost} transition-colors`}
         >
           <Plus className="h-4 w-4 stroke-current" />
           New
@@ -45,7 +46,7 @@ export function ExplorerToolbar({
       {hasSelected && onEdit && (
         <button
           onClick={onEdit}
-          className="flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          className={`flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold ${theme.buttonGhost} transition-colors`}
         >
           <Pencil className="h-4 w-4 stroke-current" />
           Edit
@@ -55,7 +56,7 @@ export function ExplorerToolbar({
       {hasSelected && onDelete && (
         <button
           onClick={onDelete}
-          className="flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+          className={`flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold ${theme.buttonGhost} transition-colors`}
         >
           <Trash2 className="h-4 w-4 stroke-current" />
           Delete
@@ -65,7 +66,7 @@ export function ExplorerToolbar({
       {onRefresh && (
         <button
           onClick={onRefresh}
-          className="flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors ml-auto"
+          className={`flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold ${theme.buttonGhost} transition-colors ml-auto`}
         >
           <RefreshCw className="h-4 w-4 stroke-current" />
           Refresh
@@ -77,12 +78,12 @@ export function ExplorerToolbar({
         placeholder="Search..."
         value={search || ""}
         onChange={(e) => onSearchChange?.(e.target.value)}
-        className="ml-2 flex-grow max-w-xs rounded border border-gray-300 bg-white px-2 text-sm outline-none placeholder:text-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+        className={`ml-2 flex-grow max-w-xs rounded ${theme.input} px-2 text-sm outline-none`}
       />
 
       <button
         onClick={() => setFilterOpen(!filterOpen)}
-        className="flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+        className={`flex items-center gap-1 px-3 py-1 rounded-sm text-sm font-semibold ${theme.buttonGhost} transition-colors`}
         title="Toggle Filter"
       >
         <Funnel className="h-4 w-4 stroke-current" />
@@ -93,7 +94,7 @@ export function ExplorerToolbar({
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="absolute top-10 right-2 z-50 rounded border border-gray-300 bg-white p-1 text-sm outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+          className={`absolute top-10 right-2 z-50 rounded ${theme.input} p-1 text-sm outline-none`}
         >
           <option value="all">All</option>
           <option value="active">Active</option>

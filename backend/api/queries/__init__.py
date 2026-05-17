@@ -3,6 +3,7 @@ from typing import Optional
 from django.contrib.auth.models import User
 from django.db.models import Q
 
+from api.queries.application import ApplicationSettingsQuery
 from api.queries.execution import ExecutionQuery
 from api.queries.improvement import ImprovementQuery
 from api.queries.kpi import KpiQuery
@@ -13,6 +14,7 @@ from docs_manager.schema import DocumentationQuery
 
 @strawberry.type
 class Query(
+    ApplicationSettingsQuery,
     ManufacturingQuery,
     ExecutionQuery,
     ImprovementQuery,

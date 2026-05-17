@@ -89,12 +89,35 @@ export const ASSIGN_DEPARTMENT_TO_LINES_MUTATION = gql`
   }
 `;
 
-export const REMOVE_DEPARTMENT_FROM_LINE_MUTATION = gql`
-  mutation RemoveDepartmentFromProductionLine($departmentId: String!, $productionLineId: String!) {
-    removeDepartmentFromProductionLine(departmentId: $departmentId, productionLineId: $productionLineId) {
+export const ASSIGN_DEPARTMENT_TO_LINE_MUTATION = gql`
+  mutation AssignDepartmentToProductionLine($input: AssignDepartmentInput!) {
+    assignDepartmentToProductionLine(input: $input) {
       ok
-      department {
-        ${DEPARTMENT_FIELDS}
+      assignment {
+        id
+        plantId
+        productionLineId
+        departmentId
+        sequence
+        status
+        createdAt
+        updatedAt
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const REMOVE_DEPARTMENT_FROM_LINE_MUTATION = gql`
+  mutation RemoveDepartmentFromProductionLine($productionLineId: String!, $departmentId: String!) {
+    removeDepartmentFromProductionLine(productionLineId: $productionLineId, departmentId: $departmentId) {
+      ok
+      assignment {
+        id
       }
       errors {
         field

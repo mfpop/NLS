@@ -10,15 +10,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const theme = useThemeStore((state) => state.theme);
 
   useEffect(() => {
-    // Set data-theme for CSS variable approach (legacy)
-    document.documentElement.setAttribute("data-theme", theme);
-    // Set class for Tailwind dark mode (primary)
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    document.documentElement.style.colorScheme = theme;
+    const root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    root.classList.toggle("dark", theme === "dark");
+    root.style.colorScheme = theme === "dark" ? "dark" : "light";
   }, [theme]);
 
   return <>{children}</>;

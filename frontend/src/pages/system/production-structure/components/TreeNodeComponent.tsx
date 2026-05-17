@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronDown } from "lucide-react";
 import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview";
 import { ENTITY_CONFIG } from "../config";
+import { theme } from "../../../../styles/themeTokens";
 
 export interface TreeNodeProps {
   node: DataManagementTreeChild;
@@ -47,10 +48,10 @@ export function TreeNodeComponent({
   return (
     <div>
       <div
-        className={`flex items-center gap-1.5 cursor-pointer transition-colors select-none outline-none h-8 min-h-8 rounded px-2 ${
+        className={`flex h-8 min-h-8 cursor-pointer select-none items-center gap-1.5 rounded border-l-2 px-2 text-[13px] leading-5 outline-none transition-colors ${
           isSelected
-            ? "bg-emerald-50/80 dark:bg-emerald-500/10 border-l-[3px] border-l-emerald-500 dark:border-l-emerald-400"
-            : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+            ? "border-l-selection-border bg-table-selected text-sidebar-active-foreground"
+            : `${theme.interactiveRow} border-l-transparent text-foreground`
         }`}
         style={{ paddingLeft: `${indentPx}px` }}
         onClick={() => {
@@ -71,7 +72,7 @@ export function TreeNodeComponent({
         <span className="w-4 shrink-0 flex items-center justify-center">
           {hasChildren ? (
             <ChevronDown
-              className={`h-3.5 w-3.5 text-slate-400 dark:text-slate-500 stroke-current transition-transform duration-200 ${
+              className={`h-3.5 w-3.5 ${theme.icon} stroke-current transition-transform duration-200 ${
                 expanded ? "" : "-rotate-90"
               }`}
             />
@@ -84,26 +85,26 @@ export function TreeNodeComponent({
         </span>
         <div className="min-w-0 flex-1 flex items-center gap-1.5">
           <span
-            className={`truncate text-[13px] font-semibold ${
+            className={`truncate text-[13px] font-medium leading-5 ${
               isSelected
-                ? "text-emerald-700 dark:text-emerald-400"
-                : "text-slate-800 dark:text-slate-100"
+                ? "text-sidebar-active-foreground"
+                : theme.textPrimary
             }`}
           >
             {node.name}
           </span>
           {node.code && (
-            <span className="rounded px-1.5 py-px text-[10px] font-mono font-semibold tracking-tight bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300">
+            <span className={`rounded px-1.5 py-px text-[10px] font-mono font-semibold tracking-tight ${theme.codeBadge}`}>
               {node.code}
             </span>
           )}
           <span
-            className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ${
-              node.status === "active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-500"
+            className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-card ${
+              node.status === "active" ? "bg-status-active" : "bg-status-inactive"
             }`}
           />
           {countLabel && (
-            <span className="ml-auto shrink-0 text-[10px] font-medium text-slate-500 dark:text-slate-400">{countLabel}</span>
+            <span className={`ml-auto shrink-0 text-[10px] font-medium ${theme.textSecondary}`}>{countLabel}</span>
           )}
         </div>
       </div>

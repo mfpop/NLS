@@ -1,3 +1,4 @@
+import { theme } from "../../../../styles/themeTokens";
 import { useReferenceCategory, type ReferenceValueNode } from "@/hooks/useReferenceTables";
 
 interface ReferenceSelectProps {
@@ -25,20 +26,20 @@ export function ReferenceSelect({
 
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-        {label}{required && <span className="ml-0.5 text-red-500">*</span>}
+      <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+        {label}{required && <span className="ml-0.5 text-danger">*</span>}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled || loading}
         className={`w-full rounded border px-2 py-0.5 text-[13px] outline-none transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-          error ? "border-red-300 focus:ring-2 focus:ring-red-200" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-emerald-200/50 focus:border-emerald-400"
-        } ${disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : ""}`}
+          error ? "border-danger focus:ring-2 focus:ring-danger" : "border-border bg-card bg-muted text-muted-foreground focus:ring-2 focus:ring-success focus:border-success"
+        } ${disabled ? "bg-muted text-muted-foreground" : ""}`}
       >
         {placeholder && <option value="">{placeholder}</option>}
         {loading && <option value="" disabled>Loading...</option>}
-        {!loading && options.length === 0 && <option value="" disabled>No reference values configured</option>}
+        {!loading && options.length === 0 && <option value="" disabled>No options available</option>}
         {options.map((opt) => (
           <option key={opt.id} value={opt.id}>
             {opt.name}
@@ -48,7 +49,7 @@ export function ReferenceSelect({
           <option value={value} disabled>Inactive value</option>
         )}
       </select>
-      {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
+      {error && <p className="mt-0.5 text-[10px] text-danger">{error}</p>}
     </div>
   );
 }
@@ -84,21 +85,21 @@ export function ReferenceMultiSelect({
 
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
+      <label className={`block text-[11px] font-semibold ${theme.textSecondary} mb-1`}>
         {label}
       </label>
       {loading && (
-        <div className="h-9 flex items-center text-xs text-slate-400">Loading...</div>
+        <div className={`h-9 flex items-center text-xs ${theme.textMuted}`}>Loading...</div>
       )}
       {!loading && activeOptions.length === 0 && (
-        <div className="h-9 flex items-center text-xs text-slate-400">No reference values configured</div>
+        <div className={`h-9 flex items-center text-xs ${theme.textMuted}`}>No options available</div>
       )}
       {!loading && activeOptions.length > 0 && (
         <div>
           {/* Selected badges */}
           <div className="flex flex-wrap gap-1 mb-1">
             {selectedOptions.length === 0 && (
-              <span className="text-xs text-slate-400 italic">{emptyLabel}</span>
+              <span className={`text-xs ${theme.textMuted} italic`}>{emptyLabel}</span>
             )}
             {selectedOptions.map((opt) => (
               <button
@@ -106,10 +107,10 @@ export function ReferenceMultiSelect({
                 type="button"
                 disabled={disabled}
                 onClick={() => toggle(opt.id)}
-                className={`inline-flex items-center gap-1 rounded-full font-medium transition-colors border whitespace-nowrap shrink-0 ${compact ? "h-6 text-xs px-2" : "px-2 py-0.5 text-[10px]"} bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`inline-flex items-center gap-1 rounded-full font-medium transition-colors border whitespace-nowrap shrink-0 ${compact ? "h-6 text-xs px-2" : "px-2 py-0.5 text-[10px]"} ${theme.badgeActive} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {opt.name}
-                {!disabled && <span className={`${compact ? "text-[10px]" : "text-xs"} ml-0.5 text-emerald-400 hover:text-emerald-600 dark:text-emerald-300`}>&times;</span>}
+                {!disabled && <span className={`${compact ? "text-[10px]" : "text-xs"} ml-0.5 text-success hover:text-success`}>&times;</span>}
               </button>
             ))}
           </div>
@@ -122,7 +123,7 @@ export function ReferenceMultiSelect({
                   type="button"
                   disabled={disabled}
                   onClick={() => toggle(opt.id)}
-                  className={`inline-flex items-center gap-1 rounded-full font-medium transition-colors border whitespace-nowrap shrink-0 ${compact ? "h-6 text-xs px-2" : "px-2 py-0.5 text-[10px]"} bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`inline-flex items-center gap-1 rounded-full font-medium transition-colors border whitespace-nowrap shrink-0 ${compact ? "h-6 text-xs px-2" : "px-2 py-0.5 text-[10px]"} ${theme.chip} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   + {opt.name}
                 </button>
@@ -131,7 +132,7 @@ export function ReferenceMultiSelect({
           )}
         </div>
       )}
-      {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
+      {error && <p className={`mt-0.5 text-[10px] ${theme.textCritical}`}>{error}</p>}
     </div>
   );
 }
@@ -142,35 +143,35 @@ interface ReferenceBadgeProps {
 }
 
 const COLOR_MAP: Record<string, string> = {
-  emerald: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20",
-  blue: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20",
-  amber: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20",
-  purple: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20",
-  rose: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20",
-  gray: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20",
-  slate: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600",
-  indigo: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20",
-  cyan: "bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-500/10 dark:text-cyan-400 dark:border-cyan-500/20",
-  violet: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-500/10 dark:text-violet-400 dark:border-violet-500/20",
-  orange: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20",
-  pink: "bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-500/10 dark:text-pink-400 dark:border-pink-500/20",
-  teal: "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-500/10 dark:text-teal-400 dark:border-teal-500/20",
+  emerald: "bg-success text-success border-success bg-success text-success border-success",
+  blue: "bg-primary text-primary border-primary bg-primary text-primary border-primary",
+  amber: "bg-warning text-warning border-warning bg-warning text-warning border-warning",
+  purple: "bg-info text-info border-info bg-info text-info border-info",
+  rose: "bg-danger text-danger border-danger bg-danger text-danger border-danger",
+  gray: "bg-muted text-muted-foreground border-border bg-muted text-muted-foreground border-border",
+  slate: "bg-muted text-muted-foreground border-border bg-muted text-muted-foreground border-border",
+  indigo: "bg-info text-info border-info bg-info text-info border-info",
+  cyan: "bg-info text-info border-info bg-info text-info border-info",
+  violet: "bg-info text-info border-info bg-info text-info border-info",
+  orange: "bg-warning text-warning border-warning bg-warning text-warning border-warning",
+  pink: "bg-info text-info border-info bg-info text-info border-info",
+  teal: "bg-success text-success border-success bg-success text-success border-success",
 };
 
 const DOT_COLOR_MAP: Record<string, string> = {
-  emerald: "bg-emerald-500",
-  blue: "bg-blue-500",
-  amber: "bg-amber-500",
-  purple: "bg-purple-500",
-  rose: "bg-rose-500",
-  gray: "bg-gray-500",
-  slate: "bg-slate-400",
-  indigo: "bg-indigo-500",
-  cyan: "bg-cyan-500",
-  violet: "bg-violet-500",
-  orange: "bg-orange-500",
-  pink: "bg-pink-500",
-  teal: "bg-teal-500",
+  emerald: "bg-success",
+  blue: "bg-primary",
+  amber: "bg-warning",
+  purple: "bg-info",
+  rose: "bg-danger",
+  gray: "bg-muted",
+  slate: "bg-muted",
+  indigo: "bg-info",
+  cyan: "bg-info",
+  violet: "bg-info",
+  orange: "bg-warning",
+  pink: "bg-info",
+  teal: "bg-success",
 };
 
 export function ReferenceBadge({ value, size = "sm" }: ReferenceBadgeProps) {
@@ -201,7 +202,7 @@ interface ReferenceBadgeListProps {
 }
 
 export function ReferenceBadgeList({ values, size = "sm" }: ReferenceBadgeListProps) {
-  if (!values || values.length === 0) return <span className="text-xs text-slate-400">None</span>;
+  if (!values || values.length === 0) return <span className="text-xs text-muted-foreground">None</span>;
   return (
     <div className="flex flex-wrap gap-1">
       {values.map((v) => (
@@ -220,7 +221,7 @@ export function ReferenceColorBadge({ colorKey, label }: ReferenceColorBadgeProp
   const style = COLOR_MAP[colorKey] ?? COLOR_MAP.slate;
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide border ${style}`}>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${DOT_COLOR_MAP[colorKey] ?? "bg-slate-400"}`} />
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${DOT_COLOR_MAP[colorKey] ?? "bg-muted"}`} />
       {label}
     </span>
   );

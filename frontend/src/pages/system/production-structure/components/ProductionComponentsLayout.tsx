@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Search, X, Plus, Pencil, Trash2, RefreshCw, Database, Check, Info } from "lucide-react";
@@ -6,14 +7,25 @@ import { theme } from "@/styles/themeTokens";
 
 const BASE = "/system/production-structure/components";
 
-const NAV_ITEMS = [
-  { key: "company", label: "Company", to: `${BASE}/company`, Icon: Landmark, colorActive: "text-emerald-700 dark:text-emerald-300", bgActive: "bg-emerald-50 dark:bg-emerald-500/10", colorInactive: "text-emerald-600/70 dark:text-emerald-400/55", bgInactive: "bg-emerald-50/40 dark:bg-emerald-900/10", accent: "bg-emerald-500 dark:bg-emerald-400", subtitle: "Company root profile, global defaults, and production structure overview." },
-  { key: "plants", label: "Plants", to: `${BASE}/plants`, Icon: Factory, colorActive: "text-blue-700 dark:text-blue-300", bgActive: "bg-blue-50 dark:bg-blue-500/10", colorInactive: "text-blue-600/70 dark:text-blue-400/55", bgInactive: "bg-blue-50/40 dark:bg-blue-900/10", accent: "bg-blue-500 dark:bg-blue-400", subtitle: "Facilities, locations, and production sites." },
-  { key: "line", label: "Line", to: `${BASE}/line`, Icon: TrendingUpDown, colorActive: "text-amber-700 dark:text-amber-300", bgActive: "bg-amber-50 dark:bg-amber-500/10", colorInactive: "text-amber-600/70 dark:text-amber-400/55", bgInactive: "bg-amber-50/40 dark:bg-amber-900/10", accent: "bg-amber-500 dark:bg-amber-400", subtitle: "Production lines and flow paths." },
-  { key: "dept", label: "Dept", to: `${BASE}/dept`, Icon: Layers, colorActive: "text-purple-700 dark:text-purple-300", bgActive: "bg-purple-50 dark:bg-purple-500/10", colorInactive: "text-purple-600/70 dark:text-purple-400/55", bgInactive: "bg-purple-50/40 dark:bg-purple-900/10", accent: "bg-purple-500 dark:bg-purple-400", subtitle: "Organizational departments and work centers." },
-  { key: "rg", label: "RG", to: `${BASE}/rg`, Icon: Component, colorActive: "text-rose-700 dark:text-rose-300", bgActive: "bg-rose-50 dark:bg-rose-500/10", colorInactive: "text-rose-600/70 dark:text-rose-400/55", bgInactive: "bg-rose-50/40 dark:bg-rose-900/10", accent: "bg-rose-500 dark:bg-rose-400", subtitle: "Work cells, teams, and resource groupings." },
-  { key: "resource", label: "Resource", to: `${BASE}/resource`, Icon: Dumbbell, colorActive: "text-slate-700 dark:text-slate-300", bgActive: "bg-slate-100 dark:bg-slate-800/70", colorInactive: "text-slate-500/80 dark:text-slate-400/65", bgInactive: "bg-slate-50/40 dark:bg-slate-900/40", accent: "bg-slate-500 dark:bg-slate-400", subtitle: "Machines, workstations, and production assets." },
+interface NavItem {
+  key: string;
+  label: string;
+  to: string;
+  Icon: typeof Landmark;
+  entityClass: string;
+  subtitle: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
+  { key: "company", label: "Company", to: `${BASE}/company`, Icon: Landmark, entityClass: "company", subtitle: "Company root profile, global defaults, and production structure overview." },
+  { key: "plants", label: "Plants", to: `${BASE}/plants`, Icon: Factory, entityClass: "plant", subtitle: "Facilities, locations, and production sites." },
+  { key: "line", label: "Line", to: `${BASE}/line`, Icon: TrendingUpDown, entityClass: "line", subtitle: "Production lines and flow paths." },
+  { key: "dept", label: "Dept", to: `${BASE}/dept`, Icon: Layers, entityClass: "department", subtitle: "Organizational departments and work centers." },
+  { key: "rg", label: "RG", to: `${BASE}/rg`, Icon: Component, entityClass: "resource-group", subtitle: "Work cells, teams, and resource groupings." },
+  { key: "resource", label: "Resource", to: `${BASE}/resource`, Icon: Dumbbell, entityClass: "resource", subtitle: "Machines, workstations, and production assets." },
 ];
+
+const colorVar = (e: string) => `--color-entity-${e}` as string;
 
 function getTitle(key: string): string {
   const map: Record<string, string> = {
@@ -30,7 +42,7 @@ function getTitle(key: string): string {
 function Toolbar() {
   const { search, setSearch, statusFilter, setStatusFilter, toolbarVariant, entityContext } = useToolbar();
   const actions = useToolbarActions();
-  const toolbarButtonClass = "inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500 disabled:opacity-70";
+  const toolbarButtonClass = "inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors disabled:pointer-events-none disabled:text-muted-foreground disabled:bg-transparent disabled:opacity-70";
   const saveDisabled = actions.isSaving || !actions.isDirty || actions.isValid === false;
   const isEditMode = !!actions.onSave;
   const requestFilterChange = (apply: () => void) => {
@@ -44,18 +56,18 @@ function Toolbar() {
   const searchFilterControls = (
     <>
       <div className="relative min-w-0 flex-1">
-        <Search className={`absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 stroke-current pointer-events-none ${isEditMode ? theme.textDisabled : "text-slate-400"}`} />
+        <Search className={`absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 stroke-current pointer-events-none ${isEditMode ? theme.textDisabled : "text-muted-foreground"}`} />
         <input type="text" value={search} onChange={(e) => requestFilterChange(() => setSearch(e.target.value))} placeholder="Search"
-          className="h-7 w-full border border-slate-300 bg-white pl-3 pr-7 text-xs outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-blue-400" />
+          className="h-7 w-full border border-border bg-card pl-3 pr-7 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-primary" />
         {search && (
           <button type="button" onClick={() => requestFilterChange(() => setSearch(""))}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
             <X className="h-3.5 w-3.5 stroke-current" />
           </button>
         )}
       </div>
       <select value={statusFilter} onChange={(e) => requestFilterChange(() => setStatusFilter(e.target.value))}
-        className="h-7 w-24 shrink-0 border border-slate-300 bg-white px-2 text-xs outline-none text-slate-600 cursor-pointer dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        className="h-7 w-24 shrink-0 border border-border bg-card px-2 text-xs outline-none text-muted-foreground cursor-pointer">
         <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
       </select>
     </>
@@ -67,7 +79,7 @@ function Toolbar() {
         {actions.editLabel || "Editing"}
       </span>
       <span className={`inline-flex items-center gap-1 h-8 px-2 text-[11px] font-medium ${actions.isDirty ? theme.textWarning : theme.textMuted}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${actions.isDirty ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`} />
+        <span className={`h-1.5 w-1.5 rounded-full ${actions.isDirty ? "bg-warning" : "bg-muted"}`} />
         {actions.isDirty ? "Unsaved changes" : "No changes"}
       </span>
       <button type="button" onClick={actions.onSave} title={saveDisabled ? "Save is available after valid changes" : "Save"} disabled={saveDisabled}
@@ -76,7 +88,7 @@ function Toolbar() {
         <span className="hidden sm:inline">{actions.isSaving ? "Saving..." : "Save"}</span>
       </button>
       <button type="button" onClick={actions.onCancel} title="Cancel"
-        className={`inline-flex items-center gap-1.5 h-8 px-2 rounded border text-[11px] font-medium ${theme.buttonSecondary} border-slate-300 dark:border-slate-600 transition-colors`}>
+        className={`inline-flex items-center gap-1.5 h-8 px-2 rounded border text-[11px] font-medium ${theme.buttonSecondary} border-border transition-colors`}>
         <X className="h-4 w-4 stroke-current" />
         <span className="hidden sm:inline">Cancel</span>
       </button>
@@ -98,14 +110,14 @@ function Toolbar() {
         <Trash2 className="h-4 w-4 stroke-current" />
         <span>Delete</span>
       </button>
-      <span className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-600 shrink-0" />
+      <span className="mx-1 h-5 w-px bg-muted shrink-0" />
       <button type="button" onClick={actions.onRefresh} title="Refresh list" disabled={!actions.onRefresh}
         className={toolbarButtonClass}>
         <RefreshCw className="h-4 w-4 stroke-current" />
         <span>Refresh</span>
       </button>
       {actions.hasSelected && (
-        <span className="ml-2 inline-flex items-center gap-1 h-8 px-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 border-l border-slate-200 dark:border-slate-700">
+        <span className="ml-2 inline-flex items-center gap-1 h-8 px-2 text-[11px] font-medium text-muted-foreground border-l border-border">
           1 selected
         </span>
       )}
@@ -113,13 +125,13 @@ function Toolbar() {
   );
 
   return (
-    <div className="shrink-0 flex items-center gap-0.5 border-b border-slate-300 bg-white pl-6 pr-4 dark:border-slate-600 dark:bg-slate-900 h-10 select-none">
+    <div className="shrink-0 flex items-center gap-0.5 border-b border-border bg-muted pl-6 pr-4 h-10 select-none">
       {toolbarVariant === "splitListDetail" ? (
         <>
           <div className="flex h-full min-w-0 items-center gap-2 pr-2" style={{ flex: "0 0 280px", width: 280 }}>
             {searchFilterControls}
           </div>
-          <span className="h-5 w-px shrink-0 bg-slate-300 dark:bg-slate-600" />
+          <span className="h-5 w-px shrink-0 bg-muted" />
           <div className="flex min-w-0 flex-1 items-center gap-0.5 pl-3">
             {actionControls}
           </div>
@@ -128,10 +140,10 @@ function Toolbar() {
         <>
           {entityContext && (
             <>
-              <span className="mr-2 inline-flex h-7 items-center rounded border border-slate-200 bg-slate-50 px-2 text-[11px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              <span className="mr-2 inline-flex h-7 items-center rounded border border-border bg-muted px-2 text-[11px] font-semibold text-muted-foreground">
                 {entityContext}
               </span>
-              <span className="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-600 shrink-0" />
+              <span className="mx-1 h-5 w-px bg-muted shrink-0" />
             </>
           )}
           {actionControls}
@@ -161,12 +173,12 @@ function Footer() {
   }
 
   return (
-    <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center justify-between px-5 text-xs text-slate-500 dark:text-slate-300 font-medium h-10">
+    <div className="shrink-0 border-t border-border bg-muted flex h-14 items-center justify-between px-5 text-xs text-muted-foreground font-medium">
       <div className="flex items-center gap-2">
-        <Database className="h-3.5 w-3.5 stroke-current text-slate-400" />
-        <span className="text-slate-400">{leftParts.join(" · ") || `Production Components${entityContext ? ` / ${entityContext}` : ""}`}</span>
+        <Database className="h-3.5 w-3.5 stroke-current text-muted-foreground" />
+        <span className="text-muted-foreground">{leftParts.join(" · ") || `Production Components${entityContext ? ` / ${entityContext}` : ""}`}</span>
       </div>
-      {rightParts.length > 0 && <div className="text-slate-400">{rightParts.join(" · ")}</div>}
+      {rightParts.length > 0 && <div className="text-muted-foreground">{rightParts.join(" · ")}</div>}
     </div>
   );
 }
@@ -177,19 +189,21 @@ function ProductionComponentsShell() {
   const lastSegment = location.pathname.replace(/\/+$/, "").split("/").pop() || "";
   const tab = lastSegment === "components" ? "company" : lastSegment;
   const currentItem = NAV_ITEMS.find((i) => i.key === tab) || NAV_ITEMS[0];
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const { systemMessage, clearSystemMessage } = useToolbar();
   const messageClass = systemMessage?.type === "success"
-    ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+    ? "border-success bg-success/10 text-success"
     : systemMessage?.type === "error"
-      ? "border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
-      : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300";
+      ? "border-danger bg-danger/10 text-danger"
+      : "border-border/60 bg-muted text-muted-foreground";
 
   return (
     <div className="flex flex-col overflow-hidden h-full">
         <div className="relative shrink-0">
           <PageHeader
             icon={<currentItem.Icon className="h-5 w-5 stroke-current" />}
-            iconClass={`${currentItem.bgInactive} ${currentItem.colorInactive}`}
+            iconClass={`text-entity-${currentItem.entityClass}`}
             title={getTitle(tab)}
             subtitle={currentItem.subtitle}
           />
@@ -204,38 +218,85 @@ function ProductionComponentsShell() {
             </div>
           )}
         </div>
-        <Toolbar />
         <div className="flex flex-1 overflow-hidden p-0 m-0">
-          <div className="flex flex-col shrink-0" style={{ width: 24, maxWidth: 24 }}>
+          <div className="flex h-[calc(100%+3.5rem)] -mb-14 flex-col shrink-0 gap-1 border-r border-border py-1" style={{ width: 26, maxWidth: 26 }}>
             {NAV_ITEMS.map((item) => {
               const Icon = item.Icon;
               const isActiveTab = tab === item.key;
+              const isHovered = hoveredKey === item.key;
+              const isFocused = focusedKey === item.key;
+
+              let bg = "transparent";
+              let color = `color-mix(in srgb, var(${colorVar(item.entityClass)}) 72%, var(--color-muted-foreground))`;
+              let opacity = "0.86";
+              let accentOpacity = "0";
+              let transitionDuration = "200ms";
+              let fontWeight = 500;
+              let strokeWidth = 1.75;
+              let outlineStyle = "none";
+
+              if (isActiveTab) {
+                bg = `color-mix(in srgb, var(${colorVar(item.entityClass)}) 11%, transparent)`;
+                color = `var(${colorVar(item.entityClass)})`;
+                opacity = "1";
+                accentOpacity = "0.42";
+                transitionDuration = "120ms";
+                fontWeight = 600;
+                strokeWidth = 2.1;
+              } else if (isHovered) {
+                bg = `color-mix(in srgb, var(${colorVar(item.entityClass)}) 8%, transparent)`;
+                color = `var(${colorVar(item.entityClass)})`;
+                opacity = "1";
+                transitionDuration = "150ms";
+                strokeWidth = 2;
+              }
+
+              if (isFocused) {
+                outlineStyle = `2px solid var(${colorVar(item.entityClass)})`;
+              }
+
               return (
                 <button
                   key={item.key}
                   type="button"
                   onClick={() => navigate(item.to)}
-                  className={`relative flex items-center justify-center transition-colors duration-150 font-['Segoe_UI',system-ui,sans-serif] ${
-                    isActiveTab
-                      ? `${item.bgActive} ${item.colorActive} font-medium`
-                      : `${item.bgInactive} ${item.colorInactive} hover:text-slate-500 dark:hover:text-slate-400`
-                  }`}
-                  style={{ flex: "1 0 auto", minHeight: 0 }}
-                  title={item.label}
+                  onMouseEnter={() => setHoveredKey(item.key)}
+                  onMouseLeave={() => setHoveredKey(null)}
+                  onFocus={() => setFocusedKey(item.key)}
+                  onBlur={() => setFocusedKey(null)}
+                  className="relative flex flex-1 items-center justify-center w-full rounded-sm font-['Segoe_UI',system-ui,sans-serif] select-none"
+                  style={{
+                    background: bg,
+                    color,
+                    opacity,
+                    borderLeft: "2px solid transparent",
+                    transition: `all ${transitionDuration} ease-out`,
+                    fontWeight,
+                    minHeight: 52,
+                    outline: outlineStyle,
+                    outlineOffset: -2,
+                  } as React.CSSProperties}
+                  title={`${item.label}${isActiveTab ? " (active)" : ""}`}
+                  aria-current={isActiveTab ? "page" : undefined}
                 >
-                  {isActiveTab && <span className={`absolute left-0 top-2 bottom-2 w-px ${item.accent}`} />}
-                  <div className="flex items-center gap-1" style={{ transform: "rotate(-90deg)", transformOrigin: "center", whiteSpace: "nowrap" }}>
-                    <span className={`flex items-center justify-center w-3.5 h-3.5 ${isActiveTab ? item.colorActive : item.colorInactive}`}>
-                      <Icon className="h-3 w-3" />
+                  <span
+                    className="absolute left-0 top-2 bottom-2 w-px rounded-full"
+                    style={{ background: `var(${colorVar(item.entityClass)})`, opacity: accentOpacity }}
+                    aria-hidden="true"
+                  />
+                  <div className="flex items-center gap-1.5" style={{ transform: "rotate(-90deg)", transformOrigin: "center", whiteSpace: "nowrap" }}>
+                    <span className="flex items-center justify-center w-4 h-4">
+                      <Icon className="h-3.5 w-3.5 stroke-current" strokeWidth={strokeWidth} />
                     </span>
-                    <span className={`text-[9px] ${isActiveTab ? `font-medium ${item.colorActive}` : `font-semibold ${item.colorInactive}`}`}>{item.label}</span>
+                    <span className="text-[10.5px] leading-none tracking-[0.01em]">{item.label}</span>
                   </div>
                 </button>
               );
             })}
           </div>
-          <div className="shrink-0 bg-slate-200/60 dark:bg-slate-700/60" style={{ width: 1 }} />
+          <div className="shrink-0 bg-muted" style={{ width: 1 }} />
           <div className="flex flex-col overflow-hidden flex-1 min-w-0">
+            <Toolbar />
             <Outlet />
           </div>
         </div>

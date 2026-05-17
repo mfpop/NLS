@@ -137,12 +137,12 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
           <div className="space-y-3">
             <Field label="Plant Name" required error={errors.name}>
               <input type="text" value={form.name} onChange={(e) => updateField("name", e.target.value)} placeholder="e.g. Main Plant"
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 ${errors.name ? "border-red-300 focus:ring-red-200" : "border-slate-200 focus:ring-slate-300 dark:border-slate-600"}`} />
+                className={`w-full rounded-lg border bg-card px-3 py-2 text-xs text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 bg-muted text-primary-foreground ${errors.name ? "border-danger focus:ring-danger" : "border-border focus:ring-ring border-border"}`} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Plant Code" required error={errors.code}>
                 <input type="text" value={form.code} onChange={(e) => updateField("code", e.target.value.toUpperCase())} placeholder="e.g. MP-01"
-                  className={`w-full rounded-lg border bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 uppercase focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 ${errors.code ? "border-red-300 focus:ring-red-200" : "border-slate-200 focus:ring-slate-300 dark:border-slate-600"}`} />
+                  className={`w-full rounded-lg border bg-card px-3 py-2 text-xs text-muted-foreground placeholder:text-muted-foreground uppercase focus:outline-none focus:ring-2 bg-muted text-primary-foreground ${errors.code ? "border-danger focus:ring-danger" : "border-border focus:ring-ring border-border"}`} />
               </Field>
               <Field label="Status">
                 <select value={form.status} onChange={(e) => updateField("status", e.target.value)}
@@ -163,7 +163,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
             </Field>
             <Field label="Address">
               <input type="text" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="e.g. 123 Industrial Blvd, Detroit, MI"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500" />
+                className="w-full rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring border-border bg-muted text-primary-foreground" />
             </Field>
             <Field label="Timezone">
               <select value={form.timezone} onChange={(e) => updateField("timezone", e.target.value)}
@@ -184,7 +184,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
             </Field>
             <Field label="Email (optional)" error={errors.managerEmail}>
               <input type="email" value={form.managerEmail} onChange={(e) => updateField("managerEmail", e.target.value)} placeholder="john@leansync.com"
-                className={`w-full rounded-lg border bg-white px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500 ${errors.managerEmail ? "border-red-300 focus:ring-red-200" : "border-slate-200 focus:ring-slate-300 dark:border-slate-600"}`} />
+                className={`w-full rounded-lg border bg-card px-3 py-2 text-xs text-muted-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 bg-muted text-primary-foreground ${errors.managerEmail ? "border-danger focus:ring-danger" : "border-border focus:ring-ring border-border"}`} />
             </Field>
           </div>
 
@@ -197,16 +197,16 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
 
           {/* ── Validation feedback ── */}
           {errors._form && (
-            <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{errors._form}</div>
+            <div className="mt-3 rounded-lg border border-danger bg-danger px-3 py-2 text-xs text-danger">{errors._form}</div>
           )}
 
           {/* ── Confirm close warning ── */}
           {showConfirmClose && (
-            <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <div className="mt-3 rounded-lg border border-warning bg-warning px-3 py-2 text-xs text-warning">
               You have unsaved changes.
               <div className="mt-2 flex items-center gap-2">
-                <button type="button" onClick={() => setShowConfirmClose(false)} className="rounded-md border border-amber-200 bg-white px-2 py-1 text-[10px] font-medium text-amber-700 hover:bg-amber-100 transition-colors">Keep editing</button>
-                <button type="button" onClick={() => { setDirty(false); onClose(); }} className="rounded-md bg-amber-600 px-2 py-1 text-[10px] font-medium text-white hover:bg-amber-500 transition-colors">Discard</button>
+                <button type="button" onClick={() => setShowConfirmClose(false)} className="rounded-md border border-warning bg-card px-2 py-1 text-[10px] font-medium text-warning hover:bg-warning transition-colors">Keep editing</button>
+                <button type="button" onClick={() => { setDirty(false); onClose(); }} className="rounded-md bg-warning px-2 py-1 text-[10px] font-medium text-primary-foreground hover:bg-warning transition-colors">Discard</button>
               </div>
             </div>
           )}
@@ -224,7 +224,7 @@ export function PlantModal({ open, onClose, onSave, editingPlant }: PlantModalPr
               Cancel
             </button>
             <button type="submit" onClick={handleSubmit} disabled={!canSave}
-              className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-white transition-colors ${canSave ? "bg-slate-800 hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600" : "cursor-not-allowed bg-slate-300 dark:bg-slate-600"}`}>
+              className={`rounded-lg px-4 py-1.5 text-xs font-semibold text-primary-foreground transition-colors ${canSave ? "bg-muted hover:bg-muted hover:bg-muted" : "cursor-not-allowed bg-muted"}`}>
               {saving ? "Saving..." : "Save"}
             </button>
           </div>
@@ -245,10 +245,10 @@ function Field({ label, children, error, required }: { label: string; children: 
     <div>
       <label className={`mb-1 block text-[11px] font-medium ${theme.textSecondary}`}>
         {label}
-        {required && <span className="ml-0.5 text-red-500">*</span>}
+        {required && <span className="ml-0.5 text-danger">*</span>}
       </label>
       {children}
-      {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
+      {error && <p className="mt-0.5 text-[10px] text-danger">{error}</p>}
     </div>
   );
 }

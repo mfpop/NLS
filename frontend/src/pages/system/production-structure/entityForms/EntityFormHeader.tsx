@@ -17,7 +17,7 @@ export function EntityFormHeader({ icon, iconBg, name, entityType, code, status,
   const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
-    <div className="shrink-0 border-b border-slate-200 dark:border-slate-700/50 bg-white dark:bg-slate-950">
+    <div className="shrink-0 border-b border-border bg-card bg-muted">
       <div className="mx-auto px-6 py-3" style={{ maxWidth: "1000px" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
@@ -26,18 +26,18 @@ export function EntityFormHeader({ icon, iconBg, name, entityType, code, status,
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{name}</h2>
-                {error && <span className="text-[10px] text-red-500 font-medium">{error}</span>}
+                <h2 className="text-sm font-bold text-muted-foreground truncate">{name}</h2>
+                {error && <span className="text-[10px] text-danger font-medium">{error}</span>}
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                <span className="font-medium text-slate-600 dark:text-slate-300">{entityType}</span>
-                <span className="text-slate-300 dark:text-slate-600">|</span>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                <span className="font-medium text-muted-foreground">{entityType}</span>
+                <span className="text-muted-foreground">|</span>
                 <span className="font-mono">{code || "\u2014"}</span>
-                <span className="text-slate-300 dark:text-slate-600">|</span>
+                <span className="text-muted-foreground">|</span>
                 <PillBadge variant={status === "active" ? "active" : "inactive"} label={statusLabel} />
                 {isDirty && (
-                  <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
-                    <Circle className="h-2 w-2 fill-amber-500 stroke-none" />
+                  <span className="inline-flex items-center gap-1 text-warning font-medium">
+                    <Circle className="h-2 w-2 fill-warning stroke-none" />
                     Unsaved changes
                   </span>
                 )}

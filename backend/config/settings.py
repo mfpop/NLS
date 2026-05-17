@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "strawberry_django",
     # Project apps
     "shared",
+    "application",
     "manufacturing",
     "process",
     "execution",

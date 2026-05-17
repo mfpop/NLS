@@ -340,15 +340,15 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
   const SortIcon = ({ col }: { col: string }) => {
     if (sortConfig?.key === col) {
       return sortConfig.direction === "asc"
-        ? <ChevronUp className="h-3 w-3 stroke-current text-slate-600 shrink-0" />
-        : <ChevronDown className="h-3 w-3 stroke-current text-slate-600 shrink-0" />;
+        ? <ChevronUp className="h-3 w-3 stroke-current text-muted-foreground shrink-0" />
+        : <ChevronDown className="h-3 w-3 stroke-current text-muted-foreground shrink-0" />;
     }
-    return <ChevronsUpDown className="h-3 w-3 stroke-current text-slate-400 shrink-0" />;
+    return <ChevronsUpDown className="h-3 w-3 stroke-current text-muted-foreground shrink-0" />;
   };
 
   const Th = ({ col, label, className = "" }: { col: string; label: string; className?: string }) => (
     <button type="button" onClick={() => cycleSort(col)}
-      className={`flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors ${className}`}>
+      className={`flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-muted-foreground hover:text-muted-foreground transition-colors ${className}`}>
       <span>{label}</span>
       <SortIcon col={col} />
     </button>
@@ -357,7 +357,7 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 flex flex-col min-h-0">
-        <div className={`shrink-0 grid ${gridCols} gap-0 px-3 py-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30`}>
+        <div className={`shrink-0 grid ${gridCols} gap-0 px-3 py-1.5 border-b border-border bg-muted`}>
           {isStaffAssignments ? (
             <>
               <Th col="name" label="Staff" />
@@ -388,20 +388,20 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
         </div>
         <div className="flex-1 overflow-y-auto">
           {visible.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-xs text-slate-400">
-              <Database className="h-8 w-8 stroke-current text-slate-200 dark:text-slate-700 mb-2" />
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            <div className="flex flex-col items-center justify-center py-12 text-xs text-muted-foreground">
+              <Database className="h-8 w-8 stroke-current text-muted-foreground mb-2" />
+              <span className="text-sm font-medium text-muted-foreground">
                 {typeItems.length === 0 ? "No records yet" : "No matching records"}
               </span>
             </div>
           ) : (
-            <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+            <div>
               {visible.map((item) => (
                 <div key={item.id} onClick={() => { if (!workflowManaged) onEdit(item); }}
-                  className={`grid ${gridCols} gap-0 px-3 transition-colors ${workflowManaged ? "cursor-default" : "cursor-pointer"} hover:bg-slate-50 dark:hover:bg-slate-800/40 min-h-0`} style={{ height: "44px" }}>
+                  className={`grid ${gridCols} gap-0 px-3 transition-colors ${workflowManaged ? "cursor-default" : "cursor-pointer"} hover:bg-muted hover:bg-muted min-h-0`} style={{ height: "44px" }}>
                   {isStaffAssignments ? (
                     <>
-                      <span className="flex items-center text-xs font-semibold truncate text-slate-800 dark:text-slate-200 pr-2" title={item.name}>{item.name}</span>
+                      <span className="flex items-center text-xs font-semibold truncate text-muted-foreground pr-2" title={item.name}>{item.name}</span>
                       <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.role || ""}>{item.role || "-"}</span>
                       <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.department || ""}>{item.department || "Unassigned"}</span>
                       <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.plant || ""}>{item.plant || "Unassigned"}</span>
@@ -410,7 +410,7 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
                   ) : isStaffUsers ? (
                     <>
                       <span className="flex min-w-0 flex-col justify-center pr-2">
-                        <span className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200" title={item.name}>{item.name}</span>
+                        <span className="truncate text-xs font-semibold text-muted-foreground" title={item.name}>{item.name}</span>
                         <span className={`truncate text-[9px] font-mono ${theme.textMuted}`} title={item.username || item.code}>{item.username || item.code}</span>
                       </span>
                       <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.role || ""}>{item.role || "-"}</span>
@@ -419,8 +419,8 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
                     </>
                   ) : (
                     <>
-                      <span className="flex items-center text-xs font-semibold truncate text-slate-800 dark:text-slate-200 pr-2" title={item.name}>{item.name}</span>
-                      <span className="flex items-center text-[10px] truncate text-slate-400 dark:text-slate-500 leading-tight text-left pr-2">
+                      <span className="flex items-center text-xs font-semibold truncate text-muted-foreground pr-2" title={item.name}>{item.name}</span>
+                      <span className="flex items-center text-[10px] truncate text-muted-foreground leading-tight text-left pr-2">
                         {item.description}
                       </span>
                       <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.usageContext || ""}>{item.usageContext}</span>
@@ -428,7 +428,7 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
                   )}
                   <span className="flex items-center">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ${statusBadgeClass(item.isActive)}`}>
-                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${item.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      <span className={`inline-block h-1.5 w-1.5 rounded-full ${item.isActive ? 'bg-success' : 'bg-muted'}`} />
                       {item.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </span>
@@ -436,7 +436,7 @@ function ItemsList({ items, selectedType, tableSearch, onEdit }: {
                     <>
                       <span className={`flex items-center truncate pr-2 text-[10px] ${theme.textSecondary}`} title={item.usageImpact || ""}>{item.usageImpact}</span>
                       <span className="flex items-center overflow-hidden pr-2">
-                        <span className="inline-flex max-w-full items-center truncate rounded border border-slate-200/80 bg-slate-100/80 px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none tracking-wide text-slate-500 dark:border-slate-700/80 dark:bg-slate-800/80 dark:text-slate-400" title={item.code}>
+                        <span className="inline-flex max-w-full items-center truncate rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold leading-none tracking-wide text-muted-foreground border-border bg-muted text-muted-foreground" title={item.code}>
                           {item.code}
                         </span>
                       </span>
@@ -462,7 +462,7 @@ function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany,
     <div className="flex flex-col min-h-0 h-full">
       <div className="flex-1 overflow-y-auto">
         {itemsLoading && !itemsData ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-xs text-slate-400"><RefreshCw className="h-4 w-4 animate-spin stroke-current" /> Loading...</div>
+          <div className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground"><RefreshCw className="h-4 w-4 animate-spin stroke-current" /> Loading...</div>
         ) : (
           <div>
             {GROUP_ORDER.map((g) => {
@@ -472,23 +472,23 @@ function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany,
               return (
                 <div key={g}>
                   <button type="button" onClick={() => toggleGroup(g)}
-                    className="flex w-full cursor-pointer items-center gap-2 px-3 transition-colors text-left hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
+                    className="flex w-full cursor-pointer items-center gap-2 px-3 transition-colors text-left hover:bg-muted hover:bg-muted"
                     style={{ height: "34px" }}>
-                    <ChevronRight className={`h-3 w-3 text-slate-400 stroke-current shrink-0 transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
-                    <span className="min-w-0 flex-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">{GROUP_LABELS[g]}</span>
-                    <span className="text-[9px] text-slate-400 font-mono shrink-0">{uniqueTypes.length}</span>
+                    <ChevronRight className={`h-3 w-3 text-muted-foreground stroke-current shrink-0 transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`} />
+                    <span className="min-w-0 flex-1 text-[11px] font-medium text-muted-foreground">{GROUP_LABELS[g]}</span>
+                    <span className="text-[9px] text-muted-foreground font-mono shrink-0">{uniqueTypes.length}</span>
                   </button>
                   <div className={`overflow-hidden transition-all duration-150 ease-in-out ${isOpen ? "" : "max-h-0"}`}>
                     {g === "organization" && (
                       <button type="button" onClick={openCompany}
                         className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-3 ${
                           selectedType === "__company__"
-                            ? "bg-emerald-50/60 dark:bg-emerald-500/10 border-emerald-500"
-                            : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-transparent"
+                            ? "bg-success border-success"
+                            : "hover:bg-muted hover:bg-muted border-transparent"
                         }`}
                         style={{ paddingLeft: "36px", height: "30px" }}>
-                        <span className="flex-1 text-left text-[11px] font-medium text-slate-600 dark:text-slate-300">Company</span>
-                        <span className="text-[9px] text-slate-400">setup</span>
+                        <span className="flex-1 text-left text-[11px] font-medium text-muted-foreground">Company</span>
+                        <span className="text-[9px] text-muted-foreground">setup</span>
                       </button>
                     )}
                     {uniqueTypes.map((tt) => {
@@ -504,18 +504,18 @@ function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany,
                         <button key={tt} type="button" onClick={() => selectType(tt)}
                           className={`flex w-full cursor-pointer items-center gap-2 px-3 transition-colors border-l-3 ${
                             isSelected
-                              ? "bg-slate-100 dark:bg-slate-800 border-emerald-500 dark:border-emerald-400"
-                              : "hover:bg-slate-100/60 dark:hover:bg-slate-800/40 border-transparent"
+                              ? "bg-muted border-success"
+                              : "hover:bg-muted hover:bg-muted border-transparent"
                           }`}
                           style={{ paddingLeft: "36px", height: "30px" }}>
                           <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded ${entityBgColor}`}>
                             <EntityIcon className={`h-2.5 w-2.5 stroke-current ${entityTextColor}`} />
                           </span>
-                          <span className={`flex-1 text-left text-[11px] truncate ${isSelected ? "font-semibold text-slate-800 dark:text-slate-200" : "font-medium text-slate-600 dark:text-slate-300"}`}>{label}</span>
+                          <span className={`flex-1 text-left text-[11px] truncate ${isSelected ? "font-semibold text-muted-foreground" : "font-medium text-muted-foreground"}`}>{label}</span>
                           <div className="flex items-center gap-1 shrink-0">
-                            {workflowManaged && <Lock className="h-2.5 w-2.5 stroke-current text-sky-500" aria-label="Managed by workflow" />}
-                            {!workflowManaged && hasUsage && <Info className="h-2.5 w-2.5 stroke-current text-amber-500" aria-label="Used by production data" />}
-                            <span className="text-[9px] text-slate-400 font-mono">{typeItems.length}</span>
+                            {workflowManaged && <Lock className="h-2.5 w-2.5 stroke-current text-info" aria-label="Managed by workflow" />}
+                            {!workflowManaged && hasUsage && <Info className="h-2.5 w-2.5 stroke-current text-warning" aria-label="Used by production data" />}
+                            <span className="text-[9px] text-muted-foreground font-mono">{typeItems.length}</span>
                           </div>
                         </button>
                       );
@@ -893,42 +893,42 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
 
       {/* ── Toolbar ── */}
       {standalone && (
-        <div className="shrink-0 flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 h-10 px-4">
+        <div className="shrink-0 flex items-center gap-3 border-b border-border bg-card bg-muted h-10 px-4">
           <div className="relative" style={{ width: 200 }}>
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current pointer-events-none" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search catalog..."
-              className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-violet-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-violet-500" />
+              className="h-7 w-full rounded border border-border bg-card pl-7 pr-2 text-[11px] outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-info border-border bg-muted text-muted-foreground dark:focus:border-info" />
           </div>
           {selectedType && !companyEditMode && !itemEditorOpen && (
             <>
-              <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
+              <span className="h-5 w-px bg-muted shrink-0" />
               <div className="relative" style={{ width: 200 }}>
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 stroke-current pointer-events-none" />
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
                 <input type="text" value={tableSearch} onChange={(e) => setTableSearch(e.target.value)} placeholder="Search records..."
-                  className="h-7 w-full rounded border border-slate-300 bg-white pl-7 pr-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-colors focus:border-violet-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-violet-500" />
+                  className="h-7 w-full rounded border border-border bg-card pl-7 pr-2 text-[11px] outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-info border-border bg-muted text-muted-foreground dark:focus:border-info" />
               </div>
-              <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
-              <span className="text-[11px] text-slate-400">Reference Tables</span>
-              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-              <span className="text-[11px] text-slate-400">{selectedGroupLabel}</span>
-              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
-              <span className="text-[10px] text-slate-400 font-mono">{selectedTypeItems.length}</span>
+              <span className="h-5 w-px bg-muted shrink-0" />
+              <span className="text-[11px] text-muted-foreground">Reference Tables</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-muted-foreground" />
+              <span className="text-[11px] text-muted-foreground">{selectedGroupLabel}</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-muted-foreground" />
+              <span className="text-[11px] font-semibold text-muted-foreground truncate">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
+              <span className="text-[10px] text-muted-foreground font-mono">{selectedTypeItems.length}</span>
             </>
           )}
           {selectedType && !companyEditMode && itemEditorOpen && (
             <>
-              <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 shrink-0" />
-              <span className="text-[11px] text-slate-400">Reference Tables</span>
-              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-              <span className="text-[11px] text-slate-400">{selectedGroupLabel}</span>
-              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
-              <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-              <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 truncate">
+              <span className="h-5 w-px bg-muted shrink-0" />
+              <span className="text-[11px] text-muted-foreground">Reference Tables</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-muted-foreground" />
+              <span className="text-[11px] text-muted-foreground">{selectedGroupLabel}</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-muted-foreground" />
+              <span className="text-[11px] font-semibold text-muted-foreground truncate">{TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
+              <ChevronRight className="h-3 w-3 stroke-current text-muted-foreground" />
+              <span className="text-[11px] font-semibold text-muted-foreground truncate">
                 {editingItem ? `Edit ${editingItem.name}` : `Add ${getEntityLabel(currentTableType)}`}
               </span>
-              {isItemDirty && <span className="text-[10px] text-amber-600 font-medium">unsaved</span>}
+              {isItemDirty && <span className="text-[10px] text-warning font-medium">unsaved</span>}
             </>
           )}
           <div className="flex-1" />
@@ -937,18 +937,18 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
               <>
                 {editingItem && (
                   <button type="button" onClick={() => setConfirmDelete(editingItem)} disabled={itemSaving}
-                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:pointer-events-none disabled:opacity-40">
+                    className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-danger hover:bg-danger hover:bg-danger transition-colors disabled:pointer-events-none disabled:opacity-40">
                     <Trash2 className="h-3.5 w-3.5 stroke-current" />
                     <span>Delete</span>
                   </button>
                 )}
                 <button type="submit" form="item-form" disabled={itemSaving || !isFormValid}
-                  className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                  className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-muted text-primary-foreground hover:bg-muted hover:bg-muted disabled:opacity-40 transition-colors">
                   {itemSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />}
                   <span>Save</span>
                 </button>
                 <button type="button" onClick={tryClosePanel}
-                  className="h-7 px-2.5 rounded text-[11px] font-medium inline-flex items-center gap-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors">
+                  className="h-7 px-2.5 rounded text-[11px] font-medium inline-flex items-center gap-1 text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors">
                   <X className="h-3.5 w-3.5 stroke-current" />
                   <span>Cancel</span>
                 </button>
@@ -956,12 +956,12 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
             ) : (
               <>
                 <button type="button" onClick={() => selectedType && openAddItem(selectedType)} disabled={!selectedType || selectedReadOnly} title={selectedReadOnly ? "Managed by workflow. Open the source workflow to add records." : "Add Record"}
-                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors disabled:pointer-events-none disabled:text-muted-foreground disabled:bg-transparent dark:disabled:text-muted-foreground">
                   <Plus className="h-3.5 w-3.5 stroke-current" />
                   <span>Add Record</span>
                 </button>
                 <button type="button" onClick={() => refetchItems()} disabled={itemsLoading}
-                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors disabled:pointer-events-none disabled:text-slate-400 disabled:bg-transparent dark:disabled:text-slate-500">
+                  className="inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors disabled:pointer-events-none disabled:text-muted-foreground disabled:bg-transparent dark:disabled:text-muted-foreground">
                   <RefreshCw className={`h-3.5 w-3.5 stroke-current ${itemsLoading ? "animate-spin" : ""}`} />
                   <span>Refresh</span>
                 </button>
@@ -974,7 +974,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
       {/* ── Content: 20/80 ── */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* LEFT: Catalog (20%) */}
-        <div className="flex flex-col shrink-0 border-r border-slate-200 dark:border-slate-700" style={{ width: "20%", minWidth: 200, maxWidth: 300 }}>
+        <div className="flex flex-col shrink-0 border-r border-border" style={{ width: "20%", minWidth: 200, maxWidth: 300 }}>
           <ExplorerBrowser
             openGroup={openGroup} toggleGroup={toggleGroup}
             groupedFiltered={groupedFiltered}
@@ -988,19 +988,19 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
           {companyEditMode ? (
             <div className="flex h-full flex-col">
-              <div className="shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-700 px-3" style={{ height: "40px" }}>
+              <div className="shrink-0 flex items-center justify-between border-b border-border px-3" style={{ height: "40px" }}>
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[11px] text-slate-400">Reference Tables</span>
-                  <ChevronRight className="h-3 w-3 stroke-current text-slate-300" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Company</span>
+                  <span className="text-[11px] text-muted-foreground">Reference Tables</span>
+                  <ChevronRight className="h-3 w-3 stroke-current text-muted-foreground" />
+                  <span className="text-sm font-semibold text-muted-foreground">Company</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button type="button" onClick={handleCompanySave} disabled={companySaving}
-                    className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                    className="h-7 px-3 rounded text-[11px] font-semibold inline-flex items-center gap-1.5 bg-muted text-primary-foreground hover:bg-muted hover:bg-muted disabled:opacity-40 transition-colors">
                     {companySaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />} Save
                   </button>
                   <button type="button" onClick={closeCompanyEdit}
-                    className="h-7 w-7 flex items-center justify-center rounded text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors">
+                    className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-muted-foreground hover:bg-muted hover:bg-muted transition-colors">
                     <X className="h-3.5 w-3.5 stroke-current" />
                   </button>
                 </div>
@@ -1009,9 +1009,9 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
                 <CompanyEditor form={companyForm} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))} compact
                   touchedFields={companyTouched} setTouched={setCompanyTouched} />
                 {companyError && !companyErrorDismissed && (
-                  <div className="mt-2 rounded border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
+                  <div className="mt-2 rounded border border-danger bg-danger px-2 py-1 text-[10px] text-danger border-danger bg-danger text-danger flex items-center justify-between">
                     <span>Save failed</span>
-                    <button type="button" onClick={() => setCompanyErrorDismissed(true)} className="text-red-400 hover:text-red-600 ml-2"><X className="h-3 w-3 stroke-current" /></button>
+                    <button type="button" onClick={() => setCompanyErrorDismissed(true)} className="text-danger hover:text-danger ml-2"><X className="h-3 w-3 stroke-current" /></button>
                   </div>
                 )}
               </div>
@@ -1020,38 +1020,38 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
             <div className="flex h-full flex-col">
               <form id="item-form" onSubmit={(e) => { e.preventDefault(); handleItemSave(); }} className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-w-xl">
                 {currentTableType === "shift_pattern" && (
-                  <div className="rounded border border-amber-200 bg-amber-50 px-2.5 py-2 text-[10px] leading-4 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                  <div className="rounded border border-warning bg-warning px-2.5 py-2 text-[10px] leading-4 text-warning border-warning bg-warning text-warning">
                     Shift times are saved as reference attributes only. Authoritative schedule duration, break duration, and capacity availability must be resolved by schedule/domain services.
                   </div>
                 )}
                 {activeFields.map((f) => (
                   <div key={f.key}>
-                    <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">
-                      {f.label}{f.required && <span className="ml-0.5 text-red-500">*</span>}
+                    <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">
+                      {f.label}{f.required && <span className="ml-0.5 text-danger">*</span>}
                     </label>
                     {f.type === "select" && f.options ? (
                       <div className="relative">
                         <select value={itemForm[f.key] ?? ""} onChange={(e) => handleFieldChange(f.key, e.target.value)}
-                          className={`w-full h-8 rounded border px-2.5 text-[11px] appearance-none cursor-pointer transition-colors outline-none ${fieldErrors[f.key] ? "border-red-300" : "border-slate-300 dark:border-slate-600"} bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200`}>
+                          className={`w-full h-8 rounded border px-2.5 text-[11px] appearance-none cursor-pointer transition-colors outline-none ${fieldErrors[f.key] ? "border-danger" : "border-border"} bg-card bg-muted text-muted-foreground`}>
                           {f.options.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-400 stroke-current" />
-                        {fieldErrors[f.key] && <p className="text-[9px] text-red-500 mt-0.5">{fieldErrors[f.key]}</p>}
+                        <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground stroke-current" />
+                        {fieldErrors[f.key] && <p className="text-[9px] text-danger mt-0.5">{fieldErrors[f.key]}</p>}
                       </div>
                     ) : (
                       <div>
                         <input type="text" value={itemForm[f.key] ?? ""} onChange={(e) => handleFieldChange(f.key, e.target.value)} placeholder={f.placeholder}
-                          className={`w-full h-8 rounded border px-2.5 text-[11px] transition-colors outline-none ${fieldErrors[f.key] ? "border-red-300" : "border-slate-300 dark:border-slate-600"} bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400`} />
-                        {fieldErrors[f.key] && <p className="text-[9px] text-red-500 mt-0.5">{fieldErrors[f.key]}</p>}
-                        {f.key === "code" && codeDuplicate && <p className="text-[9px] text-red-500 mt-0.5">Code must be unique inside this table</p>}
+                          className={`w-full h-8 rounded border px-2.5 text-[11px] transition-colors outline-none ${fieldErrors[f.key] ? "border-danger" : "border-border"} bg-card bg-muted text-muted-foreground placeholder:text-muted-foreground`} />
+                        {fieldErrors[f.key] && <p className="text-[9px] text-danger mt-0.5">{fieldErrors[f.key]}</p>}
+                        {f.key === "code" && codeDuplicate && <p className="text-[9px] text-danger mt-0.5">Code must be unique inside this table</p>}
                       </div>
                     )}
                   </div>
                 ))}
                 {itemError && !itemErrorDismissed && (
-                  <div className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-between">
+                  <div className="rounded border border-danger bg-danger px-2 py-1 text-[10px] text-danger border-danger bg-danger text-danger flex items-center justify-between">
                     <span>{itemError}</span>
-                    <button type="button" onClick={() => setItemErrorDismissed(true)} className="text-red-400 hover:text-red-600 ml-2"><X className="h-3 w-3 stroke-current" /></button>
+                    <button type="button" onClick={() => setItemErrorDismissed(true)} className="text-danger hover:text-danger ml-2"><X className="h-3 w-3 stroke-current" /></button>
                   </div>
                 )}
               </form>
@@ -1094,9 +1094,9 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center px-4">
-                <FileSpreadsheet className="h-10 w-10 stroke-current text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">Reference Tables</h3>
-                <p className="text-xs text-slate-400 dark:text-slate-500 max-w-60 mx-auto leading-relaxed">
+                <FileSpreadsheet className="h-10 w-10 stroke-current text-muted-foreground mx-auto mb-3" />
+                <h3 className="text-sm font-semibold text-muted-foreground mb-1">Reference Tables</h3>
+                <p className="text-xs text-muted-foreground max-w-60 mx-auto leading-relaxed">
                   Select a table from the sidebar to browse and manage reference data.
                 </p>
               </div>
@@ -1107,7 +1107,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
 
       {/* ── Footer ── */}
       {standalone && selectedType && !companyEditMode && !editingItem && !(itemForm.tableType && itemForm.name !== undefined) && (
-        <div className="shrink-0 border-t border-slate-200/50 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-900/40 flex items-center px-5 text-[11px] text-slate-500 dark:text-slate-400 font-medium h-9">
+        <div className="shrink-0 border-t border-border bg-muted flex items-center px-5 text-[11px] text-muted-foreground font-medium h-9">
           <span>{selectedTypeItems.length} record{selectedTypeItems.length !== 1 ? "s" : ""} in {TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
         </div>
       )}
@@ -1115,14 +1115,14 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
       {/* Unsaved changes modal */}
       {showUnsavedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/40" onClick={handleModalCancel} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-90 max-w-[90vw]">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Unsaved changes</h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">You have unsaved changes that will be lost.</p>
+          <div className="fixed inset-0 bg-background" onClick={handleModalCancel} />
+          <div className="relative bg-card bg-muted rounded-xl shadow-2xl border border-border p-5 w-90 max-w-[90vw]">
+            <h3 className="text-sm font-bold text-muted-foreground mb-2">Unsaved changes</h3>
+            <p className="text-[10px] text-muted-foreground mb-4">You have unsaved changes that will be lost.</p>
             <div className="flex items-center justify-end gap-1">
-              <button type="button" onClick={handleModalSave} className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">Save</button>
-              <button type="button" onClick={handleModalDiscard} className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">Discard</button>
-              <button type="button" onClick={handleModalCancel} className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+              <button type="button" onClick={handleModalSave} className="rounded px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors">Save</button>
+              <button type="button" onClick={handleModalDiscard} className="rounded px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors">Discard</button>
+              <button type="button" onClick={handleModalCancel} className="rounded px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-muted-foreground transition-colors">Cancel</button>
             </div>
           </div>
         </div>
@@ -1131,19 +1131,19 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
       {/* Delete confirm modal */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setConfirmDelete(null)} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-5 w-90 max-w-[90vw]">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">Delete {confirmDelete.name}?</h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mb-4">
+          <div className="fixed inset-0 bg-background" onClick={() => setConfirmDelete(null)} />
+          <div className="relative bg-card bg-muted rounded-xl shadow-2xl border border-border p-5 w-90 max-w-[90vw]">
+            <h3 className="text-sm font-bold text-muted-foreground mb-2">Delete {confirmDelete.name}?</h3>
+            <p className="text-[10px] text-muted-foreground mb-4">
               This record will be deactivated instead of removed. {confirmDelete.usageImpact}.
             </p>
             <div className="flex items-center justify-end gap-1">
               <button type="button" onClick={handleDelete} disabled={itemSaving}
-                className="rounded px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40">
+                className="rounded px-2.5 py-1.5 text-xs font-medium text-danger hover:bg-danger text-danger hover:bg-danger transition-colors disabled:opacity-40">
                 {itemSaving ? "Deactivating..." : "Deactivate"}
               </button>
               <button type="button" onClick={() => setConfirmDelete(null)}
-                className="rounded px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:bg-slate-700/60 transition-colors">
+                className="rounded px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted text-muted-foreground hover:bg-muted transition-colors">
                 Cancel
               </button>
             </div>

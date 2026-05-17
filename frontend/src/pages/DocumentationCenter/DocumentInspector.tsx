@@ -138,8 +138,8 @@ export function DocumentInspector({ document, files, onSelectRelated }: Document
                   className={
                     "rounded-xl px-3 py-2 text-xs font-medium " +
                     (item.passed
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                      : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400")
+                      ? "bg-success text-success bg-success text-success"
+                      : "bg-warning text-warning bg-warning text-warning")
                   }
                 >
                   <span>{item.passed ? "✓" : "!"}</span> {item.label}

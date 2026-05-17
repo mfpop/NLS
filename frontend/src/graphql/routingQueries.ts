@@ -32,6 +32,9 @@ const ROUTING_STEP_FIELDS = `
     materialState
     locationId
     locationName
+    binId
+    binCode
+    binName
   }
   materialOutputs {
     id
@@ -42,6 +45,9 @@ const ROUTING_STEP_FIELDS = `
     materialState
     locationId
     locationName
+    binId
+    binCode
+    binName
   }
   movementRule {
     id
@@ -50,6 +56,10 @@ const ROUTING_STEP_FIELDS = `
     sourceLocationName
     destinationLocationId
     destinationLocationName
+    sourceBinId
+    sourceBinName
+    destinationBinId
+    destinationBinName
     notes
   }
   createdAt
@@ -80,6 +90,29 @@ export const INVENTORY_LOCATIONS_QUERY = gql`
   }
 `;
 
+export const MATERIAL_BINS_QUERY = gql`
+  query MaterialBins($plantId: String, $resourceGroupId: String, $binType: String, $isActive: Boolean, $limit: Int, $offset: Int) {
+    materialBins(plantId: $plantId, resourceGroupId: $resourceGroupId, binType: $binType, isActive: $isActive, limit: $limit, offset: $offset) {
+      id
+      plantId
+      plantName
+      resourceGroupId
+      resourceGroupName
+      code
+      name
+      binType
+      materialId
+      materialCode
+      materialName
+      capacity
+      uomId
+      uomName
+      locationCode
+      isActive
+    }
+  }
+`;
+
 const ROUTING_FIELDS = `
   id
   productionLineId
@@ -88,6 +121,9 @@ const ROUTING_FIELDS = `
   productFamilyName
   productModelId
   productModelName
+  partNumberId
+  partNumber
+  partDescription
   version
   status
   effectiveFrom

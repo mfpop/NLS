@@ -24,15 +24,15 @@ interface TextFieldProps {
 function TextField({ label, value, onChange, required, placeholder, disabled, error }: TextFieldProps) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-        {label}{required && <span className="ml-0.5 text-red-500">*</span>}
+      <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+        {label}{required && <span className="ml-0.5 text-danger">*</span>}
       </label>
       <input type="text" value={value} onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder} disabled={disabled}
         className={`w-full h-9 rounded-lg border px-3 text-sm outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
-          error ? "border-red-300 focus:ring-2 focus:ring-red-200" : `${theme.input} ${theme.focusRing}`
-        } ${disabled ? "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400" : ""}`} />
-      {error && <p className="mt-0.5 text-[10px] text-red-500">{error}</p>}
+          error ? "border-danger focus:ring-2 focus:ring-danger" : `${theme.input} ${theme.focusRing}`
+        } ${disabled ? "bg-muted text-muted-foreground" : ""}`} />
+      {error && <p className="mt-0.5 text-[10px] text-danger">{error}</p>}
     </div>
   );
 }
@@ -40,8 +40,8 @@ function TextField({ label, value, onChange, required, placeholder, disabled, er
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">{label}</label>
-      <div className="h-9 flex items-center text-sm font-medium text-slate-700 dark:text-slate-200 px-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-transparent">
+      <label className="block text-[11px] font-semibold text-muted-foreground mb-1">{label}</label>
+      <div className="h-9 flex items-center text-sm font-medium text-muted-foreground px-3 rounded-lg bg-muted border border-transparent">
         {value || "\u2014"}
       </div>
     </div>
@@ -51,7 +51,7 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
 function Section({ title, children, twoColumns }: { title: string; children: React.ReactNode; twoColumns?: boolean }) {
   return (
     <div>
-      <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 dark:border-slate-800">{title}</h3>
+      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 pb-1.5 border-b border-border">{title}</h3>
       <div className={twoColumns ? "grid grid-cols-2 gap-x-6 gap-y-3" : "space-y-3"}>{children}</div>
     </div>
   );
@@ -166,10 +166,10 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto px-6 py-5 space-y-6" style={{ maxWidth: "1000px" }}>
           {toast && (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">{toast}</div>
+            <div className="rounded-lg border border-success bg-success px-4 py-2 text-xs text-success border-success bg-success text-success">{toast}</div>
           )}
           {saveError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs text-red-600 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-400">{saveError}</div>
+            <div className="rounded-lg border border-danger bg-danger px-4 py-2 text-xs text-danger border-danger bg-danger text-danger">{saveError}</div>
           )}
 
           <Section title="Identity" twoColumns>
@@ -208,8 +208,8 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
           </Section>
 
           <Section title="Working Schedule">
-            <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-3">
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+            <div className="rounded-lg border border-dashed border-border bg-muted px-4 py-3">
+              <p className="text-xs text-muted-foreground">
                 Schedule and shift pattern are inherited from the resource group.
                 Configure at the production line or resource group level.
               </p>
@@ -217,8 +217,8 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
           </Section>
 
           <Section title="Maintenance">
-            <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 px-4 py-3">
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+            <div className="rounded-lg border border-dashed border-border bg-muted px-4 py-3">
+              <p className="text-xs text-muted-foreground">
                 Maintenance status tracking is not yet available in the current data model.
               </p>
             </div>
@@ -226,7 +226,7 @@ export function ResourceForm({ resourceId, onClose, onSaved, readOnlyContext }: 
 
           <Section title="Notes">
             <textarea disabled
-              className="w-full h-20 rounded-lg border px-3 py-2 text-sm outline-none bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 resize-none cursor-not-allowed"
+              className="w-full h-20 rounded-lg border px-3 py-2 text-sm outline-none bg-muted text-muted-foreground resize-none cursor-not-allowed"
               placeholder="Notes are not yet available in the current data model." value="" />
           </Section>
         </div>

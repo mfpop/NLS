@@ -134,7 +134,7 @@ export function usePlants() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  /* ── Attempt GraphQL query, fall back to mock data ── */
+  /* ── GraphQL query ── */
   const { data: gqlData, loading: gqlLoading, refetch } = useQuery<PlantsQueryData, PlantsQueryVars>(
     PLANTS_QUERY,
     { variables: { search: search || undefined, status: statusFilter !== "all" ? statusFilter : undefined },

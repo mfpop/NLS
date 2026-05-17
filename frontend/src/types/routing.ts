@@ -7,6 +7,9 @@ export interface MaterialFlowItem {
   materialState?: string | null;
   locationId?: string | null;
   locationName?: string | null;
+  binId?: string | null;
+  binCode?: string | null;
+  binName?: string | null;
 }
 
 export interface MaterialMovementRule {
@@ -16,6 +19,10 @@ export interface MaterialMovementRule {
   sourceLocationName?: string | null;
   destinationLocationId?: string | null;
   destinationLocationName?: string | null;
+  sourceBinId?: string | null;
+  sourceBinName?: string | null;
+  destinationBinId?: string | null;
+  destinationBinName?: string | null;
   notes?: string;
 }
 
@@ -57,6 +64,9 @@ export interface Routing {
   productFamilyName?: string | null;
   productModelId?: string | null;
   productModelName?: string | null;
+  partNumberId?: string | null;
+  partNumber?: string | null;
+  partDescription?: string | null;
   version: string;
   status: string;
   effectiveFrom?: string | null;
@@ -159,6 +169,7 @@ export interface RoutingInput {
   productionLineId: string;
   productFamilyId?: string | null;
   productModelId?: string | null;
+  partNumberId?: string | null;
   version?: string;
   status?: string;
   effectiveFrom?: string | null;

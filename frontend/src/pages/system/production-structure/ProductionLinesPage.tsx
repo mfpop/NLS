@@ -113,59 +113,59 @@ function FamilyModelSection({ familyValues, availableModels, familyId, modelIds,
   selectClass: string;
   disabled?: boolean;
 }) {
-  const labelClass = "text-[10px] font-medium text-slate-500 dark:text-slate-400";
+  const labelClass = "text-[10px] font-medium text-muted-foreground";
   const selectedModels = availableModels.filter((model) => modelIds.includes(model.id));
   const availableUnselectedModels = availableModels.filter((model) => !modelIds.includes(model.id));
 
   return (
     <div className="space-y-1.5">
       <div className="grid items-center gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-        <label className={labelClass}>Family <span className="text-red-500">*</span></label>
+        <label className={labelClass}>Family <span className="text-danger">*</span></label>
         <select value={familyId} onChange={(e) => onFamilyChange(e.target.value)} className={selectClass}>
           <option value="">Select</option>
           {familyValues.filter((v) => v.isActive).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
         </select>
       </div>
       <div className="grid items-start gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-        <label className={labelClass}>Models <span className="text-red-500">*</span></label>
-        <div className="space-y-1 rounded-md border border-slate-200 bg-slate-50/60 p-1 dark:border-slate-700 dark:bg-slate-800/30">
+        <label className={labelClass}>Models <span className="text-danger">*</span></label>
+        <div className="space-y-1 rounded-md border border-border bg-muted p-1 border-border bg-muted">
           <div>
-            <div className="mb-0.5 text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Selected Models</div>
+            <div className="mb-0.5 text-[8px] font-bold uppercase tracking-wide text-muted-foreground">Selected Models</div>
             <div className={`flex flex-wrap gap-1 ${selectedModels.length > 4 ? "max-h-24 overflow-y-auto" : "overflow-visible"}`}>
               {selectedModels.length > 0 ? selectedModels.map((model) => {
                 const primary = primaryModelId === model.id;
                 return (
                   <button key={model.id} type="button" disabled={disabled} onClick={() => onModelsChange(modelIds.filter((id) => id !== model.id))}
                     aria-pressed="true"
-                    className="inline-flex min-h-6 items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500/20">
+                    className="inline-flex min-h-6 items-center gap-1 rounded-full border border-primary bg-primary px-2 py-0.5 text-[9px] font-semibold text-primary shadow-sm transition-colors hover:bg-primary disabled:cursor-not-allowed disabled:opacity-60 border-primary bg-primary text-primary hover:bg-primary">
                     <Check className="h-2.5 w-2.5 stroke-current" />
                     <span className="max-w-[180px] truncate">{model.name}</span>
-                    {primary && <span className="rounded bg-blue-100 px-1 py-px text-[7px] font-bold tracking-wide text-blue-700 dark:bg-blue-500/20 dark:text-blue-200">PRIMARY</span>}
+                    {primary && <span className="rounded bg-primary px-1 py-px text-[7px] font-bold tracking-wide text-primary bg-primary text-primary">PRIMARY</span>}
                   </button>
                 );
               }) : (
-                <span className="text-[10px] text-slate-400">No models selected.</span>
+                <span className="text-[10px] text-muted-foreground">No models selected.</span>
               )}
             </div>
           </div>
           <div>
-            <div className="mb-0.5 text-[8px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Available Models</div>
+            <div className="mb-0.5 text-[8px] font-bold uppercase tracking-wide text-muted-foreground">Available Models</div>
             <div className="flex max-h-14 flex-wrap gap-1 overflow-y-auto">
               {availableUnselectedModels.length > 0 ? availableUnselectedModels.map((model) => (
                 <button key={model.id} type="button" disabled={disabled} onClick={() => onModelsChange([...modelIds, model.id])}
                   aria-pressed="false"
-                  className="inline-flex min-h-6 items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-800">
+                  className="inline-flex min-h-6 items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 text-[9px] font-semibold text-muted-foreground transition-colors hover:border-border hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 border-border bg-muted text-muted-foreground hover:border-border hover:bg-muted">
                   <span className="max-w-[180px] truncate">{model.name}</span>
                 </button>
               )) : (
-                <span className="text-[10px] text-slate-400">{familyId ? "All available models are selected." : "Select a family first."}</span>
+                <span className="text-[10px] text-muted-foreground">{familyId ? "All available models are selected." : "Select a family first."}</span>
               )}
             </div>
           </div>
         </div>
       </div>
       <div className="grid items-center gap-2" style={{ gridTemplateColumns: "130px 1fr" }}>
-        <label className={labelClass}>Primary Model <span className="text-red-500">*</span></label>
+        <label className={labelClass}>Primary Model <span className="text-danger">*</span></label>
         <select value={primaryModelId} onChange={(e) => onPrimaryModelChange(e.target.value)} disabled={disabled || selectedModels.length === 0} className={selectClass}>
           <option value="">{selectedModels.length === 0 ? "Select models first" : "Select"}</option>
           {selectedModels.map((model) => <option key={model.id} value={model.id}>{model.name}</option>)}
@@ -188,21 +188,21 @@ function ScheduleSection({ isForm, sCls, g, s, sel, errors, setShiftModel, hasCa
               <RefSelect category="timezone" value={g("timezoneId")} onChange={(v) => s("timezoneId", v)} placeholder="Select timezone" selectClass={sCls} />
             </div>
             {capacityBasisInfo && (
-              <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] leading-4 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+              <div className="rounded-md border border-warning bg-warning px-2 py-1 text-[10px] leading-4 text-warning border-warning bg-warning text-warning">
                 Capacity basis set from shift: {capacityBasisInfo.label}
               </div>
             )}
           </div>
         ) : (
-          <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+          <div className="bg-muted rounded-lg p-2">
             <div className="space-y-px">
               <InlineRow label="Calendar" value={sel?.defaultCalendar ? sel.defaultCalendar : <Badge label="Not assigned" variant="inactive" />} />
-              <InlineRow label="Shift" value={<span className="inline-flex items-center gap-1">{sel?.shiftPattern || <span className="text-slate-400 text-[11px]">Not configured</span>}{sel?.shiftPattern && <Badge label="Inherited" variant="default" />}</span>} />
+              <InlineRow label="Shift" value={<span className="inline-flex items-center gap-1">{sel?.shiftPattern || <span className="text-muted-foreground text-[11px]">Not configured</span>}{sel?.shiftPattern && <Badge label="Inherited" variant="default" />}</span>} />
               <InlineRow label="Week Start" value={sel?.weekStartDay ? sel.weekStartDay : <Badge label="Not configured" variant="inactive" />} />
               <InlineRow label="Timezone" value={<span className="inline-flex items-center gap-1">{sel?.timezone || "Plant default"}{!sel?.timezone && <Badge label="Inherited" variant="default" />}</span>} />
             </div>
-            <div className="flex items-center gap-2 pt-1 mt-1 border-t border-slate-100 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">{sel?.shiftPattern ? "Line override" : "Plant default"}</span>
+            <div className="flex items-center gap-2 pt-1 mt-1 border-t border-border">
+              <span className="text-[10px] text-muted-foreground">{sel?.shiftPattern ? "Line override" : "Plant default"}</span>
               {!hasCal && <Badge label="Incomplete" variant="warning" />}
             </div>
           </div>
@@ -216,7 +216,7 @@ function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: b
   const { summary } = useRoutingSummary(sel?.id ?? null);
   const bnName = summary?.bottleneckStepName ? `${summary.bottleneckStepName}${summary.bottleneckResourceGroupName ? ` (${summary.bottleneckResourceGroupName})` : ""}` : null;
   return (
-    <div className="rounded-lg bg-slate-50/50 p-2 dark:bg-slate-800/30">
+    <div className="rounded-lg bg-muted p-2 bg-muted">
       <div className="space-y-2">
         <ProductionLineProductScopeSummary
           family={sel?.productFamily ?? sel?.productFamilies?.find((f: any) => f.isPrimary) ?? sel?.productFamilies?.[0] ?? null}
@@ -230,8 +230,8 @@ function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: b
         {!compact && <InlineRow label="UoM" value={sel?.capacityUom ? sel.capacityUom : <Badge label="Not configured" variant="inactive" />} />}
         <InlineRow label="Bottleneck" value={bnName || <Badge label="N/A" variant="inactive" />} />
       </div>
-      <div className="mt-2 flex items-center gap-2 border-t border-slate-100 pt-2 text-[12px] dark:border-slate-700">
-        <span className="font-semibold text-slate-500 dark:text-slate-400">Constraint:</span>
+      <div className="mt-2 flex items-center gap-2 border-t border-border pt-2 text-[12px] border-border">
+        <span className="font-semibold text-muted-foreground">Constraint:</span>
         {summary?.constraintStatus === "CONSTRAINT" ? <Badge label="Yes" variant="amber" /> : <Badge label="No" variant="default" />}
       </div>
     </div>
@@ -298,9 +298,9 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, i
           <ExternalLink className="h-3 w-3 stroke-current" /> {buttonLabel}
         </SecondaryActionButton>
       }>
-        <div className="bg-slate-50/50 dark:bg-slate-800/30 rounded-lg p-2">
+        <div className="bg-muted rounded-lg p-2">
           {loading ? (
-            <p className="text-[10px] text-slate-400">Loading routing...</p>
+            <p className="text-[10px] text-muted-foreground">Loading routing...</p>
           ) : (
             <div className="space-y-px">
               <InlineRow label="Status" value={<Badge label={statusLabel} variant={statusVariant} />} />
@@ -308,16 +308,16 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, i
               <InlineRow label="Routing Scope" value={displaySummary.routingScope === "All Models" && primaryModel ? "Primary Model" : displaySummary.routingScope || (primaryModel ? "Primary Model" : "All Models")} />
               {(displaySummary.routingScope !== "All Models" || primaryModel) && <InlineRow label="Model" value={primaryModel?.name || displaySummary.routingScope || "-"} />}
               <InlineRow label="Sequences" value={displaySummary.sequenceCount} />
-              <InlineRow label="First Dept" value={displaySummary.firstDepartmentName || <span className="text-slate-400 text-[11px]">None</span>} />
-              <InlineRow label="Last Dept" value={displaySummary.lastDepartmentName || <span className="text-slate-400 text-[11px]">None</span>} />
+              <InlineRow label="First Dept" value={displaySummary.firstDepartmentName || <span className="text-muted-foreground text-[11px]">None</span>} />
+              <InlineRow label="Last Dept" value={displaySummary.lastDepartmentName || <span className="text-muted-foreground text-[11px]">None</span>} />
               {displaySummary.bottleneckStepName && <InlineRow label="Bottleneck" value={`${displaySummary.bottleneckStepName}${displaySummary.bottleneckResourceGroupName ? ` (${displaySummary.bottleneckResourceGroupName})` : ""}`} />}
               <InlineRow label="Constraint" value={displaySummary.constraintStatus || "-"} />
               <InlineRow label="Message" value={displaySummary.message || (hasFlow ? "Routing configured." : "No routing steps configured.")} />
             </div>
           )}
           {summary?.status === "INVALID" && (
-            <div className="flex items-center gap-1.5 pt-1 mt-1 border-t border-slate-100 dark:border-slate-700">
-              <span className="text-[10px] text-orange-600 dark:text-orange-400">Routing has validation errors</span>
+            <div className="flex items-center gap-1.5 pt-1 mt-1 border-t border-border">
+              <span className="text-[10px] text-warning">Routing has validation errors</span>
             </div>
           )}
         </div>
@@ -441,7 +441,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   return (
     <div className="grid h-full min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "32px 36px minmax(0,1fr)" }}>
       {/* ── Row 1: Slim 32px status bar ── */}
-      <div className={`flex items-center gap-3 rounded-lg px-2.5 py-1 ${blocked ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300" : partial ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"}`}>
+      <div className={`flex items-center gap-3 rounded-lg border px-2.5 py-1 ${blocked ? "border-danger/20 bg-danger/10 text-danger" : partial ? "border-warning/25 bg-warning/10 text-warning" : "border-success/20 bg-success/10 text-success"}`}>
         <span className="text-[11px] font-bold">{readinessIcon} {readiness}</span>
         {missingReasons.length > 0 && (
           <span className="text-[10px] font-medium opacity-80">— {missingReasons.join(", ")}</span>
@@ -450,7 +450,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
           <Badge label={readinessSummary} variant={readinessVariant as any} />
           <div className="flex items-center gap-0.5">
             {setupSteps.map((step, index) => (
-              <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }} title={step.label} className={`h-1.5 w-4 rounded-full ${step.done ? "bg-emerald-500" : index === nextStepIndex ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-600"}`} />
+              <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }} title={step.label} className={`h-1.5 w-4 rounded-full ${step.done ? "bg-success" : index === nextStepIndex ? "bg-warning" : "bg-muted"}`} />
             ))}
           </div>
           <span className="text-[8px] font-semibold opacity-70">{currentStep}/4</span>
@@ -458,13 +458,13 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
       </div>
 
       {/* ── Row 2: Tab bar (36px) ── */}
-      <div className="flex items-center gap-0.5 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex items-center gap-0.5 border-b border-border/50">
         {tabs.map((tab) => (
           <button key={tab.key} type="button" onClick={() => setActiveTab(tab.key)}
             className={`flex h-9 items-center border-b-2 px-3 text-[10px] font-semibold transition-colors ${
               activeTab === tab.key
-                ? "border-amber-500 bg-amber-50/50 text-slate-900 dark:border-amber-400 dark:bg-amber-500/5 dark:text-slate-100"
-                : "border-transparent text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"
+                ? "border-accent bg-accent/10 text-foreground"
+                : "border-transparent text-muted-foreground hover:bg-muted"
             }`}>
             {tab.label}
           </button>
@@ -476,11 +476,11 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
         <div className="grid min-h-0 items-start gap-1.5 overflow-hidden" style={{ gridTemplateColumns: "1fr 1fr" }}>
           {/* ── LEFT COLUMN: Identity, Operations ── */}
           <div className="flex flex-col gap-1.5 overflow-hidden">
-            <div className="rounded-lg border border-slate-200/80 bg-white px-3 pb-2 pt-2 shadow-xs dark:border-slate-700/80 dark:bg-slate-900">
-              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Identity & Schedule</div>
+            <div className="rounded-lg border border-border/60 bg-card px-3 pb-2 pt-2 shadow-sm shadow-foreground/5">
+              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Identity & Schedule</div>
               <div className="space-y-1">
-                <InlineRow label="Name" value={<span className="font-bold text-slate-900">{productionLine?.name || "—"}</span>} />
-                <InlineRow label="Code" value={<span className="font-bold text-slate-900">{productionLine?.code || "—"}</span>} />
+                <InlineRow label="Name" value={<span className="font-bold text-muted-foreground">{productionLine?.name || "—"}</span>} />
+                <InlineRow label="Code" value={<span className="font-bold text-muted-foreground">{productionLine?.code || "—"}</span>} />
                 <InlineRow label="Plant" value={productionLine?.plantName || "—"} />
                 <InlineRow label="Type" value={productionLine?.lineType || "—"} />
                 <InlineRow label="Primary Model" value={productionLine?.primaryProductModel?.name || productionLine?.productModels?.find((m: any) => m.isPrimary)?.name || "—"} />
@@ -505,32 +505,32 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                 <div className="space-y-1 overflow-hidden">
                   {productionLine.departmentLinks.slice(0, 6).map((link: any) => (
                     <button key={link.id} onClick={() => nav(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
-                      className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-[11px] text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-                      <span className="font-mono text-[10px] text-slate-500">{link.sequence}</span>
+                      className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md bg-muted px-2 text-left text-[11px] text-muted-foreground hover:bg-muted/80">
+                      <span className="font-mono text-[10px] text-muted-foreground">{link.sequence}</span>
                       <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
-                      <span className="text-slate-500">{link.resourceGroups} RG</span>
-                      <span className="text-slate-500">{link.resources} Res</span>
+                      <span className="text-muted-foreground">{link.resourceGroups} RG</span>
+                      <span className="text-muted-foreground">{link.resources} Res</span>
                     </button>
                   ))}
                   {productionLine.departmentLinks.length > 6 && (
-                    <div className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <div className="flex h-6 items-center rounded-md bg-muted px-2 text-[10px] font-semibold text-muted-foreground">
                       +{productionLine.departmentLinks.length - 6} more departments
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="flex min-h-[108px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
-                  <span className="text-[10px] text-slate-500">No departments linked</span>
+                <div className="flex min-h-[108px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted">
+                  <span className="text-[10px] text-muted-foreground">No departments linked</span>
                 </div>
               )}
             </SectionCard>
             <SectionCard title="Setup & Issues" className="overflow-hidden">
               <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Setup Steps</div>
+                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Setup Steps</div>
                     {setupSteps.map((step, index) => (
                       <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }}
-                        className={`flex h-7 w-full items-center gap-2 rounded-md border px-2 text-left text-[10px] font-medium ${step.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300" : index === nextStepIndex ? "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" : "border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"}`}>
+                        className={`flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[10px] font-medium ${step.done ? "bg-success/10 text-success" : index === nextStepIndex ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
                         <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
                         <span className="flex-1 truncate">{step.label}</span>
                         <span className="text-[8px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
@@ -538,15 +538,15 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                     ))}
                   </div>
                   <div className="space-y-1">
-                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Issues</div>
+                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Issues</div>
                     {topIssues.length > 0 ? topIssues.slice(0, 4).map((issue) => (
                       <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
-                        className="flex h-7 w-full items-center gap-2 rounded-md border border-red-100 bg-red-50 px-2 text-left text-[10px] font-medium text-slate-800 hover:bg-red-100 dark:border-red-500/20 dark:bg-red-500/10 dark:text-slate-100">
-                        <span className="text-red-600 dark:text-red-300">✕</span>
+                        className="flex h-7 w-full items-center gap-2 rounded-md bg-danger/10 px-2 text-left text-[10px] font-medium text-danger hover:bg-danger/15">
+                        <span className="text-danger">✕</span>
                         <span className="min-w-0 flex-1 truncate">{issue.message}</span>
-                        <span className="shrink-0 whitespace-nowrap text-amber-700 dark:text-amber-300">{issue.action}</span>
+                        <span className="shrink-0 whitespace-nowrap font-semibold text-danger">{issue.action}</span>
                       </button>
-                    )) : <div className="flex h-7 items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-300"><Check className="h-3 w-3" /> No issues</div>}
+                    )) : <div className="flex h-7 items-center gap-1.5 text-[10px] text-success"><Check className="h-3 w-3" /> No issues</div>}
                   </div>
               </div>
             </SectionCard>
@@ -554,14 +554,14 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
               {validations.length > 0 ? (
                 <div className="space-y-0.5">
                   {validationGroups.filter((group) => group.items.length > 0 && group.label !== "Routing errors").slice(0, 3).map((group) => (
-                    <div key={group.label} className="flex h-7 items-center justify-between rounded border border-slate-200 bg-slate-50/70 px-2.5 dark:border-slate-700 dark:bg-slate-800/30">
-                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">{group.label}</span>
-                      <span className="text-[9px] font-semibold text-slate-600 dark:text-slate-300">({group.items.length})</span>
+                    <div key={group.label} className="flex h-7 items-center justify-between rounded bg-muted px-2.5">
+                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group.label}</span>
+                      <span className="text-[9px] font-semibold text-muted-foreground">({group.items.length})</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-300">
+                <div className="flex items-center gap-1.5 text-[10px] text-success">
                   <Check className="h-3 w-3" /> No grouped validation issues
                 </div>
               )}
@@ -573,8 +573,8 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
       {activeTab === "flow" && (
         <div className="grid min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0,1fr) auto" }}>
           <div className="grid grid-cols-3 gap-1.5">
-            <SectionCard title="Steps"><div className="text-sm font-bold text-slate-900 dark:text-slate-100">{operations.length}</div></SectionCard>
-            <SectionCard title="Bottleneck"><div className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-100">—</div></SectionCard>
+            <SectionCard title="Steps"><div className="text-sm font-bold text-muted-foreground">{operations.length}</div></SectionCard>
+            <SectionCard title="Bottleneck"><div className="truncate text-[11px] font-semibold text-muted-foreground">—</div></SectionCard>
             <SectionCard title="Status"><Badge label={routingOk ? "Configured" : "Missing"} variant={routingOk ? "active" : "warning"} /></SectionCard>
           </div>
           <SectionCard title="Process Flow" className="flex min-h-0 flex-col overflow-hidden" action={
@@ -582,9 +582,9 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
               <ExternalLink className="h-3 w-3 stroke-current" /> {routingOk ? "Edit Flow" : "Create Flow"}
             </SecondaryActionButton>
           }>
-            {loading ? <p className="text-[10px] text-slate-400">Loading flow context...</p> : operations.length > 0 ? (
+            {loading ? <p className="text-[10px] text-muted-foreground">Loading flow context...</p> : operations.length > 0 ? (
               <div className="relative flex min-h-0 flex-1 flex-wrap items-center justify-center gap-3 overflow-hidden p-3">
-                <div className="pointer-events-none absolute left-8 right-8 top-1/2 h-px bg-slate-200/80 dark:bg-slate-700/70" />
+                <div className="pointer-events-none absolute left-8 right-8 top-1/2 h-px bg-muted" />
                 {operations.map((operation, index) => {
                   const missingInput = operation.inputs.length === 0;
                   const missingOutput = operation.outputs.length === 0;
@@ -593,29 +593,29 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                   return (
                     <div key={operation.sequence} className="relative z-10 flex items-center gap-2">
                       <button type="button" onClick={openRouting}
-                        className={`min-w-[168px] rounded-xl border-2 px-4 py-3 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.97] ${broken ? "border-red-300 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10" : bottleneck ? "border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10" : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"}`}>
+                        className={`min-w-[168px] rounded-xl border px-4 py-3 text-left shadow-sm shadow-foreground/5 transition-all hover:shadow-md active:scale-[0.97] ${broken ? "border-danger/25 bg-danger/10" : bottleneck ? "border-warning/25 bg-warning/10" : "border-border/60 bg-card hover:bg-muted"}`}>
                         <div className="mb-1 flex items-center justify-between gap-2">
-                          <span className="font-mono text-[10px] font-bold text-slate-500">#{operation.sequence}</span>
+                          <span className="font-mono text-[10px] font-bold text-muted-foreground">#{operation.sequence}</span>
                           {bottleneck && <Badge label="Bottleneck" variant="warning" />}
                           {broken && <Badge label="Broken" variant="warning" />}
                         </div>
-                        <p className="truncate text-[13px] font-bold text-slate-900 dark:text-slate-100">{operation.resourceGroupName || operation.departmentName || "Unassigned"}</p>
-                        <p className="text-[11px] font-medium text-slate-600 dark:text-slate-300">{operation.cycleTimeSec}s cycle</p>
+                        <p className="truncate text-[13px] font-bold text-muted-foreground">{operation.resourceGroupName || operation.departmentName || "Unassigned"}</p>
+                        <p className="text-[11px] font-medium text-muted-foreground">{operation.cycleTimeSec}s cycle</p>
                         <div className="mt-1 space-y-0.5">
-                          <div className={`truncate rounded-md px-2 py-0.5 text-[10px] font-semibold ${missingInput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100"}`}>IN: {missingInput ? "No Input" : operation.inputs.map((item) => item.materialCode || item.materialName).join(", ")}</div>
-                          <div className={`truncate rounded-md px-2 py-0.5 text-[10px] font-semibold ${missingOutput ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300" : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-100"}`}>OUT: {missingOutput ? "No Output" : operation.outputs.map((item) => `${item.materialCode || item.materialName} ${item.materialState}`).join(", ")}</div>
+                          <div className={`truncate rounded-md px-2 py-0.5 text-[10px] font-semibold ${missingInput ? "bg-danger/10 text-danger" : "bg-muted text-muted-foreground"}`}>IN: {missingInput ? "No Input" : operation.inputs.map((item) => item.materialCode || item.materialName).join(", ")}</div>
+                          <div className={`truncate rounded-md px-2 py-0.5 text-[10px] font-semibold ${missingOutput ? "bg-danger/10 text-danger" : "bg-muted text-muted-foreground"}`}>OUT: {missingOutput ? "No Output" : operation.outputs.map((item) => `${item.materialCode || item.materialName} ${item.materialState}`).join(", ")}</div>
                         </div>
                       </button>
-                      {index < operations.length - 1 && <span className="text-2xl font-light text-slate-300 dark:text-slate-600">→</span>}
+                      {index < operations.length - 1 && <span className="text-2xl font-light text-muted-foreground">→</span>}
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/20">
+              <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/60 bg-muted">
                 <div className="text-center">
-                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Create your first process flow</p>
-                  <p className="mt-1 text-[11px] text-slate-500">Define how materials move through resource groups to produce finished goods.</p>
+                  <p className="text-sm font-bold text-muted-foreground">Create your first process flow</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Define how materials move through resource groups to produce finished goods.</p>
                   <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew} className="mt-2">Create Process Flow</SecondaryActionButton>
                 </div>
               </div>
@@ -625,10 +625,10 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
             <div className="flex gap-1.5 overflow-hidden">
               {topIssues.slice(0, 3).map((issue) => (
                 <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
-                  className="flex h-7 items-center gap-2 rounded-md border border-white/70 bg-white px-2 text-left text-[10px] font-medium text-slate-800 shadow-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
-                  <span className="text-red-600 dark:text-red-300">✕</span>
+                  className="flex h-7 items-center gap-2 rounded-md bg-danger/10 px-2 text-left text-[10px] font-medium text-danger shadow-xs hover:bg-danger/15">
+                  <span className="text-danger">✕</span>
                   <span className="truncate">{issue.message}</span>
-                  <span className="shrink-0 text-amber-700 dark:text-amber-300">{issue.action}</span>
+                  <span className="shrink-0 font-semibold text-danger">{issue.action}</span>
                 </button>
               ))}
             </div>
@@ -640,29 +640,29 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
         <div className="grid min-h-0 content-start gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0,1fr)" }}>
           <div className="grid grid-cols-3 gap-1.5">
             <SectionCard title="BOM Status">{context?.bom ? <Badge label={context.bom.status} variant={context.bom.status === "ACTIVE" ? "active" : "inactive"} /> : <Badge label="Missing" variant="warning" />}</SectionCard>
-            <SectionCard title="Materials"><div className="text-sm font-bold text-slate-900 dark:text-slate-100">{bomItems.length}</div></SectionCard>
-            <SectionCard title="Locations"><div className="text-sm font-bold text-slate-900 dark:text-slate-100">{inputLocations.length + fgDestinations.length}</div></SectionCard>
+            <SectionCard title="Materials"><div className="text-sm font-bold text-muted-foreground">{bomItems.length}</div></SectionCard>
+            <SectionCard title="Locations"><div className="text-sm font-bold text-muted-foreground">{inputLocations.length + fgDestinations.length}</div></SectionCard>
           </div>
           <SectionCard title="Material Flow" className="min-h-0 overflow-hidden" action={!materialOk ? (
             <SecondaryActionButton onClick={openRouting} disabled={!productionLineId || isNew}><ExternalLink className="h-3 w-3 stroke-current" /> Define Material Flow</SecondaryActionButton>
           ) : undefined}>
             {!materialOk ? (
-              <div className="flex min-h-[135px] items-center justify-center rounded-lg border border-dashed border-amber-200 bg-amber-50/60 px-4 dark:border-amber-500/20 dark:bg-amber-500/10">
+              <div className="flex min-h-[135px] items-center justify-center rounded-lg border border-dashed border-warning/25 bg-warning/10 px-4">
                 <div className="max-w-md text-center">
-                  <AlertTriangle className="mx-auto h-5 w-5 text-amber-600 dark:text-amber-300" />
-                  <p className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-100">Material flow is incomplete</p>
-                  <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-300">Production lines need input raw material, WIP/FG outputs, and source/destination locations before flow readiness can be trusted.</p>
+                  <AlertTriangle className="mx-auto h-5 w-5 text-warning" />
+                  <p className="mt-2 text-sm font-bold text-muted-foreground">Material flow is incomplete</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">Production lines need input raw material, WIP/FG outputs, and source/destination locations before flow readiness can be trusted.</p>
                   <div className="mt-2 flex flex-wrap justify-center gap-1">
                     {["BOM", "RM input", "WIP output", "FG destination", "Bins"].map((item) => (
-                      <span key={item} className="rounded-full bg-white/70 px-2 py-0.5 text-[9px] font-semibold text-amber-800 ring-1 ring-amber-200 dark:bg-slate-900/40 dark:text-amber-200 dark:ring-amber-500/20">○ {item}</span>
+                      <span key={item} className="rounded-full bg-card px-2 py-0.5 text-[9px] font-semibold text-warning ring-1 ring-warning/25">○ {item}</span>
                     ))}
                   </div>
-                  <button type="button" onClick={openRouting} disabled={!productionLineId || isNew} className="mt-2 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-bold text-white shadow-sm hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">Define Material Flow</button>
+                  <button type="button" onClick={openRouting} disabled={!productionLineId || isNew} className="mt-2 rounded-md border border-warning/25 bg-warning/10 px-3 py-1.5 text-[11px] font-bold text-warning shadow-sm hover:bg-warning/15 disabled:cursor-not-allowed disabled:opacity-50">Define Material Flow</button>
                 </div>
               </div>
             ) : (
-              <div className="grid min-h-[180px] place-items-center rounded-lg border border-slate-200 bg-slate-50/60 dark:border-slate-700 dark:bg-slate-800/20">
-                <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              <div className="grid min-h-[180px] place-items-center rounded-lg bg-muted">
+                <div className="flex items-center gap-3 text-[11px] font-semibold text-muted-foreground">
                   <span>RM bins: {inputLocations.length || "—"}</span>
                   <span>→</span>
                   <span>Process outputs: {outputCount}</span>
@@ -681,18 +681,18 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
             {validations.length > 0 ? (
               <div className="h-full space-y-1 overflow-hidden">
                 {validationGroups.map((group) => (
-                  <div key={group.label} className="rounded border border-slate-200 bg-slate-50/70 dark:border-slate-700 dark:bg-slate-800/30">
+                  <div key={group.label} className="rounded bg-muted">
                     <div className="flex h-8 items-center justify-between px-2.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">{group.label}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group.label}</span>
                       <Badge label={`${group.items.length}`} variant={group.items.length ? "warning" : "active"} />
                     </div>
                     {group.items.length > 0 && (
                       <div className="space-y-0.5 px-2 pb-1.5">
                         {group.items.map((item) => (
-                          <div key={`${group.label}-${item.field}-${item.code}`} className="flex h-8 items-center gap-2 rounded bg-white px-2 text-[10px] dark:bg-slate-900">
-                            <span className="font-mono font-semibold text-slate-600 dark:text-slate-300">{item.code}</span>
-                            <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-100">{item.message}</span>
-                            <button type="button" onClick={openRouting} className="shrink-0 font-bold text-amber-800 dark:text-amber-200">Fix</button>
+                          <div key={`${group.label}-${item.field}-${item.code}`} className="flex h-8 items-center gap-2 rounded bg-card px-2 text-[10px]">
+                            <span className="font-mono font-semibold text-muted-foreground">{item.code}</span>
+                            <span className="min-w-0 flex-1 truncate font-medium text-muted-foreground">{item.message}</span>
+                            <button type="button" onClick={openRouting} className="shrink-0 font-bold text-warning">Fix</button>
                           </div>
                         ))}
                       </div>
@@ -703,9 +703,9 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
             ) : (
               <div className="flex h-full items-center justify-center">
                 <div className="text-center">
-                  <Check className="mx-auto h-5 w-5 text-emerald-500" />
-                  <p className="mt-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">All validations passed</p>
-                  <p className="text-[10px] text-slate-500">Line is configured and ready.</p>
+                  <Check className="mx-auto h-5 w-5 text-success" />
+                  <p className="mt-1 text-[11px] font-semibold text-success">All validations passed</p>
+                  <p className="text-[10px] text-muted-foreground">Line is configured and ready.</p>
                 </div>
               </div>
             )}
@@ -714,7 +714,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
             <SectionCard title="Readiness" className="min-h-0 overflow-hidden">
               <div className="grid grid-cols-2 gap-1.5">
                 {setupSteps.map((step) => (
-                  <div key={step.label} className={`flex items-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-medium ${step.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300" : "border-slate-200 bg-slate-50 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}`}>
+                  <div key={step.label} className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-medium ${step.done ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"}`}>
                     <span>{step.done ? "✓" : "○"}</span>
                     <span className="flex-1 truncate">{step.label}</span>
                     <span className="text-[8px]">{step.done ? "Ready" : "Missing"}</span>
@@ -732,8 +732,8 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
 function InlineRow({ label, value, action }: { label: string; value: React.ReactNode; action?: { text: string; onClick: () => void } }) {
   return (
     <div className="grid min-h-5 items-center gap-2" style={{ gridTemplateColumns: "120px 1fr auto" }}>
-      <span className="truncate text-[12px] font-semibold text-slate-400 dark:text-slate-500">{label}</span>
-      <span className="min-w-0 truncate text-[13px] font-medium text-slate-800 dark:text-slate-200">{value}</span>
+      <span className="truncate text-[12px] font-semibold text-muted-foreground">{label}</span>
+      <span className="min-w-0 truncate text-[13px] font-medium text-muted-foreground">{value}</span>
       {action ? <SecondaryActionButton onClick={action.onClick}>{action.text}</SecondaryActionButton> : <span />}
     </div>
   );
@@ -741,9 +741,9 @@ function InlineRow({ label, value, action }: { label: string; value: React.React
 
 function SectionCard({ id, title, action, children, className = "" }: { id?: string; title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section id={id} className={`rounded-lg border border-slate-200/80 bg-white px-3 pb-2 pt-2 shadow-xs dark:border-slate-700/80 dark:bg-slate-900 ${className}`}>
+    <section id={id} className={`rounded-lg border border-border bg-card px-3 pb-2 pt-2 shadow-xs border-border bg-muted ${className}`}>
       <div className="mb-1.5 flex min-h-5 items-center gap-2">
-        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">{title}</h3>
+        <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
         {action}
       </div>
       {children}
@@ -754,7 +754,7 @@ function SectionCard({ id, title, action, children, className = "" }: { id?: str
 function SecondaryActionButton({ children, onClick, disabled = false, className = "" }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; className?: string }) {
   return (
     <button type="button" onClick={onClick} disabled={disabled}
-      className={`inline-flex h-5 items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 text-[9px] font-semibold text-slate-600 transition-all hover:bg-slate-100 hover:border-slate-300 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-800 ${className}`}>
+      className={`inline-flex h-5 items-center gap-1 rounded-md border border-border bg-card px-1.5 text-[9px] font-semibold text-muted-foreground transition-all hover:bg-muted hover:border-border active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 border-border bg-muted text-muted-foreground hover:border-border hover:bg-muted ${className}`}>
       {children}
     </button>
   );
@@ -772,7 +772,7 @@ function LineTypeSelect({ value, onChange, selectClass, error }: { value: string
         {!loading && options.length === 0 && <option value="" disabled>No line types configured</option>}
         {options.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
       </select>
-      {error && <p className="text-[9px] text-red-500">{error}</p>}
+      {error && <p className="text-[9px] text-danger">{error}</p>}
     </div>
   );
 }
@@ -790,7 +790,7 @@ function RefSelect({ category, value, onChange, placeholder, error, selectClass 
         {!loading && options.length === 0 && <option value="" disabled>No options</option>}
         {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
       </select>
-      {error && <p className="text-[9px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[9px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
@@ -815,7 +815,7 @@ function ShiftModelSelect({ value, onChange, placeholder, error, selectClass }: 
         {!loading && options.length === 0 && <option value="" disabled>No options</option>}
         {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
       </select>
-      {error && <p className="text-[9px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[9px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
@@ -832,24 +832,24 @@ function StatusSelect({ value, onChange, selectClass, error }: { value: string; 
         <option value="">Select status</option>
         {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
       </select>
-      {error && <p className="text-[9px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[9px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
 
 function Badge({ label, variant = "default" }: { label: string; variant?: "active" | "inactive" | "new" | "default" | "amber" | "warning" }) {
   const m: Record<string, string> = {
-    active: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20",
-    inactive: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
-    amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20",
-    warning: "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400 border border-orange-200 dark:border-orange-500/20",
-    new: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20",
-    default: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600",
+    active: "bg-success/10 text-success border border-success/20",
+    inactive: "bg-muted text-muted-foreground border border-border/60",
+    amber: "bg-warning/10 text-warning border border-warning/25",
+    warning: "bg-warning/10 text-warning border border-warning/25",
+    new: "bg-primary/10 text-primary border border-primary/20",
+    default: "bg-muted text-muted-foreground border border-border/60",
   };
-  return <span className={`inline-flex items-center rounded-md px-1.5 py-px text-[8px] font-bold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />}{label}</span>;
+  return <span className={`inline-flex items-center rounded-md px-1.5 py-px text-[8px] font-bold uppercase tracking-wider ${m[variant]}`}>{label === "active" && <span className="inline-block h-1.5 w-1.5 rounded-full bg-success mr-1 animate-pulse" />}{label}</span>;
 }
 
-export function ProductionLinesPage() {
+export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
   const navigate = useNavigate();
   const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setEntityContext, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
@@ -1123,21 +1123,21 @@ export function ProductionLinesPage() {
   const hasCal = !!sel?.shiftPattern || !!sel?.defaultCalendar;
 
 
-  const ev = (k: string, v: string | null | undefined) => v?.trim() ? v : <span className="text-slate-400 dark:text-slate-500 text-[11px]">{ET[k] || "-"}</span>;
+  const ev = (k: string, v: string | null | undefined) => v?.trim() ? v : <span className="text-muted-foreground text-[11px]">{ET[k] || "-"}</span>;
 
-  const iCls = "h-7 w-full border border-slate-200 bg-white px-2 text-[11px] outline-none text-slate-700 placeholder-slate-400 transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-500 dark:focus:border-amber-500 dark:focus:ring-amber-500/20";
-  const sCls = "h-7 w-full border border-slate-200 bg-white px-2 text-[11px] outline-none text-slate-700 transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:focus:border-amber-500 dark:focus:ring-amber-500/20";
+  const iCls = "h-7 w-full border border-border bg-card px-2 text-[11px] outline-none text-muted-foreground placeholder:text-muted-foreground transition-all focus:border-warning focus:ring-2 focus:ring-warning border-border bg-muted text-muted-foreground dark:focus:border-warning dark:focus:ring-warning";
+  const sCls = "h-7 w-full border border-border bg-card px-2 text-[11px] outline-none text-muted-foreground transition-all focus:border-warning focus:ring-2 focus:ring-warning border-border bg-muted text-muted-foreground dark:focus:border-warning dark:focus:ring-warning";
 
   const renderDetail = () => {
     if (mode !== "create" && !sel) {
       return (
-        <div className="flex flex-1 items-center justify-center bg-white dark:bg-slate-900 h-full">
+        <div className="flex flex-1 items-center justify-center bg-card bg-muted h-full">
           <div className="text-center max-w-xs">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-500/10">
-              <TrendingUpDown className="h-5 w-5 text-amber-400 dark:text-amber-300 stroke-current" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-entity-line-bg">
+              <TrendingUpDown className="h-5 w-5 text-entity-line stroke-current" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Production Line Details</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">Select a line or create a new one to view its full configuration.</p>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-1">Production Line Details</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">Select a line or create a new one to view its full configuration.</p>
           </div>
         </div>
       );
@@ -1151,37 +1151,37 @@ export function ProductionLinesPage() {
     const missingLineSetup = !plantName || !lt || (sel?.departmentCount ?? 0) === 0 || (sel?.groupCount ?? 0) === 0 || (sel?.resourceCount ?? 0) === 0;
 
     return (
-      <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+      <div className="flex-1 flex flex-col overflow-hidden bg-card bg-muted">
         {/* ── HEADER ── */}
-        <div className="shrink-0 px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+        <div className="shrink-0 px-4 pt-3 pb-2 border-b border-border">
           <div className="flex items-stretch gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-amber-400 to-amber-500 text-white shadow-sm">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
               <TrendingUpDown className="h-4 w-4 stroke-current" />
             </div>
             <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-3">
               <div className="min-w-0 justify-self-start">
                 <div className="flex min-w-0 items-center gap-2">
-                  <h2 className="truncate text-[16px] font-bold leading-5 text-slate-900 dark:text-slate-100">{title}</h2>
-                  {code && <span className="shrink-0 rounded bg-slate-100 px-1 py-px font-mono text-[9px] text-slate-400 dark:bg-slate-800 dark:text-slate-500">{code}</span>}
+                  <h2 className="truncate text-[16px] font-bold leading-5 text-muted-foreground">{title}</h2>
+                  {code && <span className="shrink-0 rounded bg-muted px-1 py-px font-mono text-[9px] text-muted-foreground bg-muted text-muted-foreground">{code}</span>}
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
                 <span><Factory className="h-2.5 w-2.5 inline stroke-current mr-0.5" />{plantName || "Plant required"}</span>
-                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-muted-foreground">·</span>
                 <span>{ev("lineType", lt)}</span>
                 </div>
               </div>
               <div className="flex min-h-9 items-center justify-center justify-self-center self-stretch text-center">
                 {missingLineSetup && (
-                  <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-center text-[9px] font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300" title="Line setup has readiness gaps">
+                  <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-warning bg-warning px-2 py-0.5 text-center text-[9px] font-semibold text-warning border-warning bg-warning text-warning" title="Line setup has readiness gaps">
                     <AlertTriangle className="h-3 w-3 stroke-current" /> Setup gaps
                   </span>
                 )}
               </div>
               <div className="flex min-h-7 items-center gap-1.5 justify-self-end self-stretch">
                 <Badge label={sel?.status || "active"} variant={sel?.status === "active" ? "active" : "inactive"} />
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.departmentCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.departmentCount ?? 0} Dept</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.groupCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.groupCount ?? 0} RG</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300" : "bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500"}`}>{sel?.resourceCount ?? 0} Res</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.departmentCount ?? 0) > 0 ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}>{sel?.departmentCount ?? 0} Dept</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.groupCount ?? 0) > 0 ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}>{sel?.groupCount ?? 0} RG</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}>{sel?.resourceCount ?? 0} Res</span>
                 {isForm && <Badge label="Editing" variant="amber" />}
                 {isNew && <Badge label="New" variant="default" />}
               </div>
@@ -1194,10 +1194,10 @@ export function ProductionLinesPage() {
           {isForm ? (
             <div className="flex min-h-0 flex-col gap-2 overflow-hidden">
               {errors._form && (
-                <div className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">{errors._form}</div>
+                <div className="rounded-md border border-danger bg-danger px-2 py-1 text-[10px] text-danger border-danger bg-danger text-danger">{errors._form}</div>
               )}
               {mode === "create" && (
-                <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-medium text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                <div className="rounded-md border border-warning bg-warning px-2 py-1 text-[10px] font-medium text-warning border-warning bg-warning text-warning">
                   Save production line before assigning departments or creating flow.
                 </div>
               )}
@@ -1207,31 +1207,31 @@ export function ProductionLinesPage() {
                     <div className="space-y-1.5">
                     <div className="grid grid-cols-2 items-start gap-2">
                       <div>
-                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Name <span className="text-red-500">*</span></label>
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Name <span className="text-danger">*</span></label>
                         <input type="text" value={g("name")} onChange={(e) => s("name", e.target.value)} placeholder="Line name" className={iCls} />
-                        {errors.name && <p className="text-[9px] text-red-500 mt-0.5">{errors.name}</p>}
+                        {errors.name && <p className="text-[9px] text-danger mt-0.5">{errors.name}</p>}
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Code <span className="text-red-500">*</span></label>
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Code <span className="text-danger">*</span></label>
                         <input type="text" value={g("code")} onChange={(e) => s("code", e.target.value)} placeholder="Line code" className={iCls} />
-                        {errors.code && <p className="text-[9px] text-red-500 mt-0.5">{errors.code}</p>}
+                        {errors.code && <p className="text-[9px] text-danger mt-0.5">{errors.code}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-2 items-start gap-2">
                       <div>
-                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Plant <span className="text-red-500">*</span></label>
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Plant <span className="text-danger">*</span></label>
                         <select value={g("plantId")} onChange={(e) => s("plantId", e.target.value)} className={sCls}><option value="">Select plant</option>{plantOptions.map((o: any) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
-                        {errors.plantId && <p className="text-[9px] text-red-500 mt-0.5">{errors.plantId}</p>}
+                        {errors.plantId && <p className="text-[9px] text-danger mt-0.5">{errors.plantId}</p>}
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-slate-500 dark:text-slate-400 mb-0.5">Status <span className="text-red-500">*</span></label>
+                        <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Status <span className="text-danger">*</span></label>
                         <StatusSelect value={g("statusId")} onChange={(id, cv) => { s("statusId", id); s("status", cv || "active"); }} selectClass={sCls} error={errors.statusId} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 items-start gap-2">
                       <LineTypeSelect value={g("lineTypeId")} onChange={(v) => s("lineTypeId", v)} selectClass={sCls} error={errors.lineTypeId} />
                     </div>
-                    <textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Description" rows={2} className="max-h-[72px] min-h-[52px] w-full resize-none rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] outline-none transition-all focus:border-amber-400 focus:ring-2 focus:ring-amber-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200" />
+                    <textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Description" rows={2} className="max-h-[72px] min-h-[52px] w-full resize-none rounded-md border border-border bg-card px-2 py-1.5 text-[11px] outline-none transition-all focus:border-warning focus:ring-2 focus:ring-warning border-border bg-muted text-muted-foreground" />
                   </div>
                   </SectionCard>
                   <SectionCard title="Operations" className="overflow-hidden">
@@ -1247,11 +1247,11 @@ export function ProductionLinesPage() {
                       selectClass={sCls}
                       disabled={!g("productFamilyId")}
                     />
-                    {errors.productFamilyId && <p className="text-[9px] text-red-500">{errors.productFamilyId}</p>}
-                    {errors.modelIds && <p className="text-[9px] text-red-500">{errors.modelIds}</p>}
-                    {errors.primaryModelId && <p className="text-[9px] text-red-500">{errors.primaryModelId}</p>}
+                    {errors.productFamilyId && <p className="text-[9px] text-danger">{errors.productFamilyId}</p>}
+                    {errors.modelIds && <p className="text-[9px] text-danger">{errors.modelIds}</p>}
+                    {errors.primaryModelId && <p className="text-[9px] text-danger">{errors.primaryModelId}</p>}
                     <div className="mt-2 space-y-1.5">
-                      <InlineRow label="Capacity" value={<input type="text" value={g("capacityBasis")} readOnly disabled={!g("shiftPatternId")} title={capacityBasisInfo ? "Derived from selected shift/calendar" : "Select shift/calendar to derive capacity"} className={`${iCls} bg-slate-50 text-slate-600 disabled:cursor-not-allowed disabled:opacity-70 dark:bg-slate-800/60 dark:text-slate-300`} />} />
+                      <InlineRow label="Capacity" value={<input type="text" value={g("capacityBasis")} readOnly disabled={!g("shiftPatternId")} title={capacityBasisInfo ? "Derived from selected shift/calendar" : "Select shift/calendar to derive capacity"} className={`${iCls} bg-muted text-muted-foreground disabled:cursor-not-allowed disabled:opacity-70 bg-muted text-muted-foreground`} />} />
                       <InlineRow label="UoM" value={<RefSelect category="unit_of_measure" value={g("capacityUomId")} onChange={(v) => s("capacityUomId", v)} placeholder="Select UoM" selectClass={sCls} error={errors.capacityUomId} />} />
                       <InlineRow label="Bottleneck RG" value={
                         <select value={g("bottleneckResourceGroupId")} onChange={(e) => s("bottleneckResourceGroupId", e.target.value)} className={sCls}>
@@ -1259,7 +1259,7 @@ export function ProductionLinesPage() {
                           {(sel?.resourceGroupOptions ?? []).map((rg) => <option key={rg.id} value={rg.id}>{rg.name}</option>)}
                         </select>
                       } />
-                      <label className="flex items-center gap-1.5 text-[10px] text-slate-600">
+                      <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         <input type="checkbox" checked={!!g("isConstraint")} onChange={(e) => s("isConstraint", e.target.checked)} /> Constraint Line
                       </label>
                     </div>
@@ -1270,28 +1270,28 @@ export function ProductionLinesPage() {
                   <RoutingSummarySection productionLine={sel} navigate={navigate} isNew={mode === "create"} isEditing={true} returnContext={{ searchText: search, statusFilter }} />
                   <SectionCard title="Departments" action={sel?.id ? <SecondaryActionButton onClick={() => navigate(`/system/production-structure/components/dept?lineId=${sel.id}`)}>Manage</SecondaryActionButton> : undefined} className="overflow-hidden">
                     {mode === "create" ? (
-                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-[10px] font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800/20 dark:text-slate-400">
+                      <div className="rounded-lg border border-dashed border-border bg-muted px-3 py-2 text-[10px] font-medium text-muted-foreground border-border bg-muted text-muted-foreground">
                         Save production line before assigning departments or creating flow.
                       </div>
                     ) : hasDepts ? (
                       <div className="space-y-1 overflow-hidden">
                         {departmentLinks.slice(0, 6).map((link) => (
                           <button key={link.id} onClick={() => navigate(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
-                            className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 text-left text-[11px] text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-                            <span className="font-mono text-[10px] text-slate-500">{link.sequence}</span>
+                            className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md border border-border bg-muted px-2 text-left text-[11px] text-muted-foreground hover:bg-muted border-border bg-muted text-muted-foreground hover:bg-muted">
+                            <span className="font-mono text-[10px] text-muted-foreground">{link.sequence}</span>
                             <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
-                            <span className="text-slate-500">{link.resourceGroups} RG</span>
-                            <span className="text-slate-500">{link.resources} Res</span>
+                            <span className="text-muted-foreground">{link.resourceGroups} RG</span>
+                            <span className="text-muted-foreground">{link.resources} Res</span>
                           </button>
                         ))}
                         {departmentLinks.length > 6 && (
-                          <div className="flex h-6 items-center rounded-md border border-slate-200 bg-slate-50 px-2 text-[10px] font-semibold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                          <div className="flex h-6 items-center rounded-md border border-border bg-muted px-2 text-[10px] font-semibold text-muted-foreground border-border bg-muted text-muted-foreground">
                             +{departmentLinks.length - 6} more departments
                           </div>
                         )}
                       </div>
                     ) : (
-                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/60 px-3 py-2 text-[10px] text-slate-500 dark:border-slate-700 dark:bg-slate-800/20 dark:text-slate-400">
+                      <div className="rounded-lg border border-dashed border-border bg-muted px-3 py-2 text-[10px] text-muted-foreground border-border bg-muted text-muted-foreground">
                         No departments linked.
                       </div>
                     )}
@@ -1316,24 +1316,25 @@ export function ProductionLinesPage() {
         <ConfirmDialog open={!!pendingSelId} onClose={() => setPendingSelId(null)} title="Discard changes?" message="You have unsaved changes. Discard them and switch lines?" onConfirm={confirmSelectLine} />
       )}
       <EntityWorkspacePage
+        hideList={embeddedInFlow}
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 h-9 border-b border-slate-200 dark:border-slate-700 flex items-center px-3 bg-white dark:bg-slate-900">
-              <Search className="h-3 w-3 text-slate-400 stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Lines</span>
-              <span className="ml-auto text-[9px] text-slate-400 dark:text-slate-500 font-mono">{filtered.length}</span>
+            <div className="shrink-0 border-b border-border flex items-center p-3 bg-muted">
+              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2 shrink-0" />
+              <span className="text-[11px] font-medium text-muted-foreground">Lines</span>
+              <span className="ml-auto text-[9px] text-muted-foreground font-mono">{filtered.length}</span>
             </div>
-            <div data-production-lines-list className="flex-1 overflow-y-auto bg-white pl-2 dark:bg-slate-900">
+            <div data-production-lines-list className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
               {loading && lines.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-slate-400"><div className="h-2 w-2 rounded-full bg-amber-400 animate-bounce mr-2" />Loading...</div>
+                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-warning animate-bounce mr-2" />Loading...</div>
               ) : paginated.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <TrendingUpDown className="h-4 w-4 text-slate-300 dark:text-slate-600 mb-1.5 stroke-current" />
-                  <p className="text-xs text-slate-400 dark:text-slate-500">No production lines</p>
+                  <TrendingUpDown className="h-4 w-4 text-muted-foreground mb-1.5 stroke-current" />
+                  <p className="text-xs text-muted-foreground">No production lines</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                <div>
                   {paginated.map((ln: ProductionLine) => {
                     const readiness = getLineListReadiness(ln);
                     return (
@@ -1344,14 +1345,14 @@ export function ProductionLinesPage() {
                         selected={selectedId === ln.id}
                         status={ln.status}
                         onClick={() => selectLine(ln.id)}
-                        accentColor="amber"
+                        entityType="line"
                         issueTags={
                           <span title={`${readiness.label}: ${readiness.reason}`} className={`ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black ${
                             readiness.tone === "ready"
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                              ? "bg-success/10 text-success"
                               : readiness.tone === "partial"
-                                ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
-                                : "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300"
+                                ? "bg-warning/10 text-warning"
+                                : "bg-danger/10 text-danger"
                           }`}>
                             {readiness.icon}
                           </span>
@@ -1361,7 +1362,7 @@ export function ProductionLinesPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div className="shrink-0 flex h-12 items-center border-t border-border bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

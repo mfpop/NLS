@@ -182,6 +182,7 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const departmentFilterId = searchParams.get("departmentId") || "";
+  const urlResourceGroupId = searchParams.get("resourceGroupId");
 
   const [mode, setMode] = useState<FormMode>("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -211,6 +212,14 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
   const assignedResources = listItems(resourcesData?.resources);
 
   useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  useEffect(() => {
+    if (!embeddedInFlow || !urlResourceGroupId || groups.length === 0) return;
+    const exists = groups.some((group) => group.id === urlResourceGroupId);
+    if (!exists) return;
+    setSelectedId(urlResourceGroupId);
+    setMode("view");
+  }, [embeddedInFlow, urlResourceGroupId, groups]);
 
   const filtered = groups.filter((g) => !departmentFilterId || g.departmentId === departmentFilterId)
     .filter((g) => statusFilter === "all" || g.status === statusFilter)
@@ -610,7 +619,7 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
                 </div>
               )}
             </div>
-            <div className="shrink-0 flex h-12 items-center border-t border-border/50 bg-muted px-3">
+            <div className="shrink-0 flex h-7 items-center border-t border-border/50 bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

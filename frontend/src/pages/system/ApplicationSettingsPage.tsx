@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { Bell, Check, ChevronDown, Cog, DatabaseZap, Eye, Globe2, Lock, RefreshCw, Save, ShieldCheck, SlidersHorizontal, TriangleAlert } from "lucide-react";
-import { GraphqlStatusPage } from "@/pages/graphql-status";
+import { Bell, Check, Cog, DatabaseZap, Eye, Globe2, Info, Lock, RefreshCw, Save, ShieldCheck, SlidersHorizontal, TriangleAlert } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { APPLICATION_SETTINGS_QUERY } from "@/graphql/applicationSettingsQueries";
 import { UPDATE_APPLICATION_SETTINGS } from "@/graphql/applicationSettingsMutations";
 import type { ApplicationSetting, ApplicationSettingInput } from "@/types/applicationSettings";
 import { useThemeStore } from "@/stores/theme";
 import { theme } from "../../styles/themeTokens";
-
-type SettingsTab = "settings" | "graphql-status";
 
 type FieldType = "select" | "boolean" | "number" | "text";
 
@@ -25,6 +23,39 @@ interface UpdateApplicationSettingsResponse {
     ok: boolean;
     errors?: Array<{ message: string }>;
   };
+}
+
+const APPLICATION_SETTING_PREFIXES = [
+  "appearance.",
+  "localization.",
+  "notifications.",
+  "audit.",
+  "security.",
+  "integrations.",
+  "system.",
+] as const;
+
+const MANUFACTURING_SETTING_PATTERNS = [
+  /company/i,
+  /plant/i,
+  /production[-_.\s]?line/i,
+  /department/i,
+  /resource[-_.\s]?group/i,
+  /resource/i,
+  /material[-_.\s]?bin/i,
+  /routing[-_.\s]?step/i,
+  /product[-_.\s]?(family|model)/i,
+  /capacity/i,
+  /schedule/i,
+  /kanban/i,
+  /fifo/i,
+  /supermarket/i,
+  /manufacturing[-_.\s]?kpi/i,
+] as const;
+
+function isApplicationSettingsKey(key: string): boolean {
+  return APPLICATION_SETTING_PREFIXES.some((prefix) => key.startsWith(prefix))
+    && !MANUFACTURING_SETTING_PATTERNS.some((pattern) => pattern.test(key));
 }
 
 const SETTING_SECTIONS: Array<{ id: string; title: string; description: string; icon: React.ReactNode; fields: FieldConfig[] }> = [
@@ -104,8 +135,7 @@ const SETTING_SECTIONS: Array<{ id: string; title: string; description: string; 
 ];
 
 export function ApplicationSettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("settings");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
   const [draft, setDraft] = useState<Record<string, unknown>>({});
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -114,13 +144,7 @@ export function ApplicationSettingsPage() {
   const { data, loading, error, refetch } = useQuery<{ applicationSettings: ApplicationSetting[] }>(APPLICATION_SETTINGS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const [updateSettings, { loading: saving }] = useMutation<UpdateApplicationSettingsResponse>(UPDATE_APPLICATION_SETTINGS, { refetchQueries: [APPLICATION_SETTINGS_QUERY] });
 
-  const tabs: { value: SettingsTab; label: string }[] = [
-    { value: "settings", label: "Settings" },
-    { value: "graphql-status", label: "GraphQL Status" },
-  ];
-
-  const activeTabLabel = tabs.find((t) => t.value === activeTab)?.label || "Overview";
-  const buttonClass = "inline-flex h-7 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground disabled:opacity-70";
+  const buttonClass = "inline-flex h-7 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted-foreground/70 disabled:opacity-100";
   const settingsByKey = useMemo(() => new Map((data?.applicationSettings ?? []).map((setting) => [setting.key, setting])), [data]);
   const dirtyInputs = useMemo<ApplicationSettingInput[]>(() => Object.entries(draft).map(([key, value]) => ({ key, value })), [draft]);
   const isDirty = dirtyInputs.length > 0;
@@ -143,7 +167,23 @@ export function ApplicationSettingsPage() {
     }
   }, [settingsByKey]);
 
+  useEffect(() => {
+    if (!statusMessage) return;
+    const timer = setTimeout(() => setStatusMessage(null), 5000);
+    return () => clearTimeout(timer);
+  }, [statusMessage]);
+
+  useEffect(() => {
+    if (!diagnosticsMessage) return;
+    const timer = setTimeout(() => setDiagnosticsMessage(null), 5000);
+    return () => clearTimeout(timer);
+  }, [diagnosticsMessage]);
+
   const setValue = (key: string, value: unknown) => {
+    if (!isApplicationSettingsKey(key)) {
+      setStatusMessage("Application Settings cannot edit manufacturing domain configuration.");
+      return;
+    }
     setStatusMessage(null);
     setDraft((previous) => ({ ...previous, [key]: value }));
     if (key === "appearance.theme_default" && (value === "system" || value === "light" || value === "dark")) {
@@ -177,6 +217,10 @@ export function ApplicationSettingsPage() {
       setStatusMessage(validationErrors.join(", "));
       return;
     }
+    if (dirtyInputs.some((input) => !isApplicationSettingsKey(input.key))) {
+      setStatusMessage("Blocked: Application Settings can only persist system/runtime behavior.");
+      return;
+    }
     try {
       const response = await updateSettings({ variables: { settings: dirtyInputs } });
       const payload = response.data?.updateApplicationSettings;
@@ -201,87 +245,51 @@ export function ApplicationSettingsPage() {
   };
 
   return (
-    <AppPageLayout
-      icon={<Cog />}
-      title="Application Settings"
-      subtitle="Configure application behavior, security, localization, integrations, and diagnostics."
-      toolbar={
-        <div className="flex w-full items-center gap-1">
-          <div className="relative">
-          <button
-            className={buttonClass}
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            aria-expanded={isDropdownOpen}
-          >
-            <Cog className="h-4 w-4 stroke-current" />
-            <span className="truncate max-w-28">{activeTabLabel}</span>
-            <ChevronDown className={"h-4 w-4 stroke-current transition " + (isDropdownOpen ? "rotate-180" : "rotate-0")} />
-          </button>
-          {isDropdownOpen && (
-            <div className={`absolute left-0 z-10 mt-1 w-44 rounded-lg border p-1 shadow-lg ${theme.dropdown}`}>
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.value;
-                return (
-                  <button
-                    key={tab.value}
-                    className={
-                      "flex h-7 w-full items-center gap-2 rounded px-2 text-left text-[11px] " +
-                      (isActive
-                        ? `font-medium ${theme.iconBoxEmerald}`
-                        : `${theme.textSecondary} ${theme.interactiveRow}`)
-                    }
-                    onClick={() => {
-                      setActiveTab(tab.value);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
+    <div className="relative">
+      <AppPageLayout
+        icon={<Cog />}
+        title="Application Settings"
+        subtitle="Configure application behavior, security, localization, integrations, and diagnostics."
+        toolbar={
+          <div className="flex w-full items-center gap-1">
+            <div className={`${buttonClass} pointer-events-none`}>
+              <Cog className="h-4 w-4 stroke-current" />
+              <span className="truncate max-w-28">Settings</span>
             </div>
-          )}
+            <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
+            <span className={`hidden text-[11px] font-medium md:inline ${theme.textMuted}`}>System behavior only</span>
+            <div className="flex-1" />
+            <button type="button" onClick={handleRefresh} disabled={isRefreshing}
+              className={buttonClass}>
+              <RefreshCw className={`h-3.5 w-3.5 stroke-current ${loading || isRefreshing ? "animate-spin" : ""}`} /> Refresh
+            </button>
+            <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
+            <button type="button" onClick={handleSave} disabled={!canAttemptSave} title={!settingsLoaded ? "Settings must load successfully before saving." : !isDirty ? "Make a change before saving." : !isValid ? validationErrors.join(", ") : "Save application settings"}
+              className={`inline-flex h-7 items-center gap-1.5 rounded px-3 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed ${!canAttemptSave ? "pointer-events-none bg-muted text-muted-foreground shadow-none" : theme.buttonSuccessSolid}`}>
+              {saving ? <RefreshCw className={`h-3.5 w-3.5 animate-spin stroke-current ${!canAttemptSave ? "text-muted-foreground" : ""}`} /> : <Save className={`h-3.5 w-3.5 stroke-current ${!canAttemptSave ? "text-muted-foreground" : ""}`} />} Save
+            </button>
           </div>
-          <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
-          <span className={`hidden text-[11px] font-medium md:inline ${theme.textMuted}`}>System behavior only</span>
-          <div className="flex-1" />
-          <button type="button" onClick={handleRefresh} disabled={isRefreshing}
-            className={buttonClass}>
-            <RefreshCw className={`h-3.5 w-3.5 stroke-current ${loading || isRefreshing ? "animate-spin" : ""}`} /> Refresh
-          </button>
-          <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
-          <button type="button" onClick={handleSave} disabled={!canAttemptSave} title={!settingsLoaded ? "Settings must load successfully before saving." : !isDirty ? "Make a change before saving." : !isValid ? validationErrors.join(", ") : "Save application settings"}
-            className={`inline-flex h-7 items-center gap-1.5 rounded px-3 text-[11px] font-semibold ${!canAttemptSave ? `${theme.chip} ${theme.textDisabled}` : theme.buttonSuccessSolid}`}>
-            {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin stroke-current" /> : <Save className="h-3.5 w-3.5 stroke-current" />} Save
-          </button>
-        </div>
-      }
-      footer={<span>Application Settings controls app behavior only. Manufacturing master data remains in Data Management.</span>}
-    >
-      <div className="h-full overflow-y-auto p-2">
-        {activeTab === "settings" && (
+        }
+        footer={<span>Application Settings controls application behavior only. Manufacturing modules control manufacturing operations.</span>}
+      >
+        <div className="h-full overflow-y-auto p-2">
           <div className="space-y-2">
-            <div className={`flex h-8 items-center rounded border px-2.5 text-[10px] ${theme.infoBanner}`}>
+                <div className="flex h-8 items-center rounded border border-info/20 bg-info/10 px-2.5 text-[10px] text-info">
               <div className="flex min-w-0 items-center gap-2">
                 <TriangleAlert className="h-3.5 w-3.5 shrink-0 stroke-current" />
                 <p className="min-w-0 truncate">
-                  <span className="font-semibold">Scope:</span> Application Settings controls app behavior only. Manufacturing master data stays in Data Management.
+                  <span className="font-semibold">Domain boundary:</span> Application Settings controls system/runtime behavior only. Manufacturing structure, routing, materials, capacity, and schedules stay in manufacturing modules.
                 </p>
               </div>
             </div>
             {loading && !data && <EmptyState message="Loading application settings..." />}
             {error && <EmptyState tone="error" message={error.message} />}
-            {statusMessage && (
-              <div className={`flex items-center gap-2 rounded border px-3 py-2 text-[11px] ${isSuccessMessage(statusMessage) ? "border-success/30 bg-success/10 text-success" : "border-danger/30 bg-danger/10 text-danger"}`}>
-                <Check className="h-3.5 w-3.5 stroke-current" /> {statusMessage}
-              </div>
-            )}
             {validationErrors.length > 0 && (
-              <div className="rounded border border-warning/35 bg-warning/10 px-3 py-1.5 text-[10px] text-warning">
+              <div className="rounded border border-warning/25 bg-warning/10 px-3 py-1.5 text-[10px] text-warning">
                 {validationErrors.join(", ")}
               </div>
             )}
-            <div className="grid auto-rows-fr gap-2 xl:grid-cols-4">
+            <div className="grid gap-2 xl:grid-cols-4">
               {SETTING_SECTIONS.map((section) => (
                 <SettingsCard
                   key={section.id}
@@ -306,22 +314,30 @@ export function ApplicationSettingsPage() {
                   ))}
                 </SettingsCard>
               ))}
+              <DiagnosticsSummaryCard auditEnabled={auditEnabled} settingsLoaded={settingsLoaded} lastCheckLabel={new Date().toLocaleTimeString()} onOpenDiagnostics={() => navigate("/system/diagnostics")} />
             </div>
-          </div>
-        )}
-        {activeTab === "graphql-status" && <GraphqlStatusPage />}
+        </div>
       </div>
     </AppPageLayout>
+      {statusMessage && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-50 flex justify-center pt-4">
+          <div className={`pointer-events-auto inline-flex max-w-full items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-sm ${isSuccessMessage(statusMessage) ? "border-success/25 bg-success/10 text-success" : "border-danger/30 bg-danger/10 text-danger"}`}>
+            <Info className="h-3.5 w-3.5 shrink-0 stroke-current" />
+            <span className="truncate">{statusMessage}</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 function SettingsCard({ sectionId, title, description, icon, children, themeValue, auditEnabled, diagnosticsLevel, diagnosticsMessage, onRunDiagnostics }: { sectionId: string; title: string; description: string; icon: React.ReactNode; children: React.ReactNode; themeValue?: string; auditEnabled?: boolean; diagnosticsLevel?: string; diagnosticsMessage?: string | null; onRunDiagnostics?: () => void }) {
   return (
-    <section className={`flex h-full flex-col rounded-lg border p-2 shadow-sm ${theme.card}`}>
+    <section className="flex flex-col rounded-lg border border-border/10 bg-card p-2 shadow-md shadow-foreground/5">
       <div className="mb-1.5 flex items-center gap-2">
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>{icon}</span>
         <div className="min-w-0">
-          <h2 className={`text-[12px] font-bold ${theme.textPrimary}`}>{title}</h2>
+          <h2 className="text-[12px] font-extrabold text-foreground">{title}</h2>
           <p className={`truncate text-[10px] ${theme.textMuted}`}>{description}</p>
         </div>
       </div>
@@ -334,16 +350,49 @@ function SettingsCard({ sectionId, title, description, icon, children, themeValu
 
 function ThemePreview({ value }: { value: string }) {
   return (
-    <div className="mt-auto grid grid-cols-3 gap-1 pt-1.5">
+    <div className="mt-1.5 grid grid-cols-3 gap-1">
       {["system", "light", "dark"].map((option) => {
         const active = value === option;
         return (
-          <div key={option} className={`h-8 rounded border px-1.5 py-1 ${active ? "border-primary bg-primary/10" : "border-border bg-muted"}`}>
+          <div key={option} className={`relative flex h-8 flex-col justify-center rounded border px-1.5 py-1 ${active ? "border-primary/40 bg-primary/10 text-primary shadow-sm" : "border-border/15 bg-muted/40 text-muted-foreground"}`}>
+            {active && <Check className="absolute right-1 top-1 h-2.5 w-2.5 stroke-current" />}
             <div className={`mb-1 h-1 rounded ${option === "dark" ? "bg-foreground" : option === "light" ? "bg-card" : "bg-accent"}`} />
-            <p className={`truncate text-[9px] font-semibold capitalize ${active ? "text-primary" : theme.textMuted}`}>{option}</p>
+            <p className="truncate pr-3 text-[9px] font-semibold capitalize">{option}</p>
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function DiagnosticsSummaryCard({ auditEnabled, settingsLoaded, lastCheckLabel, onOpenDiagnostics }: { auditEnabled: boolean; settingsLoaded: boolean; lastCheckLabel: string; onOpenDiagnostics: () => void }) {
+  return (
+    <button type="button" onClick={onOpenDiagnostics} className="flex flex-col rounded-lg border border-border/10 bg-card p-2 text-left shadow-md shadow-foreground/5 transition-colors hover:bg-muted/45 focus:outline-none focus:ring-2 focus:ring-ring/20">
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sidebar-settings/15 text-sidebar-settings">
+          <ShieldCheck className="h-4 w-4 stroke-current" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-[12px] font-extrabold text-foreground">Diagnostics Summary</h2>
+          <p className="truncate text-[10px] text-muted-foreground">Runtime readiness snapshot.</p>
+        </div>
+      </div>
+      <div className="grid gap-1.5 text-[10px]">
+        <SummaryRow label="GraphQL" value={settingsLoaded ? "OK" : "Loading"} ok={settingsLoaded} />
+        <SummaryRow label="DB" value={settingsLoaded ? "OK" : "Loading"} ok={settingsLoaded} />
+        <SummaryRow label="Audit" value={auditEnabled ? "Active" : "Off"} ok={auditEnabled} />
+        <SummaryRow label="Last check" value={lastCheckLabel} />
+      </div>
+    </button>
+  );
+}
+
+function SummaryRow({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
+  return (
+    <div className="flex items-center gap-2 rounded bg-muted/40 px-2 py-1">
+      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${ok === undefined ? "bg-muted-foreground/50" : ok ? "bg-success" : "bg-warning"}`} />
+      <span className="min-w-0 flex-1 truncate font-semibold text-muted-foreground">{label}</span>
+      <span className="truncate text-right font-bold text-foreground">{value}</span>
     </div>
   );
 }
@@ -353,26 +402,26 @@ function AuditDiagnosticsStatus({ auditEnabled, diagnosticsLevel, diagnosticsMes
   return (
     <div className="mt-auto space-y-1 pt-1.5 text-[10px]">
       <div className="grid grid-cols-2 gap-1">
-        <div className={`rounded border px-1.5 py-1 ${auditEnabled ? "border-success/30 bg-success/10 text-success" : "border-border bg-muted text-muted-foreground"}`}>
+        <div className={`rounded px-1.5 py-1 ${auditEnabled ? "bg-success/10 text-success" : "bg-muted/40 text-muted-foreground"}`}>
           <span className="block font-semibold">{auditEnabled ? "Audit active" : "Audit off"}</span>
           <span className="block truncate">Save events tracked</span>
         </div>
-        <div className="rounded border border-border bg-muted px-1.5 py-1 text-muted-foreground">
+        <div className="rounded bg-muted/40 px-1.5 py-1 text-muted-foreground">
           <span className="block font-semibold">{levelLabel}</span>
           <span className="block truncate">Runtime visibility</span>
         </div>
       </div>
-      <button type="button" onClick={onRunDiagnostics} className="h-6 w-full rounded border border-input bg-card px-2 text-[10px] font-semibold text-muted-foreground hover:bg-muted">
+      <button type="button" onClick={onRunDiagnostics} className="h-6 w-full rounded border border-border/25 bg-card px-2 text-[10px] font-semibold text-muted-foreground hover:bg-muted">
         Run Diagnostics Check
       </button>
-      {diagnosticsMessage && <p className={`truncate rounded border px-1.5 py-1 ${theme.chip}`}>{diagnosticsMessage}</p>}
+      {diagnosticsMessage && <p className="truncate rounded bg-muted/40 px-1.5 py-1 text-muted-foreground">{diagnosticsMessage}</p>}
     </div>
   );
 }
 
 function SettingField({ field, value, description, onChange }: { field: FieldConfig; value: unknown; description: string; onChange: (value: unknown) => void }) {
   return (
-    <label className="grid grid-cols-[132px_1fr] items-center gap-2 rounded border border-border bg-muted px-2 py-1.5">
+    <label className="grid grid-cols-[132px_1fr] items-center gap-2 rounded-md bg-muted/40 px-2 py-1.5">
       <span className="min-w-0">
         <span className={`block truncate text-[11px] font-semibold ${theme.textSecondary}`}>{field.label}</span>
         {description && <span className={`block truncate text-[10px] ${theme.textMuted}`}>{description}</span>}
@@ -407,7 +456,7 @@ function SettingField({ field, value, description, onChange }: { field: FieldCon
 
 function EmptyState({ message, tone = "neutral" }: { message: string; tone?: "neutral" | "error" }) {
   return (
-    <div className={`rounded-lg border px-3 py-4 text-center text-xs ${tone === "error" ? "border-danger/30 bg-danger/10 text-danger" : `${theme.card} ${theme.textMuted}`}`}>
+    <div className={`rounded-lg border px-3 py-4 text-center text-xs ${tone === "error" ? "border-danger/25 bg-danger/10 text-danger" : "border-border/20 bg-card text-muted-foreground shadow-sm shadow-foreground/5"}`}>
       {message}
     </div>
   );

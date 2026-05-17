@@ -59,6 +59,27 @@ type ProductDraft = Record<string, string | boolean | null | undefined>;
 const PER_PAGE = 15;
 const DEFAULT_LIST_WIDTH = 280;
 const COMMAND_BAR_X_PADDING = 12;
+const PMD_CARD = "border border-border/20 bg-card shadow-md shadow-foreground/10";
+const PMD_FIELD = "border border-border/20 bg-transparent text-muted-foreground outline-none transition-colors focus:border-border-strong focus:bg-card focus:text-foreground focus:ring-2 focus:ring-ring/15";
+const PMD_BUTTON = "inline-flex h-7 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:text-muted-foreground/70 disabled:opacity-100";
+
+function ProductStatusBadge({ status, active }: { status?: string | null; active?: boolean }) {
+  const normalized = String(status || (active ? "ACTIVE" : "ARCHIVED")).toUpperCase();
+  const label = normalized === "ACTIVE" ? "Active" : normalized === "DRAFT" ? "Draft" : normalized === "ARCHIVED" ? "Obsolete" : normalized.charAt(0) + normalized.slice(1).toLowerCase();
+  const tone = normalized === "ACTIVE"
+    ? "bg-success/10 text-success border-success/20"
+    : normalized === "DRAFT"
+      ? "bg-warning/10 text-warning border-warning/25"
+      : "bg-muted text-muted-foreground border-border/30";
+  const dot = normalized === "ACTIVE" ? "bg-success" : normalized === "DRAFT" ? "bg-warning" : "bg-muted-foreground/55";
+
+  return (
+    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-px text-[9px] font-semibold ${tone}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
+}
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Layers; accent: string }> = [
   { id: "families", label: "Product Families", icon: Layers, accent: "emerald" },
@@ -458,7 +479,7 @@ export function ProductMasterDataPage() {
           canSave={dirty && formValid && !refreshing}
         />
         {refreshError && (
-          <div className="shrink-0 border-b border-danger bg-danger px-3 py-1.5 text-[11px] font-medium text-danger border-danger bg-danger text-danger">
+          <div className="shrink-0 border-b border-danger/25 bg-danger/10 px-3 py-1.5 text-[11px] font-semibold text-foreground">
             {refreshError}
           </div>
         )}
@@ -468,16 +489,16 @@ export function ProductMasterDataPage() {
           footer={null}
           list={
             <>
-              <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-3 py-2 border-border bg-card">
+              <div className="flex shrink-0 items-center justify-between border-b border-border/20 bg-card px-3 py-2">
                 <div className="min-w-0">
                   <p className="truncate text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{tabLabel(activeTab)}</p>
                   <p className="text-[9px] text-muted-foreground">{list.length} matching records</p>
                 </div>
-                <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground border-border bg-muted text-muted-foreground">
+                <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">
                   {activeTab}
                 </span>
               </div>
-              <div className="flex-1 overflow-y-auto bg-card pl-2 bg-card">
+              <div className="flex-1 overflow-y-auto bg-card pl-2">
                 {paginated.length === 0 ? (
                   <div className="flex h-32 flex-col items-center justify-center px-4 text-center">
                     <Package className="mb-1.5 h-4 w-4 text-muted-foreground stroke-current" />
@@ -503,26 +524,21 @@ export function ProductMasterDataPage() {
                           key={item.id}
                           type="button"
                           onClick={() => { setSelectedId(item.id); setMode("view"); setMutationError(null); }}
-                          className={`flex w-full items-start gap-2 border-l-[2px] px-2.5 py-1.5 text-left transition-colors focus:outline-none ${selectedRow ? "border-l-warning bg-table-selected" : "border-l-transparent hover:bg-table-row-hover"}`}
+                          className={`flex w-full items-start gap-2 border-l-[3px] px-2.5 py-1.5 text-left transition-colors focus:outline-none ${selectedRow ? "border-l-warning bg-warning/15 shadow-sm shadow-warning/10" : "border-l-transparent hover:bg-muted/60"}`}
                         >
-                          <div className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${isOperationallyActive(item) ? "bg-success" : "bg-muted"}`} />
                           <div className="min-w-0 flex-1">
                             <div className="flex min-w-0 items-center gap-2">
-                              <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground text-muted-foreground">
+                              <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground">
                                 {item.partNumber || item.name || item.code || "-"}
                               </span>
-                              {isOperationallyActive(item) && (
-                                <span className="shrink-0 rounded-full bg-success px-1.5 py-px text-[7px] font-bold uppercase tracking-wide text-success bg-success text-success">
-                                  Active
-                                </span>
-                              )}
+                              <ProductStatusBadge status={item.status} active={isOperationallyActive(item)} />
                             </div>
                             <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[9px] text-muted-foreground">
                               {code && <span className="truncate font-mono">{code}</span>}
                               {countLabel && (
                                 <>
                                   {code && <span className="text-muted-foreground">·</span>}
-                                  <span className="shrink-0 rounded bg-muted px-1 py-px text-[8px] font-semibold text-muted-foreground bg-muted text-muted-foreground">
+                                  <span className="shrink-0 rounded bg-muted px-1 py-px text-[8px] font-semibold text-muted-foreground">
                                     {count} {countLabel}
                                   </span>
                                 </>
@@ -535,14 +551,14 @@ export function ProductMasterDataPage() {
                   </div>
                 )}
               </div>
-              <div className="flex h-7 shrink-0 items-center justify-between border-t border-border bg-card px-3 text-[10px] text-muted-foreground border-border bg-card">
+              <div className="flex h-7 shrink-0 items-center justify-between border-t border-border/20 bg-card px-3 text-[10px] text-muted-foreground">
                 <span>{list.length} {activeTab}</span>
                 <div className="flex items-center gap-1">
-                  <button type="button" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:opacity-30 dark:hover:bg-muted">
+                  <button type="button" disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:text-muted-foreground/70 disabled:opacity-100">
                     <ChevronLeft className="h-3 w-3 stroke-current" />
                   </button>
                   <span className="px-1 font-mono">{currentPage}/{pageCount}</span>
-                  <button type="button" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))} className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:opacity-30 dark:hover:bg-muted">
+                  <button type="button" disabled={currentPage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))} className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted disabled:text-muted-foreground/70 disabled:opacity-100">
                     <ChevronRight className="h-3 w-3 stroke-current" />
                   </button>
                 </div>
@@ -593,7 +609,7 @@ export function ProductMasterDataPage() {
         />
       </div>
 
-      <footer className="flex h-8 shrink-0 items-center justify-between border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
+      <footer className="flex h-14 shrink-0 items-center justify-between border-t border-border/20 bg-muted px-4 text-xs font-medium text-muted-foreground">
         <div className="flex min-w-0 items-center gap-2">
           <Database className="h-3.5 w-3.5 shrink-0 text-muted-foreground stroke-current" />
           <span className="truncate text-muted-foreground">{footerMeta.join(" · ")}</span>
@@ -641,11 +657,11 @@ function ProductMasterContentHeader({
   refreshing?: boolean;
   canSave: boolean;
 }) {
-  const buttonClass = "inline-flex h-7 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-45 text-muted-foreground dark:hover:bg-muted";
+  const buttonClass = PMD_BUTTON;
   const isForm = mode === "create" || mode === "edit";
 
   return (
-    <div className="flex h-9 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-2 border-border bg-card">
+    <div className="flex h-9 shrink-0 items-center justify-between gap-3 border-b border-border/20 bg-card px-2">
       <div className="flex min-w-0 flex-1 items-center gap-2" aria-label="Product Master selector, search, and filters">
         <div className="min-w-0 shrink-0" style={{ width: DEFAULT_LIST_WIDTH - COMMAND_BAR_X_PADDING * 2 }}>
           <select
@@ -653,7 +669,7 @@ function ProductMasterContentHeader({
             aria-label="Product master entity"
             value={activeTab}
             onChange={(event) => onTabChange(event.target.value as Tab)}
-            className="h-7 w-full border border-border bg-card px-2 text-xs font-semibold text-foreground outline-none focus:border-primary border-border bg-muted text-muted-foreground dark:focus:border-primary"
+            className={`h-7 w-full px-2 text-xs font-semibold ${PMD_FIELD}`}
           >
             {tabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
           </select>
@@ -668,7 +684,7 @@ function ProductMasterContentHeader({
             value={searchText}
             onChange={(event) => onSearchTextChange(event.target.value)}
             placeholder="Search product master data"
-            className="h-7 w-full border border-border bg-card pl-3 pr-8 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary border-border bg-muted text-muted-foreground dark:placeholder:text-muted-foreground dark:focus:border-primary"
+            className={`h-7 w-full pl-3 pr-8 text-xs placeholder:text-muted-foreground ${PMD_FIELD}`}
           />
           {searchText && (
             <button type="button" onClick={() => onSearchTextChange("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
@@ -676,14 +692,14 @@ function ProductMasterContentHeader({
             </button>
           )}
         </div>
-        <div className="flex h-7 w-36 shrink-0 items-center gap-1 border border-border bg-card px-2 border-border bg-muted">
+        <div className="flex h-7 w-36 shrink-0 items-center gap-1 border border-border/20 bg-transparent px-2 transition-colors focus-within:border-border-strong focus-within:bg-card focus-within:ring-2 focus-within:ring-ring/15">
           <Funnel className="h-3.5 w-3.5 text-muted-foreground stroke-current" />
           <select
             id="product-master-status-filter"
             aria-label="Filter records"
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value as "all" | "active" | "archived")}
-            className="h-full flex-1 border-0 bg-transparent text-xs text-muted-foreground outline-none text-muted-foreground"
+            className="h-full flex-1 border-0 bg-transparent text-xs text-muted-foreground outline-none"
           >
             <option value="all">All records</option>
             <option value="active">Active</option>
@@ -700,12 +716,12 @@ function ProductMasterContentHeader({
               onClick={onSave}
               disabled={!canSave}
               title={!canSave ? "Make a valid change before saving." : "Save changes"}
-              className={`inline-flex h-7 items-center gap-1.5 rounded px-3 text-[11px] font-semibold ${theme.buttonSuccessSolid} disabled:pointer-events-none disabled:opacity-45`}
+              className={`inline-flex h-7 items-center gap-1.5 rounded px-3 text-[11px] font-semibold ${theme.buttonPrimary} disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground/70 disabled:shadow-none`}
             >
               <CheckCircle className="h-4 w-4 stroke-current" />
               Save
             </button>
-            <button type="button" onClick={onCancel} className={`${buttonClass} border border-border`}>
+            <button type="button" onClick={onCancel} className={`${buttonClass} border border-border/20`}>
               <X className="h-4 w-4 stroke-current" />
               Cancel
             </button>
@@ -775,8 +791,8 @@ function DetailPanel({
 }) {
   if (!selected && !isForm) {
     return (
-      <div className="flex h-full flex-1 flex-col bg-muted bg-card">
-        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-border bg-card px-4 border-border bg-card">
+      <div className="flex h-full flex-1 flex-col bg-card">
+        <div className="flex h-12 shrink-0 items-center gap-3 border-b border-border/20 bg-card px-4">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
             <TabIcon className="h-4 w-4 stroke-current" />
           </div>
@@ -818,7 +834,7 @@ function DetailPanel({
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden bg-card">
-      <div className="shrink-0 border-b border-border px-3 py-1 border-border">
+      <div className="shrink-0 border-b border-border/20 px-3 py-1">
         <div className="flex items-stretch gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
             <TabIcon className="h-4 w-4 stroke-current" />
@@ -826,7 +842,7 @@ function DetailPanel({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h2 className="truncate text-[16px] font-bold leading-5 text-foreground">{title}</h2>
-              {s.code && s.code !== s.name && <span className="shrink-0 rounded bg-muted px-1.5 py-px font-mono text-[9px] text-muted-foreground bg-muted text-muted-foreground">{s.code}</span>}
+              {s.code && s.code !== s.name && <span className="shrink-0 rounded bg-muted px-1.5 py-px font-mono text-[9px] text-muted-foreground">{s.code}</span>}
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
               <span>{tabLabel(activeTab)}</span>
@@ -834,16 +850,15 @@ function DetailPanel({
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${isOperationallyActive(s) ? "bg-success" : "bg-muted"}`} />
-            <span className="text-[9px] font-medium text-muted-foreground">{statusLabel}</span>
+            <ProductStatusBadge status={statusLabel} active={isOperationallyActive(s)} />
           </div>
         </div>
       </div>
 
       {mutationError && (
         <div className="shrink-0 px-4 pt-2">
-          <div className="flex items-center gap-2 rounded border border-danger bg-danger px-3 py-1.5 text-[10px] text-danger border-danger bg-danger text-danger">
-            <AlertTriangle className="h-3 w-3 shrink-0 stroke-current" />
+          <div className="flex items-center gap-2 rounded border border-danger/25 bg-danger/10 px-3 py-1.5 text-[10px] font-semibold text-foreground">
+            <AlertTriangle className="h-3 w-3 shrink-0 stroke-current text-danger" />
             {mutationError}
           </div>
         </div>
@@ -866,7 +881,7 @@ function DetailPanel({
 
           {/* IDENTITY - compact for view mode, form for edit */}
           <Section title="Identity" level="primary">
-            <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] bg-muted">
+            <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px]">
               {isForm ? (
                 <ProductMasterForm
                   activeTab={activeTab}
@@ -892,7 +907,7 @@ function DetailPanel({
           {/* TWO-COLUMN: RELATIONS + USAGE */}
           <div className="grid grid-cols-2 gap-1">
             <Section title="Relations" level="support">
-              <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] bg-muted">
+              <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px]">
                 {entityType === "family" && <CompactRows items={[["Models", `${modelsInFamily.length} model${modelsInFamily.length !== 1 ? "s" : ""}`]]} />}
                 {entityType === "model" && <CompactRows items={[["Family", s.familyName || "-"]]} />}
                 {entityType === "variant" && <CompactRows items={[["Model", s.modelName || "-"]]} />}
@@ -902,7 +917,7 @@ function DetailPanel({
               </div>
             </Section>
             <Section title="Where Used" level="support">
-              <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] bg-muted">
+              <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px]">
                 <CompactRows items={[
                   ["Production Lines", `${new Set(routingsForEntity.map((routing: any) => routing.productionLineId).filter(Boolean)).size} line${new Set(routingsForEntity.map((routing: any) => routing.productionLineId).filter(Boolean)).size !== 1 ? "s" : ""}`],
                   ["BOMs", `${activeBomCount} active`],
@@ -925,7 +940,7 @@ function DetailPanel({
           {/* TWO-COLUMN: BOMS + ROUTING */}
           <div className="grid grid-cols-2 gap-1">
             <Section title="BOMs" level="support">
-              <div className="rounded-md bg-muted px-2 py-1.5 text-[11px] bg-muted">
+              <div className="rounded-md bg-muted px-2 py-1.5 text-[11px]">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`inline-block h-2 w-2 rounded-full ${bomsForEntity.some((b: any) => b.status === "ACTIVE") ? "bg-success" : bomsForEntity.length > 0 ? "bg-warning" : "bg-muted"}`} />
                   <span className="text-sm font-bold text-foreground">{bomsForEntity.filter((b: any) => b.status === "ACTIVE").length}</span>
@@ -943,12 +958,12 @@ function DetailPanel({
                 )}
                 <div className="mt-1 flex gap-1">
                   {bomsForEntity.length === 0 && <span className="text-[10px] font-medium text-muted-foreground">Create or link a BOM before release.</span>}
-                  <button type="button" onClick={onOpenBoms} className="h-6 rounded border border-border bg-muted px-2.5 text-[10px] font-bold text-primary-foreground shadow-sm hover:bg-muted focus:ring-2 focus:ring-ring border-border bg-muted text-foreground dark:hover:bg-card">Open BOMs</button>
+                  <button type="button" onClick={onOpenBoms} className="h-6 rounded bg-primary px-2.5 text-[10px] font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:ring-2 focus:ring-ring/20">Open BOMs</button>
                 </div>
               </div>
             </Section>
             <Section title="Routing" level="support">
-              <div className="rounded-md bg-muted px-2 py-1.5 text-[11px] bg-muted">
+              <div className="rounded-md bg-muted px-2 py-1.5 text-[11px]">
                 <div className="flex items-center gap-2 mb-1">
                   <span className={`inline-block h-2 w-2 rounded-full ${routingsForEntity.some((r: any) => r.status === "ACTIVE") ? "bg-success" : routingsForEntity.length > 0 ? "bg-warning" : "bg-muted"}`} />
                   <span className="text-sm font-bold text-foreground">{routingsForEntity.filter((r: any) => r.status === "ACTIVE").length}</span>
@@ -963,8 +978,8 @@ function DetailPanel({
                 )}
                 <div className="mt-1 flex gap-1">
                   {routingsForEntity.length === 0 && <span className="text-[10px] font-medium text-muted-foreground">Assign routing before execution.</span>}
-                  <button type="button" onClick={onOpenRouting} className="h-6 rounded border border-border bg-muted px-2.5 text-[10px] font-bold text-primary-foreground shadow-sm hover:bg-muted focus:ring-2 focus:ring-ring border-border bg-muted text-foreground dark:hover:bg-card">Open Routing</button>
-                  <button type="button" onClick={onOpenRouting} className="h-6 rounded border border-border bg-card px-2.5 text-[10px] font-semibold text-foreground hover:bg-muted focus:ring-2 focus:ring-ring border-border bg-card text-muted-foreground">View Assignments</button>
+                  <button type="button" onClick={onOpenRouting} className="h-6 rounded bg-primary px-2.5 text-[10px] font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:ring-2 focus:ring-ring/20">Open Routing</button>
+                  <button type="button" onClick={onOpenRouting} className="h-6 rounded border border-border/20 bg-transparent px-2.5 text-[10px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:ring-2 focus:ring-ring/15">View Assignments</button>
                 </div>
               </div>
             </Section>
@@ -973,7 +988,7 @@ function DetailPanel({
           {/* VALIDATION */}
           <div>
             <Section title={`Validation (${validationIssues.length})`} level="operational">
-              <div className={`rounded-md px-1.5 py-1 text-[11px] ${validationIssues.length === 0 ? "bg-success" : "bg-warning"}`}>
+              <div className={`rounded-md border px-1.5 py-1 text-[11px] ${validationIssues.length === 0 ? "border-success/10 bg-success/5 text-foreground" : "border-warning/10 bg-warning/10 text-foreground"}`}>
                 <ValidationGroup title="Execution Readiness">
                   {entityType === "part" && <ValidationLine severity={activeBomCount > 0 ? "ok" : "warning"} message={activeBomCount > 0 ? "BOM available" : "Missing BOM"} />}
                   {entityType === "part" && <ValidationLine severity={activeRoutingCount > 0 ? "ok" : "warning"} message={activeRoutingCount > 0 ? "Routing assigned" : "Missing Routing"} />}
@@ -997,7 +1012,7 @@ function DetailPanel({
 }
 
 function StatusBadge({ label }: { label: string }) {
-  return <span className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${theme.badgeNeutral}`}>{label}</span>;
+  return <span className="rounded-full border border-border/20 bg-warning/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-warning shadow-sm shadow-warning/5">{label}</span>;
 }
 
 function ProductMasterForm({
@@ -1091,7 +1106,7 @@ function TextField({ value, onChange, placeholder, className = "" }: { value: un
       value={String(value ?? "")}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className={`h-8 w-full border border-border bg-card px-2 text-[11px] text-foreground outline-none placeholder:text-muted-foreground focus:border-primary border-border bg-card text-muted-foreground dark:placeholder:text-muted-foreground dark:focus:border-primary ${className}`}
+      className={`h-8 w-full px-2 text-[11px] placeholder:text-muted-foreground ${PMD_FIELD} ${className}`}
     />
   );
 }
@@ -1101,7 +1116,7 @@ function SelectField({ value, onChange, options, placeholder }: { value: unknown
     <select
       value={String(value ?? "")}
       onChange={(event) => onChange(event.target.value)}
-      className="h-8 w-full border border-border bg-card px-2 text-[11px] text-foreground outline-none focus:border-primary border-border bg-card text-muted-foreground dark:focus:border-primary"
+      className={`h-8 w-full px-2 text-[11px] ${PMD_FIELD}`}
     >
       <option value="">{placeholder}</option>
       {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -1114,7 +1129,7 @@ function StatusSelect({ value, onChange, draftOptions = ["ACTIVE", "ARCHIVED"] }
     <select
       value={String(value ?? draftOptions[0])}
       onChange={(event) => onChange(event.target.value)}
-      className="h-8 w-full border border-border bg-card px-2 text-[11px] text-foreground outline-none focus:border-primary border-border bg-card text-muted-foreground dark:focus:border-primary"
+      className={`h-8 w-full px-2 text-[11px] ${PMD_FIELD}`}
     >
       {draftOptions.map((status) => <option key={status} value={status}>{status}</option>)}
     </select>
@@ -1123,17 +1138,17 @@ function StatusSelect({ value, onChange, draftOptions = ["ACTIVE", "ARCHIVED"] }
 
 function Section({ title, children, level = "support" }: { title: string; children: React.ReactNode; level?: "primary" | "operational" | "support" }) {
   const style = level === "primary"
-    ? "border-border bg-card border-border bg-card"
+    ? PMD_CARD
     : level === "operational"
-      ? "border-warning bg-warning border-warning bg-warning/[0.03]"
-      : "border-border bg-card border-border bg-card";
+      ? "border border-warning/10 bg-card shadow-md shadow-foreground/10"
+      : PMD_CARD;
   const titleStyle = level === "operational"
     ? "text-warning"
     : level === "primary"
-      ? "text-foreground text-muted-foreground"
+      ? "text-foreground"
       : "text-muted-foreground";
   return (
-    <section className={`w-full rounded-lg border p-1.5 shadow-sm ${style}`}>
+    <section className={`w-full rounded-lg p-1.5 ${style}`}>
       <h3 className={`mb-1 text-[10px] font-black uppercase tracking-wider ${titleStyle}`}>{title}</h3>
       {children}
     </section>
@@ -1150,20 +1165,20 @@ function HierarchyNav({ activeTab, counts, onNavigate }: { activeTab: Tab; count
     { tab: "routing", label: "Routings", icon: <GitCompare className="h-3 w-3 stroke-current" />, color: "rose" },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-1 rounded-md bg-card px-1.5 py-1 text-[10px] bg-card">
+    <div className="flex flex-wrap items-center gap-1 rounded-md bg-muted px-1.5 py-1 text-[10px]">
       {nodes.map((node, index) => (
         <div key={node.tab} className="inline-flex items-center gap-1">
           {index > 0 && <span className="text-muted-foreground">→</span>}
           <button
             type="button"
             onClick={() => onNavigate(node.tab)}
-            className={`inline-flex items-center gap-1 rounded border px-2 py-1 font-bold transition-colors hover:bg-card focus:ring-2 dark:hover:bg-muted ${
-              activeTab === node.tab ? "border-warning bg-warning text-warning border-warning bg-warning text-warning" : "border-border bg-muted text-muted-foreground border-border bg-muted text-muted-foreground"
+            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 font-semibold transition-colors focus:ring-2 focus:ring-ring/15 ${
+              activeTab === node.tab ? "border-warning/15 bg-warning/15 text-warning" : "border-border/20 bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
             {node.icon}
             {node.label}
-            <span className="rounded bg-card px-1 font-mono text-[9px] text-muted-foreground bg-card text-muted-foreground">{counts[node.tab]}</span>
+            <span className="rounded bg-background/60 px-1 font-mono text-[9px] text-muted-foreground">{counts[node.tab]}</span>
           </button>
         </div>
       ))}
@@ -1173,20 +1188,20 @@ function HierarchyNav({ activeTab, counts, onNavigate }: { activeTab: Tab; count
 
 function BadgeDot({ label, color }: { label: string; color: string }) {
   const colors: Record<string, string> = {
-    emerald: "bg-success text-success bg-success text-success",
-    blue: "bg-accent text-primary bg-primary text-primary",
-    violet: "bg-accent text-info bg-accent text-info",
-    amber: "bg-warning text-warning bg-warning text-warning",
-    slate: "bg-muted text-muted-foreground bg-muted text-muted-foreground",
-    cyan: "bg-accent text-info bg-accent0/20 text-info",
-    rose: "bg-danger text-danger bg-danger text-danger",
+    emerald: "border-success/20 bg-success/10 text-success",
+    blue: "border-primary/20 bg-primary/10 text-primary",
+    violet: "border-accent/20 bg-accent/10 text-accent",
+    amber: "border-warning/25 bg-warning/10 text-warning",
+    slate: "border-border/30 bg-muted text-muted-foreground",
+    cyan: "border-info/20 bg-info/10 text-info",
+    rose: "border-danger/20 bg-danger/10 text-danger",
   };
-  return <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold ${colors[color] || colors.slate}`}>{label}</span>;
+  return <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold ${colors[color] || colors.slate}`}>{label}</span>;
 }
 
 function ValidationGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-warning py-1 last:border-b-0 border-warning">
+    <div className="py-1">
       <p className="mb-0.5 text-[9px] font-black uppercase tracking-wide text-warning">{title}</p>
       <div className="space-y-0.5">{children}</div>
     </div>
@@ -1194,11 +1209,11 @@ function ValidationGroup({ title, children }: { title: string; children: React.R
 }
 
 function ValidationLine({ severity, message }: { severity: "ok" | "warning" | "critical"; message: string }) {
-  const color = severity === "ok" ? "text-success bg-success" : severity === "critical" ? "text-danger bg-danger" : "text-warning bg-warning";
+  const color = severity === "ok" ? "text-success bg-success/10" : severity === "critical" ? "text-danger bg-danger/10" : "text-warning bg-warning/15";
   return (
-    <div className="flex items-center gap-1.5">
+    <div className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 ${severity === "warning" || severity === "critical" ? color.split(" ").slice(1).join(" ") : ""}`}>
       {severity === "ok" ? <CheckCircle className={`h-3 w-3 shrink-0 stroke-current ${color.split(" ")[0]}`} /> : <AlertTriangle className={`h-3 w-3 shrink-0 stroke-current ${color.split(" ")[0]}`} />}
-      <span className="text-[10px] font-medium text-foreground text-muted-foreground">{message}</span>
+      <span className="text-[10px] font-medium text-foreground">{message}</span>
     </div>
   );
 }
@@ -1207,9 +1222,9 @@ function CompactRows({ items }: { items: Array<[string, string | number | null |
   return (
     <>
       {items.map(([label, value], i) => (
-        <div key={i} className="flex items-center gap-2 border-b border-border py-0.5 last:border-b-0 border-border">
+        <div key={i} className="flex items-center gap-2 py-0.5">
           <span className="w-24 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
-          <span className="truncate text-[11px] font-medium text-foreground text-muted-foreground">{value ?? "-"}</span>
+          <span className="truncate text-[11px] font-medium text-foreground">{value ?? "-"}</span>
         </div>
       ))}
     </>

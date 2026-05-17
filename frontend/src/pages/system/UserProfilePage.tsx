@@ -1300,7 +1300,7 @@ export function UserProfilePage() {
       </div>
 
       {/* FOOTER: Section progress + Completion bar + dates */}
-      <footer className="shrink-0 border-t border-border bg-muted px-5 py-3" style={{ height: "3.75rem" }}>
+      <footer className="h-14 shrink-0 border-t border-border bg-muted px-5 py-3">
         <div className="flex items-center justify-between gap-4 h-full">
           <div className="flex items-center gap-2" ref={completionBarRef}>
             <span className="text-xs text-muted-foreground">Completion</span>

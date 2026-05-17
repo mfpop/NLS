@@ -87,14 +87,14 @@ export function ActiveLineSelector() {
                 {activePlant?.id === plant.id && <Check className="h-3 w-3 stroke-current shrink-0" />}
               </button>
               <button type="button" onClick={() => setExpandedPlant(expandedPlant === plant.id ? "" : plant.id)}
-                className={`flex items-center gap-1 w-full px-3 h-7 text-[10px] font-medium ${theme.textMuted} hover:text-muted-foreground transition-colors`}
+                className={`flex h-8 w-full items-center gap-1 px-3 text-[10px] font-medium ${theme.textMuted} hover:text-muted-foreground transition-colors`}
               >
                 <ChevronRight className={`h-3 w-3 stroke-current transition-transform ${expandedPlant === plant.id ? "rotate-90" : ""}`} />
                 Lines
               </button>
               {expandedPlant === plant.id && plant.lines.map((line) => (
                 <button key={line.id} type="button" onClick={() => selectLine(line.id)}
-                  className={`flex items-center gap-2 w-full pl-8 pr-3 h-7 text-xs transition-colors ${activeLineId === line.id ? "bg-accent bg-accent0/10 text-info font-semibold" : `${theme.textSecondary} ${theme.interactiveRow}`}`}
+                  className={`flex h-8 w-full items-center gap-2 pl-8 pr-3 text-xs transition-colors ${activeLineId === line.id ? "bg-accent bg-accent0/10 text-info font-semibold" : `${theme.textSecondary} ${theme.interactiveRow}`}`}
                 >
                   <span className="truncate text-left">{line.name}</span>
                   {activeLineId === line.id && <Check className="h-3 w-3 stroke-current shrink-0" />}

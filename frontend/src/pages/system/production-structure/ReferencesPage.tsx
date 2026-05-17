@@ -1107,7 +1107,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
 
       {/* ── Footer ── */}
       {standalone && selectedType && !companyEditMode && !editingItem && !(itemForm.tableType && itemForm.name !== undefined) && (
-        <div className="shrink-0 border-t border-border bg-muted flex items-center px-5 text-[11px] text-muted-foreground font-medium h-9">
+        <div className="shrink-0 border-t border-border bg-muted flex h-14 items-center px-5 text-[11px] text-muted-foreground font-medium">
           <span>{selectedTypeItems.length} record{selectedTypeItems.length !== 1 ? "s" : ""} in {TABLE_TYPE_LABELS[selectedType] || selectedType}</span>
         </div>
       )}

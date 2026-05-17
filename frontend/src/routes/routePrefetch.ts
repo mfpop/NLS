@@ -133,6 +133,11 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/system/ApplicationSettingsPage"),
   },
   {
+    key: "system-diagnostics",
+    matches: (path) => path.startsWith("/system/diagnostics") || path.startsWith("/status"),
+    load: () => import("@/pages/graphql-status/GraphqlStatusPage"),
+  },
+  {
     key: "routing-editor",
     matches: (path) => path.startsWith("/system/production-structure/flow/routing"),
     load: () => import("@/pages/system/production-structure/RoutingEditorPage"),

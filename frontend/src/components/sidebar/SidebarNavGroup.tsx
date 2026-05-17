@@ -80,6 +80,8 @@ function sidebarItemCategory(label: string, fallback?: string): string | undefin
       return "product";
     case "Reference Tables":
       return "reference";
+    case "Diagnostics":
+      return "settings";
     case "Application Settings":
       return "settings";
     case "Setup Reference":

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlertTriangle, Check, TrendingUpDown, Factory, Search, ExternalLink } from "lucide-react";
 import { Pagination, ProductionLineProductScopeSummary, EntityListItem } from "./components";
 import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
@@ -441,10 +441,10 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   return (
     <div className="grid h-full min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "32px 36px minmax(0,1fr)" }}>
       {/* ── Row 1: Slim 32px status bar ── */}
-      <div className={`flex items-center gap-3 rounded-lg border px-2.5 py-1 ${blocked ? "border-danger/20 bg-danger/10 text-danger" : partial ? "border-warning/25 bg-warning/10 text-warning" : "border-success/20 bg-success/10 text-success"}`}>
-        <span className="text-[11px] font-bold">{readinessIcon} {readiness}</span>
+      <div className={`flex items-center gap-3 rounded-lg border px-2.5 py-1 text-foreground ${blocked ? "border-danger/25 bg-danger/10" : partial ? "border-warning/30 bg-warning/10" : "border-success/25 bg-success/10"}`}>
+        <span className={`text-[11px] font-bold ${blocked ? "text-danger" : partial ? "text-warning" : "text-success"}`}>{readinessIcon} {readiness}</span>
         {missingReasons.length > 0 && (
-          <span className="text-[10px] font-medium opacity-80">— {missingReasons.join(", ")}</span>
+          <span className="text-[10px] font-semibold text-foreground">— {missingReasons.join(", ")}</span>
         )}
         <span className="ml-auto flex items-center gap-1.5">
           <Badge label={readinessSummary} variant={readinessVariant as any} />
@@ -541,7 +541,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                     <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Issues</div>
                     {topIssues.length > 0 ? topIssues.slice(0, 4).map((issue) => (
                       <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
-                        className="flex h-7 w-full items-center gap-2 rounded-md bg-danger/10 px-2 text-left text-[10px] font-medium text-danger hover:bg-danger/15">
+                        className="flex h-7 w-full items-center gap-2 rounded-md border border-danger/20 bg-danger/10 px-2 text-left text-[10px] font-semibold text-foreground hover:bg-danger/15">
                         <span className="text-danger">✕</span>
                         <span className="min-w-0 flex-1 truncate">{issue.message}</span>
                         <span className="shrink-0 whitespace-nowrap font-semibold text-danger">{issue.action}</span>
@@ -625,7 +625,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
             <div className="flex gap-1.5 overflow-hidden">
               {topIssues.slice(0, 3).map((issue) => (
                 <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
-                  className="flex h-7 items-center gap-2 rounded-md bg-danger/10 px-2 text-left text-[10px] font-medium text-danger shadow-xs hover:bg-danger/15">
+                  className="flex h-7 items-center gap-2 rounded-md border border-danger/20 bg-danger/10 px-2 text-left text-[10px] font-semibold text-foreground shadow-xs hover:bg-danger/15">
                   <span className="text-danger">✕</span>
                   <span className="truncate">{issue.message}</span>
                   <span className="shrink-0 font-semibold text-danger">{issue.action}</span>
@@ -851,6 +851,8 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
 
 export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlProductionLineId = searchParams.get("productionLineId");
   const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setEntityContext, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const { lines, loading, saveLine, archiveLine, refetch, plants } = useProductionLines(500);
@@ -871,6 +873,14 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   useEffect(() => { setEntityContext("Line"); }, [setEntityContext]);
 
   useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  useEffect(() => {
+    if (!embeddedInFlow || !urlProductionLineId || lines.length === 0) return;
+    const exists = lines.some((line) => line.id === urlProductionLineId);
+    if (!exists) return;
+    setSelectedId(urlProductionLineId);
+    setMode("view");
+  }, [embeddedInFlow, urlProductionLineId, lines]);
 
   // Restore selected line when returning from routing editor
   useEffect(() => {
@@ -1362,7 +1372,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
                 </div>
               )}
             </div>
-            <div className="shrink-0 flex h-12 items-center border-t border-border bg-muted px-3">
+            <div className="shrink-0 flex h-7 items-center border-t border-border bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

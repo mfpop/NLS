@@ -27,7 +27,7 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
         {children}
       </div>
       {footer && (
-        <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-5 text-xs font-medium text-muted-foreground">
+        <div className="shrink-0 flex h-14 items-center gap-5 border-t border-border bg-muted px-5 text-xs font-medium text-muted-foreground">
           {footer}
         </div>
       )}

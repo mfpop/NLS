@@ -24,21 +24,21 @@ export function Pagination({ page, total, perPage, onChange }: PaginationProps) 
     }
   }
 
-  const btnClass = "inline-flex h-7 min-w-7 items-center justify-center rounded-full text-xs font-medium transition-colors";
+  const btnClass = "inline-flex h-5 min-w-5 items-center justify-center rounded-full text-[10px] font-medium transition-colors";
   const activeClass = `${theme.tabActive}`;
   const inactiveClass = `${theme.textSecondary} ${theme.interactiveRow}`;
 
   return (
-    <div className={`flex w-full items-center justify-between text-xs ${theme.textSecondary}`}>
+    <div className={`flex w-full items-center justify-between text-[11px] ${theme.textSecondary}`}>
       <span className="shrink-0 font-medium">{start}–{end} of {total}</span>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <button
           type="button"
           disabled={page <= 1}
           onClick={() => onChange(page - 1)}
           className={`${btnClass} ${inactiveClass} disabled:opacity-30 disabled:cursor-not-allowed`}
         >
-          <ChevronLeft className="h-3.5 w-3.5 stroke-current" />
+          <ChevronLeft className="h-3 w-3 stroke-current" />
         </button>
         {pages.map((p, i) =>
           p === "..." ? (
@@ -60,7 +60,7 @@ export function Pagination({ page, total, perPage, onChange }: PaginationProps) 
           onClick={() => onChange(page + 1)}
           className={`${btnClass} ${inactiveClass} disabled:opacity-30 disabled:cursor-not-allowed`}
         >
-          <ChevronRight className="h-3.5 w-3.5 stroke-current" />
+          <ChevronRight className="h-3 w-3 stroke-current" />
         </button>
       </div>
     </div>

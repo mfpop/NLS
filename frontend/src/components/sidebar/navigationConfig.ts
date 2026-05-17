@@ -97,6 +97,7 @@ export const sidebarNav: TopLevelEntry[] = [
         ],
       },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
+      { type: "item", label: "Diagnostics", to: "/system/diagnostics", icon: Activity },
       { type: "item", label: "Application Settings", to: "/system/application-settings", icon: Cog },
       {
         type: "group", label: "Documentation Center", icon: BookMarked,

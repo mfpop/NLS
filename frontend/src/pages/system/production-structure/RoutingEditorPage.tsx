@@ -869,7 +869,7 @@ export function RoutingEditorPage() {
       </div>
 
       {/* ── Footer Stats ── */}
-      <div className="shrink-0 border-t border-border px-4 py-2 flex items-center gap-4 text-[9px] ${theme.textMuted}">
+      <div className={`h-14 shrink-0 border-t border-border bg-muted px-4 flex items-center gap-4 text-[9px] ${theme.textMuted}`}>
         <span>{localSteps.length} step{localSteps.length !== 1 ? "s" : ""}</span>
         {localSteps.length > 0 && (
           <>

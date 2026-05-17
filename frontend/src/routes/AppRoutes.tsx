@@ -203,6 +203,7 @@ export function AppRoutes() {
           <Route path="system/product-master-data" element={<ProductMasterDataPage />} />
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
+          <Route path="system/diagnostics" element={<GraphqlStatusPage />} />
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />

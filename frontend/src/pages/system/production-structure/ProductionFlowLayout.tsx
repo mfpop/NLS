@@ -347,7 +347,7 @@ export function ProductionFlowLayout() {
       </div>
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-border bg-muted flex items-center gap-5 px-5 text-xs text-muted-foreground font-medium h-10">
+      <div className="shrink-0 border-t border-border bg-muted flex h-14 items-center gap-5 px-5 text-xs text-muted-foreground font-medium">
         <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-entity-plant stroke-current" /> Plant</span>
         <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-entity-line stroke-current" /> Line</span>
         <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-entity-department stroke-current" /> Dept</span>

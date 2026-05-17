@@ -3,6 +3,7 @@ import { Dumbbell, Component, Search, Calendar, Clock, MapPin, Wrench, Cpu, Info
 import { theme } from "../../../styles/themeTokens";
 import { Pagination, EntityListItem } from "./components";
 import { useQuery } from "@apollo/client/react";
+import { useSearchParams } from "react-router-dom";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, DetailSection } from "./components/EntityWorkspacePage";
@@ -98,6 +99,8 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
 }
 
 export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
+  const [searchParams] = useSearchParams();
+  const urlResourceId = searchParams.get("resourceId");
   const { search, statusFilter, setFooterContent, setToolbarVariant } = useToolbar();
   const registerActions = useRegisterActions();
   const { data, loading, refetch: refetchRes } = useQuery<{ resources: ListResult<Resource> }>(RESOURCES_QUERY);
@@ -108,6 +111,13 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
   const resources = listItems(data?.resources);
 
   useEffect(() => { setPage(1); }, [search, statusFilter]);
+
+  useEffect(() => {
+    if (!embeddedInFlow || !urlResourceId || resources.length === 0) return;
+    const exists = resources.some((resource) => resource.id === urlResourceId);
+    if (!exists) return;
+    setSelectedId(urlResourceId);
+  }, [embeddedInFlow, urlResourceId, resources]);
 
   const filtered = resources.filter((r) => statusFilter === "all" || r.status === statusFilter)
     .filter((r) => !search || (r.name ?? "").toLowerCase().includes(search.toLowerCase()));
@@ -330,7 +340,7 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
                 </div>
               )}
             </div>
-            <div className="shrink-0 flex h-12 items-center border-t border-border bg-muted px-3">
+            <div className="shrink-0 flex h-7 items-center border-t border-border bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

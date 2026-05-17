@@ -774,7 +774,7 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
                 </div>
               )}
             </div>
-            <div className="shrink-0 flex h-12 items-center border-t border-border bg-muted px-3">
+            <div className="shrink-0 flex h-7 items-center border-t border-border bg-muted px-3">
               <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
             </div>
           </>

@@ -1,6 +1,6 @@
 export const sidebarNavTokens = {
   nav: "flex-1 overflow-y-auto py-1 space-y-[3px] px-2",
-  row: "group flex h-8 w-full items-center gap-2.5 border-l-2 border-l-transparent pr-3 text-[13px] font-medium leading-5 tracking-normal outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-120",
+  row: "group flex h-8 w-full items-center gap-2.5 pr-3 text-[13px] font-medium leading-5 tracking-normal outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-120",
   label: "min-w-0 flex-1 truncate text-left text-[13px] leading-5 tracking-normal",
   labelActive: "min-w-0 flex-1 truncate text-left text-[13px] font-semibold leading-5 tracking-normal",
   icon: "h-4 w-4 shrink-0 stroke-current",
@@ -125,9 +125,9 @@ export const sectionColors: Record<string, {
     chevron: "text-sidebar-reference/75",
   },
   settings: {
-    activeBg: "bg-sidebar-settings/15",
-    hoverBg: "hover:bg-sidebar-settings/10 hover:text-sidebar-settings",
-    icon: "text-sidebar-settings/85 group-hover:text-sidebar-settings",
+    activeBg: "bg-sidebar-settings/25",
+    hoverBg: "hover:bg-sidebar-settings/12 hover:text-sidebar-settings",
+    icon: "text-sidebar-settings/90 group-hover:text-sidebar-settings",
     iconActive: "text-sidebar-settings",
     textActive: "text-sidebar-settings",
     chevron: "text-sidebar-settings/75",

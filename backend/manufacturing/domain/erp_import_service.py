@@ -1,13 +1,21 @@
 from __future__ import annotations
 
+import os
 import json
+import logging
 from dataclasses import dataclass
-from datetime import datetime
+from django.utils import timezone
+from pathlib import Path
 
 from django.db import transaction
 
 from application.models import ImportSourceConfig
-from manufacturing.models import ImportJob, ImportValidationError
+from manufacturing.models import ImportJob, ImportValidationError, ImportCompareResult
+from manufacturing.domain.file_parser_service import FileParserService, FileParserError
+from manufacturing.domain.domain_import_handler import get_handler, ValidationIssue, CompareRow, ApplyResult
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -19,6 +27,7 @@ class ErpImportError(Exception):
 
 WORKFLOW_TRANSITIONS = {
     "DRAFT": ["PREVIEWED", "PREVIEW_FAILED", "CANCELLED"],
+    "FILE_ATTACHED": ["PREVIEWED", "PREVIEW_FAILED", "CANCELLED"],
     "PREVIEWED": ["VALIDATED", "VALIDATION_FAILED", "CANCELLED"],
     "VALIDATED": ["COMPARED", "COMPARE_FAILED", "CANCELLED"],
     "COMPARED": ["READY_TO_APPLY", "CANCELLED"],
@@ -55,10 +64,10 @@ class ErpImportService:
 
         job = ImportJob.objects.create(
             source_config=config,
-            file_name=file_name,
+            file_name=file_name or Path(config.path).name or "",
             file_path=file_path or config.path,
             status="DRAFT",
-            started_at=datetime.now(),
+            started_at=timezone.now(),
             triggered_by=triggered_by,
         )
         ErpImportService._audit(job, "CREATED", f"Import job created from source {config.name}")
@@ -77,33 +86,142 @@ class ErpImportService:
     @staticmethod
     @transaction.atomic
     def preview_file(job_id: str) -> ImportJob:
+        """Read and parse the import file, store preview metadata, and persist results."""
         job = ErpImportService._get_job(job_id)
-        _validate_transition(job.status, "PREVIEWED")
+        if job.status not in ("DRAFT", "FILE_ATTACHED"):
+            _validate_transition(job.status, "PREVIEWED")
+
         if not job.file_name:
             raise ErpImportError("fileName", "REQUIRED", "No file selected for preview")
+
+        file_path = ErpImportService._resolve_file_path(job)
+        if not file_path:
+            raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found for job {job.id}")
+
+        try:
+            parse_result = FileParserService.parse(file_path, job.source_config.source_type)
+        except FileParserError as exc:
+            logger.exception("Preview parse failed for job %s (%s)", job.id, file_path)
+            raise ErpImportError("filePath", exc.code, exc.message)
+        except Exception as exc:
+            logger.exception("Unexpected preview failure for job %s (%s)", job.id, file_path)
+            raise ErpImportError("filePath", "PREVIEW_FAILED", f"Preview failed: {exc}")
+
+        # Count total rows processed
+        total_rows = parse_result.total_rows_all_sheets
+        job.records_processed = total_rows
         job.status = "PREVIEWED"
-        job.save(update_fields=["status", "updated_at"])
-        ErpImportService._audit(job, "PREVIEWED", f"File previewed: {job.file_name}")
+        job.save(update_fields=["status", "records_processed", "updated_at"])
+
+        # Store preview metadata as audit log
+        sheet_names = [s.sheet_name for s in parse_result.sheets]
+        column_count = sum(len(s.column_headers) for s in parse_result.sheets) if parse_result.sheets else 0
+        ErpImportService._audit(job, "PREVIEWED",
+            f"File previewed: {parse_result.file_name}, {total_rows} rows, {len(parse_result.sheets)} sheets, {column_count} columns")
+
         return job
 
     @staticmethod
     @transaction.atomic
     def validate_job(job_id: str) -> ImportJob:
+        """Parse file, run domain-specific validation, and persist validation errors."""
         job = ErpImportService._get_job(job_id)
         _validate_transition(job.status, "VALIDATED")
-        job.status = "VALIDATED"
-        job.save(update_fields=["status", "updated_at"])
-        ErpImportService._audit(job, "VALIDATED", "Import data validated")
+
+        file_path = ErpImportService._resolve_file_path(job)
+        if not file_path:
+            raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found for job {job.id}")
+        if not Path(file_path).exists():
+            raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found: {file_path}")
+
+        try:
+            parse_result = FileParserService.parse(file_path, job.source_config.source_type)
+        except FileParserError as exc:
+            raise ErpImportError("filePath", exc.code, exc.message)
+
+        domain = job.source_config.domain
+        handler = get_handler(domain)
+
+        from manufacturing.models import MappingRule
+        mapping_rules = list(MappingRule.objects.filter(domain=domain, is_active=True))
+        issues = handler.validate(parse_result.sheets, mapping_rules)
+
+        # Clear previous validation errors and persist new ones
+        ImportValidationError.objects.filter(import_job=job).delete()
+
+        if issues:
+            for issue in issues:
+                ImportValidationError.objects.create(
+                    import_job=job,
+                    sheet_name=issue.sheet_name,
+                    row_number=issue.row_number,
+                    entity_type=issue.entity_type,
+                    field_name=issue.field_name,
+                    error_code=issue.error_code,
+                    message=issue.message,
+                    raw_value=issue.raw_value,
+                )
+            job.status = "VALIDATION_FAILED"
+            job.error_summary = f"{len(issues)} validation error(s) found"
+            job.save(update_fields=["status", "error_summary", "updated_at"])
+            ErpImportService._audit(job, "VALIDATION_FAILED", f"Validation failed: {len(issues)} issues")
+        else:
+            job.status = "VALIDATED"
+            job.error_summary = ""
+            job.save(update_fields=["status", "error_summary", "updated_at"])
+            ErpImportService._audit(job, "VALIDATED", "All data validated successfully")
+
         return job
 
     @staticmethod
     @transaction.atomic
     def compare_job(job_id: str) -> ImportJob:
+        """Parse file, compare incoming data with existing domain entities, persist results."""
         job = ErpImportService._get_job(job_id)
         _validate_transition(job.status, "COMPARED")
+
+        file_path = ErpImportService._resolve_file_path(job)
+        if not file_path:
+            raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found for job {job.id}")
+        if not Path(file_path).exists():
+            raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found: {file_path}")
+
+        try:
+            parse_result = FileParserService.parse(file_path, job.source_config.source_type)
+        except FileParserError as exc:
+            raise ErpImportError("filePath", exc.code, exc.message)
+
+        domain = job.source_config.domain
+        handler = get_handler(domain)
+
+        compare_rows = handler.compare(parse_result.sheets)
+
+        # Clear previous compare results and persist new ones
+        ImportCompareResult.objects.filter(import_job=job).delete()
+
+        for cr in compare_rows:
+            ImportCompareResult.objects.create(
+                import_job=job,
+                action=cr.action,
+                entity_type=cr.entity_type,
+                stable_key=cr.stable_key,
+                current_value=cr.current_value or {},
+                incoming_value=cr.incoming_value,
+                diff=cr.diff,
+                status="PENDING",
+            )
+
+        creates = sum(1 for r in compare_rows if r.action == "CREATE")
+        updates = sum(1 for r in compare_rows if r.action == "UPDATE")
+        unchanged = sum(1 for r in compare_rows if r.action == "UNCHANGED")
+
         job.status = "COMPARED"
-        job.save(update_fields=["status", "updated_at"])
-        ErpImportService._audit(job, "COMPARED", "Import data compared with existing")
+        job.records_created = creates
+        job.records_updated = updates
+        job.save(update_fields=["status", "records_created", "records_updated", "updated_at"])
+
+        ErpImportService._audit(job, "COMPARED",
+            f"Compare complete: {creates} to create, {updates} to update, {unchanged} unchanged")
         return job
 
     @staticmethod
@@ -119,18 +237,77 @@ class ErpImportService:
     @staticmethod
     @transaction.atomic
     def apply_job(job_id: str, summary: dict | None = None) -> ImportJob:
+        """Apply incoming data by creating/updating domain entities via domain services."""
         job = ErpImportService._get_job(job_id)
         _validate_transition(job.status, "APPLIED")
-        job.status = "APPLIED"
-        job.completed_at = datetime.now()
+
+        # If summary is provided, use it directly (legacy support)
         if summary:
+            job.status = "APPLIED"
+            job.completed_at = timezone.now()
             job.records_processed = summary.get("records_processed", 0)
             job.records_created = summary.get("records_created", 0)
             job.records_updated = summary.get("records_updated", 0)
             job.records_failed = summary.get("records_failed", 0)
             job.error_summary = summary.get("error_summary", "")
-        job.save()
-        ErpImportService._audit(job, "APPLIED", f"Import applied: {job.records_created} created, {job.records_updated} updated")
+            job.save()
+            ErpImportService._audit(job, "APPLIED", f"Import applied: {job.records_created} created, {job.records_updated} updated")
+            return job
+
+        # Otherwise, parse the file and apply via domain handlers
+        try:
+            file_path = ErpImportService._resolve_file_path(job)
+            if not file_path:
+                raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found for job {job.id}")
+            if not Path(file_path).exists():
+                raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found: {file_path}")
+
+            parse_result = FileParserService.parse(file_path, job.source_config.source_type)
+            domain = job.source_config.domain
+            handler = get_handler(domain)
+
+            # Get compare results for this job
+            compare_results = ImportCompareResult.objects.filter(
+                import_job=job,
+                action__in=["CREATE", "UPDATE"],
+            )
+
+            compare_rows = []
+            for cr in compare_results:
+                    compare_rows.append(CompareRow(
+                    action=cr.action,
+                    entity_type=cr.entity_type,
+                    stable_key=cr.stable_key,
+                    current_value=cr.current_value,
+                    incoming_value=cr.incoming_value,
+                    diff=cr.diff,
+                    status="PENDING",
+                ))
+
+            apply_result = handler.apply(parse_result.sheets, compare_rows)
+
+            job.status = "APPLIED"
+            job.completed_at = timezone.now()
+            job.records_processed = parse_result.total_rows_all_sheets
+            job.records_created = apply_result.records_created
+            job.records_updated = apply_result.records_updated
+            job.records_failed = apply_result.records_failed
+            job.error_summary = apply_result.error_summary[:500] if apply_result.error_summary else ""
+            job.save()
+
+            # Mark compare results as ACCEPTED
+            ImportCompareResult.objects.filter(import_job=job, action__in=["CREATE", "UPDATE"]).update(status="ACCEPTED")
+
+            ErpImportService._audit(job, "APPLIED",
+                f"Import applied: {apply_result.records_created} created, {apply_result.records_updated} updated, {apply_result.records_failed} failed")
+
+        except Exception as exc:
+            job.status = "APPLY_FAILED"
+            job.completed_at = timezone.now()
+            job.error_summary = str(exc)[:500]
+            job.save()
+            ErpImportService._audit(job, "APPLY_FAILED", f"Apply failed: {exc}")
+
         return job
 
     @staticmethod
@@ -139,7 +316,7 @@ class ErpImportService:
         job = ErpImportService._get_job(job_id)
         _validate_transition(job.status, "CANCELLED")
         job.status = "CANCELLED"
-        job.completed_at = datetime.now()
+        job.completed_at = timezone.now()
         job.save(update_fields=["status", "completed_at", "updated_at"])
         ErpImportService._audit(job, "CANCELLED", "Import job cancelled")
         return job
@@ -148,8 +325,6 @@ class ErpImportService:
     @transaction.atomic
     def fail_job(job_id: str, error_message: str) -> ImportJob:
         job = ErpImportService._get_job(job_id)
-        allowed = ["PREVIEW_FAILED", "VALIDATION_FAILED", "COMPARE_FAILED", "APPLY_FAILED", "FAILED"]
-        _validate_transition(job.status, allowed[0])  # Approximate
         failure_status = {
             "DRAFT": "PREVIEW_FAILED",
             "PREVIEWED": "VALIDATION_FAILED",
@@ -158,7 +333,7 @@ class ErpImportService:
             "READY_TO_APPLY": "APPLY_FAILED",
         }.get(job.status, "FAILED")
         job.status = failure_status
-        job.completed_at = datetime.now()
+        job.completed_at = timezone.now()
         job.error_summary = error_message
         job.save(update_fields=["status", "completed_at", "error_summary", "updated_at"])
         ErpImportService._audit(job, failure_status, f"Job failed: {error_message}")
@@ -198,3 +373,28 @@ class ErpImportService:
             user=job.triggered_by or "",
             message=message,
         )
+
+    @staticmethod
+    def _resolve_file_path(job: ImportJob) -> str | None:
+        candidates: list[str] = []
+
+        if job.file_path:
+            candidates.append(job.file_path)
+
+        if job.file_path and job.file_name:
+            candidates.append(os.path.join(job.file_path, job.file_name))
+
+        if job.file_name:
+            candidates.append(os.path.join(job.source_config.path, job.file_name))
+
+        candidates.append(job.source_config.path)
+
+        seen: set[str] = set()
+        for candidate in candidates:
+            if not candidate or candidate in seen:
+                continue
+            seen.add(candidate)
+            path = Path(candidate)
+            if path.exists() and path.is_file():
+                return str(path)
+        return None

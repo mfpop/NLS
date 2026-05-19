@@ -3,6 +3,7 @@ import strawberry
 from datetime import datetime
 
 from api.types.manufacturing import MutationError
+from api.types.pagination import PageInfo
 from manufacturing.models import (
     ImportJob, ImportValidationError, MappingRule,
 )
@@ -13,9 +14,6 @@ from manufacturing.models import (
 def _iso(dt: datetime | None) -> str:
     return dt.isoformat() if dt else ""
 
-
-# ── Import Job ──
-
 @strawberry.type
 class ImportJobNode:
     id: strawberry.ID
@@ -23,6 +21,8 @@ class ImportJobNode:
     domain: str
     file_name: str = strawberry.field(name="fileName")
     file_path: str = strawberry.field(name="filePath")
+    file_size: typing.Optional[int] = strawberry.field(name="fileSize", default=None)
+    file_hash: typing.Optional[str] = strawberry.field(name="fileHash", default=None)
     started_at: str = strawberry.field(name="startedAt")
     completed_at: typing.Optional[str] = strawberry.field(name="completedAt", default=None)
     status: str
@@ -43,6 +43,8 @@ class ImportJobNode:
             domain=obj.source_config.domain if obj.source_config_id else "",
             file_name=obj.file_name,
             file_path=obj.file_path,
+            file_size=obj.file_size,
+            file_hash=obj.file_hash or None,
             started_at=_iso(obj.started_at),
             completed_at=_iso(obj.completed_at),
             status=obj.status,
@@ -58,9 +60,31 @@ class ImportJobNode:
 
 
 @strawberry.type
+class ImportJobStructuredError:
+    error_code: typing.Optional[str] = strawberry.field(name="errorCode", default=None)
+    message: typing.Optional[str] = None
+    existing_job_id: typing.Optional[strawberry.ID] = strawberry.field(name="existingJobId", default=None)
+    source_config_id: typing.Optional[strawberry.ID] = strawberry.field(name="sourceConfigId", default=None)
+    file_name: typing.Optional[str] = strawberry.field(name="fileName", default=None)
+
+
+@strawberry.input
+class AttachFileInput:
+    file_name: str = strawberry.field(name="fileName")
+    file_path: str = strawberry.field(name="filePath")
+    file_size: typing.Optional[int] = strawberry.field(name="fileSize", default=None)
+    file_hash: typing.Optional[str] = strawberry.field(name="fileHash", default=None)
+
+
+@strawberry.type
 class ImportJobPayload:
     ok: bool
     job: typing.Optional[ImportJobNode] = None
+    error_code: typing.Optional[str] = strawberry.field(name="errorCode", default=None)
+    message: typing.Optional[str] = None
+    existing_job_id: typing.Optional[strawberry.ID] = strawberry.field(name="existingJobId", default=None)
+    source_config_id: typing.Optional[strawberry.ID] = strawberry.field(name="sourceConfigId", default=None)
+    file_name: typing.Optional[str] = strawberry.field(name="fileName", default=None)
     errors: typing.Optional[list["MutationError"]] = None
 
 
@@ -166,34 +190,6 @@ class IntegrationStatusPayload:
     statuses: list[IntegrationStatusNode] = strawberry.field(name="statuses")
 
 
-# ── File Preview Row ──
-
-@strawberry.type
-class PreviewRowNode:
-    row_number: int = strawberry.field(name="rowNumber")
-    columns: typing.Optional[list[str]] = None
-    is_empty: bool = strawberry.field(name="isEmpty", default=False)
-
-    @classmethod
-    def from_row(cls, row_number: int, columns: list[str]) -> "PreviewRowNode":
-        return cls(row_number=row_number, columns=columns)
-
-
-@strawberry.type
-class FilePreviewNode:
-    job_id: strawberry.ID = strawberry.field(name="jobId")
-    file_name: str = strawberry.field(name="fileName")
-    sheet_names: list[str] = strawberry.field(name="sheetNames", default_factory=list)
-    active_sheet: str = strawberry.field(name="activeSheet", default="")
-    column_headers: list[str] = strawberry.field(name="columnHeaders", default_factory=list)
-    total_rows: int = strawberry.field(name="totalRows", default=0)
-    sample_rows: list[PreviewRowNode] = strawberry.field(name="sampleRows", default_factory=list)
-    detected_types: typing.Optional[list[str]] = strawberry.field(name="detectedTypes", default=None)
-    empty_required_cells: int = strawberry.field(name="emptyRequiredCells", default=0)
-    duplicate_rows: int = strawberry.field(name="duplicateRows", default=0)
-    errors: typing.Optional[list["MutationError"]] = None
-
-
 # ── Import Compare Result ──
 
 @strawberry.type
@@ -250,3 +246,61 @@ class ImportAuditLogNode:
         )
 
 
+# ── Paginated result wrappers ──
+
+@strawberry.type
+class ImportJobsResult:
+    items: list[ImportJobNode]
+    page_info: PageInfo = strawberry.field(name="pageInfo")
+
+
+@strawberry.type
+class ImportValidationErrorsResult:
+    items: list[ImportValidationErrorNode]
+    page_info: PageInfo = strawberry.field(name="pageInfo")
+
+
+@strawberry.type
+class MappingRulesResult:
+    items: list[MappingRuleNode]
+    page_info: PageInfo = strawberry.field(name="pageInfo")
+
+
+@strawberry.type
+class ImportCompareResultsResult:
+    items: list[ImportCompareResultNode]
+    page_info: PageInfo = strawberry.field(name="pageInfo")
+
+
+@strawberry.type
+class ImportAuditLogsResult:
+    items: list[ImportAuditLogNode]
+    page_info: PageInfo = strawberry.field(name="pageInfo")
+
+
+# ── File Preview Row ──
+
+@strawberry.type
+class PreviewRowNode:
+    row_number: int = strawberry.field(name="rowNumber")
+    columns: typing.Optional[list[str]] = None
+    is_empty: bool = strawberry.field(name="isEmpty", default=False)
+
+    @classmethod
+    def from_row(cls, row_number: int, columns: list[str]) -> "PreviewRowNode":
+        return cls(row_number=row_number, columns=columns)
+
+
+@strawberry.type
+class FilePreviewNode:
+    job_id: strawberry.ID = strawberry.field(name="jobId")
+    file_name: str = strawberry.field(name="fileName")
+    sheet_names: list[str] = strawberry.field(name="sheetNames", default_factory=list)
+    active_sheet: str = strawberry.field(name="activeSheet", default="")
+    column_headers: list[str] = strawberry.field(name="columnHeaders", default_factory=list)
+    total_rows: int = strawberry.field(name="totalRows", default=0)
+    sample_rows: list[PreviewRowNode] = strawberry.field(name="sampleRows", default_factory=list)
+    detected_types: typing.Optional[list[str]] = strawberry.field(name="detectedTypes", default=None)
+    empty_required_cells: int = strawberry.field(name="emptyRequiredCells", default=0)
+    duplicate_rows: int = strawberry.field(name="duplicateRows", default=0)
+    errors: typing.Optional[list["MutationError"]] = None

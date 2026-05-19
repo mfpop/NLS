@@ -517,15 +517,20 @@ class ManufacturingMutation:
         if user is None:
             return None
         try:
-            role = user.role_profile.role
+            rp = user.role_profile
+            role = rp.role
+            plant = rp.plant or ""
+            department = rp.department or ""
         except Exception:
             role = "guest"
+            plant = ""
+            department = ""
         return AuthPayload(
             token=encode_jwt(user.id, role),
             user=UserNode(
                 id=str(user.id), name=user.get_full_name() or user.username, username=user.username, email=user.email or "",
-                role=role, plant=getattr(user.role_profile, "plant", "") or "",
-                department=getattr(user.role_profile, "department", "") or "",
+                role=role, plant=plant,
+                department=department,
             ),
         )
 

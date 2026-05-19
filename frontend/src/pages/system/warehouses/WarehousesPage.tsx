@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
-import { Search, CheckCircle, Warehouse, Factory, Plus, Pencil, Trash2, RefreshCw, X, GripVertical, Check, Box, Layers, Route, Map, Database, Shield, ExternalLink, Building2, LayoutGrid } from "lucide-react";
+import { Search, CheckCircle, Warehouse, Factory, Plus, Pencil, Trash2, RefreshCw, X, GripVertical, Check, Box, Layers, Route, Map, Database, Shield, ExternalLink, Building2, LayoutGrid, LineChart, AlertTriangle, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -143,8 +144,12 @@ export function WarehousesPage() {
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = useState<string | null>(null);
 
+  const navigate = useNavigate();
   const splitRef = useRef<HTMLDivElement>(null);
   const [leftPct, setLeftPct] = useState(22);
+  const [showLinesModal, setShowLinesModal] = useState(false);
+  const [showZonesModal, setShowZonesModal] = useState(false);
+  const [showValidateModal, setShowValidateModal] = useState(false);
 
   const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -363,10 +368,7 @@ export function WarehousesPage() {
             </div>
             {/* Action buttons */}
             <div className="flex items-center gap-1">
-              <ActionButton icon={<Box className="h-3 w-3 stroke-current" />} label="Bins" />
-              <ActionButton icon={<Layers className="h-3 w-3 stroke-current" />} label="Lines" />
-              <ActionButton icon={<LayoutGrid className="h-3 w-3 stroke-current" />} label="Zones" />
-              <ActionButton icon={<Shield className="h-3 w-3 stroke-current" />} label="Validate" />
+              <ActionButton icon={<Shield className="h-3 w-3 stroke-current" />} label="Validate" onClick={() => setShowValidateModal(true)} />
             </div>
           </div>
         </div>
@@ -458,7 +460,7 @@ export function WarehousesPage() {
                 <>
                   {/* Material Bins card */}
                   <SectionCard title="Material Bins"
-                    action={<ActionButton icon={<Box className="h-3 w-3 stroke-current" />} label="Open Bins" />}>
+                    action={<ActionButton icon={<Box className="h-3 w-3 stroke-current" />} label="Open Bins" onClick={() => { if (wh.code) navigate(`/system/material-bins?warehouseCode=${wh.code}`); }} />}>
                     <div className={`rounded-lg p-2 ${theme.subCard}`}>
                       <div className="grid grid-cols-3 gap-2 text-[10px]">
                         <div>
@@ -488,7 +490,7 @@ export function WarehousesPage() {
 
                   {/* Assigned Lines */}
                   <SectionCard title="Assigned Production Lines"
-                    action={<ActionButton icon={<Layers className="h-3 w-3 stroke-current" />} label="View Lines" />}>
+                    action={<ActionButton icon={<Layers className="h-3 w-3 stroke-current" />} label="View Lines" onClick={() => setShowLinesModal(true)} />}>
                     <div className={`rounded-lg p-2 ${theme.subCard}`}>
                       <div className="space-y-1.5 text-[10px]">
                         {["Assembly Line A", "Kitting Line 1", "Packaging Line"].map((line, i) => (
@@ -505,7 +507,7 @@ export function WarehousesPage() {
 
                   {/* Warehouse Zones */}
                   <SectionCard title="Warehouse Zones"
-                    action={<ActionButton icon={<LayoutGrid className="h-3 w-3 stroke-current" />} label="Configure" />}>
+                    action={<ActionButton icon={<LayoutGrid className="h-3 w-3 stroke-current" />} label="Zones" onClick={() => setShowZonesModal(true)} />}>
                     <div className={`rounded-lg p-2 ${theme.subCard}`}>
                       <div className="grid grid-cols-2 gap-1.5 text-[10px]">
                         {[
@@ -574,8 +576,191 @@ export function WarehousesPage() {
 
   const toolbarButtonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-70";
 
+  const renderLinesModal = () => {
+    if (!showLinesModal) return null;
+    const lines = [
+      { name: "Assembly Line A", direction: "Receiving", status: "active" },
+      { name: "Kitting Line 1", direction: "Both", status: "active" },
+      { name: "Packaging Line", direction: "Shipping", status: "active" },
+      { name: "Sub-Assembly B", direction: "Both", status: "inactive" },
+      { name: "Final Assembly", direction: "Shipping", status: "active" },
+    ];
+    return (
+      <>
+        <div className="fixed inset-0 z-30 bg-black/15" onClick={() => setShowLinesModal(false)} />
+        <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-5 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse">
+                <Layers className="h-4 w-4 stroke-current" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Assigned Production Lines</h3>
+                <p className={`text-[10px] ${theme.textMuted}`}>{sel?.code} &middot; {lines.filter(l => l.status === "active").length} active of {lines.length}</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setShowLinesModal(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-4 w-4 stroke-current" />
+            </button>
+          </div>
+          <div className="space-y-1 max-h-80 overflow-y-auto">
+            {lines.map((line, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-lg border border-border/40 p-2.5 transition-colors hover:bg-muted">
+                <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${line.status === "active" ? "bg-entity-line/20" : "bg-muted"}`}>
+                  <LineChart className={`h-3.5 w-3.5 stroke-current ${line.status === "active" ? "text-entity-line" : "text-muted-foreground"}`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className={`text-[12px] font-medium ${theme.textPrimary}`}>{line.name}</div>
+                  <div className={`text-[10px] ${theme.textMuted}`}>Flow direction: {line.direction}</div>
+                </div>
+                <span className={`inline-flex h-5 items-center rounded-full px-2 text-[9px] font-semibold uppercase tracking-wider ${
+                  line.status === "active" ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground border border-border/40"
+                }`}>{line.status}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
+            <span className={`text-[10px] ${theme.textMuted}`}>Only lines with material flow to/from this warehouse are shown.</span>
+            <button type="button" onClick={() => setShowLinesModal(false)}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors">Close</button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderZonesModal = () => {
+    if (!showZonesModal) return null;
+    const zones = [
+      { name: "Receiving", bins: 3, pct: 25, color: "amber" },
+      { name: "Storage A", bins: 5, pct: 60, color: "blue" },
+      { name: "Picking", bins: 2, pct: 40, color: "emerald" },
+      { name: "Shipping", bins: 2, pct: 30, color: "violet" },
+      { name: "Quarantine", bins: 1, pct: 10, color: "red" },
+      { name: "Bulk Storage", bins: 4, pct: 55, color: "cyan" },
+    ];
+    const colorMap: Record<string, string> = {
+      amber: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+      blue: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+      emerald: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+      violet: "bg-violet-500/10 text-violet-600 border-violet-500/20",
+      red: "bg-red-500/10 text-red-600 border-red-500/20",
+      cyan: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+    };
+    return (
+      <>
+        <div className="fixed inset-0 z-30 bg-black/15" onClick={() => setShowZonesModal(false)} />
+        <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-5 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse">
+                <LayoutGrid className="h-4 w-4 stroke-current" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Warehouse Zones</h3>
+                <p className={`text-[10px] ${theme.textMuted}`}>{sel?.code} &middot; {zones.length} zones &middot; {zones.reduce((s, z) => s + z.bins, 0)} bins</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setShowZonesModal(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-4 w-4 stroke-current" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
+            {zones.map((z, i) => (
+              <div key={i} className="rounded-lg border border-border/40 p-3 transition-colors hover:bg-muted">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${colorMap[z.color]}`}>{z.name}</div>
+                </div>
+                <div className="flex items-center gap-3 text-[10px]">
+                  <div>
+                    <div className={`font-semibold ${theme.textPrimary}`}>{z.bins}</div>
+                    <div className={theme.textMuted}>bins</div>
+                  </div>
+                  <div className="flex-1">
+                    <div className={`h-1.5 w-full overflow-hidden rounded-full ${theme.loadTrack}`}>
+                      <div className="h-1.5 rounded-full bg-entity-warehouse transition-all" style={{ width: `${z.pct}%` }} />
+                    </div>
+                    <div className={`mt-0.5 text-right text-[9px] ${theme.textMuted}`}>{z.pct}% utilized</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
+            <span className={`text-[10px] ${theme.textMuted}`}>Total capacity: {zones.reduce((s, z) => s + z.bins, 0)} bins across {zones.length} zones.</span>
+            <button type="button" onClick={() => setShowZonesModal(false)}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors">Close</button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderValidateModal = () => {
+    if (!showValidateModal) return null;
+    const checks = [
+      { label: "Plant assigned", status: "pass", detail: `${sel?.plantName || "-"}` },
+      { label: "Code uniqueness", status: "pass", detail: `Code "${sel?.code}" is unique` },
+      { label: "Type configured", status: sel?.warehouseType ? "pass" : "fail", detail: sel?.warehouseType ? WAREHOUSE_TYPE_OPTIONS.find(o => o.value === sel?.warehouseType)?.label || sel?.warehouseType : "No type set" },
+      { label: "Location set", status: sel?.location ? "pass" : "warn", detail: sel?.location || "No location configured" },
+      { label: "Active status", status: sel?.isActive ? "pass" : "warn", detail: sel?.isActive ? "Warehouse is active" : "Warehouse is inactive" },
+      { label: "Zones configured", status: "warn", detail: "No zones configured" },
+      { label: "Production lines linked", status: "warn", detail: "3 lines linked (simulated)" },
+      { label: "ERP sync", status: "pass", detail: `ERP Code: WH-${sel?.code}` },
+    ];
+    const passCount = checks.filter(c => c.status === "pass").length;
+    const warnCount = checks.filter(c => c.status === "warn").length;
+    const failCount = checks.filter(c => c.status === "fail").length;
+    return (
+      <>
+        <div className="fixed inset-0 z-30 bg-black/15" onClick={() => setShowValidateModal(false)} />
+        <div className="fixed left-1/2 top-1/2 z-40 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-card p-5 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse">
+                <Shield className="h-4 w-4 stroke-current" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Validation</h3>
+                <p className={`text-[10px] ${theme.textMuted}`}>{sel?.code} &middot; {passCount} pass, {warnCount} warning{failCount > 0 ? `, ${failCount} fail` : ""}</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => setShowValidateModal(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <X className="h-4 w-4 stroke-current" />
+            </button>
+          </div>
+          <div className="space-y-1 max-h-80 overflow-y-auto">
+            {checks.map((c, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-lg border border-border/40 p-2.5">
+                {c.status === "pass" ? (
+                  <CheckSquare className="h-4 w-4 shrink-0 text-success stroke-current" />
+                ) : c.status === "fail" ? (
+                  <XSquare className="h-4 w-4 shrink-0 text-danger stroke-current" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-warning stroke-current" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className={`text-[12px] font-medium ${theme.textPrimary}`}>{c.label}</div>
+                  <div className={`text-[10px] ${theme.textMuted}`}>{c.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-border/40 pt-3">
+            <span className={`text-[10px] ${theme.textMuted}`}>Validation completed &mdash; {passCount}/{checks.length} checks passed.</span>
+            <button type="button" onClick={() => setShowValidateModal(false)}
+              className="rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors">Close</button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <>
+      {renderLinesModal()}
+      {renderZonesModal()}
+      {renderValidateModal()}
       {confirmArchive && (
         <ConfirmDialog
           open={!!confirmArchive}
@@ -594,24 +779,23 @@ export function WarehousesPage() {
         />
 
         {/* Toolbar */}
-        <div className="flex h-9 shrink-0 select-none items-center gap-2 border-b border-border/35 bg-muted px-3">
-          <div className="flex h-full items-center gap-2 pr-2" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="relative min-w-0 flex-1">
-              <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search"
-                className="h-7 w-full rounded border border-border/30 bg-transparent pl-3 pr-7 text-xs text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-border/50 focus:ring-1 focus:ring-border/25"
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch("")}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                  <X className="h-3.5 w-3.5 stroke-current" />
-                </button>
-              )}
-            </div>
+        <div className="shrink-0 flex items-center border-b border-border/35 bg-muted h-10 select-none gap-2 px-3">
+          <div className="relative shrink-0" style={{ width: 260 }}>
+            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search warehouses..."
+              className="h-7 w-full rounded border border-border/35 bg-transparent pl-3 pr-7 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch("")}
+                className="absolute right-7 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
+                <X className="h-3.5 w-3.5 stroke-current" />
+              </button>
+            )}
+          </div>
             <select
               value={filters.plantId}
               onChange={(e) => setFilters((p) => ({ ...p, plantId: e.target.value }))}
@@ -637,7 +821,6 @@ export function WarehousesPage() {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
-          </div>
           <span className="h-5 w-px shrink-0 bg-border/25" />
           <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5">
             {isForm ? (
@@ -776,13 +959,14 @@ export function WarehousesPage() {
         <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
           <span className="flex items-center gap-1.5"><Warehouse className="h-3.5 w-3.5 text-entity-warehouse stroke-current" /> Warehouse</span>
           <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-entity-plant stroke-current" /> Plant</span>
+          <span>{filtered.length} warehouse{filtered.length !== 1 ? "s" : ""}</span>
+          <span className="ml-auto" />
           {sel && (
             <>
-              <span className="flex items-center gap-1">Created: {formatAppDate(sel.createdAt) || "-"}</span>
-              <span className="flex items-center gap-1">Updated: {formatAppDate(sel.updatedAt) || "-"}</span>
+              <span>Created: {formatAppDate(sel.createdAt) || "-"}</span>
+              <span>Updated: {formatAppDate(sel.updatedAt) || "-"}</span>
             </>
           )}
-          <span className="ml-auto">{filtered.length} warehouse{filtered.length !== 1 ? "s" : ""}</span>
         </div>
       </div>
     </>

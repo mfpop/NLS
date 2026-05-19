@@ -1,62 +1,18 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { gql } from "@apollo/client";
-import { Route, Search, Plus, RefreshCw, Pencil, Trash2, Save, X, ArrowRight } from "lucide-react";
+import { Route, Search, Plus, RefreshCw, Pencil, Trash2, Save, X, ArrowRight, RotateCcw, Archive } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-
-const MAPPING_RULES_QUERY = gql`
-  query MappingRules($domain: String, $activeOnly: Boolean) {
-    mappingRules(domain: $domain, activeOnly: $activeOnly) {
-      id domain sourceField destinationField transformRule isRequired isActive createdAt
-    }
-    importSourceConfigs(isActive: true) {
-      id name domain
-    }
-  }
-`;
-
-const CREATE_MAPPING_RULE = gql`
-  mutation CreateMappingRule($input: MappingRuleInput!) {
-    createMappingRule(input: $input) {
-      ok rule { id domain sourceField destinationField transformRule isRequired }
-      errors { field code message }
-    }
-  }
-`;
-
-const UPDATE_MAPPING_RULE = gql`
-  mutation UpdateMappingRule($id: String!, $input: MappingRuleInput!) {
-    updateMappingRule(id: $id, input: $input) {
-      ok rule { id domain sourceField destinationField transformRule isRequired }
-      errors { field code message }
-    }
-  }
-`;
-
-const ARCHIVE_MAPPING_RULE = gql`
-  mutation ArchiveMappingRule($id: String!) {
-    archiveMappingRule(id: $id) {
-      ok errors { field code message }
-    }
-  }
-`;
-
-const DOMAINS = ["PLANT_STRUCTURE", "MATERIALS", "BOM", "ROUTING", "SCHEDULES", "INVENTORY", "PRODUCTS"];
-
-interface MappingRule {
-  id: string; domain: string; sourceField: string; destinationField: string;
-  transformRule?: string | null; isRequired: boolean; isActive: boolean; createdAt: string;
-}
-interface ImportSource { id: string; name: string; domain: string; }
+import { MAPPING_RULES_QUERY, DOMAINS } from "@/graphql/mappingRuleQueries";
+import { CREATE_MAPPING_RULE, UPDATE_MAPPING_RULE, ARCHIVE_MAPPING_RULE, RESTORE_MAPPING_RULE } from "@/graphql/mappingRuleMutations";
 
 const inputClass = `h-7 w-full rounded border border-border/30 bg-transparent pl-3 pr-7 text-xs text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-border/50 focus:ring-1 focus:ring-border/25`;
 const buttonClass = `inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors`;
 const formInputClass = `h-7 w-full rounded border border-border/30 bg-card px-2.5 text-[11px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-border/50 focus:ring-1 focus:ring-border/25`;
 const formSelectClass = `h-7 w-full cursor-pointer rounded border border-border/30 bg-card px-2 text-[11px] text-foreground outline-none transition-colors focus:border-border/50 focus:ring-1 focus:ring-border/25`;
 
-interface RuleForm {
+type RuleForm = {
   domain: string; sourceField: string; destinationField: string; transformRule: string; isRequired: boolean;
-}
+};
 
 function emptyForm(): RuleForm {
   return { domain: "PLANT_STRUCTURE", sourceField: "", destinationField: "", transformRule: "", isRequired: false };
@@ -65,12 +21,16 @@ function emptyForm(): RuleForm {
 export function MappingRulesPage() {
   const [search, setSearch] = useState("");
   const [domainFilter, setDomainFilter] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<RuleForm>(emptyForm());
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data, loading, refetch } = useQuery<{ mappingRules: MappingRule[]; importSourceConfigs: ImportSource[] }>(
+  const { data, loading, refetch } = useQuery<{
+    mappingRules: { items: Array<{ id: string; domain: string; sourceField: string; destinationField: string; transformRule?: string | null; isRequired: boolean; isActive: boolean; createdAt: string }> };
+    importSourceConfigs: { items: Array<{ id: string; name: string; domain: string }> };
+  }>(
     MAPPING_RULES_QUERY,
     { variables: { domain: domainFilter || null }, fetchPolicy: "cache-and-network" }
   );
@@ -78,18 +38,26 @@ export function MappingRulesPage() {
   const [createRule] = useMutation(CREATE_MAPPING_RULE, { refetchQueries: ["MappingRules"] });
   const [updateRule] = useMutation(UPDATE_MAPPING_RULE, { refetchQueries: ["MappingRules"] });
   const [archiveRule] = useMutation(ARCHIVE_MAPPING_RULE, { refetchQueries: ["MappingRules"] });
+  const [restoreRule] = useMutation(RESTORE_MAPPING_RULE, { refetchQueries: ["MappingRules"] });
 
-  const rules = data?.mappingRules ?? [];
+  const rules = data?.mappingRules?.items ?? [];
+  const archivedCount = rules.filter((r) => !r.isActive).length;
 
   const filtered = useMemo(() => {
-    if (!search) return rules;
-    const q = search.toLowerCase();
-    return rules.filter((r) =>
-      r.sourceField.toLowerCase().includes(q) ||
-      r.destinationField.toLowerCase().includes(q) ||
-      r.domain.toLowerCase().includes(q)
-    );
-  }, [rules, search]);
+    let result = rules;
+    if (!showArchived) {
+      result = result.filter((r) => r.isActive);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((r) =>
+        r.sourceField.toLowerCase().includes(q) ||
+        r.destinationField.toLowerCase().includes(q) ||
+        r.domain.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [rules, search, showArchived]);
 
   const openAdd = () => {
     setEditingId(null);
@@ -98,7 +66,7 @@ export function MappingRulesPage() {
     setShowForm(true);
   };
 
-  const openEdit = (rule: MappingRule) => {
+  const openEdit = (rule: { id: string; domain: string; sourceField: string; destinationField: string; transformRule?: string | null; isRequired: boolean; isActive: boolean; createdAt: string }) => {
     setEditingId(rule.id);
     setForm({
       domain: rule.domain,
@@ -151,6 +119,14 @@ export function MappingRulesPage() {
     }
   };
 
+  const handleRestore = async (id: string) => {
+    try {
+      await restoreRule({ variables: { id } });
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <AppPageLayout
       title="Mapping Rules"
@@ -168,6 +144,21 @@ export function MappingRulesPage() {
             <option value="">All Domains</option>
             {DOMAINS.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
+          <button
+            type="button"
+            onClick={() => setShowArchived(!showArchived)}
+            className={`inline-flex items-center gap-1.5 h-7 px-2 rounded text-[11px] font-medium transition-colors ${
+              showArchived ? 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/15' : 'text-muted-foreground hover:bg-muted'
+            }`}
+          >
+            <Archive className="h-3.5 w-3.5 stroke-current" />
+            <span>Archived</span>
+            {archivedCount > 0 && (
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 text-[10px] font-semibold text-muted-foreground">
+                {archivedCount}
+              </span>
+            )}
+          </button>
           <div className="flex-1" />
           {showForm && (
             <>
@@ -225,7 +216,18 @@ export function MappingRulesPage() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Route className="h-12 w-12 mx-auto text-teal-600/30 stroke-current" />
-              <p className="mt-3 text-sm text-muted-foreground">No mapping rules defined yet.</p>
+              {archivedCount > 0 && !showArchived ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  All {archivedCount} rule{archivedCount > 1 ? "s are" : " is"} archived.{" "}
+                  <span className="font-medium text-amber-600">Archived</span>{" "}
+                  <button type="button" onClick={() => setShowArchived(true)} className="underline underline-offset-2 hover:text-amber-700 transition-colors">show</button>.
+                </p>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">No mapping rules defined yet.</p>
+              )}
+              {search && !showArchived && archivedCount === 0 && (
+                <p className="mt-1 text-xs text-muted-foreground/60">Try a different search term or clear the filter.</p>
+              )}
             </div>
           </div>
         ) : (
@@ -254,7 +256,11 @@ export function MappingRulesPage() {
                     <td className="h-8 px-3">
                       <div className="flex items-center justify-center gap-1">
                         <button type="button" onClick={() => openEdit(rule)} className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted transition-colors" title="Edit"><Pencil className="h-3.5 w-3.5 stroke-current" /></button>
-                        <button type="button" onClick={() => handleArchive(rule.id)} className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted transition-colors" title="Archive"><Trash2 className="h-3.5 w-3.5 stroke-current" /></button>
+                        {rule.isActive ? (
+                          <button type="button" onClick={() => handleArchive(rule.id)} className="inline-flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted transition-colors" title="Archive"><Trash2 className="h-3.5 w-3.5 stroke-current" /></button>
+                        ) : (
+                          <button type="button" onClick={() => handleRestore(rule.id)} className="inline-flex h-6 w-6 items-center justify-center rounded text-amber-600 hover:bg-amber-500/10 transition-colors" title="Restore"><RotateCcw className="h-3.5 w-3.5 stroke-current" /></button>
+                        )}
                       </div>
                     </td>
                   </tr>

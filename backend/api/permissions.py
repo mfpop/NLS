@@ -29,6 +29,12 @@ _action_roles = {
     "create_kaizen": SUPERVISOR_PLUS,
     "start_work_order": SUPERVISOR_PLUS,
     "activate_process_flow": SUPERVISOR_PLUS,
+    # Integration / ERP
+    "trigger_import_job": SUPERVISOR_PLUS,
+    "create_import_job": SUPERVISOR_PLUS,
+    "attach_import_file": SUPERVISOR_PLUS,
+    "transition_import_job": SUPERVISOR_PLUS,
+    "manage_mapping_rules": ADMIN_ROLES,
 }
 
 

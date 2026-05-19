@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { LoginPage } from "@/auth/LoginPage";
+import { ForgotPasswordPage } from "@/auth/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/auth/ResetPasswordPage";
 import { ProtectedRoute } from "@/auth/ProtectedRoute";
 
 const ControlTowerPage = lazy(() =>
@@ -185,6 +187,8 @@ export function AppRoutes() {
     <Suspense fallback={<RouteLoader />}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
                     <Route index element={<ControlTowerPage />} />
           <Route path="control-tower" element={<ControlTowerPage />} />

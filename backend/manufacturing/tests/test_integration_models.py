@@ -131,32 +131,50 @@ class MappingRuleModelTests(TestCase):
         self.assertTrue(rule.is_active)
 
 
+from unittest.mock import Mock, patch
+
+
+def _make_mock_info(role: str = "db_admin", is_authenticated: bool = True):
+    """Create a mock Strawberry Info with a user of the given role."""
+    user = Mock()
+    user.is_authenticated = is_authenticated
+    user.role_profile.role = role
+    info = Mock()
+    info.context.user = user
+    return info
+
+
 class GraphQLMutationDelegationTests(TestCase):
 
     def test_create_source_config_calls_service(self):
-        from unittest.mock import patch
-        from api.mutations.integration import IntegrationMutation
-        with patch.object(ImportSourceConfigService, "create") as mock:
-            mock.return_value = None
-            mutation = IntegrationMutation()
-            try:
-                mutation.create_import_source_config(Input(name="Test"))
-            except AttributeError:
-                pass
+        from unittest.mock import Mock as MockFactory
+        from api.mutations.application import ApplicationSettingsMutation
+        from manufacturing.domain.import_source_config_service import ImportSourceConfigService
+        with patch.object(ImportSourceConfigService, "create_config") as mock:
+            mock.return_value = MockFactory(
+                id=1, name="Test", source_type="CSV", domain="BOM",
+                path="/test", file_pattern="*.csv", archive_path="", error_path="",
+                is_active=True, is_archived=False, last_checked_at=None,
+                created_at=None, updated_at=None,
+            )
+            mutation = ApplicationSettingsMutation()
+            mutation.create_import_source_config(Input(name="Test"))
             mock.assert_called_once()
 
     def test_archive_source_config_calls_service(self):
-        from unittest.mock import patch
-        from api.mutations.integration import IntegrationMutation
+        from unittest.mock import Mock as MockFactory
+        from api.mutations.application import ApplicationSettingsMutation
         from manufacturing.domain.import_source_config_service import ImportSourceConfigService
-        with patch.object(ImportSourceConfigService, "archive") as mock:
-            mock.return_value = None
-            mutation = IntegrationMutation()
-            try:
-                mutation.archive_import_source_config("some-id")
-            except AttributeError:
-                pass
-            mock.assert_called_once_with("some-id")
+        with patch.object(ImportSourceConfigService, "archive_config") as mock:
+            mock.return_value = MockFactory(
+                id=42, name="Archived Source", source_type="CSV", domain="BOM",
+                path="/test", file_pattern="*.csv", archive_path="", error_path="",
+                is_active=False, is_archived=True, last_checked_at=None,
+                created_at=None, updated_at=None,
+            )
+            mutation = ApplicationSettingsMutation()
+            mutation.archive_import_source_config("42")
+            mock.assert_called_once_with(42)
 
     def test_trigger_import_job_rejects_disabled_source(self):
         from api.mutations.integration import IntegrationMutation
@@ -166,42 +184,43 @@ class GraphQLMutationDelegationTests(TestCase):
             is_active=False,
         )
         mutation = IntegrationMutation()
-        result = mutation.trigger_import_job(source_id=str(config.id))
+        result = mutation.trigger_import_job(_make_mock_info(), source_id=str(config.id))
         self.assertFalse(result.ok)
 
     def test_trigger_import_job_no_orm_save_directly(self):
-        from unittest.mock import patch
         from api.mutations.integration import IntegrationMutation
         from manufacturing.domain.import_job_service import ImportJobService
         with patch("manufacturing.models.ImportJob.save") as mock_save:
             with patch.object(ImportJobService, "trigger") as mock_service:
                 mock_service.side_effect = ImportJobError("sourceId", "NOT_FOUND", "not found")
                 mutation = IntegrationMutation()
-                mutation.trigger_import_job(source_id="nonexistent")
+                mutation.trigger_import_job(_make_mock_info(), source_id="nonexistent")
                 mock_save.assert_not_called()
 
     def test_mapping_rule_validation(self):
         from api.mutations.integration import IntegrationMutation
         mutation = IntegrationMutation()
         result = mutation.create_mapping_rule(
-            Input(source_field="", destination_field="")
+            _make_mock_info(), Input(source_field="", destination_field="")
         )
         self.assertFalse(result.ok)
 
     def test_test_import_source_path_returns_status(self):
-        from unittest.mock import patch
-        from api.mutations.integration import IntegrationMutation
-        from manufacturing.domain.import_source_config_service import ImportSourceConfigService
-        with patch.object(ImportSourceConfigService, "test_path") as mock:
-            mock.return_value = {
-                "sourceId": "test-id", "path": "/test", "exists": True,
-                "isDirectory": False, "isReadable": True,
-            }
-            mutation = IntegrationMutation()
-            result = mutation.test_import_source_path(id="test-id")
+        from api.queries.application import ApplicationSettingsQuery
+        from manufacturing.domain.import_source_config_service import (
+            ImportSourceConfigService, PathAccessResult,
+        )
+        from django.utils import timezone
+        with patch.object(ImportSourceConfigService, "test_path_access") as mock:
+            mock.return_value = PathAccessResult(
+                ok=True, exists=True, readable=True,
+                message="Path is reachable and readable.",
+                checked_at=timezone.now(),
+            )
+            query = ApplicationSettingsQuery()
+            result = query.test_import_source_path(id="42")
             self.assertTrue(result.exists)
-            self.assertFalse(result.is_directory)
-            self.assertTrue(result.is_readable)
+            self.assertTrue(result.readable)
 
 
 # Import needed at module level for tests

@@ -1,152 +1,244 @@
-import os
-from pathlib import Path
+from __future__ import annotations
 
+import os
+import re
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 
 from application.models import ImportSourceConfig
-from application.import_source_service import ImportSourceConfigError
+
+SECRET_PATH_PATTERN = re.compile(r"(password|secret|token|api[_-]?key|credential)", re.IGNORECASE)
+
+
+class ImportSourceConfigError(ValueError):
+    def __init__(self, field: str, message: str, code: str = "VALIDATION") -> None:
+        super().__init__(message)
+        self.field = field
+        self.code = code
+        self.message = message
+
+
+@dataclass(frozen=True)
+class PathAccessResult:
+    ok: bool
+    exists: bool | None
+    readable: bool | None
+    message: str
+    checked_at: datetime
 
 
 class ImportSourceConfigService:
+    """Configure ERP/Excel import file locations — no import execution."""
+
+    # ── Query methods ──
 
     @staticmethod
-    def list(domain: str | None = None, active_only: bool = False):
+    def list_configs(
+        *,
+        domain: str | None = None,
+        is_active: bool | None = None,
+        include_archived: bool = False,
+    ) -> list[ImportSourceConfig]:
         qs = ImportSourceConfig.objects.all()
+        if not include_archived:
+            qs = qs.filter(is_archived=False)
         if domain:
             qs = qs.filter(domain=domain)
-        if active_only:
-            qs = qs.filter(is_active=True)
-        return qs.order_by("name")
+        if is_active is not None:
+            qs = qs.filter(is_active=is_active)
+        return list(qs.order_by("domain", "name"))
 
     @staticmethod
-    def get(source_id: str) -> ImportSourceConfig:
-        try:
-            return ImportSourceConfig.objects.get(id=source_id)
-        except ImportSourceConfig.DoesNotExist as exc:
-            raise ImportSourceConfigError("id", "NOT_FOUND", "Import source config not found") from exc
+    def list_active_configs(domain: str | None = None) -> list[ImportSourceConfig]:
+        """Sources eligible for domain import jobs (active, not archived)."""
+        qs = ImportSourceConfig.objects.filter(is_active=True, is_archived=False)
+        if domain:
+            qs = qs.filter(domain=domain)
+        return list(qs.order_by("domain", "name"))
+
+    # ── Validation helpers ──
 
     @staticmethod
-    def _validate_name_unique(name: str, exclude_id: str | None = None):
-        qs = ImportSourceConfig.objects.filter(name__iexact=name)
-        if exclude_id:
-            qs = qs.exclude(id=exclude_id)
-        if qs.exists():
-            raise ImportSourceConfigError("name", "DUPLICATE", "Name already exists")
+    def _validate_required_fields(data: dict[str, Any], *, partial: bool) -> None:
+        required = ("name", "source_type", "domain", "path", "file_pattern")
+        for field in required:
+            if field not in data and partial:
+                continue
+            value = data.get(field)
+            if value is None or (isinstance(value, str) and not value.strip()):
+                raise ImportSourceConfigError(field, f"{field.replace('_', ' ').title()} is required")
+
+        if "source_type" in data and data["source_type"] not in ImportSourceConfig.SourceType.values:
+            raise ImportSourceConfigError("source_type", "Invalid source type")
+        if "domain" in data and data["domain"] not in ImportSourceConfig.Domain.values:
+            raise ImportSourceConfigError("domain", "Invalid domain")
+
+        path_value = data.get("path")
+        if path_value is not None and SECRET_PATH_PATTERN.search(str(path_value)):
+            raise ImportSourceConfigError("path", "Path must not contain credential-like values")
 
     @staticmethod
     def _find_active_duplicate(*, name: str | None = None, domain: str | None = None, source_type: str | None = None,
-                               path: str | None = None, file_pattern: str | None = None, exclude_id: str | None = None):
+                               path: str | None = None, file_pattern: str | None = None, exclude_id: str | int | None = None):
+        """Return an active, non-archived ImportSourceConfig that duplicates the provided attributes, if any."""
         qs = ImportSourceConfig.objects.filter(is_active=True, is_archived=False)
+        # Prefer name uniqueness (case-insensitive) within domain
         if name and domain:
             qsn = qs.filter(domain=domain, name__iexact=name)
             if exclude_id:
-                qsn = qsn.exclude(id=exclude_id)
+                qsn = qsn.exclude(pk=exclude_id)
             if qsn.exists():
                 return qsn.first()
+        # Fallback to exact match on domain+source_type+path+file_pattern
         if domain and source_type and path is not None and file_pattern is not None:
             qsp = qs.filter(domain=domain, source_type=source_type, path=path.strip(), file_pattern=file_pattern.strip())
             if exclude_id:
-                qsp = qsp.exclude(id=exclude_id)
+                qsp = qsp.exclude(pk=exclude_id)
             if qsp.exists():
                 return qsp.first()
         return None
 
+    # ── Dict-based API (used by GraphQL mutations/queries) ──
+
     @classmethod
     @transaction.atomic
-    def create(cls, input_data) -> ImportSourceConfig:
-        name = (input_data.name or "").strip()
-        if not name:
-            raise ImportSourceConfigError("name", "REQUIRED", "Name is required")
-        domain_code = (input_data.domain or "").strip().upper()
-        if domain_code not in ImportSourceConfig.Domain.values:
-            raise ImportSourceConfigError("domain", "INVALID", f"Invalid domain: {domain_code}")
-        source_type = (input_data.source_type or "").strip().upper()
-        if source_type not in ImportSourceConfig.SourceType.values:
-            raise ImportSourceConfigError("sourceType", "INVALID", f"Invalid source type: {source_type}")
-        path = (input_data.path or "").strip()
-        if not path:
-            raise ImportSourceConfigError("path", "REQUIRED", "Path is required")
-        cls._validate_name_unique(name)
+    def create_config(cls, data: dict[str, Any]) -> ImportSourceConfig:
+        cls._validate_required_fields(data, partial=False)
+        name = data["name"].strip()
+        domain = data["domain"]
+        source_type = data["source_type"]
+        path = data["path"].strip()
+        file_pattern = data["file_pattern"].strip()
+        is_active = data.get("is_active") is not False
 
-        is_active = input_data.is_active if hasattr(input_data, 'is_active') else True
         if is_active:
-            dup = cls._find_active_duplicate(name=name, domain=domain_code, source_type=source_type, path=path, file_pattern=(input_data.file_pattern or ""))
+            dup = cls._find_active_duplicate(name=name, domain=domain, source_type=source_type, path=path, file_pattern=file_pattern)
             if dup:
-                # field, message, code
                 raise ImportSourceConfigError("name", "Duplicate active import source exists", code="DUPLICATE")
 
         return ImportSourceConfig.objects.create(
             name=name,
-            domain=domain_code,
             source_type=source_type,
+            domain=domain,
             path=path,
-            file_pattern=input_data.file_pattern or "",
-            archive_path=input_data.archive_path or None,
-            error_path=input_data.error_path or None,
-            polling_interval_minutes=input_data.polling_interval_minutes or None,
+            file_pattern=file_pattern,
+            archive_path=(data.get("archive_path") or "").strip(),
+            error_path=(data.get("error_path") or "").strip(),
+            is_active=is_active,
+            polling_interval_minutes=data.get("polling_interval_minutes"),
         )
 
     @classmethod
     @transaction.atomic
-    def update(cls, source_id: str, input_data) -> ImportSourceConfig:
-        config = cls.get(source_id)
-        name = (input_data.name or "").strip()
-        if not name:
-            raise ImportSourceConfigError("name", "REQUIRED", "Name is required")
-        domain_code = (input_data.domain or "").strip().upper()
-        if domain_code not in ImportSourceConfig.Domain.values:
-            raise ImportSourceConfigError("domain", "INVALID", f"Invalid domain: {domain_code}")
-        source_type = (input_data.source_type or "").strip().upper()
-        if source_type not in ImportSourceConfig.SourceType.values:
-            raise ImportSourceConfigError("sourceType", "INVALID", f"Invalid source type: {source_type}")
-        path = (input_data.path or "").strip()
-        if not path:
-            raise ImportSourceConfigError("path", "REQUIRED", "Path is required")
-        cls._validate_name_unique(name, source_id)
+    def update_config(cls, config_id: int, data: dict[str, Any]) -> ImportSourceConfig:
+        config = ImportSourceConfig.objects.select_for_update().get(pk=config_id)
+        if config.is_archived:
+            raise ImportSourceConfigError("id", "Archived import sources cannot be edited", code="ARCHIVED")
 
-        # Build prospective values
-        new_name = name
-        new_domain = domain_code
-        new_source_type = source_type
-        new_path = path
-        new_file_pattern = input_data.file_pattern or ""
-        new_is_active = True if not hasattr(input_data, 'is_active') else input_data.is_active
+        cls._validate_required_fields(data, partial=True)
 
-        dup = cls._find_active_duplicate(name=new_name, domain=new_domain, source_type=new_source_type, path=new_path, file_pattern=new_file_pattern, exclude_id=source_id)
-        if dup:
-            # field, message, code
-            raise ImportSourceConfigError("name", "Duplicate active import source exists", code="DUPLICATE")
+        new_name = config.name
+        new_domain = config.domain
+        new_source_type = config.source_type
+        new_path = config.path
+        new_file_pattern = config.file_pattern
+        new_is_active = config.is_active
 
-        config.name = name
-        config.domain = domain_code
-        config.source_type = source_type
-        config.path = path
-        config.file_pattern = input_data.file_pattern or ""
-        if input_data.archive_path is not None:
-            config.archive_path = input_data.archive_path or None
-        if input_data.error_path is not None:
-            config.error_path = input_data.error_path or None
-        config.polling_interval_minutes = input_data.polling_interval_minutes or None
+        if "name" in data:
+            new_name = data["name"].strip()
+        if "source_type" in data:
+            new_source_type = data["source_type"]
+        if "domain" in data:
+            new_domain = data["domain"]
+        if "path" in data:
+            new_path = data["path"].strip()
+        if "file_pattern" in data:
+            new_file_pattern = data["file_pattern"].strip()
+        if "is_active" in data:
+            new_is_active = bool(data["is_active"])
+
+        if new_is_active:
+            dup = cls._find_active_duplicate(name=new_name, domain=new_domain, source_type=new_source_type, path=new_path, file_pattern=new_file_pattern, exclude_id=config_id)
+            if dup:
+                raise ImportSourceConfigError("name", "Duplicate active import source exists", code="DUPLICATE")
+
+        if "name" in data:
+            config.name = data["name"].strip()
+        if "source_type" in data:
+            config.source_type = data["source_type"]
+        if "domain" in data:
+            config.domain = data["domain"]
+        if "path" in data:
+            config.path = data["path"].strip()
+        if "file_pattern" in data:
+            config.file_pattern = data["file_pattern"].strip()
+        if "archive_path" in data:
+            config.archive_path = (data.get("archive_path") or "").strip()
+        if "error_path" in data:
+            config.error_path = (data.get("error_path") or "").strip()
+        if "is_active" in data:
+            config.is_active = bool(data["is_active"])
+        if "polling_interval_minutes" in data:
+            config.polling_interval_minutes = data["polling_interval_minutes"]
+
         config.save()
         return config
 
     @classmethod
     @transaction.atomic
-    def archive(cls, source_id: str) -> ImportSourceConfig:
-        config = cls.get(source_id)
+    def archive_config(cls, config_id: int) -> ImportSourceConfig:
+        config = ImportSourceConfig.objects.select_for_update().get(pk=config_id)
         config.is_active = False
-        config.save()
+        config.is_archived = True
+        config.save(update_fields=["is_archived", "is_active", "updated_at"])
         return config
 
     @staticmethod
-    def test_path(source_id: str) -> dict:
-        config = ImportSourceConfigService.get(source_id)
-        path = Path(config.path)
-        result = {
-            "sourceId": source_id,
-            "path": config.path,
-            "exists": path.exists(),
-            "isDirectory": path.is_dir() if path.exists() else False,
-            "isReadable": os.access(path, os.R_OK) if path.exists() else False,
-        }
-        return result
+    def test_path_access(config_id: int) -> PathAccessResult:
+        config = ImportSourceConfig.objects.get(pk=config_id)
+        checked_at = timezone.now()
+        validate_paths = getattr(settings, "IMPORT_SOURCE_VALIDATE_PATHS", True)
+
+        if not validate_paths:
+            config.last_checked_at = checked_at
+            config.save(update_fields=["last_checked_at"])
+            return PathAccessResult(
+                ok=True,
+                exists=None,
+                readable=None,
+                message="Path validation skipped (filesystem check disabled).",
+                checked_at=checked_at,
+            )
+
+        target = Path(config.path.strip())
+        exists = target.exists()
+        readable = exists and target.is_dir() and os.access(target, os.R_OK)
+
+        if not exists:
+            message = "Path does not exist on the application server."
+            ok = False
+        elif not readable:
+            message = "Path exists but is not a readable directory."
+            ok = False
+        else:
+            message = "Path is reachable and readable."
+            ok = True
+
+        config.last_checked_at = checked_at
+        config.save(update_fields=["last_checked_at"])
+
+        return PathAccessResult(
+            ok=ok,
+            exists=exists,
+            readable=readable,
+            message=message,
+            checked_at=checked_at,
+        )
+
+

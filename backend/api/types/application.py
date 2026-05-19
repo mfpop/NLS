@@ -3,6 +3,7 @@ from typing import Any
 import strawberry
 
 from application.models import ApplicationSetting
+from api.types.pagination import PageInfo
 
 
 @strawberry.type
@@ -128,3 +129,9 @@ class ImportSourcePathTestPayload:
     message: str
     last_checked_at: str | None = strawberry.field(name="lastCheckedAt")
     errors: list[ApplicationSettingError]
+
+
+@strawberry.type
+class ImportSourceConfigsResult:
+    items: list[ImportSourceConfigNode]
+    page_info: PageInfo = strawberry.field(name="pageInfo")

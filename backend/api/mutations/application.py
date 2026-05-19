@@ -10,7 +10,7 @@ from api.types.application import (
     ImportSourceConfigPayload,
     ImportSourceConfigUpdateInput,
 )
-from application.import_source_service import ImportSourceConfigError, ImportSourceConfigService
+from manufacturing.domain.import_source_config_service import ImportSourceConfigError, ImportSourceConfigService
 from application.services import ApplicationSettingsError, ApplicationSettingsService
 
 

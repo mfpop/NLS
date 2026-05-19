@@ -28,6 +28,7 @@ export const systemNav: NavEntry[] = [
       { label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
       { label: "Components", to: "/system/manufacturing-structure/components", icon: Layers },
       { label: "Warehouses", to: "/system/warehouses", icon: Warehouse },
+      { label: "Material Bins", to: "/system/material-bins", icon: Package },
       { label: "Product Master Data", to: "/system/manufacturing-structure/product-master-data", icon: Package },
     ],
   },

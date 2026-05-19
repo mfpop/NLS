@@ -112,6 +112,7 @@ const SETTING_SECTIONS: Array<{ id: string; title: string; description: string; 
     fields: [
       { key: "security.session_timeout_minutes", label: "Session timeout (minutes)", type: "number" },
       { key: "security.mfa_required", label: "Require MFA", type: "boolean" },
+      { key: "security.self_registration_enabled", label: "Self-registration", type: "boolean" },
     ],
   },
   {

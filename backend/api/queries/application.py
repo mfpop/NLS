@@ -9,9 +9,11 @@ from api.types.application import (
     ApplicationSettingError,
     ApplicationSettingNode,
     ImportSourceConfigNode,
+    ImportSourceConfigsResult,
     ImportSourcePathTestPayload,
 )
-from application.import_source_service import ImportSourceConfigError, ImportSourceConfigService
+from api.types.pagination import PageInfo, paginate_queryset
+from manufacturing.domain.import_source_config_service import ImportSourceConfigError, ImportSourceConfigService
 from application.services import ApplicationSettingsService
 
 
@@ -50,9 +52,21 @@ class ApplicationSettingsQuery:
         self,
         domain: Optional[str] = None,
         is_active: Optional[bool] = None,
-    ) -> list[ImportSourceConfigNode]:
-        configs = ImportSourceConfigService.list_configs(domain=domain, is_active=is_active)
-        return [ImportSourceConfigNode.from_model(item) for item in configs]
+        offset: Optional[int] = 0,
+        limit: Optional[int] = 100,
+    ) -> ImportSourceConfigsResult:
+        from application.models import ImportSourceConfig
+        qs = ImportSourceConfig.objects.all()
+        if is_active is not None:
+            qs = qs.filter(is_active=is_active)
+        if domain:
+            qs = qs.filter(domain=domain)
+        qs = qs.order_by("domain", "name")
+        items, total, has_more = paginate_queryset(qs, offset or 0, limit or 100)
+        return ImportSourceConfigsResult(
+            items=[ImportSourceConfigNode.from_model(item) for item in items],
+            page_info=PageInfo(total_count=total, has_next_page=has_more, offset=offset or 0, limit=limit or 100),
+        )
 
     @strawberry.field
     def test_import_source_path(self, id: str) -> ImportSourcePathTestPayload:

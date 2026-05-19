@@ -1,16 +1,47 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
+import { useLazyQuery } from "@apollo/client/react";
 import { gql } from "@apollo/client";
-import { Eye, Search, RefreshCw, Table2, AlertTriangle } from "lucide-react";
+import { Eye, Search, RefreshCw, Table2, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 const IMPORT_JOBS_PREVIEW_QUERY = gql`
   query ImportJobsForPreview($sourceId: String, $status: String) {
     importJobs(sourceId: $sourceId, status: $status) {
-      id fileName sourceConfigName status recordsProcessed createdAt
+      items {
+        id fileName sourceConfigName status recordsProcessed createdAt
+      }
     }
     importSourceConfigs(isActive: true) {
-      id name domain
+      items {
+        id name domain
+      }
+    }
+  }
+`;
+
+const FILE_PREVIEW_QUERY = gql`
+  query FilePreview($jobId: String!) {
+    filePreview(jobId: $jobId) {
+      jobId
+      fileName
+      sheetNames
+      activeSheet
+      columnHeaders
+      totalRows
+      sampleRows {
+        rowNumber
+        columns
+        isEmpty
+      }
+      detectedTypes
+      emptyRequiredCells
+      duplicateRows
+      errors {
+        field
+        code
+        message
+      }
     }
   }
 `;
@@ -22,19 +53,33 @@ interface ImportJob {
   id: string; fileName: string; sourceConfigName: string; status: string; recordsProcessed: number; createdAt: string;
 }
 interface ImportSource { id: string; name: string; domain: string; }
+interface PreviewRow { rowNumber: number; columns: string[] | null; isEmpty: boolean; }
+interface FilePreviewData {
+  jobId: string; fileName: string; sheetNames: string[]; activeSheet: string;
+  columnHeaders: string[]; totalRows: number; sampleRows: PreviewRow[];
+  detectedTypes: string[] | null; emptyRequiredCells: number; duplicateRows: number;
+  errors: { field: string; code: string; message: string }[] | null;
+}
 
 export function FilePreviewPage() {
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
-  const { data, loading, refetch } = useQuery<{ importJobs: ImportJob[]; importSourceConfigs: ImportSource[] }>(
-    IMPORT_JOBS_PREVIEW_QUERY,
-    { variables: { sourceId: sourceFilter || null, status: "PREVIEWED" }, fetchPolicy: "cache-and-network" }
-  );
+  const { data: listData, loading: listLoading, refetch } = useQuery<{
+    importJobs: { items: ImportJob[] };
+    importSourceConfigs: { items: ImportSource[] };
+  }>(IMPORT_JOBS_PREVIEW_QUERY, {
+    variables: { sourceId: sourceFilter || null, status: "PREVIEWED" },
+    fetchPolicy: "cache-and-network",
+  });
 
-  const jobs = data?.importJobs ?? [];
-  const sources = data?.importSourceConfigs ?? [];
+  const [fetchPreview, { data: previewData, loading: previewLoading }] = useLazyQuery<{
+    filePreview: FilePreviewData;
+  }>(FILE_PREVIEW_QUERY, { fetchPolicy: "cache-and-network" });
+
+  const jobs = listData?.importJobs?.items ?? [];
+  const sources = listData?.importSourceConfigs?.items ?? [];
 
   const filtered = useMemo(() => {
     if (!search) return jobs;
@@ -44,21 +89,15 @@ export function FilePreviewPage() {
 
   const selectedJob = useMemo(() => jobs.find((j) => j.id === selectedJobId) ?? null, [jobs, selectedJobId]);
 
-  const sampleData = useMemo(() => {
-    if (!selectedJob) return null;
-    const rows = Array.from({ length: Math.min(selectedJob.recordsProcessed || 8, 8) }, (_, i) => ({
-      row: i + 1,
-      col1: `ERP-${String(i + 1).padStart(3, "0")}`,
-      col2: ["Active", "Active", "Inactive", "Active"][i % 4],
-      col3: `Value ${i + 1}`,
-    }));
-    return {
-      columns: ["Code", "Status", "Value"] as string[],
-      rows,
-      totalRows: selectedJob.recordsProcessed || 120,
-      types: ["String", "Enum", "String"] as string[],
-    };
-  }, [selectedJob]);
+  const preview = useMemo(() => {
+    if (!previewData?.filePreview || previewData.filePreview.errors) return null;
+    return previewData.filePreview;
+  }, [previewData]);
+
+  const handleSelectJob = (jobId: string) => {
+    setSelectedJobId(jobId);
+    if (jobId) fetchPreview({ variables: { jobId } });
+  };
 
   return (
     <AppPageLayout
@@ -83,7 +122,7 @@ export function FilePreviewPage() {
 
         <div className="flex flex-1 min-h-0">
           <div className="w-64 shrink-0 border-r border-border/30 overflow-auto">
-            {loading ? (
+            {listLoading ? (
               <div className="flex items-center justify-center h-full p-4">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-success animate-bounce" /> Loading...</div>
               </div>
@@ -94,7 +133,7 @@ export function FilePreviewPage() {
             ) : (
               <div className="py-1">
                 {filtered.map((job) => (
-                  <button key={job.id} type="button" onClick={() => setSelectedJobId(job.id)}
+                  <button key={job.id} type="button" onClick={() => handleSelectJob(job.id)}
                     className={`w-full text-left px-3 py-2 border-b border-border/10 transition-colors hover:bg-muted/30 ${selectedJobId === job.id ? "bg-muted/40" : ""}`}>
                     <div className="text-[11px] font-medium text-foreground truncate">{job.fileName || "Untitled"}</div>
                     <div className="text-[10px] text-muted-foreground">{job.sourceConfigName}</div>
@@ -105,40 +144,72 @@ export function FilePreviewPage() {
           </div>
 
           <div className="flex-1 overflow-auto">
-            {selectedJob && sampleData ? (
+            {previewLoading ? (
+              <div className="flex items-center justify-center h-full p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-success animate-bounce" /> Loading preview...</div>
+              </div>
+            ) : preview ? (
               <div className="p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-sm font-semibold text-foreground">{selectedJob.fileName}</h3>
-                  <span className="text-[11px] text-muted-foreground">{sampleData.totalRows} rows</span>
-                  <span className="text-[11px] text-muted-foreground">{sampleData.columns.length} columns</span>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h3 className="text-sm font-semibold text-foreground">{preview.fileName || "Untitled"}</h3>
+                  <span className="text-[11px] text-muted-foreground">{preview.totalRows} rows</span>
+                  <span className="text-[11px] text-muted-foreground">{preview.columnHeaders.length} columns</span>
+                  {preview.sheetNames.length > 1 && (
+                    <span className="text-[11px] text-muted-foreground">{preview.sheetNames.length} sheets</span>
+                  )}
+                  {preview.activeSheet && (
+                    <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                      <FileSpreadsheet className="h-3 w-3 stroke-current" />{preview.activeSheet}
+                    </span>
+                  )}
                 </div>
 
-                <div className="rounded border border-border/20">
-                  <div className="border-b border-border/20 bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Detected Data Types</div>
-                  <div className="flex gap-4 px-3 py-2">
-                    {sampleData.columns.map((col, i) => (
-                      <div key={col} className="text-[11px]"><span className="text-muted-foreground">{col}:</span> <span className="font-medium text-foreground">{sampleData.types[i]}</span></div>
+                {preview.sheetNames.length > 1 && (
+                  <div className="flex gap-2">
+                    {preview.sheetNames.map((sheet) => (
+                      <span key={sheet}
+                        className={`rounded px-2 py-0.5 text-[10px] font-medium ${
+                          sheet === preview.activeSheet
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                        {sheet}
+                      </span>
                     ))}
                   </div>
-                </div>
+                )}
+
+                {preview.detectedTypes && preview.detectedTypes.length > 0 && (
+                  <div className="rounded border border-border/20">
+                    <div className="border-b border-border/20 bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Detected Column Types</div>
+                    <div className="flex flex-wrap gap-4 px-3 py-2">
+                      {preview.columnHeaders.map((col, i) => (
+                        <div key={col} className="text-[11px]">
+                          <span className="text-muted-foreground">{col}:</span>{" "}
+                          <span className="font-medium text-foreground">{preview.detectedTypes?.[i] ?? "Unknown"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="rounded border border-border/20 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-border/30 bg-muted/50">
-                        <th className="h-7 px-3 text-left text-[10px] font-semibold text-muted-foreground">#</th>
-                        {sampleData.columns.map((col) => (
+                        <th className="h-7 px-3 text-left text-[10px] font-semibold text-muted-foreground w-10">#</th>
+                        {preview.columnHeaders.map((col) => (
                           <th key={col} className="h-7 px-3 text-left text-[10px] font-semibold text-muted-foreground">{col}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {sampleData.rows.map((row) => (
-                        <tr key={row.row} className="border-b border-border/10 hover:bg-muted/20">
-                          <td className="h-6 px-3 text-muted-foreground">{row.row}</td>
-                          <td className="h-6 px-3 text-foreground font-medium">{row.col1}</td>
-                          <td className="h-6 px-3"><span className={`inline-flex rounded px-1 py-0.5 text-[10px] font-medium ${row.col2 === "Active" ? "text-emerald-600 bg-emerald-50" : "text-slate-500 bg-slate-100"}`}>{row.col2}</span></td>
-                          <td className="h-6 px-3 text-muted-foreground">{row.col3}</td>
+                      {preview.sampleRows.map((row) => (
+                        <tr key={row.rowNumber} className="border-b border-border/10 hover:bg-muted/20">
+                          <td className="h-6 px-3 text-muted-foreground">{row.rowNumber}</td>
+                          {(row.columns ?? []).map((val, ci) => (
+                            <td key={ci} className="h-6 px-3 text-foreground">{val}</td>
+                          ))}
                         </tr>
                       ))}
                     </tbody>
@@ -146,9 +217,29 @@ export function FilePreviewPage() {
                 </div>
 
                 <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
-                  <span>Showing {sampleData.rows.length} of {sampleData.totalRows} rows</span>
-                  <AlertTriangle className="h-3 w-3 stroke-current" />
-                  <span>2 empty required cells detected</span>
+                  <span>Showing {preview.sampleRows.length} of {preview.totalRows} rows</span>
+                  {preview.emptyRequiredCells > 0 && (
+                    <span className="inline-flex items-center gap-1 text-amber-600">
+                      <AlertTriangle className="h-3 w-3 stroke-current" />
+                      {preview.emptyRequiredCells} empty required cells
+                    </span>
+                  )}
+                  {preview.duplicateRows > 0 && (
+                    <span className="inline-flex items-center gap-1 text-amber-600">
+                      <AlertTriangle className="h-3 w-3 stroke-current" />
+                      {preview.duplicateRows} duplicate rows
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : selectedJob && previewData?.filePreview?.errors ? (
+              <div className="flex items-center justify-center h-full p-4">
+                <div className="text-center max-w-xs">
+                  <AlertTriangle className="h-10 w-10 stroke-current text-amber-500/40 mx-auto mb-3" />
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-1">Preview Error</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {previewData.filePreview.errors.map((e) => e.message).join(", ")}
+                  </p>
                 </div>
               </div>
             ) : (

@@ -5,11 +5,13 @@ from shared.models.base import TimeStampedModel
 class ImportJob(TimeStampedModel):
     class Status(models.TextChoices):
         DRAFT = "DRAFT", "Draft"
+        FILE_ATTACHED = "FILE_ATTACHED", "File Attached"
         PREVIEWED = "PREVIEWED", "Previewed"
         VALIDATED = "VALIDATED", "Validated"
         COMPARED = "COMPARED", "Compared"
         READY_TO_APPLY = "READY_TO_APPLY", "Ready to Apply"
         APPLIED = "APPLIED", "Applied"
+        ARCHIVED = "ARCHIVED", "Archived"
         PREVIEW_FAILED = "PREVIEW_FAILED", "Preview Failed"
         VALIDATION_FAILED = "VALIDATION_FAILED", "Validation Failed"
         COMPARE_FAILED = "COMPARE_FAILED", "Compare Failed"
@@ -25,8 +27,10 @@ class ImportJob(TimeStampedModel):
     source_config = models.ForeignKey(
         "application.ImportSourceConfig", on_delete=models.CASCADE, related_name="import_jobs"
     )
-    file_name = models.CharField(max_length=500)
-    file_path = models.CharField(max_length=500)
+    file_name = models.CharField(max_length=500, blank=True, default="")
+    file_path = models.CharField(max_length=500, blank=True, default="")
+    file_size = models.BigIntegerField(null=True, blank=True)
+    file_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
     started_at = models.DateTimeField()
     completed_at = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
@@ -45,6 +49,8 @@ class ImportJob(TimeStampedModel):
         indexes = [
             models.Index(fields=["status"], name="intg_job_status_idx"),
             models.Index(fields=["source_config"], name="intg_job_source_idx"),
+            models.Index(fields=["source_config", "file_hash", "status"], name="intg_job_src_hash_status_idx"),
+            models.Index(fields=["source_config", "file_name", "status"], name="intg_job_src_name_status_idx"),
         ]
 
     def __str__(self):

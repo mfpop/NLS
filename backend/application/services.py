@@ -6,6 +6,18 @@ from application.models import ApplicationSetting
 from application.settings_registry import SETTING_DEFINITIONS, is_allowed_setting_key
 
 
+def get_setting_value(key: str, default: str = "") -> str:
+    """Read a typed application setting by key, returning the default if not found or invalid."""
+    try:
+        setting = ApplicationSetting.objects.get(key=key)
+        val = setting.value
+        if isinstance(val, dict):
+            return default
+        return str(val)
+    except ApplicationSetting.DoesNotExist:
+        return default
+
+
 class ApplicationSettingsError(ValueError):
     pass
 

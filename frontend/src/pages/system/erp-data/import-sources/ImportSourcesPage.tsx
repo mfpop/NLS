@@ -20,7 +20,9 @@ const TEST_PATH = gql`
 const JOB_STATUS = gql`
   query ImportJobsForSourceStatus($sourceId: String!) {
     importJobs(sourceId: $sourceId, status: "APPLIED") {
-      id fileName completedAt recordsCreated recordsUpdated
+      items {
+        id fileName completedAt recordsCreated recordsUpdated
+      }
     }
   }
 `;
@@ -67,22 +69,25 @@ export function ImportSourcesPage() {
   const [search, setSearch] = useState("");
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
   const [form, setForm] = useState<SourceFormData>(ef());
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [systemMsg, setSystemMsg] = useState<{ text: string; type: "error" | "success" } | null>(null);
   const [pathTestData, setPathTestData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, loading, refetch } = useQuery<{ importSourceConfigs: ImportSource[] }>(IMPORT_SOURCE_CONFIGS_QUERY);
+  const { data, loading, refetch } = useQuery<{ importSourceConfigs: { items: ImportSource[] } }>(IMPORT_SOURCE_CONFIGS_QUERY, {
+    variables: { isActive: showInactive ? undefined : true },
+  });
   const [createSource] = useMutation<any>(CREATE_IMPORT_SOURCE_CONFIG);
   const [updateSource] = useMutation<any>(UPDATE_IMPORT_SOURCE_CONFIG);
   const [archiveSource] = useMutation<any>(ARCHIVE_IMPORT_SOURCE_CONFIG);
   const [runPathTest, { loading: ptLoading }] = useLazyQuery<any>(TEST_PATH, { fetchPolicy: "network-only" });
   const { data: jd } = useQuery(JOB_STATUS, { variables: { sourceId: selectedSourceId || "" }, skip: !selectedSourceId });
 
-  const sources = data?.importSourceConfigs ?? [];
+  const sources = data?.importSourceConfigs?.items ?? [];
   const selected = useMemo(() => sources.find((s) => s.id === selectedSourceId) ?? null, [sources, selectedSourceId]);
-  const lastJob: any = useMemo(() => { const j: any[] = (jd as any)?.importJobs ?? []; return j[0] ?? null; }, [jd]);
+  const lastJob: any = useMemo(() => { const j: any[] = (jd as any)?.importJobs?.items ?? []; return j[0] ?? null; }, [jd]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sources;
@@ -256,6 +261,10 @@ export function ImportSourcesPage() {
                 <span className="mx-1 h-5 w-px bg-muted shrink-0" />
               </>
             )}
+            <button type="button" onClick={() => setShowInactive((v) => !v)} title="Toggle inactive sources" className={tb}>
+              <span className={`h-2 w-2 rounded-full ${showInactive ? "bg-muted-foreground/40" : "bg-success"}`} />
+              <span>{showInactive ? "Inactive" : "Active"}</span>
+            </button>
             {!isFormOpen && (
               <button type="button" onClick={addNew} title="Create a new import source" className={tb}><Plus className="h-4 w-4 stroke-current" /><span>New</span></button>
             )}

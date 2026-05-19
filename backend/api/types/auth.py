@@ -46,3 +46,36 @@ class LoginInput:
 class AuthPayload:
     token: str
     user: UserNode
+
+
+@strawberry.type
+class ForgotPasswordPayload:
+    message: str
+
+
+@strawberry.input
+class ResetPasswordInput:
+    token: str
+    new_password: str
+
+
+@strawberry.type
+class ResetPasswordPayload:
+    ok: bool
+    message: str
+
+
+@strawberry.input
+class RegisterInput:
+    username: str
+    email: str
+    password: str
+    first_name: str = ""
+    last_name: str = ""
+
+
+@strawberry.type
+class RegisterPayload:
+    ok: bool
+    message: str
+    user: UserNode | None = None

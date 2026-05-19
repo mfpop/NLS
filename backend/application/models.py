@@ -29,6 +29,24 @@ class ApplicationSetting(models.Model):
         return self.key
 
 
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["token"], name="pwd_reset_token_idx"),
+            models.Index(fields=["user", "is_used"], name="pwd_reset_user_used_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"Reset token for {self.user.username} (used={self.is_used})"
+
+
 class ImportSourceConfig(TimeStampedModel):
     class SourceType(models.TextChoices):
         EXCEL = "EXCEL", "Excel"

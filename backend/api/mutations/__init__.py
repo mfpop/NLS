@@ -5,6 +5,7 @@ from api.mutations.execution import ExecutionMutation
 from api.mutations.improvement import ImprovementMutation
 from api.mutations.manufacturing import ManufacturingMutation
 from api.mutations.integration import IntegrationMutation
+from api.mutations.auth import AuthMutation
 
 
 @strawberry.type
@@ -14,6 +15,7 @@ class Mutation(
     ExecutionMutation,
     ImprovementMutation,
     IntegrationMutation,
+    AuthMutation,
 ):
     """Root mutation — domain mutations are added here as they get implemented."""
 

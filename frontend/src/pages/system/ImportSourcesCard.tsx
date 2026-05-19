@@ -78,7 +78,7 @@ export function ImportSourcesCard() {
   const [form, setForm] = useState<ImportSourceConfigInput>(EMPTY_FORM);
   const [message, setMessage] = useState<string | null>(null);
 
-  const { data, loading, refetch } = useQuery<{ importSourceConfigs: ImportSourceConfig[] }>(
+  const { data, loading, refetch } = useQuery<{ importSourceConfigs: { items: ImportSourceConfig[] } }>(
     IMPORT_SOURCE_CONFIGS_QUERY,
     { fetchPolicy: "cache-and-network" },
   );
@@ -93,7 +93,7 @@ export function ImportSourcesCard() {
     refetchQueries: [IMPORT_SOURCE_CONFIGS_QUERY],
   });
 
-  const sources = useMemo(() => data?.importSourceConfigs ?? [], [data]);
+  const sources = useMemo(() => data?.importSourceConfigs?.items ?? [], [data]);
   const isSaving = creating || updating;
   const isEditing = editingId !== null;
 

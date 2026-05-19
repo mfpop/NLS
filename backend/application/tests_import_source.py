@@ -5,7 +5,7 @@ from django.test import TestCase, override_settings
 from api.mutations.application import ApplicationSettingsMutation
 from api.queries.application import ApplicationSettingsQuery
 from api.types.application import ImportSourceConfigInput, ImportSourceConfigUpdateInput
-from application.import_source_service import ImportSourceConfigError, ImportSourceConfigService
+from manufacturing.domain.import_source_config_service import ImportSourceConfigError, ImportSourceConfigService
 from application.models import ImportSourceConfig
 
 
@@ -75,7 +75,7 @@ class ImportSourceConfigServiceTests(TestCase):
         self.assertNotIn(disabled.id, ids)
 
     @override_settings(IMPORT_SOURCE_VALIDATE_PATHS=False)
-        def test_path_validation_can_be_skipped(self):
+    def test_path_validation_can_be_skipped(self):
         config = ImportSourceConfigService.create_config({
             "name": "Remote",
             "source_type": ImportSourceConfig.SourceType.EXCEL,
@@ -127,7 +127,7 @@ class ImportSourceConfigServiceTests(TestCase):
             })
         self.assertEqual(ctx.exception.code, "DUPLICATE")
 
-        def test_update_allows_updating_same_record(self):
+    def test_update_allows_updating_same_record(self):
         cfg = ImportSourceConfigService.create_config({
             "name": "Original",
             "source_type": ImportSourceConfig.SourceType.CSV,
@@ -141,23 +141,24 @@ class ImportSourceConfigServiceTests(TestCase):
         self.assertEqual(updated.id, cfg.id)
 
     def test_management_command_archives_duplicates_preferring_referenced(self):
-        # Create two duplicate active sources, create a job referencing the older one; command should keep referenced
-        a = ImportSourceConfigService.create_config({
-            "name": "DupManage",
-            "source_type": ImportSourceConfig.SourceType.CSV,
-            "domain": ImportSourceConfig.Domain.MATERIALS,
-            "path": "/data/mats",
-            "file_pattern": "*.csv",
-            "is_active": True,
-        })
-        b = ImportSourceConfigService.create_config({
-            "name": "DupManage",
-            "source_type": ImportSourceConfig.SourceType.CSV,
-            "domain": ImportSourceConfig.Domain.MATERIALS,
-            "path": "/data/mats/other",
-            "file_pattern": "*.csv",
-            "is_active": True,
-        })
+        # Create two duplicate active sources via ORM (bypassing service duplicate check
+        # since we're testing the management command, not the service).
+        a = ImportSourceConfig.objects.create(
+            name="DupManage",
+            source_type=ImportSourceConfig.SourceType.CSV,
+            domain=ImportSourceConfig.Domain.MATERIALS,
+            path="/data/mats",
+            file_pattern="*.csv",
+            is_active=True,
+        )
+        b = ImportSourceConfig.objects.create(
+            name="DupManage",
+            source_type=ImportSourceConfig.SourceType.CSV,
+            domain=ImportSourceConfig.Domain.MATERIALS,
+            path="/data/mats/other",
+            file_pattern="*.csv",
+            is_active=True,
+        )
         # Create an import job referencing 'a'
         from manufacturing.domain.import_job_service import ImportJobService
         job = ImportJobService.trigger(a.id, triggered_by="tester")
@@ -186,13 +187,14 @@ class ImportSourceGraphQLTests(TestCase):
             "file_pattern": "mat_*.xlsx",
         })
 
-    def test_graphql_list_uses_service(self):
-        with patch.object(ImportSourceConfigService, "list_configs", wraps=ImportSourceConfigService.list_configs) as mocked:
-            query = ApplicationSettingsQuery()
-            nodes = query.import_source_configs(domain=ImportSourceConfig.Domain.MATERIALS, is_active=True)
-            mocked.assert_called_once()
-        self.assertEqual(len(nodes), 1)
-        self.assertEqual(nodes[0].name, "GraphQL source")
+    def test_graphql_list_returns_paginated_result(self):
+        query = ApplicationSettingsQuery()
+        result = query.import_source_configs(domain=ImportSourceConfig.Domain.MATERIALS, is_active=True)
+        self.assertEqual(len(result.items), 1)
+        self.assertEqual(result.items[0].name, "GraphQL source")
+        self.assertEqual(result.page_info.total_count, 1)
+        self.assertEqual(result.page_info.offset, 0)
+        self.assertEqual(result.page_info.limit, 100)
 
     def test_graphql_create_calls_service_only(self):
         mutation = ApplicationSettingsMutation()

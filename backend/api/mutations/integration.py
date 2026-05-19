@@ -2,13 +2,19 @@ import strawberry
 from typing import Optional
 from strawberry.types import Info
 
+from api.permissions import ensure_access
 from api.types.integration import (
     MappingRuleInput, MappingRuleNode, MappingRulePayload,
     ImportJobPayload, ImportJobNode,
+    AttachFileInput,
     MutationError,
 )
-from manufacturing.domain.import_job_service import ImportJobService, ImportJobError
-from manufacturing.models import MappingRule
+from manufacturing.domain.import_job_service import ImportJobService, ImportJobError, ImportJobDuplicateError
+from manufacturing.domain.mapping_rule_service import MappingRuleService, MappingRuleError
+
+
+def _user(info):
+    return info.context.user
 
 
 @strawberry.type
@@ -16,8 +22,9 @@ class IntegrationMutation:
 
     @strawberry.mutation
     def trigger_import_job(
-        self, source_id: str, triggered_by: Optional[str] = None
+        self, info: Info, source_id: str, triggered_by: Optional[str] = None
     ) -> ImportJobPayload:
+        ensure_access(user=_user(info), action="trigger_import_job")
         try:
             job = ImportJobService.trigger(source_id, triggered_by=triggered_by)
             return ImportJobPayload(ok=True, job=ImportJobNode.from_db(job))
@@ -26,19 +33,66 @@ class IntegrationMutation:
 
     @strawberry.mutation
     def create_import_job(
-        self, source_id: str, file_name: str = "", file_path: str = "", triggered_by: Optional[str] = None
+        self, info: Info, source_id: str, file_name: Optional[str] = None, file_hash: Optional[str] = None, triggered_by: Optional[str] = None
     ) -> ImportJobPayload:
-        from manufacturing.domain.erp_import_service import ErpImportService, ErpImportError
+        ensure_access(user=_user(info), action="create_import_job")
         try:
-            job = ErpImportService.create_job(source_id, file_name, file_path, triggered_by)
+            job = ImportJobService.create_draft_job(
+                source_id,
+                file_name=file_name,
+                file_hash=file_hash,
+                triggered_by=triggered_by,
+            )
             return ImportJobPayload(ok=True, job=ImportJobNode.from_db(job))
-        except ErpImportError as e:
-            return ImportJobPayload(ok=False, errors=[MutationError(field=e.field or "sourceId", code=e.code, message=e.message)])
+        except ImportJobDuplicateError as e:
+            existing = ImportJobService.get(e.existing_job_id) if e.existing_job_id else None
+            return ImportJobPayload(
+                ok=False,
+                job=ImportJobNode.from_db(existing) if existing else None,
+                error_code=e.code,
+                message=e.message,
+                existing_job_id=existing.id if existing else None,
+                source_config_id=e.source_config_id,
+                file_name=e.file_name,
+            )
+        except ImportJobError as e:
+            return ImportJobPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def attach_import_file(
+        self, info: Info, job_id: str, input: AttachFileInput
+    ) -> ImportJobPayload:
+        ensure_access(user=_user(info), action="attach_import_file")
+        if not job_id:
+            return ImportJobPayload(ok=False, errors=[MutationError(field="jobId", code="REQUIRED", message="jobId is required")])
+        try:
+            job = ImportJobService.attach_file(
+                job_id,
+                file_name=input.file_name,
+                file_path=input.file_path,
+                file_size=input.file_size,
+                file_hash=input.file_hash,
+            )
+            return ImportJobPayload(ok=True, job=ImportJobNode.from_db(job))
+        except ImportJobDuplicateError as e:
+            existing = ImportJobService.get(e.existing_job_id) if e.existing_job_id else None
+            return ImportJobPayload(
+                ok=False,
+                job=ImportJobNode.from_db(existing) if existing else None,
+                error_code=e.code,
+                message=e.message,
+                existing_job_id=existing.id if existing else None,
+                source_config_id=e.source_config_id,
+                file_name=e.file_name,
+            )
+        except ImportJobError as e:
+            return ImportJobPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
 
     @strawberry.mutation
     def transition_import_job(
-        self, action: str, job_id: str, summary: Optional[str] = None
+        self, info: Info, action: str, job_id: str, summary: Optional[str] = None
     ) -> ImportJobPayload:
+        ensure_access(user=_user(info), action="transition_import_job")
         from manufacturing.domain.erp_import_service import ErpImportService, ErpImportError
         try:
             action_map = {
@@ -62,46 +116,49 @@ class IntegrationMutation:
             return ImportJobPayload(ok=False, errors=[MutationError(field=e.field or "jobId", code=e.code, message=e.message)])
 
     @strawberry.mutation
-    def create_mapping_rule(self, input: MappingRuleInput) -> MappingRulePayload:
-        domain = (input.domain or "").strip().upper()
-        source_field = (input.source_field or "").strip()
-        dest_field = (input.destination_field or "").strip()
-        if not source_field:
-            return MappingRulePayload(ok=False, errors=[MutationError(field="sourceField", code="REQUIRED", message="Source field is required")])
-        if not dest_field:
-            return MappingRulePayload(ok=False, errors=[MutationError(field="destinationField", code="REQUIRED", message="Destination field is required")])
-
-        rule = MappingRule.objects.create(
-            domain=domain,
-            source_field=source_field,
-            destination_field=dest_field,
-            transform_rule=input.transform_rule or None,
-            is_required=input.is_required or False,
-        )
-        return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+    def create_mapping_rule(self, info: Info, input: MappingRuleInput) -> MappingRulePayload:
+        ensure_access(user=_user(info), action="manage_mapping_rules")
+        try:
+            rule = MappingRuleService.create_from_dict({
+                "domain": input.domain,
+                "source_field": input.source_field,
+                "destination_field": input.destination_field,
+                "transform_rule": input.transform_rule,
+                "is_required": input.is_required,
+            })
+            return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+        except MappingRuleError as exc:
+            return MappingRulePayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
 
     @strawberry.mutation
-    def update_mapping_rule(self, id: str, input: MappingRuleInput) -> MappingRulePayload:
+    def update_mapping_rule(self, info: Info, id: str, input: MappingRuleInput) -> MappingRulePayload:
+        ensure_access(user=_user(info), action="manage_mapping_rules")
         try:
-            rule = MappingRule.objects.get(id=id)
-        except MappingRule.DoesNotExist:
-            return MappingRulePayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Mapping rule not found")])
-        rule.domain = (input.domain or rule.domain).strip().upper()
-        rule.source_field = (input.source_field or rule.source_field).strip()
-        rule.destination_field = (input.destination_field or rule.destination_field).strip()
-        if input.transform_rule is not None:
-            rule.transform_rule = input.transform_rule or None
-        if input.is_required is not None:
-            rule.is_required = input.is_required
-        rule.save()
-        return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+            rule = MappingRuleService.update_from_dict(id, {
+                "domain": input.domain,
+                "source_field": input.source_field,
+                "destination_field": input.destination_field,
+                "transform_rule": input.transform_rule,
+                "is_required": input.is_required,
+            })
+            return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+        except MappingRuleError as exc:
+            return MappingRulePayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
 
     @strawberry.mutation
-    def archive_mapping_rule(self, id: str) -> MappingRulePayload:
+    def archive_mapping_rule(self, info: Info, id: str) -> MappingRulePayload:
+        ensure_access(user=_user(info), action="manage_mapping_rules")
         try:
-            rule = MappingRule.objects.get(id=id)
-        except MappingRule.DoesNotExist:
-            return MappingRulePayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Mapping rule not found")])
-        rule.is_active = False
-        rule.save()
-        return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+            rule = MappingRuleService.archive(id)
+            return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+        except MappingRuleError as exc:
+            return MappingRulePayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+
+    @strawberry.mutation
+    def restore_mapping_rule(self, info: Info, id: str) -> MappingRulePayload:
+        ensure_access(user=_user(info), action="manage_mapping_rules")
+        try:
+            rule = MappingRuleService.restore(id)
+            return MappingRulePayload(ok=True, rule=MappingRuleNode.from_db(rule))
+        except MappingRuleError as exc:
+            return MappingRulePayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])

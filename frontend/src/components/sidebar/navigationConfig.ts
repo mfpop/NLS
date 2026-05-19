@@ -108,6 +108,7 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
           { type: "item", label: "Components", to: "/system/manufacturing-structure/components", icon: Layers },
           { type: "item", label: "Warehouses", to: "/system/warehouses", icon: Warehouse },
+          { type: "item", label: "Material Bins", to: "/system/material-bins", icon: Package },
           { type: "item", label: "Product Master Data", to: "/system/manufacturing-structure/product-master-data", icon: Package },
         ],
       },

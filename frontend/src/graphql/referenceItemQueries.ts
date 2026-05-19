@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const REFERENCE_ITEMS_QUERY = gql`
-  query ReferenceItems($tableType: String) {
-    referenceItems(tableType: $tableType, activeOnly: false) {
+  query ReferenceItems($tableType: String, $plantId: String, $productionLineId: String) {
+    referenceItems(tableType: $tableType, activeOnly: false, plantId: $plantId, productionLineId: $productionLineId) {
       id
       tableType
       code

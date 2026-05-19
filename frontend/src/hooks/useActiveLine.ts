@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
 import { useActiveLineId } from "@/stores/activeLineStore";
@@ -24,6 +24,12 @@ export function useActiveLine() {
     () => productionLines.find((line) => line.id === productionLineId) ?? null,
     [productionLineId, productionLines]
   );
+
+  useEffect(() => {
+    if (productionLineId && productionLines.length > 0 && !activeLine) {
+      setProductionLineId(null);
+    }
+  }, [activeLine, productionLineId, productionLines.length, setProductionLineId]);
 
   return {
     productionLineId,

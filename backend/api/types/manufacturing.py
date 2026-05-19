@@ -24,6 +24,7 @@ class MutationError:
     field: typing.Optional[str]
     code: str
     message: str
+    details: typing.Optional[str] = None
 
 
 # ── Profile ──
@@ -1471,6 +1472,54 @@ class ScheduleAssignmentPayload:
     errors: list[MutationError] = strawberry.field(default_factory=list)
 
 
+# ── Warehouse ──
+
+@strawberry.type
+class WarehouseNode:
+    id: strawberry.ID
+    plant_id: strawberry.ID = strawberry.field(name="plantId")
+    plant_name: str = strawberry.field(name="plantName")
+    code: str
+    name: str
+    warehouse_type: str = strawberry.field(name="warehouseType")
+    location: str
+    is_active: bool = strawberry.field(name="isActive")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj) -> "WarehouseNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            plant_id=strawberry.ID(str(obj.plant_id)),
+            plant_name=obj.plant.name if obj.plant else "",
+            code=obj.code,
+            name=obj.name,
+            warehouse_type=obj.warehouse_type,
+            location=obj.location or "",
+            is_active=obj.is_active,
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.input
+class WarehouseInput:
+    plant_id: str = strawberry.field(name="plantId")
+    code: str
+    name: str
+    warehouse_type: typing.Optional[str] = strawberry.field(name="warehouseType", default="GENERAL")
+    location: typing.Optional[str] = ""
+    is_active: typing.Optional[bool] = strawberry.field(name="isActive", default=True)
+
+
+@strawberry.type
+class WarehousePayload:
+    ok: bool
+    warehouse: typing.Optional[WarehouseNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
 # ── Mutation inputs ──
 
 @strawberry.input
@@ -1650,14 +1699,22 @@ class ResourceGroupInput:
 @strawberry.input
 class MaterialBinInput:
     plant_id: typing.Optional[str] = strawberry.field(name="plantId", default=None)
+    production_line_id: typing.Optional[str] = strawberry.field(name="productionLineId", default=None)
     resource_group_id: typing.Optional[str] = strawberry.field(name="resourceGroupId", default=None)
     code: str
     name: str
+    description: typing.Optional[str] = ""
     bin_type: str = strawberry.field(name="binType")
     material_id: typing.Optional[str] = strawberry.field(name="materialId", default=None)
+    material_group: typing.Optional[str] = strawberry.field(name="materialGroup", default="")
     capacity: typing.Optional[float] = 0
     uom_id: typing.Optional[str] = strawberry.field(name="uomId", default=None)
+    replenishment_mode: typing.Optional[str] = strawberry.field(name="replenishmentMode", default=None)
+    fifo_enabled: typing.Optional[bool] = strawberry.field(name="fifoEnabled", default=False)
+    supermarket_enabled: typing.Optional[bool] = strawberry.field(name="supermarketEnabled", default=False)
     location_code: typing.Optional[str] = strawberry.field(name="locationCode", default="")
+    location_reference: typing.Optional[str] = strawberry.field(name="locationReference", default="")
+    warehouse_code: typing.Optional[str] = strawberry.field(name="warehouseCode", default="")
     is_active: typing.Optional[bool] = strawberry.field(name="isActive", default=True)
 
 @strawberry.input
@@ -2036,18 +2093,27 @@ class MaterialBinNode:
     id: strawberry.ID
     plant_id: strawberry.ID = strawberry.field(name="plantId")
     plant_name: str = strawberry.field(name="plantName")
+    production_line_id: typing.Optional[strawberry.ID] = strawberry.field(name="productionLineId", default=None)
+    production_line_name: typing.Optional[str] = strawberry.field(name="productionLineName", default=None)
     resource_group_id: typing.Optional[strawberry.ID] = strawberry.field(name="resourceGroupId", default=None)
     resource_group_name: typing.Optional[str] = strawberry.field(name="resourceGroupName", default=None)
     code: str
     name: str
+    description: str
     bin_type: str = strawberry.field(name="binType")
     material_id: typing.Optional[strawberry.ID] = strawberry.field(name="materialId", default=None)
     material_code: typing.Optional[str] = strawberry.field(name="materialCode", default=None)
     material_name: typing.Optional[str] = strawberry.field(name="materialName", default=None)
+    material_group: str = strawberry.field(name="materialGroup")
     capacity: float
     uom_id: typing.Optional[strawberry.ID] = strawberry.field(name="uomId", default=None)
     uom_name: typing.Optional[str] = strawberry.field(name="uomName", default=None)
+    replenishment_mode: typing.Optional[str] = strawberry.field(name="replenishmentMode", default=None)
+    fifo_enabled: bool = strawberry.field(name="fifoEnabled")
+    supermarket_enabled: bool = strawberry.field(name="supermarketEnabled")
     location_code: str = strawberry.field(name="locationCode")
+    location_reference: str = strawberry.field(name="locationReference")
+    warehouse_code: str = strawberry.field(name="warehouseCode")
     is_active: bool = strawberry.field(name="isActive")
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
@@ -2058,18 +2124,27 @@ class MaterialBinNode:
             id=strawberry.ID(str(obj.id)),
             plant_id=strawberry.ID(str(obj.plant_id)),
             plant_name=obj.plant.name if obj.plant_id else "",
+            production_line_id=strawberry.ID(str(obj.production_line_id)) if obj.production_line_id else None,
+            production_line_name=obj.production_line.name if obj.production_line_id else None,
             resource_group_id=strawberry.ID(str(obj.resource_group_id)) if obj.resource_group_id else None,
             resource_group_name=obj.resource_group.name if obj.resource_group_id else None,
             code=obj.code,
             name=obj.name,
+            description=obj.description,
             bin_type=obj.bin_type,
             material_id=strawberry.ID(str(obj.material_id)) if obj.material_id else None,
             material_code=obj.material.code if obj.material_id else None,
             material_name=obj.material.name if obj.material_id else None,
+            material_group=obj.material_group,
             capacity=obj.capacity,
             uom_id=strawberry.ID(str(obj.uom_id)) if obj.uom_id else None,
             uom_name=obj.uom.name if obj.uom_id else None,
+            replenishment_mode=obj.replenishment_mode,
+            fifo_enabled=obj.fifo_enabled,
+            supermarket_enabled=obj.supermarket_enabled,
             location_code=obj.location_code,
+            location_reference=obj.location_reference,
+            warehouse_code=obj.warehouse_code,
             is_active=obj.is_active,
             created_at=_iso(obj.created_at),
             updated_at=_iso(obj.updated_at),

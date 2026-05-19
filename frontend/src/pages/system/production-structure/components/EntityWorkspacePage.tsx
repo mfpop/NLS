@@ -60,7 +60,7 @@ export function EntityWorkspacePage({ toolbar, list, detail, footer, hideList = 
         </div>
       </div>
       {footer && (
-        <div className={`shrink-0 border-t border-border ${theme.subHeader} flex h-14 items-center px-5 text-xs font-medium ${theme.textSecondary}`}>
+        <div className={`shrink-0 border-t border-border ${theme.subHeader} flex h-10 items-center px-4 text-xs font-medium ${theme.textSecondary}`}>
           {footer}
         </div>
       )}

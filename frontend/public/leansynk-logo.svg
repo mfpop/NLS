@@ -1,20 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 240" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720 240" role="img" aria-labelledby="title desc">
   <title id="title">LeanSynk Logo</title>
   <desc id="desc">LeanSynk symbol with logotype and tagline</desc>
-  <rect width="720" height="240" fill="#f1f1f1"/>
-
-  <!-- Symbol -->
-  <g fill="none" stroke="#1f3f82" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="90" cy="80" r="14" fill="#f1f1f1"/>
-    <circle cx="90" cy="170" r="14" fill="#f1f1f1"/>
-    <circle cx="180" cy="80" r="14" fill="#f1f1f1"/>
-
-    <path d="M90 94V156"/>
-    <path d="M104 170H140C170 170 196 156 210 132"/>
-    <path d="M90 114H124C149 114 172 104 188 86"/>
-  </g>
-
-  <!-- Wordmark -->
-  <text x="235" y="122" font-size="72" font-family="Poppins, Montserrat, Segoe UI, Arial, sans-serif" font-weight="700" fill="#1d336f">LeanSynk</text>
-  <text x="236" y="176" font-size="36" letter-spacing="1" font-family="Montserrat, Segoe UI, Arial, sans-serif" font-weight="400" fill="#3f3f46">LEAN MANUFACTURING</text>
+  <rect width="720" height="240" fill="#f8faf9"/>
+  <image xlink:href="/logo/icon-128.png" x="28" y="56" width="128" height="128" />
+  <text x="188" y="118" font-size="56" font-family="Poppins, Montserrat, Segoe UI, Arial, sans-serif" font-weight="700" fill="#426B54">LeanSynk</text>
+  <text x="189" y="162" font-size="22" letter-spacing="2.5" font-family="Montserrat, Segoe UI, Arial, sans-serif" font-weight="500" fill="#5c6b63">LEAN MANUFACTURING</text>
 </svg>

@@ -49,6 +49,12 @@ export function ActiveLineSelector() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  useEffect(() => {
+    if (activeLineId && dbLines.length > 0 && !activeLine) {
+      setActiveLineId(null);
+    }
+  }, [activeLineId, dbLines, activeLine, setActiveLineId]);
+
   const label = useMemo(() => {
     if (!activeLine) return "All Lines";
     return `${(activePlant?.name || activeLine.plantName || "Plant").slice(0, 16)} / ${activeLine.name.slice(0, 20)}`;
@@ -68,9 +74,9 @@ export function ActiveLineSelector() {
   }, [setActiveLineId]);
 
   return (
-      <div ref={ref} className={`relative shrink-0 px-3 pt-2 pb-1 ${theme.sectionDivider} ${theme.page}`}>
+      <div ref={ref} className={`relative shrink-0 px-3 pt-1 pb-0.5 ${theme.sectionDivider} ${theme.page}`}>
       <button type="button" onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between w-full h-10 rounded-md px-2.5 text-[15px] font-medium ${theme.surfaceBg} ${theme.textPrimary} ${theme.interactiveRow} transition-colors`}
+        className={`flex items-center justify-between w-full h-9 rounded-md px-2.5 text-[13px] font-medium ${theme.surfaceBg} ${theme.textPrimary} ${theme.interactiveRow} transition-colors`}
       >
         <span className="truncate">{label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 stroke-current transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />

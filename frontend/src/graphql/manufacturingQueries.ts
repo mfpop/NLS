@@ -136,18 +136,27 @@ export const MATERIAL_BIN_FIELDS = `
   id
   plantId
   plantName
+  productionLineId
+  productionLineName
   resourceGroupId
   resourceGroupName
   code
   name
+  description
   binType
   materialId
   materialCode
   materialName
+  materialGroup
   capacity
   uomId
   uomName
+  replenishmentMode
+  fifoEnabled
+  supermarketEnabled
   locationCode
+  locationReference
+  warehouseCode
   isActive
   createdAt
   updatedAt
@@ -251,8 +260,32 @@ export const RESOURCE_GROUP_QUERY = gql`
 `;
 
 export const MATERIAL_BINS_QUERY = gql`
-  query MaterialBins($plantId: String, $resourceGroupId: String, $binType: String, $isActive: Boolean, $limit: Int, $offset: Int) {
-    materialBins(plantId: $plantId, resourceGroupId: $resourceGroupId, binType: $binType, isActive: $isActive, limit: $limit, offset: $offset) {
+  query MaterialBins($plantId: String, $warehouseCode: String, $productionLineId: String, $resourceGroupId: String, $binType: String, $replenishmentMode: String, $isActive: Boolean, $search: String, $limit: Int, $offset: Int) {
+    materialBins(plantId: $plantId, warehouseCode: $warehouseCode, productionLineId: $productionLineId, resourceGroupId: $resourceGroupId, binType: $binType, replenishmentMode: $replenishmentMode, isActive: $isActive, search: $search, limit: $limit, offset: $offset) {
+      ${MATERIAL_BIN_FIELDS}
+    }
+  }
+`;
+
+export const MATERIAL_BINS_BY_PLANT_QUERY = gql`
+  query MaterialBinsByPlant($plantId: String!) {
+    materialBinsByPlant(plantId: $plantId) {
+      ${MATERIAL_BIN_FIELDS}
+    }
+  }
+`;
+
+export const MATERIAL_BINS_BY_WAREHOUSE_QUERY = gql`
+  query MaterialBinsByWarehouse($warehouseCode: String!) {
+    materialBinsByWarehouse(warehouseCode: $warehouseCode) {
+      ${MATERIAL_BIN_FIELDS}
+    }
+  }
+`;
+
+export const MATERIAL_BINS_BY_RESOURCE_GROUP_QUERY = gql`
+  query MaterialBinsByResourceGroup($resourceGroupId: String!) {
+    materialBinsByResourceGroup(resourceGroupId: $resourceGroupId) {
       ${MATERIAL_BIN_FIELDS}
     }
   }

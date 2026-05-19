@@ -91,24 +91,35 @@ export const INVENTORY_LOCATIONS_QUERY = gql`
 `;
 
 export const MATERIAL_BINS_QUERY = gql`
-  query MaterialBins($plantId: String, $resourceGroupId: String, $binType: String, $isActive: Boolean, $limit: Int, $offset: Int) {
-    materialBins(plantId: $plantId, resourceGroupId: $resourceGroupId, binType: $binType, isActive: $isActive, limit: $limit, offset: $offset) {
+  query MaterialBins($plantId: String, $warehouseCode: String, $productionLineId: String, $resourceGroupId: String, $binType: String, $replenishmentMode: String, $isActive: Boolean, $search: String, $limit: Int, $offset: Int) {
+    materialBins(plantId: $plantId, warehouseCode: $warehouseCode, productionLineId: $productionLineId, resourceGroupId: $resourceGroupId, binType: $binType, replenishmentMode: $replenishmentMode, isActive: $isActive, search: $search, limit: $limit, offset: $offset) {
       id
       plantId
       plantName
+      productionLineId
+      productionLineName
       resourceGroupId
       resourceGroupName
       code
       name
+      description
       binType
       materialId
       materialCode
       materialName
+      materialGroup
       capacity
       uomId
       uomName
+      replenishmentMode
+      fifoEnabled
+      supermarketEnabled
       locationCode
+      locationReference
+      warehouseCode
       isActive
+      createdAt
+      updatedAt
     }
   }
 `;

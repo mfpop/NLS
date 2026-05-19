@@ -468,22 +468,73 @@ class InventoryLocation(TimeStampedModel):
         return f"{self.name} ({self.location_type})"
 
 
+class WarehouseType(models.TextChoices):
+    RM = "RM", "Raw Material"
+    WIP = "WIP", "WIP"
+    FG = "FG", "Finished Goods"
+    SCRAP = "SCRAP", "Scrap"
+    QUARANTINE = "QUARANTINE", "Quarantine"
+    SPARES = "SPARES", "Spares"
+    GENERAL = "GENERAL", "General"
+
+
+class Warehouse(TimeStampedModel):
+    plant = models.ForeignKey(
+        "manufacturing.Plant", on_delete=models.PROTECT,
+        related_name="warehouses",
+    )
+    code = models.CharField(max_length=50)
+    name = models.CharField(max_length=200)
+    warehouse_type = models.CharField(max_length=30, choices=WarehouseType.choices, default=WarehouseType.GENERAL)
+    location = models.CharField(max_length=200, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "manufacturing_warehouse"
+        ordering = ["plant", "code"]
+        constraints = [
+            models.UniqueConstraint(fields=["plant", "code"], name="uq_warehouse_plant_code"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
+class ReplenishmentMode(models.TextChoices):
+    MANUAL = "MANUAL", "Manual"
+    KANBAN = "KANBAN", "Kanban"
+    CONWIP = "CONWIP", "Conwip"
+    PULL = "PULL", "Pull"
+    PUSH = "PUSH", "Push"
+    REORDER_POINT = "REORDER_POINT", "Reorder Point"
+    MIN_MAX = "MIN_MAX", "Min/Max"
+
+
 class MaterialBinType(models.TextChoices):
     RM = "RM", "Raw Material"
     INPUT = "INPUT", "Input"
     OUTPUT = "OUTPUT", "Output"
     WIP = "WIP", "WIP"
-    SUPERMARKET = "SUPERMARKET", "Supermarket"
     FIFO = "FIFO", "FIFO"
+    SUPERMARKET = "SUPERMARKET", "Supermarket"
     FG = "FG", "Finished Goods"
     SCRAP = "SCRAP", "Scrap"
     QUARANTINE = "QUARANTINE", "Quarantine"
+    SPARES = "SPARES", "Spares"
+    LINE_SIDE = "LINE_SIDE", "Line Side"
 
 
 class MaterialBin(TimeStampedModel):
     plant = models.ForeignKey(
         "manufacturing.Plant", on_delete=models.PROTECT,
         related_name="material_bins",
+    )
+    production_line = models.ForeignKey(
+        "manufacturing.ProductionLine", on_delete=models.PROTECT,
+        related_name="material_bins",
+        null=True, blank=True,
     )
     resource_group = models.ForeignKey(
         "manufacturing.ResourceGroup", on_delete=models.PROTECT,
@@ -492,18 +543,32 @@ class MaterialBin(TimeStampedModel):
     )
     code = models.CharField(max_length=50)
     name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
     bin_type = models.CharField(max_length=30, choices=MaterialBinType.choices)
     material = models.ForeignKey(
         Material, on_delete=models.SET_NULL,
         related_name="material_bins",
         null=True, blank=True,
     )
+    material_group = models.CharField(max_length=100, blank=True, default="")
     capacity = models.FloatField(default=0)
     uom = models.ForeignKey(
         "manufacturing.ReferenceValue", on_delete=models.SET_NULL,
         null=True, blank=True, related_name="+",
     )
+    replenishment_mode = models.CharField(
+        max_length=30, choices=ReplenishmentMode.choices,
+        null=True, blank=True,
+    )
+    fifo_enabled = models.BooleanField(default=False)
+    supermarket_enabled = models.BooleanField(default=False)
     location_code = models.CharField(max_length=80, blank=True, default="")
+    location_reference = models.CharField(max_length=200, blank=True, default="")
+    # TODO: warehouse_code was migrated to Warehouse FK (see docs/MATERIAL_BIN_MIGRATION_NOTES.md).
+    warehouse = models.ForeignKey(
+        "manufacturing.Warehouse", on_delete=models.PROTECT,
+        related_name="material_bins", null=True, blank=True,
+    )
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -516,13 +581,29 @@ class MaterialBin(TimeStampedModel):
         indexes = [
             models.Index(fields=["plant", "bin_type", "resource_group", "material"], name="mfg_bin_scope_idx"),
             models.Index(fields=["plant", "is_active"], name="mfg_bin_plant_active_idx"),
+            models.Index(fields=["plant", "production_line"], name="mfg_bin_prod_line_idx"),
         ]
 
     def clean(self):
+        # Validate production_line and resource_group plant consistency
+        if self.production_line_id and self.plant_id and self.production_line.plant_id != self.plant_id:
+            raise ValidationError("Material bin production line must belong to the same plant.")
         if self.resource_group_id and self.plant_id and self.resource_group.department.plant_id != self.plant_id:
-            raise ValidationError("Material bin and resource group must belong to the same plant.")
+            raise ValidationError("Material bin resource group must belong to the same plant.")
+        # Warehouse must belong to same plant (no cross-plant assignment)
+        if getattr(self, "warehouse_id", None) and self.plant_id and self.warehouse and self.warehouse.plant_id != self.plant_id:
+            raise ValidationError("Material bin warehouse must belong to the same plant.")
         if self.capacity is not None and self.capacity < 0:
             raise ValidationError("Material bin capacity cannot be negative.")
+        # Enforce ownership rules by bin type
+        if self.bin_type in (MaterialBinType.RM, MaterialBinType.FG, MaterialBinType.SCRAP, MaterialBinType.QUARANTINE) and not getattr(self, "warehouse_id", None):
+            raise ValidationError(f"{self.get_bin_type_display()} bins should reference a warehouse.")
+        if self.bin_type in (MaterialBinType.INPUT, MaterialBinType.OUTPUT, MaterialBinType.WIP, MaterialBinType.LINE_SIDE) and not self.resource_group_id and not self.production_line_id:
+            raise ValidationError(f"{self.get_bin_type_display()} bins should belong to a resource group or production flow.")
+
+    @property
+    def warehouse_code(self):
+        return self.warehouse.code if self.warehouse else ""
 
     def save(self, *args, **kwargs):
         self.full_clean()

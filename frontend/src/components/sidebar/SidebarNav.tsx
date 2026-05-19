@@ -8,15 +8,35 @@ import { sidebarNavTokens } from "./sidebarStyles";
 import { useSidebarStore } from "@/stores/sidebar";
 import type { SidebarSectionId } from "@/stores/sidebar";
 
+function nestedGroupForRoute(pathname: string): string | null {
+  if (pathname.startsWith("/system/production-structure") || pathname.startsWith("/system/warehouses") || pathname.startsWith("/system/product-master-data") || pathname.startsWith("/system/material-bins")) return "Manufacturing Structure";
+  if (pathname.startsWith("/system/erp-data")) return "ERP Data";
+  if (pathname.startsWith("/system/diagnostics") || pathname.startsWith("/system/application-settings") || pathname.startsWith("/docs/")) return "Application";
+  return null;
+}
+
 export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const { pathname } = useLocation();
   const openSection = useSidebarStore((s) => s.openSection);
+  const openNestedGroup = useSidebarStore((s) => s.openNestedGroup);
   const setOpenSection = useSidebarStore((s) => s.setOpenSection);
+  const setOpenNestedGroup = useSidebarStore((s) => s.setOpenNestedGroup);
+  const consumeSuppressRouteOpen = useSidebarStore((s) => s.consumeSuppressRouteOpen);
+  const routeSection = sectionFromPath(pathname);
 
   useEffect(() => {
-    const s = sectionFromPath(pathname);
-    if (s) setOpenSection(s as SidebarSectionId);
-  }, [pathname, setOpenSection]);
+    if (consumeSuppressRouteOpen()) {
+      return;
+    }
+    if (pathname === "/") {
+      setOpenSection(null);
+      setOpenNestedGroup(null);
+      return;
+    }
+    if (routeSection) setOpenSection(routeSection as SidebarSectionId);
+    const routeNested = nestedGroupForRoute(pathname);
+    setOpenNestedGroup(routeNested);
+  }, [pathname, routeSection, setOpenSection, setOpenNestedGroup, consumeSuppressRouteOpen]);
 
   return (
     <nav className={sidebarNavTokens.nav} aria-label="Main navigation">
@@ -33,7 +53,12 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             items={entry.items}
             pathname={pathname}
             openSection={openSection}
-            onToggle={(id) => setOpenSection(openSection === id ? null : id as SidebarSectionId)}
+            openNestedGroup={openNestedGroup}
+            onToggle={(id) => {
+              setOpenSection(openSection === id ? null : id as SidebarSectionId);
+              setOpenNestedGroup(null);
+            }}
+            onNestedToggle={setOpenNestedGroup}
             onNavigate={onNavigate}
           />
         );

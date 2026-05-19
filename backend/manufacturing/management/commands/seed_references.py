@@ -462,6 +462,27 @@ CATEGORIES = {
             {"code": "TE-33", "name": "TE-33 Medium-Duty Tuk-A-Way", "sort_order": 37, "metadata": {"family": "TUKAWAY"}},
         ],
     },
+    "container_type": {
+        "name": "Container Type",
+        "description": "Material handling container types used for storage, transport, and workstation organization",
+        "values": [
+            {"code": "TOTE", "name": "Tote Box", "description": "Standard plastic tote for small-to-medium parts, stackable with lid options", "usage_context": "Material handling, workstation storage", "sort_order": 10, "metadata": {"color": "blue"}},
+            {"code": "BIN", "name": "Bin", "description": "Small parts bin for organized component storage on workstations and shelving", "usage_context": "Workstation organization, small parts storage", "sort_order": 15, "metadata": {"color": "emerald"}},
+            {"code": "BSKT", "name": "Basket", "description": "Wire or plastic basket for parts handling, good for heat treatment or washing", "usage_context": "Parts handling, process transport", "sort_order": 18, "metadata": {"color": "amber"}},
+            {"code": "PALLET", "name": "Pallet", "description": "Standard shipping pallet (48x40 or EUR) for bulk material transport and storage", "usage_context": "Bulk transport, warehouse storage", "sort_order": 20, "metadata": {"color": "orange"}},
+            {"code": "RACK", "name": "Rack", "description": "Purpose-built material handling rack for specialized part geometries", "usage_context": "Material handling, specialty parts", "sort_order": 25, "metadata": {"color": "violet"}},
+            {"code": "BOX", "name": "Corrugated Box", "description": "Cardboard or corrugated box for lightweight parts and finished goods", "usage_context": "Packaging, finished goods", "sort_order": 28, "metadata": {"color": "cyan"}},
+            {"code": "CRATE", "name": "Wooden Crate", "description": "Heavy-duty wooden crate for large or heavy parts and equipment", "usage_context": "Heavy parts, equipment transport", "sort_order": 30, "metadata": {"color": "indigo"}},
+            {"code": "DRUM", "name": "Drum", "description": "55-gallon or 30-gallon drum for liquids, powders, and bulk materials", "usage_context": "Liquids, bulk materials storage", "sort_order": 35, "metadata": {"color": "rose"}},
+            {"code": "IBC", "name": "IBC Tote", "description": "Intermediate Bulk Container (275-330 gal) for liquids and bulk materials", "usage_context": "Bulk liquids, chemical storage", "sort_order": 40, "metadata": {"color": "slate"}},
+            {"code": "CART", "name": "Rolling Cart", "description": "Rolling cart for in-process material movement between workstations", "usage_context": "In-process material movement", "sort_order": 45, "metadata": {"color": "blue"}},
+            {"code": "HOPPER", "name": "Hopper", "description": "Hopper or tote for bulk material dispensing of consumables and small parts", "usage_context": "Bulk dispensing, consumables", "sort_order": 50, "metadata": {"color": "emerald"}},
+            {"code": "SILO", "name": "Silo", "description": "Outdoor or indoor silo for bulk raw material storage of grains, pellets, powders", "usage_context": "Bulk raw material storage", "sort_order": 55, "metadata": {"color": "amber"}},
+            {"code": "TANK", "name": "Tank", "description": "Storage tank for liquids, chemicals, and bulk fluids", "usage_context": "Liquid storage, chemical storage", "sort_order": 60, "metadata": {"color": "orange"}},
+            {"code": "GONDOLA", "name": "Gondola", "description": "Large metal gondola for heavy bulk parts and scrap material", "usage_context": "Heavy bulk parts, scrap handling", "sort_order": 65, "metadata": {"color": "violet"}},
+            {"code": "DUNNAGE", "name": "Dunnage Tray", "description": "Custom-molded dunnage tray for protecting sensitive parts during transport", "usage_context": "Sensitive parts, protective transport", "sort_order": 70, "metadata": {"color": "cyan"}},
+        ],
+    },
 }
 
 
@@ -499,15 +520,20 @@ class Command(BaseCommand):
 
             for val_data in cat_data["values"]:
                 metadata = val_data.get("metadata", {})
+                defaults: dict = {
+                    "name": val_data["name"],
+                    "sort_order": val_data.get("sort_order", 0),
+                    "is_active": True,
+                    "metadata": metadata,
+                }
+                if "description" in val_data:
+                    defaults["description"] = val_data["description"]
+                if "usage_context" in val_data:
+                    defaults["usage_context"] = val_data["usage_context"]
                 val, val_created = ReferenceValue.objects.update_or_create(
                     category=cat,
                     code=val_data["code"],
-                    defaults={
-                        "name": val_data["name"],
-                        "sort_order": val_data.get("sort_order", 0),
-                        "is_active": True,
-                        "metadata": metadata,
-                    },
+                    defaults=defaults,
                 )
                 if val_created:
                     self.stdout.write(f"    Created value: {val.name}")

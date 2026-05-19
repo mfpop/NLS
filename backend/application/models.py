@@ -1,5 +1,7 @@
 from django.db import models
 
+from shared.models.base import TimeStampedModel
+
 
 class ApplicationSetting(models.Model):
     class ValueType(models.TextChoices):
@@ -25,3 +27,40 @@ class ApplicationSetting(models.Model):
 
     def __str__(self) -> str:
         return self.key
+
+
+class ImportSourceConfig(TimeStampedModel):
+    class SourceType(models.TextChoices):
+        EXCEL = "EXCEL", "Excel"
+        CSV = "CSV", "CSV"
+        ERP_EXPORT = "ERP_EXPORT", "ERP export"
+
+    class Domain(models.TextChoices):
+        PLANT_STRUCTURE = "PLANT_STRUCTURE", "Plant structure"
+        MATERIALS = "MATERIALS", "Materials"
+        BOM = "BOM", "BOM"
+        ROUTING = "ROUTING", "Routing"
+        SCHEDULES = "SCHEDULES", "Schedules"
+        INVENTORY = "INVENTORY", "Inventory"
+
+    name = models.CharField(max_length=120)
+    source_type = models.CharField(max_length=16, choices=SourceType.choices)
+    domain = models.CharField(max_length=32, choices=Domain.choices)
+    path = models.CharField(max_length=512)
+    file_pattern = models.CharField(max_length=120)
+    archive_path = models.CharField(max_length=512, blank=True, default="")
+    error_path = models.CharField(max_length=512, blank=True, default="")
+    is_active = models.BooleanField(default=True)
+    is_archived = models.BooleanField(default=False)
+    polling_interval_minutes = models.PositiveIntegerField(null=True, blank=True)
+    last_checked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["domain", "name"]
+        indexes = [
+            models.Index(fields=["domain", "is_active"], name="import_src_domain_active_idx"),
+            models.Index(fields=["is_archived"], name="import_src_archived_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.domain})"

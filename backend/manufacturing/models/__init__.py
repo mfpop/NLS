@@ -11,7 +11,8 @@ from .reference import ReferenceCategory, ReferenceValue, ResourceType, VisualId
 from .routing import (
     ProductFamily, ProductModel, ProductVariant, PartNumber,
     ProcessFlow, ProcessStep, Routing, RoutingStep, RoutingStatus, ScheduleSource,
-    Material, MaterialState, BOM, BOMItem, InventoryLocation, InventoryLocationType, MaterialBin, MaterialBinType,
+    Material, MaterialState, BOM, BOMItem, InventoryLocation, InventoryLocationType,
+    MaterialBin, MaterialBinType, ReplenishmentMode, Warehouse,
     OperationInput, OperationOutput, MaterialMovementRule, MaterialMovementRuleType,
     MaterialMovement, MaterialMovementType,
 )
@@ -27,6 +28,8 @@ from .capacity import (
 )
 from .profile import Profile
 from .role import UserRole
+
+from .integration import ImportJob, ImportValidationError, MappingRule, ImportCompareResult, ImportAuditLog
 
 # Legacy models (keep for migration compatibility)
 from .reference_table import ReferenceTable
@@ -69,6 +72,8 @@ __all__ = [
     "InventoryLocationType",
     "MaterialBin",
     "MaterialBinType",
+    "ReplenishmentMode",
+    "Warehouse",
     "OperationInput",
     "OperationOutput",
     "MaterialMovementRule",
@@ -95,6 +100,10 @@ __all__ = [
     "OperatorAssignment",
     "Profile",
     "UserRole",
+    # Integration
+    "ImportJob",
+    "ImportValidationError",
+    "MappingRule",
     # Legacy
     "ReferenceTable",
     "ReferenceItem",

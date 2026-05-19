@@ -84,6 +84,7 @@ export const theme = {
   entityIconDept: "text-entity-department",
   entityIconGroup: "text-entity-resource-group",
   entityIconResource: "text-entity-resource",
+  entityIconWarehouse: "text-entity-warehouse",
 
   toolbarBg: "bg-toolbar/85",
   subCard: "bg-muted/45",

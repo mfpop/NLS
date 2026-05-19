@@ -10,12 +10,18 @@ import type { CapacityConstraint, CapacityLoadRow, CapacityPlan, CapacityYamazum
 import type { ProductionLine } from "@/types/productionLine";
 import { theme } from "@/styles/themeTokens";
 
-type TabKey = "overview" | "load" | "yamazumi" | "constraints" | "scenarios";
+type TabKey = "overview" | "load" | "yamazumi" | "line-balancing" | "bottleneck-analysis" | "operator-allocation" | "takt-vs-cycle" | "capacity-loss" | "workload-distribution" | "constraints" | "scenarios";
 
 const tabs: Array<{ key: TabKey; label: string; path: string }> = [
   { key: "overview", label: "Overview", path: "/plan/capacity" },
   { key: "load", label: "Capacity Load", path: "/plan/capacity/load" },
   { key: "yamazumi", label: "Yamazumi", path: "/plan/capacity/yamazumi" },
+  { key: "line-balancing", label: "Line Balancing", path: "/plan/capacity/line-balancing" },
+  { key: "bottleneck-analysis", label: "Bottleneck Analysis", path: "/plan/capacity/bottleneck-analysis" },
+  { key: "operator-allocation", label: "Operator Allocation", path: "/plan/capacity/operator-allocation" },
+  { key: "takt-vs-cycle", label: "Takt vs Cycle", path: "/plan/capacity/takt-vs-cycle" },
+  { key: "capacity-loss", label: "Capacity Loss", path: "/plan/capacity/capacity-loss" },
+  { key: "workload-distribution", label: "Workload Distribution", path: "/plan/capacity/workload-distribution" },
   { key: "constraints", label: "Constraints", path: "/plan/capacity/constraints" },
   { key: "scenarios", label: "Scenarios", path: "/plan/capacity/scenarios" },
 ];
@@ -249,6 +255,100 @@ function ScenariosTab({ planId, onCreateScenario }: { planId?: string | null; on
   );
 }
 
+function CapacityTabShell({ title, description, children }: { title: string; description: string; children?: React.ReactNode }) {
+  return (
+    <div className={`rounded-xl p-4 ${theme.card}`}>
+      <h3 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h3>
+      <p className={`mt-1 mb-4 text-xs ${theme.textSecondary}`}>{description}</p>
+      {children || <div className={`py-8 text-center text-xs ${theme.textMuted}`}>Configure capacity inputs to populate this view.</div>}
+    </div>
+  );
+}
+
+function LineBalancingTab({ plan }: { plan?: CapacityPlan | null }) {
+  const result = plan?.result;
+  return (
+    <CapacityTabShell title="Line Balancing" description="Balance workload across workstations and operators to minimize idle time and maximize throughput.">
+      {result ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Stat label="Balance Loss" value={result.balanceLossPercent !== null ? `${result.balanceLossPercent.toFixed(1)}%` : "-"} warn={(result.balanceLossPercent ?? 0) > 20} />
+          <Stat label="Operators Required" value={String(result.operatorsRequired ?? "-")} />
+          <Stat label="Bottleneck" value={result.bottleneckStepName || result.bottleneckResourceName || "-"} />
+        </div>
+      ) : null}
+    </CapacityTabShell>
+  );
+}
+
+function BottleneckAnalysisTab({ plan }: { plan?: CapacityPlan | null }) {
+  return (
+    <CapacityTabShell title="Bottleneck Analysis" description="Identify and analyze constraints that limit throughput in the production system.">
+      {plan?.result?.bottleneckResourceName ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Stat label="Bottleneck Step" value={plan.result.bottleneckStepName || "-"} />
+          <Stat label="Bottleneck Resource" value={plan.result.bottleneckResourceName || "-"} />
+        </div>
+      ) : null}
+    </CapacityTabShell>
+  );
+}
+
+function OperatorAllocationTab({ plan }: { plan?: CapacityPlan | null }) {
+  return (
+    <CapacityTabShell title="Operator Allocation" description="Assign operators to workstations based on workload, skill requirements, and takt time.">
+      {plan?.result?.operatorsRequired ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Stat label="Operators Required" value={String(plan.result.operatorsRequired)} />
+        </div>
+      ) : null}
+    </CapacityTabShell>
+  );
+}
+
+function TaktVsCycleTab({ plan }: { plan?: CapacityPlan | null }) {
+  return (
+    <CapacityTabShell title="Takt vs Cycle" description="Compare takt time against individual cycle times to identify overburden and waiting.">
+      {plan?.inputs?.taktTimeSeconds ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Stat label="Takt Time" value={fmtSeconds(plan.inputs.taktTimeSeconds)} />
+        </div>
+      ) : null}
+    </CapacityTabShell>
+  );
+}
+
+function CapacityLossTab({ plan }: { plan?: CapacityPlan | null }) {
+  return (
+    <CapacityTabShell title="Capacity Loss" description="Analyze planned and unplanned capacity losses including downtime, changeover, and speed losses.">
+      {plan?.result ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Stat label="Utilization" value={fmtPercent(plan.result.capacityUtilizationPercent)} />
+        </div>
+      ) : null}
+    </CapacityTabShell>
+  );
+}
+
+function WorkloadDistributionTab({ plan }: { plan?: CapacityPlan | null }) {
+  return (
+    <CapacityTabShell title="Workload Distribution" description="View workload distribution across resources, operators, and time periods.">
+      {plan?.result?.loadRows?.length ? (
+        <div className="space-y-2">
+          {plan.result.loadRows.slice(0, 10).map((row: CapacityLoadRow) => (
+            <div key={`${row.level}-${row.area}`} className="flex items-center gap-3 text-xs">
+              <div className="w-48 truncate font-semibold">{row.area}</div>
+              <div className="flex-1 h-5 rounded bg-muted relative overflow-hidden">
+                <div className="h-full rounded bg-primary" style={{ width: `${Math.min(row.utilizationPercent, 100)}%` }} />
+              </div>
+              <div className="w-16 text-right text-muted-foreground">{fmtPercent(row.utilizationPercent)}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </CapacityTabShell>
+  );
+}
+
 export function CapacityPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -391,6 +491,12 @@ export function CapacityPage() {
   const renderActiveTab = () => {
     if (activeTab === "load") return <CapacityLoadTab rows={selectedPlan?.result?.loadRows ?? []} />;
     if (activeTab === "yamazumi") return <YamazumiTab plan={selectedPlan} metric={yamazumiMetric} />;
+    if (activeTab === "line-balancing") return <LineBalancingTab plan={selectedPlan} />;
+    if (activeTab === "bottleneck-analysis") return <BottleneckAnalysisTab plan={selectedPlan} />;
+    if (activeTab === "operator-allocation") return <OperatorAllocationTab plan={selectedPlan} />;
+    if (activeTab === "takt-vs-cycle") return <TaktVsCycleTab plan={selectedPlan} />;
+    if (activeTab === "capacity-loss") return <CapacityLossTab plan={selectedPlan} />;
+    if (activeTab === "workload-distribution") return <WorkloadDistributionTab plan={selectedPlan} />;
     if (activeTab === "constraints") return <ConstraintsTab constraints={selectedPlan?.constraints ?? []} />;
     if (activeTab === "scenarios") return <ScenariosTab planId={selectedPlan?.id} onCreateScenario={async (name) => { if (!selectedPlan) return; const result = await createScenario(selectedPlan.id, name, { plannedQuantity: inputs.plannedQuantity }); if (result.ok) { setMessage("Scenario saved"); } }} />;
     return <OverviewTab plan={selectedPlan} />;

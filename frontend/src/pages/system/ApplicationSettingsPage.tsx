@@ -8,6 +8,7 @@ import { UPDATE_APPLICATION_SETTINGS } from "@/graphql/applicationSettingsMutati
 import type { ApplicationSetting, ApplicationSettingInput } from "@/types/applicationSettings";
 import { useThemeStore } from "@/stores/theme";
 import { theme } from "../../styles/themeTokens";
+import { ImportSourcesCard } from "./ImportSourcesCard";
 
 type FieldType = "select" | "boolean" | "number" | "text";
 
@@ -144,7 +145,7 @@ export function ApplicationSettingsPage() {
   const { data, loading, error, refetch } = useQuery<{ applicationSettings: ApplicationSetting[] }>(APPLICATION_SETTINGS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const [updateSettings, { loading: saving }] = useMutation<UpdateApplicationSettingsResponse>(UPDATE_APPLICATION_SETTINGS, { refetchQueries: [APPLICATION_SETTINGS_QUERY] });
 
-  const buttonClass = "inline-flex h-7 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted-foreground/70 disabled:opacity-100";
+  const buttonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted-foreground/70 disabled:opacity-100";
   const settingsByKey = useMemo(() => new Map((data?.applicationSettings ?? []).map((setting) => [setting.key, setting])), [data]);
   const dirtyInputs = useMemo<ApplicationSettingInput[]>(() => Object.entries(draft).map(([key, value]) => ({ key, value })), [draft]);
   const isDirty = dirtyInputs.length > 0;
@@ -265,7 +266,7 @@ export function ApplicationSettingsPage() {
             </button>
             <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
             <button type="button" onClick={handleSave} disabled={!canAttemptSave} title={!settingsLoaded ? "Settings must load successfully before saving." : !isDirty ? "Make a change before saving." : !isValid ? validationErrors.join(", ") : "Save application settings"}
-              className={`inline-flex h-7 items-center gap-1.5 rounded px-3 text-[11px] font-semibold transition-colors disabled:cursor-not-allowed ${!canAttemptSave ? "pointer-events-none bg-muted text-muted-foreground shadow-none" : theme.buttonSuccessSolid}`}>
+              className={`inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-semibold border-0 transition-colors disabled:cursor-not-allowed ${!canAttemptSave ? "pointer-events-none bg-muted text-muted-foreground shadow-none" : theme.buttonSuccessSolid}`}>
               {saving ? <RefreshCw className={`h-3.5 w-3.5 animate-spin stroke-current ${!canAttemptSave ? "text-muted-foreground" : ""}`} /> : <Save className={`h-3.5 w-3.5 stroke-current ${!canAttemptSave ? "text-muted-foreground" : ""}`} />} Save
             </button>
           </div>
@@ -315,6 +316,7 @@ export function ApplicationSettingsPage() {
                 </SettingsCard>
               ))}
               <DiagnosticsSummaryCard auditEnabled={auditEnabled} settingsLoaded={settingsLoaded} lastCheckLabel={new Date().toLocaleTimeString()} onOpenDiagnostics={() => navigate("/system/diagnostics")} />
+              <ImportSourcesCard />
             </div>
         </div>
       </div>

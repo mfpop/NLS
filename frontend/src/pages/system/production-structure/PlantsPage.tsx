@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { AlertTriangle, Calendar, Clock, Factory, Globe, Info, MapPin, Phone, Search, User } from "lucide-react";
+import { AlertTriangle, Calendar, Clock, Factory, Globe, Info, MapPin, Phone, User } from "lucide-react";
 import { usePlants, EMPTY_FORM, validatePlantForm } from "@/hooks/usePlants";
 import type { Plant } from "@/types/plant";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
@@ -382,7 +382,7 @@ export function PlantsPage() {
                       <ReferenceSelect categoryCode="week_start_day" label="" value={g("weekStartDayId") as string} onChange={(v) => s("weekStartDayId", v)} placeholder="Week start day *" error={errors.weekStartDayId} />
                       <ReferenceSelect categoryCode="schedule" label="" value={g("defaultScheduleId") as string} onChange={(v) => s("defaultScheduleId", v)} placeholder="Default schedule" />
                     </div>
-                    <p className="rounded-md bg-warning px-2 py-1 text-[10px] leading-3 text-warning bg-warning text-warning">
+                    <p className="rounded-md bg-warning/10 px-2 py-1 text-[10px] leading-3 text-warning">
                       These are plant defaults for later workflows. Authoritative shift duration and calendar calculations remain in domain services.
                     </p>
                   </div>
@@ -435,11 +435,6 @@ export function PlantsPage() {
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 border-b border-border flex items-center p-3 bg-muted">
-              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2" />
-              <span className="text-xs font-medium text-muted-foreground">Plants</span>
-              <span className="ml-auto text-[10px] text-muted-foreground font-mono">{filtered.length}</span>
-            </div>
             {mutationError && mode === "view" && (
               <div className="border-b border-danger/30 bg-danger/10 px-3 py-2 text-[11px] font-semibold text-danger">
                 {mutationError}

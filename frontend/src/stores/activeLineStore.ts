@@ -32,6 +32,10 @@ export function setActiveLineId(productionLineId: string | null) {
   emit();
 }
 
+export function resetActiveLineState() {
+  setActiveLineId(null);
+}
+
 export function useActiveLineId(): [string | null, (productionLineId: string | null) => void] {
   const state = useSyncExternalStore(
     (listener) => {

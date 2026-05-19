@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { AlertTriangle, CheckCircle, Layers, Search, Plus, ExternalLink, AlertCircle, ArrowRight } from "lucide-react";
+import { AlertTriangle, CheckCircle, Layers, Plus, ExternalLink, AlertCircle, ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Pagination, EntityListItem } from "./components";
 import { useDepartments } from "@/hooks/useDepartments";
@@ -719,15 +719,12 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 border-b border-border flex items-center p-3 bg-muted">
-              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-muted-foreground">Departments</span>
+            <div className="shrink-0 border-b border-border/35 flex h-9 items-center px-3 bg-muted">
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
-                className="ml-2 h-6 min-w-0 max-w-32 rounded border border-border bg-card px-1 text-[10px] text-muted-foreground outline-none border-border bg-muted text-muted-foreground">
+                className="h-6 w-full min-w-0 rounded border border-border/35 bg-transparent px-2 text-[11px] text-muted-foreground outline-none transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
                 <option value="all">All Plants</option>
                 {plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
               </select>
-              <span className="ml-auto text-[9px] text-muted-foreground font-mono">{filtered.length}</span>
             </div>
             <div className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
               {loading && departments.length === 0 ? (
@@ -740,34 +737,17 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
               ) : (
                 <div>
                   {paginated.map((d: DepartmentNode) => {
-                    const deptOwnerOk = !!d.managerRef || !!d.supervisor;
-                    const deptLinesOk = (d.productionLineCount ?? 0) > 0;
-                    const deptRgOk = (d.resourceGroupCount ?? d.groupCount ?? 0) > 0;
-                    const deptResOk = (d.resourceCount ?? 0) > 0;
                     const deptPlantOk = !!d.plantId && !!d.plant?.name;
-                    const issues: string[] = [];
-                    if (!deptPlantOk) issues.push("Plant missing");
-                    if (!deptOwnerOk) issues.push("Owner missing");
-                    if (!deptLinesOk) issues.push("Production lines missing");
-                    if (!deptRgOk) issues.push("Resource groups missing");
-                    if (!deptResOk) issues.push("Resources missing");
                     const plantName = d.plant?.name || "";
-                    const readyCount = [deptPlantOk, deptOwnerOk, deptLinesOk, deptRgOk, deptResOk].filter(Boolean).length;
-                    const readiness = Math.round((readyCount / 5) * 100);
                     return (
                       <EntityListItem key={d.id}
                         name={d.name} code={d.code}
-                        meta={`${plantName || "Plant required"} · ${d.productionLineCount ?? 0} lines | ${d.resourceGroupCount ?? d.groupCount ?? 0} RG | ${d.resourceCount ?? 0} resources | ${readiness}% ready`}
+                        meta={deptPlantOk ? plantName : "Plant required"}
                         icon={<Layers className="h-3.5 w-3.5 stroke-current" />}
                         selected={selectedId === d.id}
                         status={d.status}
                         onClick={() => selectDepartment(d.id)}
                         entityType="department"
-                        issueTags={issues.length > 0 ? (
-                          <span className="ml-auto inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-warning" title={issues.join(", ")}>
-                            <AlertTriangle className="h-3.5 w-3.5 stroke-current" />
-                          </span>
-                        ) : <span className="inline-block h-1.5 w-1.5 rounded-full bg-success shrink-0" title="All configured" />}
                       />
                     );
                   })}

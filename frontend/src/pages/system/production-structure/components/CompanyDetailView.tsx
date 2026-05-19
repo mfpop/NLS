@@ -883,7 +883,7 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
           </div>
 
           {isEditing && (
-            <div className={`flex shrink-0 items-center gap-3 px-4 ${theme.toolbarBg} border-b ${theme.sectionDivider}`} style={{ height: 40 }}>
+            <div className={`flex shrink-0 items-center gap-3 px-4 ${theme.toolbarBg} border-b ${theme.sectionDivider}`} style={{ height: 36 }}>
               <span className={`inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full text-[11px] font-semibold ${theme.badgeWarning}`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-warning" /> Editing Company
               </span>
@@ -897,7 +897,7 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
                 Cancel
               </button>
               <button type="button" disabled={saving || !canSave} onClick={handleSave}
-                className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-md text-[11px] font-semibold transition-colors shadow-sm ${saving || !canSave ? `${theme.textDisabled} cursor-not-allowed ${theme.chip}` : `${theme.buttonSuccessSolid}`}`}>
+                className={`inline-flex items-center gap-1.5 h-7 px-3 rounded-md text-[11px] font-semibold border-0 transition-colors shadow-sm ${saving || !canSave ? `${theme.textDisabled} cursor-not-allowed ${theme.chip}` : `${theme.buttonSuccessSolid}`}`}>
                 {saving ? "Saving..." : "Save"}
               </button>
             </div>

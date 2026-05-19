@@ -281,6 +281,16 @@ const inputClass =
 const inputErrorClass =
   "w-full border-0 border-b-2 border-danger bg-transparent px-0 py-1.5 text-sm text-foreground transition placeholder:text-muted-foreground hover:border-danger focus:border-danger focus:outline-none focus:ring-0 cursor-text border-danger text-foreground";
 const mutedValueClass = "text-sm font-medium text-foreground text-muted-foreground";
+const profileSectionBase = "overflow-auto rounded-xl border border-border/12 bg-card p-4 shadow-lg shadow-foreground/9 ring-1 ring-foreground/[0.03]";
+const profileSectionClass = `${profileSectionBase} flex-1`;
+const profileSectionPersonalClass = profileSectionBase;
+const editIconButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/12 bg-card text-muted-foreground transition-colors hover:border-border/22 hover:bg-muted/70 hover:text-foreground hover:shadow-sm";
+const saveIconButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md border border-success/20 bg-success/10 text-success transition-colors hover:bg-success/15";
+const dangerIconButtonClass = "inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/12 bg-card text-muted-foreground transition-colors hover:border-danger/25 hover:bg-danger/10 hover:text-danger hover:shadow-sm";
+
+function MissingValue({ label = "Not provided" }: { label?: string }) {
+  return <span className="text-sm font-medium text-muted-foreground/85">{label}</span>;
+}
 
 export function UserProfilePage() {
   const navigate = useNavigate();
@@ -748,23 +758,23 @@ export function UserProfilePage() {
       </header>
 
       {/* TOOLBAR: Highlights + Score */}
-      <div className="shrink-0 border-b border-border bg-card px-5 py-1.5 border-border bg-background">
-        <div className="flex items-center gap-1.5">
+      <div className="shrink-0 flex h-9 items-center border-b border-border/35 bg-muted px-3 select-none">
+        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           {highlights.map((h, i) => (
-            <span key={i} title={getHighlightTitle(h)} className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground bg-muted text-muted-foreground">
+            <span key={i} title={getHighlightTitle(h)} className="inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border/25 bg-transparent px-2 text-[11px] font-medium text-muted-foreground">
               {h}
             </span>
           ))}
-          {highlights.length > 0 && <div className="h-3 w-px bg-muted" />}
+          {highlights.length > 0 && <div className="h-5 w-px shrink-0 bg-border/25" />}
           <span
             title="Profile quality score: completeness + skill coverage"
-            className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground bg-muted text-muted-foreground"
+            className="inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border/25 bg-transparent px-2 text-[11px] font-semibold text-muted-foreground"
           >
             {score.value}/100
           </span>
           <span
             title="Top 30% of operator profiles in this plant"
-            className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground bg-muted text-muted-foreground"
+            className="inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border/25 bg-transparent px-2 text-[11px] font-medium text-muted-foreground"
           >
             {score.label}
           </span>
@@ -774,10 +784,10 @@ export function UserProfilePage() {
       <div className={`flex-1 overflow-hidden transition-colors ${editingSection ? "bg-muted bg-card" : ""}`}>
         <div className="flex flex-col h-full">
 
-          <div className="grid xl:grid-cols-[2fr_1.75fr_1.25fr] flex-1 min-h-0">
+          <div className="grid gap-3 p-3 xl:grid-cols-[2fr_1.75fr_1.25fr] flex-1 min-h-0">
             {/* Column 1 — Personal Information + Professional Summary */}
             <div className="flex flex-col min-h-0 overflow-hidden">
-              <section className="flex flex-col flex-1 overflow-auto border border-border bg-card p-4 shadow-sm">
+              <section className={`flex flex-col ${profileSectionPersonalClass}`}>
                 <div className="mb-3 flex items-start justify-between shrink-0">
                   <div>
                     <h3 className="text-xl font-bold text-foreground">Personal information</h3>
@@ -786,26 +796,26 @@ export function UserProfilePage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {editingSection === "profile" ? (
                       <>
-                        <button type="button" onClick={handleSave} title="Confirm this section" className="rounded-lg border border-success bg-success p-1.5 text-success transition hover:bg-success border-success bg-success text-success">
+                        <button type="button" onClick={handleSave} title="Confirm this section" className={saveIconButtonClass}>
                           <Check className="h-3.5 w-3.5" />
                         </button>
-                        <button type="button" onClick={cancelEditing} className="rounded-lg border border-border bg-card p-1.5 text-muted-foreground transition hover:border-danger hover:text-danger border-border bg-card hover:border-danger hover:text-danger">
+                        <button type="button" onClick={cancelEditing} className={dangerIconButtonClass}>
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </>
                     ) : (
-                      <button type="button" onClick={() => startEditing("profile")} className="rounded-lg border border-border bg-card p-1.5 text-muted-foreground transition hover:border-success hover:text-success border-border bg-card hover:border-success dark:hover:text-success">
+                      <button type="button" onClick={() => startEditing("profile")} className={editIconButtonClass}>
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
                 </div>
-                <div ref={identityRef} className="grid md:grid-cols-2 gap-4">
+                <div ref={identityRef} className="grid md:grid-cols-2 gap-x-3 gap-y-2.5">
                   <FieldShell label="First name" error={fieldErrors.firstName}>
                     {editingSection === "profile" ? (
                       <input data-field="firstName" value={draft.firstName} onChange={(e) => setDraft((prev) => ({ ...prev, firstName: e.target.value }))} className={fieldErrors.firstName ? inputErrorClass : inputClass} placeholder="First name" />
                     ) : (
-                      <div className={mutedValueClass}>{draft.firstName || ""}</div>
+                      <div className={mutedValueClass}>{draft.firstName || <MissingValue />}</div>
                     )}
                   </FieldShell>
 
@@ -813,7 +823,7 @@ export function UserProfilePage() {
                     {editingSection === "profile" ? (
                       <input data-field="lastName" value={draft.lastName} onChange={(e) => setDraft((prev) => ({ ...prev, lastName: e.target.value }))} className={fieldErrors.lastName ? inputErrorClass : inputClass} placeholder="Last name" />
                     ) : (
-                      <div className={mutedValueClass}>{draft.lastName || ""}</div>
+                      <div className={mutedValueClass}>{draft.lastName || <MissingValue />}</div>
                     )}
                   </FieldShell>
 
@@ -821,7 +831,7 @@ export function UserProfilePage() {
                     {editingSection === "profile" ? (
                       <input data-field="role" value={draft.role} onChange={(e) => setDraft((prev) => ({ ...prev, role: e.target.value }))} className={inputClass} placeholder="Role or title" />
                     ) : (
-                      <div className={mutedValueClass}>{draft.role || ""}</div>
+                      <div className={mutedValueClass}>{draft.role || <MissingValue />}</div>
                     )}
                   </FieldShell>
 
@@ -888,8 +898,8 @@ export function UserProfilePage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        {draft.reportsTo || ""}
+                        {draft.reportsTo ? <User className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.reportsTo || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
@@ -902,8 +912,8 @@ export function UserProfilePage() {
                       </select>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <Factory className="h-4 w-4 text-muted-foreground" />
-                        {draft.plant || ""}
+                        {draft.plant ? <Factory className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.plant || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
@@ -922,8 +932,8 @@ export function UserProfilePage() {
                       </select>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <Layers className="h-4 w-4 text-muted-foreground" />
-                        {draft.department || ""}
+                        {draft.department ? <Layers className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.department || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
@@ -936,14 +946,14 @@ export function UserProfilePage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <Globe className="h-4 w-4 text-muted-foreground" />
-                        {draft.language || ""}
+                        {draft.language ? <Globe className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.language || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
                 </div>
 
-                <div ref={contactRef} className="grid md:grid-cols-2 gap-4 mt-4">
+                <div ref={contactRef} className="grid md:grid-cols-2 gap-x-3 gap-y-2.5 mt-3">
                   <FieldShell label="Email" error={fieldErrors.email}>
                     {editingSection === "profile" ? (
                       <div className="flex items-start gap-2">
@@ -958,8 +968,8 @@ export function UserProfilePage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        {draft.email || ""}
+                        {draft.email ? <Mail className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.email || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
@@ -985,8 +995,8 @@ export function UserProfilePage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        {draft.phone || ""}
+                        {draft.phone ? <Phone className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.phone || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
@@ -999,53 +1009,68 @@ export function UserProfilePage() {
                       </div>
                     ) : (
                       <div className="flex items-center gap-2 text-sm text-foreground text-muted-foreground">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        {draft.location || ""}
+                        {draft.location ? <MapPin className="h-4 w-4 text-muted-foreground" /> : null}
+                        {draft.location || <MissingValue />}
                       </div>
                     )}
                   </FieldShell>
                 </div>
 
-                <div ref={summaryRef} className="flex-1 flex flex-col min-h-0 mt-4">
-                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">About</div>
-                  {editingSection === "profile" ? (
-                    <div className="relative flex-1 flex flex-col">
-                      <textarea
-                        ref={aboutRef}
-                        data-field="about"
-                        value={draft.about}
-                        onChange={(e) => setDraft((prev) => ({ ...prev, about: e.target.value }))}
-                        className="w-full rounded-lg border border-border bg-card p-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-success focus:outline-none focus:ring-2 focus:ring-ring border-border bg-background text-foreground"
-                        placeholder="Summarize your role, expertise, and manufacturing focus (plain text, max 500 characters)"
-                        maxLength={500}
-                        style={{ minHeight: "80px", resize: "vertical" }}
-                      />
-                      <div className={`mt-1 self-end text-xs ${aboutCharColor}`}>
-                        {aboutCharCount} / 500
+                <div ref={summaryRef} className="mt-2.5 overflow-hidden rounded-lg border border-border/12 bg-muted/8 shadow-sm shadow-foreground/4">
+                  <div className="flex items-center h-7 border-b border-border/10 bg-muted/12 px-2.5 select-none">
+                    <div className="flex items-center gap-1.5 rounded text-[11px] font-medium text-muted-foreground/90">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>About</span>
+                    </div>
+                  </div>
+                  <div className="bg-card p-2.5 min-h-[56px]">
+                    {editingSection === "profile" ? (
+                      <div className="relative flex flex-col">
+                        <textarea
+                          ref={aboutRef}
+                          data-field="about"
+                          value={draft.about}
+                          onChange={(e) => setDraft((prev) => ({ ...prev, about: e.target.value }))}
+                          className="w-full border border-border/12 bg-card p-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-info focus:outline-none rounded-sm"
+                          placeholder="Summarize your role, expertise, and manufacturing focus (plain text, max 500 characters)"
+                          maxLength={500}
+                          style={{ minHeight: "60px", resize: "vertical" }}
+                        />
+                        <div className={`mt-1 self-end text-xs ${aboutCharColor}`}>
+                          {aboutCharCount} / 500
+                        </div>
                       </div>
-                    </div>
-                  ) : draft.about ? (
-                    <div className="flex-1">
-                      <ul className="space-y-2">
-                        {normalized.summary.map((b, i) => (
-                          <li key={i} className="flex items-start gap-2 text-sm leading-5 text-foreground text-muted-foreground">
-                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted" />
-                            {b}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : (
-                    <EmptyBlock icon={FileText} title="No summary added yet." action="Add Summary" onAction={() => startEditing("profile")} />
-                  )}
-                  {fieldErrors.about && <div className="mt-1 text-xs text-danger">{fieldErrors.about}</div>}
+                    ) : draft.about ? (
+                      <div>
+                        <ul className="space-y-1.5">
+                          {normalized.summary.map((b, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm leading-5 text-foreground">
+                              <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[#0078d4]" />
+                              {b}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-3 text-center">
+                        <FileText className="h-5 w-5 text-muted-foreground mb-2" />
+                        <p className="text-xs text-muted-foreground">No summary added yet.</p>
+                        <button type="button" onClick={() => startEditing("profile")}
+                          className="mt-2 inline-flex items-center gap-1 h-7 px-2.5 rounded text-[11px] font-medium text-muted-foreground transition-colors border border-transparent hover:border-info/25 hover:bg-info/10 hover:text-info">
+                          <Pencil className="h-3 w-3" />
+                          Add Summary
+                        </button>
+                      </div>
+                    )}
+                    {fieldErrors.about && <div className="mt-1 text-xs text-danger">{fieldErrors.about}</div>}
+                  </div>
                 </div>
               </section>
             </div>
 
             {/* Column 2 — Work History */}
             <div ref={experienceRef} className="flex flex-col min-h-0 overflow-hidden">
-              <section className="flex-1 overflow-auto border border-border bg-card p-4 shadow-sm border-border bg-background">
+              <section className={profileSectionClass}>
                 <div className="mb-3 flex items-start justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-foreground">Work history</h3>
@@ -1054,18 +1079,18 @@ export function UserProfilePage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {editingSection === "work" ? (
                       <>
-                        <button type="button" onClick={handleSave} title="Confirm this section" className="rounded-lg border border-success bg-success p-1.5 text-success transition hover:bg-success border-success bg-success text-success">
+                        <button type="button" onClick={handleSave} title="Confirm this section" className={saveIconButtonClass}>
                           <Check className="h-3.5 w-3.5" />
                         </button>
-                        <button type="button" onClick={() => setWorkDraft((prev) => [{ id: `w${Date.now()}`, role: "", company: "", period: "", description: "" }, ...prev])} className="rounded-lg border border-success bg-success p-1.5 text-success transition hover:bg-success border-success bg-success text-success">
+                        <button type="button" onClick={() => setWorkDraft((prev) => [{ id: `w${Date.now()}`, role: "", company: "", period: "", description: "" }, ...prev])} className={saveIconButtonClass}>
                           <Plus className="h-3.5 w-3.5" />
                         </button>
-                        <button type="button" onClick={cancelEditing} className="rounded-lg border border-border bg-card p-1.5 text-muted-foreground transition hover:border-danger hover:text-danger border-border bg-card hover:border-danger hover:text-danger">
+                        <button type="button" onClick={cancelEditing} className={dangerIconButtonClass}>
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </>
                     ) : (
-                      <button type="button" onClick={() => startEditing("work")} className="rounded-lg border border-border bg-card p-1.5 text-muted-foreground transition hover:border-success hover:text-success border-border bg-card hover:border-success dark:hover:text-success">
+                      <button type="button" onClick={() => startEditing("work")} className={editIconButtonClass}>
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -1073,7 +1098,7 @@ export function UserProfilePage() {
                 </div>
 
                 {workDraft.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {[...workDraft].sort((a, b) => {
                       const yearA = extractPeriodYear(a.period);
                       const yearB = extractPeriodYear(b.period);
@@ -1083,10 +1108,10 @@ export function UserProfilePage() {
                     }).map((job, index) => (
                       <div
                         key={job.id}
-                        className={`rounded-xl border transition-shadow ${
+                        className={`rounded-xl border shadow-sm shadow-foreground/5 transition-shadow ${
                           editingSection === "work"
-                            ? "border-info bg-accent shadow-sm border-info bg-accent"
-                            : "border-border bg-card border-border bg-card"
+                            ? "border-info/15 bg-accent/55"
+                            : "border-border/12 bg-card"
                         }`}
                       >
                         {/* Card header */}
@@ -1185,7 +1210,7 @@ export function UserProfilePage() {
 
             {/* Column 3 — Education */}
             <div ref={educationRef} className="flex flex-col min-h-0 overflow-hidden">
-              <section className="flex-1 overflow-auto border border-border bg-card p-4 shadow-sm">
+              <section className={profileSectionClass}>
                 <div className="mb-3 flex items-start justify-between">
                   <div>
                     <h3 className="text-xl font-bold text-foreground">Education</h3>
@@ -1194,18 +1219,18 @@ export function UserProfilePage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {editingSection === "edu" ? (
                       <>
-                        <button type="button" onClick={handleSave} title="Confirm this section" className="rounded-lg border border-success bg-success p-1.5 text-success transition hover:bg-success border-success bg-success text-success">
+                        <button type="button" onClick={handleSave} title="Confirm this section" className={saveIconButtonClass}>
                           <Check className="h-3.5 w-3.5" />
                         </button>
-                        <button type="button" onClick={() => setEduDraft((prev) => [{ id: `e${Date.now()}`, degree: "", school: "", period: "" }, ...prev])} className="rounded-lg border border-success bg-success p-1.5 text-success transition hover:bg-success border-success bg-success text-success">
+                        <button type="button" onClick={() => setEduDraft((prev) => [{ id: `e${Date.now()}`, degree: "", school: "", period: "" }, ...prev])} className={saveIconButtonClass}>
                           <Plus className="h-3.5 w-3.5" />
                         </button>
-                        <button type="button" onClick={cancelEditing} className="rounded-lg border border-border bg-card p-1.5 text-muted-foreground transition hover:border-danger hover:text-danger border-border bg-card hover:border-danger hover:text-danger">
+                        <button type="button" onClick={cancelEditing} className={dangerIconButtonClass}>
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </>
                     ) : (
-                      <button type="button" onClick={() => startEditing("edu")} className="rounded-lg border border-border bg-card p-1.5 text-muted-foreground transition hover:border-success hover:text-success border-border bg-card hover:border-success dark:hover:text-success">
+                      <button type="button" onClick={() => startEditing("edu")} className={editIconButtonClass}>
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -1213,7 +1238,7 @@ export function UserProfilePage() {
                 </div>
 
                 {eduDraft.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {[...eduDraft].sort((a, b) => {
                       const yearA = extractPeriodYear(a.period);
                       const yearB = extractPeriodYear(b.period);
@@ -1223,10 +1248,10 @@ export function UserProfilePage() {
                     }).map((edu, index) => (
                       <div
                         key={edu.id}
-                        className={`rounded-xl border transition-shadow ${
+                        className={`rounded-xl border shadow-sm shadow-foreground/5 transition-shadow ${
                           editingSection === "edu"
-                            ? "border-info bg-accent shadow-sm border-info bg-accent"
-                            : "border-border bg-card border-border bg-card"
+                            ? "border-info/15 bg-accent/55"
+                            : "border-border/12 bg-card"
                         }`}
                       >
                         <div className="flex items-center justify-between px-4 pt-3 pb-1">
@@ -1300,7 +1325,7 @@ export function UserProfilePage() {
       </div>
 
       {/* FOOTER: Section progress + Completion bar + dates */}
-      <footer className="h-14 shrink-0 border-t border-border bg-muted px-5 py-3">
+      <footer className="h-10 shrink-0 border-t border-border/35 bg-muted px-4 py-1">
         <div className="flex items-center justify-between gap-4 h-full">
           <div className="flex items-center gap-2" ref={completionBarRef}>
             <span className="text-xs text-muted-foreground">Completion</span>
@@ -1309,12 +1334,12 @@ export function UserProfilePage() {
               onClick={() => setShowCompletionPopover((prev) => !prev)}
               className="flex items-center gap-2 group"
             >
-              <div className="w-24 cursor-pointer">
-                <div className="h-1 rounded-full bg-muted">
-                  <div className="h-1 rounded-full bg-info transition-all duration-500 ease-out" style={{ width: `${completion}%` }} />
+              <div className="w-28 cursor-pointer">
+                <div className="h-2 rounded-full bg-border/65">
+                  <div className="h-2 rounded-full bg-info/95 shadow-sm shadow-info/25 transition-all duration-500 ease-out" style={{ width: `${completion}%` }} />
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground group-hover:text-foreground dark:group-hover:text-muted-foreground">{completion}%</span>
+              <span className="text-xs font-semibold text-foreground group-hover:text-foreground">{completion}%</span>
             </button>
           </div>
           <div className="flex flex-col items-end gap-0.5 text-[11px]">

@@ -21,7 +21,7 @@ const PILL_VARIANTS: Record<string, string> = {
   archived: "bg-danger text-danger",
   configured: "bg-success text-success",
   missing: "bg-muted text-muted-foreground",
-  invalid: "bg-warning text-warning",
+  invalid: "bg-warning text-warning-foreground",
 };
 
 function PillBadge({ variant = "draft", label }: { variant?: string; label: string }) {
@@ -632,7 +632,7 @@ export function RoutingEditorPage() {
             {[...validationErrors, ...materialValidationErrors].length > 0 ? (
               <div className="grid gap-1">
                 {[...validationErrors, ...materialValidationErrors].map((error) => (
-                  <div key={error} className="flex items-center gap-2 rounded border border-warning bg-warning px-2 py-1 text-[10px] text-warning">
+                  <div key={error} className="flex items-center gap-2 rounded border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] text-warning">
                     <AlertTriangle className="h-3 w-3 stroke-current" /> {error}
                   </div>
                 ))}

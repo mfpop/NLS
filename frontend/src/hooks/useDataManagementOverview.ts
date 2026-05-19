@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import {
   DATA_MANAGEMENT_OVERVIEW_FULL_QUERY,
@@ -78,12 +79,27 @@ export interface DataManagementOverviewVars {
   search?: string;
   status?: string;
   includeTree?: boolean;
+  /** Paint shell first, then request the heavy tree on the next frame. */
+  deferTree?: boolean;
 }
 
 /* ── Hook ── */
 
 export function useDataManagementOverview(vars: DataManagementOverviewVars) {
-  const includeTree = vars.includeTree ?? false;
+  const wantsTree = vars.includeTree ?? false;
+  const [treeEnabled, setTreeEnabled] = useState(!vars.deferTree || !wantsTree);
+
+  useEffect(() => {
+    if (!vars.deferTree || !wantsTree) {
+      setTreeEnabled(wantsTree);
+      return;
+    }
+    setTreeEnabled(false);
+    const frame = requestAnimationFrame(() => setTreeEnabled(true));
+    return () => cancelAnimationFrame(frame);
+  }, [vars.deferTree, wantsTree]);
+
+  const includeTree = wantsTree && treeEnabled;
 
   const { data, loading, error, refetch } = useQuery<
     DataManagementOverviewData,
@@ -95,7 +111,8 @@ export function useDataManagementOverview(vars: DataManagementOverviewVars) {
       status: vars.status,
       includeTree,
     },
-    fetchPolicy: "cache-and-network",
+    fetchPolicy: "cache-first",
+    nextFetchPolicy: "cache-and-network",
     errorPolicy: "all",
   });
 

@@ -53,6 +53,7 @@
   --color-sidebar-reference: hsl(var(--sidebar-reference));
   --color-sidebar-settings: hsl(var(--sidebar-settings));
   --color-sidebar-docs: hsl(var(--sidebar-docs));
+  --color-sidebar-erp: hsl(var(--sidebar-erp));
   --color-sidebar-active: hsl(var(--sidebar-active));
   --color-sidebar-active-foreground: hsl(var(--sidebar-active-foreground));
   --color-sidebar-hover: hsl(var(--sidebar-hover));
@@ -413,7 +414,6 @@ textarea {
   align-items: center;
   background: transparent;
   border: 0;
-  border-left: 2px solid transparent;
   border-radius: 8px;
   color: var(--text-secondary, #6b7280);
   cursor: pointer;
@@ -433,7 +433,6 @@ textarea {
 
 .sidebar-row--active {
   background: var(--surface-2, #f1f5f9);
-  border-left-color: var(--brand, #2563eb);
   color: var(--text-primary, #0f172a);
 }
 
@@ -446,7 +445,6 @@ textarea {
 }
 
 .sidebar-row--primary-active {
-  border-left-width: 4px;
   font-weight: 600;
 }
 
@@ -1618,7 +1616,6 @@ textarea {
 :root[data-theme="dark"] .preferences-card__pill,
 :root[data-theme="dark"] .theme-toggle__option--active {
   background: rgba(51, 65, 85, 0.5);
-  border-color: var(--accent, #34d399);
   color: #f1f5f9;
 }
 

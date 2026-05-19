@@ -147,7 +147,7 @@ function EditContent({ node, onSave }: { node: DataManagementTreeChild; onSave?:
   const statusLabel = formatStatusLabel(node.status);
   return (
     <div>
-      <div className="flex items-center gap-2 border-b border-warning bg-warning px-3 py-1.5 text-xs text-warning">
+      <div className="flex items-center gap-2 border-b border-warning/25 bg-warning/10 px-3 py-1.5 text-xs text-warning">
         Editing {title}
       </div>
       <DetailSection title={`${title} Fields`} bodyClass="px-0 py-0">
@@ -225,7 +225,7 @@ function CreateContent({ node }: { node: DataManagementTreeChild }) {
 
   return (
     <div>
-      <div className="flex items-center gap-2 border-b border-info bg-info px-3 py-1.5 text-xs text-info">
+      <div className="flex items-center gap-2 border-b border-info/25 bg-info/10 px-3 py-1.5 text-xs text-info">
         Creating new {childType} under {node.name}
       </div>
       <DetailSection title={`New ${childType}`} bodyClass="px-0 py-0">

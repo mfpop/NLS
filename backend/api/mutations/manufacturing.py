@@ -1,3 +1,4 @@
+import json
 import strawberry
 import typing
 from typing import Optional
@@ -19,6 +20,7 @@ from api.types.manufacturing import (
     ScheduleAssignmentNode, ScheduleAssignmentPayload, ScheduleAssignmentInput,
     ProfileNode, ProfilePayload, ProfileInput, WorkHistoryEntry, EducationEntry,
     MutationError, DeletePayload,
+    WarehouseNode, WarehouseInput, WarehousePayload,
     RoutingNode, RoutingPayload, RoutingInput,
     RoutingStepNode, RoutingStepPayload, RoutingStepInput,
     ReorderStepsInput, SaveRoutingInput,
@@ -731,52 +733,120 @@ class ManufacturingMutation:
     @strawberry.mutation
     def create_material_bin(self, input: MaterialBinInput) -> MaterialBinPayload:
         try:
-            bin_obj = MaterialBinService.create({
+            bin_obj = MaterialBinService.create_bin({
                 "plant_id": input.plant_id,
+                "production_line_id": input.production_line_id,
                 "resource_group_id": input.resource_group_id,
                 "code": input.code,
                 "name": input.name,
+                "description": input.description,
                 "bin_type": input.bin_type,
                 "material_id": input.material_id,
+                "material_group": input.material_group,
                 "capacity": input.capacity,
                 "uom_id": input.uom_id,
+                "replenishment_mode": input.replenishment_mode,
+                "fifo_enabled": input.fifo_enabled,
+                "supermarket_enabled": input.supermarket_enabled,
                 "location_code": input.location_code,
+                "location_reference": input.location_reference,
+                "warehouse_code": input.warehouse_code,
                 "is_active": input.is_active,
             })
             return MaterialBinPayload(ok=True, material_bin=MaterialBinNode.from_db(bin_obj))
         except MaterialBinServiceError as exc:
-            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message, details=json.dumps(exc.details) if exc.details else None)])
         except Exception as exc:
             return MaterialBinPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
     @strawberry.mutation
     def update_material_bin(self, id: str, input: MaterialBinInput) -> MaterialBinPayload:
         try:
-            bin_obj = MaterialBinService.update(id, {
+            bin_obj = MaterialBinService.update_bin(id, {
                 "plant_id": input.plant_id,
+                "production_line_id": input.production_line_id,
                 "resource_group_id": input.resource_group_id,
                 "code": input.code,
                 "name": input.name,
+                "description": input.description,
                 "bin_type": input.bin_type,
                 "material_id": input.material_id,
+                "material_group": input.material_group,
                 "capacity": input.capacity,
                 "uom_id": input.uom_id,
+                "replenishment_mode": input.replenishment_mode,
+                "fifo_enabled": input.fifo_enabled,
+                "supermarket_enabled": input.supermarket_enabled,
                 "location_code": input.location_code,
+                "location_reference": input.location_reference,
+                "warehouse_code": input.warehouse_code,
                 "is_active": input.is_active,
             })
             return MaterialBinPayload(ok=True, material_bin=MaterialBinNode.from_db(bin_obj))
         except MaterialBinServiceError as exc:
-            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message, details=json.dumps(exc.details) if exc.details else None)])
         except Exception as exc:
             return MaterialBinPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
     @strawberry.mutation
     def archive_material_bin(self, id: str) -> MaterialBinPayload:
         try:
-            bin_obj = MaterialBinService.archive(id)
+            bin_obj = MaterialBinService.archive_bin(id)
             return MaterialBinPayload(ok=True, material_bin=MaterialBinNode.from_db(bin_obj))
         except MaterialBinServiceError as exc:
-            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
+            return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message, details=json.dumps(exc.details) if exc.details else None)])
+
+    @strawberry.mutation
+    def create_warehouse(self, input: WarehouseInput) -> WarehousePayload:
+        from manufacturing.models import Warehouse
+        try:
+            warehouse = Warehouse.objects.create(
+                plant_id=input.plant_id,
+                code=input.code,
+                name=input.name,
+                warehouse_type=input.warehouse_type or "GENERAL",
+                location=input.location or "",
+                is_active=input.is_active if input.is_active is not None else True,
+            )
+            return WarehousePayload(ok=True, warehouse=WarehouseNode.from_db(warehouse))
+        except Exception as exc:
+            return WarehousePayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
+
+    @strawberry.mutation
+    def update_warehouse(self, id: str, input: WarehouseInput) -> WarehousePayload:
+        from manufacturing.models import Warehouse
+        try:
+            warehouse = Warehouse.objects.get(id=id)
+        except Warehouse.DoesNotExist:
+            return WarehousePayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Warehouse not found")])
+        try:
+            warehouse.plant_id = input.plant_id
+            warehouse.code = input.code
+            warehouse.name = input.name
+            if input.warehouse_type is not None:
+                warehouse.warehouse_type = input.warehouse_type
+            if input.location is not None:
+                warehouse.location = input.location
+            if input.is_active is not None:
+                warehouse.is_active = input.is_active
+            warehouse.save()
+            return WarehousePayload(ok=True, warehouse=WarehouseNode.from_db(warehouse))
+        except Exception as exc:
+            return WarehousePayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
+
+    @strawberry.mutation
+    def archive_warehouse(self, id: str) -> WarehousePayload:
+        from manufacturing.models import Warehouse
+        try:
+            warehouse = Warehouse.objects.get(id=id)
+        except Warehouse.DoesNotExist:
+            return WarehousePayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Warehouse not found")])
+        try:
+            warehouse.is_active = False
+            warehouse.save()
+            return WarehousePayload(ok=True, warehouse=WarehouseNode.from_db(warehouse))
+        except Exception as exc:
+            return WarehousePayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
     @strawberry.mutation
     def create_schedule(self, input: ScheduleInput) -> SchedulePayload:

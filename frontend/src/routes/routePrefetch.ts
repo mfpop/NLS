@@ -88,9 +88,19 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/improve/SuggestionsPage"),
   },
   {
+    key: "standardize-work-instructions",
+    matches: (path) => path.startsWith("/standardize/work-instructions"),
+    load: () => import("@/pages/standardize/WorkInstructionsPage"),
+  },
+  {
     key: "standardize-standard-work",
     matches: (path) => path.startsWith("/standardize/standard-work"),
-    load: () => import("@/pages/improve/StandardWorkPage"),
+    load: () => import("@/pages/standardize/StandardWorkPage"),
+  },
+  {
+    key: "standardize-material-flow",
+    matches: (path) => path.startsWith("/standardize/material-flow"),
+    load: () => import("@/pages/standardize/MaterialFlowStandardsPage"),
   },
   {
     key: "standardize-procedures",
@@ -98,23 +108,16 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/standardize/ProceduresPage"),
   },
   {
-    key: "standardize-templates",
-    matches: (path) => path.startsWith("/standardize/templates"),
-    load: () => import("@/pages/standardize/TemplatesPage"),
-  },
-  {
-    key: "standardize-best-practices",
-    matches: (path) => path.startsWith("/standardize/best-practices"),
-    load: () => import("@/pages/standardize/BestPracticesPage"),
+    key: "standardize-document-control",
+    matches: (path) => path.startsWith("/standardize/document-control"),
+    load: () => import("@/pages/standardize/DocumentControlPage"),
   },
   {
     key: "system-flow",
-    matches: (path) => path === "/system/production-structure" || path === "/system/production-structure/flow",
-    load: () => import("@/pages/system/ProductionStructurePage"),
-  },
-  {
-    key: "system-flow-components",
-    matches: (path) => path.startsWith("/system/production-structure/flow/"),
+    matches: (path) =>
+      path === "/system/production-structure"
+      || path === "/system/production-structure/flow"
+      || path.startsWith("/system/production-structure/flow/"),
     load: () => import("@/pages/system/production-structure/ProductionFlowLayout"),
   },
   {
@@ -141,6 +144,46 @@ const matchers: Matcher[] = [
     key: "routing-editor",
     matches: (path) => path.startsWith("/system/production-structure/flow/routing"),
     load: () => import("@/pages/system/production-structure/RoutingEditorPage"),
+  },
+  {
+    key: "documentation-center",
+    matches: (path) => path.startsWith("/docs/"),
+    load: () => import("@/pages/DocumentationCenter/DocumentationCenter"),
+  },
+  {
+    key: "system-erp-data",
+    matches: (path) => path === "/system/erp-data" || path.startsWith("/system/erp-data/"),
+    load: () => import("@/pages/system/erp-data/ERPDataPage"),
+  },
+  {
+    key: "system-erp-import-sources",
+    matches: (path) => path.startsWith("/system/erp-data/import-sources"),
+    load: () => import("@/pages/system/erp-data/import-sources/ImportSourcesPage"),
+  },
+  {
+    key: "system-erp-import-jobs",
+    matches: (path) => path.startsWith("/system/erp-data/import-jobs"),
+    load: () => import("@/pages/system/erp-data/import-jobs/ImportJobsPage"),
+  },
+  {
+    key: "system-erp-file-history",
+    matches: (path) => path.startsWith("/system/erp-data/file-history"),
+    load: () => import("@/pages/system/erp-data/file-history/FileHistoryPage"),
+  },
+  {
+    key: "system-erp-mapping-rules",
+    matches: (path) => path.startsWith("/system/erp-data/mapping-rules"),
+    load: () => import("@/pages/system/erp-data/mapping-rules/MappingRulesPage"),
+  },
+  {
+    key: "system-erp-validation-errors",
+    matches: (path) => path.startsWith("/system/erp-data/validation-errors"),
+    load: () => import("@/pages/system/erp-data/validation-errors/ValidationErrorsPage"),
+  },
+  {
+    key: "system-erp-integration-status",
+    matches: (path) => path.startsWith("/system/erp-data/integration-status"),
+    load: () => import("@/pages/system/erp-data/integration-status/IntegrationStatusPage"),
   },
 ];
 

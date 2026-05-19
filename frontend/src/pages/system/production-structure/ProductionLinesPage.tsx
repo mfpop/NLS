@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AlertTriangle, Check, TrendingUpDown, Factory, Search, ExternalLink } from "lucide-react";
+import { AlertTriangle, Check, Layers, TrendingUpDown, Factory, ExternalLink } from "lucide-react";
 import { Pagination, ProductionLineProductScopeSummary, EntityListItem } from "./components";
 import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
 import { useRoutingSummary } from "@/hooks/useRouting";
@@ -188,7 +188,7 @@ function ScheduleSection({ isForm, sCls, g, s, sel, errors, setShiftModel, hasCa
               <RefSelect category="timezone" value={g("timezoneId")} onChange={(v) => s("timezoneId", v)} placeholder="Select timezone" selectClass={sCls} />
             </div>
             {capacityBasisInfo && (
-              <div className="rounded-md border border-warning bg-warning px-2 py-1 text-[10px] leading-4 text-warning border-warning bg-warning text-warning">
+              <div className="rounded-md border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] leading-4 text-warning">
                 Capacity basis set from shift: {capacityBasisInfo.label}
               </div>
             )}
@@ -216,7 +216,7 @@ function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: b
   const { summary } = useRoutingSummary(sel?.id ?? null);
   const bnName = summary?.bottleneckStepName ? `${summary.bottleneckStepName}${summary.bottleneckResourceGroupName ? ` (${summary.bottleneckResourceGroupName})` : ""}` : null;
   return (
-    <div className="rounded-lg bg-muted p-2 bg-muted">
+    <div className="rounded-lg bg-muted/65 p-2">
       <div className="space-y-2">
         <ProductionLineProductScopeSummary
           family={sel?.productFamily ?? sel?.productFamilies?.find((f: any) => f.isPrimary) ?? sel?.productFamilies?.[0] ?? null}
@@ -230,7 +230,7 @@ function RoutingOperationsView({ sel, compact = false }: { sel: any; compact?: b
         {!compact && <InlineRow label="UoM" value={sel?.capacityUom ? sel.capacityUom : <Badge label="Not configured" variant="inactive" />} />}
         <InlineRow label="Bottleneck" value={bnName || <Badge label="N/A" variant="inactive" />} />
       </div>
-      <div className="mt-2 flex items-center gap-2 border-t border-border pt-2 text-[12px] border-border">
+      <div className="mt-2 flex items-center gap-2 pt-1.5 text-[12px]">
         <span className="font-semibold text-muted-foreground">Constraint:</span>
         {summary?.constraintStatus === "CONSTRAINT" ? <Badge label="Yes" variant="amber" /> : <Badge label="No" variant="default" />}
       </div>
@@ -324,14 +324,6 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, i
       </SectionCard>
     </div>
   );
-}
-
-function getLineListReadiness(line: ProductionLine): { icon: string; label: string; tone: "ready" | "partial" | "blocked"; reason: string } {
-  const hasModel = (line.productModelCount ?? line.productModels?.length ?? 0) > 0 || !!line.primaryProductModel || !!line.primaryModelId;
-  const hasFlow = !!line.activeFlowRouteId || line.flowRoutingStatus === "CONFIGURED";
-  if (!hasFlow) return { icon: "✕", label: "Blocked", tone: "blocked", reason: "Missing flow" };
-  if (!hasModel) return { icon: "!", label: "Partial", tone: "partial", reason: "No product model" };
-  return { icon: "✓", label: "Ready", tone: "ready", reason: "Configured baseline" };
 }
 
 function FlowContextSections({ productionLine, navigate: nav, isNew = false, returnContext, onAssignModel }: { productionLine: ProductionLine | null; navigate: (path: string, options?: any) => void; isNew?: boolean; returnContext?: { searchText: string; statusFilter: string }; onAssignModel?: () => void }) {
@@ -441,7 +433,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   return (
     <div className="grid h-full min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "32px 36px minmax(0,1fr)" }}>
       {/* ── Row 1: Slim 32px status bar ── */}
-      <div className={`flex items-center gap-3 rounded-lg border px-2.5 py-1 text-foreground ${blocked ? "border-danger/25 bg-danger/10" : partial ? "border-warning/30 bg-warning/10" : "border-success/25 bg-success/10"}`}>
+      <div className={`flex min-h-7 items-center gap-3 rounded-lg border px-2.5 py-0.5 text-foreground ${blocked ? "border-danger/15 bg-danger/5" : partial ? "border-warning/20 bg-warning/5" : "border-success/15 bg-success/5"}`}>
         <span className={`text-[11px] font-bold ${blocked ? "text-danger" : partial ? "text-warning" : "text-success"}`}>{readinessIcon} {readiness}</span>
         {missingReasons.length > 0 && (
           <span className="text-[10px] font-semibold text-foreground">— {missingReasons.join(", ")}</span>
@@ -476,7 +468,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
         <div className="grid min-h-0 items-start gap-1.5 overflow-hidden" style={{ gridTemplateColumns: "1fr 1fr" }}>
           {/* ── LEFT COLUMN: Identity, Operations ── */}
           <div className="flex flex-col gap-1.5 overflow-hidden">
-            <div className="rounded-lg border border-border/60 bg-card px-3 pb-2 pt-2 shadow-sm shadow-foreground/5">
+            <div className="rounded-lg border border-border/30 bg-card px-3 pb-2 pt-2 shadow-sm shadow-foreground/10">
               <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Identity & Schedule</div>
               <div className="space-y-1">
                 <InlineRow label="Name" value={<span className="font-bold text-muted-foreground">{productionLine?.name || "—"}</span>} />
@@ -519,8 +511,17 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                   )}
                 </div>
               ) : (
-                <div className="flex min-h-[108px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted">
-                  <span className="text-[10px] text-muted-foreground">No departments linked</span>
+                <div className="flex min-h-[104px] flex-col items-center justify-center rounded-lg border border-border/20 bg-muted/55 px-4 text-center">
+                  <span className="mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-entity-department/10 text-entity-department">
+                    <Layers className="h-4 w-4 stroke-current" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-foreground">No departments linked</span>
+                  <span className="mt-0.5 text-[10px] text-muted-foreground">Connect this line to departments to show its operating structure.</span>
+                  {productionLine?.id && (
+                    <SecondaryActionButton onClick={() => nav(`/system/production-structure/components/dept?lineId=${productionLine.id}`)} className="mt-2">
+                      Manage departments
+                    </SecondaryActionButton>
+                  )}
                 </div>
               )}
             </SectionCard>
@@ -530,7 +531,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                     <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Setup Steps</div>
                     {setupSteps.map((step, index) => (
                       <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }}
-                        className={`flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[10px] font-medium ${step.done ? "bg-success/10 text-success" : index === nextStepIndex ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"}`}>
+                        className={`flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[10px] font-medium ${step.done ? "bg-success/10 text-success" : index === nextStepIndex ? "bg-warning/10 text-warning" : "bg-muted/70 text-muted-foreground"}`}>
                         <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
                         <span className="flex-1 truncate">{step.label}</span>
                         <span className="text-[8px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
@@ -541,7 +542,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
                     <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Issues</div>
                     {topIssues.length > 0 ? topIssues.slice(0, 4).map((issue) => (
                       <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
-                        className="flex h-7 w-full items-center gap-2 rounded-md border border-danger/20 bg-danger/10 px-2 text-left text-[10px] font-semibold text-foreground hover:bg-danger/15">
+                        className="flex h-7 w-full items-center gap-2 rounded-md border border-danger/15 bg-danger/5 px-2 text-left text-[10px] font-semibold text-foreground hover:bg-danger/10">
                         <span className="text-danger">✕</span>
                         <span className="min-w-0 flex-1 truncate">{issue.message}</span>
                         <span className="shrink-0 whitespace-nowrap font-semibold text-danger">{issue.action}</span>
@@ -741,7 +742,7 @@ function InlineRow({ label, value, action }: { label: string; value: React.React
 
 function SectionCard({ id, title, action, children, className = "" }: { id?: string; title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section id={id} className={`rounded-lg border border-border bg-card px-3 pb-2 pt-2 shadow-xs border-border bg-muted ${className}`}>
+    <section id={id} className={`rounded-lg border border-border/30 bg-card px-3 pb-2 pt-2 shadow-sm shadow-foreground/10 ${className}`}>
       <div className="mb-1.5 flex min-h-5 items-center gap-2">
         <h3 className="flex-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>
         {action}
@@ -864,6 +865,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [preCreateSelectedId, setPreCreateSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [plantFilter, setPlantFilter] = useState<string>("all");
   const [form, setForm] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -872,7 +874,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
 
   useEffect(() => { setEntityContext("Line"); }, [setEntityContext]);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, plantFilter]);
 
   useEffect(() => {
     if (!embeddedInFlow || !urlProductionLineId || lines.length === 0) return;
@@ -907,6 +909,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
       const normalizedFilter = (statusFilter || "all").toLowerCase();
       return normalizedFilter === "all" || normalizedStatus === normalizedFilter;
     })
+    .filter((l) => plantFilter === "all" || l.plantId === plantFilter)
     .filter((l) => {
       const needle = search.trim().toLowerCase();
       if (!needle) return true;
@@ -1182,7 +1185,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
               </div>
               <div className="flex min-h-9 items-center justify-center justify-self-center self-stretch text-center">
                 {missingLineSetup && (
-                  <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-warning bg-warning px-2 py-0.5 text-center text-[9px] font-semibold text-warning border-warning bg-warning text-warning" title="Line setup has readiness gaps">
+                  <span className="inline-flex items-center justify-center gap-1.5 rounded-full border border-warning/25 bg-warning/10 px-2 py-0.5 text-center text-[9px] font-semibold text-warning" title="Line setup has readiness gaps">
                     <AlertTriangle className="h-3 w-3 stroke-current" /> Setup gaps
                   </span>
                 )}
@@ -1204,10 +1207,10 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
           {isForm ? (
             <div className="flex min-h-0 flex-col gap-2 overflow-hidden">
               {errors._form && (
-                <div className="rounded-md border border-danger bg-danger px-2 py-1 text-[10px] text-danger border-danger bg-danger text-danger">{errors._form}</div>
+                <div className="rounded-md border border-danger/25 bg-danger/10 px-2 py-1 text-[10px] text-danger">{errors._form}</div>
               )}
               {mode === "create" && (
-                <div className="rounded-md border border-warning bg-warning px-2 py-1 text-[10px] font-medium text-warning border-warning bg-warning text-warning">
+                <div className="rounded-md border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">
                   Save production line before assigning departments or creating flow.
                 </div>
               )}
@@ -1330,10 +1333,12 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
         toolbar={null}
         list={
           <>
-            <div className="shrink-0 border-b border-border flex items-center p-3 bg-muted">
-              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-muted-foreground">Lines</span>
-              <span className="ml-auto text-[9px] text-muted-foreground font-mono">{filtered.length}</span>
+            <div className="shrink-0 border-b border-border/35 flex h-9 items-center px-3 bg-muted">
+              <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
+                className="h-6 w-full min-w-0 rounded border border-border/35 bg-transparent px-2 text-[11px] text-muted-foreground outline-none transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
+                <option value="all">All Plants</option>
+                {plants.map((plant: any) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
+              </select>
             </div>
             <div data-production-lines-list className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
               {loading && lines.length === 0 ? (
@@ -1345,30 +1350,16 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
                 </div>
               ) : (
                 <div>
-                  {paginated.map((ln: ProductionLine) => {
-                    const readiness = getLineListReadiness(ln);
-                    return (
-                      <EntityListItem key={ln.id}
-                        name={ln.name} code={ln.code}
-                        meta={ln.plantName || "Plant required"}
-                        icon={<TrendingUpDown className="h-3.5 w-3.5 stroke-current" />}
-                        selected={selectedId === ln.id}
-                        status={ln.status}
-                        onClick={() => selectLine(ln.id)}
-                        entityType="line"
-                        issueTags={
-                          <span title={`${readiness.label}: ${readiness.reason}`} className={`ml-auto inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-black ${
-                            readiness.tone === "ready"
-                              ? "bg-success/10 text-success"
-                              : readiness.tone === "partial"
-                                ? "bg-warning/10 text-warning"
-                                : "bg-danger/10 text-danger"
-                          }`}>
-                            {readiness.icon}
-                          </span>
-                        } />
-                    );
-                  })}
+                  {paginated.map((ln: ProductionLine) => (
+                    <EntityListItem key={ln.id}
+                      name={ln.name} code={ln.code}
+                      meta={ln.plantName || "Plant required"}
+                      icon={<TrendingUpDown className="h-3.5 w-3.5 stroke-current" />}
+                      selected={selectedId === ln.id}
+                      status={ln.status}
+                      onClick={() => selectLine(ln.id)}
+                      entityType="line" />
+                  ))}
                 </div>
               )}
             </div>

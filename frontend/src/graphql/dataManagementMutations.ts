@@ -95,9 +95,10 @@ export const DELETE_RESOURCE = gql`
 `;
 
 export const MATERIAL_BIN_FRAGMENT = `
-  id plantId plantName resourceGroupId resourceGroupName code name binType
-  materialId materialCode materialName capacity uomId uomName locationCode
-  isActive createdAt updatedAt
+  id plantId plantName productionLineId productionLineName resourceGroupId resourceGroupName
+  code name description binType materialId materialCode materialName materialGroup
+  capacity uomId uomName replenishmentMode fifoEnabled supermarketEnabled
+  locationCode locationReference warehouseCode isActive createdAt updatedAt
 `;
 
 export const CREATE_MATERIAL_BIN = gql`

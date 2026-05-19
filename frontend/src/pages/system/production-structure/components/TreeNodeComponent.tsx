@@ -4,6 +4,28 @@ import type { DataManagementTreeChild } from "@/hooks/useDataManagementOverview"
 import { ENTITY_CONFIG } from "../config";
 import { theme } from "../../../../styles/themeTokens";
 
+const TREE_ENTITY_TONE: Record<string, { icon: string; selected: string; accent: string }> = {
+  company: { icon: "text-entity-company/85 bg-entity-company-bg/70", selected: "bg-entity-company/10", accent: "border-l-entity-company" },
+  plant: { icon: "text-entity-plant/85 bg-entity-plant-bg/70", selected: "bg-entity-plant/10", accent: "border-l-entity-plant" },
+  productionLine: { icon: "text-entity-line/85 bg-entity-line-bg/70", selected: "bg-entity-line/10", accent: "border-l-entity-line" },
+  line: { icon: "text-entity-line/85 bg-entity-line-bg/70", selected: "bg-entity-line/10", accent: "border-l-entity-line" },
+  lineGroup: { icon: "text-entity-line/85 bg-entity-line-bg/70", selected: "bg-entity-line/10", accent: "border-l-entity-line" },
+  department: { icon: "text-entity-department/85 bg-entity-department-bg/70", selected: "bg-entity-department/10", accent: "border-l-entity-department" },
+  resourceGroup: { icon: "text-entity-resource-group/85 bg-entity-resource-group-bg/70", selected: "bg-entity-resource-group/10", accent: "border-l-entity-resource-group" },
+  group: { icon: "text-entity-resource-group/85 bg-entity-resource-group-bg/70", selected: "bg-entity-resource-group/10", accent: "border-l-entity-resource-group" },
+  resource: { icon: "text-entity-resource/85 bg-entity-resource-bg/70", selected: "bg-entity-resource/10", accent: "border-l-entity-resource" },
+  warehouse: { icon: "text-entity-warehouse/85 bg-entity-warehouse-bg/70", selected: "bg-entity-warehouse/10", accent: "border-l-entity-warehouse" },
+};
+
+function statusBulletClass(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized === "active" || normalized === "running" || normalized === "online") return "bg-success";
+  if (normalized === "inactive" || normalized === "idle") return "bg-muted-foreground/45";
+  if (normalized === "down" || normalized === "blocked" || normalized === "error") return "bg-danger";
+  if (normalized === "maintenance" || normalized === "warning") return "bg-warning";
+  return "bg-muted-foreground/35";
+}
+
 export interface TreeNodeProps {
   node: DataManagementTreeChild;
   nodeKey: string;
@@ -16,7 +38,7 @@ export interface TreeNodeProps {
   onContextMenu: (e: React.MouseEvent, key: string, node: DataManagementTreeChild) => void;
 }
 
-export function TreeNodeComponent({
+export const TreeNodeComponent = React.memo(function TreeNodeComponent({
   node,
   nodeKey,
   depth,
@@ -31,26 +53,17 @@ export function TreeNodeComponent({
   const isSelected = selectedKey === nodeKey;
   const isRoot = depth === 0;
   const cfg = ENTITY_CONFIG[node.type] || ENTITY_CONFIG.resource;
+  const tone = TREE_ENTITY_TONE[node.type] || TREE_ENTITY_TONE.resource;
   const Icon = cfg.icon;
-  const indentPx = isRoot ? 4 : 12 + (depth - 1) * 12;
-  const countLabel = node.type === "plant"
-    ? `${node.childCount ?? 0} line${node.childCount === 1 ? "" : "s"}`
-    : node.type === "productionLine" || node.type === "line"
-      ? `${node.childCount ?? 0} dept${node.childCount === 1 ? "" : "s"}`
-      : node.type === "department"
-        ? `${node.childCount ?? 0} RG`
-        : node.type === "resourceGroup" || node.type === "group"
-          ? `${node.childCount ?? 0} res`
-          : node.type === "resource"
-            ? node.status
-            : (node.childCount ?? 0) > 0 ? String(node.childCount) : "";
+  const indentPx = isRoot ? 6 : 16 + (depth - 1) * 14;
+  const statusLabel = node.type === "resource" ? node.status : "";
 
   return (
     <div>
       <div
-        className={`flex h-8 min-h-8 cursor-pointer select-none items-center gap-1.5 rounded border-l-2 px-2 text-[13px] leading-5 outline-none transition-colors ${
+        className={`flex h-7 min-h-7 cursor-pointer select-none items-center gap-1.5 rounded-md border-l-[3px] px-2 pr-2.5 text-[12px] leading-5 outline-none transition-colors ${
           isSelected
-            ? "border-l-selection-border bg-table-selected text-sidebar-active-foreground"
+            ? `${tone.selected} ${tone.accent} text-foreground`
             : `${theme.interactiveRow} border-l-transparent text-foreground`
         }`}
         style={{ paddingLeft: `${indentPx}px` }}
@@ -80,32 +93,27 @@ export function TreeNodeComponent({
             <span className="w-3" />
           )}
         </span>
-        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${cfg.color}`}>
+        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded ${tone.icon}`}>
           <Icon className="h-3 w-3 stroke-current" />
         </span>
-        <div className="min-w-0 flex-1 flex items-center gap-1.5">
-          <span
-            className={`truncate text-[13px] font-medium leading-5 ${
-              isSelected
-                ? "text-sidebar-active-foreground"
-                : theme.textPrimary
-            }`}
-          >
-            {node.name}
-          </span>
-          {node.code && (
-            <span className={`rounded px-1.5 py-px text-[10px] font-mono font-semibold tracking-tight ${theme.codeBadge}`}>
-              {node.code}
+        <div className="grid min-w-0 flex-1 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+          <div className="min-w-0">
+            <span
+              className={`min-w-0 truncate text-[12px] leading-5 ${
+                isSelected
+                  ? "font-semibold text-foreground"
+                  : `font-medium ${theme.textPrimary}`
+              }`}
+              title={node.name}
+            >
+              {node.name}
             </span>
-          )}
-          <span
-            className={`inline-block h-2.5 w-2.5 rounded-full shrink-0 ring-2 ring-card ${
-              node.status === "active" ? "bg-status-active" : "bg-status-inactive"
-            }`}
-          />
-          {countLabel && (
-            <span className={`ml-auto shrink-0 text-[10px] font-medium ${theme.textSecondary}`}>{countLabel}</span>
-          )}
+          </div>
+          <div className="flex min-w-[42px] justify-end">
+            {statusLabel && (
+              <span className={`h-2 w-2 rounded-full ${statusBulletClass(node.status)}`} title={statusLabel} aria-label={`Status: ${statusLabel}`} />
+            )}
+          </div>
         </div>
       </div>
       {hasChildren && (
@@ -136,4 +144,4 @@ export function TreeNodeComponent({
       )}
     </div>
   );
-}
+});

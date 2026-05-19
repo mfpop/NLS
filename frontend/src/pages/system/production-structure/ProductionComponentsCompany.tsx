@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { CompanyDetailView } from "./components/CompanyDetailView";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useRegisterActions, useToolbar } from "./components/ToolbarContext";
+
+const CompanyDetailView = lazy(() =>
+  import("./components/CompanyDetailView").then((m) => ({ default: m.CompanyDetailView })),
+);
 
 export function ProductionComponentsCompany() {
   const registerActions = useRegisterActions();
@@ -31,5 +34,9 @@ export function ProductionComponentsCompany() {
     };
   }, [editing, editState, registerActions, setEntityContext, setFooterContent, setToolbarVariant]);
 
-  return <CompanyDetailView ref={ref} simple onEditChange={setEditing} onEditStateChange={setEditState} />;
+  return (
+    <Suspense fallback={<div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">Loading company...</div>}>
+      <CompanyDetailView ref={ref} simple onEditChange={setEditing} onEditStateChange={setEditState} />
+    </Suspense>
+  );
 }

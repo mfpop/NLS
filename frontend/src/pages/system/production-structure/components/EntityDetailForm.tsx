@@ -220,7 +220,7 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
     <div className="space-y-3">
       {/* ── INACTIVE BANNER ── */}
       {!isActive && (
-        <div className="rounded-lg border border-warning bg-warning px-4 py-3 border-warning bg-warning">
+        <div className="rounded-lg border border-warning/25 bg-warning/10 px-4 py-3">
           <div className="flex items-start justify-between gap-3">
             <div className="flex gap-2">
               <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5 stroke-current" />
@@ -231,7 +231,7 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
                 </p>
               </div>
             </div>
-            <button type="button" className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-warning px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-warning transition-colors shadow-sm">
+            <button type="button" className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-warning px-3 py-2 text-xs font-semibold text-warning-foreground hover:bg-warning/90 transition-colors shadow-sm">
               <Play className="h-3.5 w-3.5 stroke-current" /> Activate
             </button>
           </div>
@@ -240,7 +240,7 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
 
       {/* ── LOCATION MISMATCH FLAG ── */}
       {isActive && p.building && p.timezone && p.address && (
-        <div className="rounded-lg border border-primary bg-primary px-3 py-2 border-primary bg-primary">
+        <div className="rounded-lg border border-primary/25 bg-primary/10 px-3 py-2">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary stroke-current shrink-0" />
             <span className="text-xs text-primary">
@@ -262,10 +262,10 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
             </div>
           )}
           <div className="grid grid-cols-4 gap-2">
-            <SummaryCard icon={TrendingUpDown} label="Lines" value={p.lineCount} color="bg-warning text-warning bg-warning text-warning" />
-            <SummaryCard icon={Layers} label="Depts" value={p.departmentCount} color="bg-info text-info bg-info text-info" />
-            <SummaryCard icon={Component} label="Groups" value={p.groupCount} color="bg-danger text-danger bg-danger text-danger" />
-            <SummaryCard icon={Dumbbell} label="Resources" value={p.resourceCount} color="bg-muted text-muted-foreground bg-muted text-muted-foreground" />
+            <SummaryCard icon={TrendingUpDown} label="Lines" value={p.lineCount} color="bg-warning/15 text-warning" />
+            <SummaryCard icon={Layers} label="Depts" value={p.departmentCount} color="bg-info/15 text-info" />
+            <SummaryCard icon={Component} label="Groups" value={p.groupCount} color="bg-danger/15 text-danger" />
+            <SummaryCard icon={Dumbbell} label="Resources" value={p.resourceCount} color="bg-muted text-muted-foreground" />
           </div>
         </>
       )}
@@ -275,10 +275,10 @@ function PlantDetail({ entity: p, onAction }: { entity: any; onAction?: () => vo
         <div className="rounded-lg border border-border bg-card p-3 bg-muted border-border">
           <h2 className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hierarchy Mix</h2>
           <div className="flex flex-wrap gap-2">
-            {p.lineCount > 0 && <MiniChip icon={TrendingUpDown} value={String(p.lineCount)} label="Lines" color="text-warning bg-warning text-warning bg-warning" />}
-            {p.departmentCount > 0 && <MiniChip icon={Layers} value={String(p.departmentCount)} label="Depts" color="text-info bg-info text-info bg-info" />}
-            {p.groupCount > 0 && <MiniChip icon={Component} value={String(p.groupCount)} label="Groups" color="text-danger bg-danger text-danger bg-danger" />}
-            {p.resourceCount > 0 && <MiniChip icon={Dumbbell} value={String(p.resourceCount)} label="Resources" color="text-muted-foreground bg-muted text-muted-foreground bg-muted" />}
+            {p.lineCount > 0 && <MiniChip icon={TrendingUpDown} value={String(p.lineCount)} label="Lines" color="bg-warning/10 text-warning" />}
+            {p.departmentCount > 0 && <MiniChip icon={Layers} value={String(p.departmentCount)} label="Depts" color="bg-info/10 text-info" />}
+            {p.groupCount > 0 && <MiniChip icon={Component} value={String(p.groupCount)} label="Groups" color="bg-danger/10 text-danger" />}
+            {p.resourceCount > 0 && <MiniChip icon={Dumbbell} value={String(p.resourceCount)} label="Resources" color="bg-muted text-muted-foreground" />}
           </div>
         </div>
       )}
@@ -369,7 +369,7 @@ function LineDetail({ entity: l, onAction }: { entity: any; onAction?: () => voi
   return (
     <div className="space-y-3">
       {!isActive && (
-        <div className="rounded-lg border border-warning bg-warning px-3 py-2 border-warning bg-warning">
+        <div className="rounded-lg border border-warning/25 bg-warning/10 px-3 py-2">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-warning shrink-0 stroke-current" />
             <p className="text-xs font-medium text-warning">Line is inactive · Activate to resume production</p>
@@ -380,9 +380,9 @@ function LineDetail({ entity: l, onAction }: { entity: any; onAction?: () => voi
         <EmptyMetrics entityType="productionLine" onAction={onAction} isInactive={!isActive} />
       ) : (
         <div className="grid grid-cols-3 gap-2">
-          <SummaryCard icon={TrendingUpDown} label="Departments" value={l.departmentCount} color="bg-warning text-warning bg-warning text-warning" />
-          <SummaryCard icon={Component} label="Groups" value={l.groupCount} color="bg-danger text-danger bg-danger text-danger" />
-          <SummaryCard icon={Dumbbell} label="Resources" value={l.resourceCount} color="bg-muted text-muted-foreground bg-muted text-muted-foreground" />
+          <SummaryCard icon={TrendingUpDown} label="Departments" value={l.departmentCount} color="bg-warning/15 text-warning" />
+          <SummaryCard icon={Component} label="Groups" value={l.groupCount} color="bg-danger/15 text-danger" />
+          <SummaryCard icon={Dumbbell} label="Resources" value={l.resourceCount} color="bg-muted text-muted-foreground" />
         </div>
       )}
       <CollapsibleSection title="Line Details">

@@ -51,6 +51,7 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, sectionId, on
 
   const colors = sectionColors[sectionId ?? "control"] ?? sectionColors.control;
   const isActive = isRouteItemActive(pathname, to);
+  const colorClass = isActive ? colors.textActive : colors.icon;
 
   return (
     <NavLink
@@ -63,12 +64,12 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, sectionId, on
       onFocus={handleFocusPrefetch}
       onTouchStart={handleTouchPrefetch}
       className={`${sidebarNavTokens.row} ${isActive ? sidebarNavTokens.active : sidebarNavTokens.inactive} ${
-        isActive ? `${colors.activeBg} ${colors.textActive}` : `${colors.icon} ${colors.hoverBg}`
+        isActive ? `${colors.activeBg} ${colors.textActive}` : `${colors.hoverBg} ${colors.icon}`
       }`}
       style={{ paddingLeft: sidebarIndent(depth) }}
     >
-      <Icon className={`${sidebarNavTokens.icon} ${isActive ? colors.iconActive : colors.icon}`} />
-      <span className={sidebarNavTokens.label}>{label}</span>
+      <Icon className={`${sidebarNavTokens.icon} ${colorClass} ${isActive ? "stroke-[2.6]" : ""}`} />
+      <span className={`${sidebarNavTokens.label} ${colorClass}`}>{label}</span>
     </NavLink>
   );
 }

@@ -42,7 +42,7 @@ function getTitle(key: string): string {
 function Toolbar() {
   const { search, setSearch, statusFilter, setStatusFilter, toolbarVariant } = useToolbar();
   const actions = useToolbarActions();
-  const toolbarButtonClass = "inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors disabled:pointer-events-none disabled:text-muted-foreground disabled:bg-transparent disabled:opacity-70";
+  const toolbarButtonClass = "inline-flex items-center gap-1.5 h-8 px-2.5 rounded text-[10px] font-medium text-muted-foreground hover:bg-muted transition-colors disabled:pointer-events-none disabled:text-muted-foreground disabled:bg-transparent disabled:opacity-70";
   const saveDisabled = actions.isSaving || !actions.isDirty || actions.isValid === false;
   const isEditMode = !!actions.onSave;
   const requestFilterChange = (apply: () => void) => {
@@ -58,7 +58,7 @@ function Toolbar() {
       <div className="relative min-w-0 flex-1">
         <Search className={`absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 stroke-current pointer-events-none ${isEditMode ? theme.textDisabled : "text-muted-foreground"}`} />
         <input type="text" value={search} onChange={(e) => requestFilterChange(() => setSearch(e.target.value))} placeholder="Search"
-          className="h-7 w-full border border-border/45 bg-transparent pl-3 pr-7 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:bg-card" />
+          className="h-7 w-full rounded border border-border/35 bg-transparent pl-3 pr-7 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20" />
         {search && (
           <button type="button" onClick={() => requestFilterChange(() => setSearch(""))}
             className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
@@ -67,7 +67,7 @@ function Toolbar() {
         )}
       </div>
       <select value={statusFilter} onChange={(e) => requestFilterChange(() => setStatusFilter(e.target.value))}
-        className="h-7 w-24 shrink-0 border border-border/45 bg-transparent px-2 text-xs outline-none text-muted-foreground transition-colors cursor-pointer focus:bg-card">
+        className="h-7 w-24 shrink-0 cursor-pointer rounded border border-border/35 bg-transparent px-2 text-xs outline-none text-muted-foreground transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
         <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
       </select>
     </>
@@ -75,12 +75,12 @@ function Toolbar() {
   const actionControls = actions.onSave ? (
     <>
       <button type="button" onClick={actions.onSave} title={saveDisabled ? "Save is available after valid changes" : "Save"} disabled={saveDisabled}
-        className={`inline-flex items-center gap-1.5 h-8 px-3 rounded text-[11px] font-semibold transition-colors ${saveDisabled ? `${theme.chip} ${theme.textSecondary} cursor-not-allowed` : theme.buttonSuccessSolid}`}>
+        className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded text-[10px] font-semibold border-0 transition-colors ${saveDisabled ? `${theme.chip} ${theme.textSecondary} cursor-not-allowed` : theme.buttonSuccessSolid}`}>
         <Check className="h-4 w-4 stroke-current" />
         <span className="hidden sm:inline">{actions.isSaving ? "Saving..." : "Save"}</span>
       </button>
       <button type="button" onClick={actions.onCancel} title="Cancel"
-        className={`inline-flex items-center gap-1.5 h-8 px-2 rounded border text-[11px] font-medium ${theme.buttonSecondary} border-border transition-colors`}>
+        className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded text-[10px] font-medium text-muted-foreground hover:bg-muted transition-colors`}>
         <X className="h-4 w-4 stroke-current" />
         <span className="hidden sm:inline">Cancel</span>
       </button>
@@ -112,14 +112,14 @@ function Toolbar() {
   );
 
   return (
-    <div className="shrink-0 flex items-center gap-0.5 border-b border-border bg-muted pl-6 pr-4 h-10 select-none">
+    <div className="shrink-0 flex items-center gap-2 border-b border-border/35 bg-muted px-3 h-10 select-none">
       {toolbarVariant === "splitListDetail" ? (
         <>
-          <div className="flex h-full min-w-0 items-center gap-2 pr-2" style={{ flex: "0 0 280px", width: 280 }}>
+          <div className="flex h-full min-w-0 items-center gap-2 w-72">
             {searchFilterControls}
           </div>
-          <span className="h-5 w-px shrink-0 bg-muted" />
-          <div className="flex min-w-0 flex-1 items-center gap-0.5 pl-3">
+          <span className="h-5 w-px shrink-0 bg-border/25" />
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5">
             {actionControls}
           </div>
         </>
@@ -152,7 +152,7 @@ function Footer() {
   }
 
   return (
-    <div className="shrink-0 border-t border-border bg-muted flex h-14 items-center justify-between px-5 text-xs text-muted-foreground font-medium">
+    <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center justify-between px-4 text-xs text-muted-foreground font-medium">
       <div className="flex items-center gap-2">
         <Database className="h-3.5 w-3.5 stroke-current text-muted-foreground" />
         <span className="text-muted-foreground">{leftParts.join(" · ") || `Production Components${entityContext ? ` / ${entityContext}` : ""}`}</span>

@@ -18,18 +18,18 @@ export function EntityFormHeader({ icon, iconBg, name, entityType, code, status,
 
   return (
     <div className="shrink-0 border-b border-border bg-card bg-muted">
-      <div className="mx-auto px-6 py-3" style={{ maxWidth: "1000px" }}>
+      <div className="mx-auto px-4 py-1.5" style={{ maxWidth: "1000px" }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
               {icon}
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm font-bold text-muted-foreground truncate">{name}</h2>
+                <h2 className="text-xs font-bold text-muted-foreground truncate">{name}</h2>
                 {error && <span className="text-[10px] text-danger font-medium">{error}</span>}
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0">
                 <span className="font-medium text-muted-foreground">{entityType}</span>
                 <span className="text-muted-foreground">|</span>
                 <span className="font-mono">{code || "\u2014"}</span>

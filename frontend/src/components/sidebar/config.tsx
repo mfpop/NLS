@@ -160,10 +160,11 @@ export const sidebarEntries: SidebarEntry[] = [
     label: "Standardize",
     icon: Ruler,
     items: [
+      { type: "item", label: "Work Instructions", to: "/standardize/work-instructions", icon: ScrollText },
       { type: "item", label: "Standard Work", to: "/standardize/standard-work", icon: BookOpen },
+      { type: "item", label: "Material Flow Standards", to: "/standardize/material-flow-standards", icon: FileSpreadsheet },
       { type: "item", label: "Procedures", to: "/standardize/procedures", icon: ScrollText },
-      { type: "item", label: "Templates", to: "/standardize/templates", icon: FileSpreadsheet },
-      { type: "item", label: "Best Practices", to: "/standardize/best-practices", icon: Award },
+      { type: "item", label: "Document Control", to: "/standardize/document-control", icon: Award },
     ],
   },
   {
@@ -193,17 +194,7 @@ export const sidebarEntries: SidebarEntry[] = [
         icon: BookMarked,
         items: [
           { type: "item", label: "Setup Reference", to: "/docs/setup", icon: BookOpen },
-          {
-            type: "group",
-            label: "Core Documentation",
-            icon: BookMarked,
-            items: [
-              { type: "item", label: "Architecture", to: "/docs/core/architecture", icon: BookOpen },
-              { type: "item", label: "Domain Spec", to: "/docs/core/domain-spec", icon: BookOpen },
-              { type: "item", label: "Domain Constitution", to: "/docs/core/domain-constitution", icon: BookOpen },
-              { type: "item", label: "Diagrams", to: "/docs/core/diagrams", icon: BookOpen },
-            ],
-          },
+          { type: "item", label: "Core Documentation", to: "/docs/core", icon: BookMarked },
         ],
       },
     ],

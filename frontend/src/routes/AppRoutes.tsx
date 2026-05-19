@@ -40,9 +40,6 @@ const ContinuousImprovementPage = lazy(() =>
 const KaizenPage = lazy(() =>
   import("@/pages/improve/KaizenPage").then((module) => ({ default: module.KaizenPage }))
 );
-const BestPracticesPage = lazy(() =>
-  import("@/pages/standardize/BestPracticesPage").then((module) => ({ default: module.BestPracticesPage }))
-);
 const ProceduresPage = lazy(() =>
   import("@/pages/standardize/ProceduresPage").then((module) => ({ default: module.ProceduresPage }))
 );
@@ -55,11 +52,17 @@ const QualityPage = lazy(() =>
 const SuggestionsPage = lazy(() =>
   import("@/pages/improve/SuggestionsPage").then((module) => ({ default: module.SuggestionsPage }))
 );
-const TemplatesPage = lazy(() =>
-  import("@/pages/standardize/TemplatesPage").then((module) => ({ default: module.TemplatesPage }))
-);
 const StandardWorkPage = lazy(() =>
-  import("@/pages/improve/StandardWorkPage").then((module) => ({ default: module.StandardWorkPage }))
+  import("@/pages/standardize/StandardWorkPage").then((module) => ({ default: module.StandardWorkPage }))
+);
+const WorkInstructionsPage = lazy(() =>
+  import("@/pages/standardize/WorkInstructionsPage").then((module) => ({ default: module.WorkInstructionsPage }))
+);
+const MaterialFlowStandardsPage = lazy(() =>
+  import("@/pages/standardize/MaterialFlowStandardsPage").then((module) => ({ default: module.MaterialFlowStandardsPage }))
+);
+const DocumentControlPage = lazy(() =>
+  import("@/pages/standardize/DocumentControlPage").then((module) => ({ default: module.DocumentControlPage }))
 );
 const ProductionFlow = lazy(() =>
   import("@/pages/system/ProductionStructurePage").then((module) => ({ default: module.ProductionFlow }))
@@ -115,8 +118,41 @@ const EntityVisualSettingsPage = lazy(() =>
 const StructurePage = lazy(() =>
   import("@/pages/system/production-structure/StructurePage").then((module) => ({ default: module.StructurePage }))
 );
+const MaterialBinsPage = lazy(() =>
+  import("@/pages/system/material-bins/MaterialBinsPage").then((module) => ({ default: module.MaterialBinsPage }))
+);
+const WarehousesPage = lazy(() =>
+  import("@/pages/system/warehouses/WarehousesPage").then((module) => ({ default: module.WarehousesPage }))
+);
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system/ApplicationSettingsPage").then((module) => ({ default: module.ApplicationSettingsPage }))
+);
+const ERPDataPage = lazy(() =>
+  import("@/pages/system/erp-data/ERPDataPage").then((module) => ({ default: module.ERPDataPage }))
+);
+const ImportSourcesPage = lazy(() =>
+  import("@/pages/system/erp-data/import-sources/ImportSourcesPage").then((module) => ({ default: module.ImportSourcesPage }))
+);
+const ImportJobsPage = lazy(() =>
+  import("@/pages/system/erp-data/import-jobs/ImportJobsPage").then((module) => ({ default: module.ImportJobsPage }))
+);
+const FileHistoryPage = lazy(() =>
+  import("@/pages/system/erp-data/file-history/FileHistoryPage").then((module) => ({ default: module.FileHistoryPage }))
+);
+const MappingRulesPage = lazy(() =>
+  import("@/pages/system/erp-data/mapping-rules/MappingRulesPage").then((module) => ({ default: module.MappingRulesPage }))
+);
+const ValidationErrorsPage = lazy(() =>
+  import("@/pages/system/erp-data/validation-errors/ValidationErrorsPage").then((module) => ({ default: module.ValidationErrorsPage }))
+);
+const IntegrationStatusPage = lazy(() =>
+  import("@/pages/system/erp-data/integration-status/IntegrationStatusPage").then((module) => ({ default: module.IntegrationStatusPage }))
+);
+const FilePreviewPage = lazy(() =>
+  import("@/pages/system/erp-data/file-preview/FilePreviewPage").then((module) => ({ default: module.FilePreviewPage }))
+);
+const CompareResultsPage = lazy(() =>
+  import("@/pages/system/erp-data/compare-results/CompareResultsPage").then((module) => ({ default: module.CompareResultsPage }))
 );
 const UserProfilePage = lazy(() =>
   import("@/pages/system/UserProfilePage").then((module) => ({ default: module.UserProfilePage }))
@@ -163,6 +199,12 @@ export function AppRoutes() {
           <Route path="plan/capacity" element={<CapacityPage />} />
           <Route path="plan/capacity/load" element={<CapacityPage />} />
           <Route path="plan/capacity/yamazumi" element={<CapacityPage />} />
+          <Route path="plan/capacity/line-balancing" element={<CapacityPage />} />
+          <Route path="plan/capacity/bottleneck-analysis" element={<CapacityPage />} />
+          <Route path="plan/capacity/operator-allocation" element={<CapacityPage />} />
+          <Route path="plan/capacity/takt-vs-cycle" element={<CapacityPage />} />
+          <Route path="plan/capacity/capacity-loss" element={<CapacityPage />} />
+          <Route path="plan/capacity/workload-distribution" element={<CapacityPage />} />
           <Route path="plan/capacity/constraints" element={<CapacityPage />} />
           <Route path="plan/capacity/scenarios" element={<CapacityPage />} />
           <Route path="check/problems" element={<ProblemsPage />} />
@@ -170,15 +212,27 @@ export function AppRoutes() {
           <Route path="check/audits" element={<AuditsPage />} />
           <Route path="check/quality" element={<QualityPage />} />
           <Route path="improve/kaizen" element={<KaizenPage />} />
-          <Route path="improve/standard-work" element={<StandardWorkPage />} />
           <Route path="improve/continuous-improvement" element={<ContinuousImprovementPage />} />
           <Route path="improve/suggestions" element={<SuggestionsPage />} />
+          <Route path="standardize/work-instructions" element={<WorkInstructionsPage />} />
           <Route path="standardize/standard-work" element={<StandardWorkPage />} />
+          <Route path="standardize/material-flow-standards" element={<MaterialFlowStandardsPage />} />
+          <Route path="standardize/material-flow" element={<Navigate to="/standardize/material-flow-standards" replace />} />
           <Route path="standardize/procedures" element={<ProceduresPage />} />
-          <Route path="standardize/templates" element={<TemplatesPage />} />
-          <Route path="standardize/best-practices" element={<BestPracticesPage />} />
+          <Route path="standardize/document-control" element={<DocumentControlPage />} />
+          <Route path="standardize/templates" element={<Navigate to="/standardize/document-control" replace />} />
+          <Route path="standardize/best-practices" element={<Navigate to="/standardize/document-control" replace />} />
+          <Route path="standardize/training" element={<Navigate to="/standardize/document-control" replace />} />
+          <Route path="standardize/governance" element={<Navigate to="/standardize/document-control" replace />} />
           <Route path="system/production-structure" element={<ProductionFlow />} />
                     <Route path="system/production-structure/flow" element={<Navigate to="company" replace />} />
+                    <Route path="system/manufacturing-structure" element={<Navigate to="/system/production-structure" replace />} />
+                    <Route path="system/manufacturing-structure/flow" element={<Navigate to="company" replace />} />
+                    <Route path="system/manufacturing-structure/components" element={<Navigate to="/system/production-structure/components" replace />} />
+                    <Route path="system/manufacturing-structure/product-master-data" element={<Navigate to="/system/product-master-data" replace />} />
+                    <Route path="system/application/diagnostics" element={<Navigate to="/system/diagnostics" replace />} />
+                    <Route path="system/application/settings" element={<Navigate to="/system/application-settings" replace />} />
+                    <Route path="system/application/documentation" element={<Navigate to="/docs/core" replace />} />
                     <Route path="system/production-structure/flow/:tab" element={<ProductionFlowLayout />} />
                     <Route path="system/production-structure/components" element={<ProductionComponentsLayout />}>
                       <Route index element={<Navigate to="company" replace />} />
@@ -200,12 +254,23 @@ export function AppRoutes() {
           <Route path="system/production-structure/components/routing/:productionLineId" element={<RoutingEditorPage />} />
           <Route path="system/production-structure/components/routing/:productionLineId/:routingId" element={<RoutingEditorPage />} />
           <Route path="system/production-structure/structure" element={<StructurePage />} />
+          <Route path="system/warehouses" element={<WarehousesPage />} />
+          <Route path="system/material-bins" element={<MaterialBinsPage />} />
           <Route path="system/product-master-data" element={<ProductMasterDataPage />} />
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
           <Route path="system/diagnostics" element={<GraphqlStatusPage />} />
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
+          <Route path="system/erp-data" element={<ERPDataPage />} />
+          <Route path="system/erp-data/import-sources" element={<ImportSourcesPage />} />
+          <Route path="system/erp-data/import-jobs" element={<ImportJobsPage />} />
+          <Route path="system/erp-data/file-history" element={<FileHistoryPage />} />
+          <Route path="system/erp-data/mapping-rules" element={<MappingRulesPage />} />
+          <Route path="system/erp-data/validation-errors" element={<ValidationErrorsPage />} />
+          <Route path="system/erp-data/integration-status" element={<IntegrationStatusPage />} />
+          <Route path="system/erp-data/file-preview" element={<FilePreviewPage />} />
+          <Route path="system/erp-data/compare-results" element={<CompareResultsPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />
           <Route path="system/sign-out" element={<SignOutPage />} />

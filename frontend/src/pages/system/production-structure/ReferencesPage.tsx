@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import {
   Database, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
   Trash2, Save, FileSpreadsheet, ChevronsUpDown,
-  Lock, Info,
+  Lock, Info, Building2,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { useToolbar } from "./components/ToolbarContext";
@@ -13,6 +13,7 @@ import { COMPANY_QUERY, UPDATE_COMPANY_MUTATION } from "@/graphql/companyQueries
 import { REFERENCE_ITEMS_QUERY, CREATE_REFERENCE_ITEM_MUTATION, UPDATE_REFERENCE_ITEM_MUTATION, DEACTIVATE_REFERENCE_ITEM_MUTATION } from "@/graphql/referenceItemQueries";
 import { CompanyEditor, type CompanyFormData } from "./components/CompanyEditor";
 import { getTableEntityStyle } from "./config/entityConfig";
+import { useActiveLine } from "@/hooks/useActiveLine";
 
 interface RefItem {
   id: string;
@@ -107,6 +108,34 @@ const TYPE_GROUPS: Record<string, string[]> = {
 const GROUP_ORDER = ["organization", "manufacturing", "material_flow", "lean_quality", "people"];
 const READ_ONLY_TABLE_TYPES = new Set<string>();
 const PEOPLE_TABLE_TYPES = new Set(["skill_type", "role", "shift_team", "staff_user", "staff_assignment"]);
+
+// Scope declarations for reference table types
+// GLOBAL  — unaffected by Plant/Line selector
+// PLANT   — filtered by activePlantId (staff_user/staff_assignment via relations)
+// LINE    — reserved for future line-scoped references
+type TableScope = "GLOBAL" | "PLANT" | "LINE";
+const TABLE_SCOPE: Record<string, TableScope> = {
+  production_calendar: "GLOBAL", shift_pattern: "GLOBAL", language: "GLOBAL", timezone: "GLOBAL", industry_type: "GLOBAL",
+  manufacturing_type: "GLOBAL", work_center_type: "GLOBAL", machine_type: "GLOBAL", operation_code: "GLOBAL", routing_type: "GLOBAL",
+  product_model: "GLOBAL", production_family: "GLOBAL",
+  material_category: "GLOBAL", inventory_type: "GLOBAL", kanban_type: "GLOBAL", container_type: "GLOBAL", unit_type: "GLOBAL",
+  downtime_code: "GLOBAL", defect_code: "GLOBAL", scrap_reason: "GLOBAL", kaizen_category: "GLOBAL", priority: "GLOBAL",
+  label_badge: "GLOBAL", maintenance_type: "GLOBAL", material_flow_type: "GLOBAL", process_type: "GLOBAL",
+  skill_type: "GLOBAL", role: "GLOBAL",
+  shift_team: "PLANT",
+  staff_user: "PLANT",
+  staff_assignment: "PLANT",
+};
+function getTableScope(tableType: string): TableScope {
+  return TABLE_SCOPE[tableType] ?? "GLOBAL";
+}
+function scopeLabel(scope: TableScope, plantName?: string, lineName?: string): string {
+  if (scope === "GLOBAL") return "Global reference";
+  if (scope === "PLANT") return plantName ? `Plant: ${plantName}` : "Plant: (select a plant)";
+  if (scope === "LINE") return lineName ? `Line: ${lineName}` : "Line: (select a line)";
+  return "";
+}
+
 function generateCode(): string { return `R${Math.random().toString(36).slice(2, 8).toUpperCase()}`; }
 
 const BASE_FIELDS: DynamicField[] = [
@@ -571,12 +600,23 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
   const [confirmDelete, setConfirmDelete] = useState<RefItem | null>(null);
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
+  const { productionLineId, activeLine } = useActiveLine();
+  const activePlantId = activeLine?.plantId ?? null;
+  const activePlantName = activeLine?.plantName ?? null;
+  const activeLineName = activeLine?.name ?? null;
+
+  const queryVars = useMemo(() => ({
+    tableType: null,
+    plantId: activePlantId,
+    productionLineId: productionLineId,
+  }), [activePlantId, productionLineId]);
+
   const showToast = useCallback((message: string) => {
     showSystemMessage(message, "success");
   }, [showSystemMessage]);
 
   const { data: itemsData, loading: itemsLoading, refetch: refetchItems } = useQuery<{ referenceItems: RefItem[] }>(REFERENCE_ITEMS_QUERY, {
-    variables: { tableType: null }, fetchPolicy: "cache-and-network", errorPolicy: "all",
+    variables: queryVars, fetchPolicy: "cache-and-network", errorPolicy: "all",
   });
   const { data: companyData } = useQuery<{ company: CompanyRecord | null }>(COMPANY_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const [updateCompany] = useMutation(UPDATE_COMPANY_MUTATION, { refetchQueries: [COMPANY_QUERY] });
@@ -1020,7 +1060,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
             <div className="flex h-full flex-col">
               <form id="item-form" onSubmit={(e) => { e.preventDefault(); handleItemSave(); }} className="flex-1 overflow-y-auto px-4 py-3 space-y-2 max-w-xl">
                 {currentTableType === "shift_pattern" && (
-                  <div className="rounded border border-warning bg-warning px-2.5 py-2 text-[10px] leading-4 text-warning border-warning bg-warning text-warning">
+                  <div className="rounded border border-warning/25 bg-warning/10 px-2.5 py-2 text-[10px] leading-4 text-warning">
                     Shift times are saved as reference attributes only. Authoritative schedule duration, break duration, and capacity availability must be resolved by schedule/domain services.
                   </div>
                 )}
@@ -1072,6 +1112,10 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
                   {!isPeopleTable(selectedType) && (
                     <span className={`min-w-0 truncate text-[11px] ${theme.textSecondary}`} title={selectedUsageContext}>{selectedUsageContext}</span>
                   )}
+                  <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] ${theme.chip}`}>
+                    {getTableScope(selectedType) === "GLOBAL" ? <Database className="h-3 w-3 stroke-current" /> : <Building2 className="h-3 w-3 stroke-current" />}
+                    {scopeLabel(getTableScope(selectedType), activePlantName || undefined, activeLineName || undefined)}
+                  </span>
                   {selectedUpdatedAt && <span className={`ml-auto text-[10px] ${theme.textMuted}`}>Updated {formatDate(selectedUpdatedAt)}</span>}
                 </div>
               </div>
@@ -1087,8 +1131,25 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
                   </div>
                 </div>
               )}
+              {getTableScope(selectedType) === "PLANT" && !activePlantId && (
+                <div className={`mx-3 mt-2 flex shrink-0 items-center justify-between gap-2 rounded px-3 py-1.5 text-[10px] ${theme.warningBanner}`}>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Info className="h-3.5 w-3.5 shrink-0 stroke-current" />
+                    <span className="truncate">Select a production line to view plant-scoped records for this table.</span>
+                  </div>
+                </div>
+              )}
               <div className="flex-1 min-h-0">
-                <ItemsList items={allItems} selectedType={selectedType} tableSearch={tableSearch} onEdit={openEditItem} />
+                {getTableScope(selectedType) === "PLANT" && !activePlantId ? (
+                  <div className="flex h-full items-center justify-center">
+                    <div className="text-center px-4">
+                      <Building2 className="h-10 w-10 stroke-current text-muted-foreground mx-auto mb-3" />
+                      <p className="text-xs text-muted-foreground max-w-60 mx-auto leading-relaxed">Select a production line from the sidebar to view plant-scoped reference records.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <ItemsList items={allItems} selectedType={selectedType} tableSearch={tableSearch} onEdit={openEditItem} />
+                )}
               </div>
             </div>
           ) : (

@@ -25,9 +25,17 @@ const RAIL: Record<string, { border: string; iconBg: string; iconFg: string }> =
   warehouse:     { border: "border-l-entity-warehouse",     iconBg: "bg-entity-warehouse-bg",     iconFg: "text-entity-warehouse" },
 };
 
-export function EntityListItem({ name, code, meta, icon, selected, status, onClick, entityType = "resource", issueTags }: EntityListItemProps) {
+function statusBulletClass(status?: string) {
+  const normalized = (status || "").toLowerCase();
+  if (normalized === "active" || normalized === "running" || normalized === "online") return "bg-success";
+  if (normalized === "inactive" || normalized === "idle") return "bg-muted-foreground/45";
+  if (normalized === "down" || normalized === "blocked" || normalized === "error") return "bg-danger";
+  if (normalized === "maintenance" || normalized === "warning") return "bg-warning";
+  return "bg-muted-foreground/35";
+}
+
+export function EntityListItem({ name, meta, icon, selected, status, onClick, entityType = "resource" }: EntityListItemProps) {
   const r = RAIL[entityType] ?? RAIL.resource;
-  const isActive = status !== "inactive";
   return (
     <div onClick={onClick}
       className={`group mx-1 my-0.5 flex h-11 cursor-pointer items-center gap-2.5 rounded-md px-3 transition-all duration-150 ${
@@ -39,16 +47,14 @@ export function EntityListItem({ name, code, meta, icon, selected, status, onCli
         <span className={`${r.iconFg}`}>{icon}</span>
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[14px] font-semibold truncate ${theme.textPrimary}`}>{name}</span>
-          {code && <span className={`text-[11px] font-mono font-semibold ${theme.textSecondary} shrink-0`}>{code}</span>}
-          {issueTags}
+        <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+          <span className={`min-w-0 truncate text-[14px] font-semibold ${theme.textPrimary}`}>{name}</span>
+          <span className={`h-2 w-2 rounded-full ${statusBulletClass(status)}`} title={status || "unknown"} aria-label={`Status: ${status || "unknown"}`} />
         </div>
         <div className={`mt-0.5 truncate text-[12px] font-medium ${theme.textSecondary}`} title={meta}>
           {meta}
         </div>
       </div>
-      <span className={`ml-2 inline-block h-1 w-1 rounded-full shrink-0 ${isActive ? "bg-status-active" : "bg-status-inactive/60"}`} />
     </div>
   );
 }

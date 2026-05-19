@@ -31,6 +31,7 @@ from api.types.manufacturing import (
     ProfileNode, WorkHistoryEntry, EducationEntry,
     RoutingNode, RoutingSummaryNode, RoutingStepNode, StepCapacityNode, YamazumiAnalysisNode, YamazumiStepNode,
     ProductionLineFlowContextNode, MaterialNode, MaterialBinNode, InventoryLocationNode,
+    WarehouseNode,
     CapacityPlanNode, CapacityPlanInputNode, CapacityPlanResultNode, CapacityYamazumiNode, CapacityScenarioNode,
     CapacityResultNode, CapacitySnapshotNode, PaginatedCapacitySnapshotResponse, WorkScheduleNode, CapacityProfileNode, CapacityRecalculationJobNode,
 )
@@ -291,7 +292,7 @@ TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
     "inventory_type": "resource_group_type",
     "kanban_type": "lean_methodology",
     "industry_type": "industry_type",
-    "container_type": "industry_type",
+    "container_type": "container_type",
     "unit_type": "schedule",
     "downtime_code": "downtime_reason",
     "defect_code": "defect_type",
@@ -375,6 +376,7 @@ CATEGORY_TO_TABLE_TYPE: dict[str, str] = {
     "skill_type": "skill_type",
     "role": "role",
     "shift_team": "shift_team",
+    "container_type": "container_type",
 }
 
 from manufacturing.models import (
@@ -1028,23 +1030,44 @@ class ManufacturingQuery:
     # ── Legacy backward-compatible resolvers ──
 
     @strawberry.field
-    def reference_items(self, table_type: typing.Optional[str] = None, active_only: typing.Optional[bool] = None) -> list[LegacyReferenceItemNode]:
-        """Legacy: returns ReferenceItem-style results from new ReferenceValue data."""
+    def reference_items(
+        self,
+        table_type: typing.Optional[str] = None,
+        active_only: typing.Optional[bool] = None,
+        plant_id: typing.Optional[str] = None,
+        production_line_id: typing.Optional[str] = None,
+    ) -> list[LegacyReferenceItemNode]:
+        """Legacy: returns ReferenceItem-style results from new ReferenceValue data.
+        Supports plant/line context filtering for scoped reference types.
+        - PLANT-scoped types: staff_user, staff_assignment, shift_team
+        - LINE-scoped types: (reserved for future line-specific references)
+        - GLOBAL types: all others (ignores plant/line filters)
+        """
+        from django.contrib.auth.models import User
+        from manufacturing.models import UserRole
         result = []
         include_staff_users = table_type in (None, "staff_user")
         include_staff_assignments = table_type in (None, "staff_assignment")
+
         if include_staff_users:
             users = User.objects.select_related("role_profile").order_by("username")
             if active_only:
                 users = users.filter(is_active=True)
+            if plant_id and table_type in (None, "staff_user"):
+                users = users.filter(role_profile__plant__icontains=plant_id)
             result.extend(LegacyReferenceItemNode.from_user(user) for user in users)
+
         if include_staff_assignments:
             roles = UserRole.objects.select_related("user").order_by("user__username")
             if active_only:
                 roles = roles.filter(user__is_active=True)
+            if plant_id and table_type in (None, "staff_assignment"):
+                roles = roles.filter(department__plant_id=plant_id)
             result.extend(LegacyReferenceItemNode.from_user_role(role) for role in roles)
+
         if table_type in ("staff_user", "staff_assignment"):
             return result
+
         cats_qs = ReferenceCategory.objects.all()
         if table_type:
             category_code = TABLE_TYPE_TO_CATEGORY.get(table_type, table_type)
@@ -1129,24 +1152,62 @@ class ManufacturingQuery:
         return [InventoryLocationNode.from_db(location) for location in qs]
 
     @strawberry.field
-    def material_bins(
+    def warehouses(
         self,
         plant_id: Optional[str] = None,
-        resource_group_id: Optional[str] = None,
-        bin_type: Optional[str] = None,
         is_active: Optional[bool] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-    ) -> list[MaterialBinNode]:
-        qs = MaterialBin.objects.select_related("plant", "resource_group", "material", "uom").all()
+    ) -> list["WarehouseNode"]:
+        from manufacturing.models import Warehouse
+        qs = Warehouse.objects.select_related("plant").all()
         if plant_id:
             qs = qs.filter(plant_id=plant_id)
+        if is_active is not None:
+            qs = qs.filter(is_active=is_active)
+        if limit:
+            qs = qs[offset:offset + limit] if offset else qs[:limit]
+        return [WarehouseNode.from_db(w) for w in qs]
+
+    @strawberry.field
+    def warehouse(self, id: str) -> Optional["WarehouseNode"]:
+        from manufacturing.models import Warehouse
+        try:
+            return WarehouseNode.from_db(Warehouse.objects.select_related("plant").get(id=id))
+        except Warehouse.DoesNotExist:
+            return None
+
+    @strawberry.field
+    def material_bins(
+        self,
+        plant_id: Optional[str] = None,
+        warehouse_code: Optional[str] = None,
+        production_line_id: Optional[str] = None,
+        resource_group_id: Optional[str] = None,
+        bin_type: Optional[str] = None,
+        replenishment_mode: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        search: Optional[str] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+    ) -> list[MaterialBinNode]:
+        qs = MaterialBin.objects.select_related("plant", "production_line", "resource_group", "material", "uom").all()
+        if plant_id:
+            qs = qs.filter(plant_id=plant_id)
+        if warehouse_code:
+            qs = qs.filter(warehouse_code=warehouse_code)
+        if production_line_id:
+            qs = qs.filter(production_line_id=production_line_id)
         if resource_group_id:
             qs = qs.filter(resource_group_id=resource_group_id)
         if bin_type:
             qs = qs.filter(bin_type=bin_type)
+        if replenishment_mode:
+            qs = qs.filter(replenishment_mode=replenishment_mode)
         if is_active is not None:
             qs = qs.filter(is_active=is_active)
+        if search:
+            qs = qs.filter(Q(code__icontains=search) | Q(name__icontains=search))
         if limit:
             qs = qs[offset:offset + limit] if offset else qs[:limit]
         return [MaterialBinNode.from_db(bin_obj) for bin_obj in qs]
@@ -1155,10 +1216,31 @@ class ManufacturingQuery:
     def material_bin(self, id: str) -> Optional[MaterialBinNode]:
         try:
             return MaterialBinNode.from_db(
-                MaterialBin.objects.select_related("plant", "resource_group", "material", "uom").get(id=id)
+                MaterialBin.objects.select_related("plant", "production_line", "resource_group", "material", "uom").get(id=id)
             )
         except MaterialBin.DoesNotExist:
             return None
+
+    @strawberry.field(name="materialBinsByPlant")
+    def material_bins_by_plant(self, plant_id: str) -> list[MaterialBinNode]:
+        return [
+            MaterialBinNode.from_db(bin_obj)
+            for bin_obj in MaterialBin.objects.select_related("plant", "production_line", "resource_group", "material", "uom").filter(plant_id=plant_id)
+        ]
+
+    @strawberry.field(name="materialBinsByWarehouse")
+    def material_bins_by_warehouse(self, warehouse_code: str) -> list[MaterialBinNode]:
+        return [
+            MaterialBinNode.from_db(bin_obj)
+            for bin_obj in MaterialBin.objects.select_related("plant", "production_line", "resource_group", "material", "uom").filter(warehouse_code=warehouse_code)
+        ]
+
+    @strawberry.field(name="materialBinsByResourceGroup")
+    def material_bins_by_resource_group(self, resource_group_id: str) -> list[MaterialBinNode]:
+        return [
+            MaterialBinNode.from_db(bin_obj)
+            for bin_obj in MaterialBin.objects.select_related("plant", "production_line", "resource_group", "material", "uom").filter(resource_group_id=resource_group_id)
+        ]
 
     @strawberry.field
     def routings(self, production_line_id: Optional[str] = None, product_model_id: Optional[str] = None, product_family_id: Optional[str] = None, part_number_id: Optional[str] = None, limit: Optional[int] = None, offset: Optional[int] = None) -> list[RoutingNode]:

@@ -61,7 +61,7 @@ const DEFAULT_LIST_WIDTH = 280;
 const COMMAND_BAR_X_PADDING = 12;
 const PMD_CARD = "border border-border/20 bg-card shadow-md shadow-foreground/10";
 const PMD_FIELD = "border border-border/20 bg-transparent text-muted-foreground outline-none transition-colors focus:border-border-strong focus:bg-card focus:text-foreground focus:ring-2 focus:ring-ring/15";
-const PMD_BUTTON = "inline-flex h-7 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:text-muted-foreground/70 disabled:opacity-100";
+const PMD_BUTTON = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:text-muted-foreground/70 disabled:opacity-100";
 
 function ProductStatusBadge({ status, active }: { status?: string | null; active?: boolean }) {
   const normalized = String(status || (active ? "ACTIVE" : "ARCHIVED")).toUpperCase();

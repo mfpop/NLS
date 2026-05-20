@@ -1,7 +1,7 @@
 import { useQuery } from "@apollo/client/react";
 import { ERP_RELATIONSHIP_GRAPH } from "@/graphql/lineageQueries";
 import { Key, Link2 } from "lucide-react";
-import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import { useRef, useState, useLayoutEffect } from "react";
 
 interface NodeItem { id: string; name: string; sourceType: string; active: boolean; }
 interface FieldItem { id: string; entityId: string; fieldName: string; primaryKey: boolean; foreignKey: boolean; required: boolean; nexusField: string; dataType: string; }

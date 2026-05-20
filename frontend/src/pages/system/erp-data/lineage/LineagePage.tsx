@@ -419,7 +419,7 @@ export function LineagePage() {
                           {sev === "ERROR" ? "Blocking Issues" : sev === "WARNING" ? "Warnings" : "Info"}
                           <span className="text-muted-foreground/60">({items.length})</span>
                         </div>
-                        {items.map((v, i) => {
+                        {items.map((v) => {
                           const idx = validationItems.indexOf(v);
                           const isSelected = selectedValidationIdx === idx;
                           return (

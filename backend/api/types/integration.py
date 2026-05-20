@@ -287,6 +287,140 @@ class ImportAuditLogsResult:
 
 # ── File Preview Row ──
 
+# ── Parsed Data ──
+
+@strawberry.type
+class ParsedSheetType:
+    sheet_name: str = strawberry.field(name="sheetName")
+    column_headers: list[str] = strawberry.field(name="columnHeaders", default_factory=list)
+    column_types: list[str] = strawberry.field(name="columnTypes", default_factory=list)
+    total_rows: int = strawberry.field(name="totalRows", default=0)
+    sample_rows: list["PreviewRowNode"] = strawberry.field(name="sampleRows", default_factory=list)
+
+    @classmethod
+    def from_sheet(cls, sheet, sample_limit: int = 100) -> "ParsedSheetType":
+        sample = [
+            PreviewRowNode(row_number=r.row_number, columns=[c if c is not None else "" for c in r.values])
+            for r in sheet.rows[:sample_limit]
+        ]
+        col_types = [ct.detected_type for ct in sheet.column_types] if sheet.column_types else []
+        return cls(
+            sheet_name=sheet.sheet_name,
+            column_headers=sheet.column_headers,
+            column_types=col_types,
+            total_rows=sheet.total_rows,
+            sample_rows=sample,
+        )
+
+
+@strawberry.type
+class ParsedDataResult:
+    ok: bool
+    file_name: str = strawberry.field(name="fileName", default="")
+    sheets: list[ParsedSheetType] = strawberry.field(default_factory=list)
+    errors: typing.Optional[list["MutationError"]] = None
+
+
+# ── Mapping Suggestions ──
+
+@strawberry.type
+class MappingSuggestionType:
+    source_column: str = strawberry.field(name="sourceColumn")
+    nexus_field: typing.Optional[str] = strawberry.field(name="nexusField", default=None)
+    confidence: str = "pending"
+    status: str = "unmapped"
+    required: bool = False
+    message: str = ""
+
+    @classmethod
+    def unmapped(cls, col: str, required: bool = False) -> "MappingSuggestionType":
+        return cls(
+            source_column=col,
+            status="unmapped",
+            confidence="low",
+            required=required,
+            message="No matching Nexus field found" if not required else f"Required field '{col}' is not mapped",
+        )
+
+    @classmethod
+    def mapped(cls, col: str, nexus: str, required: bool = False) -> "MappingSuggestionType":
+        return cls(
+            source_column=col,
+            nexus_field=nexus,
+            status="mapped" if required else "optional",
+            confidence="high" if required else "medium",
+            required=required,
+            message=f"Mapped to {nexus}" if not required else f"Required: mapped to {nexus}",
+        )
+
+
+@strawberry.type
+class MappingSuggestionsResult:
+    ok: bool
+    items: list[MappingSuggestionType] = strawberry.field(default_factory=list)
+    unmapped_count: int = strawberry.field(name="unmappedCount", default=0)
+    required_unmapped_count: int = strawberry.field(name="requiredUnmappedCount", default=0)
+    errors: typing.Optional[list["MutationError"]] = None
+
+
+# ── Apply Preview ──
+
+@strawberry.type
+class FieldDiffType:
+    field: str
+    incoming: typing.Optional[str] = None
+    existing: typing.Optional[str] = None
+
+    @classmethod
+    def from_dict(cls, field: str, incoming: typing.Any, existing: typing.Any) -> "FieldDiffType":
+        return cls(
+            field=field,
+            incoming=str(incoming) if incoming is not None else None,
+            existing=str(existing) if existing is not None else None,
+        )
+
+
+@strawberry.type
+class PlannedMutationType:
+    row_number: typing.Optional[int] = strawberry.field(name="rowNumber", default=None)
+    entity_type: str = strawberry.field(name="entityType")
+    entity_key: str = strawberry.field(name="entityKey")
+    operation: str
+    incoming: typing.Optional[str] = None
+    existing: typing.Optional[str] = None
+    field_diffs: list[FieldDiffType] = strawberry.field(name="fieldDiffs", default_factory=list)
+
+    @classmethod
+    def from_compare(cls, obj) -> "PlannedMutationType":
+        import json
+        diffs = []
+        if obj.diff:
+            for k, v in obj.diff.items():
+                incoming_v = obj.incoming_value.get(k) if obj.incoming_value else None
+                existing_v = obj.current_value.get(k) if obj.current_value else None
+                diffs.append(FieldDiffType.from_dict(k, str(v.get("incoming", "")), str(v.get("existing", ""))))
+        return cls(
+            entity_type=obj.entity_type,
+            entity_key=obj.stable_key,
+            operation=obj.action,
+            incoming=json.dumps(obj.incoming_value) if obj.incoming_value else None,
+            existing=json.dumps(obj.current_value) if obj.current_value else None,
+            field_diffs=diffs,
+        )
+
+
+@strawberry.type
+class ApplyPreviewResult:
+    ok: bool
+    create_count: int = strawberry.field(name="createCount", default=0)
+    update_count: int = strawberry.field(name="updateCount", default=0)
+    unchanged_count: int = strawberry.field(name="unchangedCount", default=0)
+    conflict_count: int = strawberry.field(name="conflictCount", default=0)
+    skip_count: int = strawberry.field(name="skipCount", default=0)
+    planned_mutations: list[PlannedMutationType] = strawberry.field(name="plannedMutations", default_factory=list)
+    errors: typing.Optional[list["MutationError"]] = None
+
+
 @strawberry.type
 class PreviewRowNode:
     row_number: int = strawberry.field(name="rowNumber")

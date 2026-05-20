@@ -12,6 +12,8 @@ import { useImportJobs, type PlantStructureMutationResult } from "@/hooks/useImp
 import {
   FILE_PREVIEW_QUERY, IMPORT_VALIDATION_ERRORS_QUERY,
   IMPORT_COMPARE_RESULTS_QUERY, IMPORT_AUDIT_LOGS_QUERY,
+  PARSED_DATA_QUERY, MAPPING_SUGGESTIONS_QUERY,
+  IMPORT_APPLY_PREVIEW_QUERY,
 } from "@/graphql/erpDataJobQueries";
 
 const STATUS_FLOW: Record<string, { label: string; icon: typeof Upload; color: string; colorClass: string; next: string[] }> = {
@@ -31,6 +33,15 @@ const STATUS_FLOW: Record<string, { label: string; icon: typeof Upload; color: s
 };
 
 const PROGRESS_STEPS = ["FILE_ATTACHED", "PREVIEWED", "VALIDATED", "COMPARED", "READY_TO_APPLY", "APPLIED"];
+
+const PROGRESS_LABELS: Record<string, string> = {
+  FILE_ATTACHED: "File",
+  PREVIEWED: "Preview",
+  VALIDATED: "Validate",
+  COMPARED: "Compare",
+  READY_TO_APPLY: "Ready",
+  APPLIED: "Applied",
+};
 
 const PREVIEW_TABS = [
   { id: "file-preview", label: "File Preview", icon: FileText },
@@ -89,23 +100,22 @@ function FooterProgress({ status, failed }: { status: string; failed?: string | 
   const step = PROGRESS_STEPS.indexOf(status);
   const failedStep = failed ? PROGRESS_STEPS.indexOf(failed) : -1;
   return (
-    <div className="flex items-center w-full h-full px-3 gap-1.5">
+    <div className="flex items-center w-full h-full px-2 gap-1">
       {PROGRESS_STEPS.map((st, i) => {
-        const f = STATUS_FLOW[st];
         const done = i < step;
         const current = i === step;
         const isFailed = i === failedStep;
         const last = i === PROGRESS_STEPS.length - 1;
         return (
-          <div key={st} className="flex items-center gap-1 flex-1 min-w-0">
-            <div className={`flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[8px] font-medium leading-tight truncate transition-all
+          <div key={st} className="flex items-center gap-0.5 flex-1 min-w-0">
+            <div className={`flex items-center gap-0.5 rounded-sm px-1 py-0.5 text-[7px] font-medium leading-tight truncate transition-all
               ${isFailed ? "bg-red-100 text-red-700 ring-1 ring-red-400 font-semibold" : current ? "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-400 font-semibold" : done ? "bg-emerald-50 text-emerald-700" : "bg-muted/40 text-muted-foreground/70"}
             `}>
-              {isFailed ? <AlertCircle className="h-2.5 w-2.5 text-red-500 shrink-0" /> : current ? <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse shrink-0" /> : done ? <Check className="h-2.5 w-2.5 text-emerald-600 shrink-0" /> : <div className="h-1 w-1 rounded-full bg-border/60 shrink-0" />}
-              <span className="truncate">{f.label}</span>
+              {isFailed ? <AlertCircle className="h-2 w-2 text-red-500 shrink-0" /> : current ? <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse shrink-0" /> : done ? <Check className="h-2 w-2 text-emerald-600 shrink-0" /> : <div className="h-1 w-1 rounded-full bg-border/60 shrink-0" />}
+              <span className="truncate">{PROGRESS_LABELS[st] || st}</span>
             </div>
             {!last && (
-              <div className={`h-[3px] flex-1 rounded-full ${isFailed ? "bg-red-400" : done ? "bg-emerald-400" : "bg-border/20"}`} />
+              <div className={`h-[2px] flex-1 rounded-full ${isFailed ? "bg-red-400" : done ? "bg-emerald-400" : "bg-border/20"}`} />
             )}
           </div>
         );
@@ -362,10 +372,288 @@ function PsComparePanel({ result }: { result: PlantStructureMutationResult | nul
   );
 }
 
+function ParsedDataGrid({ data, loading }: { data: any; loading: boolean }) {
+  const sheets: any[] = data?.sheets ?? [];
+  if (loading) return <div className="flex items-center justify-center h-full text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-success animate-bounce mr-2" />Loading parsed data…</div>;
+  if (!data?.ok && data?.errors) return (
+    <div className="flex items-center justify-center h-full"><div className="text-center max-w-md"><AlertTriangle className="h-8 w-8 stroke-current text-destructive mx-auto mb-2" /><p className="text-xs text-destructive font-medium mb-1">Parse Error</p><p className="text-[10px] text-muted-foreground">{data.errors[0]?.message}</p></div></div>
+  );
+  if (sheets.length === 0) return (
+    <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+      <Table2 className="h-8 w-8 stroke-current opacity-30 mr-2" />
+      Parsed data is not available. Run preview again.
+    </div>
+  );
+  const [activeSheetIdx, setActiveSheetIdx] = useState(0);
+  const sheet = sheets[activeSheetIdx];
+  return (
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 flex items-center gap-1 px-1.5 py-1 border-b border-border/20 bg-muted/40">
+        {sheets.map((s: any, i: number) => (
+          <button key={s.sheetName} onClick={() => setActiveSheetIdx(i)}
+            className={`px-2 py-0.5 text-[10px] rounded-sm font-medium ${i === activeSheetIdx ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+            {s.sheetName}
+          </button>
+        ))}
+        <span className="flex-1 text-right text-[9px] text-muted-foreground">{sheet.totalRows} rows · {sheet.columnHeaders.length} columns{sheet.columnTypes.length > 0 ? ` · ${sheet.columnTypes.join(", ")}` : ""}</span>
+      </div>
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-collapse text-[11px] font-mono" style={{ tableLayout: "fixed" as any }}>
+          <thead><tr className="sticky top-0 z-30 bg-muted">
+            <th className="sticky left-0 z-40 bg-muted border-r-2 border-b-2 border-border/30 px-1.5 py-1.5 text-[9px] font-bold text-foreground text-center" style={{ width: 44, minWidth: 44, maxWidth: 44 }}>#</th>
+            {sheet.columnHeaders.map((h: string, ci: number) => (
+              <th key={ci} className="border-r border-b-2 border-border/30 px-1.5 py-1.5 text-[9px] font-bold text-foreground text-left truncate" style={{ width: 120, minWidth: 80 }}
+                title={h}>{h}</th>
+            ))}
+          </tr></thead>
+          <tbody>
+            {(sheet.sampleRows ?? []).length === 0 ? (
+              <tr><td colSpan={sheet.columnHeaders.length + 1} className="text-center py-6 text-[10px] text-muted-foreground">No data rows</td></tr>
+            ) : sheet.sampleRows.map((row: any, ri: number) => (
+              <tr key={ri} className={`transition-colors ${ri % 2 === 0 ? "bg-card" : "bg-muted/[0.04]"} hover:bg-indigo-500/10`}>
+                <td className="sticky left-0 z-10 bg-[inherit] hover:bg-[inherit] border-r-2 border-border/10 px-1.5 py-0.5 text-[9px] text-muted-foreground text-center font-medium leading-tight" style={{ width: 44, minWidth: 44, maxWidth: 44 }}>{row.rowNumber}</td>
+                {sheet.columnHeaders.map((_: string, ci: number) => (
+                  <td key={ci} className="border-r border-border/10 px-1 py-0.5 text-foreground truncate overflow-hidden text-ellipsis whitespace-nowrap leading-tight" title={row.columns[ci] ?? ""}>
+                    {row.columns[ci] ?? <span className="text-muted-foreground/30">—</span>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function MappingPanel({ data, loading, jobId }: { data: any; loading: boolean; jobId?: string | null }) {
+  const items: any[] = data?.items ?? [];
+  const [mappedNexusMap, setMappedNexusMap] = useState<Record<string, string>>({});
+  const [savingCol, setSavingCol] = useState<string | null>(null);
+  if (loading) return <div className="flex items-center justify-center h-full text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-success animate-bounce mr-2" />Loading mapping…</div>;
+  if (!data?.ok && data?.errors) return (
+    <div className="flex items-center justify-center h-full"><div className="text-center max-w-md"><AlertTriangle className="h-8 w-8 stroke-current text-destructive mx-auto mb-2" /><p className="text-xs text-destructive font-medium mb-1">Mapping Error</p><p className="text-[10px] text-muted-foreground">{data.errors[0]?.message}</p></div></div>
+  );
+  if (items.length === 0) return (
+    <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+      <MapIcon className="h-8 w-8 stroke-current opacity-30 mr-2" />
+      No mapping data available. Run preview first.
+    </div>
+  );
+
+  const total = items.length;
+  const mappedCount = items.filter((i: any) => i.status === "mapped" || i.status === "optional").length;
+  const requiredMissing = items.filter((i: any) => i.required && i.status === "unmapped").length;
+
+  const groups: Record<string, any[]> = {
+    "required-mapped": [],
+    "optional-mapped": [],
+    unmapped: [],
+    ignored: [],
+  };
+  for (const it of items) {
+    if (it.status === "mapped") groups["required-mapped"].push(it);
+    else if (it.status === "optional") groups["optional-mapped"].push(it);
+    else if (it.status === "unmapped") groups["unmapped"].push(it);
+    else groups["ignored"].push(it);
+  }
+
+  const groupLabels: Record<string, string> = {
+    "required-mapped": "Required Mapped",
+    "optional-mapped": "Optional Mapped",
+    unmapped: "Unmapped",
+    ignored: "Ignored",
+  };
+
+  const NEXUS_OPTIONS = [
+    "company.code", "company.name",
+    "plant.code", "plant.name",
+    "resourceGroup.code", "resourceGroup.name",
+    "resource.code", "resource.name",
+    "department.code", "department.name",
+    "productionLine.code", "productionLine.name",
+    "schedule.code",
+    "sourceBin.code", "destinationBin.code", "backflushBin.code",
+    "routingStep.operationCode", "routingStep.description",
+    "routingStep.moveHours", "routingStep.queueHours",
+    "entity.status",
+  ];
+
+  const handleOverride = async (sourceColumn: string, nexusField: string) => {
+    if (!jobId) return;
+    setSavingCol(sourceColumn);
+    setMappedNexusMap((prev) => ({ ...prev, [sourceColumn]: nexusField }));
+    try {
+      await fetch("/graphql/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: `mutation CreateMappingRule($input: MappingRuleInput!) {
+            createMappingRule(input: $input) { ok errors { field code message } }
+          }`,
+          variables: {
+            input: {
+              domain: "PLANT_STRUCTURE",
+              sourceField: sourceColumn,
+              destinationField: nexusField,
+              isRequired: false,
+            },
+          },
+        }),
+      });
+    } catch {
+      // optimistic update already applied
+    }
+    setSavingCol(null);
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 flex items-center gap-3 px-3 py-1.5 border-b border-border/20 bg-muted/20 text-[10px]">
+        <span className="font-medium text-foreground">{mappedCount}/{total} mapped</span>
+        {requiredMissing > 0 && (
+          <span className="text-destructive font-semibold flex items-center gap-1">
+            <AlertCircle className="h-3 w-3 stroke-current" />
+            {requiredMissing} required missing
+          </span>
+        )}
+        <span className="flex-1" />
+        <span className="text-muted-foreground/60">{data.unmappedCount} unmapped</span>
+      </div>
+      <div className="flex-1 overflow-auto">
+        {Object.entries(groups).map(([key, rows]) =>
+          rows.length > 0 && (
+            <div key={key}>
+              <div className="sticky top-0 z-10 bg-muted/95 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider flex items-center gap-1 border-b border-border/10">
+                <span className={`inline-block h-2 w-2 rounded-full ${key === "required-mapped" ? "bg-emerald-500" : key === "optional-mapped" ? "bg-blue-500" : key === "unmapped" ? "bg-destructive" : "bg-border"}`} />
+                {groupLabels[key]} ({rows.length})
+              </div>
+              {rows.map((it: any, i: number) => {
+                const rowBg = it.required && it.status === "unmapped" ? "bg-destructive/5" : i % 2 === 0 ? "bg-card" : "bg-muted/[0.04]";
+                const confCls = it.confidence === "high" ? "text-emerald-600 bg-emerald-100" : it.confidence === "medium" ? "text-amber-600 bg-amber-100" : "text-muted-foreground bg-muted";
+                const statusCls = it.status === "mapped" ? "text-emerald-600 bg-emerald-100" : it.status === "unmapped" ? "text-destructive bg-destructive/10" : "text-blue-600 bg-blue-100";
+                return (
+                  <div key={i} className={`flex items-center gap-2 px-2 py-1 border-b border-border/10 text-[10px] ${rowBg} ${it.required && it.status === "unmapped" ? "ring-1 ring-inset ring-destructive/20 font-medium" : ""}`}>
+                    <div className="w-[180px] shrink-0">
+                      <span className="text-foreground truncate block" title={it.sourceColumn}>{it.sourceColumn}</span>
+                    </div>
+                    <div className="flex-1 flex items-center gap-1">
+                      {it.status === "unmapped" ? (
+                        <select
+                          value={mappedNexusMap[it.sourceColumn] || ""}
+                          onChange={(e) => handleOverride(it.sourceColumn, e.target.value)}
+                          className="h-6 w-full max-w-[180px] rounded border border-border/30 bg-card px-1 text-[9px] text-muted-foreground outline-none"
+                        >
+                          <option value="">Not mapped</option>
+                          {NEXUS_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-foreground truncate block" title={it.nexusField}>{it.nexusField}</span>
+                      )}
+                      {savingCol === it.sourceColumn && <span className="text-[8px] text-blue-500 shrink-0">saving…</span>}
+                    </div>
+                    <span className={`rounded px-1 py-0.5 text-[8px] font-medium shrink-0 ${confCls}`} title={`Confidence: ${it.confidence}`}>{it.confidence}</span>
+                    <span className={`rounded px-1 py-0.5 text-[8px] font-medium shrink-0 ${statusCls}`} title={`Status: ${it.status}`}>{it.status}</span>
+                    <span className="text-muted-foreground truncate max-w-[160px] shrink-0" title={it.message}>{it.message}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ApplyPreviewPanel({ data, loading, isPlantStructure, psResult }: { data: any; loading: boolean; isPlantStructure: boolean; psResult: any }) {
+  if (loading) return <div className="flex items-center justify-center h-full text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-success animate-bounce mr-2" />Loading apply preview…</div>;
+  if (isPlantStructure && psResult) {
+    const r = psResult;
+    if (!r.ok && r.validationErrors?.length > 0) return (
+      <div className="flex items-center justify-center h-full"><div className="text-center max-w-md"><AlertTriangle className="h-8 w-8 stroke-current text-destructive mx-auto mb-2" /><p className="text-xs text-destructive font-medium mb-1">Import Error</p><p className="text-[10px] text-muted-foreground">{r.validationErrors[0]?.message}</p></div></div>
+    );
+    if (r.totalCreated === 0 && r.totalUpdated === 0) return (
+      <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+        <ClipboardCheck className="h-8 w-8 stroke-current opacity-30 mr-2" />
+        No mutations planned. Run compare first.
+      </div>
+    );
+    return (
+      <div className="h-full overflow-auto p-3 space-y-3">
+        <div className="flex gap-3">
+          <div className="flex-1 rounded border border-border/20 p-2 text-center"><div className="text-lg font-bold text-emerald-600">{r.totalCreated}</div><div className="text-[9px] text-muted-foreground">Created</div></div>
+          <div className="flex-1 rounded border border-border/20 p-2 text-center"><div className="text-lg font-bold text-blue-600">{r.totalUpdated}</div><div className="text-[9px] text-muted-foreground">Updated</div></div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-[10px]">
+          <InfoRow label="Companies" value={`${r.companiesCreated}C / ${r.companiesUpdated}U`} />
+          <InfoRow label="Plants" value={`${r.plantsCreated}C / ${r.plantsUpdated}U`} />
+          <InfoRow label="Lines" value={`${r.linesCreated}C / ${r.linesUpdated}U`} />
+          <InfoRow label="Departments" value={`${r.departmentsCreated}C / ${r.departmentsUpdated}U`} />
+          <InfoRow label="Assignments" value={`${r.assignmentsCreated}C / ${r.assignmentsUpdated}U`} />
+          <InfoRow label="Res. Groups" value={`${r.resourceGroupsCreated}C / ${r.resourceGroupsUpdated}U`} />
+          <InfoRow label="Resources" value={`${r.resourcesCreated}C / ${r.resourcesUpdated}U`} />
+        </div>
+      </div>
+    );
+  }
+  const r = data?.importApplyPreview;
+  if (!r?.ok && r?.errors) return (
+    <div className="flex items-center justify-center h-full"><div className="text-center max-w-md"><AlertTriangle className="h-8 w-8 stroke-current text-destructive mx-auto mb-2" /><p className="text-xs text-destructive font-medium mb-1">Preview Error</p><p className="text-[10px] text-muted-foreground">{r.errors[0]?.message}</p></div></div>
+  );
+  if (!r || (r.createCount === 0 && r.updateCount === 0 && r.unchangedCount === 0 && r.conflictCount === 0)) return (
+    <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+      <ClipboardCheck className="h-8 w-8 stroke-current opacity-30 mr-2" />
+      Run compare before applying.
+    </div>
+  );
+  const mutations: any[] = r.plannedMutations ?? [];
+  return (
+    <div className="h-full flex flex-col">
+      <div className="shrink-0 flex gap-2 p-2 border-b border-border/20 bg-muted/20">
+        <div className="flex-1 rounded border border-border/20 p-1.5 text-center"><div className="text-sm font-bold text-emerald-600">{r.createCount}</div><div className="text-[8px] text-muted-foreground">Create</div></div>
+        <div className="flex-1 rounded border border-border/20 p-1.5 text-center"><div className="text-sm font-bold text-blue-600">{r.updateCount}</div><div className="text-[8px] text-muted-foreground">Update</div></div>
+        <div className="flex-1 rounded border border-border/20 p-1.5 text-center"><div className="text-sm font-bold text-muted-foreground">{r.unchangedCount}</div><div className="text-[8px] text-muted-foreground">Unchanged</div></div>
+        <div className="flex-1 rounded border border-border/20 p-1.5 text-center"><div className="text-sm font-bold text-destructive">{r.conflictCount}</div><div className="text-[8px] text-muted-foreground">Conflict</div></div>
+      </div>
+      <div className="flex-1 overflow-auto">
+        {mutations.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-[10px] text-muted-foreground">No planned mutations</div>
+        ) : mutations.map((m: any, i: number) => {
+          const opCls = m.operation === "CREATE" ? "text-emerald-600 bg-emerald-100" : m.operation === "UPDATE" ? "text-blue-600 bg-blue-100" : m.operation === "CONFLICT" ? "text-destructive bg-destructive/10" : "text-muted-foreground bg-muted";
+          return (
+            <div key={i} className="px-2 py-1.5 border-b border-border/10 text-[10px]">
+              <div className="flex items-center gap-2">
+                <span className={`rounded px-1 py-0.5 text-[8px] font-medium ${opCls}`}>{m.operation}</span>
+                <span className="font-medium text-foreground">{m.entityType}</span>
+                <span className="text-muted-foreground">#{m.entityKey}</span>
+              </div>
+              {m.fieldDiffs?.length > 0 && (
+                <div className="mt-1 ml-2 space-y-0.5">
+                  {m.fieldDiffs.map((fd: any, j: number) => (
+                    <div key={j} className="flex items-center gap-1 text-[9px]">
+                      <span className="font-medium text-foreground">{fd.field}:</span>
+                      <span className="text-destructive line-through">{fd.existing || "—"}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className="text-emerald-600">{fd.incoming || "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function ImportJobsPage() {
-  const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [search, setSearch] = useState("");
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [showNewJobModal, setShowNewJobModal] = useState(false);
   const [newJobSource, setNewJobSource] = useState("");
@@ -435,15 +723,41 @@ export function ImportJobsPage() {
     fetchPolicy: "network-only",
   });
 
+  const { data: parsedData, loading: parsedLoading } = useQuery<any>(PARSED_DATA_QUERY, {
+    variables: { jobId: selectedJobId },
+    skip: !selectedJobId || previewTab !== "parsed-data",
+    fetchPolicy: "network-only",
+  });
+
+  const { data: mappingData, loading: mappingLoading } = useQuery<any>(MAPPING_SUGGESTIONS_QUERY, {
+    variables: { jobId: selectedJobId },
+    skip: !selectedJobId || previewTab !== "mapping",
+    fetchPolicy: "network-only",
+  });
+
+  const { data: applyPreviewData, loading: applyPreviewLoading } = useQuery<any>(IMPORT_APPLY_PREVIEW_QUERY, {
+    variables: { jobId: selectedJobId },
+    skip: !selectedJobId || previewTab !== "apply",
+    fetchPolicy: "network-only",
+  });
+
   const canTransition = (action: string) => {
     if (!selectedJob) return false;
     const flow = STATUS_FLOW[selectedJob.status]; if (!flow) return false;
-    if (action === "VALIDATE") return ["FILE_ATTACHED", "PREVIEWED"].includes(selectedJob.status);
-    if (action === "COMPARE") return flow.next.includes("COMPARED");
-    if (action === "APPLY") return flow.next.includes("READY_TO_APPLY") || flow.next.includes("APPLIED");
+    if (action === "VALIDATE") return ["FILE_ATTACHED", "PREVIEWED", "PREVIEW_FAILED"].includes(selectedJob.status);
+    if (action === "COMPARE") return flow.next.includes("COMPARED") || selectedJob.status === "VALIDATED";
+    if (action === "APPLY") return selectedJob.status === "READY_TO_APPLY";
     if (action === "RETRY") return ["PREVIEW_FAILED", "VALIDATION_FAILED", "COMPARE_FAILED", "APPLY_FAILED"].includes(selectedJob.status);
     if (action === "CANCEL") return !["CANCELLED", "APPLIED", "ARCHIVED"].includes(selectedJob.status);
     return false;
+  };
+
+  const applyTooltip = () => {
+    if (!selectedJob) return "";
+    if (selectedJob.status === "VALIDATED" || selectedJob.status === "COMPARED") return "";
+    if (!["READY_TO_APPLY", "COMPARED", "VALIDATED"].includes(selectedJob.status)) return "Validate first";
+    if (!canTransition("COMPARE")) return "Compare first";
+    return "";
   };
 
   const handleAction = useCallback(async (action: string, jobId: string) => {
@@ -586,7 +900,7 @@ export function ImportJobsPage() {
           {/* Center - Main Workspace */}
           <div className="flex-1 flex flex-col min-w-0">
             {selectedJob ? (
-              <>
+              <div className="flex flex-col flex-1 min-w-0">
                 <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 border-b border-border/10 bg-muted/15">
                   <FileSpreadsheet className="h-4 w-4 stroke-current text-indigo-500 shrink-0" />
                   <span className="text-[12px] font-semibold text-foreground truncate">{selectedJob.fileName || "Import Job"}</span>
@@ -612,6 +926,8 @@ export function ImportJobsPage() {
                 </div>
                 <div className="flex-1 overflow-hidden">
                   {previewTab === "file-preview" && <FilePreviewGrid data={previewData?.filePreview} loading={previewLoading} error={previewError} />}
+                  {previewTab === "parsed-data" && <ParsedDataGrid data={parsedData?.parsedData} loading={parsedLoading} />}
+                  {previewTab === "mapping" && <MappingPanel data={mappingData?.mappingSuggestions} loading={mappingLoading} jobId={selectedJobId} />}
                   {previewTab === "validation" && (
                     isPlantStructure && plantStructureResult
                       ? <PsValidationPanel result={plantStructureResult} />
@@ -622,13 +938,9 @@ export function ImportJobsPage() {
                       ? <PsComparePanel result={plantStructureResult} />
                       : <DiffTable data={compareData?.importCompareResults} loading={compareLoading} />
                   )}
-                  {!["file-preview", "validation", "compare"].includes(previewTab) && (
-                    <div className="flex items-center justify-center h-full text-[11px] text-muted-foreground">
-                      {(() => { const t = PREVIEW_TABS.find((x) => x.id === previewTab); const TI = t?.icon ?? Info; return <><TI className="h-8 w-8 stroke-current opacity-30 mr-2" /><span>{t?.label ?? "View"}</span></>; })()}
-                    </div>
-                  )}
+                  {previewTab === "apply" && <ApplyPreviewPanel data={applyPreviewData} loading={applyPreviewLoading} isPlantStructure={isPlantStructure} psResult={plantStructureResult} />}
                 </div>
-              </>
+              </div>
             ) : (
               <div className="flex items-center justify-center h-full"><div className="text-center"><Upload className="h-10 w-10 stroke-current text-indigo-600/30 mx-auto mb-2" /><p className="text-xs text-muted-foreground">Select a job to preview its data</p></div></div>
             )}
@@ -648,14 +960,20 @@ export function ImportJobsPage() {
                       { a: "APPLY", icon: Play, l: "Apply" },
                       { a: "RETRY", icon: RefreshCw, l: "Retry" },
                       { a: "CANCEL", icon: XCircle, l: "Cancel" },
-                    ].filter(({ a }) => canTransition(a)).map(({ a, icon: AI, l }) => (
-                      <button key={a} type="button" onClick={() => handleAction(a, selectedJob.id)}
-                        disabled={!!actionLoading}
-                        className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-sm text-[10px] font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-35 disabled:pointer-events-none">
-                        <AI className="h-3.5 w-3.5 stroke-current shrink-0" />
-                        <span>{l}</span>
-                      </button>
-                    ))}
+                    ].filter(({ a }) => a === "APPLY" ? selectedJob.status === "READY_TO_APPLY" : canTransition(a)).map(({ a, icon: AI, l }) => {
+                      const tip = a === "APPLY" ? applyTooltip() : "";
+                      return (
+                        <div key={a} className="relative group">
+                          <button type="button" onClick={() => handleAction(a, selectedJob.id)}
+                            disabled={!!actionLoading || (a === "APPLY" && selectedJob.status !== "READY_TO_APPLY")}
+                            className="flex items-center gap-1.5 w-full px-2 py-1.5 rounded-sm text-[10px] font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-35 disabled:pointer-events-none">
+                            <AI className="h-3.5 w-3.5 stroke-current shrink-0" />
+                            <span>{l}</span>
+                          </button>
+                          {tip && <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 hidden group-hover:block whitespace-nowrap rounded bg-popover px-2 py-1 text-[9px] text-popover-foreground shadow-md border border-border/20">{tip}</div>}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -731,7 +1049,7 @@ export function ImportJobsPage() {
         </div>
 
         {/* Footer progress bar */}
-        <div className="shrink-0 h-8 border-t border-border/25 bg-muted/50">
+        <div className="shrink-0 h-10 border-t border-border/25 bg-muted/50">
           {selectedJob ? (
             <FooterProgress status={selectedJob.status} failed={progressFailedStatus} />
           ) : (

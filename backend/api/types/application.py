@@ -135,3 +135,26 @@ class ImportSourcePathTestPayload:
 class ImportSourceConfigsResult:
     items: list[ImportSourceConfigNode]
     page_info: PageInfo = strawberry.field(name="pageInfo")
+
+
+# ── ERP Storage types ──────────────────────────────────────────────────
+
+@strawberry.type
+class ErpStorageFileNode:
+    name: str
+    path: str
+    size: int
+    modified: str
+
+
+@strawberry.type
+class ErpStoragePayload:
+    ok: bool
+    path: str | None = None
+    errors: list[ApplicationSettingError] | None = None
+
+
+@strawberry.type
+class ErpStorageListResult:
+    items: list[ErpStorageFileNode]
+    folder: str

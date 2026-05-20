@@ -7,6 +7,8 @@ from api.types.integration import (
     ImportCompareResultsResult, ImportAuditLogsResult,
     IntegrationStatusNode, IntegrationStatusPayload,
     FilePreviewNode, PreviewRowNode, ImportCompareResultNode, ImportAuditLogNode,
+    ParsedDataResult, ParsedSheetType, MappingSuggestionsResult,
+    MappingSuggestionType, ApplyPreviewResult, PlannedMutationType, FieldDiffType,
 )
 from api.types.pagination import PageInfo, paginate_queryset
 from api.types.integration import MutationError
@@ -15,6 +17,10 @@ from manufacturing.domain.erp_import_service import ErpImportService
 from manufacturing.domain.file_parser_service import FileParserService
 from manufacturing.domain.mapping_rule_service import MappingRuleService
 from manufacturing.models import ImportJob, ImportCompareResult, ImportAuditLog
+
+
+def _normalize_field(name: str) -> str:
+    return name.strip().lower().replace(" ", "").replace("_", "").replace("-", "")
 
 
 @strawberry.type
@@ -201,6 +207,123 @@ class IntegrationQuery:
         return ImportAuditLogsResult(
             items=[ImportAuditLogNode.from_db(obj) for obj in items],
             page_info=PageInfo(total_count=total, has_next_page=has_more, offset=offset or 0, limit=limit or 50),
+        )
+
+    @strawberry.field
+    def parsed_data(self, job_id: str) -> ParsedDataResult:
+        """Return all parsed sheets with column types for a given import job."""
+        try:
+            job = ImportJob.objects.select_related("source_config").get(id=job_id)
+        except ImportJob.DoesNotExist:
+            return ParsedDataResult(
+                ok=False,
+                errors=[MutationError(field="jobId", code="NOT_FOUND", message="Import job not found")],
+            )
+
+        file_path = ErpImportService._resolve_file_path(job)
+        if not file_path:
+            return ParsedDataResult(
+                ok=False, file_name=job.file_name or "",
+                errors=[MutationError(field="filePath", code="FILE_NOT_FOUND", message=f"File not found for job {job.id}")],
+            )
+
+        try:
+            parse_result = FileParserService.parse(file_path, job.source_config.source_type)
+        except Exception as exc:
+            return ParsedDataResult(
+                ok=False, file_name=job.file_name or "",
+                errors=[MutationError(field="filePath", code="PARSE_ERROR", message=str(exc))],
+            )
+
+        if not parse_result.sheets:
+            return ParsedDataResult(
+                ok=False, file_name=parse_result.file_name,
+                errors=[MutationError(field="filePath", code="EMPTY", message="No data found in file")],
+            )
+
+        sheets = [ParsedSheetType.from_sheet(s, sample_limit=200) for s in parse_result.sheets]
+        return ParsedDataResult(ok=True, file_name=parse_result.file_name, sheets=sheets)
+
+    @strawberry.field
+    def mapping_suggestions(self, job_id: str) -> MappingSuggestionsResult:
+        """Return mapping suggestions by pairing parsed columns with mapping rules."""
+        from manufacturing.models import MappingRule
+
+        try:
+            job = ImportJob.objects.select_related("source_config").get(id=job_id)
+        except ImportJob.DoesNotExist:
+            return MappingSuggestionsResult(
+                ok=False,
+                errors=[MutationError(field="jobId", code="NOT_FOUND", message="Import job not found")],
+            )
+
+        file_path = ErpImportService._resolve_file_path(job)
+        if not file_path:
+            return MappingSuggestionsResult(
+                ok=False,
+                errors=[MutationError(field="filePath", code="FILE_NOT_FOUND", message="File not found")],
+            )
+
+        try:
+            parse_result = FileParserService.parse(file_path, job.source_config.source_type)
+        except Exception as exc:
+            return MappingSuggestionsResult(
+                ok=False,
+                errors=[MutationError(field="filePath", code="PARSE_ERROR", message=str(exc))],
+            )
+
+        if not parse_result.sheets:
+            return MappingSuggestionsResult(
+                ok=False,
+                errors=[MutationError(field="filePath", code="EMPTY", message="No data found in file")],
+            )
+
+        domain = job.source_config.domain
+        active_rules = MappingRule.objects.filter(domain=domain, is_active=True)
+        rule_norm_map: dict[str, any] = {}
+        for r in active_rules:
+            key = _normalize_field(r.source_field)
+            if key not in rule_norm_map:
+                rule_norm_map[key] = r
+
+        seen_source = set()
+        items: list[MappingSuggestionType] = []
+        for sheet in parse_result.sheets:
+            for col in sheet.column_headers:
+                if col in seen_source:
+                    continue
+                seen_source.add(col)
+                col_key = _normalize_field(col)
+                rule = rule_norm_map.get(col_key)
+                if rule:
+                    items.append(MappingSuggestionType.mapped(col, rule.destination_field, rule.is_required))
+                else:
+                    items.append(MappingSuggestionType.unmapped(col))
+
+        unmapped = sum(1 for i in items if i.status == "unmapped")
+        required_unmapped = sum(1 for i in items if i.status == "unmapped" and i.required)
+        return MappingSuggestionsResult(ok=True, items=items, unmapped_count=unmapped, required_unmapped_count=required_unmapped)
+
+    @strawberry.field
+    def import_apply_preview(self, job_id: str) -> ApplyPreviewResult:
+        """Return a preview of what apply would do, based on compare results."""
+        compares = ImportCompareResult.objects.filter(import_job_id=job_id)
+        action_counts = {"CREATE": 0, "UPDATE": 0, "UNCHANGED": 0, "CONFLICT": 0}
+        for c in compares:
+            key = c.action
+            if key in action_counts:
+                action_counts[key] += 1
+
+        planned = [PlannedMutationType.from_compare(c) for c in compares.order_by("stable_key")[:500]]
+
+        return ApplyPreviewResult(
+            ok=True,
+            create_count=action_counts["CREATE"],
+            update_count=action_counts["UPDATE"],
+            unchanged_count=action_counts["UNCHANGED"],
+            conflict_count=action_counts["CONFLICT"],
+            skip_count=0,
+            planned_mutations=planned,
         )
 
 

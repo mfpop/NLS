@@ -16,6 +16,41 @@ from manufacturing.domain.file_parser_service import FileParserService, FilePars
 from manufacturing.domain.domain_import_handler import get_handler, ValidationIssue, CompareRow, ApplyResult
 
 
+def _normalize_field(name: str) -> str:
+    return name.strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+
+
+def _get_unmapped_required_errors(
+    parse_result, domain: str
+) -> list[ValidationIssue]:
+    """Check if required mapping rules have matching columns in parsed data."""
+    from manufacturing.models import MappingRule
+
+    required_rules = MappingRule.objects.filter(domain=domain, is_active=True, is_required=True)
+    rule_norm: dict[str, MappingRule] = {}
+    for r in required_rules:
+        key = _normalize_field(r.source_field)
+        if key not in rule_norm:
+            rule_norm[key] = r
+
+    issues: list[ValidationIssue] = []
+    for sheet in parse_result.sheets:
+        seen_norm = {_normalize_field(h) for h in sheet.column_headers}
+        for norm_key, rule in rule_norm.items():
+            if norm_key not in seen_norm:
+                issues.append(ValidationIssue(
+                    sheet_name=sheet.sheet_name,
+                    row_number=0,
+                    entity_type="Mapping",
+                    field_name=rule.source_field,
+                    error_code="MAPPING_REQUIRED",
+                    message=f"Required field '{rule.source_field}' has no matching column in the file. "
+                            f"It must map to '{rule.destination_field}'.",
+                    raw_value=None,
+                ))
+    return issues
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -150,7 +185,10 @@ class ErpImportService:
 
         from manufacturing.models import MappingRule
         mapping_rules = list(MappingRule.objects.filter(domain=domain, is_active=True))
-        issues = handler.validate(parse_result.sheets, mapping_rules)
+
+        # Check required mappings before domain validation
+        mapping_issues = _get_unmapped_required_errors(parse_result, domain)
+        issues = mapping_issues + handler.validate(parse_result.sheets, mapping_rules)
 
         # Clear previous validation errors and persist new ones
         ImportValidationError.objects.filter(import_job=job).delete()
@@ -200,7 +238,19 @@ class ErpImportService:
         domain = job.source_config.domain
         handler = get_handler(domain)
 
-        compare_rows = handler.compare(parse_result.sheets)
+        # Mapping must be resolved before compare
+        mapping_issues = _get_unmapped_required_errors(parse_result, domain)
+        if mapping_issues:
+            raise ErpImportError(
+                "mapping",
+                "MAPPING_REQUIRED",
+                f"Cannot compare: {len(mapping_issues)} required field(s) have no matching column. "
+                f"Resolve mapping first.",
+            )
+
+        from manufacturing.models import MappingRule
+        mapping_rules = list(MappingRule.objects.filter(domain=domain, is_active=True))
+        compare_rows = handler.compare(parse_result.sheets, mapping_rules)
 
         # Clear previous compare results and persist new ones
         ImportCompareResult.objects.filter(import_job=job).delete()
@@ -257,6 +307,14 @@ class ErpImportService:
             job.records_failed = summary.get("records_failed", 0)
             job.error_summary = summary.get("error_summary", "")
             job.save()
+            # Move file to imported/ on success
+            try:
+                from application.erp_storage_service import ERPStorageService
+                imported_path = ERPStorageService.move_to_imported(job.file_path)
+                job.imported_file_path = imported_path
+                job.save(update_fields=["imported_file_path", "updated_at"])
+            except Exception as storage_err:
+                logger.warning("Could not move file to imported/: %s", storage_err)
             ErpImportService._audit(job, "APPLIED", f"Import applied: {job.records_created} created, {job.records_updated} updated")
             return job
 
@@ -301,6 +359,15 @@ class ErpImportService:
             job.error_summary = apply_result.error_summary[:500] if apply_result.error_summary else ""
             job.save()
 
+            # Move file to imported/ on success
+            try:
+                from application.erp_storage_service import ERPStorageService
+                imported_path = ERPStorageService.move_to_imported(job.file_path)
+                job.imported_file_path = imported_path
+                job.save(update_fields=["imported_file_path", "updated_at"])
+            except Exception as storage_err:
+                logger.warning("Could not move file to imported/: %s", storage_err)
+
             # Mark compare results as ACCEPTED
             ImportCompareResult.objects.filter(import_job=job, action__in=["CREATE", "UPDATE"]).update(status="ACCEPTED")
 
@@ -312,6 +379,16 @@ class ErpImportService:
             job.completed_at = timezone.now()
             job.error_summary = str(exc)[:500]
             job.save()
+            # Write error artifact
+            try:
+                from application.erp_storage_service import ERPStorageService
+                error_info = {"job_id": str(job.id), "file": job.file_name, "error": str(exc)[:500]}
+                if job.file_path:
+                    error_path = ERPStorageService.move_to_error(job.file_path, error_info)
+                    job.error_artifact_path = error_path
+                    job.save(update_fields=["error_artifact_path", "updated_at"])
+            except Exception as storage_err:
+                logger.warning("Could not move file to error/: %s", storage_err)
             ErpImportService._audit(job, "APPLY_FAILED", f"Apply failed: {exc}")
 
         return job

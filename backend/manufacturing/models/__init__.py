@@ -30,6 +30,13 @@ from .profile import Profile
 from .role import UserRole
 
 from .integration import ImportJob, ImportValidationError, MappingRule, ImportCompareResult, ImportAuditLog
+from .mapping_profile import ImportProfile, ImportFieldMapping
+from .lineage import (
+    ErpSourceDefinition, ErpDefinitionField, ErpRelationshipDefinition,
+    ErpImportBatch, ErpStagingRow, ErpValidationResult, ErpImportLog,
+    ErpScope, ErpSourceType, ErpDefinitionStatus,
+    ErpRelationshipType, ValidationSeverity,
+)
 
 # Legacy models (keep for migration compatibility)
 from .reference_table import ReferenceTable
@@ -104,6 +111,19 @@ __all__ = [
     "ImportJob",
     "ImportValidationError",
     "MappingRule",
+    # Lineage
+    "ErpSourceDefinition",
+    "ErpDefinitionField",
+    "ErpRelationshipDefinition",
+    "ErpImportBatch",
+    "ErpStagingRow",
+    "ErpValidationResult",
+    "ErpImportLog",
+    "ErpScope",
+    "ErpSourceType",
+    "ErpDefinitionStatus",
+    "ErpRelationshipType",
+    "ValidationSeverity",
     # Legacy
     "ReferenceTable",
     "ReferenceItem",

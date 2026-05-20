@@ -56,7 +56,7 @@ class DomainImportHandler:
     def validate(self, sheets: list[SheetData], mapping_rules: list[MappingRule]) -> list[ValidationIssue]:
         raise NotImplementedError
 
-    def compare(self, sheets: list[SheetData]) -> list[CompareRow]:
+    def compare(self, sheets: list[SheetData], mapping_rules: list | None = None) -> list[CompareRow]:
         raise NotImplementedError
 
     def apply(self, sheets: list[SheetData], compare_rows: list[CompareRow]) -> ApplyResult:
@@ -71,11 +71,24 @@ def _col_value(row: ParsedRow, col_index: int) -> str | None:
     return None
 
 
+def _normalize(name: str) -> str:
+    return name.strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+
+
 def _find_column(headers: list[str], *names: str) -> int | None:
+    """Find a column header matching any of the given names (case-insensitive, normalized)."""
+    norm_names = [_normalize(n) for n in names]
+    # Build normalized-to-original mapping for headers
     for i, h in enumerate(headers):
-        h_lower = h.lower().strip()
-        for name in names:
-            if h_lower == name.lower() or h_lower.startswith(name.lower()):
+        h_norm = _normalize(h)
+        for n_norm in norm_names:
+            if h_norm == n_norm or h_norm.startswith(n_norm) or n_norm.startswith(h_norm):
+                return i
+    # Second pass: sub-string matching for aliases
+    for i, h in enumerate(headers):
+        h_norm = _normalize(h)
+        for n_norm in norm_names:
+            if n_norm in h_norm or h_norm in n_norm:
                 return i
     return None
 
@@ -247,18 +260,139 @@ class PlantStructureImportHandler(DomainImportHandler):
 
     # ── Comparison ──
 
-    def compare(self, sheets: list[SheetData]) -> list[CompareRow]:
+    def compare(self, sheets: list[SheetData], mapping_rules: list[MappingRule] | None = None) -> list[CompareRow]:
         rows: list[CompareRow] = []
         for sheet in sheets:
             sheet_lower = sheet.sheet_name.lower()
-            if "plant" in sheet_lower:
+            if "company" in sheet_lower:
+                rows.extend(self._compare_companies(sheet))
+            elif "plant" in sheet_lower and "department" not in sheet_lower:
                 rows.extend(self._compare_plants(sheet))
-            elif "department" in sheet_lower or "dept" in sheet_lower:
+            elif "department" in sheet_lower and "linedepartment" not in sheet_lower and "productionlinedepartment" not in sheet_lower:
                 rows.extend(self._compare_departments(sheet))
             elif "line" in sheet_lower or "production" in sheet_lower:
-                rows.extend(self._compare_lines(sheet))
-            elif "group" in sheet_lower or "resource" in sheet_lower:
+                if "department" in sheet_lower or "assignment" in sheet_lower:
+                    rows.extend(self._compare_assignments(sheet))
+                else:
+                    rows.extend(self._compare_lines(sheet))
+            elif "resourcegroup" in sheet_lower or "group" in sheet_lower:
                 rows.extend(self._compare_groups(sheet))
+            elif "resource" in sheet_lower:
+                rows.extend(self._compare_resources(sheet))
+        return rows
+
+    def _compare_companies(self, sheet: SheetData) -> list[CompareRow]:
+        rows: list[CompareRow] = []
+        headers = sheet.column_headers
+        for row_data in sheet.rows:
+            if row_data.is_empty:
+                continue
+            code = _val(row_data, headers, "code", "company_code", "company")
+            if not code:
+                continue
+            name = _val(row_data, headers, "name", "company_name", "companyname")
+            incoming = {"code": code, "name": name}
+
+            try:
+                existing = Company.objects.get(code__iexact=code)
+                current = {"code": existing.code, "name": existing.name}
+                diff = {}
+                for k, v in incoming.items():
+                    if v and str(getattr(existing, k, "")).lower() != str(v).lower():
+                        diff[k] = {"from": getattr(existing, k, ""), "to": v}
+                action = "UPDATE" if diff else "UNCHANGED"
+                rows.append(CompareRow(
+                    action=action, entity_type="Company",
+                    stable_key=code,
+                    current_value=current, incoming_value=incoming, diff=diff,
+                ))
+            except Company.DoesNotExist:
+                rows.append(CompareRow(
+                    action="CREATE", entity_type="Company",
+                    stable_key=code,
+                    current_value=None, incoming_value=incoming, diff=incoming,
+                ))
+        return rows
+
+    def _compare_assignments(self, sheet: SheetData) -> list[CompareRow]:
+        rows: list[CompareRow] = []
+        headers = sheet.column_headers
+        for row_data in sheet.rows:
+            if row_data.is_empty:
+                continue
+            plant_code = _val(row_data, headers, "plant", "plant_code", "plantcode")
+            line_code = _val(row_data, headers, "line", "line_code", "linecode", "productionline")
+            dept_code = _val(row_data, headers, "department", "dept", "department_code", "dept_code")
+            if not line_code or not dept_code:
+                continue
+            key = f"{plant_code or ''}/{line_code}/{dept_code}"
+            sequence = _val(row_data, headers, "sequence", "seq")
+            incoming = {"plant_code": plant_code, "line_code": line_code, "department_code": dept_code, "sequence": sequence}
+
+            try:
+                line = ProductionLine.objects.get(code__iexact=line_code) if line_code else None
+                dept = Department.objects.get(code__iexact=dept_code) if dept_code else None
+                current = {"line_code": line_code, "department_code": dept_code, "sequence": sequence}
+                diff = {}
+                # Check if assignment exists (line department relationship)
+                if line and dept:
+                    existing_dept_ids = list(line.departments.values_list("id", flat=True))
+                    if dept.id in existing_dept_ids:
+                        action = "UNCHANGED"
+                    else:
+                        diff["department_code"] = {"from": None, "to": dept_code}
+                        action = "UPDATE"
+                else:
+                    action = "CREATE"
+                rows.append(CompareRow(
+                    action=action, entity_type="Assignment",
+                    stable_key=key,
+                    current_value=current, incoming_value=incoming, diff=diff,
+                ))
+            except (ProductionLine.DoesNotExist, Department.DoesNotExist):
+                rows.append(CompareRow(
+                    action="CREATE", entity_type="Assignment",
+                    stable_key=key,
+                    current_value=None, incoming_value=incoming, diff=incoming,
+                ))
+        return rows
+
+    def _compare_resources(self, sheet: SheetData) -> list[CompareRow]:
+        rows: list[CompareRow] = []
+        headers = sheet.column_headers
+        for row_data in sheet.rows:
+            if row_data.is_empty:
+                continue
+            code = _val(row_data, headers, "code", "resource_code", "resource", "resourceid", "resource_id")
+            if not code:
+                continue
+            name = _val(row_data, headers, "name", "description", "resource_name", "resource_description")
+            group_code = _val(row_data, headers, "group", "group_code", "resourcegroup", "resource_group", "resource_group_code", "resourcegrpid", "resource_group_id")
+            incoming = {"code": code, "name": name}
+            if group_code:
+                incoming["resource_group_code"] = group_code
+
+            try:
+                existing = Resource.objects.get(code__iexact=code)
+                current = {"code": existing.code, "name": existing.name}
+                diff = {}
+                for k, v in incoming.items():
+                    if k == "resource_group_code":
+                        continue
+                    if v and str(getattr(existing, k, "")).lower() != str(v).lower():
+                        diff[k] = {"from": getattr(existing, k, ""), "to": v}
+                action = "UPDATE" if diff else "UNCHANGED"
+                rows.append(CompareRow(
+                    action=action, entity_type="Resource",
+                    stable_key=code,
+                    current_value=current, incoming_value=incoming, diff=diff,
+                ))
+            except Resource.DoesNotExist:
+                rows.append(CompareRow(
+                    action="CREATE", entity_type="Resource",
+                    stable_key=code,
+                    current_value=None, incoming_value=incoming, diff=incoming,
+                ))
         return rows
 
     def _compare_plants(self, sheet: SheetData) -> list[CompareRow]:
@@ -751,7 +885,7 @@ class MaterialsImportHandler(DomainImportHandler):
 
     # ── Comparison ──
 
-    def compare(self, sheets: list[SheetData]) -> list[CompareRow]:
+    def compare(self, sheets: list[SheetData], mapping_rules: list | None = None) -> list[CompareRow]:
         rows: list[CompareRow] = []
         for sheet in sheets:
             sheet_lower = sheet.sheet_name.lower()
@@ -1129,7 +1263,7 @@ class BOMImportHandler(DomainImportHandler):
     def validate(self, sheets, mapping_rules):
         return []
 
-    def compare(self, sheets):
+    def compare(self, sheets, mapping_rules=None):
         return []
 
     def apply(self, sheets, compare_rows):
@@ -1143,7 +1277,7 @@ class RoutingImportHandler(DomainImportHandler):
     def validate(self, sheets, mapping_rules):
         return []
 
-    def compare(self, sheets):
+    def compare(self, sheets, mapping_rules=None):
         return []
 
     def apply(self, sheets, compare_rows):
@@ -1157,7 +1291,7 @@ class SchedulesImportHandler(DomainImportHandler):
     def validate(self, sheets, mapping_rules):
         return []
 
-    def compare(self, sheets):
+    def compare(self, sheets, mapping_rules=None):
         return []
 
     def apply(self, sheets, compare_rows):
@@ -1171,7 +1305,7 @@ class InventoryImportHandler(DomainImportHandler):
     def validate(self, sheets, mapping_rules):
         return []
 
-    def compare(self, sheets):
+    def compare(self, sheets, mapping_rules=None):
         return []
 
     def apply(self, sheets, compare_rows):

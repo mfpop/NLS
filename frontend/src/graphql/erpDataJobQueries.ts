@@ -119,3 +119,66 @@ export const IMPORT_AUDIT_LOGS_QUERY = gql`
     }
   }
 `;
+
+export const PARSED_DATA_QUERY = gql`
+  query ParsedData($jobId: String!) {
+    parsedData(jobId: $jobId) {
+      ok
+      fileName
+      sheets {
+        sheetName
+        columnHeaders
+        columnTypes
+        totalRows
+        sampleRows {
+          rowNumber
+          columns
+          isEmpty
+        }
+      }
+      errors { field code message }
+    }
+  }
+`;
+
+export const MAPPING_SUGGESTIONS_QUERY = gql`
+  query MappingSuggestions($jobId: String!) {
+    mappingSuggestions(jobId: $jobId) {
+      ok
+      items {
+        sourceColumn
+        nexusField
+        confidence
+        status
+        required
+        message
+      }
+      unmappedCount
+      requiredUnmappedCount
+      errors { field code message }
+    }
+  }
+`;
+
+export const IMPORT_APPLY_PREVIEW_QUERY = gql`
+  query ImportApplyPreview($jobId: String!) {
+    importApplyPreview(jobId: $jobId) {
+      ok
+      createCount
+      updateCount
+      unchangedCount
+      conflictCount
+      skipCount
+      plannedMutations {
+        rowNumber
+        entityType
+        entityKey
+        operation
+        incoming
+        existing
+        fieldDiffs { field incoming existing }
+      }
+      errors { field code message }
+    }
+  }
+`;

@@ -1,0 +1,21 @@
+{
+  "name": "ProductionLines",
+  "scope": "PLANT_STRUCTURE",
+  "sourceType": "EXCEL",
+  "destinationTable": "ProductionLine",
+  "expectedFilePattern": "Lines*.xlsx",
+  "active": true,
+  "status": "ACTIVE",
+  "fields": [
+    { "fieldName": "LineCode", "dataType": "string", "required": true, "primaryKey": true, "foreignKey": false, "nexusField": "productionLine.code" },
+    { "fieldName": "LineName", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "productionLine.name" },
+    { "fieldName": "PlantCode", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "plant.code" },
+    { "fieldName": "DeptCode", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": true, "nexusField": "department.code" },
+    { "fieldName": "Capacity", "dataType": "integer", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "productionLine.capacity" },
+    { "fieldName": "Active", "dataType": "boolean", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "productionLine.status" }
+  ],
+  "relationships": [
+    { "sourceField": "PlantCode", "targetSourceName": "Plants", "targetField": "PlantCode", "relationshipType": "BELONGS_TO", "required": true },
+    { "sourceField": "DeptCode", "targetSourceName": "Departments", "targetField": "DeptCode", "relationshipType": "BELONGS_TO", "required": false }
+  ]
+}

@@ -1,6 +1,7 @@
 import json
 import logging
 import base64
+import os
 from hashlib import sha256
 from pathlib import Path
 from urllib.parse import unquote
@@ -88,10 +89,12 @@ def upload_import_file(request, job_id):
 
     uploaded = request.FILES["file"]
     safe_name = Path(uploaded.name).name
-    storage_path = f"import_jobs/{job.id}/{safe_name}"
 
+    # Save to erp_data/source/ via storage service
+    from application.erp_storage_service import ERPStorageService
     try:
-        saved_path = default_storage.save(storage_path, uploaded)
+        saved_path = ERPStorageService.save_source_file(safe_name, uploaded.read())
+        uploaded.seek(0)  # reset for potential re-read
     except Exception as exc:
         logger.exception("Failed to save upload for job %s", job.id)
         return JsonResponse(

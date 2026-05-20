@@ -1,0 +1,17 @@
+{
+  "name": "RG Dashboard (Pattern)",
+  "scope": "PLANT_STRUCTURE",
+  "sourceType": "EXCEL",
+  "destinationTable": "ResourceGroup",
+  "expectedFilePattern": "RG_Dashboard_template.xlsx",
+  "active": true,
+  "status": "TEMPLATE",
+  "fields": [
+    { "fieldName": "ResourceGrpID", "dataType": "string", "required": true, "primaryKey": true, "nexusField": "resourceGroup.code" },
+    { "fieldName": "DescriptionGrpID", "dataType": "string", "required": true, "primaryKey": false, "nexusField": "resourceGroup.description" },
+    { "fieldName": "Plant", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "plant.code" },
+    { "fieldName": "ResourceID", "dataType": "string", "required": false, "primaryKey": false, "nexusField": "resource.code" },
+    { "fieldName": "Input Bin", "dataType": "string", "required": false, "primaryKey": false, "nexusField": "materialBin.sourceCode" },
+    { "fieldName": "Output Bin", "dataType": "string", "required": false, "primaryKey": false, "nexusField": "materialBin.destinationCode" }
+  ]
+}

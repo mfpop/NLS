@@ -1,0 +1,21 @@
+{
+  "name": "Plants",
+  "scope": "PLANT_STRUCTURE",
+  "sourceType": "EXCEL",
+  "destinationTable": "Plant",
+  "expectedFilePattern": "Plants*.xlsx",
+  "active": true,
+  "status": "ACTIVE",
+  "fields": [
+    { "fieldName": "PlantCode", "dataType": "string", "required": true, "primaryKey": true, "foreignKey": false, "nexusField": "plant.code" },
+    { "fieldName": "PlantName", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "plant.name" },
+    { "fieldName": "CompanyCode", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "company.code" },
+    { "fieldName": "Address", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "plant.address" },
+    { "fieldName": "City", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "plant.city" },
+    { "fieldName": "Country", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "plant.country" },
+    { "fieldName": "Active", "dataType": "boolean", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "plant.status" }
+  ],
+  "relationships": [
+    { "sourceField": "CompanyCode", "targetSourceName": "Companies", "targetField": "Code", "relationshipType": "BELONGS_TO", "required": true }
+  ]
+}

@@ -110,3 +110,13 @@ export const DELETE_IMPORT_JOB = gql`
     }
   }
 `;
+
+export const CREATE_MAPPING_RULE = gql`
+  mutation CreateMappingRule($input: MappingRuleInput!) {
+    createMappingRule(input: $input) {
+      ok
+      rule { id sourceField destinationField isRequired isActive }
+      errors { field code message }
+    }
+  }
+`;

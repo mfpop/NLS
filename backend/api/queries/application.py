@@ -8,6 +8,10 @@ from django.db.utils import OperationalError
 from api.types.application import (
     ApplicationSettingError,
     ApplicationSettingNode,
+    ApplicationSettingsPayload,
+    ErpStorageFileNode,
+    ErpStorageListResult,
+    ImportSourceConfigInput,
     ImportSourceConfigNode,
     ImportSourceConfigsResult,
     ImportSourcePathTestPayload,
@@ -46,6 +50,20 @@ class ApplicationSettingsQuery:
             server_time=timezone.now().isoformat(),
             version="1.0.0",
         )
+
+    @strawberry.field
+    def erp_list_storage_files(self, folder: str) -> ErpStorageListResult:
+        from application.erp_storage_service import ERPStorageService, FOLDERS
+        if folder not in FOLDERS:
+            return ErpStorageListResult(items=[], folder=folder)
+        files = ERPStorageService.list_files(folder)
+        items = [ErpStorageFileNode(name=f["name"], path=f["path"], size=f["size"], modified=f["modified"]) for f in files]
+        return ErpStorageListResult(items=items, folder=folder)
+
+    @strawberry.field
+    def erp_storage_folders(self) -> list[str]:
+        from application.erp_storage_service import FOLDERS
+        return list(FOLDERS.keys())
 
     @strawberry.field
     def import_source_configs(

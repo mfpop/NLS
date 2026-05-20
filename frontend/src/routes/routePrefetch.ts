@@ -156,6 +156,16 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/system/erp-data/ERPDataPage"),
   },
   {
+    key: "system-erp-import",
+    matches: (path) => path.startsWith("/system/erp-data/import") && !path.startsWith("/system/erp-data/import-sources") && !path.startsWith("/system/erp-data/import-jobs"),
+    load: () => import("@/pages/system/erp-data/erp-import/ERPImportPage"),
+  },
+  {
+    key: "system-erp-lineage",
+    matches: (path) => path.startsWith("/system/erp-data/lineage"),
+    load: () => import("@/pages/system/erp-data/lineage/LineagePage"),
+  },
+  {
     key: "system-erp-import-sources",
     matches: (path) => path.startsWith("/system/erp-data/import-sources"),
     load: () => import("@/pages/system/erp-data/import-sources/ImportSourcesPage"),
@@ -164,6 +174,11 @@ const matchers: Matcher[] = [
     key: "system-erp-import-jobs",
     matches: (path) => path.startsWith("/system/erp-data/import-jobs"),
     load: () => import("@/pages/system/erp-data/import-jobs/ImportJobsPage"),
+  },
+  {
+    key: "system-erp-admin-component-mapping",
+    matches: (path) => path.startsWith("/system/erp-data/admin/component-mapping"),
+    load: () => import("@/pages/system/erp-data/admin/component-mapping/ComponentMappingPage"),
   },
   {
     key: "system-erp-file-history",

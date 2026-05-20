@@ -29,7 +29,7 @@ class ImportJob(TimeStampedModel):
         "application.ImportSourceConfig", on_delete=models.CASCADE, related_name="import_jobs"
     )
     file_name = models.CharField(max_length=500, blank=True, default="")
-    file_path = models.CharField(max_length=500, blank=True, default="")
+    file_path = models.CharField(max_length=500, blank=True, default="", help_text="Path under erp_data/source/")
     file_size = models.BigIntegerField(null=True, blank=True)
     file_hash = models.CharField(max_length=64, null=True, blank=True, db_index=True)
     started_at = models.DateTimeField()
@@ -41,6 +41,9 @@ class ImportJob(TimeStampedModel):
     records_failed = models.IntegerField(default=0)
     error_summary = models.TextField(blank=True, null=True)
     triggered_by = models.CharField(max_length=200, blank=True, null=True)
+    result_artifact_path = models.CharField(max_length=512, blank=True, default="", help_text="Result snapshot path under erp_data/structure/ or erp_data/imported/")
+    error_artifact_path = models.CharField(max_length=512, blank=True, default="", help_text="Error artifact path under erp_data/error/")
+    imported_file_path = models.CharField(max_length=512, blank=True, default="", help_text="Imported file path under erp_data/imported/")
 
     class Meta:
         db_table = "integration_import_job"

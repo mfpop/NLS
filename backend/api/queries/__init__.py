@@ -9,6 +9,8 @@ from api.queries.improvement import ImprovementQuery
 from api.queries.kpi import KpiQuery
 from api.queries.manufacturing import ManufacturingQuery
 from api.queries.integration import IntegrationQuery
+from api.queries.mapping import MappingQuery
+from api.queries.lineage import LineageQuery
 from api.types.auth import UserNode
 from docs_manager.schema import DocumentationQuery
 
@@ -22,6 +24,8 @@ class Query(
     KpiQuery,
     DocumentationQuery,
     IntegrationQuery,
+    MappingQuery,
+    LineageQuery,
 ):
     """Root query — domain resolvers are added here as fields get implemented."""
 

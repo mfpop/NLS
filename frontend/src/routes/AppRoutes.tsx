@@ -138,6 +138,10 @@ const ImportSourcesPage = lazy(() =>
 const ImportJobsPage = lazy(() =>
   import("@/pages/system/erp-data/import-jobs/ImportJobsPage").then((module) => ({ default: module.ImportJobsPage }))
 );
+
+const ComponentMappingPage = lazy(() =>
+  import("@/pages/system/erp-data/admin/component-mapping/ComponentMappingPage").then((module) => ({ default: module.ComponentMappingPage }))
+);
 const FileHistoryPage = lazy(() =>
   import("@/pages/system/erp-data/file-history/FileHistoryPage").then((module) => ({ default: module.FileHistoryPage }))
 );
@@ -155,6 +159,12 @@ const FilePreviewPage = lazy(() =>
 );
 const CompareResultsPage = lazy(() =>
   import("@/pages/system/erp-data/compare-results/CompareResultsPage").then((module) => ({ default: module.CompareResultsPage }))
+);
+const ERPImportPage = lazy(() =>
+  import("@/pages/system/erp-data/erp-import/ERPImportPage").then((module) => ({ default: module.ERPImportPage }))
+);
+const LineagePage = lazy(() =>
+  import("@/pages/system/erp-data/lineage/LineagePage").then((module) => ({ default: module.LineagePage }))
 );
 const UserProfilePage = lazy(() =>
   import("@/pages/system/UserProfilePage").then((module) => ({ default: module.UserProfilePage }))
@@ -267,8 +277,11 @@ export function AppRoutes() {
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/erp-data" element={<ERPDataPage />} />
+          <Route path="system/erp-data/import" element={<ERPImportPage />} />
+          <Route path="system/erp-data/lineage" element={<LineagePage />} />
           <Route path="system/erp-data/import-sources" element={<ImportSourcesPage />} />
           <Route path="system/erp-data/import-jobs" element={<ImportJobsPage />} />
+          <Route path="system/erp-data/admin/component-mapping" element={<ComponentMappingPage />} />
           <Route path="system/erp-data/file-history" element={<FileHistoryPage />} />
           <Route path="system/erp-data/mapping-rules" element={<MappingRulesPage />} />
           <Route path="system/erp-data/validation-errors" element={<ValidationErrorsPage />} />

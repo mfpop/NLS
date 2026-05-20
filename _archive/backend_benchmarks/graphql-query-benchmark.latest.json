@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "runs": 1,
+    "plant_id": "1",
+    "search": null,
+    "status": null,
+    "database_vendor": "mysql",
+    "generated_at": "2026-05-11T18:41:48Z"
+  },
+  "scenarios": {
+    "overview_before_include_tree_true": {
+      "query_counts": [
+        13
+      ],
+      "durations_ms": [
+        32.758
+      ],
+      "avg_query_count": 13.0,
+      "avg_duration_ms": 32.758,
+      "min_query_count": 13,
+      "max_query_count": 13,
+      "min_duration_ms": 32.758,
+      "max_duration_ms": 32.758
+    },
+    "overview_after_include_tree_false": {
+      "query_counts": [
+        2
+      ],
+      "durations_ms": [
+        15.73
+      ],
+      "avg_query_count": 2.0,
+      "avg_duration_ms": 15.73,
+      "min_query_count": 2,
+      "max_query_count": 2,
+      "min_duration_ms": 15.73,
+      "max_duration_ms": 15.73
+    },
+    "production_structure_tree_after": {
+      "query_counts": [
+        5
+      ],
+      "durations_ms": [
+        17.276
+      ],
+      "avg_query_count": 5.0,
+      "avg_duration_ms": 17.276,
+      "min_query_count": 5,
+      "max_query_count": 5,
+      "min_duration_ms": 17.276,
+      "max_duration_ms": 17.276
+    }
+  }
+}

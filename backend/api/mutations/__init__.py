@@ -7,6 +7,8 @@ from api.mutations.manufacturing import ManufacturingMutation
 from api.mutations.integration import IntegrationMutation
 from api.mutations.auth import AuthMutation
 from api.mutations.plant_structure import PlantStructureMutation
+from api.mutations.mapping import MappingMutation
+from api.mutations.lineage import LineageMutation
 
 
 @strawberry.type
@@ -18,6 +20,8 @@ class Mutation(
     IntegrationMutation,
     AuthMutation,
     PlantStructureMutation,
+    MappingMutation,
+    LineageMutation,
 ):
     """Root mutation — domain mutations are added here as they get implemented."""
 

@@ -5,6 +5,7 @@ from api.types.application import (
     ApplicationSettingInput,
     ApplicationSettingNode,
     ApplicationSettingsPayload,
+    ErpStoragePayload,
     ImportSourceConfigInput,
     ImportSourceConfigNode,
     ImportSourceConfigPayload,
@@ -72,6 +73,48 @@ class ApplicationSettingsMutation:
             )
         except ImportSourceConfigError as exc:
             return _import_source_error_payload(exc)
+
+    # ── ERP Storage mutations ──────────────────────────────────────────
+
+    @strawberry.mutation
+    def erp_upload_pattern_file(self, file_name: str, content_base64: str) -> ErpStoragePayload:
+        import base64
+        from application.erp_storage_service import ERPStorageService, ERPStorageError
+        try:
+            content = base64.b64decode(content_base64)
+            path = ERPStorageService.save_pattern_file(file_name, content)
+            return ErpStoragePayload(ok=True, path=path)
+        except (ERPStorageError, Exception) as exc:
+            return ErpStoragePayload(
+                ok=False,
+                errors=[ApplicationSettingError(field="file", code="ERROR", message=str(exc))],
+            )
+
+    @strawberry.mutation
+    def erp_upload_source_file(self, file_name: str, content_base64: str) -> ErpStoragePayload:
+        import base64
+        from application.erp_storage_service import ERPStorageService, ERPStorageError
+        try:
+            content = base64.b64decode(content_base64)
+            path = ERPStorageService.save_source_file(file_name, content)
+            return ErpStoragePayload(ok=True, path=path)
+        except (ERPStorageError, Exception) as exc:
+            return ErpStoragePayload(
+                ok=False,
+                errors=[ApplicationSettingError(field="file", code="ERROR", message=str(exc))],
+            )
+
+    @strawberry.mutation
+    def erp_save_mapping_profile(self, profile_name: str, data_json: strawberry.scalars.JSON) -> ErpStoragePayload:
+        from application.erp_storage_service import ERPStorageService, ERPStorageError
+        try:
+            path = ERPStorageService.save_mapping_profile(profile_name, data_json)
+            return ErpStoragePayload(ok=True, path=path)
+        except (ERPStorageError, Exception) as exc:
+            return ErpStoragePayload(
+                ok=False,
+                errors=[ApplicationSettingError(field="profile", code="ERROR", message=str(exc))],
+            )
 
 
 def _import_source_error_payload(exc: ImportSourceConfigError) -> ImportSourceConfigPayload:

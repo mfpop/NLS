@@ -6,7 +6,7 @@ import {
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, Ruler, FileSpreadsheet, RefreshCw,
   Package, Clock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, HardDrive, Upload, Route, Warehouse,
+  Users, Scale, AlertTriangle, PieChart, BookText, HardDrive, Upload, Route, Warehouse, Database,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -116,12 +116,19 @@ export const sidebarNav: TopLevelEntry[] = [
       {
         type: "group", label: "ERP Data", icon: HardDrive,
         items: [
-          { type: "item", label: "Import Sources", to: "/system/erp-data/import-sources", icon: HardDrive },
-          { type: "item", label: "Import Jobs", to: "/system/erp-data/import-jobs", icon: Upload },
-          { type: "item", label: "File History", to: "/system/erp-data/file-history", icon: Clock },
-          { type: "item", label: "Mapping Rules", to: "/system/erp-data/mapping-rules", icon: Route },
-          { type: "item", label: "Validation Errors", to: "/system/erp-data/validation-errors", icon: AlertTriangle },
-          { type: "item", label: "Integration Status", to: "/system/erp-data/integration-status", icon: Activity },
+          {
+            type: "group", label: "Old", icon: Clock,
+            items: [
+              { type: "item", label: "Import Sources", to: "/system/erp-data/import-sources", icon: HardDrive },
+              { type: "item", label: "Import Jobs", to: "/system/erp-data/import-jobs", icon: Upload },
+              { type: "item", label: "File History", to: "/system/erp-data/file-history", icon: Clock },
+              { type: "item", label: "Mapping Rules", to: "/system/erp-data/mapping-rules", icon: Route },
+              { type: "item", label: "Validation Errors", to: "/system/erp-data/validation-errors", icon: AlertTriangle },
+              { type: "item", label: "Integration Status", to: "/system/erp-data/integration-status", icon: Activity },
+            ],
+          },
+          { type: "item", label: "Import/Update", to: "/system/erp-data/import", icon: Database },
+          { type: "item", label: "Lineage & Relationships", to: "/system/erp-data/lineage", icon: GitBranch },
         ],
       },
       {

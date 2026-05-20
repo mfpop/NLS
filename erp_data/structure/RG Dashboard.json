@@ -1,0 +1,24 @@
+{
+  "name": "RG Dashboard",
+  "scope": "PLANT_STRUCTURE",
+  "sourceType": "EXCEL",
+  "destinationTable": "ResourceGroup",
+  "expectedFilePattern": "RG Dashboard*.xlsx",
+  "active": true,
+  "status": "ACTIVE",
+  "fields": [
+    { "fieldName": "ResourceGrpID", "dataType": "string", "required": true, "primaryKey": true, "foreignKey": false, "nexusField": "resourceGroup.code" },
+    { "fieldName": "DescriptionGrpID", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.description" },
+    { "fieldName": "Plant", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "plant.code" },
+    { "fieldName": "Department", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "department.code" },
+    { "fieldName": "ResourceID", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.code" },
+    { "fieldName": "Description", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.description" },
+    { "fieldName": "Input Bin", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "materialBin.sourceCode" },
+    { "fieldName": "Output Bin", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "materialBin.destinationCode" }
+  ],
+  "relationships": [
+    { "sourceField": "Plant", "targetSourceName": "Plants", "targetField": "PlantCode", "relationshipType": "BELONGS_TO", "required": true },
+    { "sourceField": "Department", "targetSourceName": "Departments", "targetField": "DeptCode", "relationshipType": "BELONGS_TO", "required": true },
+    { "sourceField": "ResourceGrpID", "targetSourceName": "Resources", "targetField": "ResourceGrpID", "relationshipType": "HAS_MANY", "required": false }
+  ]
+}

@@ -6,6 +6,7 @@ class ImportJob(TimeStampedModel):
     class Status(models.TextChoices):
         DRAFT = "DRAFT", "Draft"
         FILE_ATTACHED = "FILE_ATTACHED", "File Attached"
+        FILE_MISSING = "FILE_MISSING", "File Missing"
         PREVIEWED = "PREVIEWED", "Previewed"
         VALIDATED = "VALIDATED", "Validated"
         COMPARED = "COMPARED", "Compared"

@@ -55,7 +55,7 @@ class FileParserError(Exception):
 class FileParserService:
     """Parse ERP import files (Excel/CSV) into structured data."""
 
-    SAMPLE_ROW_COUNT = 50
+    SAMPLE_ROW_COUNT = 5000
 
     @classmethod
     def parse(cls, file_path: str, source_type: str | None = None) -> ParseResult:

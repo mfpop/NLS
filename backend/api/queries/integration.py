@@ -150,8 +150,8 @@ class IntegrationQuery:
                 break
 
         sample_rows = [
-            PreviewRowNode(row_number=r.row_number, columns=r.values)
-            for r in active.rows[:50]
+            PreviewRowNode(row_number=r.row_number, columns=[c if c is not None else "" for c in r.values])
+            for r in active.rows[:FileParserService.SAMPLE_ROW_COUNT]
         ]
 
         detected_types = [ct.detected_type for ct in active.column_types] if active.column_types else None

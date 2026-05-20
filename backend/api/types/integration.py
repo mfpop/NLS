@@ -88,6 +88,13 @@ class ImportJobPayload:
     errors: typing.Optional[list["MutationError"]] = None
 
 
+@strawberry.type
+class ImportJobDeletePayload:
+    ok: bool
+    message: typing.Optional[str] = None
+    errors: typing.Optional[list["MutationError"]] = None
+
+
 # ── Import Validation Error ──
 
 @strawberry.type

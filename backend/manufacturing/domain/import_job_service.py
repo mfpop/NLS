@@ -81,6 +81,15 @@ class ImportJobService:
 
     @classmethod
     @transaction.atomic
+    def delete(cls, job_id: str) -> None:
+        try:
+            job = ImportJob.objects.select_for_update().get(id=job_id)
+        except ImportJob.DoesNotExist as exc:
+            raise ImportJobError("jobId", "NOT_FOUND", "Import job not found") from exc
+        job.delete()
+
+    @classmethod
+    @transaction.atomic
     def create_draft_job(
         cls,
         source_id: str,

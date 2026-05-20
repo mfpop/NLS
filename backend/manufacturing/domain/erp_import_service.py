@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from django.utils import timezone
 from pathlib import Path
 
+from django.core.files.storage import default_storage
 from django.db import transaction
 
 from application.models import ImportSourceConfig
@@ -27,7 +28,7 @@ class ErpImportError(Exception):
 
 WORKFLOW_TRANSITIONS = {
     "DRAFT": ["PREVIEWED", "PREVIEW_FAILED", "CANCELLED"],
-    "FILE_ATTACHED": ["PREVIEWED", "PREVIEW_FAILED", "CANCELLED"],
+    "FILE_ATTACHED": ["PREVIEWED", "VALIDATED", "PREVIEW_FAILED", "CANCELLED"],
     "PREVIEWED": ["VALIDATED", "VALIDATION_FAILED", "CANCELLED"],
     "VALIDATED": ["COMPARED", "COMPARE_FAILED", "CANCELLED"],
     "COMPARED": ["READY_TO_APPLY", "CANCELLED"],
@@ -96,7 +97,10 @@ class ErpImportService:
 
         file_path = ErpImportService._resolve_file_path(job)
         if not file_path:
+            logger.warning("File not found for job %s (status=%s, file_path=%s, file_name=%s)", job.id, job.status, job.file_path, job.file_name)
             raise ErpImportError("filePath", "FILE_NOT_FOUND", f"File not found for job {job.id}")
+
+        logger.debug("Preview resolved path for job %s: %s", job.id, file_path)
 
         try:
             parse_result = FileParserService.parse(file_path, job.source_config.source_type)
@@ -126,6 +130,8 @@ class ErpImportService:
     def validate_job(job_id: str) -> ImportJob:
         """Parse file, run domain-specific validation, and persist validation errors."""
         job = ErpImportService._get_job(job_id)
+        if job.status == "FILE_ATTACHED":
+            job = ErpImportService.preview_file(job_id)
         _validate_transition(job.status, "VALIDATED")
 
         file_path = ErpImportService._resolve_file_path(job)
@@ -376,25 +382,28 @@ class ErpImportService:
 
     @staticmethod
     def _resolve_file_path(job: ImportJob) -> str | None:
-        candidates: list[str] = []
-
         if job.file_path:
-            candidates.append(job.file_path)
+            try:
+                if default_storage.exists(job.file_path):
+                    abs_path = default_storage.path(job.file_path)
+                    logger.debug("Preview resolved storage path: %s -> %s", job.file_path, abs_path)
+                    return str(Path(abs_path))
+            except Exception as exc:
+                logger.warning("Storage path resolution failed for %s: %s", job.file_path, exc)
 
-        if job.file_path and job.file_name:
-            candidates.append(os.path.join(job.file_path, job.file_name))
-
-        if job.file_name:
-            candidates.append(os.path.join(job.source_config.path, job.file_name))
-
-        candidates.append(job.source_config.path)
-
-        seen: set[str] = set()
-        for candidate in candidates:
-            if not candidate or candidate in seen:
-                continue
-            seen.add(candidate)
-            path = Path(candidate)
+            path = Path(job.file_path)
             if path.exists() and path.is_file():
                 return str(path)
+
+        if job.file_name:
+            joined = os.path.join(job.source_config.path, job.file_name)
+            path = Path(joined)
+            if path.exists() and path.is_file():
+                return str(path)
+
+        path = Path(job.source_config.path)
+        if path.exists() and path.is_file():
+            return str(path)
+
+        logger.warning("No file path resolved for job %s (file_path=%s, file_name=%s)", job.id, job.file_path, job.file_name)
         return None

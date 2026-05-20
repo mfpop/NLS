@@ -9,6 +9,8 @@
     "budget:initial-js": "node scripts/check-initial-js-budget.mjs",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "generate:brand": "node scripts/generate-brand-assets.mjs"
   },
   "dependencies": {

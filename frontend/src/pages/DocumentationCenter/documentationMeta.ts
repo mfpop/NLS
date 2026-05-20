@@ -148,6 +148,13 @@ export const DOC_META: Record<string, DocumentationMeta> = {
     relatedDocs: ["Modelfile-coder.md", "ollama-architect.md"],
     governanceRole: "AI profile",
   },
+  "USER_MANUAL.md": {
+    category: "User Guide",
+    status: "Canonical",
+    purpose: "Comprehensive user manual for plant operators, supervisors, and administrators.",
+    relatedDocs: ["DOMAIN_HANDBOOK.md", "README.md"],
+    governanceRole: "User manual",
+  },
 };
 
 export const STATUS_FILTERS = ["All", "Canonical", "Reference", "Draft", "Needs Review", "Deprecated"] as const;

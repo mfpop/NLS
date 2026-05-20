@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from api.permissions import ensure_access
 from api.types.manufacturing import (
     CompanyNode, CompanyPayload, CompanyInput,
     PlantNode, PlantPayload, PlantInput,
@@ -474,10 +475,15 @@ def _set_company_refs(company, input: CompanyInput):
         refs = ReferenceValue.objects.filter(id__in=input.lean_methodology_ids)
         company.lean_methodology_refs.set(refs)
 
+def _user(info):
+    return info.context.user
+
+
 @strawberry.type
 class ManufacturingMutation:
     @strawberry.mutation
-    def update_profile(self, input: ProfileInput) -> ProfilePayload:
+    def update_profile(self, info: Info, input: ProfileInput) -> ProfilePayload:
+        ensure_access(user=_user(info), action="update_profile")
         from manufacturing.models.profile import Profile as ProfileModel
         obj = ProfileModel.objects.first()
         if not obj:
@@ -560,9 +566,9 @@ class ManufacturingMutation:
 
     @strawberry.mutation
     def create_plant(self, input: PlantInput, company_id: Optional[str] = strawberry.UNSET) -> PlantPayload:
-        errors = validate_plant_input(input)
-        if errors:
-            return PlantPayload(ok=False, errors=errors)
+        domain_errors = validate_plant_input(input.code or "", input.name or "")
+        if domain_errors:
+            return PlantPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message) for e in domain_errors])
         try:
             company = None if company_id is strawberry.UNSET else company_id
             plant = StructureService.create_plant(input, company or str(Company.objects.first().id) if Company.objects.exists() else None)
@@ -802,7 +808,8 @@ class ManufacturingMutation:
             return MaterialBinPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message, details=json.dumps(exc.details) if exc.details else None)])
 
     @strawberry.mutation
-    def create_warehouse(self, input: WarehouseInput) -> WarehousePayload:
+    def create_warehouse(self, info: Info, input: WarehouseInput) -> WarehousePayload:
+        ensure_access(user=_user(info), action="manage_warehouses")
         from manufacturing.models import Warehouse
         try:
             warehouse = Warehouse.objects.create(
@@ -818,7 +825,8 @@ class ManufacturingMutation:
             return WarehousePayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
     @strawberry.mutation
-    def update_warehouse(self, id: str, input: WarehouseInput) -> WarehousePayload:
+    def update_warehouse(self, info: Info, id: str, input: WarehouseInput) -> WarehousePayload:
+        ensure_access(user=_user(info), action="manage_warehouses")
         from manufacturing.models import Warehouse
         try:
             warehouse = Warehouse.objects.get(id=id)
@@ -840,7 +848,8 @@ class ManufacturingMutation:
             return WarehousePayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
     @strawberry.mutation
-    def archive_warehouse(self, id: str) -> WarehousePayload:
+    def archive_warehouse(self, info: Info, id: str) -> WarehousePayload:
+        ensure_access(user=_user(info), action="manage_warehouses")
         from manufacturing.models import Warehouse
         try:
             warehouse = Warehouse.objects.get(id=id)
@@ -854,7 +863,8 @@ class ManufacturingMutation:
             return WarehousePayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
     @strawberry.mutation
-    def create_schedule(self, input: ScheduleInput) -> SchedulePayload:
+    def create_schedule(self, info: Info, input: ScheduleInput) -> SchedulePayload:
+        ensure_access(user=_user(info), action="manage_schedules")
         s = Schedule.objects.create(
             code=input.code, name=input.name, description=input.description or "",
             status=input.status or "ACTIVE",
@@ -862,7 +872,8 @@ class ManufacturingMutation:
         return SchedulePayload(ok=True, schedule=ScheduleNode.from_db(s))
 
     @strawberry.mutation
-    def update_schedule(self, id: str, input: ScheduleInput) -> SchedulePayload:
+    def update_schedule(self, info: Info, id: str, input: ScheduleInput) -> SchedulePayload:
+        ensure_access(user=_user(info), action="manage_schedules")
         try:
             s = Schedule.objects.get(id=id)
         except Schedule.DoesNotExist:
@@ -875,7 +886,8 @@ class ManufacturingMutation:
         return SchedulePayload(ok=True, schedule=ScheduleNode.from_db(s))
 
     @strawberry.mutation
-    def archive_schedule(self, id: str) -> SchedulePayload:
+    def archive_schedule(self, info: Info, id: str) -> SchedulePayload:
+        ensure_access(user=_user(info), action="manage_schedules")
         try:
             s = Schedule.objects.get(id=id)
         except Schedule.DoesNotExist:
@@ -885,7 +897,8 @@ class ManufacturingMutation:
         return SchedulePayload(ok=True, schedule=ScheduleNode.from_db(s))
 
     @strawberry.mutation
-    def assign_schedule(self, input: ScheduleAssignmentInput) -> ScheduleAssignmentPayload:
+    def assign_schedule(self, info: Info, input: ScheduleAssignmentInput) -> ScheduleAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_schedule_assignments")
         if input.work_schedule_id:
             from manufacturing.domain.schedule_assignment_service import ScheduleAssignmentError, ScheduleAssignmentService
             try:
@@ -911,14 +924,16 @@ class ManufacturingMutation:
         return ScheduleAssignmentPayload(ok=True, assignment=ScheduleAssignmentNode.from_db(a))
 
     @strawberry.mutation
-    def remove_schedule_assignment(self, id: str) -> ScheduleAssignmentPayload:
+    def remove_schedule_assignment(self, info: Info, id: str) -> ScheduleAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_schedule_assignments")
         deleted, _ = ScheduleAssignment.objects.filter(id=id).delete()
         return ScheduleAssignmentPayload(ok=deleted > 0)
 
     # ── Legacy reference item mutations ──
 
     @strawberry.mutation
-    def create_reference_item(self, input: ReferenceItemInput) -> ReferenceItemPayload:
+    def create_reference_item(self, info: Info, input: ReferenceItemInput) -> ReferenceItemPayload:
+        ensure_access(user=_user(info), action="manage_reference_values")
         if input.table_type in {"staff_user", "staff_assignment"}:
             return ReferenceItemPayload(errors=[MutationError(field="tableType", code="UNSUPPORTED", message="Create staff users/assignments from the staff workflow; existing records can be edited here during development.")])
         validation_errors = _validate_reference_item_input(input)
@@ -941,7 +956,8 @@ class ManufacturingMutation:
         return ReferenceItemPayload(item=LegacyReferenceItemResult.from_ref_value(rv, input.table_type))
 
     @strawberry.mutation
-    def update_reference_item(self, id: str, input: ReferenceItemInput) -> ReferenceItemPayload:
+    def update_reference_item(self, info: Info, id: str, input: ReferenceItemInput) -> ReferenceItemPayload:
+        ensure_access(user=_user(info), action="manage_reference_values")
         validation_errors = _validate_reference_item_input(input, id)
         if validation_errors:
             return ReferenceItemPayload(errors=validation_errors)
@@ -966,7 +982,8 @@ class ManufacturingMutation:
         return ReferenceItemPayload(item=LegacyReferenceItemResult.from_ref_value(rv, input.table_type))
 
     @strawberry.mutation
-    def deactivate_reference_item(self, id: str) -> ReferenceItemPayload:
+    def deactivate_reference_item(self, info: Info, id: str) -> ReferenceItemPayload:
+        ensure_access(user=_user(info), action="manage_reference_values")
         if id.startswith("user:"):
             try:
                 user = User.objects.get(id=id.split(":", 1)[1])
@@ -1370,7 +1387,8 @@ class ManufacturingMutation:
     # ── Product Family / Model Assignments ──
 
     @strawberry.mutation
-    def assign_families_to_production_line(self, production_line_id: str, family_ids: list[str], primary_family_id: typing.Optional[str] = None) -> ProductFamilyAssignmentPayload:
+    def assign_families_to_production_line(self, info: Info, production_line_id: str, family_ids: list[str], primary_family_id: typing.Optional[str] = None) -> ProductFamilyAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_line_product_scopes")
         try:
             line = ProductionLine.objects.get(id=production_line_id)
         except ProductionLine.DoesNotExist:
@@ -1406,7 +1424,8 @@ class ManufacturingMutation:
             return ProductFamilyAssignmentPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
 
     @strawberry.mutation
-    def remove_family_from_production_line(self, production_line_id: str, family_id: str) -> ProductFamilyAssignmentPayload:
+    def remove_family_from_production_line(self, info: Info, production_line_id: str, family_id: str) -> ProductFamilyAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_line_product_scopes")
         try:
             ProductionLineProductModel.objects.filter(production_line_id=production_line_id, product_family_id=family_id).delete()
             ProductionLineProductFamily.objects.filter(production_line_id=production_line_id, product_family_id=family_id).delete()
@@ -1416,7 +1435,8 @@ class ManufacturingMutation:
             return ProductFamilyAssignmentPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
 
     @strawberry.mutation
-    def assign_models_to_production_line(self, production_line_id: str, model_ids: list[str], primary_model_id: typing.Optional[str] = None) -> ProductModelAssignmentPayload:
+    def assign_models_to_production_line(self, info: Info, production_line_id: str, model_ids: list[str], primary_model_id: typing.Optional[str] = None) -> ProductModelAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_line_product_scopes")
         try:
             line = ProductionLine.objects.get(id=production_line_id)
         except ProductionLine.DoesNotExist:
@@ -1470,7 +1490,8 @@ class ManufacturingMutation:
             return ProductModelAssignmentPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
 
     @strawberry.mutation
-    def remove_model_from_production_line(self, production_line_id: str, model_id: str) -> ProductModelAssignmentPayload:
+    def remove_model_from_production_line(self, info: Info, production_line_id: str, model_id: str) -> ProductModelAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_line_product_scopes")
         try:
             ProductionLineProductModel.objects.filter(production_line_id=production_line_id, product_model_id=model_id).delete()
             assignments = ProductionLineProductModel.objects.filter(production_line_id=production_line_id).select_related("product_model", "product_family").all()
@@ -1479,7 +1500,8 @@ class ManufacturingMutation:
             return ProductModelAssignmentPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
 
     @strawberry.mutation
-    def set_primary_production_line_family(self, production_line_id: str, family_id: str) -> ProductFamilyAssignmentPayload:
+    def set_primary_production_line_family(self, info: Info, production_line_id: str, family_id: str) -> ProductFamilyAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_line_product_scopes")
         try:
             ProductionLineProductFamily.objects.filter(production_line_id=production_line_id).update(is_primary=False)
             ProductionLineProductFamily.objects.filter(production_line_id=production_line_id, product_family_id=family_id).update(is_primary=True)
@@ -1489,7 +1511,8 @@ class ManufacturingMutation:
             return ProductFamilyAssignmentPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(e))])
 
     @strawberry.mutation
-    def set_primary_production_line_model(self, production_line_id: str, model_id: str) -> ProductModelAssignmentPayload:
+    def set_primary_production_line_model(self, info: Info, production_line_id: str, model_id: str) -> ProductModelAssignmentPayload:
+        ensure_access(user=_user(info), action="manage_line_product_scopes")
         try:
             ProductionLineProductModel.objects.filter(production_line_id=production_line_id).update(is_primary=False)
             ProductionLineProductModel.objects.filter(production_line_id=production_line_id, product_model_id=model_id).update(is_primary=True)

@@ -6,6 +6,7 @@ from api.permissions import ensure_access
 from api.types.integration import (
     MappingRuleInput, MappingRuleNode, MappingRulePayload,
     ImportJobPayload, ImportJobNode,
+    ImportJobDeletePayload,
     AttachFileInput,
     MutationError,
 )
@@ -114,6 +115,23 @@ class IntegrationMutation:
             return ImportJobPayload(ok=True, job=ImportJobNode.from_db(job))
         except ErpImportError as e:
             return ImportJobPayload(ok=False, errors=[MutationError(field=e.field or "jobId", code=e.code, message=e.message)])
+
+    @strawberry.mutation
+    def delete_import_job(self, info: Info, job_id: str) -> ImportJobDeletePayload:
+        ensure_access(user=_user(info), action="delete_import_job")
+        if not job_id:
+            return ImportJobDeletePayload(
+                ok=False,
+                errors=[MutationError(field="jobId", code="REQUIRED", message="jobId is required")],
+            )
+        try:
+            ImportJobService.delete(job_id)
+            return ImportJobDeletePayload(ok=True, message="Import job deleted.")
+        except ImportJobError as e:
+            return ImportJobDeletePayload(
+                ok=False,
+                errors=[MutationError(field=e.field, code=e.code, message=e.message)],
+            )
 
     @strawberry.mutation
     def create_mapping_rule(self, info: Info, input: MappingRuleInput) -> MappingRulePayload:

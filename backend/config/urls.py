@@ -6,6 +6,7 @@ from graphql import GraphQLError
 import json
 
 from api.schema import schema, GraphQLContext, validate_query_complexity
+from api.upload_import_file import upload_import_file
 
 
 class ComplexityValidatingGraphQLView(GraphQLView):
@@ -56,4 +57,5 @@ class ComplexityValidatingGraphQLView(GraphQLView):
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("graphql/", csrf_exempt(ComplexityValidatingGraphQLView.as_view(schema=schema))),
+    path("api/import-jobs/<path:job_id>/upload/", csrf_exempt(upload_import_file)),
 ]

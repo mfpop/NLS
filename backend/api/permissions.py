@@ -34,7 +34,18 @@ _action_roles = {
     "create_import_job": SUPERVISOR_PLUS,
     "attach_import_file": SUPERVISOR_PLUS,
     "transition_import_job": SUPERVISOR_PLUS,
+    "delete_import_job": SUPERVISOR_PLUS,
     "manage_mapping_rules": ADMIN_ROLES,
+    # Material / Warehouse
+    "manage_warehouses": MANAGER_PLUS,
+    "manage_material_bins": MANAGER_PLUS,
+    # Scheduling
+    "manage_schedules": MANAGER_PLUS,
+    "manage_schedule_assignments": MANAGER_PLUS,
+    # References
+    "manage_reference_values": MANAGER_PLUS,
+    # Product / Family / Model assignments
+    "manage_line_product_scopes": MANAGER_PLUS,
 }
 
 

@@ -149,6 +149,7 @@ DOC_META: Final[dict[str, DocumentationMeta]] = {
         related_docs=("Modelfile-architect.md", "ollama-coder.md"),
         governance_role="AI profile",
     ),
+
     "ollama-architect.md": DocumentationMeta(
         category="Local AI / Modelfiles",
         status="Needs Review",
@@ -162,6 +163,13 @@ DOC_META: Final[dict[str, DocumentationMeta]] = {
         purpose="Ollama coder profile instructions.",
         related_docs=("Modelfile-coder.md", "ollama-architect.md"),
         governance_role="AI profile",
+    ),
+    "USER_MANUAL.md": DocumentationMeta(
+        category="User Guide",
+        status="Canonical",
+        purpose="Comprehensive user manual for plant operators, supervisors, and administrators.",
+        related_docs=("DOMAIN_HANDBOOK.md", "README.md"),
+        governance_role="User manual",
     ),
 }
 

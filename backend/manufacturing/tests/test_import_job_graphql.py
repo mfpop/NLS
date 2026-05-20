@@ -92,3 +92,13 @@ class GraphQLImportJobDuplicateTests(TestCase):
         self.assertFalse(result.ok)
         self.assertEqual(result.errors[0].code, "FILE_NOT_FOUND")
         self.assertIn("File not found", result.errors[0].message)
+
+    def test_graphql_delete_import_job_deletes_record(self):
+        from api.mutations.integration import IntegrationMutation
+
+        mutation = IntegrationMutation()
+        result = mutation.delete_import_job(_make_mock_info(), job_id=str(self.job.id))
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.message, "Import job deleted.")
+        self.assertFalse(ImportJob.objects.filter(id=self.job.id).exists())

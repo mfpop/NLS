@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mockUseImportJobs = vi.fn();
+let mockFetch: ReturnType<typeof vi.fn>;
 
 vi.mock("@/hooks/useImportJobs", () => ({
   useImportJobs: (...args: unknown[]) => mockUseImportJobs(...args),
@@ -58,8 +59,8 @@ function buildHookState(state: any = {}) {
     loading: state.loading ?? false,
     refetch: state.refetch ?? vi.fn().mockResolvedValue({}),
     createJob: state.createJob ?? vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "routing.csv") }),
-    attachFile: state.attachFile ?? vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "routing.csv") }),
     transitionJob: state.transitionJob ?? vi.fn().mockResolvedValue(true),
+    deleteJob: state.deleteJob ?? vi.fn().mockResolvedValue(true),
     isCreating: state.isCreating ?? false,
     isAttaching: state.isAttaching ?? false,
     actionLoading: state.actionLoading ?? null,
@@ -76,6 +77,12 @@ describe("ImportJobsPage", () => {
         digest: vi.fn().mockResolvedValue(new Uint8Array(32).fill(1).buffer),
       },
     } as any);
+    mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true, job_id: "job-new", status: "FILE_ATTACHED" }),
+      text: async () => JSON.stringify({ ok: true, job_id: "job-new", status: "FILE_ATTACHED" }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
   });
 
   it("disables new job while create is pending", () => {
@@ -99,17 +106,78 @@ describe("ImportJobsPage", () => {
     expect(screen.getAllByText("routing-2.csv")).toHaveLength(1);
   });
 
-  it("pick file updates the selected job only", async () => {
+  it("clicking New Job does not create a record — modal opens but no mutations fire", async () => {
     const user = userEvent.setup();
-    const attachFile = vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-1", "routing-updated.csv") });
-    renderPage({ jobs: [makeJob("job-1", "routing.csv")], attachFile });
+    const createJob = vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "routing.csv") });
+    renderPage({ createJob });
 
-    await user.click(screen.getByRole("button", { name: /routing\.csv/i }));
+    await user.click(screen.getByRole("button", { name: /new job/i }));
+
+    expect(screen.getByText("New Import Job")).toBeInTheDocument();
+    expect(createJob).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it("select file + Create creates exactly one DRAFT job via mutation and uploads via fetch", async () => {
+    const user = userEvent.setup();
+    const createJob = vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "routing.csv") });
+    const refetch = vi.fn().mockResolvedValue({});
+    renderPage({ createJob, refetch, jobs: [] });
+
+    await user.click(screen.getByRole("button", { name: /new job/i }));
+    const combos = screen.getAllByRole("combobox");
+    await user.selectOptions(combos[combos.length - 1], "src-1");
     const inputs = document.querySelectorAll('input[type="file"]');
-    await user.upload(inputs[0] as HTMLInputElement, new File(["a,b\n1,2\n"], "routing-updated.csv", { type: "text/csv" }));
+    await user.upload(inputs[1] as HTMLInputElement, new File(["a,b\n1,2\n"], "routing.csv", { type: "text/csv" }));
+    await user.click(screen.getByRole("button", { name: /create job/i }));
 
     await waitFor(() => {
-      expect(attachFile).toHaveBeenCalledWith("job-1", "routing-updated.csv", "/erp-data/source/routing-updated.csv", 8, expect.any(String));
+      expect(createJob).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("double-click Create creates exactly one job — lockRef prevents second call", async () => {
+    const user = userEvent.setup();
+    const createJob = vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "routing.csv") });
+    renderPage({ createJob, jobs: [] });
+
+    await user.click(screen.getByRole("button", { name: /new job/i }));
+    const combos = screen.getAllByRole("combobox");
+    await user.selectOptions(combos[combos.length - 1], "src-1");
+    const inputs = document.querySelectorAll('input[type="file"]');
+    await user.upload(inputs[1] as HTMLInputElement, new File(["a,b\n1,2\n"], "routing.csv", { type: "text/csv" }));
+    await user.click(screen.getByRole("button", { name: /create job/i }));
+    await user.click(screen.getByRole("button", { name: /create job/i }));
+
+    await waitFor(() => {
+      expect(createJob).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("upload failure does not create FILE_ATTACHED job — DRAFT job remains", async () => {
+    const user = userEvent.setup();
+    const createJob = vi.fn().mockResolvedValue({ ok: true, job: { ...makeJob("job-new", "routing.csv"), status: "DRAFT" } });
+    mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ ok: false, code: "STORAGE_SAVE_FAILED", message: "Upload failed" }),
+      text: async () => JSON.stringify({ ok: false, code: "STORAGE_SAVE_FAILED", message: "Upload failed" }),
+    });
+    vi.stubGlobal("fetch", mockFetch);
+    renderPage({ createJob, jobs: [] });
+
+    await user.click(screen.getByRole("button", { name: /new job/i }));
+    const combos = screen.getAllByRole("combobox");
+    await user.selectOptions(combos[combos.length - 1], "src-1");
+    const inputs = document.querySelectorAll('input[type="file"]');
+    await user.upload(inputs[1] as HTMLInputElement, new File(["a,b\n1,2\n"], "routing.csv", { type: "text/csv" }));
+    await user.click(screen.getByRole("button", { name: /create job/i }));
+
+    await waitFor(() => {
+      expect(createJob).toHaveBeenCalledTimes(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/upload failed/i)).toBeInTheDocument();
     });
   });
 
@@ -144,16 +212,11 @@ describe("ImportJobsPage", () => {
     expect(screen.getByText("routing.csv")).toBeInTheDocument();
   });
 
-  it("creates and attaches a single visible row", async () => {
+  it("creates and attaches a single visible row via the upload flow", async () => {
     const user = userEvent.setup();
-    const jobs = [makeJob("job-existing", "routing.csv")];
-    const createJob = vi.fn().mockImplementation(async () => ({ ok: true, job: jobs[0] }));
-    const attachFile = vi.fn().mockImplementation(async (_, fileName: string) => {
-      jobs[0] = { ...jobs[0], fileName, status: "FILE_ATTACHED" };
-      return { ok: true, job: jobs[0] };
-    });
-
-    renderPage({ jobs, createJob, attachFile });
+    const createJob = vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "routing.csv") });
+    const refetch = vi.fn().mockResolvedValue({});
+    renderPage({ jobs: [makeJob("job-existing", "routing.csv")], createJob, refetch });
 
     await user.click(screen.getByRole("button", { name: /new job/i }));
     const createSourceSelect = screen.getAllByRole("combobox")[screen.getAllByRole("combobox").length - 1] as HTMLSelectElement;
@@ -164,8 +227,32 @@ describe("ImportJobsPage", () => {
 
     await waitFor(() => {
       expect(createJob).toHaveBeenCalledTimes(1);
-      expect(attachFile).toHaveBeenCalledTimes(1);
-      expect(screen.getAllByText("routing.csv").length).toBeGreaterThanOrEqual(1);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("creates only one job even when no existing jobs are present", async () => {
+    const user = userEvent.setup();
+    const createJob = vi.fn().mockResolvedValue({ ok: true, job: makeJob("job-new", "new-file.csv") });
+    const refetch = vi.fn().mockResolvedValue({});
+    renderPage({ jobs: [], createJob, refetch });
+
+    await user.click(screen.getByRole("button", { name: /new job/i }));
+    const createSourceSelect = screen.getAllByRole("combobox")[screen.getAllByRole("combobox").length - 1] as HTMLSelectElement;
+    await user.selectOptions(createSourceSelect, "src-1");
+    const inputs = document.querySelectorAll('input[type="file"]');
+    await user.upload(inputs[1] as HTMLInputElement, new File(["data\nval\n"], "new-file.csv", { type: "text/csv" }));
+    await user.click(screen.getByRole("button", { name: /create job/i }));
+
+    await waitFor(() => {
+      expect(createJob).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("Create button is disabled while upload is running (isSubmitting)", async () => {
+    const createJob = vi.fn().mockImplementation(() => new Promise(() => {})); // never resolves
+    renderPage({ createJob, jobs: [] });
+
+    expect(screen.getByRole("button", { name: /new job/i })).not.toBeDisabled();
   });
 });

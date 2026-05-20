@@ -9,6 +9,7 @@ and the internal _validate_transition helper.
 from datetime import datetime
 from unittest.mock import Mock, patch
 from tempfile import TemporaryDirectory
+from pathlib import Path
 
 from django.utils import timezone
 
@@ -254,7 +255,7 @@ class PreviewFileTests(TestCase):
             )
 
             with patch("manufacturing.domain.erp_import_service.FileParserService.parse") as mock_parse:
-                mock_parse.return_value = _fake_parse_result(file_name="routing.csv", file_path=str(file_path))
+                mock_parse.return_value = _fake_parse_result()
 
                 result = ErpImportService.preview_file(str(job.id))
 

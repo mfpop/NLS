@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     # Project apps
     "shared",
     "application",
+    "data_management",
     "manufacturing",
     "process",
     "execution",
@@ -113,5 +114,6 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="noreply@leansync.com")
 
 # Media files (uploaded import files)
+ERP_DATA_ROOT = BASE_DIR.parent / "erp_data"
 MEDIA_ROOT = BASE_DIR.parent / "erp_data" / "source"
 MEDIA_URL = "/media/"

@@ -152,7 +152,14 @@ export const DOC_META: Record<string, DocumentationMeta> = {
     category: "User Guide",
     status: "Canonical",
     purpose: "Comprehensive user manual for plant operators, supervisors, and administrators.",
-    relatedDocs: ["DOMAIN_HANDBOOK.md", "README.md"],
+    relatedDocs: ["DOMAIN_HANDBOOK.md", "ERP_IMPORT_USER_HELP.md"],
+    governanceRole: "User manual",
+  },
+  "ERP_IMPORT_USER_HELP.md": {
+    category: "User Guide",
+    status: "Canonical",
+    purpose: "Step-by-step instructions for importing ERP data using saved ERP Patterns.",
+    relatedDocs: ["USER_MANUAL.md"],
     governanceRole: "User manual",
   },
 };

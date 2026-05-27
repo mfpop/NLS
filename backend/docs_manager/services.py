@@ -168,7 +168,14 @@ DOC_META: Final[dict[str, DocumentationMeta]] = {
         category="User Guide",
         status="Canonical",
         purpose="Comprehensive user manual for plant operators, supervisors, and administrators.",
-        related_docs=("DOMAIN_HANDBOOK.md", "README.md"),
+        related_docs=("DOMAIN_HANDBOOK.md", "ERP_IMPORT_USER_HELP.md"),
+        governance_role="User manual",
+    ),
+    "ERP_IMPORT_USER_HELP.md": DocumentationMeta(
+        category="User Guide",
+        status="Canonical",
+        purpose="Step-by-step instructions for importing ERP data using saved ERP Patterns.",
+        related_docs=("USER_MANUAL.md",),
         governance_role="User manual",
     ),
 }

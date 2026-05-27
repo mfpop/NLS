@@ -192,3 +192,7 @@ The continuous improvement loop of Nexus LeanSync operates in a cyclical flow:
   * **Integration Status**: System-to-system sync status logs.
   * **File Preview**: Inspect raw uploaded payload files.
   * **Compare Results**: Side-by-side reconciliation of ERP values against local states.
+
+#### ERP Import (`/system/erp-data/import`)
+* **Purpose**: Import ERP data using saved ERP Patterns.
+* **Instructions**: See dedicated guide — [ERP Import User Help](../docs/ERP_IMPORT_USER_HELP.md) in the Documentation Center (`/docs/core`). Covers: uploading sample files, creating patterns, mapping fields, validating, importing, reviewing logs, and resetting the workspace.

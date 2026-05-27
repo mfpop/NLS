@@ -341,6 +341,30 @@ class ProductionLineResourceGroupOptionNode:
 
 
 @strawberry.type
+class AssignedResourceGroupNode:
+    id: strawberry.ID
+    resource_group_id: strawberry.ID = strawberry.field(name="resourceGroupId")
+    resource_group_code: str = strawberry.field(name="resourceGroupCode")
+    resource_group_name: str = strawberry.field(name="resourceGroupName")
+    department_name: str = strawberry.field(name="departmentName")
+    sequence: int
+    is_active: bool = strawberry.field(name="isActive")
+
+    @classmethod
+    def from_db(cls, obj) -> "AssignedResourceGroupNode":
+        rg = obj.resource_group
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            resource_group_id=strawberry.ID(str(rg.id)),
+            resource_group_code=rg.code,
+            resource_group_name=rg.name,
+            department_name=rg.department.name if rg.department else "",
+            sequence=obj.sequence,
+            is_active=obj.is_active,
+        )
+
+
+@strawberry.type
 class ProductFamilyAssignmentNode:
     id: strawberry.ID
     name: str
@@ -454,6 +478,7 @@ class ProductionLineNode:
     bottleneck_resource_group_id: typing.Optional[str] = strawberry.field(name="bottleneckResourceGroupId", default=None)
     bottleneck_resource_group: typing.Optional[str] = strawberry.field(name="bottleneckResourceGroup", default=None)
     resource_group_options: list[ProductionLineResourceGroupOptionNode] = strawberry.field(name="resourceGroupOptions", default_factory=list)
+    assigned_resource_groups: list[AssignedResourceGroupNode] = strawberry.field(name="assignedResourceGroups", default_factory=list)
     is_constraint: bool = strawberry.field(name="isConstraint")
     line_count: typing.Optional[int] = strawberry.field(name="lineCount", default=0)
     department_count: typing.Optional[int] = strawberry.field(name="departmentCount", default=0)
@@ -547,6 +572,7 @@ class ProductionLineNode:
             bottleneck_resource_group_id=str(obj.bottleneck_resource_group_id) if obj.bottleneck_resource_group_id else None,
             bottleneck_resource_group=obj.bottleneck_resource_group.name if obj.bottleneck_resource_group_id else None,
             resource_group_options=resource_group_options,
+            assigned_resource_groups=[AssignedResourceGroupNode.from_db(a) for a in obj.assigned_resource_groups.select_related("resource_group__department").order_by("sequence").all()],
             is_constraint=obj.is_constraint,
             line_count=1,
             department_count=len(department_links),
@@ -1010,6 +1036,28 @@ class ScheduleAssignmentNode:
 # ── Reference Data & Response Types ──
 
 @strawberry.type
+class ReferenceTableCatalogEntryNode:
+    """A single table within a catalog group, with record count from the backend."""
+    code: str
+    label: str
+    label_singular: str = strawberry.field(name="labelSingular")
+    description: str
+    usage_context: str = strawberry.field(name="usageContext")
+    record_count: int = strawberry.field(name="recordCount")
+    is_configurable: bool = strawberry.field(name="isConfigurable")
+    category_code: str = strawberry.field(name="categoryCode")
+    scope: str
+
+
+@strawberry.type
+class ReferenceTableCatalogGroupNode:
+    """A group of reference tables in the catalog sidebar."""
+    code: str
+    label: str
+    tables: list[ReferenceTableCatalogEntryNode]
+
+
+@strawberry.type
 class ReferenceTableNode:
     """Reference table with metadata and values (for new referenceTables resolver)"""
     category_id: strawberry.ID = strawberry.field(name="categoryId")
@@ -1304,6 +1352,7 @@ class StructureChildNode:
     name: str
     code: str
     status: str
+    department_name: typing.Optional[str] = strawberry.field(name="departmentName", default=None)
     child_count: int = strawberry.field(name="childCount")
     children: list["StructureChildNode"] = strawberry.field(name="children")
     schedule_status: str = strawberry.field(name="scheduleStatus")
@@ -1313,6 +1362,7 @@ class StructureChildNode:
         return cls(
             id=strawberry.ID(str(node["id"])), type=node["type"],
             name=node["name"], code=node["code"], status=node["status"],
+            department_name=node.get("departmentName"),
             child_count=node.get("childCount", 0),
             children=[cls.from_tree(c) for c in node.get("children", [])],
             schedule_status=node.get("scheduleStatus", "Missing Schedule"),
@@ -1457,6 +1507,14 @@ class MaterialBinPayload:
 class AssignmentPayload:
     ok: bool
     assignment: typing.Optional[ProductionLineDepartmentAssignmentNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
+@strawberry.type
+class ProductionLineAssignmentPayload:
+    ok: bool
+    production_line: typing.Optional[ProductionLineNode] = strawberry.field(name="productionLine", default=None)
+    assigned_resource_groups: typing.Optional[list[AssignedResourceGroupNode]] = strawberry.field(name="assignedResourceGroups", default=None)
     errors: list[MutationError] = strawberry.field(default_factory=list)
 
 @strawberry.type

@@ -16,6 +16,7 @@ const TYPE_ROUTE: Record<string, string> = {
   company: "company",
   plant: "plants",
   productionLine: "line",
+  assignedGroup: "line",
   department: "dept",
   resourceGroup: "rg",
   resource: "resource",
@@ -40,6 +41,21 @@ function getAncestorKeys(key: string): string[] {
     parent = getParentKey(parent);
   }
   return ancestors;
+}
+
+function normalizeFlowTreeNode<T extends { type: string; children?: T[] }>(node: T): T {
+  const normalizedChildren = (node.children || []).flatMap((child) => {
+    const normalizedChild = normalizeFlowTreeNode(child);
+    if (normalizedChild.type === "assignedGroup") {
+      return normalizedChild.children || [];
+    }
+    return [normalizedChild];
+  });
+
+  return {
+    ...node,
+    children: normalizedChildren,
+  };
 }
 
 export function ProductionFlowLayout() {
@@ -85,9 +101,13 @@ export function ProductionFlowLayout() {
     status: statusFilter !== "all" ? statusFilter : undefined,
     includeTree: true,
     deferTree: true,
+    treeMode: "flow",
   });
 
-  const treeData = overviewData?.tree ? [overviewData.tree] : [];
+  const treeData = useMemo(() => {
+    if (!overviewData?.tree) return [];
+    return [normalizeFlowTreeNode(overviewData.tree)];
+  }, [overviewData?.tree]);
 
   const selectedNode = selectedNodeKey ? findNodeByKey(treeData, selectedNodeKey) : null;
   const selectedPath = useMemo(() => {
@@ -165,8 +185,9 @@ export function ProductionFlowLayout() {
           navigate(`/system/production-structure/flow/dept?departmentId=${node.id}`, { replace: true });
           return;
         }
-        if (node.type === "productionLine" || node.type === "line") {
-          navigate(`/system/production-structure/flow/line?productionLineId=${node.id}`, { replace: true });
+        if (node.type === "productionLine" || node.type === "line" || node.type === "assignedGroup") {
+          const lineId = node.type === "assignedGroup" ? node.id.replace("assigned_", "") : node.id;
+          navigate(`/system/production-structure/flow/line?productionLineId=${lineId}`, { replace: true });
           return;
         }
         if (node.type === "resourceGroup" || node.type === "group") {
@@ -220,7 +241,7 @@ export function ProductionFlowLayout() {
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const companyRef = useRef<{ startEditing: () => void; save: () => Promise<void>; cancel: () => void }>(null);
-  const flowToolbarButtonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-70 dark:disabled:text-muted-foreground";
+  const flowToolbarButtonClass = theme.toolbarBtn;
 
   useEffect(() => {
     if (!toast) return;
@@ -247,12 +268,12 @@ export function ProductionFlowLayout() {
       </div>
 
       {/* Toolbar - Windows Explorer style */}
-      <div className="flex h-9 shrink-0 select-none items-center gap-2 border-b border-border/35 bg-muted px-3">
-        <div className="flex h-full items-center gap-2 pr-2" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
+      <div className="flex shrink-0 select-none items-center border-b border-border/35 bg-muted py-2">
+        <div className="flex h-full items-center px-3" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
           <div className="relative min-w-0 flex-1">
             <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search"
-              className="h-7 w-full rounded border border-border/30 bg-transparent pl-3 pr-7 text-xs text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-border/50 focus:ring-1 focus:ring-border/25" />
+              className="h-8 w-full rounded bg-card px-3 py-1 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-b-2 focus:border-info" />
             {searchQuery && (
               <button type="button" onClick={() => setSearchQuery("")}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
@@ -260,22 +281,29 @@ export function ProductionFlowLayout() {
               </button>
             )}
           </div>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-7 w-24 shrink-0 cursor-pointer rounded border border-border/30 bg-transparent px-2 text-xs text-muted-foreground outline-none transition-colors focus:border-border/50 focus:ring-1 focus:ring-border/25">
-            <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
-          </select>
         </div>
         <span className="h-5 w-px shrink-0 bg-border/25" />
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5">
+        <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 w-36 shrink-0 cursor-pointer bg-card px-2 text-xs text-muted-foreground outline-none transition-colors focus:border-b-2 focus:border-info">
+            <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
+          </select>
+          <button type="button" onClick={() => refetch()} title="Refresh"
+            className={flowToolbarButtonClass}>
+            <RefreshCw className={`h-4 w-4 stroke-current ${loading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
+          <span className="h-5 w-px shrink-0 bg-border/25" />
+          <div className="flex flex-1 items-center justify-end gap-3">
         {isEditingCompany ? (
           <>
             <button type="button" onClick={() => companyRef.current?.save()} title="Save"
-              className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-success transition-colors hover:bg-success/12">
+              className="inline-flex h-8 items-center gap-3.5 px-2 text-sm font-medium text-success select-none transition-all duration-150 bg-transparent hover:bg-success/10 active:bg-success/20">
               <Check className="h-4 w-4 stroke-current" />
               <span className="hidden sm:inline">Save</span>
             </button>
             <button type="button" onClick={() => companyRef.current?.cancel()} title="Cancel"
-              className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted">
+              className={flowToolbarButtonClass}>
               <X className="h-4 w-4 stroke-current" />
               <span className="hidden sm:inline">Cancel</span>
             </button>
@@ -297,15 +325,10 @@ export function ProductionFlowLayout() {
               <Trash2 className="h-4 w-4 stroke-current" />
               <span>Delete</span>
             </button>
-            <span className="mx-1 h-5 w-px bg-muted shrink-0" />
-            <button type="button" onClick={() => refetch()} title="Refresh"
-              className={flowToolbarButtonClass}>
-              <RefreshCw className={`h-4 w-4 stroke-current ${loading ? "animate-spin" : ""}`} />
-              <span>Refresh</span>
-            </button>
           </>
         )}
         {selectionFilteredOut && <span className="ml-2 text-[11px] text-muted-foreground">Selection filtered out</span>}
+        </div>
         </div>
       </div>
 
@@ -361,11 +384,11 @@ export function ProductionFlowLayout() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* Footer — Flow Legend */}
       <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
         <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-entity-plant stroke-current" /> Plant</span>
         <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-entity-line stroke-current" /> Line</span>
-        <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-entity-department stroke-current" /> Dept</span>
+        <span className="flex items-center gap-1.5"><Component className="h-3.5 w-3.5 text-entity-resource-group stroke-current" /> Assigned RG</span>
         <span className="flex items-center gap-1.5"><Component className="h-3.5 w-3.5 text-entity-resource-group stroke-current" /> RG</span>
         <span className="flex items-center gap-1.5"><Dumbbell className="h-3.5 w-3.5 text-entity-resource stroke-current" /> Resource</span>
       </div>

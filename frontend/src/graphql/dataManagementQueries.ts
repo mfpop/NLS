@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
-  query DataManagementOverviewFull($plantId: String, $search: String, $status: String, $includeTree: Boolean) {
-    dataManagementOverview(plantId: $plantId, search: $search, status: $status, includeTree: $includeTree) {
+  query DataManagementOverviewFull($plantId: String, $search: String, $status: String, $includeTree: Boolean, $treeMode: String) {
+    dataManagementOverview(plantId: $plantId, search: $search, status: $status, includeTree: $includeTree, treeMode: $treeMode) {
       selectedPlant {
         id
         name
@@ -35,6 +35,7 @@ export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
           name
           code
           status
+          departmentName
           childCount
           children {
             id
@@ -42,6 +43,7 @@ export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
             name
             code
             status
+            departmentName
             childCount
             children {
               id
@@ -49,6 +51,7 @@ export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
               name
               code
               status
+              departmentName
               childCount
               children {
                 id
@@ -56,6 +59,7 @@ export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
                 name
                 code
                 status
+                departmentName
                 childCount
                   children {
                     id
@@ -63,6 +67,7 @@ export const DATA_MANAGEMENT_OVERVIEW_FULL_QUERY = gql`
                     name
                     code
                     status
+                    departmentName
                     childCount
                   }
               }

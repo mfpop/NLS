@@ -57,11 +57,12 @@ export const TreeNodeComponent = React.memo(function TreeNodeComponent({
   const Icon = cfg.icon;
   const indentPx = isRoot ? 6 : 16 + (depth - 1) * 14;
   const statusLabel = node.type === "resource" ? node.status : "";
+  const showDepartmentMeta = (node.type === "resourceGroup" || node.type === "group") && !!node.departmentName;
 
   return (
     <div>
       <div
-        className={`flex h-7 min-h-7 cursor-pointer select-none items-center gap-1.5 rounded-md border-l-[3px] px-2 pr-2.5 text-[12px] leading-5 outline-none transition-colors ${
+        className={`flex min-h-7 cursor-pointer select-none items-center gap-1.5 rounded-md border-l-[3px] px-2 pr-2.5 py-1 text-[12px] leading-5 outline-none transition-colors ${
           isSelected
             ? `${tone.selected} ${tone.accent} text-foreground`
             : `${theme.interactiveRow} border-l-transparent text-foreground`
@@ -108,8 +109,13 @@ export const TreeNodeComponent = React.memo(function TreeNodeComponent({
             >
               {node.name}
             </span>
+            {showDepartmentMeta && (
+              <div className={`min-w-0 truncate text-[10px] leading-4 ${theme.textMuted}`} title={`Dept: ${node.departmentName || ""}`}>
+                Dept: {node.departmentName}
+              </div>
+            )}
           </div>
-          <div className="flex min-w-[42px] justify-end">
+          <div className="flex min-w-10.5 justify-end">
             {statusLabel && (
               <span className={`h-2 w-2 rounded-full ${statusBulletClass(node.status)}`} title={statusLabel} aria-label={`Status: ${statusLabel}`} />
             )}

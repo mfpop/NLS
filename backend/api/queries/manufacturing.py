@@ -12,6 +12,7 @@ import strawberry as strawberry_decorator
 from manufacturing.domain.routing_service import RoutingService
 from manufacturing.domain.department_service import DepartmentService, DepartmentServiceError
 from manufacturing.domain.capacity_service import CapacityPlanService
+from manufacturing.domain.reference_table_service import TABLE_TYPE_TO_CATEGORY as REF_TABLE_TYPE_TO_CATEGORY
 
 from api.types.manufacturing import (
     ManufacturingSnapshot, CompanyNode,
@@ -20,7 +21,7 @@ from api.types.manufacturing import (
     ProductionStructureTree, StructureChildNode,
     ScheduleNode, ShiftNode, ScheduleAssignmentNode,
     ReferenceCategoryNode, ReferenceValueNode, ResourceTypeNode, VisualIdentityNode,
-    ReferenceTableNode,
+    ReferenceTableNode, ReferenceTableCatalogGroupNode, ReferenceTableCatalogEntryNode,
     ProductFamilyNode, ProductModelNode, ProductVariantNode, PartNumberNode,
     ProductModelByFamilyNode, ProcessFlowNode, ProcessStepNode, BOMNode,
     PaginatedReferenceCategoryResponse, PaginatedReferenceValueResponse,
@@ -277,39 +278,134 @@ class LegacyConfigOptionNode:
         )
 
 
-# Map old legacy table types to new category codes
-TABLE_TYPE_TO_CATEGORY: dict[str, str] = {
-    "production_calendar": "calendar",
-    "shift_pattern": "shift_model",
-    "language": "language",
-    "timezone": "timezone",
-    "manufacturing_type": "plant_type",
-    "work_center_type": "department_type",
-    "machine_type": "resource_type",
-    "operation_code": "resource_capability",
-    "routing_type": "product_line",
-    "material_category": "manufacturing_focus",
-    "inventory_type": "resource_group_type",
-    "kanban_type": "lean_methodology",
-    "industry_type": "industry_type",
-    "container_type": "container_type",
-    "unit_type": "schedule",
-    "downtime_code": "downtime_reason",
-    "defect_code": "defect_type",
-    "scrap_reason": "scrap_reason",
-    "kaizen_category": "lean_value",
-    "priority": "priority",
-    "label_badge": "label_badge",
-    "maintenance_type": "maintenance_type",
-    "material_flow_type": "material_flow_type",
-    "process_type": "process_type",
-    "skill_type": "skill_type",
-    "role": "role",
-    "shift_team": "shift_team",
-    "staff_user": "__staff_user__",
-    "staff_assignment": "__staff_assignment__",
-    "product_model": "product_model",
-    "production_family": "production_family",
+# Imported from reference_table_service (single source of truth):
+#   TABLE_TYPE_TO_CATEGORY as REF_TABLE_TYPE_TO_CATEGORY
+TABLE_TYPE_TO_CATEGORY = REF_TABLE_TYPE_TO_CATEGORY
+
+# ── Reference Table Catalog (group structure, labels, descriptions) ──
+# Mirrors the frontend's TYPE_GROUPS / GROUP_LABELS constants.
+# This is the single source of truth for which tables belong to which group.
+
+REFERENCE_TABLE_GROUPS: list[tuple[str, str, list[str]]] = [
+    ("organization", "Organization", ["production_calendar", "shift_pattern", "language", "timezone", "industry_type"]),
+    ("manufacturing", "Manufacturing", ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type", "product_model", "production_family"]),
+    ("material_flow", "Material Flow", ["material_category", "inventory_type", "kanban_type", "container_type", "unit_type"]),
+    ("lean_quality", "Lean / Quality", ["downtime_code", "defect_code", "scrap_reason", "kaizen_category", "priority", "label_badge", "maintenance_type", "material_flow_type", "process_type"]),
+    ("people", "People", ["skill_type", "role", "shift_team", "staff_user", "staff_assignment"]),
+]
+
+REFERENCE_TABLE_LABELS: dict[str, str] = {
+    "production_calendar": "Production Calendars",
+    "shift_pattern": "Shift Patterns",
+    "language": "Languages",
+    "timezone": "Timezones",
+    "industry_type": "Industry Types",
+    "manufacturing_type": "Manufacturing Types",
+    "work_center_type": "Work Centers",
+    "machine_type": "Machine Types",
+    "operation_code": "Operation Codes",
+    "routing_type": "Routing Types",
+    "product_model": "Product Models",
+    "production_family": "Production Families",
+    "material_category": "Material Categories",
+    "inventory_type": "Inventory Types",
+    "kanban_type": "Kanban Types",
+    "container_type": "Container Types",
+    "unit_type": "Unit Types",
+    "downtime_code": "Downtime Reasons",
+    "defect_code": "Quality Defect Types",
+    "scrap_reason": "Scrap Reasons",
+    "kaizen_category": "Lean / Quality Values",
+    "priority": "Priorities",
+    "label_badge": "Labels / Badges",
+    "maintenance_type": "Maintenance Types",
+    "material_flow_type": "Material Flow Types",
+    "process_type": "Process Types",
+    "skill_type": "Skill Types",
+    "role": "Roles",
+    "shift_team": "Shift Teams",
+    "staff_user": "Staff Users",
+    "staff_assignment": "Staff Assignments",
+}
+
+REFERENCE_TABLE_LABELS_SINGULAR: dict[str, str] = {
+    "production_calendar": "Production Calendar",
+    "shift_pattern": "Shift Pattern",
+    "language": "Language",
+    "timezone": "Timezone",
+    "industry_type": "Industry Type",
+    "manufacturing_type": "Manufacturing Type",
+    "work_center_type": "Work Center",
+    "machine_type": "Machine Type",
+    "operation_code": "Operation Code",
+    "routing_type": "Routing Type",
+    "product_model": "Product Model",
+    "production_family": "Product Family",
+    "material_category": "Material Category",
+    "inventory_type": "Inventory Type",
+    "kanban_type": "Kanban Type",
+    "container_type": "Container Type",
+    "unit_type": "Unit Type",
+    "downtime_code": "Downtime Reason",
+    "defect_code": "Quality Defect Type",
+    "scrap_reason": "Scrap Reason",
+    "kaizen_category": "Lean / Quality Value",
+    "priority": "Priority",
+    "label_badge": "Label / Badge",
+    "maintenance_type": "Maintenance Type",
+    "material_flow_type": "Material Flow Type",
+    "process_type": "Process Type",
+    "skill_type": "Skill Type",
+    "role": "Role",
+    "shift_team": "Shift Team",
+    "staff_user": "Staff User",
+    "staff_assignment": "Staff Assignment",
+}
+
+REFERENCE_TABLE_DESCRIPTIONS: dict[str, str] = {
+    "production_calendar": "Production calendar templates for scheduling",
+    "shift_pattern": "Shift pattern definitions for production scheduling",
+    "language": "Language options for UI and documentation",
+    "timezone": "Timezone definitions for plants and lines",
+    "industry_type": "Industry classification for company setup",
+    "manufacturing_type": "Manufacturing process types for plant setup",
+    "work_center_type": "Work center / department type classification",
+    "machine_type": "Machine and equipment type classification",
+    "operation_code": "Operation codes for resource capabilities and routings",
+    "routing_type": "Routing type definitions for production flow",
+    "product_model": "Product model definitions for production scope",
+    "production_family": "Product family definitions for product models",
+    "material_category": "Material categories for material flow setup",
+    "inventory_type": "Inventory type classification for resource groups",
+    "kanban_type": "Kanban type definitions for lean flow",
+    "container_type": "Container type definitions for material handling",
+    "unit_type": "Unit of measure definitions for capacity and scheduling",
+    "downtime_code": "Downtime reason codes for production loss tracking",
+    "defect_code": "Quality defect type codes for defect tracking",
+    "scrap_reason": "Scrap reason codes for waste reporting",
+    "kaizen_category": "Kaizen / improvement categories",
+    "priority": "Priority levels for tasks and actions",
+    "label_badge": "Label and badge definitions for visual tagging",
+    "maintenance_type": "Maintenance type classification",
+    "material_flow_type": "Material flow type classification",
+    "process_type": "Process type classification",        "skill_type": "Skill and certification definitions for resources",
+        "role": "Role definitions for permissions and assignments",
+        "shift_team": "Shift team / crew definitions",
+        "staff_user": "Staff/user records sourced from the backend user workflow",
+        "staff_assignment": "Relationship between staff, role, plant and department that feeds staffing and ownership readiness",
+    }
+
+REFERENCE_TABLE_SCOPE: dict[str, str] = {
+    "production_calendar": "GLOBAL", "shift_pattern": "GLOBAL", "language": "GLOBAL",
+    "timezone": "GLOBAL", "industry_type": "GLOBAL", "manufacturing_type": "GLOBAL",
+    "work_center_type": "GLOBAL", "machine_type": "GLOBAL", "operation_code": "GLOBAL",
+    "routing_type": "GLOBAL", "product_model": "GLOBAL", "production_family": "GLOBAL",
+    "material_category": "GLOBAL", "inventory_type": "GLOBAL", "kanban_type": "GLOBAL",
+    "container_type": "GLOBAL", "unit_type": "GLOBAL", "downtime_code": "GLOBAL",
+    "defect_code": "GLOBAL", "scrap_reason": "GLOBAL", "kaizen_category": "GLOBAL",
+    "priority": "GLOBAL", "label_badge": "GLOBAL", "maintenance_type": "GLOBAL",
+    "material_flow_type": "GLOBAL", "process_type": "GLOBAL", "skill_type": "GLOBAL",
+    "role": "GLOBAL", "shift_team": "PLANT", "staff_user": "PLANT", "staff_assignment": "PLANT",
 }
 
 REFERENCE_USAGE_CONTEXT: dict[str, str] = {
@@ -386,7 +482,7 @@ from manufacturing.models import (
     ProductFamily, ProductModel, ProductVariant, PartNumber,
     ProcessFlow, ProcessStep, Material, InventoryLocation, MaterialBin,
 )
-from api.services.tree_builder import build_plant_tree
+from api.services.tree_builder import build_plant_tree, build_org_tree, build_flow_tree
 from manufacturing.domain.structure_service import get_structure_counts, get_system_health
 
 
@@ -462,6 +558,7 @@ class ManufacturingQuery:
         search: Optional[str] = None,
         status: Optional[str] = None,
         include_tree: bool = True,
+        tree_mode: Optional[str] = "org",
     ) -> DataManagementOverview:
         all_plants = Plant.objects.all()
         selected_plant = None
@@ -471,10 +568,12 @@ class ManufacturingQuery:
             except Plant.DoesNotExist:
                 pass
 
+        tree_fn = build_flow_tree if tree_mode == "flow" else build_org_tree
+
         tree = None
         if include_tree:
             if selected_plant:
-                children = build_plant_tree(selected_plant, status, search)
+                children = tree_fn(selected_plant, status, search)
                 tree = ProductionStructureTree(
                     id=strawberry.ID(str(selected_plant.id)), type="plant",
                     name=selected_plant.name, code=selected_plant.code,
@@ -487,7 +586,9 @@ class ManufacturingQuery:
                 company_name = company.name if company else "Company"
                 all_children = []
                 for p in all_plants:
-                    plant_children = build_plant_tree(p, status, search)
+                    if tree_mode == "flow" and (getattr(p, "plant_type", "") or "").lower() == "warehouse":
+                        continue
+                    plant_children = tree_fn(p, status, search)
                     search_term = (search or "").strip().lower()
                     plant_matches_search = (
                         not search_term
@@ -793,6 +894,44 @@ class ManufacturingQuery:
                 pass
         return result
 
+    # ── Reference Table Catalog (Issue #1: backend-driven groups & counts) ──
+    @strawberry.field(name="referenceTableCatalog")
+    def reference_table_catalog(self) -> list["ReferenceTableCatalogGroupNode"]:
+        """Return the reference table catalog with groups, table definitions, and real record counts.
+        Replaces the previously frontend-hardcoded TYPE_GROUPS structure.
+        """
+        result = []
+        for group_code, group_label, table_types in REFERENCE_TABLE_GROUPS:
+            entries = []
+            for tt in table_types:
+                cat_code = TABLE_TYPE_TO_CATEGORY.get(tt, tt)
+
+                # Count records: standard reference values, staff users, or staff assignments
+                if tt == "staff_user":
+                    count = User.objects.filter(is_active=True).count()
+                elif tt == "staff_assignment":
+                    count = UserRole.objects.filter(user__is_active=True).count()
+                else:
+                    count = ReferenceValue.objects.filter(
+                        category__code=cat_code, is_active=True
+                    ).count()
+
+                entries.append(ReferenceTableCatalogEntryNode(
+                    code=tt,
+                    label=REFERENCE_TABLE_LABELS.get(tt, tt),
+                    label_singular=REFERENCE_TABLE_LABELS_SINGULAR.get(tt, tt),
+                    description=REFERENCE_TABLE_DESCRIPTIONS.get(tt, ""),
+                    usage_context=REFERENCE_USAGE_CONTEXT.get(tt, ""),
+                    record_count=count,
+                    is_configurable=tt not in {"staff_user", "staff_assignment"},
+                    category_code=cat_code,
+                    scope=REFERENCE_TABLE_SCOPE.get(tt, "GLOBAL"),
+                ))
+            result.append(ReferenceTableCatalogGroupNode(
+                code=group_code, label=group_label, tables=entries,
+            ))
+        return result
+
     # ── New Reference Tables Resolver (replaces legacy) ──
     @strawberry.field
     def reference_tables(self, category: str) -> Optional[ReferenceTableNode]:
@@ -1062,7 +1201,7 @@ class ManufacturingQuery:
             if active_only:
                 roles = roles.filter(user__is_active=True)
             if plant_id and table_type in (None, "staff_assignment"):
-                roles = roles.filter(department__plant_id=plant_id)
+                roles = roles.filter(plant__icontains=plant_id)
             result.extend(LegacyReferenceItemNode.from_user_role(role) for role in roles)
 
         if table_type in ("staff_user", "staff_assignment"):

@@ -1,5 +1,5 @@
 from django.db.models import Prefetch
-from manufacturing.models import ProductionLine, Department, ResourceGroup, Resource, ProductionLineDepartmentAssignment
+from manufacturing.models import Department, ProductionLine, ResourceGroup, Resource, ProductionLineResourceGroup
 from api.types.manufacturing import StructureChildNode
 
 
@@ -13,132 +13,176 @@ def _matches_status(value: str, status: str | None) -> bool:
     return (value or "").lower() == status.lower()
 
 
-def build_plant_tree(plant, status=None, search=None):
-    """Build the full production tree: Plant → ProductionLines → Departments → ResourceGroups → Resources."""
+def build_org_tree(plant, status=None, search=None):
+    """Build the organizational tree: Plant → Departments → ResourceGroups → Resources.
+
+    Production lines do not appear in this tree. Departments own ResourceGroups.
+    """
+    dept_qs = Department.objects.filter(plant=plant).prefetch_related(
+        Prefetch(
+            "resource_groups",
+            queryset=ResourceGroup.objects.prefetch_related("resources"),
+        )
+    )
+
+    if status and status != "all":
+        dept_qs = dept_qs.filter(status__iexact=status)
+
+    search_term = (search or "").strip().lower()
+    tree_children = []
+
+    for dept in dept_qs:
+        rgs = list(dept.resource_groups.all())
+
+        if search_term and not _matches_search(dept.name, search_term) and not _matches_search(dept.code, search_term):
+            rg_match_found = any(
+                _matches_search(rg.name, search_term) or _matches_search(rg.code, search_term)
+                for rg in rgs
+            )
+            if not rg_match_found:
+                continue
+
+        rg_nodes = []
+        for rg in rgs:
+            if not _matches_status(rg.status, status):
+                continue
+            resources = [r for r in rg.resources.all() if _matches_status(r.status, status)]
+
+            if search_term and not _matches_search(rg.name, search_term) and not _matches_search(rg.code, search_term):
+                matched = [r for r in resources if _matches_search(r.name, search_term) or _matches_search(r.code, search_term)]
+                if not matched:
+                    continue
+                resources = matched
+
+            rg_nodes.append({
+                "id": str(rg.id),
+                "type": "resourceGroup",
+                "name": rg.name,
+                "code": rg.code,
+                "status": rg.status,
+                "childCount": len(resources),
+                "children": [{
+                    "id": str(r.id),
+                    "type": "resource",
+                    "name": r.name,
+                    "code": r.code,
+                    "status": r.status,
+                    "childCount": 0,
+                    "children": [],
+                    "scheduleStatus": "Missing Schedule",
+                } for r in resources],
+                "scheduleStatus": "Missing Schedule",
+            })
+
+        if search_term and not rg_nodes and not _matches_search(dept.name, search_term) and not _matches_search(dept.code, search_term):
+            continue
+
+        tree_children.append({
+            "id": str(dept.id),
+            "type": "department",
+            "name": dept.name,
+            "code": dept.code,
+            "status": dept.status,
+            "childCount": len(rg_nodes),
+            "children": rg_nodes,
+            "scheduleStatus": "Missing Schedule",
+        })
+
+    return [StructureChildNode.from_tree(c) for c in tree_children]
+
+
+def build_flow_tree(plant, status=None, search=None):
+    """Build the flow tree: Plant → ProductionLines → Assigned Resource Groups → ResourceGroups → Resources.
+
+    Excludes plants with plant_type='Warehouse'. Shows lines even with zero assigned RGs.
+    Department is metadata on Resource Group rows, not a separate tree level.
+    """
+    if getattr(plant, "plant_type", "").lower() == "warehouse":
+        return []
+
     lines_qs = ProductionLine.objects.filter(plant=plant).prefetch_related(
         Prefetch(
-            "department_assignments",
-            queryset=ProductionLineDepartmentAssignment.objects.select_related("department").order_by("sequence", "id"),
+            "assigned_resource_groups",
+            queryset=ProductionLineResourceGroup.objects.select_related(
+                "resource_group", "resource_group__department",
+            ).order_by("sequence", "id"),
         )
     )
 
     if status and status != "all":
         lines_qs = lines_qs.filter(status__iexact=status)
 
-    # Scope departments to this plant through line assignments.
-    all_depts = list(
-        Department.objects.filter(line_assignments__production_line__plant=plant)
-        .distinct()
-        .prefetch_related(
-            Prefetch(
-                "resource_groups",
-                queryset=ResourceGroup.objects.prefetch_related("resources"),
-            )
-        )
-    )
-
-    dept_by_id = {dept.id: dept for dept in all_depts}
-
-    rg_by_dept_id = {}
-    for dept in all_depts:
-        rg_by_dept_id[dept.id] = list(dept.resource_groups.all())
-
-    # Check if explicit assignments exist
-    has_assignments = ProductionLineDepartmentAssignment.objects.filter(
-        production_line__plant=plant
-    ).exists()
-
     search_term = (search or "").strip().lower()
 
     tree_children = []
     for line in lines_qs:
-        if has_assignments:
-            assigned_depts = []
-            for assignment in line.department_assignments.all():
-                if assignment.department_id and assignment.department_id in dept_by_id:
-                    assigned_depts.append(dept_by_id[assignment.department_id])
-        else:
-            assigned_depts = all_depts
+        assignments = list(line.assigned_resource_groups.all())
 
         if search_term and not _matches_search(line.name, search_term) and not _matches_search(line.code, search_term):
-            dept_match_found = False
-            for dept in assigned_depts:
-                if _matches_search(dept.name, search_term) or _matches_search(dept.code, search_term):
-                    dept_match_found = True
-                    break
-            if not dept_match_found:
+            rg_match_found = any(
+                a.resource_group and (_matches_search(a.resource_group.name, search_term) or _matches_search(a.resource_group.code, search_term))
+                for a in assignments
+            )
+            if not rg_match_found:
                 continue
 
-        dept_nodes = []
-        for dept in assigned_depts:
-            if not _matches_status(dept.status, status):
+        assigned_group_nodes = []
+        for a in assignments:
+            rg = a.resource_group
+            if not rg or not _matches_status(rg.status, status):
                 continue
-            rgs = rg_by_dept_id.get(dept.id, [])
 
-            if search_term and not _matches_search(dept.name, search_term) and not _matches_search(dept.code, search_term):
-                rg_match_found = False
-                for rg in rgs:
-                    if _matches_search(rg.name, search_term) or _matches_search(rg.code, search_term):
-                        rg_match_found = True
-                        break
-                if not rg_match_found:
-                    continue
+            resources = list(rg.resources.all()) if rg.id else []
+            resources = [r for r in resources if _matches_status(r.status, status)]
 
-            rg_nodes = []
-            for rg in rgs:
-                if not _matches_status(rg.status, status):
-                    continue
-                resources = [r for r in rg.resources.all() if _matches_status(r.status, status)]
-                if search_term and not _matches_search(rg.name, search_term) and not _matches_search(rg.code, search_term):
-                    resources = [
-                        r
-                        for r in resources
-                        if _matches_search(r.name, search_term) or _matches_search(r.code, search_term)
-                    ]
-                    if not resources:
-                        continue
-
-                res_children = [
-                    {
-                        "id": str(r.id),
-                        "type": "resource",
-                        "name": r.name,
-                        "code": r.code,
-                        "status": r.status,
-                        "childCount": 0,
-                        "children": [],
-                        "scheduleStatus": "Missing Schedule",
-                    }
-                    for r in resources
+            if search_term and not _matches_search(rg.name, search_term) and not _matches_search(rg.code, search_term):
+                matched_resources = [
+                    r for r in resources
+                    if _matches_search(r.name, search_term) or _matches_search(r.code, search_term)
                 ]
+                if not matched_resources:
+                    continue
+                resources = matched_resources
 
-                rg_nodes.append({
-                    "id": str(rg.id),
-                    "type": "resourceGroup",
-                    "name": rg.name,
-                    "code": rg.code,
-                    "status": rg.status,
-                    "childCount": len(res_children),
-                    "children": res_children,
+            res_children = [
+                {
+                    "id": str(r.id),
+                    "type": "resource",
+                    "name": r.name,
+                    "code": r.code,
+                    "status": r.status,
+                    "childCount": 0,
+                    "children": [],
                     "scheduleStatus": "Missing Schedule",
-                })
+                }
+                for r in resources
+            ]
 
-            if search_term and not rg_nodes and not _matches_search(dept.name, search_term) and not _matches_search(dept.code, search_term):
-                continue
+            dept_name = rg.department.name if rg.department else ""
+            assignment_status = "active" if a.is_active else "inactive"
 
-            dept_nodes.append({
-                "id": str(dept.id),
-                "type": "department",
-                "name": dept.name,
-                "code": dept.code,
-                "status": dept.status,
-                "childCount": len(rg_nodes),
-                "children": rg_nodes,
+            assigned_group_nodes.append({
+                "id": str(rg.id),
+                "type": "resourceGroup",
+                "name": rg.name,
+                "code": rg.code,
+                "status": assignment_status,
+                "departmentName": dept_name or None,
+                "childCount": len(res_children),
+                "children": res_children,
                 "scheduleStatus": "Missing Schedule",
             })
 
-        if search_term and not dept_nodes and not _matches_search(line.name, search_term) and not _matches_search(line.code, search_term):
-            continue
+        container = {
+            "id": f"assigned_{line.id}",
+            "type": "assignedGroup",
+            "name": "Assigned Resource Groups",
+            "code": "",
+            "status": "active",
+            "childCount": len(assigned_group_nodes),
+            "children": assigned_group_nodes,
+            "scheduleStatus": "Missing Schedule",
+        }
 
         tree_children.append({
             "id": str(line.id),
@@ -146,11 +190,15 @@ def build_plant_tree(plant, status=None, search=None):
             "name": line.name,
             "code": line.code,
             "status": line.status,
-            "childCount": len(dept_nodes),
-            "children": dept_nodes,
+            "childCount": 1,
+            "children": [container],
             "scheduleStatus": "Missing Schedule",
         })
 
     return [StructureChildNode.from_tree(c) for c in tree_children]
 
 
+
+def build_plant_tree(plant, status=None, search=None):
+    """Legacy wrapper — defaults to flow tree. Use build_flow_tree for flow, build_org_tree for org."""
+    return build_flow_tree(plant, status, search)

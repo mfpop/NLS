@@ -28,6 +28,7 @@ export interface DataManagementTreeChild {
   name: string;
   code: string;
   status: string;
+  departmentName?: string | null;
   childCount: number;
   children: DataManagementTreeChild[];
   scheduleStatus?: string | null;
@@ -81,6 +82,7 @@ export interface DataManagementOverviewVars {
   includeTree?: boolean;
   /** Paint shell first, then request the heavy tree on the next frame. */
   deferTree?: boolean;
+  treeMode?: string;
 }
 
 /* ── Hook ── */
@@ -110,6 +112,7 @@ export function useDataManagementOverview(vars: DataManagementOverviewVars) {
       search: vars.search,
       status: vars.status,
       includeTree,
+      treeMode: vars.treeMode || undefined,
     },
     fetchPolicy: "cache-first",
     nextFetchPolicy: "cache-and-network",

@@ -87,8 +87,47 @@ class LineageQuery:
         ]
 
     @strawberry.field
+    def erp_destination_definitions(self) -> list[ErpStructureFileNode]:
+        """List destination definitions from erp_data/destinations/*.json."""
+        defs = LineageService.get_destination_definitions()
+        return [
+            ErpStructureFileNode(
+                name=d.get("name", "Unknown"),
+                scope=d.get("scope", "CUSTOM"),
+                source_type=d.get("sourceType", "MANUAL"),
+                destination_table=d.get("destinationTable", ""),
+                expected_file_pattern=d.get("expectedFilePattern", ""),
+                active=d.get("active", True),
+                status=d.get("status", "DRAFT"),
+                fields=d.get("fields", []),
+                relationships=d.get("relationships", []),
+                file_name=d.get("_fileName", ""),
+            )
+            for d in defs
+        ]
+
+    @strawberry.field
+    def erp_destination_definition(self, name: str) -> Optional[ErpStructureFileNode]:
+        """Get a single destination definition from erp_data/destinations/."""
+        d = LineageService.get_destination_definition(name)
+        if not d:
+            return None
+        return ErpStructureFileNode(
+            name=d.get("name", "Unknown"),
+            scope=d.get("scope", "CUSTOM"),
+            source_type=d.get("sourceType", "MANUAL"),
+            destination_table=d.get("destinationTable", ""),
+            expected_file_pattern=d.get("expectedFilePattern", ""),
+            active=d.get("active", True),
+            status=d.get("status", "DRAFT"),
+            fields=d.get("fields", []),
+            relationships=d.get("relationships", []),
+            file_name=d.get("_fileName", ""),
+        )
+
+    @strawberry.field
     def erp_structure_definition(self, name: str) -> Optional[ErpStructureFileNode]:
-        """Get a single structure definition by name from erp_data/structure/."""
+        """Get a single structure definition by name from erp_data/structure/ or erp_data/patterns/."""
         d = LineageService.get_structure_definition(name)
         if not d:
             return None
@@ -103,6 +142,7 @@ class LineageQuery:
             fields=d.get("fields", []),
             relationships=d.get("relationships", []),
             file_name=d.get("_fileName", ""),
+            tables=d.get("tables") if isinstance(d.get("tables"), list) else None,
         )
 
     @strawberry.field
@@ -140,6 +180,29 @@ class LineageQuery:
         offset: Optional[int] = 0,
         limit: Optional[int] = 100,
     ) -> ErpStagingRowsResult:
+        # Check for sample staging data first (pattern-based definitions)
+        sample_rows = LineageService.load_sample_staging_rows(source_definition_id)
+        if sample_rows is not None:
+            total = len(sample_rows)
+            sliced = sample_rows[offset:offset + limit]
+            has_more = (offset + limit) < total
+            return ErpStagingRowsResult(
+                items=[
+                    ErpStagingRowNode(
+                        id=strawberry.ID(f"sample-{i}"),
+                        batch_id=strawberry.ID("sample"),
+                        source_definition_id=strawberry.ID(source_definition_id),
+                        row_number=row.get("rowNumber", i + 1),
+                        raw_data_json=row.get("rawData", {}),
+                        normalized_data_json={},
+                        validation_status="PENDING",
+                        created_at="",
+                    )
+                    for i, row in enumerate(sliced)
+                ],
+                page_info=PageInfo(total_count=total, has_next_page=has_more, offset=offset or 0, limit=limit or 100),
+            )
+
         qs = LineageService.list_staging_rows(source_definition_id, batch_id, offset or 0, limit or 100)
         items, total, has_more = paginate_queryset(qs, offset or 0, limit or 100)
         return ErpStagingRowsResult(
@@ -149,6 +212,21 @@ class LineageQuery:
 
     @strawberry.field
     def erp_field_profile(self, source_definition_id: str, field_name: str) -> Optional[ErpFieldProfile]:
+        # Check for sample staging data
+        sample_rows = LineageService.load_sample_staging_rows(source_definition_id)
+        if sample_rows is not None:
+            values = [str(row["rawData"].get(field_name)) for row in sample_rows if row.get("rawData", {}).get(field_name) is not None]
+            distinct = list(set(values))
+            null_count = sum(1 for row in sample_rows if row.get("rawData", {}).get(field_name) is None)
+            return ErpFieldProfile(
+                field_name=field_name,
+                distinct_values=len(distinct),
+                null_count=null_count,
+                duplicate_count=len(values) - len(distinct) if values else 0,
+                sample_values=distinct[:10],
+                nexus_field="",
+                invalid_values=[],
+            )
         try:
             data = LineageService.get_field_profile(source_definition_id, field_name)
             return ErpFieldProfile(**data)
@@ -199,16 +277,83 @@ class LineageQuery:
     def erp_relationship_graph(
         self, source_definition_id: str, destination_table: str = "",
     ) -> Optional[ErpRelationshipGraphResult]:
-        """Return tables, fields, and 1:1 relationships for the relationship designer view."""
+        """Return tables, fields, and 1:1 relationships for the relationship designer view.
+
+        Supports both DB-backed definitions and pattern/JSON file definitions.
+        """
         from api.types.lineage import (
             ErpGraphTableNode, ErpGraphFieldNode, ErpGraphRelationshipNode, ErpRelationshipGraphResult,
         )
+
+        def _build_field(f: dict) -> ErpGraphFieldNode:
+            return ErpGraphFieldNode(
+                name=f.get("fieldName", f.get("name", "?")),
+                data_type=f.get("dataType", "string"),
+                required=f.get("required", False),
+                primary_key=f.get("primaryKey", False),
+                foreign_key=f.get("foreignKey", False),
+                nexus_field=f.get("nexusField", ""),
+                validation_state="valid",
+            )
+
+        def _read_layout_positions(schema_json: dict | None) -> dict[str, dict]:
+            if not schema_json:
+                return {}
+            layout = schema_json.get("relationshipLayout") if isinstance(schema_json, dict) else None
+            if not isinstance(layout, dict):
+                return {}
+            node_positions = layout.get("nodePositions", {})
+            return node_positions if isinstance(node_positions, dict) else {}
+
+        # Try pattern/JSON definition first
+        pattern_def = LineageService.get_structure_definition(source_definition_id)
+        if pattern_def and pattern_def.get("tables"):
+            tables_data = pattern_def["tables"]
+            rels_data = pattern_def.get("relationships", [])
+            node_positions = _read_layout_positions(pattern_def)
+            tables_map: dict[str, ErpGraphTableNode] = {}
+            for t in tables_data:
+                tname = t.get("name", "?")
+                tid = tname  # use table name as ID
+                fields = [_build_field(f) for f in t.get("fields", [])]
+                pos = node_positions.get(tid, {}) if isinstance(node_positions, dict) else {}
+                tables_map[tid] = ErpGraphTableNode(
+                    id=strawberry.ID(tid),
+                    name=tname,
+                    fields=fields,
+                    x=pos.get("x", t.get("x")),
+                    y=pos.get("y", t.get("y")),
+                )
+            relationships = [
+                ErpGraphRelationshipNode(
+                    id=strawberry.ID(f"{r['sourceTable']}-{r['sourceField']}-{r['targetTable']}-{r['targetField']}"),
+                    source_table_id=strawberry.ID(r["sourceTable"]),
+                    source_entity=r["sourceTable"],
+                    source_field=r["sourceField"],
+                    target_table_id=strawberry.ID(r["targetTable"]),
+                    target_entity=r["targetTable"],
+                    target_field=r["targetField"],
+                    cardinality="ONE_TO_ONE",
+                    required=r.get("required", False),
+                    status="valid",
+                    source_anchor=r.get("sourceAnchor", "right"),
+                    target_anchor=r.get("targetAnchor", "left"),
+                )
+                for r in rels_data
+            ]
+            return ErpRelationshipGraphResult(
+                tables=list(tables_map.values()),
+                relationships=relationships,
+                validation_state="valid",
+            )
+
+        # Fallback: DB-backed definition
         try:
             definition = LineageService.get_definition(source_definition_id)
             fields_qs = LineageService.list_fields(source_definition_id)
             rels_qs = LineageService.list_relationships(source_definition_id)
+            node_positions = _read_layout_positions(definition.schema_json)
 
-            # Build the main table from the source definition
             table_fields = [
                 ErpGraphFieldNode(
                     name=f.field_name, data_type=f.data_type or "string",
@@ -222,8 +367,10 @@ class LineageQuery:
                 id=strawberry.ID(source_definition_id),
                 name=definition.name,
                 fields=table_fields,
+                x=(node_positions.get(source_definition_id, {}) or {}).get("x"),
+                y=(node_positions.get(source_definition_id, {}) or {}).get("y"),
             )
-            tables = {source_definition_id: main_table}
+            tables_map = {source_definition_id: main_table}
             relationships: list[ErpGraphRelationshipNode] = []
             target_ids = set()
 
@@ -233,15 +380,18 @@ class LineageQuery:
                 relationships.append(ErpGraphRelationshipNode(
                     id=strawberry.ID(str(rel.id)),
                     source_table_id=strawberry.ID(source_definition_id),
+                    source_entity=source_definition_id,
                     source_field=rel.source_field,
                     target_table_id=strawberry.ID(tid),
+                    target_entity=tid,
                     target_field=rel.target_field,
                     cardinality="ONE_TO_ONE",
                     required=rel.required,
                     status="valid",
+                    source_anchor="right",
+                    target_anchor="left",
                 ))
 
-            # Build target tables for referenced definitions
             for tid in target_ids:
                 try:
                     tdef = LineageService.get_definition(tid)
@@ -255,20 +405,24 @@ class LineageQuery:
                         )
                         for f in tfields_qs
                     ]
-                    tables[tid] = ErpGraphTableNode(
+                    tables_map[tid] = ErpGraphTableNode(
                         id=strawberry.ID(tid),
                         name=tdef.name,
                         fields=t_fields,
+                        x=(node_positions.get(tid, {}) or {}).get("x"),
+                        y=(node_positions.get(tid, {}) or {}).get("y"),
                     )
                 except LineageServiceError:
-                    tables[tid] = ErpGraphTableNode(
+                    tables_map[tid] = ErpGraphTableNode(
                         id=strawberry.ID(tid),
                         name=f"Definition {tid[:8]}",
                         fields=[],
+                        x=(node_positions.get(tid, {}) or {}).get("x"),
+                        y=(node_positions.get(tid, {}) or {}).get("y"),
                     )
 
             return ErpRelationshipGraphResult(
-                tables=list(tables.values()),
+                tables=list(tables_map.values()),
                 relationships=relationships,
                 validation_state="valid",
             )
@@ -289,77 +443,3 @@ class LineageQuery:
             page_info=PageInfo(total_count=total, has_next_page=has_more, offset=offset or 0, limit=limit or 100),
         )
 
-    @strawberry.field
-    def erp_relationship_graph(
-        self, scope: str, source_id: Optional[str] = None, destination_table: Optional[str] = None
-    ) -> ErpRelationshipGraph:
-        defs = [d for d in LineageService.get_structure_definitions() if d.get("scope") == scope]
-        
-        nodes = []
-        fields = []
-        rels = []
-        for d in defs:
-            node_id = d.get("name", "Unknown")
-            nodes.append(ErpRelationshipGraphNodeItem(
-                id=node_id,
-                name=node_id,
-                source_type=d.get("sourceType", "MANUAL"),
-                active=d.get("active", True)
-            ))
-            for f in d.get("fields", []):
-                fields.append(ErpRelationshipGraphFieldItem(
-                    id=f"{node_id}-{f.get('fieldName', '')}",
-                    entity_id=node_id,
-                    field_name=f.get('fieldName', ''),
-                    primary_key=f.get("primaryKey", False),
-                    foreign_key=f.get("foreignKey", False),
-                    required=f.get("required", False),
-                    nexus_field=f.get("nexusField", ""),
-                    data_type=f.get("dataType", "string"),
-                ))
-            for r in d.get("relationships", []):
-                rel_id = r.get("id") or f"{node_id}-{r.get('sourceField')}-{r.get('targetSourceDefinitionId')}-{r.get('targetField')}"
-                rels.append(ErpRelationshipGraphRelItem(
-                    id=rel_id,
-                    source_entity=node_id,
-                    source_field=r.get("sourceField", ""),
-                    target_entity=r.get("targetSourceDefinitionId", ""),
-                    target_field=r.get("targetField", ""),
-                    cardinality="ONE_TO_ONE",
-                    required=r.get("required", False),
-                    status="VALID"
-                ))
-        return ErpRelationshipGraph(
-            nodes=nodes,
-            fields=fields,
-            relationships=rels,
-            validation_state=ErpRelationshipGraphValidationState(status="VALID", issues=[])
-        )
-
-    @strawberry.field
-    def erp_relationship_validation(
-        self, relationship_id: str
-    ) -> ErpRelationshipValidation:
-        # relationship_id format: source_entity-source_field-target_entity-target_field
-        parts = relationship_id.split("-")
-        if len(parts) >= 4:
-            source_entity = parts[0]
-            source_field = parts[1]
-            target_entity = parts[2]
-            target_field = parts[3]
-        else:
-            return ErpRelationshipValidation(
-                status="INVALID", matched_count=0, missing_count=0,
-                duplicate_source_count=0, duplicate_target_count=0,
-                orphan_count=0, issues=[]
-            )
-        
-        return ErpRelationshipValidation(
-            status="VALID",
-            matched_count=0,
-            missing_count=0,
-            duplicate_source_count=0,
-            duplicate_target_count=0,
-            orphan_count=0,
-            issues=[]
-        )

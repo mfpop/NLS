@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import {
   AlertTriangle,
   Box,
+  CheckCircle,
   ChevronLeft,
   ChevronRight,
   Database,
@@ -50,6 +51,7 @@ type EntityType = "family" | "model" | "variant" | "part" | "bom" | "routing";
 type ProductDraft = Record<string, string | boolean | null | undefined>;
 
 const PER_PAGE = 15;
+const PMD_CARD = "border border-border/20 bg-card shadow-md shadow-foreground/10";
 const PMD_FIELD = "border border-border/20 bg-transparent text-muted-foreground outline-none transition-colors focus:border-border-strong focus:bg-card focus:text-foreground focus:ring-2 focus:ring-ring/15";
 
 function ProductStatusBadge({ status, active }: { status?: string | null; active?: boolean }) {

@@ -4,7 +4,6 @@ import { PageHeader } from "@/pages/shared/PageHeader";
 import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Database, Info } from "lucide-react";
 import { ToolbarProvider, useToolbar, useToolbarActions } from "./ToolbarContext";
 import { Toolbar as SharedToolbar, ToolbarSearch, ToolbarSelect, ToolbarCrudActions } from "@/components/shared/Toolbar";
-import { theme } from "@/styles/themeTokens";
 
 const BASE = "/system/production-structure/components";
 

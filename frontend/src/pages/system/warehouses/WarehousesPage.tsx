@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
 import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
-import { Search, CheckCircle, Warehouse, Factory, Plus, Pencil, Trash2, RefreshCw, X, GripVertical, Check, Box, Layers, Route, Map, Database, Shield, ExternalLink, Building2, LayoutGrid, LineChart, AlertTriangle, CheckSquare, XSquare } from "lucide-react";
+import { CheckCircle, Warehouse, Factory, Plus, Pencil, Trash2, RefreshCw, X, GripVertical, Check, Box, Layers, Route, Map, Database, Shield, ExternalLink, Building2, LayoutGrid, LineChart, AlertTriangle, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";

@@ -1,7 +1,6 @@
 import { Database, Upload, RefreshCw, Search, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { theme } from "@/styles/themeTokens";
 
 const cards = [
   { label: "ERP Import", icon: Upload, desc: "Upload files and execute ERP imports", to: "/system/erp-data/import", color: "text-violet-600", bg: "bg-violet-100" },
@@ -16,6 +15,7 @@ const statCards = [
 ];
 
 const inputClass = `h-8 w-full rounded bg-card px-3 py-1 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-b-2 focus:border-info`;
+const buttonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-40";
 
 export function ERPDataPage() {
   const navigate = useNavigate();

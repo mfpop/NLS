@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../../styles/themeTokens";
 import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
-import { Search, CheckCircle, Package, Factory, Layers, Warehouse, Box, RefreshCw, Plus, Pencil, Trash2, X, GripVertical, Check, Map, Route, Database, ArrowRight, ArrowLeft, AlertTriangle, Building2, Shield, LayoutGrid, LineChart, CheckSquare, XSquare } from "lucide-react";
+import { CheckCircle, Package, Factory, Layers, Warehouse, Box, RefreshCw, Plus, Pencil, Trash2, X, GripVertical, Check, Map, Route, Database, ArrowRight, ArrowLeft, AlertTriangle, Building2, Shield, LayoutGrid, LineChart, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { PRODUCTION_LINES_QUERY, RESOURCE_GROUPS_QUERY, MATERIAL_BINS_QUERY } from "@/graphql/manufacturingQueries";

@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Database, Factory, TrendingUpDown, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { ToolbarSearch, ToolbarSelect, ToolbarButton, ToolbarCrudActions } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";

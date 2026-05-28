@@ -1,12 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Activity, BookMarked, BookOpen, CircleAlert, Cog,
+  Activity, BookOpen, CircleAlert, Cog,
   Footprints, GitBranch, Layers, LayoutDashboard, ListChecks, Monitor, PanelTop,
   Settings, ShieldCheck, Sparkles, TrendingUp, Play, ClipboardList,
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
-  Lightbulb, Ruler, FileSpreadsheet, RefreshCw,
+  Lightbulb, FileSpreadsheet, RefreshCw,
   Package, Clock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, HardDrive, Upload, Route, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig,
+  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -165,7 +165,7 @@ export function isRouteItemActive(path: string, target: string): boolean {
   if (target === "/system/production-structure/flow") {
     return path === target || path.startsWith(target + "/");
   }
-  if (target === "/system/manufacturing-structure/components") {
+  if (target === "/system/production-structure/components") {
     return path === target || path.startsWith(target + "/");
   }
   if (target === "/system/erp-data") {

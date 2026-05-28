@@ -133,10 +133,10 @@ const ERPDataPage = lazy(() =>
   import("@/pages/system/erp-data/ERPDataPage").then((module) => ({ default: module.ERPDataPage }))
 );
 const ERPImportPage = lazy(() =>
-  import("@/pages/system/erp-data/erp-import/SimpleErpImportPage").then((module) => ({ default: module.ErpImportPage }))
+  import("@/pages/system/erp-data/erp-import/ErpImportPage").then((module) => ({ default: module.ErpImportPage }))
 );
 const ErpImportPatternPage = lazy(() =>
-  import("@/pages/data-management/ErpImportPatternPage").then((module) => ({ default: module.ErpImportPatternPage }))
+  import("@/pages/system/erp-data/ErpImportPatternPage").then((module) => ({ default: module.ErpImportPatternPage }))
 );
 const UserProfilePage = lazy(() =>
   import("@/pages/system/UserProfilePage").then((module) => ({ default: module.UserProfilePage }))
@@ -199,6 +199,7 @@ export function AppRoutes() {
           <Route path="plan/production-plan" element={<ProductionPlanPage />} />
           <Route path="plan/capacity" element={<CapacityPage />} />
           <Route path="plan/capacity/load" element={<CapacityPage />} />
+          {/* REVIEW_ONLY: /plan/capacity/load — not in sidebar, may be internal deep-link */}
           <Route path="plan/capacity/yamazumi" element={<CapacityPage />} />
           <Route path="plan/capacity/line-balancing" element={<CapacityPage />} />
           <Route path="plan/capacity/bottleneck-analysis" element={<CapacityPage />} />
@@ -206,7 +207,9 @@ export function AppRoutes() {
           <Route path="plan/capacity/takt-vs-cycle" element={<CapacityPage />} />
           <Route path="plan/capacity/capacity-loss" element={<CapacityPage />} />
           <Route path="plan/capacity/workload-distribution" element={<CapacityPage />} />
+          {/* REVIEW_ONLY: /plan/capacity/constraints — not in sidebar, may be internal deep-link */}
           <Route path="plan/capacity/constraints" element={<CapacityPage />} />
+          {/* REVIEW_ONLY: /plan/capacity/scenarios — not in sidebar, may be internal deep-link */}
           <Route path="plan/capacity/scenarios" element={<CapacityPage />} />
           <Route path="check/problems" element={<ProblemsPage />} />
           <Route path="check/actions" element={<ActionsPage />} />
@@ -259,8 +262,10 @@ export function AppRoutes() {
           <Route path="system/material-bins" element={<MaterialBinsPage />} />
           <Route path="system/product-master" element={<ProductMasterDataPage />} />
           <Route path="system/product-master-data" element={<Navigate to="/system/product-master" replace />} />
+          {/* REVIEW_ONLY: /system/reference-tables is preferred sidebar route; /system/production-structure/references is retained as compatibility route */}
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
+          {/* REVIEW_ONLY: /system/diagnostics + /status share GraphqlStatusPage — intentional technical page reuse, page name does not match route */}
           <Route path="system/diagnostics" element={<GraphqlStatusPage />} />
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
@@ -270,6 +275,7 @@ export function AppRoutes() {
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />
           <Route path="system/sign-out" element={<SignOutPage />} />
+          {/* REVIEW_ONLY: /status reuses GraphqlStatusPage (same as /system/diagnostics) — kept as internal technical endpoint */}
           <Route path="status" element={<GraphqlStatusPage />} />
           <Route path="docs" element={<Navigate to="/docs/user-manual" replace />} />
           <Route path="docs/user-manual" element={<UserManualPage />} />

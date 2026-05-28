@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@/hooks";
 import { useDocumentation } from "@/hooks/useDocumentation";
 import { APP_NAME } from "@/config";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarSelect } from "@/components/shared/Toolbar";
 import { MarkdownReader } from "./MarkdownReader";
 import type { DocumentationFile } from "./documentationTypes";
 
@@ -113,43 +113,11 @@ export function DocumentationCenter() {
     });
   }, []);
 
-  const collapseAll = useCallback(() => {
-    setExpandedCategories(new Set());
-  }, []);
-
-  const expandAll = useCallback(() => {
-    setExpandedCategories(new Set(groups.map((g) => g.category)));
-  }, [groups]);
-
-  const allExpanded = groups.length > 0 && groups.every((g) => expandedCategories.has(g.category));
-
   const navListRef = useRef<HTMLDivElement>(null);
+  const splitRef = useRef<HTMLDivElement>(null);
+  const [leftPct] = useState(20);
 
   const navShadows = useScrollableShadow(navListRef);
-
-  const splitRef = useRef<HTMLDivElement>(null);
-  const [leftPct, setLeftPct] = useState(20);
-
-  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const container = splitRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const onMove = (ev: MouseEvent) => {
-      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
-      setLeftPct(Math.min(Math.max(pct, 10), 50));
-    };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
-  }, []);
 
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`}>

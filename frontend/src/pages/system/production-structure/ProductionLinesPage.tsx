@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AlertTriangle, Check, Layers, TrendingUpDown, Factory, ExternalLink } from "lucide-react";
+import { AlertTriangle, Check, TrendingUpDown, Factory, ExternalLink } from "lucide-react";
 import { Pagination, ProductionLineProductScopeSummary, EntityListItem } from "./components";
 import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
 import { useRoutingSummary } from "@/hooks/useRouting";
-import type { ProductionLine, AssignedResourceGroup } from "@/types/productionLine";
+import type { ProductionLine } from "@/types/productionLine";
 
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
@@ -540,7 +540,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
 
       {activeTab === "rg" && (
         <div className="min-h-0 overflow-auto">
-          <AssignedResourceGroupsCard productionLine={productionLine} refetch={refetch} />
+          <AssignedResourceGroupsCard productionLine={productionLine} refetch={() => refetch?.()} />
         </div>
       )}
       {activeTab === "flow" && (
@@ -724,9 +724,9 @@ function SectionCard({ id, title, action, children, className = "" }: { id?: str
   );
 }
 
-function SecondaryActionButton({ children, onClick, disabled = false, className = "" }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; className?: string }) {
+function SecondaryActionButton({ children, onClick, disabled = false, className = "", title }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; className?: string; title?: string }) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled}
+    <button type="button" onClick={onClick} disabled={disabled} title={title}
       className={`inline-flex h-5 items-center gap-1 rounded-md border border-border bg-card px-1.5 text-[9px] font-semibold text-muted-foreground transition-all hover:bg-muted hover:border-border active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 border-border bg-muted text-muted-foreground hover:border-border hover:bg-muted ${className}`}>
       {children}
     </button>
@@ -747,7 +747,6 @@ function PillBadge({ variant = "active", label, className = "" }: { variant?: st
 }
 
 function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLine: ProductionLine | null; refetch: () => void }) {
-  const nav = useNavigate();
   const [assignRg] = useMutation(ASSIGN_RG_TO_LINE_MUTATION);
   const [removeRg] = useMutation(REMOVE_RG_FROM_LINE_MUTATION);
   const [reorderRgs] = useMutation(REORDER_LINE_RGS_MUTATION);
@@ -756,7 +755,7 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
   const [confirmRemoveRgId, setConfirmRemoveRgId] = useState<string | null>(null);
   const { showSystemMessage } = useToolbar();
 
-  const assigned = productionLine?.assignedResourceGroups ?? [];
+  const assigned: Array<{ id: string; resourceGroupId: string; resourceGroupName?: string; departmentName?: string; sequence: number; isActive: boolean }> = (productionLine as any)?.assignedResourceGroups ?? [];
   const sorted = [...assigned].sort((a, b) => a.sequence - b.sequence);
 
   const plantId = productionLine?.plantId;
@@ -764,7 +763,7 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     variables: { departmentId: null, limit: 500, offset: 0 },
     skip: !plantId,
   });
-  const allRgs = (availableRgsData?.resourceGroups ?? []).filter(
+  const allRgs = ((availableRgsData as any)?.resourceGroups ?? []).filter(
     (rg: any) => !assigned.some((a) => a.resourceGroupId === rg.id),
   );
 
@@ -772,11 +771,12 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     if (!productionLine?.id) return;
     try {
       const { data } = await assignRg({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
-      if (data?.assignResourceGroupToProductionLine?.ok) {
+      const d = data as any;
+      if (d?.assignResourceGroupToProductionLine?.ok) {
         showSystemMessage?.("Resource group assigned", "success");
-        refetch();
+        void refetch();
       } else {
-        const err = data?.assignResourceGroupToProductionLine?.errors?.[0];
+        const err = d?.assignResourceGroupToProductionLine?.errors?.[0];
         showSystemMessage?.(err?.message || "Failed to assign resource group", "error");
       }
     } catch { showSystemMessage?.("Failed to assign resource group", "error"); }
@@ -787,11 +787,12 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     setConfirmRemoveRgId(null);
     try {
       const { data } = await removeRg({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
-      if (data?.removeResourceGroupFromProductionLine?.ok) {
+      const d = data as any;
+      if (d?.removeResourceGroupFromProductionLine?.ok) {
         showSystemMessage?.("Resource group removed", "success");
-        refetch();
+        void refetch();
       } else {
-        const err = data?.removeResourceGroupFromProductionLine?.errors?.[0];
+        const err = d?.removeResourceGroupFromProductionLine?.errors?.[0];
         showSystemMessage?.(err?.message || "Failed to remove resource group", "error");
       }
     } catch { showSystemMessage?.("Failed to remove resource group", "error"); }
@@ -806,11 +807,12 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
     try {
       const { data } = await reorderRgs({ variables: { productionLineId: productionLine.id, orderedResourceGroupIds: ids } });
-      if (data?.reorderAssignedResourceGroups?.ok) {
+      const d = data as any;
+      if (d?.reorderAssignedResourceGroups?.ok) {
         showSystemMessage?.("Reordered", "success");
-        refetch();
+        void refetch();
       } else {
-        const err = data?.reorderAssignedResourceGroups?.errors?.[0];
+        const err = d?.reorderAssignedResourceGroups?.errors?.[0];
         showSystemMessage?.(err?.message || "Failed to reorder", "error");
       }
     } catch { showSystemMessage?.("Failed to reorder", "error"); }
@@ -820,13 +822,14 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     if (!productionLine?.id) return;
     try {
       const mutation = currentActive ? deactivateRg : activateRg;
-      const { data } = await mutation({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
+      const { data: raw } = await mutation({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
+      const d = raw as any;
       const key = currentActive ? "deactivateAssignedResourceGroup" : "activateAssignedResourceGroup";
-      if (data?.[key]?.ok) {
+      if (d?.[key]?.ok) {
         showSystemMessage?.(currentActive ? "Deactivated" : "Activated", "success");
-        refetch();
+        void refetch();
       } else {
-        const err = data?.[key]?.errors?.[0];
+        const err = d?.[key]?.errors?.[0];
         showSystemMessage?.(err?.message || "Failed to toggle", "error");
       }
     } catch { showSystemMessage?.("Failed to toggle", "error"); }
@@ -1330,7 +1333,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
               </div>
               <div className="flex min-h-7 items-center gap-1.5 justify-self-end self-stretch">
                 <Badge label={sel?.status || "active"} variant={sel?.status === "active" ? "active" : "inactive"} />
-                <span title="Assigned Resource Groups" className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.assignedResourceGroups?.length ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{sel?.assignedResourceGroups?.length ?? 0} Assigned RG</span>
+                <span title="Assigned Resource Groups" className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${((sel as any)?.assignedResourceGroups?.length ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{(sel as any)?.assignedResourceGroups?.length ?? 0} Assigned RG</span>
                 <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{sel?.resourceCount ?? 0} Res</span>
                 {isForm && <Badge label="Editing" variant="amber" />}
                 {isNew && <Badge label="New" variant="default" />}

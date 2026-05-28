@@ -83,7 +83,7 @@ function renderWithCoreConceptPills(text: string): ReactNode[] {
   });
 }
 
-export function MarkdownReader({ document, findQuery, onFindQueryChange, findActiveIndex, onFindActiveIndexChange, findMatchCount }: MarkdownReaderProps) {
+export function MarkdownReader({ document, findQuery, onFindQueryChange, findActiveIndex, onFindActiveIndexChange }: MarkdownReaderProps) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const readerScrollRef = useRef<HTMLDivElement | null>(null);
   const matchesRef = useRef<HTMLElement[]>([]);
@@ -99,9 +99,9 @@ export function MarkdownReader({ document, findQuery, onFindQueryChange, findAct
   const searchQuery = onFindQueryChange ? findQuery ?? "" : internalSearchQuery;
   const setSearchQuery = onFindQueryChange ? (v: string) => onFindQueryChange(v) : setInternalSearchQuery;
   const activeMatchIndex = onFindActiveIndexChange ? findActiveIndex ?? 0 : internalActiveMatchIndex;
-  const setActiveMatchIndex = onFindActiveIndexChange ? (v: number) => onFindActiveIndexChange(v) : setInternalActiveMatchIndex;
+  const setActiveMatchIndex = onFindActiveIndexChange ? (v: number | ((prev: number) => number)) => onFindActiveIndexChange(typeof v === "function" ? v(activeMatchIndex) : v) : setInternalActiveMatchIndex;
   const matchCount = onFindQueryChange ? internalMatchCount : internalMatchCount;
-  const setMatchCount = onFindQueryChange ? (v: number) => { setInternalMatchCount(v); onFindMatchCountChange?.(v); } : setInternalMatchCount;
+  const setMatchCount = onFindQueryChange ? (v: number) => { setInternalMatchCount(v); } : setInternalMatchCount;
 
   useEffect(() => {
     setSearchQuery(""); setMatchCount(0); setActiveMatchIndex(0);

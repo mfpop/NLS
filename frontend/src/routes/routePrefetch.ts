@@ -158,12 +158,12 @@ const matchers: Matcher[] = [
   {
     key: "system-erp-import",
     matches: (path) => path.startsWith("/system/erp-data/import"),
-    load: () => import("@/pages/system/erp-data/erp-import/SimpleErpImportPage"),
+    load: () => import("@/pages/system/erp-data/erp-import/ErpImportPage"),
   },
   {
     key: "system-erp-patterns",
     matches: (path) => path.startsWith("/system/erp-data/erp-patterns"),
-    load: () => import("@/pages/data-management/ErpImportPatternPage"),
+    load: () => import("@/pages/system/erp-data/ErpImportPatternPage"),
   },
 ];
 

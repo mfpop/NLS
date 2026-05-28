@@ -132,39 +132,11 @@ const ApplicationSettingsPage = lazy(() =>
 const ERPDataPage = lazy(() =>
   import("@/pages/system/erp-data/ERPDataPage").then((module) => ({ default: module.ERPDataPage }))
 );
-const ImportSourcesPage = lazy(() =>
-  import("@/pages/system/erp-data/import-sources/ImportSourcesPage").then((module) => ({ default: module.ImportSourcesPage }))
-);
-const ImportJobsPage = lazy(() =>
-  import("@/pages/system/erp-data/import-jobs/ImportJobsPage").then((module) => ({ default: module.ImportJobsPage }))
-);
-
-const ComponentMappingPage = lazy(() =>
-  import("@/pages/system/erp-data/admin/component-mapping/ComponentMappingPage").then((module) => ({ default: module.ComponentMappingPage }))
-);
-const FileHistoryPage = lazy(() =>
-  import("@/pages/system/erp-data/file-history/FileHistoryPage").then((module) => ({ default: module.FileHistoryPage }))
-);
-const MappingRulesPage = lazy(() =>
-  import("@/pages/system/erp-data/mapping-rules/MappingRulesPage").then((module) => ({ default: module.MappingRulesPage }))
-);
-const ValidationErrorsPage = lazy(() =>
-  import("@/pages/system/erp-data/validation-errors/ValidationErrorsPage").then((module) => ({ default: module.ValidationErrorsPage }))
-);
-const IntegrationStatusPage = lazy(() =>
-  import("@/pages/system/erp-data/integration-status/IntegrationStatusPage").then((module) => ({ default: module.IntegrationStatusPage }))
-);
-const FilePreviewPage = lazy(() =>
-  import("@/pages/system/erp-data/file-preview/FilePreviewPage").then((module) => ({ default: module.FilePreviewPage }))
-);
-const CompareResultsPage = lazy(() =>
-  import("@/pages/system/erp-data/compare-results/CompareResultsPage").then((module) => ({ default: module.CompareResultsPage }))
-);
 const ERPImportPage = lazy(() =>
-  import("@/pages/system/erp-data/erp-import/ERPImportPage").then((module) => ({ default: module.ERPImportPage }))
+  import("@/pages/system/erp-data/erp-import/SimpleErpImportPage").then((module) => ({ default: module.ErpImportPage }))
 );
-const LineagePage = lazy(() =>
-  import("@/pages/system/erp-data/lineage/LineagePage").then((module) => ({ default: module.LineagePage }))
+const ErpImportPatternPage = lazy(() =>
+  import("@/pages/data-management/ErpImportPatternPage").then((module) => ({ default: module.ErpImportPatternPage }))
 );
 const UserProfilePage = lazy(() =>
   import("@/pages/system/UserProfilePage").then((module) => ({ default: module.UserProfilePage }))
@@ -183,6 +155,21 @@ const MyTasksPage = lazy(() =>
 );
 const DocumentationCenter = lazy(() =>
   import("@/pages/DocumentationCenter/DocumentationCenter").then((module) => ({ default: module.DocumentationCenter }))
+);
+const UserManualPage = lazy(() =>
+  import("@/pages/docs/UserManualPage").then((module) => ({ default: module.UserManualPage }))
+);
+const AdminGuidePage = lazy(() =>
+  import("@/pages/docs/AdminGuidePage").then((module) => ({ default: module.AdminGuidePage }))
+);
+const TrainingMaterialsPage = lazy(() =>
+  import("@/pages/docs/TrainingMaterialsPage").then((module) => ({ default: module.TrainingMaterialsPage }))
+);
+const ReleaseNotesPage = lazy(() =>
+  import("@/pages/docs/ReleaseNotesPage").then((module) => ({ default: module.ReleaseNotesPage }))
+);
+const TechnicalDocsPage = lazy(() =>
+  import("@/pages/docs/TechnicalDocsPage").then((module) => ({ default: module.TechnicalDocsPage }))
 );
 const NotFoundPage = lazy(() =>
   import("@/pages/not-found/NotFoundPage").then((module) => ({ default: module.NotFoundPage }))
@@ -278,21 +265,17 @@ export function AppRoutes() {
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/erp-data" element={<ERPDataPage />} />
           <Route path="system/erp-data/import" element={<ERPImportPage />} />
-          <Route path="system/erp-data/lineage" element={<LineagePage />} />
-          <Route path="system/erp-data/import-sources" element={<ImportSourcesPage />} />
-          <Route path="system/erp-data/import-jobs" element={<ImportJobsPage />} />
-          <Route path="system/erp-data/admin/component-mapping" element={<ComponentMappingPage />} />
-          <Route path="system/erp-data/file-history" element={<FileHistoryPage />} />
-          <Route path="system/erp-data/mapping-rules" element={<MappingRulesPage />} />
-          <Route path="system/erp-data/validation-errors" element={<ValidationErrorsPage />} />
-          <Route path="system/erp-data/integration-status" element={<IntegrationStatusPage />} />
-          <Route path="system/erp-data/file-preview" element={<FilePreviewPage />} />
-          <Route path="system/erp-data/compare-results" element={<CompareResultsPage />} />
+          <Route path="system/erp-data/erp-patterns" element={<ErpImportPatternPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />
           <Route path="system/sign-out" element={<SignOutPage />} />
           <Route path="status" element={<GraphqlStatusPage />} />
-          <Route path="docs" element={<Navigate to="/docs/setup" replace />} />
+          <Route path="docs" element={<Navigate to="/docs/user-manual" replace />} />
+          <Route path="docs/user-manual" element={<UserManualPage />} />
+          <Route path="docs/admin-guide" element={<AdminGuidePage />} />
+          <Route path="docs/training-materials" element={<TrainingMaterialsPage />} />
+          <Route path="docs/release-notes" element={<ReleaseNotesPage />} />
+          <Route path="docs/technical-docs" element={<TechnicalDocsPage />} />
           <Route path="docs/core" element={<DocumentationCenter />} />
           <Route path="docs/core/:docSlug" element={<DocumentationCenter />} />
           <Route path="docs/setup" element={<DocumentationCenter />} />

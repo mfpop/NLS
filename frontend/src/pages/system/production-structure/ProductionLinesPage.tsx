@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlertTriangle, Check, Layers, TrendingUpDown, Factory, ExternalLink } from "lucide-react";
 import { Pagination, ProductionLineProductScopeSummary, EntityListItem } from "./components";
 import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
 import { useRoutingSummary } from "@/hooks/useRouting";
-import type { ProductionLine } from "@/types/productionLine";
+import type { ProductionLine, AssignedResourceGroup } from "@/types/productionLine";
 
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
@@ -14,6 +14,11 @@ import { ConfirmDialog } from "./shared";
 import { formatAppDate } from "@/utils/dateFormat";
 import { PRODUCT_MODELS_BY_FAMILY_QUERY } from "@/graphql/productionLineQueries";
 import type { ProductModelByFamily } from "@/types/productionLine";
+import {
+  ASSIGN_RG_TO_LINE_MUTATION, REMOVE_RG_FROM_LINE_MUTATION,
+  REORDER_LINE_RGS_MUTATION, ACTIVATE_LINE_RG_MUTATION, DEACTIVATE_LINE_RG_MUTATION,
+} from "@/graphql/productionLineMutations";
+import { RESOURCE_GROUPS_QUERY } from "@/graphql/manufacturingQueries";
 
 const PER_PAGE = 10;
 
@@ -326,7 +331,7 @@ function RoutingSummarySection({ productionLine, navigate: nav, isNew = false, i
   );
 }
 
-function FlowContextSections({ productionLine, navigate: nav, isNew = false, returnContext, onAssignModel }: { productionLine: ProductionLine | null; navigate: (path: string, options?: any) => void; isNew?: boolean; returnContext?: { searchText: string; statusFilter: string }; onAssignModel?: () => void }) {
+function FlowContextSections({ productionLine, navigate: nav, isNew = false, returnContext, onAssignModel, refetch }: { productionLine: ProductionLine | null; navigate: (path: string, options?: any) => void; isNew?: boolean; returnContext?: { searchText: string; statusFilter: string }; onAssignModel?: () => void; refetch?: () => void }) {
   const productionLineId = productionLine?.id ?? null;
   const primaryModel = productionLine?.primaryProductModel || productionLine?.productModels?.find((model) => model.id === productionLine?.primaryModelId || model.isPrimary) || null;
   const { context, loading } = useProductionLineFlowContext(productionLineId, primaryModel?.id ?? null);
@@ -425,6 +430,7 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
   const [activeTab, setActiveTab] = useState("overview");
   const tabs = [
     { key: "overview", label: "Overview" },
+    { key: "rg", label: "RG Assignment" },
     { key: "flow", label: "Flow & Routing" },
     { key: "materials", label: "Materials" },
     { key: "validation", label: "Validation" },
@@ -465,112 +471,78 @@ function FlowContextSections({ productionLine, navigate: nav, isNew = false, ret
 
       {/* ── Row 3: Tab content ── */}
       {activeTab === "overview" && (
-        <div className="grid min-h-0 items-start gap-1.5 overflow-hidden" style={{ gridTemplateColumns: "1fr 1fr" }}>
-          {/* ── LEFT COLUMN: Identity, Operations ── */}
-          <div className="flex flex-col gap-1.5 overflow-hidden">
-            <div className="rounded-lg border border-border/30 bg-card px-3 pb-2 pt-2 shadow-sm shadow-foreground/10">
-              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Identity & Schedule</div>
+        <div className="grid min-h-0 grid-cols-2 grid-rows-2 gap-2 overflow-hidden">
+          <div className="bg-card px-3 pb-2 pt-2">
+            <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Identity & Schedule</div>
+            <div className="space-y-1">
+              <InlineRow label="Name" value={<span className="font-bold text-muted-foreground">{productionLine?.name || "—"}</span>} />
+              <InlineRow label="Code" value={<span className="font-bold text-muted-foreground">{productionLine?.code || "—"}</span>} />
+              <InlineRow label="Plant" value={productionLine?.plantName || "—"} />
+              <InlineRow label="Type" value={productionLine?.lineType || "—"} />
+              <InlineRow label="Primary Model" value={productionLine?.primaryProductModel?.name || productionLine?.productModels?.find((m: any) => m.isPrimary)?.name || "—"} />
+              <InlineRow label="Calendar" value={productionLine?.defaultCalendar || "—"} />
+              <InlineRow label="Shift" value={productionLine?.shiftPattern || "—"} />
+              <InlineRow label="Timezone" value={productionLine?.timezone || "Plant default"} />
+              <InlineRow label="Capacity" value={productionLine?.capacityBasis || "—"} />
+              <InlineRow label="UoM" value={productionLine?.capacityUom || "—"} />
+            </div>
+          </div>
+          <div className="bg-card px-3 pb-2 pt-2">
+            <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Operations</div>
+            <RoutingOperationsView sel={productionLine} compact={false} />
+          </div>
+          <div className="bg-card px-3 pb-2 pt-2">
+            <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Setup & Issues</div>
+            <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <InlineRow label="Name" value={<span className="font-bold text-muted-foreground">{productionLine?.name || "—"}</span>} />
-                <InlineRow label="Code" value={<span className="font-bold text-muted-foreground">{productionLine?.code || "—"}</span>} />
-                <InlineRow label="Plant" value={productionLine?.plantName || "—"} />
-                <InlineRow label="Type" value={productionLine?.lineType || "—"} />
-                <InlineRow label="Primary Model" value={productionLine?.primaryProductModel?.name || productionLine?.productModels?.find((m: any) => m.isPrimary)?.name || "—"} />
-                <InlineRow label="Calendar" value={productionLine?.defaultCalendar || "—"} />
-                <InlineRow label="Shift" value={productionLine?.shiftPattern || "—"} />
-                <InlineRow label="Timezone" value={productionLine?.timezone || "Plant default"} />
-                <InlineRow label="Capacity" value={productionLine?.capacityBasis || "—"} />
-                <InlineRow label="UoM" value={productionLine?.capacityUom || "—"} />
+                <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Setup Steps</div>
+                {setupSteps.map((step, index) => (
+                  <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }}
+                    className={`flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[10px] font-medium ${step.done ? "bg-success/10 text-success" : index === nextStepIndex ? "bg-warning/10 text-warning" : "bg-muted/70 text-muted-foreground"}`}>
+                    <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
+                    <span className="flex-1 truncate">{step.label}</span>
+                    <span className="text-[8px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-1">
+                <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Issues</div>
+                {topIssues.length > 0 ? topIssues.slice(0, 4).map((issue) => (
+                  <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
+                    className="flex h-7 w-full items-center gap-2 rounded-md border border-danger/15 bg-danger/5 px-2 text-left text-[10px] font-semibold text-foreground hover:bg-danger/10">
+                    <span className="text-danger">✕</span>
+                    <span className="min-w-0 flex-1 truncate">{issue.message}</span>
+                    <span className="shrink-0 whitespace-nowrap font-semibold text-danger">{issue.action}</span>
+                  </button>
+                )) : <div className="flex h-7 items-center gap-1.5 text-[10px] text-success"><Check className="h-3 w-3" /> No issues</div>}
               </div>
             </div>
-            <SectionCard title="Operations" className="overflow-hidden">
-              <RoutingOperationsView sel={productionLine} compact={false} />
-            </SectionCard>
           </div>
-
-          {/* ── RIGHT COLUMN: Departments, Setup & Issues, Validation Summary ── */}
-          <div className="flex flex-col gap-1.5 overflow-hidden">
-            <SectionCard title="Departments / Structure" className="overflow-hidden" action={
-              productionLine?.id ? <SecondaryActionButton onClick={() => nav(`/system/production-structure/components/dept?lineId=${productionLine.id}`)}>Manage</SecondaryActionButton> : undefined
-            }>
-              {productionLine?.departmentLinks && productionLine.departmentLinks.length > 0 ? (
-                <div className="space-y-1 overflow-hidden">
-                  {productionLine.departmentLinks.slice(0, 6).map((link: any) => (
-                    <button key={link.id} onClick={() => nav(`/system/production-structure/components/dept?departmentId=${link.departmentId}`)}
-                      className="grid h-6 w-full grid-cols-[28px_1fr_auto_auto] items-center gap-1.5 rounded-md bg-muted px-2 text-left text-[11px] text-muted-foreground hover:bg-muted/80">
-                      <span className="font-mono text-[10px] text-muted-foreground">{link.sequence}</span>
-                      <span className="min-w-0 truncate font-medium">{link.departmentName}</span>
-                      <span className="text-muted-foreground">{link.resourceGroups} RG</span>
-                      <span className="text-muted-foreground">{link.resources} Res</span>
-                    </button>
-                  ))}
-                  {productionLine.departmentLinks.length > 6 && (
-                    <div className="flex h-6 items-center rounded-md bg-muted px-2 text-[10px] font-semibold text-muted-foreground">
-                      +{productionLine.departmentLinks.length - 6} more departments
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex min-h-[104px] flex-col items-center justify-center rounded-lg border border-border/20 bg-muted/55 px-4 text-center">
-                  <span className="mb-1 flex h-8 w-8 items-center justify-center rounded-full bg-entity-department/10 text-entity-department">
-                    <Layers className="h-4 w-4 stroke-current" />
-                  </span>
-                  <span className="text-[11px] font-semibold text-foreground">No departments linked</span>
-                  <span className="mt-0.5 text-[10px] text-muted-foreground">Connect this line to departments to show its operating structure.</span>
-                  {productionLine?.id && (
-                    <SecondaryActionButton onClick={() => nav(`/system/production-structure/components/dept?lineId=${productionLine.id}`)} className="mt-2">
-                      Manage departments
-                    </SecondaryActionButton>
-                  )}
-                </div>
-              )}
-            </SectionCard>
-            <SectionCard title="Setup & Issues" className="overflow-hidden">
-              <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Setup Steps</div>
-                    {setupSteps.map((step, index) => (
-                      <button key={step.label} type="button" onClick={() => { step.action(); scrollToStep(step.step); }}
-                        className={`flex h-7 w-full items-center gap-2 rounded-md px-2 text-left text-[10px] font-medium ${step.done ? "bg-success/10 text-success" : index === nextStepIndex ? "bg-warning/10 text-warning" : "bg-muted/70 text-muted-foreground"}`}>
-                        <span>{step.done ? "✓" : index === nextStepIndex ? "!" : "○"}</span>
-                        <span className="flex-1 truncate">{step.label}</span>
-                        <span className="text-[8px]">{step.done ? "Done" : index === nextStepIndex ? "Next" : ""}</span>
-                      </button>
-                    ))}
+          <div className="bg-card px-3 pb-2 pt-2">
+            <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Validation Summary</div>
+            {validations.length > 0 ? (
+              <div className="space-y-0.5">
+                {validationGroups.filter((group) => group.items.length > 0 && group.label !== "Routing errors").slice(0, 3).map((group) => (
+                  <div key={group.label} className="flex h-7 items-center justify-between rounded bg-muted px-2.5">
+                    <span className="truncate text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group.label}</span>
+                    <span className="text-[9px] font-semibold text-muted-foreground">({group.items.length})</span>
                   </div>
-                  <div className="space-y-1">
-                    <div className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Issues</div>
-                    {topIssues.length > 0 ? topIssues.slice(0, 4).map((issue) => (
-                      <button key={`${issue.code}-${issue.message}`} type="button" onClick={issue.onClick ?? openRouting}
-                        className="flex h-7 w-full items-center gap-2 rounded-md border border-danger/15 bg-danger/5 px-2 text-left text-[10px] font-semibold text-foreground hover:bg-danger/10">
-                        <span className="text-danger">✕</span>
-                        <span className="min-w-0 flex-1 truncate">{issue.message}</span>
-                        <span className="shrink-0 whitespace-nowrap font-semibold text-danger">{issue.action}</span>
-                      </button>
-                    )) : <div className="flex h-7 items-center gap-1.5 text-[10px] text-success"><Check className="h-3 w-3" /> No issues</div>}
-                  </div>
+                ))}
               </div>
-            </SectionCard>
-            <SectionCard title="Validation Summary" className="overflow-hidden">
-              {validations.length > 0 ? (
-                <div className="space-y-0.5">
-                  {validationGroups.filter((group) => group.items.length > 0 && group.label !== "Routing errors").slice(0, 3).map((group) => (
-                    <div key={group.label} className="flex h-7 items-center justify-between rounded bg-muted px-2.5">
-                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group.label}</span>
-                      <span className="text-[9px] font-semibold text-muted-foreground">({group.items.length})</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-[10px] text-success">
-                  <Check className="h-3 w-3" /> No grouped validation issues
-                </div>
-              )}
-            </SectionCard>
+            ) : (
+              <div className="flex items-center gap-1.5 text-[10px] text-success">
+                <Check className="h-3 w-3" /> No grouped validation issues
+              </div>
+            )}
           </div>
         </div>
       )}
 
+      {activeTab === "rg" && (
+        <div className="min-h-0 overflow-auto">
+          <AssignedResourceGroupsCard productionLine={productionLine} refetch={refetch} />
+        </div>
+      )}
       {activeTab === "flow" && (
         <div className="grid min-h-0 gap-1.5 overflow-hidden" style={{ gridTemplateRows: "auto minmax(0,1fr) auto" }}>
           <div className="grid grid-cols-3 gap-1.5">
@@ -759,6 +731,172 @@ function SecondaryActionButton({ children, onClick, disabled = false, className 
       {children}
     </button>
   );
+}
+
+function PillBadge({ variant = "active", label, className = "" }: { variant?: string; label: string; className?: string }) {
+  const colors: Record<string, string> = {
+    active: "bg-success/10 text-success border-success/20",
+    inactive: "bg-muted text-muted-foreground border-border/30",
+    warning: "bg-warning/10 text-warning border-warning/20",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[9px] font-semibold leading-tight ${colors[variant] || colors.active} ${className}`}>
+      {label}
+    </span>
+  );
+}
+
+function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLine: ProductionLine | null; refetch: () => void }) {
+  const nav = useNavigate();
+  const [assignRg] = useMutation(ASSIGN_RG_TO_LINE_MUTATION);
+  const [removeRg] = useMutation(REMOVE_RG_FROM_LINE_MUTATION);
+  const [reorderRgs] = useMutation(REORDER_LINE_RGS_MUTATION);
+  const [activateRg] = useMutation(ACTIVATE_LINE_RG_MUTATION);
+  const [deactivateRg] = useMutation(DEACTIVATE_LINE_RG_MUTATION);
+  const [confirmRemoveRgId, setConfirmRemoveRgId] = useState<string | null>(null);
+  const { showSystemMessage } = useToolbar();
+
+  const assigned = productionLine?.assignedResourceGroups ?? [];
+  const sorted = [...assigned].sort((a, b) => a.sequence - b.sequence);
+
+  const plantId = productionLine?.plantId;
+  const { data: availableRgsData } = useQuery(RESOURCE_GROUPS_QUERY, {
+    variables: { departmentId: null, limit: 500, offset: 0 },
+    skip: !plantId,
+  });
+  const allRgs = (availableRgsData?.resourceGroups ?? []).filter(
+    (rg: any) => !assigned.some((a) => a.resourceGroupId === rg.id),
+  );
+
+  const handleAssign = async (rgId: string) => {
+    if (!productionLine?.id) return;
+    try {
+      const { data } = await assignRg({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
+      if (data?.assignResourceGroupToProductionLine?.ok) {
+        showSystemMessage?.("Resource group assigned", "success");
+        refetch();
+      } else {
+        const err = data?.assignResourceGroupToProductionLine?.errors?.[0];
+        showSystemMessage?.(err?.message || "Failed to assign resource group", "error");
+      }
+    } catch { showSystemMessage?.("Failed to assign resource group", "error"); }
+  };
+
+  const handleRemove = async (rgId: string) => {
+    if (!productionLine?.id) return;
+    setConfirmRemoveRgId(null);
+    try {
+      const { data } = await removeRg({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
+      if (data?.removeResourceGroupFromProductionLine?.ok) {
+        showSystemMessage?.("Resource group removed", "success");
+        refetch();
+      } else {
+        const err = data?.removeResourceGroupFromProductionLine?.errors?.[0];
+        showSystemMessage?.(err?.message || "Failed to remove resource group", "error");
+      }
+    } catch { showSystemMessage?.("Failed to remove resource group", "error"); }
+  };
+
+  const handleMove = async (rgId: string, direction: "up" | "down") => {
+    if (!productionLine?.id) return;
+    const idx = sorted.findIndex((a) => a.resourceGroupId === rgId);
+    if (idx === -1) return;
+    const ids = sorted.map((a) => a.resourceGroupId);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
+    try {
+      const { data } = await reorderRgs({ variables: { productionLineId: productionLine.id, orderedResourceGroupIds: ids } });
+      if (data?.reorderProductionLineResourceGroups?.ok) {
+        showSystemMessage?.("Reordered", "success");
+        refetch();
+      } else {
+        const err = data?.reorderProductionLineResourceGroups?.errors?.[0];
+        showSystemMessage?.(err?.message || "Failed to reorder", "error");
+      }
+    } catch { showSystemMessage?.("Failed to reorder", "error"); }
+  };
+
+  const handleToggleActive = async (rgId: string, currentActive: boolean) => {
+    if (!productionLine?.id) return;
+    try {
+      const mutation = currentActive ? deactivateRg : activateRg;
+      const { data } = await mutation({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
+      const key = currentActive ? "deactivateProductionLineResourceGroup" : "activateProductionLineResourceGroup";
+      if (data?.[key]?.ok) {
+        showSystemMessage?.(currentActive ? "Deactivated" : "Activated", "success");
+        refetch();
+      } else {
+        const err = data?.[key]?.errors?.[0];
+        showSystemMessage?.(err?.message || "Failed to toggle", "error");
+      }
+    } catch { showSystemMessage?.("Failed to toggle", "error"); }
+  };
+
+  return (<>
+    <div className="flex min-h-0 flex-col overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md px-3 pb-2 pt-2">
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Assigned Resource Groups</span>
+        <span className="ml-auto">
+          {productionLine?.id && (
+            <select
+              value=""
+              onChange={(e) => { if (e.target.value) handleAssign(e.target.value); }}
+              className="h-5 max-w-[140px] rounded-md border border-border bg-card px-1 text-[9px] font-semibold text-muted-foreground"
+            >
+              <option value="">+ Assign</option>
+              {allRgs.length === 0 && <option value="" disabled>No available RGs</option>}
+              {allRgs.map((rg: any) => (
+                <option key={rg.id} value={rg.id}>{rg.name} ({rg.departmentName})</option>
+              ))}
+            </select>
+          )}
+        </span>
+      </div>
+      {sorted.length > 0 ? (
+        <div className="space-y-0.5">
+          <div className="grid h-5 grid-cols-[24px_1fr_1fr_60px_80px] items-center gap-1 rounded bg-white/5 backdrop-blur-sm px-1.5 text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+            <span>Seq</span>
+            <span>Resource Group</span>
+            <span>Department</span>
+            <span>Status</span>
+            <span className="text-right">Actions</span>
+          </div>
+          {sorted.map((a, i) => (
+            <div key={a.id} className={`grid h-6 grid-cols-[24px_1fr_1fr_60px_80px] items-center gap-1 rounded-md px-1.5 text-[10px] ${a.isActive ? "bg-white/5 backdrop-blur-sm" : "bg-white/5 opacity-60"}`}>
+              <span className="font-mono text-[9px] text-muted-foreground">{a.sequence}</span>
+              <span className="min-w-0 truncate font-medium">{a.resourceGroupName}</span>
+              <span className="min-w-0 truncate text-muted-foreground">{a.departmentName}</span>
+              <span><PillBadge variant={a.isActive ? "active" : "inactive"} label={a.isActive ? "Active" : "Inactive"} /></span>
+              <span className="flex items-center justify-end gap-0.5">
+                <SecondaryActionButton onClick={() => handleToggleActive(a.resourceGroupId, a.isActive)} title={a.isActive ? "Deactivate" : "Activate"}>
+                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${a.isActive ? "bg-success" : "bg-muted-foreground"}`} />
+                </SecondaryActionButton>
+                <SecondaryActionButton onClick={() => handleMove(a.resourceGroupId, "up")} disabled={i === 0} title="Move up">↑</SecondaryActionButton>
+                <SecondaryActionButton onClick={() => handleMove(a.resourceGroupId, "down")} disabled={i === sorted.length - 1} title="Move down">↓</SecondaryActionButton>
+                <SecondaryActionButton onClick={() => setConfirmRemoveRgId(a.resourceGroupId)} title="Remove assignment">✕</SecondaryActionButton>
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex min-h-[72px] flex-col items-center justify-center rounded-lg border border-border/20 bg-muted/55 px-4 text-center">
+          <span className="text-[10px] font-semibold text-muted-foreground">No resource groups assigned</span>
+          <span className="mt-0.5 text-[9px] text-muted-foreground">Assign resource groups to define this line's operational flow.</span>
+        </div>
+      )}
+    </div>
+    {confirmRemoveRgId && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setConfirmRemoveRgId(null)}>
+        <div className="rounded-lg border bg-card p-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <p className="text-sm font-medium">Remove this resource group from the line?</p>
+          <div className="mt-3 flex justify-end gap-2">
+            <button type="button" onClick={() => setConfirmRemoveRgId(null)} className="h-7 rounded-md border border-border bg-card px-3 text-[11px] font-medium text-muted-foreground hover:bg-muted">Cancel</button>
+            <button type="button" onClick={() => handleRemove(confirmRemoveRgId)} className="h-7 rounded-md bg-danger px-3 text-[11px] font-medium text-white hover:bg-danger/90">Remove</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>);
 }
 
 function LineTypeSelect({ value, onChange, selectClass, error }: { value: string; onChange: (value: string) => void; selectClass: string; error?: string }) {
@@ -1192,9 +1330,8 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
               </div>
               <div className="flex min-h-7 items-center gap-1.5 justify-self-end self-stretch">
                 <Badge label={sel?.status || "active"} variant={sel?.status === "active" ? "active" : "inactive"} />
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.departmentCount ?? 0) > 0 ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}>{sel?.departmentCount ?? 0} Dept</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.groupCount ?? 0) > 0 ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}>{sel?.groupCount ?? 0} RG</span>
-                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "bg-muted text-muted-foreground bg-muted text-muted-foreground"}`}>{sel?.resourceCount ?? 0} Res</span>
+                <span title="Assigned Resource Groups" className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.assignedResourceGroups?.length ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{sel?.assignedResourceGroups?.length ?? 0} Assigned RG</span>
+                <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{sel?.resourceCount ?? 0} Res</span>
                 {isForm && <Badge label="Editing" variant="amber" />}
                 {isNew && <Badge label="New" variant="default" />}
               </div>
@@ -1313,7 +1450,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
               </div>
             </div>
           ) : (
-            <FlowContextSections productionLine={sel} navigate={navigate} returnContext={{ searchText: search, statusFilter }} onAssignModel={() => setMode("edit")} />
+            <FlowContextSections productionLine={sel} navigate={navigate} returnContext={{ searchText: search, statusFilter }} onAssignModel={() => setMode("edit")} refetch={refetch} />
           )}
         </div>
       </div>
@@ -1337,7 +1474,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
                 className="h-6 w-full min-w-0 rounded border border-border/35 bg-transparent px-2 text-[11px] text-muted-foreground outline-none transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
                 <option value="all">All Plants</option>
-                {plants.map((plant: any) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
+                {plants.map((plant: any) => <option key={plant.id} value={plant.id}>{plant.code} - {plant.name}</option>)}
               </select>
             </div>
             <div data-production-lines-list className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">

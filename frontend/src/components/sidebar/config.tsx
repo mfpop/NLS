@@ -175,7 +175,7 @@ export const sidebarEntries: SidebarEntry[] = [
     items: [
       {
         type: "group",
-        label: "Manufacturing Structure",
+        label: "Production Structure",
         icon: Database,
         items: [
           { type: "item", label: "Flow", to: "/system/production-structure", icon: GitBranch },
@@ -187,7 +187,7 @@ export const sidebarEntries: SidebarEntry[] = [
         ],
       },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
-      { type: "item", label: "Application Settings", to: "/system/application-settings", icon: Cog },
+      { type: "item", label: "Settings", to: "/system/application-settings", icon: Cog },
       {
         type: "group",
         label: "Documentation Center",

@@ -37,10 +37,10 @@ function NavEntryRow({ entry, depth = 0, pathname, openNestedGroup, onNestedTogg
   entry: NavEntry; depth?: number; pathname: string;
   openNestedGroup: string | null; onNestedToggle: (label: string | null) => void; onNavigate?: () => void;
 }) {
-  const isManufacturingGroup = entry.type === "group" && entry.label === "Manufacturing Structure";
+  const isProductionGroup = entry.type === "group" && entry.label === "Production Structure";
   const isApplicationGroup = entry.type === "group" && entry.label === "Application";
   const isErpGroup = entry.type === "group" && entry.label === "ERP Data";
-  const groupId = isManufacturingGroup ? "manufacturing" : isApplicationGroup ? "settings" : isErpGroup ? "erpData" : undefined;
+  const groupId = isProductionGroup ? "production" : isApplicationGroup ? "settings" : isErpGroup ? "erpData" : undefined;
   const colors = sectionColors[groupId ?? "control"] ?? sectionColors.control;
 
   if (entry.type === "item") {
@@ -59,6 +59,7 @@ function NavEntryRow({ entry, depth = 0, pathname, openNestedGroup, onNestedTogg
         style={{ paddingLeft: sidebarIndent(depth) }}
       >
         <ChevronRight className={`${sidebarNavTokens.chevron} ${colors.chevron} ${isOpen ? "rotate-90" : ""}`} />
+        <entry.icon className={`${sidebarNavTokens.icon} ${colors.icon}`} />
         <span className={`${sidebarNavTokens.label} ${colors.icon} font-medium`}>{entry.label}</span>
       </button>
       <div className={`${sidebarNavTokens.submenu} ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
@@ -85,10 +86,8 @@ function sidebarItemCategory(label: string): string | undefined {
     case "Reference Tables":
       return "reference";
     case "Diagnostics":
-    case "Application Settings":
+    case "Settings":
       return "settings";
-    case "Documentation Center":
-      return "docs";
     case "Import Sources":
       return "importSources";
     case "Import Jobs":

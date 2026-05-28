@@ -1,16 +1,11 @@
-import { Database, HardDrive, Upload, Clock, AlertTriangle, Route, Activity, Eye, GitCompare, RefreshCw, Search } from "lucide-react";
+import { Database, Upload, RefreshCw, Search, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import { theme } from "@/styles/themeTokens";
 
 const cards = [
-  { label: "Import Sources", icon: HardDrive, desc: "Configure file import sources and paths", to: "/system/erp-data/import-sources", color: "text-blue-600", bg: "bg-blue-100" },
-  { label: "Import Jobs", icon: Upload, desc: "View and trigger file import jobs", to: "/system/erp-data/import-jobs", color: "text-indigo-600", bg: "bg-indigo-100" },
-  { label: "File Preview", icon: Eye, desc: "Preview parsed file content before import", to: "/system/erp-data/file-preview", color: "text-sky-600", bg: "bg-sky-100" },
-  { label: "Mapping Rules", icon: Route, desc: "Define field mappings between ERP and system", to: "/system/erp-data/mapping-rules", color: "text-teal-600", bg: "bg-teal-100" },
-  { label: "Compare Results", icon: GitCompare, desc: "Review differences before applying", to: "/system/erp-data/compare-results", color: "text-indigo-600", bg: "bg-indigo-100" },
-  { label: "Validation Errors", icon: AlertTriangle, desc: "Review and resolve import validation issues", to: "/system/erp-data/validation-errors", color: "text-amber-600", bg: "bg-amber-100" },
-  { label: "File History", icon: Clock, desc: "Audit log of all imported files", to: "/system/erp-data/file-history", color: "text-slate-500", bg: "bg-slate-100" },
-  { label: "Integration Status", icon: Activity, desc: "Monitor integration health and connectivity", to: "/system/erp-data/integration-status", color: "text-emerald-600", bg: "bg-emerald-100" },
+  { label: "ERP Import", icon: Upload, desc: "Upload files and execute ERP imports", to: "/system/erp-data/import", color: "text-violet-600", bg: "bg-violet-100" },
+  { label: "ERP Patterns", icon: Briefcase, desc: "Configure import patterns and field mappings", to: "/system/erp-data/erp-patterns", color: "text-rose-600", bg: "bg-rose-100" },
 ];
 
 const statCards = [
@@ -20,8 +15,7 @@ const statCards = [
   { label: "Failed Today", value: "\u2014", color: "text-red-600" },
 ];
 
-const inputClass = `h-7 w-full rounded border border-border/30 bg-transparent pl-3 pr-7 text-xs text-muted-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-border/50 focus:ring-1 focus:ring-border/25`;
-const buttonClass = `inline-flex items-center gap-1.5 h-8 px-2 rounded text-[11px] font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-700 transition-colors`;
+const inputClass = `h-8 w-full rounded bg-card px-3 py-1 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-b-2 focus:border-info`;
 
 export function ERPDataPage() {
   const navigate = useNavigate();

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../../styles/themeTokens";
+import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { Search, CheckCircle, Package, Factory, Layers, Warehouse, Box, RefreshCw, Plus, Pencil, Trash2, X, GripVertical, Check, Map, Route, Database, ArrowRight, ArrowLeft, AlertTriangle, Building2, Shield, LayoutGrid, LineChart, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
@@ -176,7 +177,8 @@ export function MaterialBinsPage() {
   const [showValidateModal, setShowValidateModal] = useState(false);
 
   const splitRef = useRef<HTMLDivElement>(null);
-  const [leftPct, setLeftPct] = useState(22);
+
+  const [leftPct, setLeftPct] = useState(20);
 
   const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -185,7 +187,7 @@ export function MaterialBinsPage() {
     const rect = container.getBoundingClientRect();
     const onMove = (ev: MouseEvent) => {
       const pct = ((ev.clientX - rect.left) / rect.width) * 100;
-      setLeftPct(Math.min(Math.max(pct, 18), 45));
+      setLeftPct(Math.min(Math.max(pct, 10), 50));
     };
     const onUp = () => {
       document.removeEventListener("mousemove", onMove);
@@ -840,8 +842,6 @@ export function MaterialBinsPage() {
     );
   };
 
-  const toolbarButtonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-70";
-
   return (
     <>
       {renderLinesModal()}
@@ -854,55 +854,31 @@ export function MaterialBinsPage() {
         <PageHeader icon={<Package className="h-5 w-5 stroke-current" />} iconClass={theme.iconBoxEmerald} title="Material Bins" subtitle="Manage material bin configurations across plants" />
 
         {/* Toolbar */}
-        <div className="shrink-0 flex items-center border-b border-border/35 bg-muted h-10 select-none gap-2 px-3">
-          <div className="relative shrink-0" style={{ width: 260 }}>
-            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 stroke-current pointer-events-none text-muted-foreground" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search bins..."
-              className="h-7 w-full rounded border border-border/35 bg-transparent pl-3 pr-7 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20" />
-            {search && (
-              <button type="button" onClick={() => setSearch("")} className="absolute right-7 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                <X className="h-3.5 w-3.5 stroke-current" />
-              </button>
-            )}
-          </div>
-            <select value={filters.plantId} onChange={(e) => setFilters((p) => ({ ...p, plantId: e.target.value }))}
-              className="h-7 w-22 shrink-0 cursor-pointer rounded border border-border/30 bg-transparent px-2 text-xs text-muted-foreground outline-none">
-              <option value="">All Plants</option>
-              {plants.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}
-            </select>
-            <select value={filters.binType} onChange={(e) => setFilters((p) => ({ ...p, binType: e.target.value }))}
-              className="h-7 w-22 shrink-0 cursor-pointer rounded border border-border/30 bg-transparent px-2 text-xs text-muted-foreground outline-none">
-              <option value="">All Types</option>
-              {BIN_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-7 w-20 shrink-0 cursor-pointer rounded border border-border/30 bg-transparent px-2 text-xs text-muted-foreground outline-none">
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          <span className="h-5 w-px shrink-0 bg-border/25" />
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5">
-            {isForm ? (
-              <>
-                <button type="button" onClick={hSave} title="Save" className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-success transition-colors hover:bg-success/12">
-                  <Check className="h-4 w-4 stroke-current" /><span className="hidden sm:inline">Save</span>
-                </button>
-                <button type="button" onClick={hCancel} title="Cancel" className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted">
-                  <X className="h-4 w-4 stroke-current" /><span className="hidden sm:inline">Cancel</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button type="button" onClick={hNew} title="New" className={toolbarButtonClass}><Plus className="h-4 w-4 stroke-current" /><span>New</span></button>
-                <button type="button" onClick={hEdit} title="Edit" disabled={!sel} className={toolbarButtonClass}><Pencil className="h-4 w-4 stroke-current" /><span>Edit</span></button>
-                <button type="button" onClick={() => sel && setConfirmArchive(sel.id)} title="Archive" disabled={!sel} className={toolbarButtonClass}><Trash2 className="h-4 w-4 stroke-current" /><span>Archive</span></button>
-                <span className="mx-1 h-5 w-px bg-border/25 shrink-0" />
-                <button type="button" onClick={() => refetchBins()} title="Refresh" className={toolbarButtonClass}><RefreshCw className={`h-4 w-4 stroke-current ${loading ? "animate-spin" : ""}`} /><span>Refresh</span></button>
-              </>
-            )}
-          </div>
-        </div>
+        <Toolbar
+          left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search bins..." />}
+          right={<>
+            <ToolbarSelect value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
+            <ToolbarSelect value={filters.binType} onChange={(v) => setFilters((p) => ({ ...p, binType: v }))} options={[{ value: "", label: "All Types" }, ...BIN_TYPE_OPTIONS]} className="w-50" />
+            <ToolbarSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
+            <div className="flex-1" />
+            <div className="flex items-center gap-2 shrink-0">
+              {isForm ? (
+                <>
+                  <ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" />
+                  <ToolbarButton icon={X} label="Cancel" onClick={hCancel} />
+                </>
+              ) : (
+                <>
+                  <ToolbarButton icon={Plus} label="New" onClick={hNew} />
+                  <ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} />
+                  <ToolbarButton icon={Trash2} label="Archive" onClick={() => sel && setConfirmArchive(sel.id)} disabled={!sel} />
+                  <span className="h-5 w-px shrink-0 bg-border/25" />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetchBins()} />
+                </>
+              )}
+            </div>
+          </>}
+        />
 
         {/* Content */}
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">

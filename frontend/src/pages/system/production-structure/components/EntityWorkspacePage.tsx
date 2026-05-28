@@ -11,7 +11,7 @@ interface EntityWorkspacePageProps {
 }
 
 export function EntityWorkspacePage({ toolbar, list, detail, footer, hideList = false }: EntityWorkspacePageProps) {
-  const [leftWidth, setLeftWidth] = useState(280);
+  const [leftPct, setLeftPct] = useState(20);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
@@ -19,12 +19,13 @@ export function EntityWorkspacePage({ toolbar, list, detail, footer, hideList = 
     e.preventDefault();
     isDragging.current = true;
     const startX = e.clientX;
-    const startWidth = leftWidth;
+    const startPct = leftPct;
 
     const onMove = (ev: MouseEvent) => {
       if (!isDragging.current || !containerRef.current) return;
-      const newWidth = Math.max(180, Math.min(500, startWidth + (ev.clientX - startX)));
-      setLeftWidth(newWidth);
+      const rect = containerRef.current.getBoundingClientRect();
+      const newPct = Math.max(10, Math.min(50, startPct + ((ev.clientX - startX) / rect.width) * 100));
+      setLeftPct(newPct);
     };
 
     const onUp = () => {
@@ -39,7 +40,7 @@ export function EntityWorkspacePage({ toolbar, list, detail, footer, hideList = 
     document.body.style.userSelect = "none";
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
-  }, [leftWidth]);
+  }, [leftPct]);
 
   return (
     <div className="flex flex-col overflow-hidden h-full p-0 m-0">
@@ -47,7 +48,7 @@ export function EntityWorkspacePage({ toolbar, list, detail, footer, hideList = 
       <div ref={containerRef} className="flex flex-1 min-h-0 overflow-hidden p-0 m-0">
         {!hideList && (
           <>
-            <div className={`flex flex-col overflow-hidden min-w-0 ${masterListTokens.columnBorder}`} style={{ flex: "0 0 auto", width: leftWidth }}>
+            <div className={`flex flex-col overflow-hidden min-w-0 ${masterListTokens.columnBorder}`} style={{ flex: "0 0 auto", width: `${leftPct}%` }}>
               {list}
             </div>
             <div onMouseDown={handleMouseDown} className={`flex shrink-0 cursor-col-resize items-center justify-center ${theme.dividerVertical} transition-colors`} style={{ width: 4 }}>

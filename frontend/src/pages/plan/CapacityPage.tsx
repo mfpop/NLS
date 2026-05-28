@@ -169,7 +169,7 @@ function YamazumiTab({ plan, metric }: { plan?: CapacityPlan | null; metric: str
   const items = result?.yamazumi?.items ?? [];
   const maxWork = Math.max(...items.map((item) => item.workContentSeconds), result?.yamazumi?.taktTimeSeconds ?? 0, 1);
   if (!plan?.inputs?.taktTimeSeconds) return <Message type="warning">Complete capacity inputs before Yamazumi analysis.</Message>;
-  if (!items.length) return <Message type="warning">Complete routing in Manufacturing Structure → Flow.</Message>;
+  if (!items.length) return <Message type="warning">Complete routing in Production Structure → Flow.</Message>;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
@@ -544,7 +544,7 @@ export function CapacityPage() {
           {linesLoading || plansLoading ? <Message type="info">Loading capacity planning data...</Message> : renderActiveTab()}
           {selectedPlan?.productionLineId ? (
             <Link className={`mt-4 inline-flex items-center gap-1 text-xs font-semibold ${theme.link}`} to={`/system/production-structure/flow/routing/${selectedPlan.productionLineId}/${selectedPlan.routingVersionId}`}>
-              Open Manufacturing Structure → Flow <ExternalLink className="h-3.5 w-3.5" />
+              Open Production Structure → Flow <ExternalLink className="h-3.5 w-3.5" />
             </Link>
           ) : null}
         </div>

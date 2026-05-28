@@ -5,6 +5,11 @@ import type { DocumentationContent } from "./documentationTypes";
 
 interface MarkdownReaderProps {
   document: DocumentationContent | null;
+  findQuery?: string;
+  onFindQueryChange?: (value: string) => void;
+  findActiveIndex?: number;
+  onFindActiveIndexChange?: (index: number) => void;
+  onFindMatchCountChange?: (count: number) => void;
 }
 
 interface SectionHeading {
@@ -78,18 +83,25 @@ function renderWithCoreConceptPills(text: string): ReactNode[] {
   });
 }
 
-export function MarkdownReader({ document }: MarkdownReaderProps) {
+export function MarkdownReader({ document, findQuery, onFindQueryChange, findActiveIndex, onFindActiveIndexChange, findMatchCount }: MarkdownReaderProps) {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const readerScrollRef = useRef<HTMLDivElement | null>(null);
   const matchesRef = useRef<HTMLElement[]>([]);
   const headingIdCountRef = useRef<Map<string, number>>(new Map());
   const [runtime, setRuntime] = useState<MarkdownRuntime | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [matchCount, setMatchCount] = useState(0);
-  const [activeMatchIndex, setActiveMatchIndex] = useState(0);
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+  const [internalMatchCount, setInternalMatchCount] = useState(0);
+  const [internalActiveMatchIndex, setInternalActiveMatchIndex] = useState(0);
   const [copied, setCopied] = useState(false);
   const [sectionHeadings, setSectionHeadings] = useState<SectionHeading[]>([]);
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
+
+  const searchQuery = onFindQueryChange ? findQuery ?? "" : internalSearchQuery;
+  const setSearchQuery = onFindQueryChange ? (v: string) => onFindQueryChange(v) : setInternalSearchQuery;
+  const activeMatchIndex = onFindActiveIndexChange ? findActiveIndex ?? 0 : internalActiveMatchIndex;
+  const setActiveMatchIndex = onFindActiveIndexChange ? (v: number) => onFindActiveIndexChange(v) : setInternalActiveMatchIndex;
+  const matchCount = onFindQueryChange ? internalMatchCount : internalMatchCount;
+  const setMatchCount = onFindQueryChange ? (v: number) => { setInternalMatchCount(v); onFindMatchCountChange?.(v); } : setInternalMatchCount;
 
   useEffect(() => {
     setSearchQuery(""); setMatchCount(0); setActiveMatchIndex(0);

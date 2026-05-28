@@ -1,10 +1,11 @@
-import { BookMarked, ChevronDown, ChevronRight, FileText, Search, X } from "lucide-react";
+import { BookMarked, ChevronDown, ChevronRight, FileText } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks";
 import { useDocumentation } from "@/hooks/useDocumentation";
 import { APP_NAME } from "@/config";
 import { theme } from "@/styles/themeTokens";
+import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { MarkdownReader } from "./MarkdownReader";
 import type { DocumentationFile } from "./documentationTypes";
 
@@ -126,6 +127,30 @@ export function DocumentationCenter() {
 
   const navShadows = useScrollableShadow(navListRef);
 
+  const splitRef = useRef<HTMLDivElement>(null);
+  const [leftPct, setLeftPct] = useState(20);
+
+  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const container = splitRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const onMove = (ev: MouseEvent) => {
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setLeftPct(Math.min(Math.max(pct, 10), 50));
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, []);
+
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`}>
       {/* ── Header ── */}
@@ -141,56 +166,15 @@ export function DocumentationCenter() {
         </div>
       </header>
 
-      {/* ── Windows Explorer Toolbar ── */}
-      <div className="flex items-center h-9 shrink-0 border-b border-border bg-toolbar px-3 gap-2">
-        <div className="flex items-center flex-1 min-w-0 gap-2">
-          <div className="relative min-w-0 flex-1 max-w-xs">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search documentation..."
-              className="h-7 w-full rounded border border-border bg-card pl-7 pr-7 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring/30 transition-colors"
-            />
-            {searchTerm && (
-              <button type="button" onClick={() => setSearchTerm("")}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5 stroke-current" />
-              </button>
-            )}
-          </div>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="h-7 w-36 rounded border border-border bg-card px-2 text-xs text-foreground outline-none focus:border-border-strong focus:ring-1 focus:ring-ring/30 cursor-pointer"
-          >
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>{cat === "All" ? "All Categories" : cat}</option>
-            ))}
-          </select>
-        </div>
-
-        <span className="h-4 w-px bg-border/60 shrink-0" />
-
-        <div className="flex items-center gap-0.5">
-          <button type="button" onClick={expandAll} disabled={allExpanded}
-            className="inline-flex items-center gap-1 h-7 px-2 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none">
-            <ChevronRight className="h-3 w-3 stroke-current" />
-            <span>Expand</span>
-          </button>
-          <button type="button" onClick={collapseAll} disabled={expandedCategories.size === 0}
-            className="inline-flex items-center gap-1 h-7 px-2 rounded text-[11px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-40 disabled:pointer-events-none">
-            <ChevronDown className="h-3 w-3 stroke-current" />
-            <span>Collapse</span>
-          </button>
-        </div>
-      </div>
+      <Toolbar className="h-10"
+        left={<ToolbarSearch value={searchTerm} onChange={setSearchTerm} placeholder="Search documentation..." />}
+        right={<ToolbarSelect value={categoryFilter} onChange={setCategoryFilter} options={categories.map((cat) => ({ value: cat, label: cat === "All" ? "All Categories" : cat }))} className="w-50" />}
+      />
 
       {/* ── Body: Two-column layout ── */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: Navigation Tree */}
-        <div className="flex flex-col w-60 shrink-0 border-r border-border bg-muted/30">
+        <div className="flex flex-col border-r border-border bg-muted/30" style={{ flex: "0 0 auto", width: `${leftPct}%`, minWidth: 180 }}>
           <div className="relative flex-1 min-h-0 overflow-hidden">
             {navShadows.showTop && (
               <div className="pointer-events-none absolute inset-x-0 top-0 h-5 bg-gradient-to-b from-background/60 to-transparent z-10" />

@@ -723,7 +723,7 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
                 className="h-6 w-full min-w-0 rounded border border-border/35 bg-transparent px-2 text-[11px] text-muted-foreground outline-none transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
                 <option value="all">All Plants</option>
-                {plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.name}</option>)}
+                {plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.code} - {plant.name}</option>)}
               </select>
             </div>
             <div className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">

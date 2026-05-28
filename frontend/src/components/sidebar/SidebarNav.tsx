@@ -9,9 +9,9 @@ import { useSidebarStore } from "@/stores/sidebar";
 import type { SidebarSectionId } from "@/stores/sidebar";
 
 function nestedGroupForRoute(pathname: string): string | null {
-  if (pathname.startsWith("/system/production-structure") || pathname.startsWith("/system/warehouses") || pathname.startsWith("/system/product-master-data") || pathname.startsWith("/system/material-bins")) return "Manufacturing Structure";
+  if (pathname.startsWith("/system/production-structure") || pathname.startsWith("/system/warehouses") || pathname.startsWith("/system/product-master-data") || pathname.startsWith("/system/material-bins")) return "Production Structure";
   if (pathname.startsWith("/system/erp-data")) return "ERP Data";
-  if (pathname.startsWith("/system/diagnostics") || pathname.startsWith("/system/application-settings") || pathname.startsWith("/docs/")) return "Application";
+  if (pathname.startsWith("/system/diagnostics") || pathname.startsWith("/system/application-settings")) return "Application";
   return null;
 }
 

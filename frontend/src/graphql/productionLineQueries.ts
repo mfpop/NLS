@@ -96,6 +96,15 @@ const LINE_FIELDS = `
     name
     departmentName
   }
+  assignedResourceGroups {
+    id
+    resourceGroupId
+    resourceGroupCode
+    resourceGroupName
+    departmentName
+    sequence
+    isActive
+  }
   isConstraint
   flowRoutingStatus
   activeFlowRouteId

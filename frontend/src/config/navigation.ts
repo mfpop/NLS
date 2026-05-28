@@ -22,7 +22,7 @@ export type NavEntry = NavItem | NavGroup;
 
 export const systemNav: NavEntry[] = [
   {
-    label: "Manufacturing Structure",
+    label: "Production Structure",
     icon: GitBranch,
     items: [
       { label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
@@ -50,7 +50,7 @@ export const systemNav: NavEntry[] = [
     icon: Cog,
     items: [
       { label: "Diagnostics", to: "/system/application/diagnostics", icon: Pulse },
-      { label: "Application Settings", to: "/system/application/settings", icon: Cog },
+      { label: "Settings", to: "/system/application/settings", icon: Cog },
       { label: "Documentation Center", to: "/system/application/documentation", icon: BookMarked },
     ],
   },

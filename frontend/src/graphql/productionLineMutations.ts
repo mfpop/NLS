@@ -113,3 +113,108 @@ export const SET_PRIMARY_MODEL_MUTATION = gql`
     }
   }
 `;
+
+const ASSIGNED_RG_FIELDS = `
+  id
+  resourceGroupId
+  resourceGroupCode
+  resourceGroupName
+  departmentName
+  sequence
+  isActive
+`;
+
+export const ASSIGN_RG_TO_LINE_MUTATION = gql`
+  mutation AssignResourceGroupToProductionLine($productionLineId: String!, $resourceGroupId: String!) {
+    assignResourceGroupToProductionLine(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
+      ok
+      productionLine {
+        id
+        assignedResourceGroups {
+          ${ASSIGNED_RG_FIELDS}
+        }
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const REMOVE_RG_FROM_LINE_MUTATION = gql`
+  mutation RemoveResourceGroupFromProductionLine($productionLineId: String!, $resourceGroupId: String!) {
+    removeResourceGroupFromProductionLine(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
+      ok
+      productionLine {
+        id
+        assignedResourceGroups {
+          ${ASSIGNED_RG_FIELDS}
+        }
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const REORDER_LINE_RGS_MUTATION = gql`
+  mutation ReorderProductionLineResourceGroups($productionLineId: String!, $orderedResourceGroupIds: [String!]!) {
+    reorderProductionLineResourceGroups(productionLineId: $productionLineId, orderedResourceGroupIds: $orderedResourceGroupIds) {
+      ok
+      productionLine {
+        id
+        assignedResourceGroups {
+          ${ASSIGNED_RG_FIELDS}
+        }
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const ACTIVATE_LINE_RG_MUTATION = gql`
+  mutation ActivateProductionLineResourceGroup($productionLineId: String!, $resourceGroupId: String!) {
+    activateProductionLineResourceGroup(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
+      ok
+      productionLine {
+        id
+        assignedResourceGroups {
+          ${ASSIGNED_RG_FIELDS}
+        }
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const DEACTIVATE_LINE_RG_MUTATION = gql`
+  mutation DeactivateProductionLineResourceGroup($productionLineId: String!, $resourceGroupId: String!) {
+    deactivateProductionLineResourceGroup(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
+      ok
+      productionLine {
+        id
+        assignedResourceGroups {
+          ${ASSIGNED_RG_FIELDS}
+        }
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;

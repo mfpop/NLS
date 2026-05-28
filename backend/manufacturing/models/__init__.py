@@ -5,6 +5,7 @@ from .department import Department
 from .production_line import ProductionLine, ProductionLineProductFamily, ProductionLineProductModel
 from .assignment import ProductionLineDepartmentAssignment
 from .resource_group import ResourceGroup
+from .production_line_resource_group import ProductionLineResourceGroup
 from .resource import Resource
 from .scheduling import Schedule, Shift, ScheduleAssignment
 from .reference import ReferenceCategory, ReferenceValue, ResourceType, VisualIdentity

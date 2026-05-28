@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SidebarSectionId = "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system" | null;
+export type SidebarSectionId = "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system" | "docs" | null;
 
 interface SidebarState {
   openSection: SidebarSectionId;

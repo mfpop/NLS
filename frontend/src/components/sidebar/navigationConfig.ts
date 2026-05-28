@@ -6,7 +6,7 @@ import {
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, Ruler, FileSpreadsheet, RefreshCw,
   Package, Clock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, HardDrive, Upload, Route, Warehouse, Database,
+  Users, Scale, AlertTriangle, PieChart, BookText, HardDrive, Upload, Route, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -27,7 +27,7 @@ export type NavEntry = NavLeafItem | NavGroupItem;
 
 export interface NavSection {
   type: "section";
-  id: "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system";
+  id: "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system" | "docs";
   label: string;
   icon: LucideIcon;
   items: NavEntry[];
@@ -58,7 +58,7 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "Operator Allocation", to: "/plan/capacity/operator-allocation", icon: Users },
           { type: "item", label: "Takt vs Cycle", to: "/plan/capacity/takt-vs-cycle", icon: Clock },
           { type: "item", label: "Capacity Loss", to: "/plan/capacity/capacity-loss", icon: PieChart },
-          { type: "item", label: "Workload Distribution", to: "/plan/capacity/workload-distribution", icon: BarChart3 },
+          { type: "item", label: "Workload Distribution", to: "/plan/capacity/workload-distribution", icon: Grid3x3 },
         ],
       },
     ],
@@ -90,7 +90,7 @@ export const sidebarNav: TopLevelEntry[] = [
     ],
   },
   {
-    type: "section", id: "standardize", label: "Standardize", icon: Ruler,
+    type: "section", id: "standardize", label: "Standardize", icon: ClipboardCheck,
     items: [
       { type: "item", label: "Work Instructions", to: "/standardize/work-instructions", icon: BookText },
       { type: "item", label: "Standard Work", to: "/standardize/standard-work", icon: BookOpen },
@@ -103,42 +103,40 @@ export const sidebarNav: TopLevelEntry[] = [
     type: "section", id: "system", label: "System", icon: Settings,
     items: [
       {
-        type: "group", label: "Manufacturing Structure", icon: GitBranch,
+        type: "group", label: "Production Structure", icon: Factory,
         items: [
           { type: "item", label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
           { type: "item", label: "Components", to: "/system/manufacturing-structure/components", icon: Layers },
           { type: "item", label: "Warehouses", to: "/system/warehouses", icon: Warehouse },
           { type: "item", label: "Material Bins", to: "/system/material-bins", icon: Package },
-          { type: "item", label: "Product Master Data", to: "/system/manufacturing-structure/product-master-data", icon: Package },
+          { type: "item", label: "Product Master Data", to: "/system/manufacturing-structure/product-master-data", icon: Database },
         ],
       },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
       {
-        type: "group", label: "ERP Data", icon: HardDrive,
+        type: "group", label: "ERP Data", icon: Database,
         items: [
-          {
-            type: "group", label: "Old", icon: Clock,
-            items: [
-              { type: "item", label: "Import Sources", to: "/system/erp-data/import-sources", icon: HardDrive },
-              { type: "item", label: "Import Jobs", to: "/system/erp-data/import-jobs", icon: Upload },
-              { type: "item", label: "File History", to: "/system/erp-data/file-history", icon: Clock },
-              { type: "item", label: "Mapping Rules", to: "/system/erp-data/mapping-rules", icon: Route },
-              { type: "item", label: "Validation Errors", to: "/system/erp-data/validation-errors", icon: AlertTriangle },
-              { type: "item", label: "Integration Status", to: "/system/erp-data/integration-status", icon: Activity },
-            ],
-          },
-          { type: "item", label: "Import/Update", to: "/system/erp-data/import", icon: Database },
-          { type: "item", label: "Lineage & Relationships", to: "/system/erp-data/lineage", icon: GitBranch },
+          { type: "item", label: "ERP Patterns", to: "/system/erp-data/erp-patterns", icon: Briefcase },
+          { type: "item", label: "ERP Import", to: "/system/erp-data/import", icon: Upload },
         ],
       },
       {
-        type: "group", label: "Application", icon: Cog,
+        type: "group", label: "Application", icon: SlidersHorizontal,
         items: [
           { type: "item", label: "Diagnostics", to: "/system/application/diagnostics", icon: Activity },
-          { type: "item", label: "Application Settings", to: "/system/application/settings", icon: Cog },
-          { type: "item", label: "Documentation Center", to: "/system/application/documentation", icon: BookMarked },
+          { type: "item", label: "Settings", to: "/system/application/settings", icon: Cog },
         ],
       },
+    ],
+  },
+  {
+    type: "section", id: "docs", label: "Documentation", icon: LibraryBig,
+    items: [
+      { type: "item", label: "User Manual", to: "/docs/user-manual", icon: BookOpen },
+      { type: "item", label: "Admin Guide", to: "/docs/admin-guide", icon: ShieldCheck },
+      { type: "item", label: "Training Materials", to: "/docs/training-materials", icon: Sparkles },
+      { type: "item", label: "Release Notes", to: "/docs/release-notes", icon: FileText },
+      { type: "item", label: "Technical Docs", to: "/docs/technical-docs", icon: BookText },
     ],
   },
 ];
@@ -152,7 +150,8 @@ export function sectionFromPath(path: string): string | null {
   if (path.startsWith("/plan/")) return "plan";
   if (path.startsWith("/myworkspace/")) return "myworkspace";
   if (path.startsWith("/standardize/")) return "standardize";
-  if (path.startsWith("/system/") || path.startsWith("/docs/")) return "system";
+  if (path.startsWith("/system/")) return "system";
+  if (path.startsWith("/docs/")) return "docs";
   return null;
 }
 
@@ -168,9 +167,6 @@ export function isRouteItemActive(path: string, target: string): boolean {
   }
   if (target === "/system/manufacturing-structure/components") {
     return path === target || path.startsWith(target + "/");
-  }
-  if (target === "/system/application/documentation") {
-    return path === target || path.startsWith("/docs/");
   }
   if (target === "/system/erp-data") {
     return path === target || path.startsWith(target + "/");

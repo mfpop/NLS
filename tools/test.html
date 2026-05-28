@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ERP Data Import / Update</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const STATUS_LABELS = {
+  new:       { label: 'New',      cls: 'bg-purple-100 text-purple-800' },
+  existing:  { label: 'Existing', cls: 'bg-blue-100 text-blue-800' },
+  changed:   { label: 'Changed',  cls: 'bg-yellow-100 text-yellow-800' },
+  conflict:  { label: 'Conflict', cls: 'bg-red-100 text-red-800' },
+  synced:    { label: 'Synced',   cls: 'bg-green-100 text-green-800' },
+  error:     { label: 'Error',    cls: 'bg-gray-100 text-gray-800' },
+};
+
+const MOCK_DESTINATIONS = [
+  'nexus.material',
+  'nexus.product',
+  'nexus.resource',
+  'nexus.bom',
+];
+
+const MOCK_SOURCES = [
+  { id: 'sap', name: 'SAP HANA' },
+  { id: 'csv', name: 'CSV File' },
+  { id: 'excel', name: 'Excel Workbook' },
+  { id: 'api', name: 'REST API' },
+];
+
+const SCOPE_OPTIONS = [
+  { id: 'plant-a',  name: 'Plant A — Monterrey' },
+  { id: 'plant-b',  name: 'Plant B — Querétaro' },
+  { id: 'plant-c',  name: 'Plant C — Guadalajara' },
+];
+
+let nextId = 1;
+function makeRecords(count) {
+  const cats = ['Tecnología', 'Mobiliario', 'Embalaje', 'Refacciones', 'Materia Prima'];
+  const statuses = ['new', 'existing', 'changed', 'conflict', 'synced', 'error'];
+  return Array.from({ length: count }, (_, i) => ({
+    id: `ERP-${String(i + 1).padStart(3, '0')}`,
+    codigo: `PROD-${Math.floor(100 + Math.random() * 900)}`,
+    nombre: `Item de prueba ${i + 1}`,
+    categoria: cats[i % cats.length],
+    stock: Math.floor(Math.random() * 500),
+    precio: Math.round((Math.random() * 2000 + 100) * 100) / 100,
+    plant: 'Monterrey',
+    department: ['Production', 'Warehouse', 'Maintenance'][i % 3],
+    resourceGroup: ['Line A', 'Line B', 'Packaging', 'Storage'][i % 4],
+    resource: `R-${String(i + 1).padStart(3, '0')}`,
+    syncStatus: statuses[i % statuses.length],
+  }));
+}
+
+function ErpImportPage() {
+  const [search, setSearch] = useState('');
+  const [scope, setScope] = useState(SCOPE_OPTIONS[0].id);
+  const [source, setSource] = useState(MOCK_SOURCES[0].id);
+  const [destination, setDestination] = useState(MOCK_DESTINATIONS[0]);
+  const [records, setRecords] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [preview, setPreview] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [synced, setSynced] = useState(null);
+  const [importLog, setImportLog] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+  const fileRef = useRef(null);
+
+  const filtered = records.filter(r => {
+    const q = search.toLowerCase();
+    return r.codigo.toLowerCase().includes(q) || r.nombre.toLowerCase().includes(q);
+  });
+
+  const selected = records.find(r => r.id === selectedId);
+
+  function handleLoad() {
+    setRecords(makeRecords(12));
+    setSelectedId(null);
+    setEditData({});
+    setPreview(false);
+    setSynced(null);
+    setLoaded(true);
+  }
+
+  function handleSelect(id) {
+    setSelectedId(id);
+    const r = records.find(x => x.id === id);
+    setEditData({ ...r });
+    setPreview(false);
+    setSynced(null);
+  }
+
+  function handleChange(field, value) {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  }
+
+  function handleCancel() {
+    if (!selected) return;
+    setEditData({ ...selected });
+    setPreview(false);
+    setSynced(null);
+  }
+
+  async function handleSync() {
+    setSyncing(true);
+    setSynced(null);
+    await new Promise(r => setTimeout(r, 1500));
+    const entry = {
+      id: selected.id,
+      timestamp: new Date().toISOString(),
+      action: 'UPSERT',
+      destination,
+      fields: Object.keys(editData).filter(k => k !== 'id' && k !== 'syncStatus'),
+      status: 'ok',
+    };
+    setImportLog(prev => [entry, ...prev]);
+    setRecords(prev => prev.map(r => r.id === selected.id ? { ...r, ...editData, syncStatus: 'synced' } : r));
+    setEditData(prev => ({ ...prev, syncStatus: 'synced' }));
+    setSynced('ok');
+    setSyncing(false);
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6 font-sans">
+      <div className="max-w-7xl mx-auto">
+
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">ERP Data Import / Update</h1>
+            <p className="text-gray-500 mt-1">Import ERP rows — review and sync one record at a time to Nexus.</p>
+          </div>
+          {loaded && !syncing && (
+            <span className={'text-sm px-3 py-1 rounded-full ' + (synced === 'ok' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600')}>
+              {records.filter(r => r.syncStatus === 'synced').length} / {records.length} synced
+            </span>
+          )}
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-[180px]">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Search record</label>
+            <input
+              type="text" placeholder="Code or name..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Scope</label>
+            <select value={scope} onChange={e => setScope(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              {SCOPE_OPTIONS.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+          </div>
+          <div className="w-40">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Source</label>
+            <select value={source} onChange={e => setSource(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              {MOCK_SOURCES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <div className="w-44">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Destination table</label>
+            <select value={destination} onChange={e => setDestination(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+              {MOCK_DESTINATIONS.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div className="flex gap-2">
+            <input type="file" ref={fileRef} onChange={handleLoad} className="hidden" accept=".csv,.xlsx,.xls,.json" />
+            <button onClick={() => fileRef.current?.click()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+              Load ERP file
+            </button>
+            <button onClick={handleLoad}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">
+              Mock data
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">ERP Records</h2>
+              <p className="text-xs text-gray-400">{filtered.length} records</p>
+            </div>
+            <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+              {filtered.length === 0 && (
+                <p className="text-gray-400 text-center py-12 text-sm">
+                  {loaded ? 'No records match your search.' : 'Load an ERP file to get started.'}
+                </p>
+              )}
+              {filtered.map(r => (
+                <div
+                  key={r.id}
+                  onClick={() => handleSelect(r.id)}
+                  className={'px-4 py-3 cursor-pointer transition ' + (selectedId === r.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50 border-l-4 border-l-transparent')}
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="font-medium text-gray-800 text-sm">{r.codigo}</span>
+                    <span className={'text-xs px-2 py-0.5 rounded-full font-medium ' + STATUS_LABELS[r.syncStatus]?.cls}>{STATUS_LABELS[r.syncStatus]?.label}</span>
+                  </div>
+                  <div className="text-sm text-gray-600 truncate">{r.nombre}</div>
+                  <div className="text-xs text-gray-400 mt-0.5">{r.categoria}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="xl:col-span-2 bg-white rounded-lg shadow-sm p-6">
+            {!selected ? (
+              <p className="text-gray-400 text-center py-16 text-sm">Select an ERP record from the left panel to review mapped Nexus fields.</p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-800">{selected.codigo}</h2>
+                    <p className="text-sm text-gray-500">{selected.nombre}</p>
+                  </div>
+                  <span className={'text-xs px-3 py-1 rounded-full font-medium ' + STATUS_LABELS[editData.syncStatus]?.cls}>
+                    {(editData.syncStatus === 'existing' || editData.syncStatus === 'changed') ? 'Existing (will update)' : STATUS_LABELS[editData.syncStatus]?.label}
+                  </span>
+                </div>
+
+                {synced === 'ok' && (
+                  <div className="mb-4 px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm">Record synced to {destination}.</div>
+                )}
+
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4 mb-6">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Code</label>
+                    <input type="text" value={editData.codigo || ''} onChange={e => handleChange('codigo', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+                    <input type="text" value={editData.nombre || ''} onChange={e => handleChange('nombre', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
+                    <input type="text" value={editData.categoria || ''} onChange={e => handleChange('categoria', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Stock</label>
+                    <input type="number" value={editData.stock || ''} onChange={e => handleChange('stock', Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+                    <input type="number" step="0.01" value={editData.precio || ''} onChange={e => handleChange('precio', Number(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Plant</label>
+                    <input type="text" value={editData.plant || ''} onChange={e => handleChange('plant', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Department</label>
+                    <input type="text" value={editData.department || ''} onChange={e => handleChange('department', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Resource Group</label>
+                    <input type="text" value={editData.resourceGroup || ''} onChange={e => handleChange('resourceGroup', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Resource</label>
+                    <input type="text" value={editData.resource || ''} onChange={e => handleChange('resource', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  </div>
+                </div>
+
+                {preview && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Preview — changes to sync</h3>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-500 border-b border-gray-200">
+                          <th className="pb-2 pr-4 font-medium">Field</th>
+                          <th className="pb-2 pr-4 font-medium">Current</th>
+                          <th className="pb-2 font-medium">New</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.keys(editData).filter(k => k !== 'id' && k !== 'syncStatus').map(k => {
+                          const orig = String(selected[k] ?? '');
+                          const curr = String(editData[k] ?? '');
+                          const changed = orig !== curr;
+                          return (
+                            <tr key={k} className={'border-t border-gray-100 ' + (changed ? 'bg-yellow-50' : '')}>
+                              <td className="py-2 pr-4 font-medium text-gray-600 capitalize">{k}</td>
+                              <td className="py-2 pr-4 text-gray-500">{orig || <span className="italic text-gray-300">empty</span>}</td>
+                              <td className="py-2">{changed
+                                ? <span className="text-yellow-800 font-medium">{curr || <span className="italic text-gray-300">empty</span>}</span>
+                                : <span className="text-gray-400">{curr || <span className="italic text-gray-300">empty</span>}</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    <p className="text-xs text-gray-400 mt-3">Destination: <code className="bg-gray-200 px-1.5 py-0.5 rounded text-xs">{destination}</code></p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setPreview(p => !p)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
+                  >
+                    {preview ? 'Hide Preview' : 'Preview'}
+                  </button>
+                  <button
+                    onClick={handleSync}
+                    disabled={syncing}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {syncing ? 'Syncing...' : 'Sync Changes'}
+                  </button>
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {importLog.length > 0 && (
+          <div className="mt-6 bg-white rounded-lg shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Import Log</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left text-gray-500">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Time</th>
+                    <th className="px-4 py-2 font-medium">Record</th>
+                    <th className="px-4 py-2 font-medium">Action</th>
+                    <th className="px-4 py-2 font-medium">Destination</th>
+                    <th className="px-4 py-2 font-medium">Fields</th>
+                    <th className="px-4 py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {importLog.map((entry, i) => (
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 text-gray-500 text-xs">{new Date(entry.timestamp).toLocaleTimeString()}</td>
+                      <td className="px-4 py-2 font-medium text-gray-800">{entry.id}</td>
+                      <td className="px-4 py-2"><span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">{entry.action}</span></td>
+                      <td className="px-4 py-2 text-gray-600 text-xs font-mono">{entry.destination}</td>
+                      <td className="px-4 py-2 text-gray-500 text-xs">{entry.fields.join(', ')}</td>
+                      <td className="px-4 py-2"><span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">{entry.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<ErpImportPage />);
+  </script>
+</body>
+</html>

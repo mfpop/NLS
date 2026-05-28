@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeanSync — ERP Data Import</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+const { useMemo, useRef, useState } = React;
+
+const ENTITY_TYPES = [
+  'Company',
+  'Plant',
+  'Production Line',
+  'Department',
+  'Resource Group',
+  'Resource',
+  'Part Number',
+  'Material Bin',
+  'Routing Step',
+];
+
+const SOURCES = [
+  { id: 'sap', label: 'SAP HANA' },
+  { id: 'oracle', label: 'Oracle ERP' },
+  { id: 'csv', label: 'CSV File' },
+  { id: 'excel', label: 'Excel Workbook' },
+  { id: 'api', label: 'REST API' },
+];
+
+const BATCHES = [
+  { id: 'B-2026-001', fileName: 'sap_master_data_monterrey.csv', source: 'SAP HANA', rows: 16, status: 'validated', uploaded: 'Today 09:42' },
+  { id: 'B-2026-000', fileName: 'routing_steps_qro.xlsx', source: 'Excel Workbook', rows: 9, status: 'draft', uploaded: 'Yesterday 15:08' },
+];
+
+const STATUS = {
+  valid:      { label: 'Valid', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  warning:    { label: 'Warning', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  error:      { label: 'Error', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  duplicate:  { label: 'Duplicate', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  staged:     { label: 'Staged', cls: 'bg-slate-50 text-slate-700 border-slate-200' },
+  imported:   { label: 'Imported', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+};
+
+const initialRows = [
+  { row: 1, entity: 'Company', externalId: 'CMP-NEXUS', code: 'NEXUS', name: 'Nexus Manufacturing', parent: '—', status: 'valid', result: 'Ready to import', required: 5, mapped: 5 },
+  { row: 2, entity: 'Plant', externalId: 'PLT-MTY', code: 'MTY', name: 'Monterrey Plant', parent: 'CMP-NEXUS', status: 'valid', result: 'Parent company found', required: 7, mapped: 7 },
+  { row: 3, entity: 'Production Line', externalId: 'LN-A1', code: 'LINE-A', name: 'Line A — Final Assembly', parent: 'PLT-MTY', status: 'valid', result: 'Ready to import', required: 8, mapped: 8 },
+  { row: 4, entity: 'Department', externalId: 'DPT-PRD', code: 'PROD', name: 'Production', parent: 'PLT-MTY', status: 'valid', result: 'Plant reference valid', required: 6, mapped: 6 },
+  { row: 5, entity: 'Resource Group', externalId: 'RG-CUT', code: 'CUTTING', name: 'Cutting Cell', parent: 'DPT-PRD', status: 'warning', result: 'Cycle time missing; can import as draft', required: 8, mapped: 7 },
+  { row: 6, entity: 'Resource', externalId: 'RES-CNC-01', code: 'CNC-01', name: 'CNC Machine 01', parent: 'RG-CUT', status: 'valid', result: 'Ready to import', required: 9, mapped: 9 },
+  { row: 7, entity: 'Material Bin', externalId: 'BIN-RM-01', code: 'RM-01', name: 'Raw Material Bin 01', parent: 'PLT-MTY', status: 'duplicate', result: 'External ID already exists', required: 7, mapped: 7 },
+  { row: 8, entity: 'Routing Step', externalId: 'RT-100-20', code: 'OP-20', name: 'Cut material', parent: 'LINE-A', status: 'error', result: 'Missing destination_bin', required: 10, mapped: 9 },
+  { row: 9, entity: 'Part Number', externalId: 'PN-AX-100', code: 'AX-100', name: 'Bracket Assembly', parent: 'LINE-A', status: 'valid', result: 'Ready to import', required: 6, mapped: 6 },
+  { row: 10, entity: 'Material Bin', externalId: 'BIN-WIP-20', code: 'WIP-20', name: 'Cutting Output WIP', parent: 'PLT-MTY', status: 'valid', result: 'Ready to import', required: 7, mapped: 7 },
+];
+
+const FIELD_MAPPING = [
+  { erp: 'external_id', nexus: 'externalReference', required: true, example: 'RG-CUT', state: 'valid' },
+  { erp: 'entity_type', nexus: 'entityType', required: true, example: 'Resource Group', state: 'valid' },
+  { erp: 'code', nexus: 'code', required: true, example: 'CUTTING', state: 'valid' },
+  { erp: 'name', nexus: 'name', required: true, example: 'Cutting Cell', state: 'valid' },
+  { erp: 'parent_external_id', nexus: 'parentReference', required: true, example: 'DPT-PRD', state: 'valid' },
+  { erp: 'source_bin', nexus: 'sourceBinExternalRef', required: false, example: 'BIN-RM-01', state: 'warning' },
+  { erp: 'destination_bin', nexus: 'destinationBinExternalRef', required: false, example: 'BIN-WIP-20', state: 'error' },
+];
+
+function cx(...parts) { return parts.filter(Boolean).join(' '); }
+
+function Badge({ status, children }) {
+  const meta = STATUS[status] || STATUS.staged;
+  return <span className={cx('inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold', meta.cls)}>{children || meta.label}</span>;
+}
+
+function App() {
+  const fileRef = useRef(null);
+  const [rows, setRows] = useState(initialRows);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [entityFilter, setEntityFilter] = useState('all');
+  const [source, setSource] = useState('sap');
+  const [selectedBatch, setSelectedBatch] = useState(BATCHES[0].id);
+  const [selectedRow, setSelectedRow] = useState(5);
+  const [mode, setMode] = useState('Preview');
+  const [lastValidation, setLastValidation] = useState('Not validated in this session');
+  const [showSummary, setShowSummary] = useState(false);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return rows.filter(r => {
+      const matchesText = !q || [r.externalId, r.code, r.name, r.parent, r.entity, r.result].join(' ').toLowerCase().includes(q);
+      const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
+      const matchesEntity = entityFilter === 'all' || r.entity === entityFilter;
+      return matchesText && matchesStatus && matchesEntity;
+    });
+  }, [rows, query, statusFilter, entityFilter]);
+
+  const counts = useMemo(() => ({
+    total: rows.length,
+    valid: rows.filter(r => r.status === 'valid').length,
+    warning: rows.filter(r => r.status === 'warning').length,
+    error: rows.filter(r => r.status === 'error').length,
+    duplicate: rows.filter(r => r.status === 'duplicate').length,
+    imported: rows.filter(r => r.status === 'imported').length,
+  }), [rows]);
+
+  const activeRow = rows.find(r => r.row === selectedRow) || rows[0];
+  const canImport = counts.error === 0 && counts.duplicate === 0 && counts.valid + counts.warning > 0 && mode === 'Validated';
+
+  function loadMockFile() {
+    setRows(initialRows.map(r => ({ ...r, status: r.status === 'imported' ? 'valid' : r.status })));
+    setSelectedRow(1);
+    setMode('Preview');
+    setLastValidation('Not validated in this session');
+    setShowSummary(false);
+  }
+
+  function validateRows() {
+    setMode('Validated');
+    setLastValidation(new Date().toLocaleString());
+    setShowSummary(true);
+  }
+
+  function clearStaging() {
+    setRows([]);
+    setSelectedRow(null);
+    setMode('Preview');
+    setLastValidation('Not validated in this session');
+    setShowSummary(false);
+  }
+
+  function importValidRows() {
+    if (!canImport) return;
+    setRows(prev => prev.map(r => ['valid', 'warning'].includes(r.status) ? { ...r, status: 'imported', result: 'Imported to LeanSync staging target' } : r));
+    setMode('Imported');
+    setShowSummary(true);
+  }
+
+  return (
+    <div className="h-screen overflow-hidden bg-slate-100 text-slate-900">
+      <div className="flex h-full">
+        <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-white lg:flex lg:flex-col">
+          <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-sm font-black text-white">NX</div>
+            <div>
+              <div className="text-sm font-bold leading-4">NEXUS</div>
+              <div className="text-xs text-slate-500">LeanSync</div>
+            </div>
+          </div>
+          <div className="border-b border-slate-200 p-3">
+            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Active Line</label>
+            <select className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+              <option>Line A — Final Assembly</option>
+              <option>Line B — Packaging</option>
+            </select>
+          </div>
+          <nav className="flex-1 space-y-1 overflow-y-auto p-2 text-sm">
+            <div className="rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white">ERP Data Import</div>
+            <div className="rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100">Data Management</div>
+            <div className="rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100">Production Structure</div>
+            <div className="rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-100">Reference Tables</div>
+          </nav>
+          <div className="border-t border-slate-200 p-3 text-xs text-slate-500">mihaipop@outlook.com</div>
+        </aside>
+
+        <main className="flex min-w-0 flex-1 flex-col">
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700">⇪</div>
+                <div>
+                  <h1 className="truncate text-lg font-bold leading-5 text-slate-900">ERP Data Import</h1>
+                  <p className="truncate text-xs text-slate-500">Import, validate, stage, and safely commit ERP master data to LeanSync.</p>
+                </div>
+              </div>
+            </div>
+            <Badge status={mode === 'Imported' ? 'imported' : mode === 'Validated' ? 'valid' : 'staged'}>{mode}</Badge>
+          </header>
+
+          <section className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search imported rows..." className="h-9 w-72 rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                <option value="all">All statuses</option>
+                <option value="valid">Valid</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+                <option value="duplicate">Duplicate</option>
+                <option value="imported">Imported</option>
+              </select>
+              <select value={entityFilter} onChange={e => setEntityFilter(e.target.value)} className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                <option value="all">All entities</option>
+                {ENTITY_TYPES.map(e => <option key={e} value={e}>{e}</option>)}
+              </select>
+              <select value={source} onChange={e => setSource(e.target.value)} className="h-9 rounded-lg border border-slate-300 bg-white px-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                {SOURCES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls,.json" className="hidden" onChange={loadMockFile} />
+              <button onClick={() => fileRef.current?.click()} className="h-9 rounded-lg bg-blue-600 px-3 text-sm font-semibold text-white hover:bg-blue-700">Upload File</button>
+              <button onClick={loadMockFile} className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Mock Data</button>
+              <button onClick={validateRows} disabled={!rows.length} className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40">Validate</button>
+              <button onClick={importValidRows} disabled={!canImport} className="h-9 rounded-lg bg-emerald-600 px-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">Import Valid Rows</button>
+              <button onClick={clearStaging} className="h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">Clear</button>
+            </div>
+          </section>
+
+          <section className="grid min-h-0 flex-1 grid-cols-[280px_minmax(0,1fr)_360px] gap-3 p-3">
+            <aside className="min-h-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-3 py-2">
+                <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Import Batches</div>
+                <div className="text-xs text-slate-400">Staging files and source history</div>
+              </div>
+              <div className="max-h-full divide-y divide-slate-100 overflow-y-auto">
+                {BATCHES.map(b => (
+                  <button key={b.id} onClick={() => setSelectedBatch(b.id)} className={cx('block w-full border-l-4 px-3 py-3 text-left hover:bg-slate-50', selectedBatch === b.id ? 'border-blue-600 bg-blue-50/70' : 'border-transparent')}>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="truncate text-sm font-semibold text-slate-800">{b.fileName}</div>
+                      <Badge status={b.status === 'validated' ? 'valid' : 'staged'} />
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">{b.source} · {b.rows} rows</div>
+                    <div className="mt-0.5 text-xs text-slate-400">{b.uploaded}</div>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <section className="min-h-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="flex h-12 items-center justify-between border-b border-slate-200 px-3">
+                <div>
+                  <div className="text-sm font-bold text-slate-800">Row Preview</div>
+                  <div className="text-xs text-slate-500">Upload never imports directly. Validate first, then import eligible rows.</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge status="valid">{counts.valid} valid</Badge>
+                  <Badge status="warning">{counts.warning} warning</Badge>
+                  <Badge status="error">{counts.error} error</Badge>
+                  <Badge status="duplicate">{counts.duplicate} duplicate</Badge>
+                </div>
+              </div>
+              <div className="h-[calc(100%-3rem)] overflow-auto">
+                <table className="w-full border-separate border-spacing-0 text-sm">
+                  <thead className="sticky top-0 z-10 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="border-b border-slate-200 px-3 py-2">Row</th>
+                      <th className="border-b border-slate-200 px-3 py-2">Entity</th>
+                      <th className="border-b border-slate-200 px-3 py-2">External ID</th>
+                      <th className="border-b border-slate-200 px-3 py-2">Code / Name</th>
+                      <th className="border-b border-slate-200 px-3 py-2">Parent Ref.</th>
+                      <th className="border-b border-slate-200 px-3 py-2">Status</th>
+                      <th className="border-b border-slate-200 px-3 py-2">Validation</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filtered.map(r => (
+                      <tr key={r.row} onClick={() => setSelectedRow(r.row)} className={cx('cursor-pointer hover:bg-slate-50', selectedRow === r.row && 'bg-blue-50')}>
+                        <td className="px-3 py-2 font-medium text-slate-700">{r.row}</td>
+                        <td className="px-3 py-2 text-slate-700">{r.entity}</td>
+                        <td className="px-3 py-2 font-mono text-xs text-slate-600">{r.externalId}</td>
+                        <td className="px-3 py-2"><div className="font-semibold text-slate-800">{r.code}</div><div className="text-xs text-slate-500">{r.name}</div></td>
+                        <td className="px-3 py-2 font-mono text-xs text-slate-500">{r.parent}</td>
+                        <td className="px-3 py-2"><Badge status={r.status} /></td>
+                        <td className="max-w-xs px-3 py-2 text-xs text-slate-600">{r.result}</td>
+                      </tr>
+                    ))}
+                    {!filtered.length && <tr><td colSpan="7" className="px-3 py-12 text-center text-sm text-slate-400">No rows match the current filters.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <aside className="min-h-0 overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-3 py-2">
+                <div className="text-sm font-bold text-slate-800">Validation & Mapping</div>
+                <div className="text-xs text-slate-500">Selected row details and field mapping</div>
+              </div>
+              {activeRow ? (
+                <div className="h-[calc(100%-3rem)] overflow-y-auto p-3">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Selected row</div>
+                        <div className="mt-1 text-base font-bold text-slate-900">{activeRow.code}</div>
+                        <div className="text-xs text-slate-500">{activeRow.name}</div>
+                      </div>
+                      <Badge status={activeRow.status} />
+                    </div>
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div><dt className="text-slate-400">Entity</dt><dd className="font-semibold text-slate-700">{activeRow.entity}</dd></div>
+                      <div><dt className="text-slate-400">External ID</dt><dd className="font-mono text-slate-700">{activeRow.externalId}</dd></div>
+                      <div><dt className="text-slate-400">Parent</dt><dd className="font-mono text-slate-700">{activeRow.parent}</dd></div>
+                      <div><dt className="text-slate-400">Mapped</dt><dd className="font-semibold text-slate-700">{activeRow.mapped}/{activeRow.required}</dd></div>
+                    </dl>
+                  </div>
+
+                  {showSummary && (
+                    <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                      <div className="mb-2 font-bold text-slate-800">Validation summary</div>
+                      <div className="space-y-1">
+                        <div>Blocking errors: <b>{counts.error}</b></div>
+                        <div>Duplicate references: <b>{counts.duplicate}</b></div>
+                        <div>Importable rows: <b>{counts.valid + counts.warning}</b></div>
+                        <div>Last validation: <b>{lastValidation}</b></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-3 rounded-lg border border-slate-200">
+                    <div className="border-b border-slate-200 px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-500">Field Mapping</div>
+                    <div className="divide-y divide-slate-100">
+                      {FIELD_MAPPING.map(f => (
+                        <div key={f.erp} className="grid grid-cols-[1fr_1fr_auto] gap-2 px-3 py-2 text-xs">
+                          <div>
+                            <div className="font-mono text-slate-700">{f.erp}</div>
+                            <div className="text-slate-400">ERP column</div>
+                          </div>
+                          <div>
+                            <div className="font-mono text-slate-700">{f.nexus}</div>
+                            <div className="text-slate-400">{f.required ? 'Required' : 'Optional'} · {f.example}</div>
+                          </div>
+                          <Badge status={f.state} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    <div className="font-bold">Import guardrails</div>
+                    <p className="mt-1">Rows with blocking errors or duplicate external IDs are excluded. Parent references must resolve before import.</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 text-center text-sm text-slate-400">Select a row to inspect mapping.</div>
+              )}
+            </aside>
+          </section>
+
+          <footer className="flex h-15 min-h-[3.75rem] shrink-0 items-center justify-between border-t border-slate-200 bg-white px-4 text-xs text-slate-500">
+            <div className="flex items-center gap-3">
+              <span>Selected batch: <b className="text-slate-700">{selectedBatch}</b></span>
+              <span>Total: <b>{counts.total}</b></span>
+              <span>Valid: <b className="text-emerald-700">{counts.valid}</b></span>
+              <span>Warnings: <b className="text-amber-700">{counts.warning}</b></span>
+              <span>Errors: <b className="text-rose-700">{counts.error}</b></span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span>Last validation: <b className="text-slate-700">{lastValidation}</b></span>
+              <span>Mode: <b className="text-slate-700">{mode}</b></span>
+            </div>
+          </footer>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

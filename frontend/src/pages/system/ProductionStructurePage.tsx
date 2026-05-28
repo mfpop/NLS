@@ -153,7 +153,7 @@ export function ProductionFlow() {
       <PageHeader
         icon={<Database className="h-5 w-5 stroke-current" />}
         iconClass={theme.iconBoxEmerald}
-        title="Manufacturing Structure - Flow"
+        title="Production Structure - Flow"
         subtitle="Manufacturing hierarchy explorer"
       />
 

@@ -157,48 +157,13 @@ const matchers: Matcher[] = [
   },
   {
     key: "system-erp-import",
-    matches: (path) => path.startsWith("/system/erp-data/import") && !path.startsWith("/system/erp-data/import-sources") && !path.startsWith("/system/erp-data/import-jobs"),
-    load: () => import("@/pages/system/erp-data/erp-import/ERPImportPage"),
+    matches: (path) => path.startsWith("/system/erp-data/import"),
+    load: () => import("@/pages/system/erp-data/erp-import/SimpleErpImportPage"),
   },
   {
-    key: "system-erp-lineage",
-    matches: (path) => path.startsWith("/system/erp-data/lineage"),
-    load: () => import("@/pages/system/erp-data/lineage/LineagePage"),
-  },
-  {
-    key: "system-erp-import-sources",
-    matches: (path) => path.startsWith("/system/erp-data/import-sources"),
-    load: () => import("@/pages/system/erp-data/import-sources/ImportSourcesPage"),
-  },
-  {
-    key: "system-erp-import-jobs",
-    matches: (path) => path.startsWith("/system/erp-data/import-jobs"),
-    load: () => import("@/pages/system/erp-data/import-jobs/ImportJobsPage"),
-  },
-  {
-    key: "system-erp-admin-component-mapping",
-    matches: (path) => path.startsWith("/system/erp-data/admin/component-mapping"),
-    load: () => import("@/pages/system/erp-data/admin/component-mapping/ComponentMappingPage"),
-  },
-  {
-    key: "system-erp-file-history",
-    matches: (path) => path.startsWith("/system/erp-data/file-history"),
-    load: () => import("@/pages/system/erp-data/file-history/FileHistoryPage"),
-  },
-  {
-    key: "system-erp-mapping-rules",
-    matches: (path) => path.startsWith("/system/erp-data/mapping-rules"),
-    load: () => import("@/pages/system/erp-data/mapping-rules/MappingRulesPage"),
-  },
-  {
-    key: "system-erp-validation-errors",
-    matches: (path) => path.startsWith("/system/erp-data/validation-errors"),
-    load: () => import("@/pages/system/erp-data/validation-errors/ValidationErrorsPage"),
-  },
-  {
-    key: "system-erp-integration-status",
-    matches: (path) => path.startsWith("/system/erp-data/integration-status"),
-    load: () => import("@/pages/system/erp-data/integration-status/IntegrationStatusPage"),
+    key: "system-erp-patterns",
+    matches: (path) => path.startsWith("/system/erp-data/erp-patterns"),
+    load: () => import("@/pages/data-management/ErpImportPatternPage"),
   },
 ];
 

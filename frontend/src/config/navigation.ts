@@ -29,7 +29,7 @@ export const systemNav: NavEntry[] = [
       { label: "Components", to: "/system/manufacturing-structure/components", icon: Layers },
       { label: "Warehouses", to: "/system/warehouses", icon: Warehouse },
       { label: "Material Bins", to: "/system/material-bins", icon: Package },
-      { label: "Product Master Data", to: "/system/manufacturing-structure/product-master-data", icon: Package },
+      { label: "Product Master", to: "/system/product-master", icon: Package },
     ],
   },
   { label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
@@ -57,7 +57,7 @@ export const systemNav: NavEntry[] = [
 ];
 
 export function sectionForRoute(path: string): string | null {
-  if (path.startsWith("/system/manufacturing-structure") || path.startsWith("/system/warehouses") || path.startsWith("/system/material-bins") || path.startsWith("/system/product-master-data")) return "manufacturing";
+  if (path.startsWith("/system/manufacturing-structure") || path.startsWith("/system/warehouses") || path.startsWith("/system/material-bins") || path.startsWith("/system/product-master")) return "manufacturing";
   if (path.startsWith("/system/reference-tables")) return "reference";
   if (path.startsWith("/system/erp-data")) return "erp-data";
   if (path.startsWith("/system/application") || path.startsWith("/system/diagnostics") || path.startsWith("/system/application-settings") || path.startsWith("/docs/")) return "application";

@@ -668,14 +668,6 @@ class ManufacturingMutation:
             return DepartmentPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
 
     @strawberry.mutation
-    def remove_department_from_production_line(self, department_id: str, production_line_id: str) -> DepartmentPayload:
-        try:
-            dept = DepartmentService.remove_from_line(department_id, production_line_id)
-            return DepartmentPayload(ok=True, department=DepartmentNode.from_db(dept))
-        except DepartmentServiceError as exc:
-            return DepartmentPayload(ok=False, errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)])
-
-    @strawberry.mutation
     def assign_department_to_production_line(self, input: AssignDepartmentInput) -> AssignmentPayload:
         try:
             a = StructureService.assign_department_to_production_line(

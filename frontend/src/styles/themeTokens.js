@@ -110,7 +110,7 @@ export const theme = {
   surfaceBg: "bg-card",
   textInverse: "text-muted-foreground hover:text-foreground",
 
-  toolbarBtn: "inline-flex h-8 items-center gap-2 p-2 text-xs font-medium text-muted-foreground select-none transition-all duration-150 bg-transparent hover:bg-accent/10 active:bg-accent/20 disabled:pointer-events-none disabled:opacity-50",
-  toolbarBtnPrimary: "inline-flex h-8 items-center gap-2 p-2 text-xs font-semibold select-none transition-all duration-150 bg-primary text-primary-foreground hover:bg-accent active:brightness-90 disabled:pointer-events-none disabled:opacity-40",
-  toolbarBtnSuccess: "inline-flex h-8 items-center gap-2 p-2 text-xs font-semibold select-none transition-all duration-150 bg-success text-success-foreground hover:bg-success/90 active:brightness-90 disabled:pointer-events-none disabled:opacity-40",
+  toolbarBtn: "inline-flex h-8 items-center gap-2 px-2 py-1 text-xs font-medium text-muted-foreground select-none transition-all duration-150 bg-transparent hover:bg-accent/10 active:bg-accent/20 disabled:pointer-events-none disabled:opacity-50",
+  toolbarBtnPrimary: "inline-flex h-8 items-center gap-2 px-2 py-1 text-xs font-semibold select-none transition-all duration-150 bg-primary text-primary-foreground hover:bg-accent active:brightness-90 disabled:pointer-events-none disabled:opacity-40",
+  toolbarBtnSuccess: "inline-flex h-8 items-center gap-2 px-2 py-1 text-xs font-semibold select-none transition-all duration-150 bg-success text-success-foreground hover:bg-success/90 active:brightness-90 disabled:pointer-events-none disabled:opacity-40",
 };

@@ -106,10 +106,10 @@ export const sidebarNav: TopLevelEntry[] = [
         type: "group", label: "Production Structure", icon: Factory,
         items: [
           { type: "item", label: "Flow", to: "/system/production-structure/flow", icon: GitBranch },
-          { type: "item", label: "Components", to: "/system/manufacturing-structure/components", icon: Layers },
+          { type: "item", label: "Components", to: "/system/production-structure/components", icon: Layers },
           { type: "item", label: "Warehouses", to: "/system/warehouses", icon: Warehouse },
           { type: "item", label: "Material Bins", to: "/system/material-bins", icon: Package },
-          { type: "item", label: "Product Master Data", to: "/system/manufacturing-structure/product-master-data", icon: Database },
+          { type: "item", label: "Product Master", to: "/system/product-master", icon: Database },
         ],
       },
       { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
@@ -162,7 +162,7 @@ export function isPathActive(path: string, target: string): boolean {
 
 export function isRouteItemActive(path: string, target: string): boolean {
   if (target === "/") return path === "/";
-  if (target === "/system/manufacturing-structure/flow") {
+  if (target === "/system/production-structure/flow") {
     return path === target || path.startsWith(target + "/");
   }
   if (target === "/system/manufacturing-structure/components") {

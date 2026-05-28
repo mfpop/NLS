@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, X, Search, RefreshCw, GripVertical, Plus, Pencil, Trash2, Check } from "lucide-react";
+import { Database, Factory, TrendingUpDown, Layers, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { ToolbarSearch, ToolbarSelect, ToolbarButton, ToolbarCrudActions } from "@/components/shared/Toolbar";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -241,7 +242,6 @@ export function ProductionFlowLayout() {
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const companyRef = useRef<{ startEditing: () => void; save: () => Promise<void>; cancel: () => void }>(null);
-  const flowToolbarButtonClass = theme.toolbarBtn;
 
   useEffect(() => {
     if (!toast) return;
@@ -267,68 +267,38 @@ export function ProductionFlowLayout() {
         )}
       </div>
 
-      {/* Toolbar - Windows Explorer style */}
-      <div className="flex shrink-0 select-none items-center border-b border-border/35 bg-muted py-2">
+      <div className="flex shrink-0 select-none items-center border-b border-border/35 bg-muted h-10 py-1">
         <div className="flex h-full items-center px-3" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
-          <div className="relative min-w-0 flex-1">
-            <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search"
-              className="h-8 w-full rounded bg-card px-3 py-1 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-b-2 focus:border-info" />
-            {searchQuery && (
-              <button type="button" onClick={() => setSearchQuery("")}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-                <X className="h-3.5 w-3.5 stroke-current" />
-              </button>
-            )}
-          </div>
+          <ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search tree" />
         </div>
         <span className="h-5 w-px shrink-0 bg-border/25" />
         <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 w-36 shrink-0 cursor-pointer bg-card px-2 text-xs text-muted-foreground outline-none transition-colors focus:border-b-2 focus:border-info">
-            <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
-          </select>
-          <button type="button" onClick={() => refetch()} title="Refresh"
-            className={flowToolbarButtonClass}>
-            <RefreshCw className={`h-4 w-4 stroke-current ${loading ? "animate-spin" : ""}`} />
-            <span>Refresh</span>
-          </button>
+          <ToolbarSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: "all", label: "All" },
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+          />
+          <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
           <span className="h-5 w-px shrink-0 bg-border/25" />
           <div className="flex flex-1 items-center justify-end gap-3">
-        {isEditingCompany ? (
-          <>
-            <button type="button" onClick={() => companyRef.current?.save()} title="Save"
-              className="inline-flex h-8 items-center gap-3.5 px-2 text-sm font-medium text-success select-none transition-all duration-150 bg-transparent hover:bg-success/10 active:bg-success/20">
-              <Check className="h-4 w-4 stroke-current" />
-              <span className="hidden sm:inline">Save</span>
-            </button>
-            <button type="button" onClick={() => companyRef.current?.cancel()} title="Cancel"
-              className={flowToolbarButtonClass}>
-              <X className="h-4 w-4 stroke-current" />
-              <span className="hidden sm:inline">Cancel</span>
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" onClick={handleNew} title="New"
-              className={flowToolbarButtonClass}>
-              <Plus className="h-4 w-4 stroke-current" />
-              <span>New</span>
-            </button>
-            <button type="button" onClick={() => companyRef.current?.startEditing()} title="Edit" disabled={!selectedNode}
-              className={flowToolbarButtonClass}>
-              <Pencil className="h-4 w-4 stroke-current" />
-              <span>Edit</span>
-            </button>
-            <button type="button" onClick={handleDeleteNode} title="Delete" disabled={!canDelete}
-              className={flowToolbarButtonClass}>
-              <Trash2 className="h-4 w-4 stroke-current" />
-              <span>Delete</span>
-            </button>
-          </>
-        )}
-        {selectionFilteredOut && <span className="ml-2 text-[11px] text-muted-foreground">Selection filtered out</span>}
-        </div>
+            {isEditingCompany ? (
+              <>
+                <ToolbarButton icon={Check} label="Save" onClick={() => companyRef.current?.save()} variant="success" />
+                <ToolbarButton icon={X} label="Cancel" onClick={() => companyRef.current?.cancel()} />
+              </>
+            ) : (
+              <>
+                <ToolbarButton icon={Plus} label="New" onClick={handleNew} disabled={!selectedNode} />
+                <ToolbarButton icon={Pencil} label="Edit" onClick={() => companyRef.current?.startEditing()} disabled={!selectedNode} />
+                <ToolbarButton icon={Trash2} label="Delete" onClick={handleDeleteNode} disabled={!canDelete} />
+              </>
+            )}
+            {selectionFilteredOut && <span className="ml-2 text-[11px] text-muted-foreground">Selection filtered out</span>}
+          </div>
         </div>
       </div>
 

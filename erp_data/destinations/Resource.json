@@ -1,0 +1,23 @@
+{
+  "name": "Resource",
+  "scope": "PLANT_STRUCTURE",
+  "sourceType": "EXCEL",
+  "destinationTable": "Resource",
+  "expectedFilePattern": "Resources*.xlsx",
+  "active": true,
+  "status": "ACTIVE",
+  "fields": [
+    { "fieldName": "ResourceCode", "dataType": "string", "required": true, "primaryKey": true, "foreignKey": false, "nexusField": "resource.code" },
+    { "fieldName": "ResourceName", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "resource.name" },
+    { "fieldName": "ResourceGroupCode", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "resourceGroup.code" },
+    { "fieldName": "ResourceType", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.resourceType" },
+    { "fieldName": "StatusCode", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.status" },
+    { "fieldName": "CalendarCode", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.calendarCode" },
+    { "fieldName": "Capacity", "dataType": "number", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.capacity" },
+    { "fieldName": "OperatorType", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.operatorType" },
+    { "fieldName": "Description", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resource.description" }
+  ],
+  "relationships": [
+    { "sourceField": "ResourceGroupCode", "targetSourceName": "ResourceGroup", "targetField": "ResourceGroupCode", "relationshipType": "BELONGS_TO", "required": true }
+  ]
+}

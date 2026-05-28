@@ -1,0 +1,29 @@
+{
+  "name": "ResourceGroup",
+  "scope": "PLANT_STRUCTURE",
+  "sourceType": "EXCEL",
+  "destinationTable": "ResourceGroup",
+  "expectedFilePattern": "ResourceGroups*.xlsx",
+  "active": true,
+  "status": "ACTIVE",
+  "fields": [
+    { "fieldName": "ResourceGroupCode", "dataType": "string", "required": true, "primaryKey": true, "foreignKey": false, "nexusField": "resourceGroup.code" },
+    { "fieldName": "ResourceGroupName", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.name" },
+    { "fieldName": "DepartmentCode", "dataType": "string", "required": true, "primaryKey": false, "foreignKey": true, "nexusField": "department.code" },
+    { "fieldName": "LeaderName", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.leader" },
+    { "fieldName": "SupervisorName", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.supervisor" },
+    { "fieldName": "MemberCount", "dataType": "number", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.members" },
+    { "fieldName": "GroupType", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.groupType" },
+    { "fieldName": "CapabilityType", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.capabilityType" },
+    { "fieldName": "ShiftPatternCode", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.shiftPattern" },
+    { "fieldName": "CapacityModel", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.capacityModel" },
+    { "fieldName": "OeeTarget", "dataType": "number", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.oeeTarget" },
+    { "fieldName": "IsBottleneck", "dataType": "boolean", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.isBottleneck" },
+    { "fieldName": "IsConstraint", "dataType": "boolean", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.isConstraint" },
+    { "fieldName": "OperationCode", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.operationCode" },
+    { "fieldName": "StatusCode", "dataType": "string", "required": false, "primaryKey": false, "foreignKey": false, "nexusField": "resourceGroup.status" }
+  ],
+  "relationships": [
+    { "sourceField": "DepartmentCode", "targetSourceName": "Department", "targetField": "DepartmentCode", "relationshipType": "BELONGS_TO", "required": true }
+  ]
+}

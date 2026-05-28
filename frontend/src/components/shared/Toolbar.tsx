@@ -34,10 +34,10 @@ interface FilterSelectProps {
   className?: string;
 }
 
-export function ToolbarSelect({ value, onChange, options, className = "w-50" }: FilterSelectProps) {
+export function ToolbarSelect({ value, onChange, options, className = "" }: FilterSelectProps) {
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)}
-      className={`h-8 shrink-0 cursor-pointer bg-card px-2 text-xs text-muted-foreground outline-none transition-colors focus:border-b-2 focus:border-info ${className}`}>
+      className={`h-8 shrink-0 cursor-pointer bg-card px-2 py-1 text-xs text-muted-foreground outline-none transition-colors focus:border-b-2 focus:border-info ${className}`}>
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   );
@@ -57,7 +57,7 @@ export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, ti
   if (variant === "success") {
     return (
       <button type="button" onClick={onClick} title={title} disabled={disabled}
-        className="inline-flex h-8 items-center gap-3.5 px-2 text-xs font-medium text-success select-none transition-all duration-150 bg-transparent hover:bg-success/10 active:bg-success/20 disabled:pointer-events-none disabled:opacity-50">
+        className="inline-flex h-8 items-center gap-3.5 px-2 py-1 text-xs font-medium text-success select-none transition-all duration-150 bg-transparent hover:bg-success/10 active:bg-success/20 disabled:pointer-events-none disabled:opacity-50">
         <Icon className="h-4 w-4 stroke-current" />
         <span>{label}</span>
       </button>
@@ -82,10 +82,10 @@ interface ToolbarProps {
 
 export function Toolbar({ left, right, hideLeft = false, className = "" }: ToolbarProps) {
   return (
-    <div className={`flex shrink-0 select-none items-center border-b border-border/35 bg-muted py-2 ${className}`}>
+    <div className={`flex shrink-0 select-none items-center border-b border-border/35 bg-muted h-10 py-1 ${className}`}>
       <div className="flex h-full min-w-0 flex-1 items-center px-0">
         {!hideLeft && left && (
-          <div className="flex min-w-0 flex-[2] items-center">
+          <div className="flex min-w-0 flex-[2] items-center px-0">
             {left}
           </div>
         )}

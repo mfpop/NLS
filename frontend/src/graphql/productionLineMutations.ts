@@ -163,8 +163,8 @@ export const REMOVE_RG_FROM_LINE_MUTATION = gql`
 `;
 
 export const REORDER_LINE_RGS_MUTATION = gql`
-  mutation ReorderProductionLineResourceGroups($productionLineId: String!, $orderedResourceGroupIds: [String!]!) {
-    reorderProductionLineResourceGroups(productionLineId: $productionLineId, orderedResourceGroupIds: $orderedResourceGroupIds) {
+  mutation ReorderAssignedResourceGroups($productionLineId: String!, $orderedResourceGroupIds: [String!]!) {
+    reorderAssignedResourceGroups(productionLineId: $productionLineId, orderedResourceGroupIds: $orderedResourceGroupIds) {
       ok
       productionLine {
         id
@@ -182,8 +182,8 @@ export const REORDER_LINE_RGS_MUTATION = gql`
 `;
 
 export const ACTIVATE_LINE_RG_MUTATION = gql`
-  mutation ActivateProductionLineResourceGroup($productionLineId: String!, $resourceGroupId: String!) {
-    activateProductionLineResourceGroup(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
+  mutation ActivateAssignedResourceGroup($productionLineId: String!, $resourceGroupId: String!) {
+    activateAssignedResourceGroup(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
       ok
       productionLine {
         id
@@ -201,8 +201,8 @@ export const ACTIVATE_LINE_RG_MUTATION = gql`
 `;
 
 export const DEACTIVATE_LINE_RG_MUTATION = gql`
-  mutation DeactivateProductionLineResourceGroup($productionLineId: String!, $resourceGroupId: String!) {
-    deactivateProductionLineResourceGroup(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
+  mutation DeactivateAssignedResourceGroup($productionLineId: String!, $resourceGroupId: String!) {
+    deactivateAssignedResourceGroup(productionLineId: $productionLineId, resourceGroupId: $resourceGroupId) {
       ok
       productionLine {
         id

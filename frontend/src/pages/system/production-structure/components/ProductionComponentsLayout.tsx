@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Search, X, Plus, Pencil, Trash2, RefreshCw, Database, Check, Info } from "lucide-react";
+import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Database, Info } from "lucide-react";
 import { ToolbarProvider, useToolbar, useToolbarActions } from "./ToolbarContext";
+import { Toolbar as SharedToolbar, ToolbarSearch, ToolbarSelect, ToolbarCrudActions } from "@/components/shared/Toolbar";
 import { theme } from "@/styles/themeTokens";
 
 const BASE = "/system/production-structure/components";
@@ -43,98 +44,56 @@ function Toolbar() {
   const location = useLocation();
   const lastSegment = location.pathname.replace(/\/+$/, "").split("/").pop() || "";
   const isCompanyPage = lastSegment === "company";
-  const { search, setSearch, statusFilter, setStatusFilter, toolbarVariant } = useToolbar();
+  const { search, setSearch, statusFilter, setStatusFilter } = useToolbar();
   const actions = useToolbarActions();
   const saveDisabled = actions.isSaving || !actions.isDirty || actions.isValid === false;
   const isEditMode = !!actions.onSave;
-  const requestFilterChange = (apply: () => void) => {
+
+  const filterChange = (apply: () => void) => {
     if (isEditMode && actions.isDirty) {
-      const discard = window.confirm("You have unsaved changes. Discard them and update the list filter?");
-      if (!discard) return;
+      if (!window.confirm("You have unsaved changes. Discard them and update the list filter?")) return;
       actions.onDiscardChanges?.();
     }
     apply();
   };
-  const searchControl = !isCompanyPage && (
-    <div className="relative min-w-0 flex-1 mx-2">
-      <Search className={`absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none ${isEditMode ? "opacity-40" : ""}`} />
-      <input type="text" value={search} onChange={(e) => requestFilterChange(() => setSearch(e.target.value))} placeholder="Search"
-        className="h-8 w-full rounded bg-card px-3 py-1 text-xs outline-none text-muted-foreground placeholder:text-muted-foreground transition-colors focus:border-b-2 focus:border-info" />
-      {search && (
-        <button type="button" onClick={() => requestFilterChange(() => setSearch(""))}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-          <X className="h-3.5 w-3.5 stroke-current" />
-        </button>
-      )}
-    </div>
-  );
-  const statusControl = !isCompanyPage && (
-    <select value={statusFilter} onChange={(e) => requestFilterChange(() => setStatusFilter(e.target.value))}
-      className="h-8 w-50 shrink-0 cursor-pointer bg-card px-2 text-xs text-muted-foreground outline-none transition-colors focus:border-b-2 focus:border-info">
-      <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
-    </select>
-  );
-  const actionControls = actions.onSave ? (
-    <>
-      <button type="button" onClick={actions.onSave} title={saveDisabled ? "Save is available after valid changes" : "Save"} disabled={saveDisabled}
-        className="inline-flex h-8 items-center gap-3.5 px-2 text-sm font-medium text-success select-none transition-all duration-150 bg-transparent hover:bg-success/10 active:bg-success/20 disabled:pointer-events-none disabled:opacity-50">
-        <Check className="h-4 w-4 stroke-current" />
-        <span className="hidden sm:inline">{actions.isSaving ? "Saving..." : "Save"}</span>
-      </button>
-      <button type="button" onClick={actions.onCancel} title="Cancel"
-        className={theme.toolbarBtn}>
-        <X className="h-4 w-4 stroke-current" />
-        <span className="hidden sm:inline">Cancel</span>
-      </button>
-    </>
-  ) : (
-    <>
-      {!isCompanyPage && (
-        <button type="button" onClick={actions.onAdd} title="Create a new plant (Ctrl+N)" disabled={!actions.onAdd}
-          className={theme.toolbarBtn}>
-          <Plus className="h-4 w-4 stroke-current" />
-          <span>New</span>
-        </button>
-      )}
-      <button type="button" onClick={actions.onEdit} title="Edit selected plant (Enter)" disabled={!actions.hasSelected || !actions.onEdit}
-        className={theme.toolbarBtn}>
-        <Pencil className="h-4 w-4 stroke-current" />
-        <span>Edit</span>
-      </button>
-      {!isCompanyPage && (
-        <button type="button" onClick={actions.onDelete} title="Delete selected plant (Delete)" disabled={!actions.hasSelected || !actions.onDelete}
-          className={theme.toolbarBtn}>
-          <Trash2 className="h-4 w-4 stroke-current" />
-          <span>Delete</span>
-        </button>
-      )}
-      {!isCompanyPage && <span className="h-5 w-px shrink-0 bg-border/25" />}
-      <button type="button" onClick={actions.onRefresh} title="Refresh list" disabled={!actions.onRefresh}
-        className={theme.toolbarBtn}>
-        <RefreshCw className="h-4 w-4 stroke-current" />
-        <span>Refresh</span>
-      </button>
-    </>
-  );
 
   return (
-    <div className="flex shrink-0 select-none items-center border-b border-border/35 bg-muted py-2">
-      <div className="flex h-full min-w-0 flex-1 items-center px-0">
-        {searchControl && (
-          <div className="flex min-w-0 flex-[2] items-center">
-            {searchControl}
-          </div>
-        )}
-        {!searchControl && <div className="flex-1" />}
-        <div className="flex min-w-0 flex-[8] items-center ml-2">
-          {statusControl}
+    <SharedToolbar
+      left={!isCompanyPage ? <ToolbarSearch value={search} onChange={(v) => filterChange(() => setSearch(v))} placeholder="Search" /> : undefined}
+      right={
+        <>
+          {!isCompanyPage && (
+            <ToolbarSelect
+              value={statusFilter}
+              onChange={(v) => filterChange(() => setStatusFilter(v))}
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+                { value: "inactive", label: "Inactive" },
+              ]}
+            />
+          )}
           <div className="flex-1" />
-          <div className="flex items-center gap-2 shrink-0">
-            {actionControls}
-          </div>
-        </div>
-      </div>
-    </div>
+          <ToolbarCrudActions
+            onNew={actions.onAdd}
+            onEdit={actions.onEdit}
+            onDelete={actions.onDelete}
+            onRefresh={actions.onRefresh}
+            onSave={actions.onSave}
+            onCancel={actions.onCancel}
+            isEditMode={isEditMode}
+            isSaving={actions.isSaving}
+            saveDisabled={saveDisabled}
+            hideNew={isCompanyPage}
+            hideDelete={isCompanyPage}
+            canNew={!!actions.onAdd}
+            canEdit={!!actions.hasSelected && !!actions.onEdit}
+            canDelete={!!actions.hasSelected && !!actions.onDelete}
+            canRefresh={!!actions.onRefresh}
+          />
+        </>
+      }
+    />
   );
 }
 

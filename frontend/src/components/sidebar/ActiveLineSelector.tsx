@@ -74,15 +74,15 @@ export function ActiveLineSelector() {
   }, [setActiveLineId]);
 
   return (
-      <div ref={ref} className={`relative shrink-0 px-3 pt-1 pb-0.5 ${theme.sectionDivider} ${theme.page}`}>
+      <div ref={ref} className={`relative shrink-0 p-0 ${theme.sectionDivider} ${theme.page}`}>
       <button type="button" onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between w-full h-9 rounded-md px-2.5 text-[13px] font-medium ${theme.surfaceBg} ${theme.textPrimary} ${theme.interactiveRow} transition-colors`}
+        className={`flex items-center justify-between w-full h-10 rounded-none px-3 text-[13px] font-medium ${theme.surfaceBg} ${theme.textPrimary} ${theme.interactiveRow} transition-colors`}
       >
         <span className="truncate">{label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 stroke-current transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
       </button>
       {isOpen && (
-        <div className={`absolute left-3 right-3 top-full mt-1 z-50 ${theme.row} rounded-lg shadow-xl py-1 max-h-[300px] overflow-y-auto`}>
+        <div className={`absolute left-0 right-0 top-full mt-1 z-50 ${theme.row} rounded-lg shadow-xl py-1 max-h-[300px] overflow-y-auto`}>
           {plants.map((plant) => (
             <div key={plant.id}>
               <button type="button" onClick={() => selectPlant(plant.id)}

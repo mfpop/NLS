@@ -81,7 +81,7 @@ function sidebarItemCategory(label: string): string | undefined {
       return "components";
     case "Warehouses":
       return "warehouses";
-    case "Product Master Data":
+    case "Product Master":
       return "product";
     case "Reference Tables":
       return "reference";

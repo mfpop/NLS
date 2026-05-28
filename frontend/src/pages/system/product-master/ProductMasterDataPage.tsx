@@ -3,24 +3,17 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import {
   AlertTriangle,
   Box,
-  CheckCircle,
   ChevronLeft,
   ChevronRight,
   Database,
   FileText,
-  Funnel,
   GitBranch,
   GitCompare,
   Layers,
   Package,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  X,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarCrudActions } from "@/components/shared/Toolbar";
 import { EntityWorkspacePage } from "@/pages/system/production-structure/components/EntityWorkspacePage";
 import { theme } from "@/styles/themeTokens";
 import {
@@ -57,11 +50,7 @@ type EntityType = "family" | "model" | "variant" | "part" | "bom" | "routing";
 type ProductDraft = Record<string, string | boolean | null | undefined>;
 
 const PER_PAGE = 15;
-const DEFAULT_LIST_WIDTH = 280;
-const COMMAND_BAR_X_PADDING = 12;
-const PMD_CARD = "border border-border/20 bg-card shadow-md shadow-foreground/10";
 const PMD_FIELD = "border border-border/20 bg-transparent text-muted-foreground outline-none transition-colors focus:border-border-strong focus:bg-card focus:text-foreground focus:ring-2 focus:ring-ring/15";
-const PMD_BUTTON = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:text-muted-foreground/70 disabled:opacity-100";
 
 function ProductStatusBadge({ status, active }: { status?: string | null; active?: boolean }) {
   const normalized = String(status || (active ? "ACTIVE" : "ARCHIVED")).toUpperCase();
@@ -435,7 +424,7 @@ export function ProductMasterDataPage() {
         <PageHeader
           icon={<Package className="h-5 w-5 stroke-current" />}
           iconClass={theme.iconBoxAmber}
-          title="Product Master Data"
+          title="Product Master"
           subtitle="Core manufacturing product hierarchy and manufacturable definitions."
         >
           <StatusBadge label={`${families.length} families`} />
@@ -657,98 +646,49 @@ function ProductMasterContentHeader({
   refreshing?: boolean;
   canSave: boolean;
 }) {
-  const buttonClass = PMD_BUTTON;
   const isForm = mode === "create" || mode === "edit";
 
   return (
-    <div className="flex h-9 shrink-0 items-center justify-between gap-3 border-b border-border/20 bg-card px-2">
-      <div className="flex min-w-0 flex-1 items-center gap-2" aria-label="Product Master selector, search, and filters">
-        <div className="min-w-0 shrink-0" style={{ width: DEFAULT_LIST_WIDTH - COMMAND_BAR_X_PADDING * 2 }}>
-          <select
-            id="product-master-entity-selector"
-            aria-label="Product master entity"
-            value={activeTab}
-            onChange={(event) => onTabChange(event.target.value as Tab)}
-            className={`h-7 w-full px-2 text-xs font-semibold ${PMD_FIELD}`}
-          >
-            {tabs.map((tab) => <option key={tab.id} value={tab.id}>{tab.label}</option>)}
-          </select>
-        </div>
-        <span className="h-5 w-px shrink-0 bg-muted" />
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground stroke-current" />
-          <input
-            id="product-master-search"
-            aria-label="Search product master data"
-            type="search"
-            value={searchText}
-            onChange={(event) => onSearchTextChange(event.target.value)}
-            placeholder="Search product master data"
-            className={`h-7 w-full pl-3 pr-8 text-xs placeholder:text-muted-foreground ${PMD_FIELD}`}
-          />
-          {searchText && (
-            <button type="button" onClick={() => onSearchTextChange("")} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-              <X className="h-3.5 w-3.5 stroke-current" />
-            </button>
-          )}
-        </div>
-        <div className="flex h-7 w-36 shrink-0 items-center gap-1 border border-border/20 bg-transparent px-2 transition-colors focus-within:border-border-strong focus-within:bg-card focus-within:ring-2 focus-within:ring-ring/15">
-          <Funnel className="h-3.5 w-3.5 text-muted-foreground stroke-current" />
-          <select
-            id="product-master-status-filter"
-            aria-label="Filter records"
+    <Toolbar
+      left={
+        <ToolbarSelect
+          value={activeTab}
+          onChange={(v) => onTabChange(v as Tab)}
+          options={tabs.map((tab) => ({ value: tab.id, label: tab.label }))}
+          className="w-full flex-1 shrink mx-2 !px-3 rounded"
+        />
+      }
+      right={
+        <>
+          <ToolbarSearch value={searchText} onChange={onSearchTextChange} placeholder="Search product master data" />
+          <ToolbarSelect
             value={statusFilter}
-            onChange={(event) => onStatusFilterChange(event.target.value as "all" | "active" | "archived")}
-            className="h-full flex-1 border-0 bg-transparent text-xs text-muted-foreground outline-none"
-          >
-            <option value="all">All records</option>
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-0.5" aria-label="Product Master actions">
-        {isForm ? (
-          <>
-            <button
-              type="button"
-              onClick={onSave}
-              disabled={!canSave}
-              title={!canSave ? "Make a valid change before saving." : "Save changes"}
-              className={`inline-flex h-7 items-center gap-1.5 rounded px-3 text-[11px] font-semibold ${theme.buttonPrimary} disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground/70 disabled:shadow-none`}
-            >
-              <CheckCircle className="h-4 w-4 stroke-current" />
-              Save
-            </button>
-            <button type="button" onClick={onCancel} className={`${buttonClass} border border-border/20`}>
-              <X className="h-4 w-4 stroke-current" />
-              Cancel
-            </button>
-          </>
-        ) : (
-          <>
-            <button type="button" onClick={onNew} disabled={!canMutate} title={!canMutate ? "Routing assignments are opened in the routing workspace." : "Create new record"} className={buttonClass}>
-              <Plus className="h-4 w-4 stroke-current" />
-              New
-            </button>
-            <button type="button" onClick={onEdit} disabled={!canMutate || !hasSelected} title={!hasSelected ? "Select a record to edit." : !canMutate ? "This record opens in its owning workspace." : "Edit selected record"} className={buttonClass}>
-              <Pencil className="h-4 w-4 stroke-current" />
-              Edit
-            </button>
-            <button type="button" onClick={onDelete} disabled={!canMutate || !hasSelected} title={!hasSelected ? "Select a record to archive." : !canMutate ? "This record opens in its owning workspace." : "Archive selected record"} className={buttonClass}>
-              <Trash2 className="h-4 w-4 stroke-current" />
-              Archive
-            </button>
-            <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
-            <button type="button" onClick={onRefresh} disabled={refreshing} title={refreshing ? "Refresh in progress." : "Refresh product master data"} className={buttonClass}>
-              <RefreshCw className={`h-4 w-4 stroke-current ${refreshing ? "animate-spin" : ""}`} />
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
+            onChange={(v) => onStatusFilterChange(v as "all" | "active" | "archived")}
+            options={[
+              { value: "all", label: "All records" },
+              { value: "active", label: "Active" },
+              { value: "archived", label: "Archived" },
+            ]}
+          />
+          <div className="flex-1" />
+          <ToolbarCrudActions
+            onNew={onNew}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onRefresh={onRefresh}
+            onSave={onSave}
+            onCancel={onCancel}
+            isEditMode={isForm}
+            isSaving={refreshing}
+            saveDisabled={!canSave}
+            canNew={canMutate}
+            canEdit={canMutate && hasSelected}
+            canDelete={canMutate && hasSelected}
+            canRefresh={!refreshing}
+          />
+        </>
+      }
+    />
   );
 }
 

@@ -806,11 +806,11 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     [ids[idx], ids[swapIdx]] = [ids[swapIdx], ids[idx]];
     try {
       const { data } = await reorderRgs({ variables: { productionLineId: productionLine.id, orderedResourceGroupIds: ids } });
-      if (data?.reorderProductionLineResourceGroups?.ok) {
+      if (data?.reorderAssignedResourceGroups?.ok) {
         showSystemMessage?.("Reordered", "success");
         refetch();
       } else {
-        const err = data?.reorderProductionLineResourceGroups?.errors?.[0];
+        const err = data?.reorderAssignedResourceGroups?.errors?.[0];
         showSystemMessage?.(err?.message || "Failed to reorder", "error");
       }
     } catch { showSystemMessage?.("Failed to reorder", "error"); }
@@ -821,7 +821,7 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     try {
       const mutation = currentActive ? deactivateRg : activateRg;
       const { data } = await mutation({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
-      const key = currentActive ? "deactivateProductionLineResourceGroup" : "activateProductionLineResourceGroup";
+      const key = currentActive ? "deactivateAssignedResourceGroup" : "activateAssignedResourceGroup";
       if (data?.[key]?.ok) {
         showSystemMessage?.(currentActive ? "Deactivated" : "Activated", "success");
         refetch();

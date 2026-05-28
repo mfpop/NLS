@@ -112,7 +112,7 @@ const ReferencesPage = lazy(() =>
   import("@/pages/system/production-structure/ReferencesPage").then((module) => ({ default: module.ReferencesPage }))
 );
 const ProductMasterDataPage = lazy(() =>
-  import("@/pages/system/product-master-data/ProductMasterDataPage").then((module) => ({ default: module.ProductMasterDataPage }))
+  import("@/pages/system/product-master/ProductMasterDataPage").then((module) => ({ default: module.ProductMasterDataPage }))
 );
 const EntityVisualSettingsPage = lazy(() =>
   import("@/pages/system/production-structure/EntityVisualSettingsPage").then((module) => ({ default: module.EntityVisualSettingsPage }))
@@ -230,7 +230,7 @@ export function AppRoutes() {
                     <Route path="system/manufacturing-structure" element={<Navigate to="/system/production-structure" replace />} />
                     <Route path="system/manufacturing-structure/flow" element={<Navigate to="company" replace />} />
                     <Route path="system/manufacturing-structure/components" element={<Navigate to="/system/production-structure/components" replace />} />
-                    <Route path="system/manufacturing-structure/product-master-data" element={<Navigate to="/system/product-master-data" replace />} />
+                    <Route path="system/manufacturing-structure/product-master-data" element={<Navigate to="/system/product-master" replace />} />
                     <Route path="system/application/diagnostics" element={<Navigate to="/system/diagnostics" replace />} />
                     <Route path="system/application/settings" element={<Navigate to="/system/application-settings" replace />} />
                     <Route path="system/application/documentation" element={<Navigate to="/docs/core" replace />} />
@@ -257,7 +257,8 @@ export function AppRoutes() {
           <Route path="system/production-structure/structure" element={<StructurePage />} />
           <Route path="system/warehouses" element={<WarehousesPage />} />
           <Route path="system/material-bins" element={<MaterialBinsPage />} />
-          <Route path="system/product-master-data" element={<ProductMasterDataPage />} />
+          <Route path="system/product-master" element={<ProductMasterDataPage />} />
+          <Route path="system/product-master-data" element={<Navigate to="/system/product-master" replace />} />
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
           <Route path="system/diagnostics" element={<GraphqlStatusPage />} />

@@ -504,8 +504,8 @@ export function RoutingEditorPage() {
       {/* ── Header (identity only) ── */}
       <div className="shrink-0 border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
-            <Settings2 className="h-4 w-4 stroke-current" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-routing-bg text-entity-routing ring-1 ring-entity-routing/20">
+            <Settings2 className="h-5 w-5 stroke-current" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">

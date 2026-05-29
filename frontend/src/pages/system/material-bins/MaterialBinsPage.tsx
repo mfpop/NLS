@@ -394,12 +394,12 @@ export function MaterialBinsPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="shrink-0 px-4 pt-3 pb-2 border-b border-border/50">
           <div className="flex items-stretch gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse shadow-sm">
-              <Package className="h-4 w-4 stroke-current" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse ring-1 ring-entity-warehouse/20">
+              <Package className="h-5 w-5 stroke-current" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className={`truncate text-[16px] font-bold leading-5 ${theme.textPrimary}`}>{title}</h2>
+                <h2 className={`truncate text-sm font-bold leading-5 text-foreground`}>{title}</h2>
                 {bin.code && <span className={`shrink-0 rounded px-1.5 py-px font-mono text-[9px] ${theme.codeBadge}`}>{bin.code}</span>}
               </div>
               <div className={`mt-1 flex flex-wrap items-center gap-1.5 text-[10px] ${theme.textMuted}`}>
@@ -445,14 +445,12 @@ export function MaterialBinsPage() {
                     <div><textarea value={g("description")} onChange={(e) => s("description", e.target.value)} placeholder="Description" className={`h-10 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} resize-none`} /></div>
                   </div>
                 ) : (
-                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                    <div className="space-y-px">
-                      <InlineRow label="Name" value={bin.name} />
-                      <InlineRow label="Code" value={bin.code} />
-                      <InlineRow label="Type" value={<TypeBadge type={bin.binType || ""} />} />
-                      <InlineRow label="Plant" value={bin.plantName} icon={<Factory className="h-2.5 w-2.5" />} />
-                      <InlineRow label="Description" value={ev("description", bin.description)} />
-                    </div>
+                  <div className="space-y-px">
+                    <InlineRow label="Name" value={bin.name} />
+                    <InlineRow label="Code" value={bin.code} />
+                    <InlineRow label="Type" value={<TypeBadge type={bin.binType || ""} />} />
+                    <InlineRow label="Plant" value={bin.plantName} icon={<Factory className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Description" value={ev("description", bin.description)} />
                   </div>
                 )}
               </SectionCard>
@@ -479,12 +477,10 @@ export function MaterialBinsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                    <div className="space-y-px">
-                      <InlineRow label="Resource Group" value={ev("resourceGroupId", bin.resourceGroupName)} icon={<Layers className="h-2.5 w-2.5" />} />
-                      <InlineRow label="Production Line" value={ev("productionLineId", bin.productionLineName)} icon={<Box className="h-2.5 w-2.5" />} />
-                      <InlineRow label="Warehouse" value={ev("warehouseCode", bin.warehouseCode)} icon={<Warehouse className="h-2.5 w-2.5" />} />
-                    </div>
+                  <div className="space-y-px">
+                    <InlineRow label="Resource Group" value={ev("resourceGroupId", bin.resourceGroupName)} icon={<Layers className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Production Line" value={ev("productionLineId", bin.productionLineName)} icon={<Box className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Warehouse" value={ev("warehouseCode", bin.warehouseCode)} icon={<Warehouse className="h-2.5 w-2.5" />} />
                   </div>
                 )}
               </SectionCard>
@@ -526,15 +522,13 @@ export function MaterialBinsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                    <div className="space-y-px">
-                      <InlineRow label="Capacity" value={bin.capacity != null ? `${bin.capacity}` : ev("capacity", null)} />
-                      <InlineRow label="UOM" value={ev("uomId", bin.uomName || bin.uomId)} />
-                      <InlineRow label="Min Level" value={ev("minLevel", null)} />
-                      <InlineRow label="Max Level" value={ev("maxLevel", null)} />
-                      <InlineRow label="Reorder Point" value={ev("reorderPoint", null)} />
-                      <InlineRow label="Replenishment" value={ev("replenishmentMode", bin.replenishmentMode)} />
-                    </div>
+                  <div className="space-y-px">
+                    <InlineRow label="Capacity" value={bin.capacity != null ? `${bin.capacity}` : ev("capacity", null)} />
+                    <InlineRow label="UOM" value={ev("uomId", bin.uomName || bin.uomId)} />
+                    <InlineRow label="Min Level" value={ev("minLevel", null)} />
+                    <InlineRow label="Max Level" value={ev("maxLevel", null)} />
+                    <InlineRow label="Reorder Point" value={ev("reorderPoint", null)} />
+                    <InlineRow label="Replenishment" value={ev("replenishmentMode", bin.replenishmentMode)} />
                   </div>
                 )}
               </SectionCard>
@@ -542,15 +536,13 @@ export function MaterialBinsPage() {
               {/* Validation Status */}
               {!isForm && (
                 <SectionCard title="Validation">
-                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                    <div className="flex flex-wrap gap-1">
-                      <ValidationPill ok={validations.plant} label="Plant" />
-                      <ValidationPill ok={validations.rg} label="Ownership" />
-                      <ValidationPill ok={validations.warehouse} label="Warehouse" />
-                      <ValidationPill ok={validations.capacity} label="Capacity" warning />
-                      <ValidationPill ok={validations.uom} label="UOM" />
-                      <ValidationPill ok={validations.replenishment} label="Replenishment" />
-                    </div>
+                  <div className="flex flex-wrap gap-1">
+                    <ValidationPill ok={validations.plant} label="Plant" />
+                    <ValidationPill ok={validations.rg} label="Ownership" />
+                    <ValidationPill ok={validations.warehouse} label="Warehouse" />
+                    <ValidationPill ok={validations.capacity} label="Capacity" warning />
+                    <ValidationPill ok={validations.uom} label="UOM" />
+                    <ValidationPill ok={validations.replenishment} label="Replenishment" />
                   </div>
                 </SectionCard>
               )}
@@ -567,12 +559,10 @@ export function MaterialBinsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                    <div className="flex gap-2">
-                      {BIN_MODE_OPTIONS.map((opt) => (
-                        <ModeChip key={opt.value} mode={opt.value} active={binMode === opt.value} onClick={() => {}} />
-                      ))}
-                    </div>
+                  <div className="flex gap-2">
+                    {BIN_MODE_OPTIONS.map((opt) => (
+                      <ModeChip key={opt.value} mode={opt.value} active={binMode === opt.value} onClick={() => {}} />
+                    ))}
                   </div>
                 )}
               </SectionCard>
@@ -615,13 +605,11 @@ export function MaterialBinsPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                    <div className="space-y-px">
-                      <InlineRow label="Source Type" value={bin.warehouseCode ? "Warehouse" : bin.resourceGroupId ? "Previous RG" : "Not configured"} icon={<ArrowLeft className="h-2.5 w-2.5" />} />
-                      <InlineRow label="Destination" value={["FG", "SCRAP", "QUARANTINE"].includes(bin.binType || "") ? bin.binType : "Next RG"} icon={<ArrowRight className="h-2.5 w-2.5" />} />
-                      <InlineRow label="Location Code" value={ev("locationCode", bin.locationCode)} icon={<Map className="h-2.5 w-2.5" />} />
-                      <InlineRow label="Reference" value={ev("locationReference", bin.locationReference)} />
-                    </div>
+                  <div className="space-y-px">
+                    <InlineRow label="Source Type" value={bin.warehouseCode ? "Warehouse" : bin.resourceGroupId ? "Previous RG" : "Not configured"} icon={<ArrowLeft className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Destination" value={["FG", "SCRAP", "QUARANTINE"].includes(bin.binType || "") ? bin.binType : "Next RG"} icon={<ArrowRight className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Location Code" value={ev("locationCode", bin.locationCode)} icon={<Map className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Reference" value={ev("locationReference", bin.locationReference)} />
                   </div>
                 )}
               </SectionCard>
@@ -630,16 +618,14 @@ export function MaterialBinsPage() {
               {!isForm && (
                 <>
                   <SectionCard title="Current Material">
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-entity-warehouse-bg">
-                          <Database className="h-4 w-4 text-entity-warehouse stroke-current" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className={`text-[13px] font-semibold ${theme.textPrimary}`}>{bin.materialName || "No material assigned"}</div>
-                          {bin.materialCode && <div className={`text-[10px] ${theme.textMuted} font-mono`}>{bin.materialCode}</div>}
-                          {bin.materialGroup && <div className={`text-[9px] ${theme.textMuted}`}>Group: {bin.materialGroup}</div>}
-                        </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-entity-warehouse-bg">
+                        <Database className="h-4 w-4 text-entity-warehouse stroke-current" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className={`text-[13px] font-semibold ${theme.textPrimary}`}>{bin.materialName || "No material assigned"}</div>
+                        {bin.materialCode && <div className={`text-[10px] ${theme.textMuted} font-mono`}>{bin.materialCode}</div>}
+                        {bin.materialGroup && <div className={`text-[9px] ${theme.textMuted}`}>Group: {bin.materialGroup}</div>}
                       </div>
                     </div>
                   </SectionCard>
@@ -649,11 +635,9 @@ export function MaterialBinsPage() {
                       className={`inline-flex h-6 items-center gap-1 rounded border border-border/60 ${theme.surfaceBg} px-2 text-[10px] font-medium ${theme.textSecondary} transition-colors ${theme.interactiveRow}`}>
                       <Layers className="h-3 w-3 stroke-current" /> Open linked lines
                     </button> : undefined}>
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="flex items-center gap-2 text-[10px]">
-                        <Route className="h-3 w-3 stroke-current text-muted-foreground" />
-                        <span className={theme.textMuted}>No routing steps linked to this bin.</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-[10px]">
+                      <Route className="h-3 w-3 stroke-current text-muted-foreground" />
+                      <span className={theme.textMuted}>No routing steps linked to this bin.</span>
                     </div>
                   </SectionCard>
                 </>

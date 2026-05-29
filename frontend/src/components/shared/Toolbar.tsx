@@ -51,9 +51,10 @@ interface ActionButtonProps {
   disabled?: boolean;
   title?: string;
   variant?: "default" | "success";
+  active?: boolean;
 }
 
-export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, title, variant = "default" }: ActionButtonProps) {
+export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, title, variant = "default", active = false }: ActionButtonProps) {
   if (variant === "success") {
     return (
       <button type="button" onClick={onClick} title={title} disabled={disabled}
@@ -65,7 +66,7 @@ export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, ti
   }
   return (
     <button type="button" onClick={onClick} title={title} disabled={disabled}
-      className={theme.toolbarBtn}>
+      className={`${theme.toolbarBtn} ${active ? "bg-primary/10 text-primary font-semibold" : ""}`}>
       <Icon className="h-4 w-4 stroke-current" />
       <span>{label}</span>
     </button>

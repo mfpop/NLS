@@ -1046,7 +1046,7 @@ export function ReferencesPage({ standalone = true }: { standalone?: boolean }) 
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-3">
-                <CompanyEditor form={companyForm} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))} compact
+                <CompanyEditor form={companyForm} onChange={(k, v) => setCompanyForm((p) => ({ ...p, [k]: v }))}
                   touchedFields={companyTouched} setTouched={setCompanyTouched} />
                 {companyError && !companyErrorDismissed && (
                   <div className="mt-2 rounded border border-danger bg-danger px-2 py-1 text-[10px] text-danger border-danger bg-danger text-danger flex items-center justify-between">

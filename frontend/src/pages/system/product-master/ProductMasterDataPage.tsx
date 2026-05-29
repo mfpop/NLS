@@ -735,8 +735,8 @@ function DetailPanel({
     return (
       <div className="flex h-full flex-1 flex-col bg-card">
         <div className="flex h-12 shrink-0 items-center gap-3 border-b border-border/20 bg-card px-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
-            <TabIcon className="h-4 w-4 stroke-current" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-product-master-bg text-entity-product-master ring-1 ring-entity-product-master/20">
+            <TabIcon className="h-5 w-5 stroke-current" />
           </div>
           <div>
             <h2 className="text-sm font-bold text-foreground">{tabLabel(activeTab)}</h2>
@@ -778,12 +778,12 @@ function DetailPanel({
     <div className="flex h-full flex-1 flex-col overflow-hidden bg-card">
       <div className="shrink-0 border-b border-border/20 px-3 py-1">
         <div className="flex items-stretch gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center text-warning">
-            <TabIcon className="h-4 w-4 stroke-current" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-product-master-bg text-entity-product-master ring-1 ring-entity-product-master/20">
+            <TabIcon className="h-5 w-5 stroke-current" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="truncate text-[16px] font-bold leading-5 text-foreground">{title}</h2>
+              <h2 className="truncate text-sm font-bold leading-5 text-foreground">{title}</h2>
               {s.code && s.code !== s.name && <span className="shrink-0 rounded bg-muted px-1.5 py-px font-mono text-[9px] text-muted-foreground">{s.code}</span>}
             </div>
             <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">

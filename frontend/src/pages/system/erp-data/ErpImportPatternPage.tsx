@@ -171,8 +171,8 @@ export function ErpImportPatternPage() {
   const [formScope, setFormScope] = useState("CUSTOM");
   const [formDest, setFormDest] = useState("");
   const [formFilePattern, setFormFilePattern] = useState("");
-  const [_rgMode, setRgMode] = useState<"all" | "selected">("all" as const);
-  const [_selectedRgIds, setSelectedRgIds] = useState<string[]>([]);
+  const [, setRgMode] = useState<"all" | "selected">("all" as const);
+  const [, setSelectedRgIds] = useState<string[]>([]);
   const [mappings, setMappings] = useState<Array<{
     sourceName: string; sourceDataType: string; destinationName: string;
     destinationDataType: string; isRequired: boolean; sortOrder: number;
@@ -458,7 +458,8 @@ export function ErpImportPatternPage() {
       await refetchPatterns();
       setSaveError(null);
       setToast({ message: "Pattern saved", type: "success" });
-      mode === "create" ? (resetForm(), setMode("view")) : setMode("view");
+      if (mode === "create") resetForm();
+      setMode("view");
     } catch (e) {
       const errMsg = e instanceof Error ? e.message : "An unexpected error occurred";
       console.error("Save error:", e);

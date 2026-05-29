@@ -12,10 +12,14 @@ interface ReferenceSelectProps {
   placeholder?: string;
   includeInactive?: boolean;
   filteredValues?: Array<{ id: string; name: string }>;
+  selectClass?: string;
+  id?: string;
+  name?: string;
 }
 
 export function ReferenceSelect({
-  categoryCode, label, value, onChange, required, disabled, error, placeholder, includeInactive, filteredValues,
+  categoryCode, label, value, onChange, required, disabled, error, placeholder, includeInactive, filteredValues, selectClass,
+  id, name
 }: ReferenceSelectProps) {
   const { values, loading } = useReferenceCategory(categoryCode);
 
@@ -24,18 +28,22 @@ export function ReferenceSelect({
     ? rawOptions
     : rawOptions.filter((v) => "isActive" in v ? (v as any).isActive : true);
 
+  const defaultSelectClass = `w-full rounded border px-2 py-0.5 text-[13px] outline-none transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+    error ? "border-danger focus:ring-2 focus:ring-danger" : "border-border bg-card bg-muted text-muted-foreground focus:ring-2 focus:ring-success focus:border-success"
+  } ${disabled ? "bg-muted text-muted-foreground" : ""}`;
+
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+      <label htmlFor={id} className="block text-[11px] font-semibold text-muted-foreground mb-1">
         {label}{required && <span className="ml-0.5 text-danger">*</span>}
       </label>
       <select
+        id={id}
+        name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled || loading}
-        className={`w-full rounded border px-2 py-0.5 text-[13px] outline-none transition-colors appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
-          error ? "border-danger focus:ring-2 focus:ring-danger" : "border-border bg-card bg-muted text-muted-foreground focus:ring-2 focus:ring-success focus:border-success"
-        } ${disabled ? "bg-muted text-muted-foreground" : ""}`}
+        className={selectClass || defaultSelectClass}
       >
         {placeholder && <option value="">{placeholder}</option>}
         {loading && <option value="" disabled>Loading...</option>}

@@ -48,16 +48,28 @@ export function ProductionLineProductScopeSummary({
         <span className={`text-[12px] font-semibold ${theme.textSecondary}`}>Product Models</span>
         <div className="min-w-0">
           {models.length ? (
-            <div className="flex flex-wrap gap-1">
-              {visibleModels.map((model) => (
-                <ScopeChip key={model.id} label={model.name || model.code} primary={model.id === primaryModel?.id || model.isPrimary} />
-              ))}
+            <ul className="space-y-0.5">
+              {visibleModels.map((model) => {
+                const isPrimary = model.id === primaryModel?.id || model.isPrimary;
+                return (
+                  <li key={model.id} className="flex items-center gap-1.5 text-[12px]">
+                    <span className="text-muted-foreground/30">•</span>
+                    <span className="font-medium text-muted-foreground">{model.name || model.code}</span>
+                    {isPrimary && (
+                      <span className="rounded bg-primary/10 px-1.5 py-px text-[8px] font-bold uppercase tracking-wider text-primary">Primary</span>
+                    )}
+                  </li>
+                );
+              })}
               {hiddenCount > 0 && (
-                <button type="button" onClick={onMoreModels} className={`rounded-full ${theme.chip} ${theme.textPrimary} hover:text-foreground`}>
-                  +{hiddenCount} more
-                </button>
+                <li>
+                  <button type="button" onClick={onMoreModels}
+                    className="text-[11px] font-semibold text-primary hover:underline">
+                    +{hiddenCount} more
+                  </button>
+                </li>
               )}
-            </div>
+            </ul>
           ) : <EmptyBadge label="None" />}
         </div>
       </div>

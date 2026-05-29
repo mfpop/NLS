@@ -2512,6 +2512,51 @@ button {
 }
 
 /* =============================================
+   TAB CONTENT ANIMATIONS
+   ============================================= */
+
+.tab-enter {
+  animation: tabContentIn 0.15s ease-out both;
+}
+
+@keyframes tabContentIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-enter {
+    animation: none;
+  }
+}
+
+/* =============================================
+   MODE TRANSITION ANIMATIONS (view/edit)
+   ============================================= */
+
+.mode-enter {
+  animation: modeFadeIn 0.2s ease-out both;
+}
+
+@keyframes modeFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.mode-stagger-1 { animation: modeFadeIn 0.25s ease-out 0ms both; }
+.mode-stagger-2 { animation: modeFadeIn 0.25s ease-out 80ms both; }
+.mode-stagger-3 { animation: modeFadeIn 0.25s ease-out 160ms both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-enter,
+  .mode-stagger-1,
+  .mode-stagger-2,
+  .mode-stagger-3 {
+    animation: none;
+  }
+}
+
+/* =============================================
    404 PAGE ANIMATIONS
    ============================================= */
 

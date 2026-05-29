@@ -770,7 +770,7 @@ class ManufacturingQuery:
 
     @strawberry.field
     def product_models_by_family(self, family_id: str) -> list[ProductModelByFamilyNode]:
-        qs = ProductModel.objects.filter(family_id=family_id, is_active=True).order_by("code", "name")
+        qs = ProductModel.objects.filter(family_id=family_id, status="ACTIVE").order_by("code", "name")
         return [ProductModelByFamilyNode.from_product_model(model) for model in qs]
 
     # ── Department ──

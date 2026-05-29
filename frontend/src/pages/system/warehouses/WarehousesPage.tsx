@@ -348,12 +348,12 @@ export function WarehousesPage() {
         {/* Header */}
         <div className="shrink-0 px-4 pt-3 pb-2 border-b border-border/50">
           <div className="flex items-stretch gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse shadow-sm">
-              <Warehouse className="h-4 w-4 stroke-current" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-warehouse-bg text-entity-warehouse ring-1 ring-entity-warehouse/20">
+              <Warehouse className="h-5 w-5 stroke-current" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <h2 className={`truncate text-[16px] font-bold leading-5 ${theme.textPrimary}`}>{title}</h2>
+                <h2 className={`truncate text-sm font-bold leading-5 text-foreground`}>{title}</h2>
                 {wh.code && <span className={`shrink-0 rounded px-1.5 py-px font-mono text-[9px] ${theme.codeBadge}`}>{wh.code}</span>}
               </div>
               <div className={`mt-1 flex flex-wrap items-center gap-1.5 text-[10px] ${theme.textMuted}`}>
@@ -412,22 +412,18 @@ export function WarehousesPage() {
                     <div>
                       <input type="text" value={g("location")} onChange={(e) => s("location", e.target.value)} placeholder="Location (e.g. Building A, Zone 3)" className={iCls} />
                     </div>
-                    <div className={`rounded-lg p-2 ${theme.subCard} flex items-center gap-2`}>
+                    <div className="flex items-center gap-2">
                       <input type="checkbox" checked={form.isActive} onChange={(e) => s("isActive", e.target.checked)} className="h-3 w-3" id="wh-active" />
                       <label htmlFor="wh-active" className={`text-[10px] ${theme.textSecondary} cursor-pointer select-none`}>Active</label>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="space-y-px">
-                        <InlineRow label="Name" value={wh.name} />
-                        <InlineRow label="Code" value={wh.code} />
-                        <InlineRow label="Type" value={<TypeBadge type={wh.warehouseType || ""} />} />
-                        <InlineRow label="Plant" value={wh.plantName} icon={<Factory className="h-2.5 w-2.5" />} />
-                        <InlineRow label="Location" value={wh.location || "Not set"} icon={<Map className="h-2.5 w-2.5" />} />
-                      </div>
-                    </div>
+                  <div className="space-y-px">
+                    <InlineRow label="Name" value={wh.name} />
+                    <InlineRow label="Code" value={wh.code} />
+                    <InlineRow label="Type" value={<TypeBadge type={wh.warehouseType || ""} />} />
+                    <InlineRow label="Plant" value={wh.plantName} icon={<Factory className="h-2.5 w-2.5" />} />
+                    <InlineRow label="Location" value={wh.location || "Not set"} icon={<Map className="h-2.5 w-2.5" />} />
                   </div>
                 )}
               </SectionCard>
@@ -462,107 +458,97 @@ export function WarehousesPage() {
                   {/* Material Bins card */}
                   <SectionCard title="Material Bins"
                     action={<ActionButton icon={<Box className="h-3 w-3 stroke-current" />} label="Open Bins" onClick={() => { if (wh.code) navigate(`/system/material-bins?warehouseCode=${wh.code}`); }} />}>
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="grid grid-cols-3 gap-2 text-[10px]">
-                        <div>
-                          <div className={`font-semibold ${theme.textPrimary}`}>8</div>
-                          <div className={theme.textMuted}>Active Bins</div>
-                        </div>
-                        <div>
-                          <div className={`font-semibold ${theme.textPrimary}`}>4</div>
-                          <div className={theme.textMuted}>Inactive</div>
-                        </div>
-                        <div>
-                          <div className={`font-semibold ${theme.textPrimary}`}>12</div>
-                          <div className={theme.textMuted}>Total</div>
-                        </div>
+                    <div className="grid grid-cols-3 gap-2 text-[10px]">
+                      <div>
+                        <div className={`font-semibold ${theme.textPrimary}`}>8</div>
+                        <div className={theme.textMuted}>Active Bins</div>
                       </div>
-                      <div className={`mt-2 flex flex-wrap gap-1 text-[9px] ${theme.textMuted}`}>
-                        <span className="text-amber-600 font-medium">RM: 5</span>
-                        <span>·</span>
-                        <span className="text-emerald-600 font-medium">FG: 3</span>
-                        <span>·</span>
-                        <span className="text-blue-600 font-medium">WIP: 2</span>
-                        <span>·</span>
-                        <span className="text-slate-600 font-medium">Other: 2</span>
+                      <div>
+                        <div className={`font-semibold ${theme.textPrimary}`}>4</div>
+                        <div className={theme.textMuted}>Inactive</div>
                       </div>
+                      <div>
+                        <div className={`font-semibold ${theme.textPrimary}`}>12</div>
+                        <div className={theme.textMuted}>Total</div>
+                      </div>
+                    </div>
+                    <div className={`mt-2 flex flex-wrap gap-1 text-[9px] ${theme.textMuted}`}>
+                      <span className="text-amber-600 font-medium">RM: 5</span>
+                      <span>·</span>
+                      <span className="text-emerald-600 font-medium">FG: 3</span>
+                      <span>·</span>
+                      <span className="text-blue-600 font-medium">WIP: 2</span>
+                      <span>·</span>
+                      <span className="text-slate-600 font-medium">Other: 2</span>
                     </div>
                   </SectionCard>
 
                   {/* Assigned Lines */}
                   <SectionCard title="Assigned Production Lines"
                     action={<ActionButton icon={<Layers className="h-3 w-3 stroke-current" />} label="View Lines" onClick={() => setShowLinesModal(true)} />}>
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="space-y-1.5 text-[10px]">
-                        {["Assembly Line A", "Kitting Line 1", "Packaging Line"].map((line, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <span className="h-1.5 w-1.5 rounded-full bg-entity-line" />
-                            <span className={`${theme.textPrimary}`}>{line}</span>
-                            <span className={`ml-auto ${theme.textMuted}`}>{["Receiving", "Both", "Shipping"][i]}</span>
-                          </div>
-                        ))}
-                        <button type="button" className={`mt-1 text-[10px] font-medium text-entity-warehouse hover:underline`}>+ Assign line</button>
-                      </div>
+                    <div className="space-y-1.5 text-[10px]">
+                      {["Assembly Line A", "Kitting Line 1", "Packaging Line"].map((line, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-entity-line" />
+                          <span className={`${theme.textPrimary}`}>{line}</span>
+                          <span className={`ml-auto ${theme.textMuted}`}>{["Receiving", "Both", "Shipping"][i]}</span>
+                        </div>
+                      ))}
+                      <button type="button" className={`mt-1 text-[10px] font-medium text-entity-warehouse hover:underline`}>+ Assign line</button>
                     </div>
                   </SectionCard>
 
                   {/* Warehouse Zones */}
                   <SectionCard title="Warehouse Zones"
                     action={<ActionButton icon={<LayoutGrid className="h-3 w-3 stroke-current" />} label="Zones" onClick={() => setShowZonesModal(true)} />}>
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                        {[
-                          { name: "Receiving", bins: 3, pct: 25 },
-                          { name: "Storage A", bins: 5, pct: 60 },
-                          { name: "Picking", bins: 2, pct: 40 },
-                          { name: "Shipping", bins: 2, pct: 30 },
-                        ].map((z, i) => (
-                          <div key={i} className={`rounded border border-border/30 p-1.5 ${theme.surfaceBg}`}>
-                            <div className={`font-medium ${theme.textPrimary}`}>{z.name}</div>
-                            <div className={theme.textMuted}>{z.bins} bins · {z.pct}% utilized</div>
-                          </div>
-                        ))}
-                      </div>
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                      {[
+                        { name: "Receiving", bins: 3, pct: 25 },
+                        { name: "Storage A", bins: 5, pct: 60 },
+                        { name: "Picking", bins: 2, pct: 40 },
+                        { name: "Shipping", bins: 2, pct: 30 },
+                      ].map((z, i) => (
+                        <div key={i} className={`rounded border border-border/30 p-1.5 ${theme.surfaceBg}`}>
+                          <div className={`font-medium ${theme.textPrimary}`}>{z.name}</div>
+                          <div className={theme.textMuted}>{z.bins} bins · {z.pct}% utilized</div>
+                        </div>
+                      ))}
                     </div>
                   </SectionCard>
 
                   {/* ERP Mapping */}
                   <SectionCard title="ERP Mapping">
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="flex items-center gap-3 text-[10px]">
-                        <div className="flex items-center gap-1.5">
-                          <Database className="h-3 w-3 stroke-current text-muted-foreground" />
-                          <span className={theme.textMuted}>ERP Code:</span>
-                          <span className={`font-mono font-medium ${theme.textPrimary}`}>WH-{wh.code}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className={`h-1.5 w-1.5 rounded-full bg-success`} />
-                          <span className={theme.textSecondary}>Synced</span>
-                        </div>
+                    <div className="flex items-center gap-3 text-[10px]">
+                      <div className="flex items-center gap-1.5">
+                        <Database className="h-3 w-3 stroke-current text-muted-foreground" />
+                        <span className={theme.textMuted}>ERP Code:</span>
+                        <span className={`font-mono font-medium ${theme.textPrimary}`}>WH-{wh.code}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`h-1.5 w-1.5 rounded-full bg-success`} />
+                        <span className={theme.textSecondary}>Synced</span>
                       </div>
                     </div>
                   </SectionCard>
 
                   {/* Validation Status */}
                   <SectionCard title="Validation Status">
-                    <div className={`rounded-lg p-2 ${theme.subCard}`}>
-                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle className="h-3 w-3 text-success stroke-current" />
-                          <span className={theme.textSecondary}>Plant assigned</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle className="h-3 w-3 text-success stroke-current" />
-                          <span className={theme.textSecondary}>Code unique</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle className="h-3 w-3 text-success stroke-current" />
-                          <span className={theme.textSecondary}>Type configured</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="h-3 w-3 rounded border border-border/60 inline-block" />
-                          <span className={theme.textMuted}>Zones configured</span>
-                        </div>
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle className="h-3 w-3 text-success stroke-current" />
+                        <span className={theme.textSecondary}>Plant assigned</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle className="h-3 w-3 text-success stroke-current" />
+                        <span className={theme.textSecondary}>Code unique</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle className="h-3 w-3 text-success stroke-current" />
+                        <span className={theme.textSecondary}>Type configured</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-3 w-3 rounded border border-border/60 inline-block" />
+                        <span className={theme.textMuted}>Zones configured</span>
                       </div>
                     </div>
                   </SectionCard>

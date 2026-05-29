@@ -162,6 +162,34 @@ export const DOC_META: Record<string, DocumentationMeta> = {
     relatedDocs: ["USER_MANUAL.md"],
     governanceRole: "User manual",
   },
+  "AI_AGENT_MASTER_PROMPT.md": {
+    category: "Admin",
+    status: "Reference",
+    purpose: "Master AI agent prompt for the LeanSync ERP import system.",
+    relatedDocs: [],
+    governanceRole: "Admin guide",
+  },
+  "LEAN_SYNC_MASTER_CONTEXT.md": {
+    category: "Training",
+    status: "Reference",
+    purpose: "Comprehensive training material for the LeanSync platform.",
+    relatedDocs: [],
+    governanceRole: "Training material",
+  },
+  "CHAT_INDEX.md": {
+    category: "Release Notes",
+    status: "Reference",
+    purpose: "Changelog and release notes for the LeanSync platform.",
+    relatedDocs: [],
+    governanceRole: "Release notes",
+  },
+  "INDEX.md": {
+    category: "Technical",
+    status: "Reference",
+    purpose: "Technical documentation index for the LeanSync platform.",
+    relatedDocs: [],
+    governanceRole: "Technical docs",
+  },
 };
 
 export const STATUS_FILTERS = ["All", "Canonical", "Reference", "Draft", "Needs Review", "Deprecated"] as const;

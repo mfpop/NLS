@@ -178,6 +178,34 @@ DOC_META: Final[dict[str, DocumentationMeta]] = {
         related_docs=("USER_MANUAL.md",),
         governance_role="User manual",
     ),
+    "AI_AGENT_MASTER_PROMPT.md": DocumentationMeta(
+        category="Admin",
+        status="Reference",
+        purpose="Master AI agent prompt for the LeanSync ERP import system.",
+        related_docs=(),
+        governance_role="Admin guide",
+    ),
+    "LEAN_SYNC_MASTER_CONTEXT.md": DocumentationMeta(
+        category="Training",
+        status="Reference",
+        purpose="Comprehensive training material for the LeanSync platform.",
+        related_docs=(),
+        governance_role="Training material",
+    ),
+    "CHAT_INDEX.md": DocumentationMeta(
+        category="Release Notes",
+        status="Reference",
+        purpose="Changelog and release notes for the LeanSync platform.",
+        related_docs=(),
+        governance_role="Release notes",
+    ),
+    "INDEX.md": DocumentationMeta(
+        category="Technical",
+        status="Reference",
+        purpose="Technical documentation index for the LeanSync platform.",
+        related_docs=(),
+        governance_role="Technical docs",
+    ),
 }
 
 

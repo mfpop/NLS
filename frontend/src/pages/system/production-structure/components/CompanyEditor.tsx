@@ -55,26 +55,26 @@ function SearchableSelect({ category, formKey, label, form, onChange, options, l
 
   if (loading) return (
     <div>
-      <label className="block text-xs font-semibold text-muted-foreground mb-1">{label}</label>
-      <div className="w-full rounded border border-border px-2.5 py-1.5 text-[13px] flex items-center gap-1.5 bg-card bg-muted">
+      <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">{label}</label>
+      <div className="h-8 w-full rounded-md border border-input/60 bg-card px-2.5 text-[13px] flex items-center gap-1.5">
         <RefreshCw className="h-3.5 w-3.5 animate-spin text-muted-foreground stroke-current" /> Loading options...
       </div>
     </div>
   );
   if (opts.length === 0) return (
     <div>
-      <label className="block text-xs font-semibold text-muted-foreground mb-1">{label}</label>
-      <div className="w-full rounded border border-border px-2.5 py-1.5 text-[13px] flex items-center justify-between bg-card bg-muted">
+      <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">{label}</label>
+      <div className="h-8 w-full rounded-md border border-input/60 bg-card px-2.5 text-[13px] flex items-center justify-between">
         <span className="text-muted-foreground italic">No options configured</span>
-        <button type="button" onClick={() => window.open("/system/production-structure/references", "_blank")} className="inline-flex items-center gap-0.5 text-success hover:text-success font-medium text-xs"><Plus className="h-3 w-3 stroke-current" /> Add</button>
+        <button type="button" onClick={() => window.open("/system/production-structure/references", "_blank")} className="inline-flex items-center gap-0.5 text-success hover:text-success font-medium text-[10px]"><Plus className="h-3 w-3 stroke-current" /> Add</button>
       </div>
     </div>
   );
   return (
     <div ref={ref} className="relative">
-      <label className="block text-xs font-semibold text-muted-foreground mb-1">{label}{required && <span className="ml-0.5 text-danger">*</span>}</label>
+      <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">{label}{required && <span className="ml-0.5 text-danger">*</span>}</label>
       <button id={id} type="button" onClick={() => { setIsOpen(!isOpen); setQuery(""); }}
-        className={'w-full h-8 rounded border border-border px-2.5 text-[13px] flex items-center justify-between gap-1 bg-card bg-muted focus:border-success focus:ring-2 focus:ring-success outline-none transition-colors' + (invalid ? ' border-danger' : '') + (!selected ? ' text-muted-foreground' : '')}>
+        className={`h-8 w-full rounded-md border bg-card px-2.5 text-[13px] flex items-center justify-between gap-1 outline-none transition-all duration-150 focus:border-primary/50 focus:ring-2 focus:ring-primary/15 ${invalid ? "border-danger/60" : "border-input/60"} ${!selected ? "text-muted-foreground" : "text-foreground"}`}>
         <span className="truncate">{selected ? selected.label : "Select..."}</span>
         <span className="flex items-center gap-0.5 shrink-0">
           {selected && <span onClick={(e) => { e.stopPropagation(); onChange(formKey as string, ""); setQuery(""); setIsOpen(true); }} className="text-muted-foreground hover:text-muted-foreground transition-colors"><X className="h-3.5 w-3.5 stroke-current" /></span>}
@@ -83,8 +83,8 @@ function SearchableSelect({ category, formKey, label, form, onChange, options, l
       </button>
       {invalid && <p className="text-[11px] text-danger mt-0.5">This field is required</p>}
       {isOpen && (
-        <div className="absolute z-20 top-full left-0 right-0 mt-1 rounded-lg border border-border bg-card shadow-lg border-border bg-muted max-h-48 flex flex-col">
-          <div className="relative border-b border-border">
+        <div className="absolute z-20 top-full left-0 right-0 mt-1 rounded-md border border-border/30 bg-card shadow-lg max-h-48 flex flex-col">
+          <div className="relative border-b border-border/20">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground stroke-current pointer-events-none" />
             <input ref={inputRef} type="text" value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={handleInputKeyDown}
               placeholder="Search..." className="w-full h-8 pl-8 pr-2.5 text-[12px] bg-transparent outline-none text-muted-foreground placeholder:text-muted-foreground" />
@@ -94,7 +94,7 @@ function SearchableSelect({ category, formKey, label, form, onChange, options, l
               <div className="px-3 py-2 text-[12px] text-muted-foreground text-center">No results</div>
             ) : filtered.map((o, i) => (
               <button key={o.value} type="button" onClick={() => { onChange(formKey as string, o.value); setIsOpen(false); }} onMouseEnter={() => setHighlighted(i)}
-                className={`w-full text-left px-3 py-1.5 text-[12px] transition-colors ${o.value === form[formKey] ? "bg-info text-info font-medium bg-info text-info" : highlighted === i ? "bg-muted text-muted-foreground bg-muted text-muted-foreground" : "text-muted-foreground"}`}>{o.label}</button>
+                className={`w-full text-left px-3 py-1.5 text-[12px] transition-colors ${o.value === form[formKey] ? "bg-primary/10 text-primary font-medium" : highlighted === i ? "bg-muted text-muted-foreground" : "text-muted-foreground hover:bg-muted"}`}>{o.label}</button>
             ))}
           </div>
         </div>
@@ -109,27 +109,22 @@ function TextField({ id, label, value, onChange, onBlur, required, placeholder, 
 }) {
   return (
     <div>
-      <label className="block text-xs font-semibold text-muted-foreground mb-1">{label}{required && <span className="ml-0.5 text-danger">*</span>}</label>
+      <label className="block text-[10px] font-medium text-muted-foreground mb-0.5">{label}{required && <span className="ml-0.5 text-danger">*</span>}</label>
       <input id={id} type="text" value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
         placeholder={placeholder}
-        className={`w-full rounded border border-border px-2.5 py-1.5 text-[13px] bg-card bg-muted outline-none transition-colors ${invalid ? "border-danger" : "border-border"} focus:border-success focus:ring-2 focus:ring-success`} />
-      {helper && !invalid && <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1"><HelpCircle className="h-3 w-3 shrink-0" />{helper}</p>}
-      {invalid && <p className="text-[11px] text-danger mt-0.5">Required</p>}
+        className={`h-8 w-full rounded-md border bg-card px-2.5 text-[13px] text-foreground outline-none transition-all duration-150 placeholder:text-muted-foreground/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/15 ${invalid ? "border-danger/60 pr-8" : "border-input/60"}`} />
+      {helper && !invalid && <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1"><HelpCircle className="h-2.5 w-2.5 shrink-0" />{helper}</p>}
+      {invalid && <p className="mt-0.5 text-[10px] text-danger flex items-center gap-1"><HelpCircle className="h-2.5 w-2.5 shrink-0" />Required</p>}
     </div>
   );
 }
 
-export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact, touchedFields, setTouched }: {
+export function CompanyEditor({ form, onChange, touchedFields, setTouched }: {
   form: CompanyFormData;
   onChange: (key: string, value: string) => void;
-  onSave?: () => void;
-  onClose?: () => void;
-  saving?: boolean;
-  compact?: boolean;
   touchedFields?: Record<string, boolean>;
   setTouched?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }) {
-  void onSave; void onClose; void saving; void compact;
   const { data: optsData, loading: optsLoading } = useQuery<{ configOptions: Array<{ category: string; value: string; label: string }> }>(CONFIG_OPTIONS_QUERY);
 
   const options = useMemo(() => {
@@ -141,28 +136,16 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
   const touch = (key: string) => { if (setTouched) setTouched((p) => ({ ...p, [key]: true })); };
   const isInvalid = (key: string, required?: boolean) => required ? (touchedFields?.[key] && !form[key as keyof CompanyFormData]?.toString().trim()) : false;
 
-  function Section({ title, children, collapsible = false, defaultOpen = true }: { title: string; children: React.ReactNode; collapsible?: boolean; defaultOpen?: boolean }) {
-    const [open, setOpen] = useState(defaultOpen);
+  function SectionHeader({ title }: { title: string }) {
     return (
-      <div className="bg-muted rounded-lg p-4 mb-5">
-        <button type="button" onClick={collapsible ? () => setOpen(!open) : undefined}
-          aria-expanded={collapsible ? open : undefined}
-          className={`flex items-center gap-2 w-full text-left ${collapsible ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}>
-          <h3 className="text-sm font-bold text-muted-foreground flex-1">{title}</h3>
-          {collapsible && (
-            <ChevronDown className={`h-4 w-4 text-muted-foreground stroke-current transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-          )}
-        </button>
-        <p className="text-[11px] text-muted-foreground mt-0.5 mb-4">Changes here affect all plants, lines, and resources.</p>
-        {(!collapsible || open) && <>{children}</>}
-      </div>
+      <div className="mb-2 inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground">{title}</div>
     );
   }
 
   return (
-    <div className="px-4 py-4">
-      <Section title="Identity">
-        <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+    <div className="flex flex-col gap-4 p-4">
+      <SectionHeader title="Identity" />
+        <div className="grid grid-cols-3 gap-x-3 gap-y-3">
           <TextField id="company-field-name" label="Company Name" value={form.name}
             onChange={(v) => onChange("name", v)} onBlur={() => touch("name")}
             required placeholder="e.g. Lean Manufacturing Demo" invalid={isInvalid("name", true)} />
@@ -180,10 +163,8 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
             onChange={(v) => onChange("operatingSince", v)} placeholder="e.g. 1995-01-01"
             helper="Format: YYYY-MM-DD" />
         </div>
-      </Section>
-
-      <Section title="Business Profile">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+      <SectionHeader title="Business Profile" />
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3">
           <TextField label="Manufacturing Focus" value={form.manufacturingFocus}
             onChange={(v) => onChange("manufacturingFocus", v)} placeholder="Comma-separated, e.g. Lean, TPS, Kaizen" />
           <TextField label="Product Lines" value={form.productLines}
@@ -193,10 +174,8 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
           <TextField label="Manufacturing Type" value={form.manufacturingType}
             onChange={(v) => onChange("manufacturingType", v)} placeholder="e.g. Discrete Manufacturing" />
         </div>
-      </Section>
-
-      <Section title="Global Operations" collapsible defaultOpen={false}>
-        <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+      <SectionHeader title="Global Operations" />
+        <div className="grid grid-cols-3 gap-x-3 gap-y-3">
           <SearchableSelect category="timezone" formKey="defaultTimezone"
             label="Timezone" form={form} onChange={onChange} options={options} loading={optsLoading}
             required touched={touchedFields?.defaultTimezone} onBlur={() => touch("defaultTimezone")} />
@@ -215,10 +194,8 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
           <TextField label="Default Units" value={form.defaultUnits}
             onChange={(v) => onChange("defaultUnits", v)} placeholder="e.g. Imperial, Metric" />
         </div>
-      </Section>
-
-      <Section title="Contact & Administration">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+      <SectionHeader title="Contact & Administration" />
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3">
           <TextField label="Phone" value={form.phone}
             onChange={(v) => onChange("phone", v)} placeholder="+1 (555) 000-0000"
             helper="Include country code (e.g. +1 555 000 0000)" />
@@ -231,10 +208,8 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
           <TextField label="Admin Role" value={form.adminRole}
             onChange={(v) => onChange("adminRole", v)} placeholder="e.g. Operations Manager" />
         </div>
-      </Section>
-
-      <Section title="Location" collapsible defaultOpen={false}>
-        <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+      <SectionHeader title="Location" />
+        <div className="grid grid-cols-3 gap-x-3 gap-y-3">
           <div className="col-span-3">
             <TextField label="Address" value={form.address}
               onChange={(v) => onChange("address", v)} placeholder="e.g. 123 Industrial Blvd, Suite 100" />
@@ -250,18 +225,15 @@ export function CompanyEditor({ form, onChange, onSave, onClose, saving, compact
             onChange={(v) => onChange("zipcode", v)} placeholder="e.g. 90670"
             helper="US: 90670, US+4: 90670-2221, Canada: A1A 1A1" />
         </div>
-      </Section>
-
-      <Section title="Description">
+      <SectionHeader title="Description" />
         <div>
           <textarea value={form.description} onChange={(e) => onChange("description", e.target.value)}
-            className="w-full rounded border border-border p-2.5 text-[13px] bg-card bg-muted outline-none focus:border-success focus:ring-2 focus:ring-success transition-colors resize-y min-h-[60px]"
+            className="min-h-[72px] max-h-[140px] w-full rounded-md border border-input/60 bg-card px-2.5 py-1.5 text-[13px] text-foreground outline-none transition-all duration-150 placeholder:text-muted-foreground/40 focus:border-primary/50 focus:ring-2 focus:ring-primary/15 resize-none"
             maxLength={500} placeholder="Brief description of the company, core products, and operational scope." />
-          <p className={`text-right text-[11px] mt-1 ${(form.description?.length || 0) >= 500 ? "text-danger" : (form.description?.length || 0) >= 450 ? "text-warning" : "text-muted-foreground"}`}>
+          <p className={`text-right text-[10px] mt-0.5 ${(form.description?.length || 0) >= 500 ? "text-danger" : (form.description?.length || 0) >= 450 ? "text-warning" : "text-muted-foreground/60"}`}>
             {form.description?.length || 0} / 500
           </p>
         </div>
-      </Section>
     </div>
   );
 }

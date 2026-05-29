@@ -31,7 +31,7 @@
   --warning-foreground: 32 65% 22%;
   --danger: 0 52% 46%;
   --danger-foreground: 0 58% 24%;
-  --info: 199 89% 48%;
+  --info: 199 80% 38%;
   --info-foreground: 0 0% 100%;
   --sidebar: 222 14% 97%;
   --sidebar-foreground: 215 25% 27%;
@@ -161,6 +161,14 @@
   --entity-resource-bg: 275 18% 18%;
   --entity-warehouse: 188 34% 60%;
   --entity-warehouse-bg: 188 18% 18%;
+  --entity-product-master: 258 28% 62%;
+  --entity-product-master-bg: 258 18% 18%;
+  --entity-settings: 215 14% 62%;
+  --entity-settings-bg: 215 10% 18%;
+  --entity-profile: 340 24% 62%;
+  --entity-profile-bg: 340 16% 18%;
+  --entity-routing: 15 42% 60%;
+  --entity-routing-bg: 15 20% 18%;
   --shadow-color: 222 60% 3%;
 }
 
@@ -190,7 +198,7 @@
   --warning-foreground: 32 65% 22%;
   --danger: 0 52% 46%;
   --danger-foreground: 0 58% 24%;
-  --info: 199 89% 48%;
+  --info: 199 80% 38%;
   --info-foreground: 0 0% 100%;
   --sidebar: 222 14% 97%;
   --sidebar-foreground: 215 25% 27%;
@@ -250,6 +258,14 @@
   --entity-resource-bg: 275 18% 93%;
   --entity-warehouse: 190 16% 46%;
   --entity-warehouse-bg: 190 20% 94%;
+  --entity-product-master: 258 22% 48%;
+  --entity-product-master-bg: 258 18% 93%;
+  --entity-settings: 215 12% 46%;
+  --entity-settings-bg: 215 10% 93%;
+  --entity-profile: 340 20% 48%;
+  --entity-profile-bg: 340 18% 93%;
+  --entity-routing: 15 38% 46%;
+  --entity-routing-bg: 15 22% 93%;
   --shadow-color: 222 47% 11%;
 }
 
@@ -339,6 +355,14 @@
   --entity-resource-bg: 275 14% 90%;
   --entity-warehouse: 190 16% 36%;
   --entity-warehouse-bg: 190 12% 90%;
+  --entity-product-master: 258 18% 40%;
+  --entity-product-master-bg: 258 14% 90%;
+  --entity-settings: 220 8% 38%;
+  --entity-settings-bg: 220 8% 90%;
+  --entity-profile: 340 16% 40%;
+  --entity-profile-bg: 340 14% 90%;
+  --entity-routing: 15 32% 38%;
+  --entity-routing-bg: 15 18% 90%;
   --shadow-color: 22 60% 20%;
 }
 

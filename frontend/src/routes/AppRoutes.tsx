@@ -153,12 +153,6 @@ const MyDashboardPage = lazy(() =>
 const MyTasksPage = lazy(() =>
   import("@/pages/myworkspace/MyTasksPage").then((module) => ({ default: module.MyTasksPage }))
 );
-const DocumentationCenter = lazy(() =>
-  import("@/pages/DocumentationCenter/DocumentationCenter").then((module) => ({ default: module.DocumentationCenter }))
-);
-const UserManualPage = lazy(() =>
-  import("@/pages/docs/UserManualPage").then((module) => ({ default: module.UserManualPage }))
-);
 const AdminGuidePage = lazy(() =>
   import("@/pages/docs/AdminGuidePage").then((module) => ({ default: module.AdminGuidePage }))
 );
@@ -171,6 +165,10 @@ const ReleaseNotesPage = lazy(() =>
 const TechnicalDocsPage = lazy(() =>
   import("@/pages/docs/TechnicalDocsPage").then((module) => ({ default: module.TechnicalDocsPage }))
 );
+const UserManualPage = lazy(() =>
+  import("@/pages/docs/UserManualPage").then((module) => ({ default: module.UserManualPage }))
+);
+
 const NotFoundPage = lazy(() =>
   import("@/pages/not-found/NotFoundPage").then((module) => ({ default: module.NotFoundPage }))
 );
@@ -236,7 +234,7 @@ export function AppRoutes() {
                     <Route path="system/manufacturing-structure/product-master-data" element={<Navigate to="/system/product-master" replace />} />
                     <Route path="system/application/diagnostics" element={<Navigate to="/system/diagnostics" replace />} />
                     <Route path="system/application/settings" element={<Navigate to="/system/application-settings" replace />} />
-                    <Route path="system/application/documentation" element={<Navigate to="/docs/core" replace />} />
+                    <Route path="system/application/documentation" element={<Navigate to="/docs/user-manual" replace />} />
                     <Route path="system/production-structure/flow/:tab" element={<ProductionFlowLayout />} />
                     <Route path="system/production-structure/components" element={<ProductionComponentsLayout />}>
                       <Route index element={<Navigate to="company" replace />} />
@@ -283,9 +281,6 @@ export function AppRoutes() {
           <Route path="docs/training-materials" element={<TrainingMaterialsPage />} />
           <Route path="docs/release-notes" element={<ReleaseNotesPage />} />
           <Route path="docs/technical-docs" element={<TechnicalDocsPage />} />
-          <Route path="docs/core" element={<DocumentationCenter />} />
-          <Route path="docs/core/:docSlug" element={<DocumentationCenter />} />
-          <Route path="docs/setup" element={<DocumentationCenter />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

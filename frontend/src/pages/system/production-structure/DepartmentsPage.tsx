@@ -92,10 +92,10 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
       setSelectedId(departmentId);
       return;
     }
-    if (lineIdFilter && departments.length > 0 && !departments.some((department: DepartmentNode) => department.id === selectedId)) {
-      setSelectedId(departments[0].id);
-    }
-  }, [departments, searchParams, lineIdFilter, selectedId]);
+    if (paginated.length === 0) return;
+    if (selectedId && paginated.some((d: DepartmentNode) => d.id === selectedId)) return;
+    setSelectedId(paginated[0].id);
+  }, [paginated, searchParams, selectedId]);
 
   const hNew = useCallback(() => {
     setSelectedId(null);

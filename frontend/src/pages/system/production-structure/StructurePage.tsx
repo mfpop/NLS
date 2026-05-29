@@ -278,7 +278,7 @@ export function StructurePage() {
             <span className="font-medium uppercase tracking-wide">Legend</span>
             <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typePlant}`} /> Plant</span>
             <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.iconBoxAmber}`} /> Line</span>
-            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeDepartment}`} /> Dept</span>
+            <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeDepartment}`} /> Dept (org only)</span>
             <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeGroup}`} /> Group</span>
             <span className="flex items-center gap-1"><span className={`inline-block h-2 w-2 rounded ${theme.typeResource}`} /> Resource</span>
           </div>

@@ -13,19 +13,17 @@ type FormMode = "view" | "edit";
 
 // ── Shared display helpers ──
 
-function Pill({ label }: { label: string }) {
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${theme.badgeActive}`}>{label}</span>;
-}
-
-function RefPill({ categoryCode, valueId }: { categoryCode: string; valueId: string }) {
-  const { getLabel } = useReferenceTables();
-  const label = getLabel(categoryCode, valueId) || valueId;
-  return <Pill label={label} />;
-}
-
 function BadgeList({ categoryCode, ids }: { categoryCode: string; ids: string[] }) {
+  const { getLabel } = useReferenceTables();
   if (!ids || ids.length === 0) return <span className={`text-[12px] ${theme.textMuted} italic`}>None</span>;
-  return (<div className="flex flex-wrap gap-1">{ids.map((id) => <RefPill key={id} categoryCode={categoryCode} valueId={id} />)}</div>);
+  return (
+    <ul className="space-y-0.5">
+      {ids.map((id) => {
+        const label = getLabel(categoryCode, id) || id;
+        return <li key={id} className="flex items-center gap-1.5 text-[12px] text-foreground"><span className="h-1 w-1 rounded-full bg-entity-product-master/40 shrink-0" />{label}</li>;
+      })}
+    </ul>
+  );
 }
 
 function parseCoordinate(value: unknown): number | null {
@@ -76,10 +74,10 @@ const FIELD_CONFIGS: Record<string, FieldDef[]> = {
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div className="mb-1.5 flex items-center gap-1.5">
-      <span className="flex h-3 w-3 items-center justify-center text-entity-product-master/60">
+      <span className="flex h-4 w-4 items-center justify-center text-entity-product-master/60">
         {icon}
       </span>
-      <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-entity-product-master/70">
+      <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-entity-product-master/70">
         {title}
       </span>
     </div>
@@ -174,7 +172,7 @@ function FieldSet({ configs, form, errors, isEditing, update, ro, textRefs }: {
   configs: FieldDef[]; form: CompanyFormData; errors: Record<string, string>; isEditing: boolean;
   update: (k: keyof CompanyFormData, v: string | string[]) => void; ro: string; textRefs: Record<string, string>;
 }) {
-  const labelClass = "block text-[10px] font-medium text-muted-foreground mb-0.5";
+  const labelClass = "block text-[11px] font-medium text-muted-foreground mb-0.5";
 
   const helpers: Record<string, string> = {
     operatingSince: "Format: YYYY-MM-DD (e.g. 1995-01-15)",
@@ -215,7 +213,7 @@ function CompanyIdentityCard({ form, errors, isEditing, update, ro }: {
   return (
     <div>
       <SectionHeader icon={
-        <svg className="h-3 w-3 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l-9 5h18z"/></svg>
+        <svg className="h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 22h18"/><path d="M6 18v-7"/><path d="M10 18v-7"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M12 2l-9 5h18z"/></svg>
       } title="Company Identity" />
       <FieldSet configs={FIELD_CONFIGS.identity} form={form} errors={errors} isEditing={isEditing} update={update} ro={ro} textRefs={textRefs} />
     </div>
@@ -251,14 +249,14 @@ function BusinessProfileCard({ form, isEditing, update, roTA }: {
 
   return (
     <div>
-      <SectionHeader icon={<Info className="h-3 w-3 stroke-current text-muted-foreground" />} title="Business Profile" />
+      <SectionHeader icon={<Info className="h-4 w-4 stroke-current text-info" />} title="Business Profile" />
       <div className="flex flex-col gap-3">
         <div className="flex flex-col">
-          <span className="block text-[10px] font-medium text-muted-foreground mb-0.5">Description</span>
+          <span className="block text-[11px] font-medium text-muted-foreground mb-0.5">Description</span>
           {isEditing ? (
             <div className="flex flex-col">
               <textarea ref={textareaRef} value={form.description} onChange={(e) => update("description", e.target.value)}
-                className={`min-h-[100px] max-h-[150px] w-full max-w-prose text-[13px] outline-none transition-colors resize-none ${roTA}`}
+                className={`min-h-[100px] max-h-[150px] w-full text-[13px] outline-none transition-colors resize-none ${roTA}`}
                 maxLength={500} placeholder="Brief description of the company, core products, and operational scope."
                 style={{ overflowY: "hidden" }} />
               {form.description?.length >= 450 && (
@@ -269,7 +267,7 @@ function BusinessProfileCard({ form, isEditing, update, roTA }: {
             </div>
           ) : (
             <div>
-              <p ref={descRef} className={`min-h-[60px] max-h-[100px] max-w-prose overflow-hidden text-[13px] ${theme.textPrimary} leading-snug whitespace-pre-wrap ${descExpanded ? "max-h-none" : ""}`}>{renderDisplayValue(form.description)}</p>
+              <p ref={descRef} className={`min-h-[60px] max-h-[100px] overflow-hidden text-[13px] ${theme.textPrimary} leading-snug whitespace-pre-wrap text-justify ${descExpanded ? "max-h-none" : ""}`}>{renderDisplayValue(form.description)}</p>
               {descOverflows && (
                 <button type="button" onClick={() => setDescExpanded((v) => !v)} className={`mt-1 text-[11px] font-medium ${theme.link}`}>
                   {descExpanded ? "Show less" : "Show more"}
@@ -280,7 +278,7 @@ function BusinessProfileCard({ form, isEditing, update, roTA }: {
         </div>
         <div className="grid grid-cols-2 gap-3 shrink-0">
           <div>
-            <span className={`block text-[11px] font-semibold ${theme.textSecondary} mb-1`}>Product Lines</span>
+            <span className={`block text-[11px] font-medium text-muted-foreground mb-1`}>Product Lines</span>
             {isEditing ? (
               <ReferenceMultiSelect categoryCode="product_line" label="" values={form.productLineIds ?? []}
                 onChange={(v) => update("productLineIds", v)} showUnselected={false} compact />
@@ -289,7 +287,7 @@ function BusinessProfileCard({ form, isEditing, update, roTA }: {
             )}
           </div>
           <div>
-            <span className={`block text-[11px] font-semibold ${theme.textSecondary} mb-1`}>Lean Methodology</span>
+            <span className={`block text-[11px] font-medium text-muted-foreground mb-1`}>Lean Methodology</span>
             {isEditing ? (
               <ReferenceMultiSelect categoryCode="lean_methodology" label="" values={form.leanMethodologyIds ?? []}
                 onChange={(v) => update("leanMethodologyIds", v)} showUnselected={false} compact />
@@ -313,15 +311,13 @@ function ContactAdminCard({ form, errors, isEditing, update, ro }: {
     phone: "Include country code (e.g. +1 555 000 0000)",
   };
   return (
-    <div className="h-full">
-      <SectionHeader icon={<Phone className="h-3 w-3 stroke-current text-muted-foreground" />} title="Contact & Administration" />
+    <div>
+      <SectionHeader icon={<Phone className="h-4 w-4 stroke-current text-accent" />} title="Contact & Administration" />
       <div className="grid grid-cols-2 gap-x-1.5 gap-y-1">
         {contactFields.map((f) => {
           const val = form[f.key] as string;
           const err = errors[f.key as string];
-          const labelClass = isEditing
-            ? "block text-[10px] font-medium text-muted-foreground mb-0.5"
-            : "block text-[10px] font-medium text-muted-foreground mb-0.5";
+          const labelClass = "block text-[11px] font-medium text-muted-foreground mb-0.5";
           return (
             <div key={f.key} className={f.key === "website" ? "col-span-2" : ""}>
               <label className={labelClass}>{f.label}{f.required ? " *" : ""}</label>
@@ -423,9 +419,9 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
   }, [lookupQuery]);
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between">
-        <SectionHeader icon={<MapPin className="h-3 w-3 stroke-current text-muted-foreground" />} title="Headquarters / Main Location" />
+        <SectionHeader icon={<MapPin className="h-4 w-4 stroke-current text-info" />} title="Headquarters / Main Location" />
         {isEditing && (
           <button type="button" onClick={() => setHqOpen(!hqOpen)}
             className="flex items-center gap-0.5 text-[10px] font-medium text-muted-foreground/60 hover:text-muted-foreground transition-colors">
@@ -435,105 +431,105 @@ function HeadquartersCard({ form, errors, isEditing, update, ro, getLabel, filte
         )}
       </div>
       {(!isEditing || hqOpen) && (
-        <div className="grid grid-cols-[65fr_35fr]">
-          <div className="flex flex-col pr-2">
-            <div className="grid grid-cols-2 gap-x-1.5 gap-y-1.5">
-              <div className="col-span-2">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>Street Address</label>
-                <TextField value={form.address} onChange={(v) => update("address", v)} readOnly={!isEditing} ro={ro} />
-              </div>
-              <div className="col-span-1">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>Zip / Postal Code</label>
-                <TextField value={form.zipcode} onChange={(v) => update("zipcode", v)} readOnly={!isEditing} error={errors.zipcode} ro={ro} placeholder="90670 / 90670-2221 / A1A 1A1" inputType="text" />
-              </div>
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+          <div className="shrink-0 grid grid-cols-2 gap-x-1.5 gap-y-1.5">
+            <div className="col-span-2">
+              <label className="block text-[11px] font-medium text-muted-foreground mb-0.5">Street Address</label>
+              <TextField value={form.address} onChange={(v) => update("address", v)} readOnly={!isEditing} ro={ro} />
             </div>
-            <div className="grid grid-cols-3 gap-x-1.5 gap-y-1.5 mt-2">
-              <div className="min-w-0">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>City</label>
-                {isEditing ? (
-                  <ReferenceSelect categoryCode="city" label=""
-                    value={form.cityId ?? ""} onChange={onCityChange} placeholder="Select city..."
-                    filteredValues={form.stateId ? filterByMeta("city", "state_code", byCategory("state").find((s) => s.id === form.stateId)?.code ?? "") : []} />
-                ) : (
-                  <span className={`block text-[13px] ${theme.textPrimary} truncate`}>{form.city || "\u2014"}</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>State</label>
-                {isEditing ? (
-                  <ReferenceSelect categoryCode="state" label=""
-                    value={form.stateId ?? ""} onChange={onStateChange} placeholder="Select state..."
-                    filteredValues={form.countryId ? filterByMeta("state", "country_code", byCategory("country").find((c) => c.id === form.countryId)?.code ?? "") : []} />
-                ) : (
-                  <span className={`block text-[13px] ${theme.textPrimary} truncate`}>{form.state || "\u2014"}</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <label className={`block ${isEditing ? 'text-[11px] font-semibold text-muted-foreground' : theme.label} mb-0.5`}>Country *</label>
-                {isEditing ? (
-                  <ReferenceSelect categoryCode="country" label=""
-                    value={form.countryId ?? ""} onChange={onCountryChange} placeholder="Select country..." />
-                ) : (
-                  <span className={`block text-[13px] ${theme.textPrimary} truncate`}>{form.country || "\u2014"}</span>
-                )}
-                {errors.countryId && <p className={theme.labelError + " mt-0.5"}>{errors.countryId}</p>}
-              </div>
+            <div className="col-span-1">
+              <label className="block text-[11px] font-medium text-muted-foreground mb-0.5">Zip / Postal Code</label>
+              <TextField value={form.zipcode} onChange={(v) => update("zipcode", v)} readOnly={!isEditing} error={errors.zipcode} ro={ro} placeholder="90670 / 90670-2221 / A1A 1A1" inputType="text" />
             </div>
           </div>
-          <div className="overflow-hidden border-l border-border" style={{ maxHeight: 180 }}>
-            {(() => {
-              const lat = resolvedCoords?.lat ?? null;
-              const lon = resolvedCoords?.lon ?? null;
-              const hasCoordinates = lat !== null && lon !== null && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+          <div className="shrink-0 grid grid-cols-3 gap-x-1.5 gap-y-1.5">
+            <div className="min-w-0">
+              <label className="block text-[11px] font-medium text-muted-foreground mb-0.5">City</label>
+              {isEditing ? (
+                <ReferenceSelect categoryCode="city" label=""
+                  value={form.cityId ?? ""} onChange={onCityChange} placeholder="Select city..."
+                  filteredValues={form.stateId ? filterByMeta("city", "state_code", byCategory("state").find((s) => s.id === form.stateId)?.code ?? "") : []} />
+              ) : (
+                <span className={`block text-[13px] ${theme.textPrimary} truncate`}>{form.city || "\u2014"}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <label className="block text-[11px] font-medium text-muted-foreground mb-0.5">State</label>
+              {isEditing ? (
+                <ReferenceSelect categoryCode="state" label=""
+                  value={form.stateId ?? ""} onChange={onStateChange} placeholder="Select state..."
+                  filteredValues={form.countryId ? filterByMeta("state", "country_code", byCategory("country").find((c) => c.id === form.countryId)?.code ?? "") : []} />
+              ) : (
+                <span className={`block text-[13px] ${theme.textPrimary} truncate`}>{form.state || "\u2014"}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <label className="block text-[11px] font-medium text-muted-foreground mb-0.5">Country *</label>
+              {isEditing ? (
+                <ReferenceSelect categoryCode="country" label=""
+                  value={form.countryId ?? ""} onChange={onCountryChange} placeholder="Select country..." />
+              ) : (
+                <span className={`block text-[13px] ${theme.textPrimary} truncate`}>{form.country || "\u2014"}</span>
+              )}
+              {errors.countryId && <p className={theme.labelError + " mt-0.5"}>{errors.countryId}</p>}
+            </div>
+          </div>
+          {(() => {
+            const lat = resolvedCoords?.lat ?? null;
+            const lon = resolvedCoords?.lon ?? null;
+            const hasCoordinates = lat !== null && lon !== null && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
 
-              if (hasCoordinates) {
-                const delta = 0.01;
-                const left = lon - delta;
-                const right = lon + delta;
-                const top = lat + delta;
-                const bottom = lat - delta;
-                const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${lat}%2C${lon}`;
+            if (hasCoordinates) {
+              const delta = 0.01;
+              const left = lon - delta;
+              const right = lon + delta;
+              const top = lat + delta;
+              const bottom = lat - delta;
+              const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${lat}%2C${lon}`;
 
-                return (
+              return (
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden mb-4 border border-border/20 bg-background/40 backdrop-blur-sm focus-within:opacity-100 transition-opacity duration-150">
                   <iframe
                     title="Company location"
-                    className="w-full h-full"
+                    className="w-full flex-1 opacity-40 hover:opacity-100 focus:opacity-100 transition-opacity duration-150"
                     loading="lazy"
                     src={mapSrc}
                   />
-                );
-              }
-
-              if (isResolvingCoords) {
-                return <div className="flex items-center justify-center h-full bg-muted text-muted-foreground text-xs">Loading map...</div>;
-              }
-
-              const mapQuery = form.address && form.city
-                  ? `${form.address}, ${form.city}, ${form.state || ""}, ${form.country || ""}`
-                : form.city
-                  ? `${form.city}, ${form.state || ""}, ${form.country || ""}`
-                  : "";
-
-              if (!mapQuery) {
-                return <div className="flex items-center justify-center h-full bg-muted text-muted-foreground text-xs">No location data</div>;
-              }
-
-              return (
-                <div className="flex h-full flex-col items-center justify-center gap-2 px-3">
-                  <MapPin className="h-5 w-5 text-danger/60 shrink-0" />
-                  <p className="text-[10px] text-muted-foreground text-center leading-relaxed">{mapQuery}</p>
-                  <a
-                    href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(mapQuery)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[10px] font-medium text-info hover:text-info/80 transition-colors underline underline-offset-2"
-                  >
-                    Open map &rarr;
-                  </a>
+                  <div className="shrink-0 flex items-center justify-between bg-muted/20 px-3 py-1 border-t border-border/20">
+                    <span className="text-[9px] text-muted-foreground/60">{lat.toFixed(4)}, {lon.toFixed(4)}</span>
+                    <a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(`${form.city}, ${form.state || ""}, ${form.country || ""}`)}`}
+                      target="_blank" rel="noreferrer"
+                      className="text-[9px] font-medium text-primary hover:text-accent transition-colors">
+                      Open in OpenStreetMap &rarr;
+                    </a>
+                  </div>
                 </div>
               );
-            })()}
-          </div>
+            }
+
+            if (isResolvingCoords) {
+              return <div className="flex items-center justify-center flex-1 mb-4 border border-border/20 bg-background/40 backdrop-blur-sm opacity-50 text-muted-foreground text-xs">Loading map...</div>;
+            }
+
+            const mapQuery = form.address && form.city
+                ? `${form.address}, ${form.city}, ${form.state || ""}, ${form.country || ""}`
+              : form.city
+                ? `${form.city}, ${form.state || ""}, ${form.country || ""}`
+                : "";
+
+            if (!mapQuery) return null;
+
+            return (
+              <div className="flex items-center justify-between mb-4 border border-dashed border-border/30 bg-background/40 backdrop-blur-sm px-3 py-2.5">
+                <span className="text-[11px] text-muted-foreground">{mapQuery}</span>
+                <a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(mapQuery)}`}
+                  target="_blank" rel="noreferrer"
+                  className="text-[10px] font-medium text-primary hover:text-accent transition-colors shrink-0 ml-2">
+                  View on map &rarr;
+                </a>
+              </div>
+            );
+          })()}
         </div>
       )}
     </div>
@@ -556,7 +552,7 @@ function GlobalOpsCard({ form, errors, isEditing, update }: {
     const err = errors[key];
     return (
       <div>
-        <label className={`block text-[11px] font-semibold text-muted-foreground mb-0.5`}>{label}{required ? " *" : ""}</label>
+        <label className={`block text-[11px] font-medium text-muted-foreground mb-0.5`}>{label}{required ? " *" : ""}</label>
         <RefField value={val} onChange={(v) => update(key as any, v)} readOnly={!isEditing} error={err}
           categoryCode={cat} placeholder={`Select ${label.toLowerCase()}...`} refLabel={textRefs[key] || val} />
       </div>
@@ -564,15 +560,15 @@ function GlobalOpsCard({ form, errors, isEditing, update }: {
   };
   return (
     <div>
-      <SectionHeader icon={<Globe className="h-3 w-3 stroke-current text-muted-foreground" />} title="Global Operations" />
+      <SectionHeader icon={<Globe className="h-4 w-4 stroke-current text-entity-product-master" />} title="Global Operations" />
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-3 gap-2">
           {rf("defaultCalendarId", "calendar", "Working Calendar", true)}
           {rf("defaultShiftModelId", "shift_model", "Shift Model", true)}
           {rf("weekStartDayId", "week_start_day", "Week Start Day", true)}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="min-w-0">{rf("defaultTimezoneId", "timezone", "Default Timezone", true)}</div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="col-span-2 min-w-0">{rf("defaultTimezoneId", "timezone", "Default Timezone", true)}</div>
           {rf("defaultLanguageId", "language_locale", "Language / Locale", false)}
         </div>
       </div>
@@ -590,9 +586,9 @@ function ProductionSummaryCard({ plantsLoading, counts }: { plantsLoading: boole
   ];
   return (
     <div>
-      <SectionHeader icon={<Factory className="h-3 w-3 stroke-current text-muted-foreground" />} title="Structure Summary" />
+      <SectionHeader icon={<Factory className="h-4 w-4 stroke-current text-entity-product-master" />} title="Structure Summary" />
       {plantsLoading ? (
-        <p className="text-[10px] text-muted-foreground py-2 text-center">Loading counts...</p>
+        <p className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground py-3"><span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-pulse" />Loading counts...</p>
       ) : (
         <div className="grid grid-cols-5 gap-2">
           {tiles.map((t) => {
@@ -601,7 +597,7 @@ function ProductionSummaryCard({ plantsLoading, counts }: { plantsLoading: boole
               <div key={t.label} className="flex flex-col gap-1.5 bg-muted/20 border border-border/10 px-2.5 py-2 rounded-sm transition-colors hover:bg-muted/40">
                 <div className="flex items-center gap-1.5">
                   <Icon className="h-3 w-3 text-entity-product-master/60 stroke-current" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/70">{t.label}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{t.label}</span>
                 </div>
                 <span className="text-lg font-bold text-foreground leading-none">{t.value}</span>
               </div>
@@ -619,62 +615,50 @@ function RelatedPlantsCard({ plants, plantsLoading, onSelectPlant, className = "
   if (plantsLoading) {
     return (
       <div className={className}>
-        <SectionHeader icon={<Factory className="h-3 w-3 stroke-current text-muted-foreground" />} title="Related Plants" />
-        <p className="text-[10px] text-muted-foreground py-2 text-center">Loading plants...</p>
+        <SectionHeader icon={<Factory className="h-4 w-4 stroke-current text-entity-plant" />} title="Related Plants" />
+        <p className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground py-3"><span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-pulse" />Loading plants...</p>
       </div>
     );
   }
   if (plants.length === 0) {
     return (
       <div className={className}>
-        <SectionHeader icon={<Factory className="h-3 w-3 stroke-current text-muted-foreground" />} title="Related Plants" />
-        <div className="flex flex-col items-center justify-center py-6 text-[10px] text-muted-foreground">
-          <Factory className="h-5 w-5 mx-auto mb-1 opacity-40" />
-          No plants configured yet
+        <SectionHeader icon={<Factory className="h-4 w-4 stroke-current text-entity-plant" />} title="Related Plants" />
+        <div className="flex flex-col items-center justify-center py-6 text-[12px] text-muted-foreground">
+          <Factory className="h-6 w-6 mx-auto mb-1.5 opacity-40" />
+          <span className="text-foreground/60 font-medium">No plants configured yet</span>
         </div>
       </div>
     );
   }
   return (
     <div className={`flex min-h-0 flex-col ${className}`}>
-      <SectionHeader icon={<Factory className="h-3 w-3 stroke-current text-muted-foreground" />} title="Related Plants" />
-      {(plants.length > 0) && (
-        <div className="min-h-0 flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
-          <div className="grid gap-px text-[11px]">
-            <div className="grid grid-cols-[1fr_64px_64px_44px_28px] items-center gap-2 bg-muted/60 px-2 py-1.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20">
-              <span>Name</span>
-              <span className="text-center">Code</span>
-              <span className="text-center">Status</span>
-              <span className="text-center">Lines</span>
-              <span className="text-center" />
-            </div>
-            <div className="overflow-y-auto">
-              {plants.map((plant: Plant, idx) => {
-                const isActive = String(plant.status ?? "").toLowerCase() === "active";
-                const statusLabel = isActive ? "Active" : "Inactive";
-                return (
-                  <div key={plant.id} className={`grid grid-cols-[1fr_64px_64px_44px_28px] items-center gap-2 px-2 py-2 transition-all border-b border-border/5 cursor-pointer group ${idx % 2 === 0 ? "bg-muted/10" : "bg-transparent"} hover:bg-primary/[0.04] hover:pl-3`} onClick={() => onSelectPlant?.(plant.id)} title={plant.name}>
-                    <span className="truncate font-semibold text-foreground text-[12px] group-hover:text-primary transition-colors">{plant.name}</span>
-                    <span className="text-center font-mono text-[11px] text-muted-foreground">{plant.code || "-"}</span>
-                    <span className="text-center">
-                      <span className={`inline-block min-w-14 rounded-full px-2 py-0.5 text-center text-[9px] font-semibold ${isActive ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground border border-border/60"}`}>{statusLabel}</span>
-                    </span>
-                    <span className="text-center text-[11px] font-semibold text-foreground">{plant.lineCount ?? 0}</span>
-                    <span className="flex items-center justify-center text-muted-foreground/30 group-hover:text-entity-product-master/60 transition-colors"><ChevronDown className="h-3.5 w-3.5 -rotate-90" /></span>
-                  </div>
-                );
-              })}
-            </div>
+      <SectionHeader icon={<Factory className="h-4 w-4 stroke-current text-entity-plant" />} title="Related Plants" />
+        <div className="flex min-h-0 flex-col overflow-hidden">
+          <div className="grid h-7 shrink-0 grid-cols-[1fr_80px_80px_60px_28px] items-center gap-2 px-2 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20">
+            <span>Name</span>
+            <span className="text-center">Code</span>
+            <span className="text-center">Status</span>
+            <span className="text-center">Lines</span>
+            <span />
+          </div>
+          <div className="overflow-y-auto flex-1 min-h-0">
+            {plants.map((plant: Plant) => {
+              const isActive = String(plant.status ?? "").toLowerCase() === "active";
+              return (
+                <div key={plant.id} className={`grid h-8 grid-cols-[1fr_80px_80px_60px_28px] items-center gap-2 px-2 text-[11px] border-b border-border/10 hover:bg-muted/30 transition-colors rounded-sm cursor-pointer ${isActive ? "" : "opacity-50"}`} onClick={() => onSelectPlant?.(plant.id)} title={plant.name}>
+                  <span className="min-w-0 truncate font-medium text-foreground">{plant.name}</span>
+                  <span className="text-center font-mono text-[10px] text-muted-foreground">{plant.code || "—"}</span>
+                  <span className="text-center">
+                    <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${isActive ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground border border-border/60"}`}>{isActive ? "Active" : "Inactive"}</span>
+                  </span>
+                  <span className="text-center text-[10px] font-semibold text-foreground">{plant.lineCount ?? 0}</span>
+                  <span className="flex items-center justify-center text-muted-foreground/60"><ChevronDown className="h-3.5 w-3.5 -rotate-90" /></span>
+                </div>
+              );
+            })}
           </div>
         </div>
-      )}
-      {plants.length === 0 && (
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[120px] text-[10px] text-muted-foreground">
-          <Factory className="h-6 w-6 mx-auto mb-2 opacity-30 stroke-current" />
-          <span>No plants configured yet</span>
-          <span className="text-[9px] text-muted-foreground/60 mt-0.5">Add a plant to get started</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -879,7 +863,7 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
 
       <div className={`flex-1 min-h-0 flex flex-col ${theme.surfaceBg}`}>
         {loading && !hasCompany ? (
-          <div className="flex items-center justify-center h-full"><div className={`text-xs ${theme.textMuted}`}>Loading company data...</div></div>
+          <div className="flex items-center justify-center h-full"><div className={`flex items-center gap-2 text-[13px] ${theme.textMuted}`}><span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40 animate-pulse" />Loading company data...</div></div>
         ) : !hasCompany ? (
           <div className="flex items-center justify-center h-full">
             <div className="max-w-sm text-center">
@@ -891,7 +875,7 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
             </div>
           </div>
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] grid-rows-[1fr] gap-3 px-3 pt-3 overflow-hidden" style={{ position: "relative" }}>
+          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] grid-rows-[1fr] gap-6 px-3 pt-3 overflow-hidden" style={{ position: "relative" }}>
             {toast && (
               <div role="alert" aria-live="polite" className={`absolute top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg shadow-lg text-xs font-medium ${toast.type === "success" ? "bg-success text-primary-foreground" : "bg-danger text-primary-foreground"}`}>
                 <span className="flex items-center gap-1.5">{toast.type === "success" ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}{toast.message}</span>
@@ -900,30 +884,30 @@ export const CompanyDetailView = forwardRef<{ startEditing: () => void; save: ()
             )}
 
             {/* ── Left column ── */}
-            <div className="grid min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-2 overflow-hidden">
+            <div className="grid min-h-0 grid-rows-[auto_auto_1fr] gap-4 overflow-hidden">
               <div>
                 <CompanyIdentityCard form={form} errors={errors} isEditing={isEditing} update={update} ro={ro} />
               </div>
-              <div className="border-t border-border/30 pt-2.5 min-h-0 overflow-y-auto">
-                <BusinessProfileCard form={form} isEditing={isEditing} update={update} roTA={roTA} />
-              </div>
-              <div className="border-t border-border/30 pt-2.5 min-h-0">
+              <div>
                 <ContactAdminCard form={form} errors={errors} isEditing={isEditing} update={update} ro={ro} />
+              </div>
+              <div className="min-h-0">
+                <HeadquartersCard form={form} errors={errors} isEditing={isEditing} update={update} ro={ro} getLabel={getLabel} filterByMeta={filterByMeta} byCategory={byCategory} />
               </div>
             </div>
 
             {/* ── Right column ── */}
-            <div className="grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-2 overflow-hidden">
+            <div className="grid min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-4 overflow-hidden">
               <div>
-                <HeadquartersCard form={form} errors={errors} isEditing={isEditing} update={update} ro={ro} getLabel={getLabel} filterByMeta={filterByMeta} byCategory={byCategory} />
+                <BusinessProfileCard form={form} isEditing={isEditing} update={update} roTA={roTA} />
               </div>
-              <div className="border-t border-border/30 pt-2.5">
+              <div>
                 <GlobalOpsCard form={form} errors={errors} isEditing={isEditing} update={update} />
               </div>
-              <div className="border-t border-border/30 pt-2.5">
+              <div>
                 <ProductionSummaryCard plantsLoading={plantsLoading} counts={counts} />
               </div>
-              <div className="border-t border-border/30 pt-2.5 min-h-0">
+              <div className="min-h-0">
                 <RelatedPlantsCard plants={plants} plantsLoading={plantsLoading} onSelectPlant={handleSelectPlant} className="h-full min-h-0" />
               </div>
             </div>

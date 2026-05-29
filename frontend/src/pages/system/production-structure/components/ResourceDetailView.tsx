@@ -158,7 +158,7 @@ export function ResourceDetailView({ resource }: ResourceDetailViewProps) {
 
       {/* ── BODY ── */}
       <div className="flex-1 min-h-0 overflow-hidden bg-card">
-        <div className="grid min-h-0 h-full grid-cols-2 gap-4 overflow-y-auto p-3">
+        <div className="grid min-h-0 h-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 overflow-y-auto p-3">
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-1">
             {/* Overview */}

@@ -72,6 +72,13 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
     .filter((r) => !search || (r.name ?? "").toLowerCase().includes(search.toLowerCase()));
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? resources.find((r) => r.id === selectedId) ?? null : null;
+
+  useEffect(() => {
+    if (paginated.length === 0) return;
+    if (selectedId && paginated.some((r) => r.id === selectedId)) return;
+    setSelectedId(paginated[0].id);
+  }, [paginated, selectedId]);
+
   const selectResource = useCallback((id: string) => setSelectedId(id), []);
 
   useEffect(() => {

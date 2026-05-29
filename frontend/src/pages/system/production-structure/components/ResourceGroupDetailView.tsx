@@ -349,7 +349,7 @@ function ResourceGroupDetailView({
             {mutationError}
           </div>
         )}
-        <div key={`detail-${isNew ? "create" : isEditing ? "edit" : "view"}`} className="mode-enter grid h-full min-h-0 grid-cols-[1fr_2fr] gap-4 p-3">
+        <div key={`detail-${isNew ? "create" : isEditing ? "edit" : "view"}`} className="mode-enter grid h-full min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 p-3">
           {/* LEFT */}
           <div className="flex min-h-0 flex-col gap-4 overflow-y-auto pr-1">
             {/* Identity */}

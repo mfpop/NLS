@@ -47,7 +47,7 @@ function getAncestorKeys(key: string): string[] {
 function normalizeFlowTreeNode<T extends { type: string; children?: T[] }>(node: T): T {
   const normalizedChildren = (node.children || []).flatMap((child) => {
     const normalizedChild = normalizeFlowTreeNode(child);
-    if (normalizedChild.type === "assignedGroup") {
+    if (normalizedChild.type === "assignedGroup" || normalizedChild.type === "department") {
       return normalizedChild.children || [];
     }
     return [normalizedChild];

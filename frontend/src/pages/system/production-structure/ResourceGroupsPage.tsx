@@ -102,6 +102,13 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? groups.find((g) => g.id === selectedId) ?? null : null;
 
+  useEffect(() => {
+    if (mode !== "view") return;
+    if (paginated.length === 0) return;
+    if (selectedId && paginated.some((g) => g.id === selectedId)) return;
+    setSelectedId(paginated[0].id);
+  }, [paginated, selectedId, mode]);
+
   const hNew = useCallback(() => { setSelectedId(null); setMode("create"); setEditState({ dirty: false, valid: true, saving: false }); }, []);
   const hEdit = useCallback(() => { if (sel) setMode("edit"); }, [sel]);
 

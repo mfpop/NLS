@@ -8,7 +8,7 @@ import type { Plant, PlantInput } from "@/types/plant";
 import { ReferenceSelect, ReferenceMultiSelect } from "./ReferenceSelect";
 import { useReferenceTables } from "@/hooks/useReferenceTables";
 import { formatAppDate } from "@/utils/dateFormat";
-import { SectionHeader as SharedSectionHeader, ErrorFieldWrapper, ErrorText, iCls, iClsError, sCls, sClsError, labelCls, labelClsRequired } from "./DetailComponents";
+import { ErrorFieldWrapper, ErrorText, iCls, iClsError, sCls, sClsError, labelCls, labelClsRequired } from "./DetailComponents";
 
 type PlantMutationError = { field?: string | null; message: string };
 type UpdatePlantResult = { updatePlant?: { errors?: PlantMutationError[] } };
@@ -16,15 +16,24 @@ type UpdatePlantResult = { updatePlant?: { errors?: PlantMutationError[] } };
 function FlatStat({ label, value, title }: { label: string; value: React.ReactNode; title?: string }) {
   return (
     <div className="flex flex-col gap-0.5 bg-muted/20 px-3 py-2" title={title}>
-      <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">{label}</span>
       <span className="text-[13px] font-semibold text-foreground">{value}</span>
     </div>
   );
 }
 
-// ── SectionHeader wraps the shared component with "chip" variant ──
+// ── Flat SectionHeader matching company page style ──
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return <SharedSectionHeader icon={icon} title={title} variant="chip" />;
+  return (
+    <div className="mb-1.5 flex items-center gap-1.5">
+      <span className="flex h-4 w-4 items-center justify-center text-entity-product-master/60">
+        {icon}
+      </span>
+      <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-entity-product-master/70">
+        {title}
+      </span>
+    </div>
+  );
 }
 
 interface PlantDetailViewProps {
@@ -456,7 +465,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
     return (
       <div className="flex flex-col overflow-hidden flex-1">
         <div className="flex items-center justify-center flex-1 bg-card">
-          <div className="text-xs text-muted-foreground">Loading plant...</div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground"><span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40 animate-pulse" />Loading plant...</div>
         </div>
       </div>
     );
@@ -486,7 +495,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
       <div className="shrink-0 border-b border-border/40 bg-card">
         <div className="px-4 pt-3 pb-2">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/15 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/50 dark:ring-amber-700/30">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-entity-plant-bg text-entity-plant ring-1 ring-entity-plant/20">
               <Factory className="h-5 w-5 stroke-current" />
             </div>
             <div className="flex-1 min-w-0">
@@ -535,13 +544,13 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
 
       {/* ── BODY ── */}
       <div className="flex-1 min-h-0 overflow-hidden bg-card">
-        <div key={modeKey} className="mode-enter grid min-h-0 items-start gap-4 overflow-hidden grid-cols-[1fr_1fr]">
+        <div key={modeKey} className="mode-enter grid min-h-0 items-start gap-4 overflow-hidden grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {/* ── Left column ── */}
           <div className="flex flex-col gap-4 min-h-0 overflow-y-auto px-4 pt-3 pb-4">
             {/* 1. Plant Identity */}
             {readOnly ? (
               <div>
-                <SectionHeader icon={<Factory className="h-3 w-3 stroke-current text-muted-foreground" />} title="Identity" />
+                <SectionHeader icon={<Factory className="h-4 w-4 stroke-current text-entity-plant" />} title="Identity" />
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   <ViewField label="Plant Name" value={form.name} missing={!form.name} />
                   <ViewField label="Plant Code" value={form.code} missing={!form.code} />
@@ -556,7 +565,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
               </div>
             ) : (
               <div>
-                <SectionHeader icon={<Factory className="h-3 w-3 stroke-current text-muted-foreground" />} title="Identity" />
+                <SectionHeader icon={<Factory className="h-4 w-4 stroke-current text-entity-plant" />} title="Identity" />
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   <EditField label="Plant Name" required error={errors.name}>
                     <ErrorFieldWrapper error={errors.name}>
@@ -599,7 +608,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
             {readOnly ? (
               ((form.managerName || form.managerEmail || form.managerPhone) ? (
                 <div>
-                  <SectionHeader icon={<Phone className="h-3 w-3 stroke-current text-muted-foreground" />} title="Contact" />
+                  <SectionHeader icon={<Phone className="h-4 w-4 stroke-current text-accent" />} title="Contact" />
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                     <ViewField label="Manager Name" value={form.managerName} missing={!form.managerName} />
                     <ViewField label="Manager Phone" value={form.managerPhone} missing={!form.managerPhone} />
@@ -611,7 +620,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
               ) : null)
             ) : (
               <div>
-                <SectionHeader icon={<Phone className="h-3 w-3 stroke-current text-muted-foreground" />} title="Contact" />
+                <SectionHeader icon={<Phone className="h-4 w-4 stroke-current text-accent" />} title="Contact" />
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   <EditField label="Manager Name">
                     <input id="pdv-managerName" name="managerName" type="text" value={form.managerName || ""}
@@ -643,7 +652,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
             {/* 3. Schedule & Calendar */}
             {readOnly ? (
               <div>
-                <SectionHeader icon={<Globe className="h-3 w-3 stroke-current text-muted-foreground" />} title="Schedule & Calendar" />
+                <SectionHeader icon={<Globe className="h-4 w-4 stroke-current text-entity-product-master" />} title="Schedule & Calendar" />
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   <ViewField label="Default Calendar" value={form.defaultCalendar} missing={!form.defaultCalendar} />
                   <ViewField label="Default Shift Model" value={form.defaultShiftModel} missing={!form.defaultShiftModel} />
@@ -656,7 +665,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
               </div>
             ) : (
               <div>
-                <SectionHeader icon={<Globe className="h-3 w-3 stroke-current text-muted-foreground" />} title="Schedule & Calendar" />
+                <SectionHeader icon={<Globe className="h-4 w-4 stroke-current text-entity-product-master" />} title="Schedule & Calendar" />
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                   <EditField label="Default Calendar" required error={errors.defaultCalendarId}>
                     <ReferenceSelect categoryCode="calendar" label="" selectClass={errors.defaultCalendarId ? sClsError : sCls} id="pdv-calendar"
@@ -693,7 +702,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
             {(form.manufacturingFocus || !readOnly) ? (
               readOnly ? (
                 <div>
-                  <SectionHeader icon={<Tag className="h-3 w-3 stroke-current text-muted-foreground" />} title="Manufacturing Focus" />
+                  <SectionHeader icon={<Tag className="h-4 w-4 stroke-current text-entity-product-master" />} title="Manufacturing Focus" />
                   <div className="flex flex-wrap gap-1">
                     {(form.manufacturingFocus || "").split(",").map((t: string) => t.trim()).filter(Boolean).map((t: string) => (
                       <span key={t} className="inline-block rounded-full bg-success/10 text-success border border-success/20 px-2 py-0.5 text-[10px] font-medium">{t}</span>
@@ -703,7 +712,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
                 </div>
               ) : (
                 <div>
-                  <SectionHeader icon={<Tag className="h-3 w-3 stroke-current text-muted-foreground" />} title="Manufacturing Focus" />
+                  <SectionHeader icon={<Tag className="h-4 w-4 stroke-current text-entity-product-master" />} title="Manufacturing Focus" />
                   <ReferenceMultiSelect categoryCode="manufacturing_focus" label=""
                     values={form.manufacturingFocusIds ?? []}
                     onChange={(v: string[]) => update("manufacturingFocusIds", v)} emptyLabel="No focus tags selected" compact />
@@ -715,7 +724,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
             {readOnly ? (
               (form.description ? (
                 <div>
-                  <SectionHeader icon={<Info className="h-3 w-3 stroke-current text-muted-foreground" />} title="Description" />
+                  <SectionHeader icon={<Info className="h-4 w-4 stroke-current text-info" />} title="Description" />
                   <div>
                     <p className={`text-[13px] text-foreground/80 leading-relaxed ${!descExpanded ? "line-clamp-2" : ""}`}>{form.description}</p>
                     {form.description.length > 120 && (
@@ -729,7 +738,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
               ) : null)
             ) : (
               <div>
-                <SectionHeader icon={<Info className="h-3 w-3 stroke-current text-muted-foreground" />} title="Description" />
+                <SectionHeader icon={<Info className="h-4 w-4 stroke-current text-info" />} title="Description" />
                 <textarea value={form.description || ""} onChange={(e) => update("description", e.target.value)}
                   className={roTA} maxLength={1000} placeholder="Plant description (optional)" />
               </div>
@@ -737,11 +746,11 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
           </div>
 
           {/* ── Right column ── */}
-          <div className="flex flex-col gap-4 min-h-0 overflow-hidden pr-4 pt-3 pb-4">
+          <div className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-4 pt-3 pb-4">
             {/* 1. Location */}
             {readOnly ? (
               <div>
-                <SectionHeader icon={<MapPin className="h-3 w-3 stroke-current text-muted-foreground" />} title="Location" />
+                <SectionHeader icon={<MapPin className="h-4 w-4 stroke-current text-info" />} title="Location" />
                 <div className="flex flex-col gap-2">
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                     <ViewField label="Building / Site" value={form.buildingSite} missing={!form.buildingSite} />
@@ -755,16 +764,18 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
                     <ViewField label="State" value={form.state} missing={!form.state} />
                     <ViewField label="Country" value={form.country || getLabel("country", form.countryId)} missing={!form.country && !form.countryId} />
                   </div>
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                    <ViewField label="Latitude" value={form.latitude || "—"} missing={!form.latitude} />
-                    <ViewField label="Longitude" value={form.longitude || "—"} missing={!form.longitude} />
-                  </div>
                 </div>
                 {renderMap()}
+                <div className="flex items-center justify-end gap-6 text-[11px]">
+                  <span className="font-medium text-muted-foreground">Latitude:</span>
+                  <span className={`text-foreground ${!form.latitude ? "text-muted-foreground/40 italic" : ""}`}>{form.latitude || "—"}</span>
+                  <span className="font-medium text-muted-foreground">Longitude:</span>
+                  <span className={`text-foreground ${!form.longitude ? "text-muted-foreground/40 italic" : ""}`}>{form.longitude || "—"}</span>
+                </div>
               </div>
             ) : (
               <div>
-                <SectionHeader icon={<MapPin className="h-3 w-3 stroke-current text-muted-foreground" />} title="Location" />
+                <SectionHeader icon={<MapPin className="h-4 w-4 stroke-current text-info" />} title="Location" />
                 <div className="flex flex-col gap-2">
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
                     <EditField label="Building / Site">
@@ -802,37 +813,37 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
                         placeholder="Select country..." />
                     </EditField>
                   </div>
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                    <EditField label="Latitude" error={errors.latitude}>
-                      <ErrorFieldWrapper error={errors.latitude}>
-                        <input id="pdv-latitude" name="latitude" type="text" value={form.latitude || ""}
-                          onChange={(e) => update("latitude", e.target.value)}
-                          className={errors.latitude ? iClsError : iCls}
-                          placeholder="25.7600" />
-                      </ErrorFieldWrapper>
-                    </EditField>
-                    <EditField label="Longitude" error={errors.longitude}>
-                      <ErrorFieldWrapper error={errors.longitude}>
-                        <input id="pdv-longitude" name="longitude" type="text" value={form.longitude || ""}
-                          onChange={(e) => update("longitude", e.target.value)}
-                          className={errors.longitude ? iClsError : iCls}
-                          placeholder="-80.1900" />
-                      </ErrorFieldWrapper>
-                    </EditField>
-                  </div>
                 </div>
                 {renderMap()}
+                <div className="flex items-center justify-end gap-6 mt-2">
+                  <label className={labelCls + " shrink-0"}>Latitude</label>
+                  <ErrorFieldWrapper error={errors.latitude}>
+                    <input id="pdv-latitude" name="latitude" type="text" value={form.latitude || ""}
+                      onChange={(e) => update("latitude", e.target.value)}
+                      className={errors.latitude ? iClsError : iCls + " w-24"}
+                      placeholder="25.7600" />
+                  </ErrorFieldWrapper>
+                  <label className={labelCls + " shrink-0"}>Longitude</label>
+                  <ErrorFieldWrapper error={errors.longitude}>
+                    <input id="pdv-longitude" name="longitude" type="text" value={form.longitude || ""}
+                      onChange={(e) => update("longitude", e.target.value)}
+                      className={errors.longitude ? iClsError : iCls + " w-24"}
+                      placeholder="-80.1900" />
+                  </ErrorFieldWrapper>
+                  <ErrorText message={errors.latitude} />
+                  <ErrorText message={errors.longitude} />
+                </div>
               </div>
             )}
 
             {/* 2. Structure Summary */}
             {!isNew && (
               <div>
-                <SectionHeader icon={<TrendingUpDown className="h-3 w-3 stroke-current text-muted-foreground" />} title="Structure Summary" />
+                <SectionHeader icon={<TrendingUpDown className="h-4 w-4 stroke-current text-entity-product-master" />} title="Structure Summary" />
                 {(plant?.lineCount ?? 0) + (plant?.departmentCount ?? 0) + (plant?.groupCount ?? 0) + (plant?.resourceCount ?? 0) === 0 ? (
                   <p className="text-[10px] text-muted-foreground/60 px-1">No structure data yet. Add lines, departments, and resource groups.</p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-px bg-border/10 rounded-md overflow-hidden">
+                  <div className="grid grid-cols-2 gap-px bg-border/10 overflow-hidden">
                     <FlatStat label="Lines" value={plant?.lineCount ?? 0} title="Production lines at this plant" />
                     <FlatStat label="Departments" value={plant?.departmentCount ?? 0} title="Departments" />
                     <FlatStat label="Resource Groups" value={plant?.groupCount ?? 0} title="Resource groups across all departments" />
@@ -845,7 +856,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
             {/* 3. Related Production Lines */}
             {!isNew && (
               <div>
-                <SectionHeader icon={<TrendingUpDown className="h-3 w-3 stroke-current text-muted-foreground" />} title="Production Lines" />
+                <SectionHeader icon={<TrendingUpDown className="h-4 w-4 stroke-current text-entity-line" />} title="Production Lines" />
                 {renderLinesList()}
               </div>
             )}
@@ -869,10 +880,10 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
   function renderMap() {
     if (hasBackendCoordinates) {
       return (
-        <div className="mt-2 overflow-hidden rounded-lg border border-border/20 shadow-sm">
+        <div className="mb-4 mt-2 overflow-hidden border border-border/20 bg-background/40 backdrop-blur-sm focus-within:opacity-100 transition-opacity duration-150">
           <iframe
             title="Plant location"
-            className="h-24 w-full"
+            className="h-24 w-full opacity-40 hover:opacity-100 focus:opacity-100 transition-opacity duration-150"
             loading="lazy"
             src={`https://www.openstreetmap.org/export/embed.html?bbox=${backendLongitude - 0.01}%2C${backendLatitude - 0.01}%2C${backendLongitude + 0.01}%2C${backendLatitude + 0.01}&layer=mapnik&marker=${backendLatitude}%2C${backendLongitude}`}
           />
@@ -889,7 +900,7 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
     }
     if (resolvedCountry) {
       return (
-        <div className="mt-2 rounded-lg border border-dashed border-border/30 bg-muted/10 px-3 py-2.5 flex items-center justify-between">
+        <div className="mt-2 border border-dashed border-border/30 bg-background/40 backdrop-blur-sm px-3 py-2.5 flex items-center justify-between">
           <span className="text-[11px] text-muted-foreground">{resolvedCountry}</span>
           <a href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(resolvedCountry)}`}
             target="_blank" rel="noreferrer"
@@ -905,42 +916,38 @@ function PlantDetailView({ plantId, createMode = false, editing = false, onEditT
   function renderLinesList() {
     if (lines.length === 0) {
       return (
-        <div className="flex items-center justify-center py-8 text-xs text-muted-foreground/60">
+        <div className="flex items-center justify-center py-6 text-[11px] text-muted-foreground/60">
           No production lines yet
         </div>
       );
     }
     return (
-      <div className="min-h-0 w-full flex-1 overflow-y-auto text-xs">
-        <div className="flex items-center gap-1 px-2 py-1 border-b border-border/20 text-[9px] font-semibold text-muted-foreground uppercase tracking-wider bg-muted/20">
-          <span className="flex-1 min-w-0">Name</span>
-          <span className="w-14 shrink-0 text-center hidden sm:block">Code</span>
-          <span className="w-16 shrink-0 text-center">Status</span>
-          <span className="w-4 shrink-0" />
+      <div className="flex min-h-0 flex-col">
+        <div className="grid h-7 shrink-0 grid-cols-[1fr_80px_80px_28px] items-center gap-2 px-2 text-[9px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20">
+          <span>Name</span>
+          <span className="text-center">Code</span>
+          <span className="text-center">Status</span>
+          <span />
         </div>
-        {lines.map((line: any) => (
-          <div key={line.id} className="flex items-center gap-1 px-2 py-1.5 border-b border-border/10 hover:bg-muted/30 transition-colors cursor-pointer last:border-0 group"
-            onClick={() => {
-              if (dirty) {
-                onDirtyNavigateToLine?.(line.id);
-                return;
-              }
-              onNavigateToLine?.(line.id);
-            }}
-          >
-            <span className="flex-1 min-w-0 truncate font-medium text-foreground group-hover:text-accent transition-colors" title={line.name}>{line.name}</span>
-            <span className="w-14 shrink-0 text-center text-muted-foreground font-mono text-[10px] hidden sm:block">{line.code || "—"}</span>
-            <span className="w-16 shrink-0 text-center">
-              <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-px text-[9px] font-semibold ${line.status === "active" ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground border border-border/40"}`}>
-                <span className={`inline-block h-1 w-1 rounded-full ${line.status === "active" ? "bg-success" : "bg-muted-foreground/40"}`} />
-                {line.status === "active" ? "Active" : "Inactive"}
+        <div>
+          {lines.map((line: any) => (
+            <div key={line.id} className={`grid h-8 grid-cols-[1fr_80px_80px_28px] items-center gap-2 px-2 text-[11px] border-b border-border/10 hover:bg-muted/30 transition-colors rounded-sm cursor-pointer ${line.status === "active" ? "" : "opacity-50"}`}
+              onClick={() => {
+                if (dirty) { onDirtyNavigateToLine?.(line.id); return; }
+                onNavigateToLine?.(line.id);
+              }}
+            >
+              <span className="min-w-0 truncate font-medium text-foreground" title={line.name}>{line.name}</span>
+              <span className="text-center font-mono text-[10px] text-muted-foreground">{line.code || "—"}</span>
+              <span className="text-center">
+                <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[8px] font-semibold uppercase tracking-wider ${line.status === "active" ? "bg-success/10 text-success border border-success/20" : "bg-muted text-muted-foreground border border-border/60"}`}>{line.status === "active" ? "Active" : "Inactive"}</span>
               </span>
-            </span>
-            <span className="w-5 shrink-0 flex items-center justify-center text-muted-foreground/60 group-hover:text-foreground transition-colors">
-              <svg className="h-3.5 w-3.5 stroke-current" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
-            </span>
-          </div>
-        ))}
+              <span className="flex items-center justify-center text-muted-foreground/60">
+                <svg className="h-3.5 w-3.5 stroke-current" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

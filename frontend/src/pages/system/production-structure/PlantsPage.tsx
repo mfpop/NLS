@@ -119,6 +119,13 @@ export function PlantsPage() {
   }, [pendingLineId]);
 
   const selectedIndex = useMemo(() => paginated.findIndex((p) => p.id === selectedId), [paginated, selectedId]);
+
+  useEffect(() => {
+    if (mode !== "view") return;
+    if (paginated.length === 0) return;
+    if (selectedId && paginated.some((p) => p.id === selectedId)) return;
+    setSelectedId(paginated[0].id);
+  }, [paginated, selectedId, mode]);
   useEffect(() => {
     if (mode !== "view") return;
     const h = (e: KeyboardEvent) => {

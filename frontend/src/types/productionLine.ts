@@ -24,6 +24,16 @@ export interface ProductModelByFamily {
   status: string;
 }
 
+export interface AssignedResourceGroup {
+  id: string;
+  resourceGroupId: string;
+  resourceGroupCode?: string;
+  resourceGroupName?: string;
+  departmentName?: string;
+  sequence: number;
+  isActive: boolean;
+}
+
 export interface ProductionLine {
   id: string;
   name: string;
@@ -66,6 +76,7 @@ export interface ProductionLine {
   bottleneckResourceGroupId?: string | null;
   bottleneckResourceGroup?: string | null;
   resourceGroupOptions?: Array<{ id: string; code: string; name: string; departmentName: string }>;
+  assignedResourceGroups?: AssignedResourceGroup[];
   isConstraint: boolean;
   flowRoutingStatus: string;
   activeFlowRouteId?: string | null;

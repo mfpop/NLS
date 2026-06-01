@@ -4,6 +4,7 @@ interface ToolbarActions {
   onAdd?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onDeletePermanent?: () => void;
   onRefresh?: () => void;
   onSave?: () => void;
   onCancel?: () => void;
@@ -55,6 +56,7 @@ function shallowEqual(a: ToolbarActions, b: ToolbarActions): boolean {
   return a.onAdd === b.onAdd
     && a.onEdit === b.onEdit
     && a.onDelete === b.onDelete
+    && a.onDeletePermanent === b.onDeletePermanent
     && a.onRefresh === b.onRefresh
     && a.onSave === b.onSave
     && a.onCancel === b.onCancel

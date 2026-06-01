@@ -84,7 +84,7 @@ function TypeBadge({ type }: { type: string }) {
 
 function MetricCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
   return (
-    <div className={`flex items-start gap-2.5 rounded-lg border border-border/40 p-2 ${theme.subCard}`}>
+    <div className="flex items-start gap-2.5 bg-muted/20 border border-border/10 px-2.5 py-2 rounded-sm">
       <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-entity-warehouse-bg text-entity-warehouse">
         {icon}
       </div>
@@ -111,9 +111,9 @@ function InlineRow({ label, value, icon }: { label: string; value: React.ReactNo
 
 function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-border/50 ${theme.surfaceBg} p-2 shadow-sm shadow-foreground/5 ${className}`}>
+    <section className={className}>
       <div className="mb-1.5 flex min-h-6 items-center gap-2">
-        <h3 className={`flex-1 text-[10px] font-bold uppercase tracking-wider ${theme.textMuted}`}>{title}</h3>
+        <h3 className={`flex-1 text-[11px] font-bold uppercase tracking-[0.12em] text-entity-product-master/70`}>{title}</h3>
         {action}
       </div>
       {children}
@@ -137,6 +137,7 @@ export function WarehousesPage() {
   const [mode, setMode] = useState<"view" | "edit" | "create">("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [filters, setFilters] = useState({ plantId: "", warehouseType: "" });
   const [form, setForm] = useState<WarehouseForm>({
     plantId: "", code: "", name: "", warehouseType: "", location: "", isActive: true,
@@ -207,6 +208,14 @@ export function WarehousesPage() {
   const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? warehouses.find((w) => w.id === selectedId) ?? null : null;
   const isForm = mode === "edit" || mode === "create";
+
+  useEffect(() => {
+    if (paginated.length === 0) return;
+    if (selectedId && paginated.some((w) => w.id === selectedId)) return;
+    if (!initialLoad) return;
+    setInitialLoad(false);
+    setSelectedId(paginated[0].id);
+  }, [paginated, selectedId, initialLoad]);
 
   // Group by plant for list hierarchy
   const groupedByPlant = plantOptions.map((pl) => ({
@@ -322,8 +331,8 @@ export function WarehousesPage() {
   const g = (k: keyof WarehouseForm) => String(form[k] ?? "");
   const s = (k: keyof WarehouseForm, v: unknown) => setForm((p) => ({ ...p, [k]: v }));
 
-  const iCls = `h-7 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} transition-all ${theme.focusRingCritical}`;
-  const sCls = `h-7 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} transition-all ${theme.focusRingCritical}`;
+  const iCls = `h-7 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const sCls = `h-7 w-full rounded-md ${theme.input} px-2 text-[11px] outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
 
   const renderDetail = () => {
     if (mode !== "create" && !sel) {
@@ -800,13 +809,14 @@ export function WarehousesPage() {
             </div>
             <div className={`flex-1 overflow-y-auto ${theme.surfaceBg} pl-2`}>
               {loading && warehouses.length === 0 ? (
-                <div className={`flex items-center justify-center h-24 text-xs ${theme.textMuted}`}>
-                  <div className={`h-2 w-2 rounded-full ${theme.iconAccent} animate-bounce mr-2`} />Loading...
+                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                  <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40 animate-pulse mr-2" />Loading...
                 </div>
               ) : paginated.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <Warehouse className={`h-4 w-4 ${theme.icon} mb-1.5 stroke-current`} />
-                  <p className={`text-xs ${theme.textMuted}`}>No warehouses</p>
+                  <Warehouse className="h-5 w-5 text-muted-foreground/40 mb-2 stroke-current" />
+                  <p className="text-xs font-medium text-muted-foreground">No warehouses</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">Create one to get started</p>
                 </div>
               ) : (
                 <div>
@@ -822,8 +832,8 @@ export function WarehousesPage() {
                             onClick={() => { setSelectedId(w.id); if (mode === "create") { clearForm(); setMode("view"); } }}
                             className={`group mx-1 my-0.5 flex h-10 cursor-pointer items-center gap-2.5 rounded-md px-3 transition-all duration-150 ${
                               selectedId === w.id
-                                ? "bg-teal-500/8 border-l-2 border-l-entity-warehouse"
-                                : "border-l-2 border-l-transparent hover:bg-muted"
+                                ? "bg-table-selected border-l-2 border-l-entity-warehouse"
+                                : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                             }`}>
                             <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${selectedId === w.id ? "bg-entity-warehouse-bg" : "bg-muted"}`}>
                               <Warehouse className="h-3.5 w-3.5 stroke-current text-entity-warehouse" />
@@ -849,9 +859,12 @@ export function WarehousesPage() {
                           onClick={() => { setSelectedId(w.id); if (mode === "create") { clearForm(); setMode("view"); } }}
                           className={`group mx-1 my-0.5 flex h-10 cursor-pointer items-center gap-2.5 rounded-md px-3 transition-all duration-150 ${
                             selectedId === w.id
-                              ? "bg-teal-500/8 border-l-2 border-l-entity-warehouse"
-                              : "border-l-2 border-l-transparent hover:bg-muted"
+                              ? "bg-table-selected border-l-2 border-l-entity-warehouse"
+                              : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                           }`}>
+                          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${selectedId === w.id ? "bg-entity-warehouse-bg" : "bg-muted"}`}>
+                            <Warehouse className="h-3.5 w-3.5 stroke-current text-entity-warehouse" />
+                          </div>
                           <div className="min-w-0 flex-1">
                             <span className={`min-w-0 truncate text-[13px] font-semibold ${theme.textPrimary}`}>{w.code} - {w.name}</span>
                             <div className="flex items-center gap-1.5">

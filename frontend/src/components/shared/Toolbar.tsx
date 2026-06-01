@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Search, X, Plus, Pencil, Trash2, RefreshCw, Check } from "lucide-react";
+import { Search, X, Plus, Pencil, Trash2, RefreshCw, Check, Archive } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
 
 // ── Search Input ──
@@ -105,12 +105,14 @@ interface CrudActionsProps {
   onNew?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onDeletePermanent?: () => void;
   onRefresh?: () => void;
   onSave?: () => void;
   onCancel?: () => void;
   canNew?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+  canDeletePermanent?: boolean;
   canRefresh?: boolean;
   isEditMode?: boolean;
   isSaving?: boolean;
@@ -120,9 +122,9 @@ interface CrudActionsProps {
 }
 
 export function ToolbarCrudActions({
-  onNew, onEdit, onDelete, onRefresh,
+  onNew, onEdit, onDelete, onDeletePermanent, onRefresh,
   onSave, onCancel,
-  canNew = true, canEdit = true, canDelete = true, canRefresh = true,
+  canNew = true, canEdit = true, canDelete = true, canDeletePermanent = true, canRefresh = true,
   isEditMode = false, isSaving = false, saveDisabled = false,
   hideNew = false, hideDelete = false,
 }: CrudActionsProps) {
@@ -138,7 +140,8 @@ export function ToolbarCrudActions({
     <>
       {!hideNew && <ToolbarButton icon={Plus} label="New" onClick={onNew} disabled={!onNew || !canNew} title="Create new (Ctrl+N)" />}
       <ToolbarButton icon={Pencil} label="Edit" onClick={onEdit} disabled={!onEdit || !canEdit} title="Edit selected (Enter)" />
-      {!hideDelete && <ToolbarButton icon={Trash2} label="Delete" onClick={onDelete} disabled={!onDelete || !canDelete} title="Delete selected (Delete)" />}
+      {!hideDelete && <ToolbarButton icon={Archive} label="Archive" onClick={onDelete} disabled={!onDelete || !canDelete} title="Archive selected" />}
+      {!hideDelete && <ToolbarButton icon={Trash2} label="Delete" onClick={onDeletePermanent} disabled={!onDeletePermanent || !canDeletePermanent} title="Permanently delete selected" />}
       {!hideDelete && <span className="h-5 w-px shrink-0 bg-border/25" />}
       <ToolbarButton icon={RefreshCw} label="Refresh" onClick={onRefresh} disabled={!onRefresh || !canRefresh} title="Refresh list" />
     </>

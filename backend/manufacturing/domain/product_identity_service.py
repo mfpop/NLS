@@ -121,11 +121,15 @@ class ProductIdentityService:
     @transaction.atomic
     def create_variant(cls, data: dict[str, Any]) -> ProductVariant:
         model = cls._get_model(data.get("model_id"))
+        part_number = data.get("part_number")
+        if part_number is not None:
+            part_number = str(part_number).strip() or None
         return ProductVariant.objects.create(
             model=model,
             code=cls._clean_code(data.get("code")),
             name=(data.get("name") or "").strip(),
             configuration_summary=data.get("configuration_summary") or "",
+            part_number=part_number,
             status=data.get("status") or "ACTIVE",
             is_active=data.get("is_active", True),
         )
@@ -138,6 +142,9 @@ class ProductIdentityService:
             raise ProductIdentityError("variantId", "NOT_FOUND", "Product variant not found.")
         if data.get("model_id"):
             variant.model = cls._get_model(data["model_id"])
+        if "part_number" in data:
+            pn = data["part_number"]
+            variant.part_number = str(pn).strip() if pn is not None else None
         for field in ("code", "name", "configuration_summary", "status", "is_active"):
             if field in data and data[field] is not None:
                 setattr(variant, field, cls._clean_code(data[field]) if field == "code" else data[field])
@@ -158,15 +165,23 @@ class ProductIdentityService:
     @classmethod
     @transaction.atomic
     def create_part_number(cls, data: dict[str, Any]) -> PartNumber:
+        """Create a part number by writing to ProductVariant.part_number.
+        No standalone PartNumber row is created — this is the deprecated compatibility path."""
+        variant_id = data.get("variant_id")
+        if not variant_id:
+            raise ProductIdentityError("variantId", "REQUIRED", "Product variant is required for part number assignment.")
+        variant = cls._get_variant(variant_id)
         family = cls._get_family(data.get("family_id"))
         model = cls._get_model(data.get("model_id"))
-        variant = cls._get_variant(data.get("variant_id"))
         cls.validate_part_hierarchy(family, model, variant)
-        return PartNumber.objects.create(
-            family=family,
-            model=model,
-            variant=variant,
-            part_number=cls._clean_code(data.get("part_number"), "partNumber"),
+        pn_value = cls._clean_code(data.get("part_number"), "partNumber")
+        if ProductVariant.objects.filter(part_number=pn_value).exclude(id=variant.id).exists():
+            raise ProductIdentityError("partNumber", "DUPLICATE", f"Part number '{pn_value}' is already assigned to another variant.")
+        variant.part_number = pn_value
+        variant.save()
+        return PartNumber(
+            id=0, family=family, model=model, variant=variant,
+            part_number=pn_value,
             description=data.get("description") or "",
             revision=data.get("revision") or "",
             uom=data.get("uom") or "EA",
@@ -177,10 +192,16 @@ class ProductIdentityService:
     @classmethod
     @transaction.atomic
     def update_part_number(cls, part_id: str, data: dict[str, Any]) -> PartNumber:
+        """Compatibility-only: updates are handled via ProductVariant mutation.
+        If a PartNumber row exists (legacy), update it; otherwise update variant variant_data."""
         try:
             part = PartNumber.objects.select_related("family", "model", "variant").get(id=part_id)
-        except PartNumber.DoesNotExist as exc:
-            raise ProductIdentityError("id", "NOT_FOUND", "Part number not found.") from exc
+        except PartNumber.DoesNotExist:
+            raise ProductIdentityError("id", "NOT_FOUND", "Part number not found. Use updateProductVariant to modify variant-level part numbers.")
+        if part.variant and "part_number" in data:
+            pn = cls._clean_code(data["part_number"], "partNumber")
+            part.variant.part_number = pn
+            part.variant.save()
         family = cls._get_family(data["family_id"]) if data.get("family_id") else part.family
         model = cls._get_model(data["model_id"]) if data.get("model_id") else part.model
         variant = cls._get_variant(data["variant_id"]) if "variant_id" in data else part.variant
@@ -197,10 +218,14 @@ class ProductIdentityService:
     @classmethod
     @transaction.atomic
     def archive_part_number(cls, part_id: str) -> PartNumber:
+        """Compatibility-only: archives a legacy PartNumber row if it exists."""
         try:
             part = PartNumber.objects.get(id=part_id)
         except PartNumber.DoesNotExist as exc:
             raise ProductIdentityError("id", "NOT_FOUND", "Part number not found.") from exc
+        if part.variant:
+            part.variant.part_number = None
+            part.variant.save()
         part.is_active = False
         part.status = "ARCHIVED"
         part.save()

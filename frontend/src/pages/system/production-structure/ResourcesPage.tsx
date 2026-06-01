@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Dumbbell, Search } from "lucide-react";
-import { Pagination, EntityListItem, ResourceDetailView } from "./components";
-import { useQuery } from "@apollo/client/react";
+import { Pagination, EntityListItem, ResourceDetailView, type ResourceForm } from "./components";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { useSearchParams } from "react-router-dom";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
+import { UPDATE_RESOURCE } from "@/graphql/dataManagementMutations";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage } from "./components/EntityWorkspacePage";
 
@@ -56,6 +57,10 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState<ResourceForm | null>(null);
+
+  const [updateResource] = useMutation(UPDATE_RESOURCE);
 
   const resources = listItems(data?.resources);
 
@@ -79,11 +84,34 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
     setSelectedId(paginated[0].id);
   }, [paginated, selectedId]);
 
-  const selectResource = useCallback((id: string) => setSelectedId(id), []);
+  const hEdit = useCallback(() => { if (sel) { setFormData(null); setIsEditing(true); } }, [sel]);
+  const hCancel = useCallback(() => { setIsEditing(false); setFormData(null); }, []);
+  const hSave = useCallback(async () => {
+    if (!formData || !selectedId) return false;
+    try {
+      const { data: result } = await updateResource({ variables: { id: selectedId, input: formData } });
+      const res = result as any;
+      if (res?.updateResource?.errors?.length) {
+        return false;
+      }
+      setIsEditing(false);
+      setFormData(null);
+      await refetchRes();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [formData, selectedId, updateResource, refetchRes]);
+
+  const selectResource = useCallback((id: string) => { setSelectedId(id); if (isEditing) setIsEditing(false); }, [isEditing]);
 
   useEffect(() => {
     setToolbarVariant("splitListDetail");
-    registerActions({ onRefresh: () => refetchRes(), hasSelected: !!sel });
+    if (isEditing) {
+      registerActions({ onSave: hSave, onCancel: hCancel, isDirty: false, isSaving: false });
+    } else {
+      registerActions({ onRefresh: () => refetchRes(), hasSelected: !!sel, onEdit: sel ? hEdit : undefined });
+    }
     const footerParts = [`${filtered.length} res${filtered.length !== 1 ? "s" : ""}`];
     if (sel) {
       const fmt = (d: string | null | undefined) => {
@@ -136,7 +164,7 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
             </div>
           </>
         }
-        detail={<ResourceDetailView resource={sel} />}
+        detail={<ResourceDetailView resource={sel} editing={isEditing} onSave={setFormData} />}
         footer={null}
     />
   );

@@ -69,6 +69,7 @@ function Toolbar() {
                 { value: "all", label: "All" },
                 { value: "active", label: "Active" },
                 { value: "inactive", label: "Inactive" },
+                { value: "archived", label: "Archived" },
               ]}
             />
           )}
@@ -77,6 +78,7 @@ function Toolbar() {
             onNew={actions.onAdd}
             onEdit={actions.onEdit}
             onDelete={actions.onDelete}
+            onDeletePermanent={actions.onDeletePermanent}
             onRefresh={actions.onRefresh}
             onSave={actions.onSave}
             onCancel={actions.onCancel}
@@ -88,6 +90,7 @@ function Toolbar() {
             canNew={!!actions.onAdd}
             canEdit={!!actions.hasSelected && !!actions.onEdit}
             canDelete={!!actions.hasSelected && !!actions.onDelete}
+            canDeletePermanent={!!actions.hasSelected && !!actions.onDeletePermanent}
             canRefresh={!!actions.onRefresh}
           />
         </>

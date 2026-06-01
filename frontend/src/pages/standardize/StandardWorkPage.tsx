@@ -1,14 +1,13 @@
 import { BookOpen } from "lucide-react";
-import { KnowledgeModulePage } from "./KnowledgeModulePage";
-import { STANDARD_WORK_DOCS } from "./mockDocuments";
-import { STANDARD_WORK_CONFIG } from "./moduleConfig";
+import { StructureDocumentPage } from "./components/StructureDocumentPage";
 
 export function StandardWorkPage() {
   return (
-    <KnowledgeModulePage
+    <StructureDocumentPage
+      documentType="STANDARD_WORK"
+      title="Standard Work"
+      subtitle="Structure-based standard work management"
       icon={<BookOpen className="h-5 w-5 stroke-current" />}
-      documents={STANDARD_WORK_DOCS}
-      config={STANDARD_WORK_CONFIG}
     />
   );
 }

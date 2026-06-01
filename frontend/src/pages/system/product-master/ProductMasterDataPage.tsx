@@ -21,7 +21,6 @@ import {
   PRODUCT_FAMILIES_QUERY,
   PRODUCT_MODELS_QUERY,
   PRODUCT_VARIANTS_QUERY,
-  PART_NUMBERS_QUERY,
   BOMS_QUERY,
   ROUTING_ASSIGNMENTS_QUERY,
 } from "@/graphql/productIdentityQueries";
@@ -35,19 +34,16 @@ import {
   CREATE_PRODUCT_VARIANT,
   UPDATE_PRODUCT_VARIANT,
   ARCHIVE_PRODUCT_VARIANT,
-  CREATE_PART_NUMBER,
-  UPDATE_PART_NUMBER,
-  ARCHIVE_PART_NUMBER,
   CREATE_BOM,
   UPDATE_BOM,
   ARCHIVE_BOM,
 } from "@/graphql/productIdentityMutations";
-import type { ProductFamily, ProductModel, ProductVariant, PartNumber, BOM, RoutingAssignment } from "@/types/productIdentity";
+import type { ProductFamily, ProductModel, ProductVariant, BOM, RoutingAssignment } from "@/types/productIdentity";
 
-type Tab = "families" | "models" | "variants" | "parts" | "boms" | "routing";
+type Tab = "families" | "models" | "variants" | "boms" | "routing";
 type Mode = "view" | "create" | "edit";
-type ProductEntity = ProductFamily | ProductModel | ProductVariant | PartNumber | BOM | RoutingAssignment;
-type EntityType = "family" | "model" | "variant" | "part" | "bom" | "routing";
+type ProductEntity = ProductFamily | ProductModel | ProductVariant | BOM | RoutingAssignment;
+type EntityType = "family" | "model" | "variant" | "bom" | "routing";
 type ProductDraft = Record<string, string | boolean | null | undefined>;
 
 const PER_PAGE = 15;
@@ -76,7 +72,6 @@ const tabs: Array<{ id: Tab; label: string; icon: typeof Layers; accent: string 
   { id: "families", label: "Product Families", icon: Layers, accent: "emerald" },
   { id: "models", label: "Product Models", icon: Box, accent: "blue" },
   { id: "variants", label: "Product Variants", icon: GitBranch, accent: "violet" },
-  { id: "parts", label: "Part Numbers", icon: Package, accent: "amber" },
   { id: "boms", label: "BOMs", icon: FileText, accent: "cyan" },
   { id: "routing", label: "Routing Assignments", icon: GitCompare, accent: "rose" },
 ];
@@ -113,21 +108,15 @@ function entityTypeForTab(tab: Tab): EntityType {
   if (tab === "families") return "family";
   if (tab === "models") return "model";
   if (tab === "variants") return "variant";
-  if (tab === "parts") return "part";
   if (tab === "boms") return "bom";
   return "routing";
 }
 
-function emptyDraft(tab: Tab, families: ProductFamily[], models: ProductModel[], parts: PartNumber[]): ProductDraft {
+function emptyDraft(tab: Tab, families: ProductFamily[], models: ProductModel[]): ProductDraft {
   if (tab === "families") return { code: "", name: "", description: "", status: "ACTIVE", isActive: true };
   if (tab === "models") return { familyId: families[0]?.id || "", code: "", name: "", description: "", status: "ACTIVE" };
-  if (tab === "variants") return { modelId: models[0]?.id || "", code: "", name: "", configurationSummary: "", status: "ACTIVE", isActive: true };
-  if (tab === "parts") {
-    const model = models[0];
-    const familyId = model?.familyId || families[0]?.id || "";
-    return { familyId, modelId: model?.id || "", variantId: "", partNumber: "", description: "", revision: "", uom: "EA", status: "ACTIVE", isActive: true };
-  }
-  if (tab === "boms") return { partNumberId: parts[0]?.id || "", productModelId: parts[0]?.modelId || "", version: "1.0", status: "DRAFT", notes: "" };
+  if (tab === "variants") return { modelId: models[0]?.id || "", code: "", name: "", configurationSummary: "", partNumber: "", status: "ACTIVE", isActive: true };
+  if (tab === "boms") return { productVariantId: "", version: "1.0", status: "DRAFT", notes: "" };
   return {};
 }
 
@@ -135,9 +124,8 @@ function draftFromEntity(tab: Tab, entity: any): ProductDraft {
   if (!entity) return {};
   if (tab === "families") return { code: entity.code || "", name: entity.name || "", description: entity.description || "", status: entity.status || "ACTIVE", isActive: entity.isActive !== false };
   if (tab === "models") return { familyId: entity.familyId || "", code: entity.code || "", name: entity.name || "", description: entity.description || "", status: entity.status || "ACTIVE" };
-  if (tab === "variants") return { modelId: entity.modelId || "", code: entity.code || "", name: entity.name || "", configurationSummary: entity.configurationSummary || "", status: entity.status || "ACTIVE", isActive: entity.isActive !== false };
-  if (tab === "parts") return { familyId: entity.familyId || "", modelId: entity.modelId || "", variantId: entity.variantId || "", partNumber: entity.partNumber || "", description: entity.description || "", revision: entity.revision || "", uom: entity.uom || "EA", status: entity.status || "ACTIVE", isActive: entity.isActive !== false };
-  if (tab === "boms") return { partNumberId: entity.partNumberId || "", productModelId: entity.productModelId || "", version: entity.version || "1.0", status: entity.status || "DRAFT", notes: entity.notes || "" };
+  if (tab === "variants") return { modelId: entity.modelId || "", code: entity.code || "", name: entity.name || "", configurationSummary: entity.configurationSummary || "", partNumber: entity.partNumber || "", status: entity.status || "ACTIVE", isActive: entity.isActive !== false };
+  if (tab === "boms") return { productVariantId: entity.productVariantId || "", version: entity.version || "1.0", status: entity.status || "DRAFT", notes: entity.notes || "" };
   return {};
 }
 
@@ -146,8 +134,7 @@ function validateDraft(tab: Tab, draft: ProductDraft): string | null {
   if (tab === "families") return required("code", "Code") || required("name", "Name");
   if (tab === "models") return required("familyId", "Product Family") || required("code", "Code") || required("name", "Name");
   if (tab === "variants") return required("modelId", "Product Model") || required("code", "Code") || required("name", "Name");
-  if (tab === "parts") return required("familyId", "Product Family") || required("modelId", "Product Model") || required("partNumber", "Part Number");
-  if (tab === "boms") return required("partNumberId", "Part Number") || required("version", "Version");
+  if (tab === "boms") return required("productVariantId", "Product Variant") || required("version", "Version");
   return "Routing assignments are edited in the routing workspace.";
 }
 
@@ -171,23 +158,12 @@ function inputFromDraft(tab: Tab, draft: ProductDraft): ProductDraft {
     code: String(draft.code || "").trim(),
     name: String(draft.name || "").trim(),
     configurationSummary: String(draft.configurationSummary || "").trim(),
-    status: String(draft.status || "ACTIVE"),
-    isActive: draft.isActive !== false,
-  };
-  if (tab === "parts") return {
-    familyId: String(draft.familyId || ""),
-    modelId: String(draft.modelId || ""),
-    variantId: draft.variantId ? String(draft.variantId) : null,
-    partNumber: String(draft.partNumber || "").trim(),
-    description: String(draft.description || "").trim(),
-    revision: String(draft.revision || "").trim(),
-    uom: String(draft.uom || "EA").trim(),
+    partNumber: String(draft.partNumber || "").trim() || null,
     status: String(draft.status || "ACTIVE"),
     isActive: draft.isActive !== false,
   };
   return {
-    partNumberId: String(draft.partNumberId || ""),
-    productModelId: String(draft.productModelId || ""),
+    productVariantId: String(draft.productVariantId || "").trim() || null,
     version: String(draft.version || "1.0").trim(),
     status: String(draft.status || "DRAFT"),
     notes: String(draft.notes || "").trim(),
@@ -216,14 +192,12 @@ export function ProductMasterDataPage() {
   const familiesQ = useQuery<{ productFamilies: { items: ProductFamily[] } }>(PRODUCT_FAMILIES_QUERY, { variables: { limit: 500, offset: 0 }, fetchPolicy: "cache-and-network" });
   const modelsQ = useQuery<{ productModels: { items: ProductModel[] } }>(PRODUCT_MODELS_QUERY, { variables: { limit: 500, offset: 0 }, fetchPolicy: "cache-and-network" });
   const variantsQ = useQuery<{ productVariants: { items: ProductVariant[] } }>(PRODUCT_VARIANTS_QUERY, { variables: { limit: 500, offset: 0 }, fetchPolicy: "cache-and-network" });
-  const partsQ = useQuery<{ partNumbers: { items: PartNumber[] } }>(PART_NUMBERS_QUERY, { variables: { limit: 500, offset: 0, search: searchText || undefined }, fetchPolicy: "cache-and-network" });
   const bomsQ = useQuery<{ boms: { items: BOM[] } }>(BOMS_QUERY, { variables: { limit: 500, offset: 0 }, fetchPolicy: "cache-and-network" });
   const routingQ = useQuery<{ routings: { items: RoutingAssignment[] } | RoutingAssignment[] }>(ROUTING_ASSIGNMENTS_QUERY, { variables: { limit: 500, offset: 0 }, fetchPolicy: "cache-and-network" });
 
   const families = items(familiesQ.data?.productFamilies);
   const allModels = items(modelsQ.data?.productModels);
   const allVariants = items(variantsQ.data?.productVariants);
-  const parts = items(partsQ.data?.partNumbers);
   const boms = items(bomsQ.data?.boms);
   const routings = items(routingQ.data?.routings);
 
@@ -236,9 +210,6 @@ export function ProductMasterDataPage() {
   const [createVariant] = useMutation(CREATE_PRODUCT_VARIANT);
   const [updateVariant] = useMutation(UPDATE_PRODUCT_VARIANT);
   const [archiveVariant] = useMutation(ARCHIVE_PRODUCT_VARIANT);
-  const [createPart] = useMutation(CREATE_PART_NUMBER);
-  const [updatePart] = useMutation(UPDATE_PART_NUMBER);
-  const [archivePart] = useMutation(ARCHIVE_PART_NUMBER);
   const [createBom] = useMutation(CREATE_BOM);
   const [updateBom] = useMutation(UPDATE_BOM);
   const [archiveBom] = useMutation(ARCHIVE_BOM);
@@ -247,10 +218,9 @@ export function ProductMasterDataPage() {
     if (activeTab === "families") return families;
     if (activeTab === "models") return allModels;
     if (activeTab === "variants") return allVariants;
-    if (activeTab === "parts") return parts;
     if (activeTab === "boms") return boms;
     return routings;
-  }, [activeTab, allModels, allVariants, boms, families, parts, routings]);
+  }, [activeTab, allModels, allVariants, boms, families, routings]);
 
   const list = useMemo(() => {
     const query = searchText.trim().toLowerCase();
@@ -264,7 +234,7 @@ export function ProductMasterDataPage() {
 
   const selected = selectedId ? list.find((item: any) => item.id === selectedId) ?? null : null;
   const isForm = mode === "create" || mode === "edit";
-  const dirty = isForm && JSON.stringify(draft) !== JSON.stringify(mode === "edit" && selected ? draftFromEntity(activeTab, selected) : emptyDraft(activeTab, families, allModels, parts));
+  const dirty = isForm && JSON.stringify(draft) !== JSON.stringify(mode === "edit" && selected ? draftFromEntity(activeTab, selected) : emptyDraft(activeTab, families, allModels));
   const formValid = isForm && !validateDraft(activeTab, draft);
   const entityType = entityTypeForTab(activeTab);
   const activeTabConfig = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
@@ -280,16 +250,15 @@ export function ProductMasterDataPage() {
     setRefreshError(null);
     setRefreshing(true);
     try {
-      const results = await Promise.all([familiesQ.refetch(), modelsQ.refetch(), variantsQ.refetch(), partsQ.refetch(), bomsQ.refetch(), routingQ.refetch()]);
+      const results = await Promise.all([familiesQ.refetch(), modelsQ.refetch(), variantsQ.refetch(), bomsQ.refetch(), routingQ.refetch()]);
       const refreshedLists = [
         items((results[0].data as any)?.productFamilies),
         items((results[1].data as any)?.productModels),
         items((results[2].data as any)?.productVariants),
-        items((results[3].data as any)?.partNumbers),
-        items((results[4].data as any)?.boms),
-        items((results[5].data as any)?.routings),
+        items((results[3].data as any)?.boms),
+        items((results[4].data as any)?.routings),
       ];
-      const tabIndex = activeTab === "families" ? 0 : activeTab === "models" ? 1 : activeTab === "variants" ? 2 : activeTab === "parts" ? 3 : activeTab === "boms" ? 4 : 5;
+      const tabIndex = activeTab === "families" ? 0 : activeTab === "models" ? 1 : activeTab === "variants" ? 2 : activeTab === "boms" ? 3 : 4;
       const refreshedActiveList = refreshedLists[tabIndex] as Array<{ id: string }>;
       if (beforeSelectedId && !refreshedActiveList.some((item) => item.id === beforeSelectedId)) {
         setSelectedId(refreshedActiveList[0]?.id ?? null);
@@ -301,7 +270,7 @@ export function ProductMasterDataPage() {
       refreshingGuard.current = false;
       setRefreshing(false);
     }
-  }, [activeTab, bomsQ, familiesQ, modelsQ, partsQ, routingQ, selectedId, showSystemMessage, variantsQ]);
+  }, [activeTab, bomsQ, familiesQ, modelsQ, routingQ, selectedId, showSystemMessage, variantsQ]);
 
   const handleTabChange = useCallback((tab: Tab) => {
     setActiveTab(tab);
@@ -315,10 +284,10 @@ export function ProductMasterDataPage() {
   const hNew = useCallback(() => {
     if (activeTab === "routing") return;
     setSelectedId(null);
-    setDraft(emptyDraft(activeTab, families, allModels, parts));
+    setDraft(emptyDraft(activeTab, families, allModels));
     setMutationError(null);
     setMode("create");
-  }, [activeTab, allModels, families, parts]);
+  }, [activeTab, allModels, families]);
 
   const hEdit = useCallback(() => {
     if (!selected || activeTab === "routing") return;
@@ -338,7 +307,7 @@ export function ProductMasterDataPage() {
     if (!window.confirm(`Archive ${(selected as any).name || (selected as any).partNumber || "this record"}?`)) return;
     setMutationError(null);
     try {
-      const fn = activeTab === "families" ? archiveFamily : activeTab === "models" ? archiveModel : activeTab === "variants" ? archiveVariant : activeTab === "parts" ? archivePart : activeTab === "boms" ? archiveBom : null;
+      const fn = activeTab === "families" ? archiveFamily : activeTab === "models" ? archiveModel : activeTab === "variants" ? archiveVariant : activeTab === "boms" ? archiveBom : null;
       if (!fn) {
         showSystemMessage("Archive is not supported for this entity type.", "error");
         return;
@@ -353,7 +322,7 @@ export function ProductMasterDataPage() {
       setMutationError("Could not archive. This item may be in use.");
       showSystemMessage("Could not archive.", "error");
     }
-  }, [activeTab, archiveBom, archiveFamily, archiveModel, archivePart, archiveVariant, list, refetchAll, selected, showSystemMessage]);
+  }, [activeTab, archiveBom, archiveFamily, archiveModel, archiveVariant, list, refetchAll, selected, showSystemMessage]);
 
   const hSave = useCallback(async () => {
     setMutationError(null);
@@ -370,7 +339,6 @@ export function ProductMasterDataPage() {
       if (activeTab === "families") result = mode === "edit" ? await updateFamily({ variables: { id: selectedId, input } }) : await createFamily({ variables: { input } });
       else if (activeTab === "models") result = mode === "edit" ? await updateModel({ variables: { id: selectedId, input } }) : await createModel({ variables: { input } });
       else if (activeTab === "variants") result = mode === "edit" ? await updateVariant({ variables: { id: selectedId, input } }) : await createVariant({ variables: { input } });
-      else if (activeTab === "parts") result = mode === "edit" ? await updatePart({ variables: { id: selectedId, input } }) : await createPart({ variables: { input } });
       else if (activeTab === "boms") result = mode === "edit" ? await updateBom({ variables: { id: selectedId, input } }) : await createBom({ variables: { input } });
       else {
         setMutationError("Routing assignments are opened from the routing workspace.");
@@ -384,7 +352,7 @@ export function ProductMasterDataPage() {
         showSystemMessage(msg, "error");
         return;
       }
-      const saved = payload.family || payload.model || payload.variant || payload.partNumber || payload.bom;
+      const saved = payload.family || payload.model || payload.variant || payload.bom;
       if (saved?.id) setSelectedId(saved.id);
       await refetchAll();
       setDraft({});
@@ -395,24 +363,20 @@ export function ProductMasterDataPage() {
       setMutationError(msg);
       showSystemMessage("Could not save.", "error");
     }
-  }, [activeTab, createBom, createFamily, createModel, createPart, createVariant, draft, mode, refetchAll, selectedId, showSystemMessage, updateBom, updateFamily, updateModel, updatePart, updateVariant]);
+  }, [activeTab, createBom, createFamily, createModel, createVariant, draft, mode, refetchAll, selectedId, showSystemMessage, updateBom, updateFamily, updateModel, updateVariant]);
 
   const focusRelatedTab = useCallback((tab: Tab) => {
     setActiveTab(tab);
     setPage(1);
     setMode("view");
     setMutationError(null);
-    if (selected && "partNumberId" in selected && (selected as any).partNumberId) {
-      setSelectedId((selected as any).partNumberId);
-    } else {
-      setSelectedId(null);
-    }
-  }, [selected]);
+    setSelectedId(null);
+  }, []);
 
   const footerMeta = [
     `${list.length} record${list.length === 1 ? "" : "s"}`,
     `Page ${currentPage} of ${pageCount}`,
-    selected ? `Selected ${(selected as any).partNumber || (selected as any).code || (selected as any).id}` : "No selection",
+    selected ? `Selected ${(selected as any).code || (selected as any).id}` : "No selection",
   ];
   const auditMeta = selected ? [
     (selected as any).version ? `v${(selected as any).version}` : (selected as any).revision ? `Rev ${(selected as any).revision}` : null,
@@ -431,7 +395,6 @@ export function ProductMasterDataPage() {
         >
           <StatusBadge label={`${families.length} families`} />
           <StatusBadge label={`${allModels.length} models`} />
-          <StatusBadge label={`${parts.length} parts`} />
           <StatusBadge label={`${boms.length} BOMs`} />
           <StatusBadge label={`${routings.length} routings`} />
         </PageHeader>
@@ -502,13 +465,9 @@ export function ProductMasterDataPage() {
                         ? allModels.filter((model) => model.familyId === item.id).length
                         : activeTab === "models"
                           ? allVariants.filter((variant) => variant.modelId === item.id).length
-                          : activeTab === "variants"
-                            ? parts.filter((part) => part.variantId === item.id).length
-                            : activeTab === "parts"
-                              ? boms.filter((bom) => bom.partNumberId === item.id).length + routings.filter((routing) => routing.partNumberId === item.id).length
-                              : 0;
-                      const countLabel = activeTab === "families" ? "models" : activeTab === "models" ? "variants" : activeTab === "variants" ? "parts" : activeTab === "parts" ? "links" : "";
-                      const code = item.code || item.partNumber || (item.version ? `v${item.version}` : "");
+                          : 0;
+                      const countLabel = activeTab === "families" ? "models" : activeTab === "models" ? "variants" : "";
+                      const code = item.code || (item.version ? `v${item.version}` : "");
                       const selectedRow = selectedId === item.id;
                       return (
                         <button
@@ -520,7 +479,7 @@ export function ProductMasterDataPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-foreground">
-                                {item.partNumber || item.name || item.code || "-"}
+                                {item.name || item.code || "-"}
                               </span>
                               <ProductStatusBadge status={item.status} active={isOperationallyActive(item)} />
                             </div>
@@ -570,16 +529,6 @@ export function ProductMasterDataPage() {
                     const model = allModels.find((item) => item.id === value);
                     if (model?.familyId) next.familyId = model.familyId;
                   }
-                  if (key === "partNumberId" && activeTab === "boms") {
-                    const part = parts.find((item) => item.id === value);
-                    if (part?.modelId) next.productModelId = part.modelId;
-                  }
-                  if (key === "familyId" && activeTab === "parts") {
-                    const model = allModels.find((item) => item.familyId === value);
-                    next.modelId = model?.id || "";
-                    next.variantId = "";
-                  }
-                  if (key === "modelId" && activeTab === "parts") next.variantId = "";
                   return next;
                 });
                 setMutationError(null);
@@ -589,7 +538,6 @@ export function ProductMasterDataPage() {
               families={families}
               allModels={allModels}
               allVariants={allVariants}
-              parts={parts}
               boms={boms}
               routings={routings}
               onOpenBoms={() => focusRelatedTab("boms")}
@@ -706,7 +654,6 @@ function DetailPanel({
   families,
   allModels,
   allVariants,
-  parts,
   boms,
   routings,
   onOpenBoms,
@@ -724,7 +671,6 @@ function DetailPanel({
   families: ProductFamily[];
   allModels: ProductModel[];
   allVariants: ProductVariant[];
-  parts: PartNumber[];
   boms: BOM[];
   routings: RoutingAssignment[];
   onOpenBoms: () => void;
@@ -745,7 +691,7 @@ function DetailPanel({
         </div>
         <div className="grid flex-1 place-items-center px-6 text-center">
           <p className="max-w-md text-xs leading-5 text-muted-foreground">
-            Product master data stays organized by family, model, variant, part, BOM, and routing assignment.
+            Product master data stays organized by family, model, variant, BOM, and routing assignment.
           </p>
         </div>
       </div>
@@ -754,17 +700,12 @@ function DetailPanel({
 
   const s = selected || {};
   const modelsInFamily = allModels.filter((model: any) => model.familyId === s.id);
-  const partsForEntity = parts.filter((part: any) => activeTab === "families" ? part.familyId === s.id : activeTab === "models" ? part.modelId === s.id : activeTab === "variants" ? part.variantId === s.id : true);
-  const entityPartIds = new Set(partsForEntity.map((part: any) => part.id));
-  const bomsForEntity = boms.filter((bom: any) => activeTab === "parts" ? bom.partNumberId === s.id : entityPartIds.has(bom.partNumberId));
-  const routingsForEntity = routings.filter((routing: any) => activeTab === "parts" ? routing.partNumberId === s.id : entityPartIds.has(routing.partNumberId));
+  const bomsForEntity = boms;
+  const routingsForEntity = routings;
   const activeBomCount = bomsForEntity.filter((bom: any) => bom.status === "ACTIVE").length;
   const activeRoutingCount = routingsForEntity.filter((routing: any) => routing.status === "ACTIVE").length;
   const validationIssues = [
     entityType === "family" && modelsInFamily.length === 0 ? "No Models" : null,
-    (entityType === "family" || entityType === "model") && partsForEntity.length === 0 ? "No Part Numbers" : null,
-    entityType === "part" && activeBomCount === 0 ? "Missing BOM" : null,
-    entityType === "part" && activeRoutingCount === 0 ? "Missing Routing" : null,
     !isOperationallyActive(s) ? "Inactive Assignment" : null,
   ].filter(Boolean);
   const validationState = validationIssues.length === 0 ? "Ready" : `${validationIssues.length} Issue${validationIssues.length !== 1 ? "s" : ""}`;
@@ -832,16 +773,13 @@ function DetailPanel({
                   families={families}
                   models={allModels}
                   variants={allVariants}
-                  parts={parts}
                 />
-              ) : entityType === "part" ? (
-                <CompactRows items={[["Part Number", s.partNumber], ["Revision", s.revision || "-"], ["UoM", s.uom || "EA"], ["Description", s.description || "-"]]} />
               ) : entityType === "bom" ? (
-                <CompactRows items={[["Version", s.version], ["Part Number", s.partNumber || "-"], ["Status", s.status], ["Notes", s.notes || "-"]]} />
+                <CompactRows items={[["Version", s.version], ["Status", s.status], ["Notes", s.notes || "-"]]} />
               ) : entityType === "routing" ? (
-                <CompactRows items={[["Version", s.version], ["Status", s.status], ["Part Number", s.partNumber || "-"], ["Notes", s.notes || "-"]]} />
+                <CompactRows items={[["Version", s.version], ["Status", s.status], ["Notes", s.notes || "-"]]} />
               ) : (
-                <CompactRows items={[["Code", s.code], ["Name", s.name], [entityType === "variant" ? "Configuration" : "Description", entityType === "variant" ? (s.configurationSummary || "-") : (s.description || "-")]]} />
+                <CompactRows items={[["Code", s.code], ["Name", s.name], [entityType === "variant" ? "Configuration" : "Description", entityType === "variant" ? (s.configurationSummary || "-") : (s.description || "-")]] as [string, string][]} />
               )}
             </div>
           </Section>
@@ -852,10 +790,9 @@ function DetailPanel({
               <div className="rounded-md bg-muted px-1.5 py-0.5 text-[11px]">
                 {entityType === "family" && <CompactRows items={[["Models", `${modelsInFamily.length} model${modelsInFamily.length !== 1 ? "s" : ""}`]]} />}
                 {entityType === "model" && <CompactRows items={[["Family", s.familyName || "-"]]} />}
-                {entityType === "variant" && <CompactRows items={[["Model", s.modelName || "-"]]} />}
-                {entityType === "part" && <CompactRows items={[["Family", s.familyName], ["Model", s.modelName], ["Variant", s.variantName || "None"]]} />}
-                {entityType === "bom" && <CompactRows items={[["Part Number", s.partNumber || "-"]]} />}
-                {entityType === "routing" && <CompactRows items={[["Line", s.productionLineName || "-"], ["Part Number", s.partNumber || "-"]]} />}
+                {entityType === "variant" && <CompactRows items={[["Model", s.modelName || "-"], ["Part Number", s.partNumber || "-"]]} />}
+                {entityType === "bom" && <CompactRows items={[["Version", s.version || "-"]]} />}
+                {entityType === "routing" && <CompactRows items={[["Line", s.productionLineName || "-"]]} />}
               </div>
             </Section>
             <Section title="Where Used" level="support">
@@ -864,7 +801,6 @@ function DetailPanel({
                   ["Production Lines", `${new Set(routingsForEntity.map((routing: any) => routing.productionLineId).filter(Boolean)).size} line${new Set(routingsForEntity.map((routing: any) => routing.productionLineId).filter(Boolean)).size !== 1 ? "s" : ""}`],
                   ["BOMs", `${activeBomCount} active`],
                   ["Routings", `${activeRoutingCount} active`],
-                  ["Part Numbers", `${partsForEntity.length} total`],
                 ]} />
               </div>
             </Section>
@@ -875,7 +811,7 @@ function DetailPanel({
             <HierarchyNav
               activeTab={activeTab}
               onNavigate={onNavigateTab}
-              counts={{ families: families.length, models: allModels.length, variants: allVariants.length, parts: parts.length, boms: boms.length, routing: routings.length }}
+              counts={{ families: families.length, models: allModels.length, variants: allVariants.length, boms: boms.length, routing: routings.length }}
             />
           </Section>
 
@@ -892,12 +828,11 @@ function DetailPanel({
                   <span className="text-muted-foreground">·</span>
                   <span className="text-muted-foreground">{bomsForEntity.filter((b: any) => b.status === "ARCHIVED").length} obsolete</span>
                 </div>
-                {bomsForEntity.length > 0 && (
-                  <div className="text-[10px] text-muted-foreground">
-                    Last rev: {bomsForEntity.sort((a: any, b: any) => (b.version || "").localeCompare(a.version || ""))[0]?.version || "-"}
-                    {entityType === "part" && <span className="ml-2">· Used by {Math.min(routingsForEntity.length, 3)} production lines</span>}
-                  </div>
-                )}
+                  {bomsForEntity.length > 0 && (
+                    <div className="text-[10px] text-muted-foreground">
+                      Last rev: {[...bomsForEntity].sort((a: any, b: any) => (b.version || "").localeCompare(a.version || ""))[0]?.version || "-"}
+                    </div>
+                  )}
                 <div className="mt-1 flex gap-1">
                   {bomsForEntity.length === 0 && <span className="text-[10px] font-medium text-muted-foreground">Create or link a BOM before release.</span>}
                   <button type="button" onClick={onOpenBoms} className="h-6 rounded bg-primary px-2.5 text-[10px] font-bold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:ring-2 focus:ring-ring/20">Open BOMs</button>
@@ -932,14 +867,12 @@ function DetailPanel({
             <Section title={`Validation (${validationIssues.length})`} level="operational">
               <div className={`rounded-md border px-1.5 py-1 text-[11px] ${validationIssues.length === 0 ? "border-success/10 bg-success/5 text-foreground" : "border-warning/10 bg-warning/10 text-foreground"}`}>
                 <ValidationGroup title="Execution Readiness">
-                  {entityType === "part" && <ValidationLine severity={activeBomCount > 0 ? "ok" : "warning"} message={activeBomCount > 0 ? "BOM available" : "Missing BOM"} />}
-                  {entityType === "part" && <ValidationLine severity={activeRoutingCount > 0 ? "ok" : "warning"} message={activeRoutingCount > 0 ? "Routing assigned" : "Missing Routing"} />}
-                  {entityType !== "part" && <ValidationLine severity={partsForEntity.length > 0 ? "ok" : "warning"} message={partsForEntity.length > 0 ? `${partsForEntity.length} part number${partsForEntity.length !== 1 ? "s" : ""}` : "No Part Numbers"} />}
+                  <ValidationLine severity={activeBomCount > 0 ? "ok" : "warning"} message={activeBomCount > 0 ? `${activeBomCount} BOM${activeBomCount !== 1 ? "s" : ""}` : "No BOMs"} />
+                  <ValidationLine severity={activeRoutingCount > 0 ? "ok" : "warning"} message={activeRoutingCount > 0 ? `${activeRoutingCount} Routing${activeRoutingCount !== 1 ? "s" : ""}` : "No Routings"} />
                 </ValidationGroup>
                 <ValidationGroup title="Hierarchy">
                   {entityType === "family" && <ValidationLine severity={modelsInFamily.length > 0 ? "ok" : "warning"} message={modelsInFamily.length > 0 ? `${modelsInFamily.length} model${modelsInFamily.length !== 1 ? "s" : ""}` : "No Models"} />}
                   {entityType === "model" && <ValidationLine severity={allVariants.filter((variant) => variant.modelId === s.id).length > 0 ? "ok" : "warning"} message={allVariants.filter((variant) => variant.modelId === s.id).length > 0 ? "Variants available" : "No Variants"} />}
-                  {entityType === "variant" && <ValidationLine severity={partsForEntity.length > 0 ? "ok" : "warning"} message={partsForEntity.length > 0 ? "Linked to part number" : "No Part Numbers"} />}
                 </ValidationGroup>
                 <ValidationGroup title="Assignment State">
                   <ValidationLine severity={isOperationallyActive(s) ? "ok" : "critical"} message={isOperationallyActive(s) ? "Active assignment" : "Inactive Assignment"} />
@@ -963,20 +896,15 @@ function ProductMasterForm({
   onChange,
   families,
   models,
-  variants,
-  parts,
+  variants = [],
 }: {
   activeTab: Tab;
   draft: ProductDraft;
   onChange: (key: string, value: string | boolean | null) => void;
   families: ProductFamily[];
   models: ProductModel[];
-  variants: ProductVariant[];
-  parts: PartNumber[];
+  variants?: ProductVariant[];
 }) {
-  const familyModels = draft.familyId ? models.filter((model) => model.familyId === draft.familyId) : models;
-  const modelVariants = draft.modelId ? variants.filter((variant) => variant.modelId === draft.modelId) : variants;
-
   if (activeTab === "families") {
     return (
       <div className="grid gap-2 md:grid-cols-2">
@@ -1006,31 +934,20 @@ function ProductMasterForm({
         <SelectField value={draft.modelId} onChange={(value) => onChange("modelId", value)} options={models.map((model) => ({ value: model.id, label: `${model.familyName ? `${model.familyName} / ` : ""}${model.name}` }))} placeholder="Product Model *" />
         <TextField placeholder="Code *" value={draft.code} onChange={(value) => onChange("code", value)} />
         <TextField placeholder="Name *" value={draft.name} onChange={(value) => onChange("name", value)} />
+        <TextField placeholder="Part Number" value={draft.partNumber} onChange={(value) => onChange("partNumber", value)} />
         <StatusSelect value={draft.status} onChange={(value) => onChange("status", value)} />
         <TextField className="md:col-span-2" placeholder="Configuration summary" value={draft.configurationSummary} onChange={(value) => onChange("configurationSummary", value)} />
       </div>
     );
   }
 
-  if (activeTab === "parts") {
-    return (
-      <div className="grid gap-2 md:grid-cols-2">
-        <SelectField value={draft.familyId} onChange={(value) => onChange("familyId", value)} options={families.map((family) => ({ value: family.id, label: family.name }))} placeholder="Product Family *" />
-        <SelectField value={draft.modelId} onChange={(value) => onChange("modelId", value)} options={familyModels.map((model) => ({ value: model.id, label: model.name }))} placeholder="Product Model *" />
-        <SelectField value={draft.variantId} onChange={(value) => onChange("variantId", value || null)} options={modelVariants.map((variant) => ({ value: variant.id, label: variant.name }))} placeholder="No variant" />
-        <TextField placeholder="Part Number *" value={draft.partNumber} onChange={(value) => onChange("partNumber", value)} />
-        <TextField placeholder="Revision" value={draft.revision} onChange={(value) => onChange("revision", value)} />
-        <TextField placeholder="UoM" value={draft.uom} onChange={(value) => onChange("uom", value)} />
-        <StatusSelect value={draft.status} onChange={(value) => onChange("status", value)} />
-        <TextField className="md:col-span-2" placeholder="Description" value={draft.description} onChange={(value) => onChange("description", value)} />
-      </div>
-    );
-  }
-
   if (activeTab === "boms") {
+    const modelId = draft.modelId || "";
+    const filteredVariants = modelId ? variants.filter((v) => v.modelId === modelId) : variants;
     return (
       <div className="grid gap-2 md:grid-cols-2">
-        <SelectField value={draft.partNumberId} onChange={(value) => onChange("partNumberId", value)} options={parts.map((part) => ({ value: part.id, label: `${part.partNumber} / ${part.description || part.modelName}` }))} placeholder="Part Number *" />
+        <SelectField value={draft.modelId} onChange={(value) => { onChange("modelId", value); onChange("productVariantId", ""); }} options={models.map((model) => ({ value: model.id, label: model.name }))} placeholder="Product Model" />
+        <SelectField value={draft.productVariantId} onChange={(value) => onChange("productVariantId", value)} options={filteredVariants.map((v) => ({ value: v.id, label: `${v.name}${v.partNumber ? ` · ${v.partNumber}` : " · —"}` }))} placeholder="Product Variant *" />
         <TextField placeholder="Version *" value={draft.version} onChange={(value) => onChange("version", value)} />
         <StatusSelect value={draft.status} onChange={(value) => onChange("status", value)} draftOptions={["DRAFT", "ACTIVE", "ARCHIVED"]} />
         <TextField className="md:col-span-2" placeholder="Notes" value={draft.notes} onChange={(value) => onChange("notes", value)} />
@@ -1102,7 +1019,6 @@ function HierarchyNav({ activeTab, counts, onNavigate }: { activeTab: Tab; count
     { tab: "families", label: "Family", icon: <Layers className="h-3 w-3 stroke-current" />, color: "emerald" },
     { tab: "models", label: "Models", icon: <Box className="h-3 w-3 stroke-current" />, color: "blue" },
     { tab: "variants", label: "Variants", icon: <GitBranch className="h-3 w-3 stroke-current" />, color: "violet" },
-    { tab: "parts", label: "Parts", icon: <Package className="h-3 w-3 stroke-current" />, color: "amber" },
     { tab: "boms", label: "BOMs", icon: <FileText className="h-3 w-3 stroke-current" />, color: "cyan" },
     { tab: "routing", label: "Routings", icon: <GitCompare className="h-3 w-3 stroke-current" />, color: "rose" },
   ];

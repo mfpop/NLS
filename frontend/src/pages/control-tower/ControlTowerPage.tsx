@@ -124,24 +124,21 @@ const controlTowerData = {
 
 function sevBorder(sev: string) {
   switch (sev) {
-    case "critical": return "border-l-danger/45";
-    case "warning":  return "border-l-warning/45";
-    default:         return "border-l-transparent";
+    case "critical": return "border-l-2 border-l-danger/45";
+    case "warning":  return "border-l-2 border-l-warning/45";
+    default:         return "border-l-2 border-l-transparent";
   }
 }
 
-const CT_CARD = "border-border/35 bg-card shadow-sm shadow-foreground/6";
-const CT_CARD_SOFT = "border-border/30 bg-card shadow-sm shadow-foreground/5";
 const CT_SECONDARY = "text-muted-foreground";
 const CT_MUTED = "text-muted-foreground";
-const CT_WORK_CARD = "border-border/40 shadow-sm shadow-foreground/5";
-const WORK_BUTTON = "inline-flex h-7 min-w-[74px] shrink-0 items-center justify-center rounded-md border px-2.5 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-70";
-const WORK_BUTTON_NEUTRAL = `${WORK_BUTTON} border-border bg-card text-foreground hover:bg-muted`;
-const CT_BUTTON_PRIMARY = "inline-flex h-8 items-center justify-center rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
-const CT_BUTTON_SECONDARY = "inline-flex h-8 items-center justify-center rounded-md border border-border/70 bg-card px-3 text-xs font-semibold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
-const CT_BUTTON_TERTIARY = "inline-flex h-8 items-center justify-center rounded-md px-3 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
+const WORK_BUTTON = "inline-flex h-7 min-w-[74px] shrink-0 items-center justify-center rounded-sm border border-gray-500/50 px-2.5 text-xs font-semibold motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-70";
+const WORK_BUTTON_NEUTRAL = `${WORK_BUTTON} bg-background/60 backdrop-blur-sm text-foreground hover:bg-background/80`;
+const CT_BUTTON_PRIMARY = "inline-flex h-8 items-center justify-center rounded-sm bg-primary/80 backdrop-blur-sm px-3 text-xs font-semibold text-primary-foreground shadow-sm motion-safe:transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
+const CT_BUTTON_SECONDARY = "inline-flex h-8 items-center justify-center rounded-sm border border-gray-500/50 bg-background/60 backdrop-blur-sm px-3 text-xs font-semibold text-foreground motion-safe:transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
+const CT_BUTTON_TERTIARY = "inline-flex h-8 items-center justify-center rounded-sm px-3 text-xs font-semibold text-muted-foreground motion-safe:transition-colors hover:bg-background/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
 
-/* Badges — clean, readable, uppercase */
+/* Badges */
 function sevBadge(sev: string) {
   switch (sev) {
     case "critical": return theme.badgeCritical;
@@ -176,7 +173,7 @@ function trendIcon(trend: string) {
 
 function SectionLabel({ children }: { children: string }) {
   return (
-    <div className={`mb-1.5 text-[11px] font-bold uppercase tracking-wider ${CT_SECONDARY}`}>
+    <div className={`mb-1.5 text-xs font-bold uppercase tracking-wider ${CT_SECONDARY}`}>
       {children}
     </div>
   );
@@ -202,10 +199,10 @@ function DrillDownPanel({ target, onClose }: { target: string; onClose: () => vo
 
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-foreground/20 p-4">
-      <div className={`w-full max-w-md rounded-xl border p-4 ${theme.modal}`}>
+      <div className={`w-full max-w-md rounded-sm border p-4 ${theme.modal}`}>
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <span className="flex h-8 w-8 items-center justify-center rounded-sm bg-primary/10 text-primary">
               <DetailIcon className="h-4 w-4 stroke-current" />
             </span>
             <div>
@@ -217,7 +214,7 @@ function DrillDownPanel({ target, onClose }: { target: string; onClose: () => vo
             Close
           </button>
         </div>
-        <div className="rounded-lg border border-border/40 bg-muted/45 p-3 text-sm font-medium text-foreground">
+        <div className="rounded-sm border border-border/40 bg-muted/45 p-3 text-sm font-medium text-foreground">
           {detail.body}
         </div>
       </div>
@@ -232,7 +229,7 @@ export function ControlTowerPage() {
   const [drillDownTarget, setDrillDownTarget] = useState<string | null>(null);
 
   return (
-        <div className={`relative flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
+    <div className={`relative flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
       {/* ── HEADER ── */}
       <header className={`flex shrink-0 items-center justify-between border-b px-5 py-3 ${theme.header}`}>
         <div className="flex items-center gap-3">
@@ -261,27 +258,27 @@ export function ControlTowerPage() {
 
       {/* ── BODY ── */}
       <div className={`flex min-h-0 flex-1 overflow-hidden ${theme.page}`}>
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden">
           {/* ════ LEFT COLUMN ════ */}
-          <div className="flex min-h-0 flex-col gap-2.5 overflow-y-auto lg:overflow-hidden">
-            {/* 1. SITUATION SUMMARY — action-first */}
-            <section className="ct-section">
-              <div className="flex min-h-16 items-center justify-between gap-3 rounded-lg border border-danger/15 border-l-2 border-l-danger/45 bg-danger/5 px-3 py-2 shadow-sm shadow-foreground/5">
+          <div className="flex min-h-0 flex-col overflow-y-auto pl-4 py-4 bg-background/70 backdrop-blur-md lg:overflow-hidden">
+            {/* 1. SITUATION SUMMARY */}
+            <section className="mt-4">
+              <div className="flex min-h-16 items-center justify-between gap-3 border border-l-2 border-danger/15 border-l-danger/45 bg-danger/5 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-danger/10 text-danger">
                     <AlertTriangle className="h-4 w-4 stroke-current" />
                   </span>
                   <div className="grid min-w-0 gap-x-4 gap-y-1 sm:grid-cols-[auto_auto_auto]">
                     <div className="min-w-0">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-danger">Status</div>
+                      <div className="text-xs font-bold uppercase tracking-wide text-danger">Status</div>
                       <div className="truncate text-sm font-bold text-foreground">Output: {situation.output}</div>
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Root cause</div>
+                      <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Root cause</div>
                       <div className="truncate text-xs font-semibold text-foreground">{situation.rootCause}</div>
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Next action</div>
+                      <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Next action</div>
                       <div className="truncate text-xs font-semibold text-foreground">{situation.nextAction}</div>
                     </div>
                   </div>
@@ -290,13 +287,13 @@ export function ControlTowerPage() {
             </section>
 
             {/* 2. PRIMARY ACTIONS */}
-            <section className="ct-section">
+            <section className="mt-4">
               <SectionLabel>Primary Action</SectionLabel>
-              <div className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 ${CT_CARD_SOFT}`}>
+              <div className="flex items-center gap-2 border border-gray-500/50 px-3 py-1.5">
                 <Wrench className="h-4 w-4 shrink-0 text-primary stroke-current" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-semibold text-foreground">Resolve flow interruption before next pitch</div>
-                  <div className="truncate text-[11px] font-medium text-muted-foreground">Station 4 · WIP empty · machine stopped</div>
+                  <div className="truncate text-xs font-medium text-muted-foreground">Station 4 · WIP empty · machine stopped</div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                   {primaryActions.slice(0, 3).map((action) => (
@@ -307,16 +304,16 @@ export function ControlTowerPage() {
             </section>
 
             {/* 3. KPI GROUPS */}
-            <section className="ct-section">
+            <section className="mt-4">
               <SectionLabel>KPIs</SectionLabel>
               <div className="grid grid-cols-3 gap-2">
                 {kpiGroups.map((group) => {
                   const GroupIcon = group.icon;
                   return (
-                    <div key={group.title} className={`rounded-lg border p-2 ${CT_CARD}`}>
+                    <div key={group.title} className="border border-gray-500/50 p-2">
                       <div className="mb-1.5 flex items-center gap-1.5">
                         <GroupIcon className="h-3.5 w-3.5 text-foreground stroke-current" />
-                        <span className="text-[11px] font-extrabold uppercase tracking-wide text-foreground">{group.title}</span>
+                        <span className="text-xs font-extrabold uppercase tracking-wide text-foreground">{group.title}</span>
                       </div>
                       <div className="grid gap-1">
                         {group.items.map((kpi) => (
@@ -324,11 +321,11 @@ export function ControlTowerPage() {
                             key={kpi.label}
                             type="button"
                             onClick={() => setDrillDownTarget(kpi.drillDown)}
-                            className={`flex h-[52px] items-center justify-between rounded-md border px-2.5 text-left transition-colors hover:bg-muted/70 ${stateTone(kpi.state)}`}
+                            className={`flex h-[52px] items-center justify-between border px-2.5 text-left motion-safe:transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 ${stateTone(kpi.state)}`}
                             aria-label={`${kpi.label} opens ${kpi.drillDown}`}
                           >
                             <span className="min-w-0">
-                              <span className="block truncate text-[10px] font-bold uppercase tracking-wide opacity-80">{kpi.label}</span>
+                              <span className="block truncate text-xs font-bold uppercase tracking-wide opacity-80">{kpi.label}</span>
                               <span className="block truncate text-lg font-bold leading-5 text-foreground">{kpi.value}</span>
                             </span>
                             <span className="flex items-center gap-1 text-xs font-bold">
@@ -345,26 +342,26 @@ export function ControlTowerPage() {
             </section>
 
             {/* 4. PRIORITY ACTIONS */}
-            <section className="ct-section">
+            <section className="mt-4">
               <SectionLabel>Priority Actions</SectionLabel>
-              <div className="grid gap-1.5">
+              <div className="grid gap-2">
                 {priorityActions.map((a, i) => (
                   <button
                     type="button"
                     key={i}
                     onClick={() => setDrillDownTarget("root-cause view")}
                     className={
-                      "ct-priority-card grid h-12 grid-cols-[minmax(0,1.15fr)_0.7fr_0.9fr_auto] items-center gap-2 rounded-lg border border-l-2 px-3 text-left shadow-sm shadow-foreground/5 transition-colors hover:bg-muted/70 " +
+                      "grid h-12 grid-cols-[minmax(0,1.15fr)_0.7fr_0.9fr_auto] items-center gap-2 border border-l-2 px-3 text-left motion-safe:transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 " +
                       priorityActionTone(a.severity)
                     }
                   >
                     <span className="min-w-0">
                       <span className="block truncate text-xs font-bold text-foreground">{a.type}</span>
-                      <span className="block truncate text-[10px] font-medium text-muted-foreground">Impact: {a.impact}</span>
+                      <span className="block truncate text-xs font-medium text-muted-foreground">Impact: {a.impact}</span>
                     </span>
-                    <span className="truncate text-[11px] font-semibold text-muted-foreground">Owner: {a.owner}</span>
-                    <span className="truncate text-[11px] font-semibold text-foreground">{a.nextAction}</span>
-                    <span className={"rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide " + sevBadge(a.severity)}>
+                    <span className="truncate text-xs font-semibold text-muted-foreground">Owner: {a.owner}</span>
+                    <span className="truncate text-xs font-semibold text-foreground">{a.nextAction}</span>
+                    <span className={"px-2 py-0.5 text-xs font-bold uppercase tracking-wide " + sevBadge(a.severity)}>
                       {a.severity}
                     </span>
                   </button>
@@ -372,25 +369,26 @@ export function ControlTowerPage() {
               </div>
             </section>
 
-            <section className="ct-section flex min-h-0 flex-1 flex-col">
+            {/* 5. PROBLEMS */}
+            <section className="mt-4">
               <SectionLabel>Problems</SectionLabel>
-              <div className={`min-h-0 flex-1 rounded-lg border ${CT_CARD}`}>
-                <div className="grid h-full grid-rows-3 gap-1 p-1">
+              <div>
+                <div className="grid h-full grid-rows-3 gap-2 p-1">
                   {problems.map((p) => (
                     <button
                       key={p.title}
                       type="button"
                       onClick={() => setDrillDownTarget(p.drillDown)}
-                      className={"flex min-h-0 items-center gap-2 rounded-md bg-muted/55 px-3 py-1 text-left transition-colors hover:bg-muted/80 " + sevBorder(p.severity)}
+                      className={"flex min-h-0 items-center gap-2 bg-muted/55 px-3 py-1 text-left motion-safe:transition-all hover:bg-muted/80 hover:translate-x-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 " + sevBorder(p.severity)}
                       aria-label={`${p.title} opens ${p.drillDown}`}
                     >
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-card text-muted-foreground">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center bg-card text-muted-foreground">
                         {p.severity === "critical" ? <AlertTriangle className="h-3.5 w-3.5 text-danger stroke-current" /> : <CircleDot className="h-3.5 w-3.5 stroke-current" />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{p.group}</span>
+                        <span className="block truncate text-xs font-bold uppercase tracking-wide text-muted-foreground">{p.group}</span>
                         <span className="block truncate text-xs font-bold text-foreground">{p.title}</span>
-                        <span className="block truncate text-[10px] font-medium text-muted-foreground">
+                        <span className="block truncate text-xs font-medium text-muted-foreground">
                           {p.chain.map((step, index) => `${index === 0 ? "" : "→ "}${step}`).join(" ")}
                         </span>
                       </span>
@@ -403,20 +401,20 @@ export function ControlTowerPage() {
           </div>
 
           {/* ════ RIGHT COLUMN — MY WORK ════ */}
-          <aside className="ct-section flex min-h-0 flex-col max-lg:hidden">
+          <aside className="flex min-h-0 flex-col py-4 bg-background/70 backdrop-blur-md max-xl:hidden">
             <SectionLabel>My Work</SectionLabel>
-            <div className={`min-h-0 flex-1 overflow-y-auto rounded-lg border border-border/30 bg-card p-2.5 shadow-sm shadow-foreground/5`}>
+            <div className="min-h-0 flex-1 overflow-y-auto p-2.5">
               {/* DO NOW */}
               {myWork.doNow.length > 0 && (
                 <div className="mb-3">
                   <div className="mb-1.5 flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-danger/10 text-[10px] font-bold text-danger">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-danger/10 text-xs font-bold text-danger">
                       {myWork.doNow.length}
                     </span>
-                    <h4 className={`text-[10px] font-semibold uppercase tracking-wider ${CT_SECONDARY}`}>Do Now</h4>
+                    <h4 className={`text-xs font-semibold uppercase tracking-wider ${CT_SECONDARY}`}>Do Now</h4>
                   </div>
                   {myWork.doNow.map((t, i) => (
-                    <button key={i} type="button" onClick={() => setDrillDownTarget("root-cause view")} className={`mb-2 w-full rounded-lg border border-l-2 border-danger/15 border-l-danger/45 bg-danger/5 px-2.5 py-2 text-left ${CT_WORK_CARD}`}>
+                    <button key={i} type="button" onClick={() => setDrillDownTarget("root-cause view")} className="mb-2 w-full border border-l-2 border-danger/15 border-l-danger/45 bg-danger/5 px-2.5 py-2 text-left motion-safe:transition-colors hover:bg-danger/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className={`text-sm font-semibold ${theme.textPrimary}`}>{t.title}</div>
@@ -435,13 +433,13 @@ export function ControlTowerPage() {
               {myWork.next.length > 0 && (
                 <div className="mb-3">
                   <div className="mb-1.5 flex items-center gap-2">
-                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning/10 text-[10px] font-bold text-warning">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning/10 text-xs font-bold text-warning">
                       {myWork.next.length}
                     </span>
-                    <h4 className={`text-[10px] font-semibold uppercase tracking-wider ${CT_SECONDARY}`}>Next</h4>
+                    <h4 className={`text-xs font-semibold uppercase tracking-wider ${CT_SECONDARY}`}>Next</h4>
                   </div>
                   {myWork.next.map((t, i) => (
-                    <button key={i} type="button" onClick={() => setDrillDownTarget("line/station breakdown")} className={`mb-2 w-full rounded-lg border px-2.5 py-2 text-left ${CT_WORK_CARD} border-warning/15 bg-warning/5`}>
+                    <button key={i} type="button" onClick={() => setDrillDownTarget("line/station breakdown")} className="mb-2 w-full border border-warning/15 bg-warning/5 px-2.5 py-2 text-left motion-safe:transition-colors hover:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className={`text-sm font-semibold ${theme.textPrimary}`}>{t.title}</div>
@@ -461,10 +459,10 @@ export function ControlTowerPage() {
                 <div>
                   <div className="mb-1.5 flex items-center gap-2">
                     <Clock3 className="h-3 w-3 text-muted-foreground stroke-current" />
-                    <h4 className={`text-[10px] font-semibold uppercase tracking-wider ${CT_SECONDARY}`}>Later</h4>
+                    <h4 className={`text-xs font-semibold uppercase tracking-wider ${CT_SECONDARY}`}>Later</h4>
                   </div>
                   {myWork.later.map((t, i) => (
-                    <button key={i} type="button" onClick={() => setDrillDownTarget("trend chart")} className={`mb-2 w-full rounded-lg border bg-card px-2.5 py-2 text-left ${CT_WORK_CARD}`}>
+                    <button key={i} type="button" onClick={() => setDrillDownTarget("trend chart")} className="mb-2 w-full border px-2.5 py-2 text-left motion-safe:transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className={`text-sm font-semibold ${theme.textPrimary}`}>{t.title}</div>

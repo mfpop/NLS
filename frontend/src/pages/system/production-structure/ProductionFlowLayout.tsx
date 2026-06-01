@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Database, Factory, TrendingUpDown, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { useMutation } from "@apollo/client/react";
+import { Database, Factory, TrendingUpDown, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X, Rocket } from "lucide-react";
+import { SEED_GPT_LINE_MUTATION, CLEANUP_GPT_LINE_MUTATION } from "@/graphql/productionLineMutations";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "../../../styles/themeTokens";
@@ -62,6 +64,8 @@ function normalizeFlowTreeNode<T extends { type: string; children?: T[] }>(node:
 export function ProductionFlowLayout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [seedGptMutation, { loading: seeding }] = useMutation<{ seedGptLine: { ok: boolean; messages?: string[] } }>(SEED_GPT_LINE_MUTATION);
+  const [cleanupGptMutation, { loading: cleaning }] = useMutation<{ cleanupGptLine: { ok: boolean; messages?: string[] } }>(CLEANUP_GPT_LINE_MUTATION);
   const urlDepartmentId = searchParams.get("departmentId");
   const urlLineId = searchParams.get("productionLineId");
   const urlRgId = searchParams.get("resourceGroupId");
@@ -283,6 +287,36 @@ export function ProductionFlowLayout() {
             ]}
           />
           <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+          <ToolbarButton icon={Trash2} label={cleaning ? "Cleaning..." : "Cleanup GPT"} disabled={cleaning} onClick={async () => {
+            if (!window.confirm("This will delete ALL GPT line data (departments, RGs, resources, variant, PNs, BOM, line, bins). Continue?")) return;
+            try {
+              const { data } = await cleanupGptMutation();
+              if (data?.cleanupGptLine?.ok) {
+                setToast({ message: "GPT line cleaned up!", type: "success" });
+                refetch();
+              } else {
+                const msgs = data?.cleanupGptLine?.messages?.join("; ") || "Cleanup failed";
+                setToast({ message: msgs, type: "error" });
+              }
+            } catch (e) {
+              setToast({ message: e instanceof Error ? e.message : "Cleanup failed", type: "error" });
+            }
+          }} />
+          <ToolbarButton icon={Rocket} label={seeding ? "Setting up..." : "GPT Setup"} disabled={seeding} onClick={async () => {
+            if (!window.confirm("This will reset the GPT line and overwrite existing data. Continue?")) return;
+            try {
+              const { data } = await seedGptMutation();
+              if (data?.seedGptLine?.ok) {
+                setToast({ message: "GPT Line setup complete!", type: "success" });
+                refetch();
+              } else {
+                const msgs = data?.seedGptLine?.messages?.join("; ") || "Setup failed";
+                setToast({ message: msgs, type: "error" });
+              }
+            } catch (e) {
+              setToast({ message: e instanceof Error ? e.message : "Setup failed", type: "error" });
+            }
+          }} />
           <span className="h-5 w-px shrink-0 bg-border/25" />
           <div className="flex flex-1 items-center justify-end gap-3">
             {isEditingCompany ? (

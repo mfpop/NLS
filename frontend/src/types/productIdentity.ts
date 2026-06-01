@@ -25,6 +25,7 @@ export interface ProductVariant {
   code: string;
   name: string;
   configurationSummary?: string;
+  partNumber?: string | null;
   status: string;
   isActive: boolean;
 }
@@ -58,6 +59,7 @@ export interface BOM {
   id: string;
   partNumberId?: string;
   partNumber?: string;
+  productVariantId?: string;
   version: string;
   status: string;
   notes?: string;
@@ -97,6 +99,7 @@ export interface RoutingAssignment {
   productModelName?: string;
   partNumberId?: string;
   partNumber?: string;
+  productVariantId?: string;
   partDescription?: string;
   version: string;
   status: string;

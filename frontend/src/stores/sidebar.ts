@@ -3,6 +3,7 @@ import { create } from "zustand";
 export type SidebarSectionId = "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system" | "docs" | null;
 
 interface SidebarState {
+  collapsed: boolean;
   openSection: SidebarSectionId;
   openNestedGroup: string | null;
   suppressRouteOpen: boolean;
@@ -10,9 +11,11 @@ interface SidebarState {
   setOpenNestedGroup: (label: string | null) => void;
   collapseForUserNavigation: () => void;
   consumeSuppressRouteOpen: () => boolean;
+  toggleCollapsed: () => void;
 }
 
 export const useSidebarStore = create<SidebarState>((set) => ({
+  collapsed: false,
   openSection: null,
   openNestedGroup: null,
   suppressRouteOpen: false,
@@ -27,5 +30,6 @@ export const useSidebarStore = create<SidebarState>((set) => ({
     });
     return suppressed;
   },
+  toggleCollapsed: () => set((state) => ({ collapsed: !state.collapsed })),
 }));
 

@@ -308,6 +308,23 @@ class StructureService:
 
     @classmethod
     @transaction.atomic
+    def delete_production_line(cls, line_id: str) -> ProductionLine:
+        from manufacturing.models import Routing, ProductionLineResourceGroup, ProcessFlow
+        try:
+            line = ProductionLine.objects.get(id=line_id)
+        except ProductionLine.DoesNotExist as exc:
+            raise StructureServiceError("id", "NOT_FOUND", "Production line not found") from exc
+        if line.routings.exists():
+            raise StructureServiceError("id", "IN_USE_ROUTINGS", "Cannot delete production line with existing routings")
+        if line.assigned_resource_groups.exists():
+            raise StructureServiceError("id", "IN_USE_RGS", "Cannot delete production line with assigned resource groups")
+        if line.process_flows.exists():
+            raise StructureServiceError("id", "IN_USE_PROCESS_FLOWS", "Cannot delete production line with existing process flows")
+        line.delete()
+        return line
+
+    @classmethod
+    @transaction.atomic
     def archive_resource_group(cls, group_id: str) -> ResourceGroup:
         group = cls._resource_group(group_id, for_update=True)
         group.status = "ARCHIVED"

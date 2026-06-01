@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
@@ -7,6 +9,8 @@ import json
 
 from api.schema import schema, GraphQLContext, validate_query_complexity
 from api.upload_import_file import upload_import_file
+from api.upload_image import upload_image
+from api.upload_document import upload_document
 
 
 class ComplexityValidatingGraphQLView(GraphQLView):
@@ -58,4 +62,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("graphql/", csrf_exempt(ComplexityValidatingGraphQLView.as_view(schema=schema))),
     path("api/import-jobs/<path:job_id>/upload/", csrf_exempt(upload_import_file)),
+    path("api/upload-image/", csrf_exempt(upload_image)),
+    path("api/upload-document/", csrf_exempt(upload_document)),
 ]
+
+# Serve uploaded media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

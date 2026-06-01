@@ -187,7 +187,6 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
                     <Route index element={<ControlTowerPage />} />
           <Route path="control-tower" element={<ControlTowerPage />} />
-          <Route path="home" element={<Navigate to="/control-tower" replace />} />
           <Route path="myworkspace/dashboard" element={<MyDashboardPage />} />
           <Route path="myworkspace/tasks" element={<MyTasksPage />} />
           <Route path="execution/line-performance" element={<LinePerformancePage />} />

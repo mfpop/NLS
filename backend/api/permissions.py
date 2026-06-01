@@ -46,6 +46,11 @@ _action_roles = {
     "manage_reference_values": MANAGER_PLUS,
     # Product / Family / Model assignments
     "manage_line_product_scopes": MANAGER_PLUS,
+    # Document / Standard Framework
+    "manage_structure_documents": MANAGER_PLUS,
+    "view_structure_documents": SUPERVISOR_PLUS,
+    "approve_structure_documents": MANAGER_PLUS,
+    "archive_structure_documents": MANAGER_PLUS,
 }
 
 

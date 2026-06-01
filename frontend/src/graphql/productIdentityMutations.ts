@@ -28,6 +28,7 @@ const PRODUCT_VARIANT_FIELDS = `
   code
   name
   configurationSummary
+  partNumber
   status
   isActive
 `;
@@ -162,6 +163,7 @@ const BOM_FIELDS = `
   id
   partNumberId
   partNumber
+  productVariantId
   version
   status
   notes

@@ -90,6 +90,7 @@ export const PRODUCT_VARIANTS_QUERY = gql`
         code
         name
         configurationSummary
+        partNumber
         status
         isActive
       }
@@ -108,6 +109,7 @@ export const PRODUCT_VARIANT_QUERY = gql`
       code
       name
       configurationSummary
+      partNumber
       status
       isActive
     }
@@ -141,6 +143,7 @@ export const BOMS_QUERY = gql`
         id
         partNumberId
         partNumber
+        productVariantId
         version
         status
         notes
@@ -160,6 +163,7 @@ export const BOM_QUERY = gql`
       id
       partNumberId
       partNumber
+      productVariantId
       version
       status
       notes

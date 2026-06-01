@@ -46,7 +46,7 @@ export function PageHeader({ icon, iconClass, title, subtitle, systemMessage, on
   return (
     <header className={`flex h-16 shrink-0 items-center justify-between px-4 ${theme.header}`}>
       <div className="flex items-center gap-2 min-w-0">
-        <div className={`flex-none ${iconClass || "text-primary"}`}>
+        <div className={`flex-none ml-10 ${iconClass || "text-primary"}`}>
           {icon}
         </div>
         <div className="min-w-0">

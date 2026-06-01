@@ -6,9 +6,9 @@ from django.db.models import F
 from manufacturing.models import (
     Routing, RoutingStep, RoutingStatus,
     ProductionLine, Department, ResourceGroup, Resource,
-    ReferenceValue, ProductModel, ProcessFlow,
+    ReferenceValue, ProductModel, ProductVariant, ProcessFlow,
     BOM, InventoryLocation, Material, MaterialBin, OperationInput, OperationOutput, MaterialMovementRule,
-    PartNumber, ProductFamily,
+    PartNumber, ProductFamily, ProductionLineResourceGroup,
     MaterialState, MaterialMovementRuleType,
 )
 
@@ -83,13 +83,26 @@ def _resolve_product_model(ref_id: Optional[str]) -> Optional[ProductModel]:
     return model
 
 
+def _resolve_product_variant(variant_id: Optional[str]) -> Optional[ProductVariant]:
+    if not variant_id:
+        return None
+    try:
+        return ProductVariant.objects.select_related("model__family").get(id=variant_id)
+    except ProductVariant.DoesNotExist:
+        raise RoutingValidationError(f"Product variant with id {variant_id} not found", "productVariantId")
+
+
 def _resolve_part_number(part_id: Optional[str]) -> Optional[PartNumber]:
     if not part_id:
         return None
     try:
         return PartNumber.objects.select_related("family", "model", "variant").get(id=part_id)
     except PartNumber.DoesNotExist:
-        raise RoutingValidationError(f"Part number with id {part_id} not found", "partNumberId")
+        raise RoutingValidationError(
+            f"PartNumber with id {part_id} not found. "
+            f"Use productVariantId instead — standalone PartNumber is deprecated.",
+            "partNumberId",
+        )
 
 
 def _resolve_optional_process_flow(ref_id: Optional[str]) -> Optional[ProcessFlow]:
@@ -177,7 +190,13 @@ class RoutingService:
     @transaction.atomic
     def create_bom(input_data: dict) -> BOM:
         part_number = _resolve_part_number(input_data.get("part_number_id"))
-        product_model = part_number.model if part_number else _resolve_product_model(input_data.get("product_model_id"))
+        variant = _resolve_product_variant(input_data.get("product_variant_id"))
+        if variant:
+            product_model = variant.model
+        elif part_number:
+            product_model = part_number.model
+        else:
+            product_model = _resolve_product_model(input_data.get("product_model_id"))
         if product_model is None:
             raise RoutingValidationError("Product model is required", "productModelId")
         RoutingService._lock_bom_siblings(str(product_model.id), part_number.id if part_number else None)
@@ -199,6 +218,11 @@ class RoutingService:
             bom = BOM.objects.select_for_update().get(id=bom_id)
         except BOM.DoesNotExist:
             raise RoutingValidationError("BOM not found", "id")
+        if "product_variant_id" in input_data:
+            variant = _resolve_product_variant(input_data.get("product_variant_id"))
+            if variant:
+                bom.product_model = variant.model
+                bom.part_number = None
         if "product_model_id" in input_data:
             product_model = _resolve_product_model(input_data.get("product_model_id"))
             if product_model is None:
@@ -246,8 +270,14 @@ class RoutingService:
         pf_id = input_data.get("product_family_id")
         pf = _resolve_ref(ReferenceValue, pf_id) if pf_id else None
         part_number = _resolve_part_number(input_data.get("part_number_id"))
+        variant = _resolve_product_variant(input_data.get("product_variant_id"))
         pm_id = input_data.get("product_model_id")
-        pm = part_number.model if part_number else _resolve_product_model(pm_id)
+        if variant:
+            pm = variant.model
+        elif part_number:
+            pm = part_number.model
+        else:
+            pm = _resolve_product_model(pm_id)
         RoutingService._lock_routing_siblings(pl_id, pm.id if pm else None, part_number.id if part_number else None)
 
         routing = Routing(
@@ -283,6 +313,11 @@ class RoutingService:
         if "product_family_id" in input_data:
             pf_id = input_data["product_family_id"]
             routing.product_family = _resolve_ref(ReferenceValue, pf_id) if pf_id else None
+        if "product_variant_id" in input_data:
+            variant = _resolve_product_variant(input_data.get("product_variant_id"))
+            if variant:
+                routing.product_model = variant.model
+                routing.part_number = None
         if "product_model_id" in input_data:
             pm_id = input_data["product_model_id"]
             routing.product_model = _resolve_product_model(pm_id)
@@ -367,6 +402,14 @@ class RoutingService:
                 raise RoutingValidationError(
                     "Resource group does not belong to selected department", "resourceGroupId"
                 )
+            if not ProductionLineResourceGroup.objects.filter(
+                production_line_id=routing.production_line_id,
+                resource_group_id=rg_id,
+                is_active=True,
+            ).exists():
+                raise RoutingValidationError(
+                    "Resource group is not assigned to this production line", "resourceGroupId"
+                )
         res = None
         if res_id:
             res = _resolve_ref(Resource, res_id)
@@ -419,6 +462,14 @@ class RoutingService:
             if step.department and step.resource_group and step.resource_group.department_id != step.department.id:
                 raise RoutingValidationError(
                     "Resource group does not belong to selected department", "resourceGroupId"
+                )
+            if rg_id and not ProductionLineResourceGroup.objects.filter(
+                production_line_id=step.routing.production_line_id,
+                resource_group_id=rg_id,
+                is_active=True,
+            ).exists():
+                raise RoutingValidationError(
+                    "Resource group is not assigned to this production line", "resourceGroupId"
                 )
         if "resource_id" in input_data:
             res_id = input_data["resource_id"]
@@ -655,6 +706,14 @@ class RoutingService:
         if sorted(seqs) != list(range(1, len(steps) + 1)):
             errors.append(_error("steps", "INVALID_SEQUENCE", "Step sequences must start at 1 and be continuous"))
 
+        # Build assigned RG set for this routing's production line
+        assigned_rg_ids = set(
+            ProductionLineResourceGroup.objects.filter(
+                production_line_id=routing.production_line_id,
+                is_active=True,
+            ).values_list("resource_group_id", flat=True)
+        )
+
         # Check missing department
         for s in steps:
             if not s.department:
@@ -665,6 +724,8 @@ class RoutingService:
                 errors.append(_error(f"step_{s.sequence}", "INVALID_CT", f"Step {s.sequence} cycle time must be > 0"))
             if s.resource_group and s.resource_group.status != "ACTIVE":
                 errors.append(_error(f"step_{s.sequence}", "INACTIVE_RESOURCE_GROUP", f"Step {s.sequence} uses inactive resource group"))
+            if s.resource_group and s.resource_group_id not in assigned_rg_ids:
+                errors.append(_error(f"step_{s.sequence}", "UNASSIGNED_RG", f"Step {s.sequence} uses resource group not assigned to this production line"))
             if s.resource and s.resource.status != "ACTIVE":
                 errors.append(_error(f"step_{s.sequence}", "INACTIVE_RESOURCE", f"Step {s.sequence} uses inactive resource"))
             inputs = list(s.material_inputs.select_related("material", "source_location", "source_bin"))

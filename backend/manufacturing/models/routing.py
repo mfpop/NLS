@@ -62,6 +62,7 @@ class ProductVariant(models.Model):
     status = models.CharField(
         max_length=20, choices=EntityStatus.choices, default=EntityStatus.ACTIVE,
     )
+    part_number = models.CharField(max_length=128, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

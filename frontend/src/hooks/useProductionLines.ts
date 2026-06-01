@@ -6,6 +6,7 @@ import {
   CREATE_PRODUCTION_LINE_MUTATION,
   UPDATE_PRODUCTION_LINE_MUTATION,
   ARCHIVE_PRODUCTION_LINE_MUTATION,
+  DELETE_PRODUCTION_LINE_MUTATION,
 } from "@/graphql/productionLineQueries";
 import {
   ASSIGN_FAMILIES_MUTATION,
@@ -109,6 +110,7 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
   const [createMutation, createState] = useMutation<MutationData>(CREATE_PRODUCTION_LINE_MUTATION);
   const [updateMutation, updateState] = useMutation<MutationData>(UPDATE_PRODUCTION_LINE_MUTATION);
   const [archiveMutation] = useMutation<any, { id: string }>(ARCHIVE_PRODUCTION_LINE_MUTATION);
+  const [deleteMutation] = useMutation<any, { id: string }>(DELETE_PRODUCTION_LINE_MUTATION);
   const [assignFamiliesMutation] = useMutation<MutationData>(ASSIGN_FAMILIES_MUTATION);
   const [removeFamilyMutation] = useMutation<MutationData>(REMOVE_FAMILY_MUTATION);
   const [assignModelsMutation] = useMutation<MutationData>(ASSIGN_MODELS_MUTATION);
@@ -193,6 +195,20 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     }
   }, [archiveMutation, refetch]);
 
+  const deleteLine = useCallback(async (id: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const { data } = await deleteMutation({ variables: { id } });
+      if (data?.deleteProductionLine?.ok) {
+        await refetch();
+        return { success: true, message: "Production line deleted." };
+      }
+      const err = data?.deleteProductionLine?.errors?.[0];
+      return { success: false, message: err?.message || "Failed to delete production line." };
+    } catch {
+      return { success: false, message: "Failed to delete production line." };
+    }
+  }, [deleteMutation, refetch]);
+
   const assignFamilies = useCallback(async (productionLineId: string, familyIds: string[], primaryFamilyId?: string | null): Promise<{ ok: boolean; assignments?: ProductFamilyAssignment[]; errors?: any }> => {
     try {
       const { data } = await assignFamiliesMutation({ variables: { productionLineId, familyIds, primaryFamilyId } });
@@ -248,6 +264,7 @@ export function useProductionLines(pageSize: number = 10, page: number = 1) {
     setStatusFilter,
     saveLine,
     archiveLine,
+    deleteLine,
     refetch,
     assignFamilies,
     removeFamily,

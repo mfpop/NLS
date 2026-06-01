@@ -43,6 +43,7 @@ from .lineage import (
 from .reference_table import ReferenceTable
 from .reference_item import ReferenceItem
 from .config_option import ConfigOption
+from .structure_document import StructureDocument, DocumentType, TargetType, DocumentStatus, LifecycleAction, StructureDocumentRevisionHistory, StructureDocumentAuditTrail
 
 __all__ = [
     "EntityStatus",
@@ -129,4 +130,12 @@ __all__ = [
     "ReferenceTable",
     "ReferenceItem",
     "ConfigOption",
+    # Document / Standard Framework
+    "StructureDocument",
+    "DocumentType",
+    "TargetType",
+    "DocumentStatus",
+    "LifecycleAction",
+    "StructureDocumentRevisionHistory",
+    "StructureDocumentAuditTrail",
 ]

@@ -66,6 +66,7 @@ export interface Routing {
   productModelName?: string | null;
   partNumberId?: string | null;
   partNumber?: string | null;
+  productVariantId?: string | null;
   partDescription?: string | null;
   version: string;
   status: string;
@@ -170,6 +171,7 @@ export interface RoutingInput {
   productFamilyId?: string | null;
   productModelId?: string | null;
   partNumberId?: string | null;
+  productVariantId?: string | null;
   version?: string;
   status?: string;
   effectiveFrom?: string | null;

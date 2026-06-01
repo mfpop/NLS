@@ -8,10 +8,14 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from api.permissions import ensure_access
+from manufacturing.domain.line_resource_group_service import ProductionLineResourceGroupService
 from api.types.manufacturing import (
     CompanyNode, CompanyPayload, CompanyInput,
+    StructureDocumentNode, StructureDocumentPayload, StructureDocumentInput, StructureDocumentUpdateInput,
+    DocumentControlPayload, CreateRevisionInput, ArchiveDocumentInput, ControlledCopyInput,
     PlantNode, PlantPayload, PlantInput,
     ProductionLineNode, ProductionLinePayload, ProductionLineInput,
+    ProductionLineAssignmentPayload,
     DepartmentNode, DepartmentPayload, DepartmentInput,
     ResourceGroupNode, ResourceGroupPayload, ResourceGroupInput,
     ResourceNode, ResourcePayload, ResourceInput,
@@ -41,6 +45,8 @@ from api.types.manufacturing import (
     CapacitySnapshotNode, LaborRequirementInput, LaborRequirementNode, LaborRequirementPayload,
     LaborRequirementUpdateInput, OperatorAssignmentInput, OperatorAssignmentNode,
     OperatorAssignmentPayload, OperatorAssignmentUpdateInput,
+    SeedGptLinePayload,
+    CleanupGptLinePayload,
 )
 from api.types.auth import LoginInput, AuthPayload, UserNode
 from api.auth_utils import encode_jwt
@@ -623,6 +629,14 @@ class ManufacturingMutation:
             return ProductionLinePayload(ok=False, errors=_structure_error_payload(exc))
 
     @strawberry.mutation
+    def delete_production_line(self, id: str) -> ProductionLinePayload:
+        try:
+            line = StructureService.delete_production_line(id)
+            return ProductionLinePayload(ok=True, production_line=ProductionLineNode.from_db(line))
+        except StructureServiceError as exc:
+            return ProductionLinePayload(ok=False, errors=_structure_error_payload(exc))
+
+    @strawberry.mutation
     def create_department(self, input: DepartmentInput) -> DepartmentPayload:
         try:
             dept = DepartmentService.create(input)
@@ -1132,6 +1146,7 @@ class ManufacturingMutation:
                 "product_family_id": input.product_family_id,
                 "product_model_id": input.product_model_id,
                 "part_number_id": input.part_number_id,
+                "product_variant_id": input.product_variant_id,
                 "version": input.version or "1.0",
                 "status": input.status or "DRAFT",
                 "effective_from": input.effective_from,
@@ -1150,6 +1165,7 @@ class ManufacturingMutation:
                 "product_family_id": input.product_family_id,
                 "product_model_id": input.product_model_id,
                 "part_number_id": input.part_number_id,
+                "product_variant_id": input.product_variant_id,
                 "version": input.version,
                 "effective_from": input.effective_from,
                 "effective_to": input.effective_to,
@@ -1187,6 +1203,7 @@ class ManufacturingMutation:
                 "product_family_id": input.product_family_id,
                 "product_model_id": input.product_model_id,
                 "part_number_id": input.part_number_id,
+                "product_variant_id": input.product_variant_id,
                 "version": input.version or "1.0",
                 "notes": input.notes or "",
                 "steps": [
@@ -1786,3 +1803,295 @@ class ManufacturingMutation:
             return OperatorAssignmentPayload(ok=True, operator_assignment=OperatorAssignmentNode.from_db(assignment))
         except Exception as exc:
             return _validation_payload(OperatorAssignmentPayload, exc)
+
+    # ── Production Line Resource Group Assignments ──
+
+    @strawberry.mutation
+    def assign_resource_group_to_production_line(
+        self,
+        production_line_id: str,
+        resource_group_id: str,
+        sequence: typing.Optional[int] = None,
+    ) -> ProductionLineAssignmentPayload:
+        from manufacturing.domain.line_resource_group_service import (
+            ProductionLineResourceGroupService, LineResourceGroupError,
+        )
+        try:
+            ProductionLineResourceGroupService.assign_resource_group_to_line(
+                production_line_id, resource_group_id, sequence,
+            )
+            return ProductionLineAssignmentPayload(ok=True)
+        except LineResourceGroupError as e:
+            return ProductionLineAssignmentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)],
+            )
+
+    @strawberry.mutation
+    def remove_resource_group_from_production_line(
+        self,
+        production_line_id: str,
+        resource_group_id: str,
+    ) -> ProductionLineAssignmentPayload:
+        from manufacturing.domain.line_resource_group_service import (
+            ProductionLineResourceGroupService, LineResourceGroupError,
+        )
+        try:
+            ProductionLineResourceGroupService.remove_resource_group_from_line(
+                production_line_id, resource_group_id,
+            )
+            return ProductionLineAssignmentPayload(ok=True)
+        except LineResourceGroupError as e:
+            return ProductionLineAssignmentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)],
+            )
+
+    @strawberry.mutation
+    def reorder_production_line_resource_groups(
+        self,
+        production_line_id: str,
+        ordered_resource_group_ids: list[str],
+    ) -> ProductionLineAssignmentPayload:
+        from manufacturing.domain.line_resource_group_service import (
+            ProductionLineResourceGroupService, LineResourceGroupError,
+        )
+        try:
+            ProductionLineResourceGroupService.reorder_assigned_resource_groups(
+                production_line_id, ordered_resource_group_ids,
+            )
+            return ProductionLineAssignmentPayload(ok=True)
+        except LineResourceGroupError as e:
+            return ProductionLineAssignmentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)],
+            )
+
+    @strawberry.mutation
+    def activate_production_line_resource_group(
+        self,
+        production_line_id: str,
+        resource_group_id: str,
+    ) -> ProductionLineAssignmentPayload:
+        from manufacturing.domain.line_resource_group_service import (
+            ProductionLineResourceGroupService, LineResourceGroupError,
+        )
+        try:
+            ProductionLineResourceGroupService.activate_line_resource_group(
+                production_line_id, resource_group_id,
+            )
+            return ProductionLineAssignmentPayload(ok=True)
+        except LineResourceGroupError as e:
+            return ProductionLineAssignmentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)],
+            )
+
+    @strawberry.mutation
+    def deactivate_production_line_resource_group(
+        self,
+        production_line_id: str,
+        resource_group_id: str,
+    ) -> ProductionLineAssignmentPayload:
+        from manufacturing.domain.line_resource_group_service import (
+            ProductionLineResourceGroupService, LineResourceGroupError,
+        )
+        try:
+            ProductionLineResourceGroupService.deactivate_line_resource_group(
+                production_line_id, resource_group_id,
+            )
+            return ProductionLineAssignmentPayload(ok=True)
+        except LineResourceGroupError as e:
+            return ProductionLineAssignmentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)],
+            )
+
+    # ── GPT Line Setup (bulk seed) ──
+
+    @strawberry.mutation
+    @transaction.atomic
+    def seed_gpt_line(self, info: Info) -> "SeedGptLinePayload":
+        """Run the GPT line setup seed command (creates depts, RGs, resources, variant, PNs, BOM, line, flow, bins)."""
+        from io import StringIO
+        from django.core.management import call_command
+        ensure_access(user=_user(info), action="manage_production_lines")
+        out = StringIO()
+        try:
+            call_command("seed_gpt_line", stdout=out)
+            output = out.getvalue()
+            lines = [l.strip() for l in output.split("\n") if l.strip()]
+            ok = "SEED COMPLETE" in output
+            return SeedGptLinePayload(ok=ok, messages=lines[-20:] if lines else ["Completed"])
+        except Exception as e:
+            return SeedGptLinePayload(ok=False, messages=[str(e)])
+
+    # ── GPT Line Cleanup ──
+
+    @strawberry.mutation
+    @transaction.atomic
+    def cleanup_gpt_line(self, info: Info) -> "CleanupGptLinePayload":
+        """Delete all GPT line setup data (departments, RGs, resources, variant, PNs, BOM, line, flow, bins)."""
+        from manufacturing.models import (
+            Plant, ProductionLine, Department, ResourceGroup, Resource,
+            ProductModel, ProductVariant, PartNumber,
+        )
+        from manufacturing.models.production_line_resource_group import ProductionLineResourceGroup
+        from manufacturing.models.routing import (
+            Routing, RoutingStep, ProcessFlow, ProcessStep,
+            BOM, BOMItem, MaterialBin,
+        )
+        ensure_access(user=_user(info), action="manage_production_lines")
+
+        messages = []
+        try:
+            plant = Plant.objects.get(code="PP-02")
+            gpt_model = ProductModel.objects.get(code="GPT")
+
+            # 1. Delete production line and its related data
+            line = ProductionLine.objects.filter(plant=plant, code="GPT").first()
+            if line:
+                ProductionLineResourceGroup.objects.filter(production_line=line).delete()
+                MaterialBin.objects.filter(production_line=line).delete()
+                Routing.objects.filter(production_line=line).delete()
+                ProcessFlow.objects.filter(production_line=line).delete()
+                ProductionLineDepartmentAssignment.objects.filter(production_line=line).delete()
+                messages.append("Deleted GPT production line")
+
+            # 2. Delete GPT-related departments (MCH, WLD, COT, ASM, PIP, KIT, HRS, PKG)
+            dept_codes = ["MCH", "WLD", "COT", "ASM", "PIP", "KIT", "HRS", "PKG"]
+            for code in dept_codes:
+                dept = Department.objects.filter(plant=plant, code=code).first()
+                if not dept:
+                    continue
+                for rg in ResourceGroup.objects.filter(department=dept):
+                    MaterialBin.objects.filter(resource_group=rg).delete()
+                    Resource.objects.filter(resource_group=rg).delete()
+                    ProductionLineResourceGroup.objects.filter(resource_group=rg).delete()
+                    RoutingStep.objects.filter(resource_group=rg).delete()
+                    rg.delete()
+                ProductionLineDepartmentAssignment.objects.filter(department=dept).delete()
+                dept.delete()
+            messages.append("Deleted 8 GPT departments, 16 RGs, 32 resources")
+
+            # 3. Delete line if exists
+            if line:
+                line.delete()
+                messages.append("Removed GPT production line")
+
+            # 4. Delete BOM
+            for bom in BOM.objects.filter(product_model=gpt_model):
+                BOMItem.objects.filter(bom=bom).delete()
+                bom.delete()
+            messages.append("Deleted GPT BOM")
+
+            # 5. Delete part numbers and variant
+            variant = ProductVariant.objects.filter(model=gpt_model, code="239364-01").first()
+            if variant:
+                PartNumber.objects.filter(variant=variant).delete()
+                variant.delete()
+                messages.append("Deleted GPT variant and 50 part numbers")
+
+            messages.append("GPT line cleanup complete")
+            return CleanupGptLinePayload(ok=True, messages=messages)
+        except Exception as e:
+            return CleanupGptLinePayload(ok=False, messages=[str(e)])
+
+    # ── Document / Standard Framework Mutations ──
+
+    @strawberry.mutation(name="createStructureDocument")
+    def create_structure_document(self, info: Info, input: StructureDocumentInput) -> StructureDocumentPayload:
+        ensure_access(user=_user(info), action="manage_structure_documents")
+        from manufacturing.domain.structure_document_service import StructureDocumentService, StructureDocumentError
+        try:
+            doc = StructureDocumentService.create_document(
+                document_type=input.document_type,
+                target_type=input.target_type,
+                target_id=input.target_id,
+                title=input.title,
+                code=input.code,
+                content=input.content or "",
+                revision=input.revision or "1.0",
+                owner=input.owner or "",
+                effective_from=input.effective_from,
+                effective_to=input.effective_to,
+            )
+            return StructureDocumentPayload(ok=True, document=StructureDocumentNode.from_db(doc))
+        except StructureDocumentError as e:
+            return StructureDocumentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)]
+            )
+
+    @strawberry.mutation(name="updateStructureDocument")
+    def update_structure_document(self, info: Info, id: str, input: StructureDocumentUpdateInput) -> StructureDocumentPayload:
+        ensure_access(user=_user(info), action="manage_structure_documents")
+        from manufacturing.domain.structure_document_service import StructureDocumentService, StructureDocumentError
+        try:
+            doc = StructureDocumentService.update_document(
+                document_id=int(id),
+                title=input.title,
+                content=input.content,
+                revision=input.revision,
+                owner=input.owner,
+                effective_from=input.effective_from,
+                effective_to=input.effective_to,
+            )
+            return StructureDocumentPayload(ok=True, document=StructureDocumentNode.from_db(doc))
+        except StructureDocumentError as e:
+            return StructureDocumentPayload(
+                ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)]
+            )
+
+    # ── Document Control Mutations ──
+
+    @strawberry.mutation(name="createStructureDocumentRevision")
+    def create_structure_document_revision(self, info: Info, input: CreateRevisionInput) -> DocumentControlPayload:
+        ensure_access(user=_user(info), action="manage_structure_documents")
+        from manufacturing.domain.structure_document_control_service import StructureDocumentControlService, DocumentControlError
+        try:
+            doc = StructureDocumentControlService.create_revision(
+                document_id=int(input.document_id),
+                new_revision=input.new_revision,
+                change_reason=input.change_reason or "",
+                user=str(_user(info)),
+            )
+            return DocumentControlPayload(ok=True, document=StructureDocumentNode.from_db(doc))
+        except DocumentControlError as e:
+            return DocumentControlPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="approveStructureDocument")
+    def approve_structure_document_controlled(self, info: Info, id: str) -> DocumentControlPayload:
+        ensure_access(user=_user(info), action="approve_structure_documents")
+        from manufacturing.domain.structure_document_control_service import StructureDocumentControlService, DocumentControlError
+        try:
+            doc = StructureDocumentControlService.approve_document(
+                document_id=int(id),
+                user=str(_user(info)),
+            )
+            return DocumentControlPayload(ok=True, document=StructureDocumentNode.from_db(doc))
+        except DocumentControlError as e:
+            return DocumentControlPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="archiveStructureDocument")
+    def archive_structure_document_controlled(self, info: Info, input: ArchiveDocumentInput) -> DocumentControlPayload:
+        ensure_access(user=_user(info), action="archive_structure_documents")
+        from manufacturing.domain.structure_document_control_service import StructureDocumentControlService, DocumentControlError
+        try:
+            doc = StructureDocumentControlService.archive_document(
+                document_id=int(input.document_id),
+                reason=input.reason,
+                user=str(_user(info)),
+            )
+            return DocumentControlPayload(ok=True, document=StructureDocumentNode.from_db(doc))
+        except DocumentControlError as e:
+            return DocumentControlPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="setStructureDocumentControlledCopy")
+    def set_structure_document_controlled_copy(self, info: Info, input: ControlledCopyInput) -> DocumentControlPayload:
+        ensure_access(user=_user(info), action="manage_structure_documents")
+        from manufacturing.domain.structure_document_control_service import StructureDocumentControlService, DocumentControlError
+        try:
+            doc = StructureDocumentControlService.set_controlled_copy(
+                document_id=int(input.document_id),
+                is_controlled_copy=input.is_controlled_copy,
+                reason=input.reason or "",
+                user=str(_user(info)),
+            )
+            return DocumentControlPayload(ok=True, document=StructureDocumentNode.from_db(doc))
+        except DocumentControlError as e:
+            return DocumentControlPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])

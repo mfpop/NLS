@@ -10,7 +10,7 @@ from django.db import transaction
 from manufacturing.models import (
     ImportJob, ImportCompareResult, ImportValidationError, MappingRule,
     Company, Plant, Department, ProductionLine, ResourceGroup, Resource,
-    ProductFamily, ProductModel, ProductVariant, PartNumber, Material,
+    ProductFamily, ProductModel, ProductVariant, Material,
 )
 from manufacturing.domain.structure_service import StructureService, StructureServiceError
 from manufacturing.domain.department_service import DepartmentService, DepartmentServiceError
@@ -708,7 +708,7 @@ class MaterialsImportHandler(DomainImportHandler):
     """Handles MATERIALS domain: Product Families → Product Models → Product Variants → Part Numbers → Materials."""
 
     domain = "MATERIALS"
-    entity_types = ["ProductFamily", "ProductModel", "ProductVariant", "PartNumber", "Material"]
+    entity_types = ["ProductFamily", "ProductModel", "ProductVariant", "Material"]
 
     # ── Column name lookups ──
 
@@ -733,16 +733,6 @@ class MaterialsImportHandler(DomainImportHandler):
         "status": (["status"], False),
         "model_code": (["model_code", "model", "model code"], True),
     }
-    _PART_FIELDS = {
-        "part_number": (["part_number", "part", "part no", "pn"], True),
-        "description": (["description", "desc"], False),
-        "revision": (["revision", "rev"], False),
-        "uom": (["uom", "unit_of_measure", "unit"], False),
-        "status": (["status"], False),
-        "family_code": (["family_code", "family", "family code"], True),
-        "model_code": (["model_code", "model", "model code"], True),
-        "variant_code": (["variant_code", "variant", "variant code"], False),
-    }
     _MATERIAL_FIELDS = {
         "code": (["code", "material_code"], True),
         "name": (["name", "material_name"], True),
@@ -764,8 +754,6 @@ class MaterialsImportHandler(DomainImportHandler):
                 issues.extend(self._validate_models(sheet))
             elif "variant" in sheet_lower or "variants" in sheet_lower:
                 issues.extend(self._validate_variants(sheet))
-            elif "part" in sheet_lower or "part_number" in sheet_lower:
-                issues.extend(self._validate_part_numbers(sheet))
             elif "material" in sheet_lower:
                 issues.extend(self._validate_materials(sheet))
         return issues
@@ -841,30 +829,6 @@ class MaterialsImportHandler(DomainImportHandler):
                                "REQUIRED", "Model code reference is required for product variant", vals.get("model_code"))
         return issues
 
-    def _validate_part_numbers(self, sheet: SheetData) -> list[ValidationIssue]:
-        issues: list[ValidationIssue] = []
-        headers = sheet.column_headers
-        for row in sheet.rows:
-            if row.is_empty:
-                continue
-            vals = self._extract_and_validate(issues, sheet, row, "PartNumber", headers, self._PART_FIELDS)
-            # Validate part_number length (max 100 chars by model)
-            pn = vals.get("part_number", "")
-            if pn and len(pn) > 100:
-                self._add_issue(issues, sheet, row, "PartNumber", "part_number",
-                               "MAX_LENGTH", "Part number must be 100 characters or less", pn)
-            status = vals.get("status", "")
-            if status and status.upper() not in ("ACTIVE", "INACTIVE", "ARCHIVED", "DRAFT"):
-                self._add_issue(issues, sheet, row, "PartNumber", "status",
-                               "INVALID_STATUS", f"Invalid status: {status}", status)
-            if not vals.get("family_code"):
-                self._add_issue(issues, sheet, row, "PartNumber", "family_code",
-                               "REQUIRED", "Family code reference is required for part number", vals.get("family_code"))
-            if not vals.get("model_code"):
-                self._add_issue(issues, sheet, row, "PartNumber", "model_code",
-                               "REQUIRED", "Model code reference is required for part number", vals.get("model_code"))
-        return issues
-
     def _validate_materials(self, sheet: SheetData) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
         headers = sheet.column_headers
@@ -895,8 +859,6 @@ class MaterialsImportHandler(DomainImportHandler):
                 rows.extend(self._compare_models(sheet))
             elif "variant" in sheet_lower or "variants" in sheet_lower:
                 rows.extend(self._compare_variants(sheet))
-            elif "part" in sheet_lower or "part_number" in sheet_lower:
-                rows.extend(self._compare_part_numbers(sheet))
             elif "material" in sheet_lower:
                 rows.extend(self._compare_materials(sheet))
         return rows
@@ -955,28 +917,6 @@ class MaterialsImportHandler(DomainImportHandler):
                 "status": _val(row, headers, "status") or "ACTIVE",
             }
             result.append(self._compare_entity(ProductVariant, "iexact", "code", incoming, "ProductVariant", code))
-        return result
-
-    def _compare_part_numbers(self, sheet: SheetData) -> list[CompareRow]:
-        result: list[CompareRow] = []
-        headers = sheet.column_headers
-        for row in sheet.rows:
-            if row.is_empty:
-                continue
-            pn = _val(row, headers, "part_number", "part", "part no", "pn")
-            if not pn:
-                continue
-            incoming = {
-                "part_number": pn,
-                "description": _val(row, headers, "description", "desc"),
-                "revision": _val(row, headers, "revision", "rev"),
-                "uom": _val(row, headers, "uom", "unit_of_measure", "unit") or "EA",
-                "family_code": _val(row, headers, "family_code", "family", "family code"),
-                "model_code": _val(row, headers, "model_code", "model", "model code"),
-                "variant_code": _val(row, headers, "variant_code", "variant", "variant code"),
-                "status": _val(row, headers, "status") or "ACTIVE",
-            }
-            result.append(self._compare_entity(PartNumber, "", "part_number", incoming, "PartNumber", pn))
         return result
 
     def _compare_materials(self, sheet: SheetData) -> list[CompareRow]:
@@ -1157,22 +1097,6 @@ class MaterialsImportHandler(DomainImportHandler):
                 "model_id": str(model.id),
                 "status": iv.get("status", "ACTIVE"),
             })
-        elif row.entity_type == "PartNumber":
-            family = self._get_or_create_family(iv.get("family_code", ""), iv)
-            model = self._get_or_create_model(iv.get("model_code", ""), iv)
-            variant_code = iv.get("variant_code", "")
-            variant = self._get_or_create_variant(variant_code, iv) if variant_code else None
-            from manufacturing.domain.product_identity_service import ProductIdentityService
-            ProductIdentityService.create_part_number({
-                "family_id": str(family.id),
-                "model_id": str(model.id),
-                "variant_id": str(variant.id) if variant else None,
-                "part_number": iv.get("part_number", ""),
-                "description": iv.get("description", ""),
-                "revision": iv.get("revision", ""),
-                "uom": iv.get("uom", "EA"),
-                "status": iv.get("status", "ACTIVE"),
-            })
         elif row.entity_type == "Material":
             Material.objects.create(
                 code=iv.get("code", ""),
@@ -1225,25 +1149,6 @@ class MaterialsImportHandler(DomainImportHandler):
                     "status": iv.get("status", variant.status),
                 })
             except ProductVariant.DoesNotExist:
-                self._apply_create_material_entity(row)
-        elif row.entity_type == "PartNumber":
-            try:
-                part = PartNumber.objects.get(part_number=sv)
-                family = self._get_or_create_family(iv.get("family_code", ""), iv)
-                model = self._get_or_create_model(iv.get("model_code", ""), iv)
-                variant_code = iv.get("variant_code", "")
-                variant = self._get_or_create_variant(variant_code, iv) if variant_code else None
-                ProductIdentityService.update_part_number(str(part.id), {
-                    "family_id": str(family.id),
-                    "model_id": str(model.id),
-                    "variant_id": str(variant.id) if variant else None,
-                    "part_number": iv.get("part_number", part.part_number),
-                    "description": iv.get("description", part.description),
-                    "revision": iv.get("revision", part.revision),
-                    "uom": iv.get("uom", part.uom),
-                    "status": iv.get("status", part.status),
-                })
-            except PartNumber.DoesNotExist:
                 self._apply_create_material_entity(row)
         elif row.entity_type == "Material":
             try:

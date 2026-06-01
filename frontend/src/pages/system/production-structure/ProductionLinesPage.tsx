@@ -5,7 +5,7 @@ import { AlertTriangle, Check, TrendingUpDown, Factory, ExternalLink } from "luc
 import { Pagination, ProductionLineProductScopeSummary, EntityListItem, Badge, InlineRow } from "./components";
 import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
 import { useRoutingSummary } from "@/hooks/useRouting";
-import type { ProductionLine } from "@/types/productionLine";
+import type { ProductionLine, AssignedResourceGroup } from "@/types/productionLine";
 
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
@@ -800,7 +800,7 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
   const [confirmRemoveRgId, setConfirmRemoveRgId] = useState<string | null>(null);
   const { showSystemMessage } = useToolbar();
 
-  const assigned: Array<{ id: string; resourceGroupId: string; resourceGroupName?: string; departmentName?: string; sequence: number; isActive: boolean }> = (productionLine as any)?.assignedResourceGroups ?? [];
+  const assigned: AssignedResourceGroup[] = productionLine?.assignedResourceGroups ?? [];
   const sorted = [...assigned].sort((a, b) => a.sequence - b.sequence);
 
   const plantId = productionLine?.plantId;
@@ -854,11 +854,11 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
     try {
       const { data } = await reorderRgs({ variables: { productionLineId: productionLine.id, orderedResourceGroupIds: ids } });
       const d = data as any;
-      if (d?.reorderAssignedResourceGroups?.ok) {
+      if (d?.reorderProductionLineResourceGroups?.ok) {
         showSystemMessage?.("Reordered", "success");
         void refetch();
       } else {
-        const err = d?.reorderAssignedResourceGroups?.errors?.[0];
+        const err = d?.reorderProductionLineResourceGroups?.errors?.[0];
         showSystemMessage?.(err?.message || "Failed to reorder", "error");
       }
     } catch { showSystemMessage?.("Failed to reorder", "error"); }
@@ -870,7 +870,7 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
       const mutation = currentActive ? deactivateRg : activateRg;
       const { data: raw } = await mutation({ variables: { productionLineId: productionLine.id, resourceGroupId: rgId } });
       const d = raw as any;
-      const key = currentActive ? "deactivateAssignedResourceGroup" : "activateAssignedResourceGroup";
+      const key = currentActive ? "deactivateProductionLineResourceGroup" : "activateProductionLineResourceGroup";
       if (d?.[key]?.ok) {
         showSystemMessage?.(currentActive ? "Deactivated" : "Activated", "success");
         void refetch();
@@ -950,7 +950,7 @@ function AssignedResourceGroupsCard({ productionLine, refetch }: { productionLin
         </div>
       ) : (
         <div className="flex min-h-[72px] flex-col items-center justify-center rounded-sm border border-dashed border-border/20 bg-muted/20 px-4 text-center">
-          <span className="text-[11px] font-semibold text-muted-foreground">No resource groups assigned</span>
+          <span className="text-[11px] font-semibold text-muted-foreground">No Resource Groups assigned to this Production Line.</span>
           <span className="mt-0.5 text-[10px] text-muted-foreground">Use the dropdown above to assign resource groups to this line.</span>
         </div>
       )}
@@ -1052,7 +1052,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   const urlProductionLineId = searchParams.get("productionLineId");
   const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setEntityContext, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
-  const { lines, loading, saveLine, archiveLine, refetch, plants } = useProductionLines(500);
+  const { lines, loading, saveLine, archiveLine, deleteLine, refetch, plants } = useProductionLines(500);
   const { values: statusValues } = useReferenceCategory("status");
   const { values: shiftValues } = useReferenceCategory("shift_model");
   const { values: familyValues } = useReferenceCategory("production_family");
@@ -1065,6 +1065,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   const [form, setForm] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmHardDelete, setConfirmHardDelete] = useState<string | null>(null);
   const [pendingSelId, setPendingSelId] = useState<string | null>(null);
   const [editState, setEditState] = useState({ dirty: false, saving: false });
 
@@ -1245,6 +1246,18 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
     showSystemMessage("Production line archived", "success");
   }, [confirmDelete, archiveLine, refetch, showSystemMessage]);
 
+  const hHardDelete = useCallback(async () => {
+    if (!confirmHardDelete) return;
+    const result = await deleteLine(confirmHardDelete);
+    if (!result.success) {
+      showSystemMessage(result.message, "error");
+      setConfirmHardDelete(null);
+      return;
+    }
+    setSelectedId(null); await refetch(); setConfirmHardDelete(null);
+    showSystemMessage("Production line deleted permanently", "success");
+  }, [confirmHardDelete, deleteLine, refetch, showSystemMessage]);
+
   const selectLine = useCallback((id: string) => {
     if (editState.dirty) { setPendingSelId(id); return; }
     setSelectedId(id); if (mode === "create") { clearForm(); setMode("view"); }
@@ -1288,6 +1301,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
       registerActions({
         onAdd: hNew, onEdit: sel ? hEdit : undefined,
         onDelete: sel ? () => setConfirmDelete(sel.id) : undefined,
+        onDeletePermanent: sel ? () => setConfirmHardDelete(sel.id) : undefined,
         onRefresh: () => refetch(), hasSelected: !!sel,
       });
     }
@@ -1392,7 +1406,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
               </div>
               <div className="flex min-h-7 items-center gap-1.5 justify-self-end self-stretch">
                 <Badge label={sel?.status || "active"} variant={sel?.status === "active" ? "active" : "inactive"} />
-                <span title="Assigned Resource Groups" className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${((sel as any)?.assignedResourceGroups?.length ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{(sel as any)?.assignedResourceGroups?.length ?? 0} Assigned RG</span>
+                <span title="Assigned Resource Groups" className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.assignedResourceGroups?.length ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{sel?.assignedResourceGroups?.length ?? 0} Assigned RG</span>
                 <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-px text-[9px] font-medium ${(sel?.resourceCount ?? 0) > 0 ? "bg-muted text-muted-foreground" : "bg-muted text-muted-foreground"}`}>{sel?.resourceCount ?? 0} Res</span>
                 {isForm && <Badge label="Editing" variant="amber" />}
                 {isNew && <Badge label="New" variant="default" />}
@@ -1493,7 +1507,10 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   return (
     <>
       {confirmDelete && (
-        <ConfirmDialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Delete production line?" message="This action cannot be undone." onConfirm={hDelete} />
+        <ConfirmDialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Archive production line?" message="The production line will be archived (soft delete)." confirmLabel="Archive" onConfirm={hDelete} />
+      )}
+      {confirmHardDelete && (
+        <ConfirmDialog open={!!confirmHardDelete} onClose={() => setConfirmHardDelete(null)} title="Permanently delete production line?" message="This will permanently delete the production line. Resource groups, routing, and process flows must be removed first." confirmLabel="Delete permanently" onConfirm={hHardDelete} />
       )}
       {pendingSelId && (
         <ConfirmDialog open={!!pendingSelId} onClose={() => setPendingSelId(null)} title="Discard changes?" message="You have unsaved changes. Discard them and switch lines?" onConfirm={confirmSelectLine} />

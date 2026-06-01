@@ -17,4 +17,13 @@ class ExecutionMutation:
             work_order_reference,
             "work_order_reference",
         )
-        return f"Work order {validated_reference} started"
+        from execution.models import WorkOrder, WorkOrderStatus
+        try:
+            wo = WorkOrder.objects.get(reference=validated_reference)
+            if wo.status == WorkOrderStatus.OPEN:
+                wo.status = WorkOrderStatus.IN_PROGRESS
+                wo.save(update_fields=["status", "updated_at"])
+                return f"Work order {validated_reference} started."
+            return f"Work order {validated_reference} is already {wo.status}."
+        except WorkOrder.DoesNotExist:
+            return f"Work order {validated_reference} not found."

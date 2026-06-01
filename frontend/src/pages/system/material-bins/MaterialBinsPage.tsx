@@ -89,9 +89,9 @@ function Badge({ label, variant = "default" }: { label: string; variant?: "activ
 
 function SectionCard({ title, action, children, className = "" }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (
-    <section className={`rounded-lg border border-border/40 ${theme.surfaceBg} p-2 shadow-sm shadow-foreground/5 ${className}`}>
+    <section className={className}>
       <div className="mb-1.5 flex min-h-6 items-center gap-2">
-        <h3 className={`flex-1 text-[10px] font-bold uppercase tracking-wider ${theme.textMuted}`}>{title}</h3>
+        <h3 className={`flex-1 text-[11px] font-bold uppercase tracking-[0.12em] text-entity-product-master/70`}>{title}</h3>
         {action}
       </div>
       {children}

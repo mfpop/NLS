@@ -206,6 +206,25 @@ export const ARCHIVE_PRODUCTION_LINE_MUTATION = gql`
   }
 `;
 
+export const DELETE_PRODUCTION_LINE_MUTATION = gql`
+  mutation DeleteProductionLine($id: String!) {
+    deleteProductionLine(id: $id) {
+      ok
+      productionLine {
+        id
+        code
+        name
+        status
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
 export const PRODUCT_MODELS_OPTIONS_QUERY = gql`
   query ProductModelsOptions {
     productModels(limit: 500, offset: 0) {

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { AlertTriangle, CheckCircle, Dumbbell, Component, Activity, BarChart, Cpu, Wrench, Info } from "lucide-react";
 import { formatAppDate } from "@/utils/dateFormat";
-import { InlineRow, Badge, SectionHeader } from "./DetailComponents";
+import { InlineRow, Badge, SectionHeader, iCls, labelCls } from "./DetailComponents";
+import { ReferenceSelect } from "./ReferenceSelect";
 
 // ─── Types ───
 
@@ -39,6 +40,16 @@ interface Resource {
 
 export interface ResourceDetailViewProps {
   resource: Resource | null;
+  editing?: boolean;
+  onSave?: (form: ResourceForm) => void;
+}
+
+export interface ResourceForm {
+  name: string;
+  code: string;
+  description: string;
+  statusId: string;
+  resourceTypeId: string;
 }
 
 // ─── Helpers ───
@@ -83,8 +94,27 @@ function MissingBlock({ label, action }: { label: string; action: string }) {
 
 // ─── Main Component ───
 
-export function ResourceDetailView({ resource }: ResourceDetailViewProps) {
+export function ResourceDetailView({ resource, editing = false, onSave }: ResourceDetailViewProps) {
   const [descExpanded, setDescExpanded] = useState(false);
+  const [form, setForm] = useState<ResourceForm>({ name: "", code: "", description: "", statusId: "", resourceTypeId: "" });
+
+  const initForm = useCallback((r: Resource) => {
+    const f = { name: r.name || "", code: r.code || "", description: r.description || "", statusId: r.statusId || r.status || "", resourceTypeId: r.resourceTypeId || "" };
+    setForm(f);
+    onSave?.(f);
+  }, [onSave]);
+
+  const handleChange = useCallback((key: keyof ResourceForm, value: string) => {
+    setForm(prev => {
+      const next = { ...prev, [key]: value };
+      onSave?.(next);
+      return next;
+    });
+  }, [onSave]);
+
+  if (resource && editing && form.name === "" && form.code === "") {
+    initForm(resource);
+  }
 
   // ── Empty state ──
   if (!resource) {
@@ -158,6 +188,32 @@ export function ResourceDetailView({ resource }: ResourceDetailViewProps) {
 
       {/* ── BODY ── */}
       <div className="flex-1 min-h-0 overflow-hidden bg-card">
+        {editing ? (
+          <div className="h-full overflow-y-auto p-3">
+            <div className="max-w-lg space-y-4">
+              <div>
+                <label className={labelCls}>Name</label>
+                <input type="text" value={form.name} onChange={(e) => handleChange("name", e.target.value)} className={iCls} placeholder="Resource name" />
+              </div>
+              <div>
+                <label className={labelCls}>Code</label>
+                <input type="text" value={form.code} onChange={(e) => handleChange("code", e.target.value)} className={iCls} placeholder="Resource code" />
+              </div>
+              <div>
+                <label className={labelCls}>Status</label>
+                <ReferenceSelect categoryCode="status" label="" value={form.statusId} onChange={(v) => handleChange("statusId", v)} placeholder="Select status..." />
+              </div>
+              <div>
+                <label className={labelCls}>Resource Type</label>
+                <ReferenceSelect categoryCode="resource_type" label="" value={form.resourceTypeId} onChange={(v) => handleChange("resourceTypeId", v)} placeholder="Select type..." />
+              </div>
+              <div>
+                <label className={labelCls}>Description</label>
+                <textarea value={form.description} onChange={(e) => handleChange("description", e.target.value)} className={iCls + " min-h-[80px] resize-none"} placeholder="Description" />
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="grid min-h-0 h-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 overflow-y-auto p-3">
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4 min-h-0 overflow-y-auto pr-1">
@@ -274,6 +330,7 @@ export function ResourceDetailView({ resource }: ResourceDetailViewProps) {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

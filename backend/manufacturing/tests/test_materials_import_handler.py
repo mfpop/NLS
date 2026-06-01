@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 from django.test import TestCase
 
 from manufacturing.models import (
-    ProductFamily, ProductModel, ProductVariant, PartNumber, Material,
+    ProductFamily, ProductModel, ProductVariant, Material,
 )
 from manufacturing.domain.domain_import_handler import (
     MaterialsImportHandler,
@@ -81,22 +81,6 @@ class MaterialsImportHandlerTests(TestCase):
         ])
         issues = self.handler.validate([sheet], [])
         self.assertIn(("model_code", "REQUIRED"), {(i.field_name, i.error_code) for i in issues})
-
-    def test_validate_part_number_requires_family_and_model(self):
-        sheet = _make_sheet("Parts", ["part_number", "family_code", "model_code"], [
-            ["PN001", "", ""],
-        ])
-        issues = self.handler.validate([sheet], [])
-        codes = {(i.field_name, i.error_code) for i in issues}
-        self.assertIn(("family_code", "REQUIRED"), codes)
-        self.assertIn(("model_code", "REQUIRED"), codes)
-
-    def test_validate_part_number_max_length(self):
-        sheet = _make_sheet("Parts", ["part_number", "family_code", "model_code"], [
-            ["X" * 101, "F001", "M001"],
-        ])
-        issues = self.handler.validate([sheet], [])
-        self.assertIn(("part_number", "MAX_LENGTH"), {(i.field_name, i.error_code) for i in issues})
 
     def test_validate_material_required_fields(self):
         sheet = _make_sheet("Materials", ["code", "name"], [
@@ -187,24 +171,6 @@ class MaterialsImportHandlerTests(TestCase):
         rows = self.handler.compare([sheet])
         self.assertEqual(rows[0].action, "CREATE")
 
-    def test_compare_part_number_create(self):
-        sheet = _make_sheet("Part Numbers", ["part_number", "family_code", "model_code"], [
-            ["PN001", "F001", "M001"],
-        ])
-        rows = self.handler.compare([sheet])
-        self.assertEqual(rows[0].action, "CREATE")
-        self.assertEqual(rows[0].entity_type, "PartNumber")
-
-    def test_compare_part_number_unchanged(self):
-        family = ProductFamily.objects.create(code="F001", name="Family")
-        model = ProductModel.objects.create(code="M001", name="Model", family=family)
-        PartNumber.objects.create(part_number="PN001", family=family, model=model)
-        sheet = _make_sheet("Parts", ["part_number", "family_code", "model_code", "description"], [
-            ["PN001", "F001", "M001", ""],
-        ])
-        rows = self.handler.compare([sheet])
-        self.assertEqual(rows[0].action, "UNCHANGED")
-
     def test_compare_material_create(self):
         sheet = _make_sheet("Materials", ["code", "name", "material_state"], [
             ["MAT001", "New Mat", "RAW_MATERIAL"],
@@ -281,26 +247,6 @@ class MaterialsImportHandlerTests(TestCase):
         self.assertEqual(result.records_created, 1)
         variant = ProductVariant.objects.get(code="V001")
         self.assertEqual(variant.model_id, model.id)
-
-    def test_apply_create_part_number(self):
-        family = ProductFamily.objects.create(code="F001", name="Family")
-        model = ProductModel.objects.create(code="M001", name="Model", family=family)
-        rows = [
-            CompareRow(action="CREATE", entity_type="PartNumber",
-                       stable_key="PN001",
-                       current_value=None,
-                       incoming_value={
-                           "part_number": "PN001", "family_code": "F001", "model_code": "M001",
-                           "description": "Test part", "revision": "A", "uom": "EA",
-                       },
-                       diff={"part_number": "PN001"}),
-        ]
-        result = self.handler.apply([], rows)
-        self.assertEqual(result.records_created, 1)
-        part = PartNumber.objects.get(part_number="PN001")
-        self.assertEqual(part.family_id, family.id)
-        self.assertEqual(part.model_id, model.id)
-        self.assertEqual(part.uom, "EA")
 
     def test_apply_create_material(self):
         rows = [
@@ -406,22 +352,15 @@ class MaterialsImportHandlerTests(TestCase):
         self.assertTrue(ProductFamily.objects.filter(code="AUTO_FAM").exists())
         self.assertTrue(ProductModel.objects.filter(code="M001").exists())
 
-    def test_apply_create_part_number_auto_resolves_hierarchy(self):
-        """Part number auto-creates family, model, and variant."""
+    def test_apply_unknown_entity_type_does_not_fail(self):
+        """Unknown entity types are silently skipped — apply doesn't crash."""
         rows = [
             CompareRow(action="CREATE", entity_type="PartNumber",
                        stable_key="PN001",
                        current_value=None,
-                       incoming_value={
-                           "part_number": "PN001",
-                           "family_code": "FAM", "model_code": "MOD", "variant_code": "VAR",
-                           "description": "Auto-resolved", "revision": "1", "uom": "EA",
-                       },
+                       incoming_value={"part_number": "PN001"},
                        diff={"part_number": "PN001"}),
         ]
         result = self.handler.apply([], rows)
-        self.assertEqual(result.records_created, 1)
-        self.assertTrue(ProductFamily.objects.filter(code="FAM").exists())
-        self.assertTrue(ProductModel.objects.filter(code="MOD").exists())
-        self.assertTrue(ProductVariant.objects.filter(code="VAR").exists())
-        self.assertTrue(PartNumber.objects.filter(part_number="PN001").exists())
+        self.assertEqual(result.records_failed, 0)
+        self.assertNotIn("PN001", result.error_summary)

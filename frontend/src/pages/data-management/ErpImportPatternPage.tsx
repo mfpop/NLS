@@ -61,7 +61,7 @@ const SCOPE_DESTINATIONS: Record<string, { value: string; label: string }[]> = {
     { value: "ProductFamily", label: "Product Family" },
     { value: "ProductModel", label: "Product Model" },
     { value: "ProductVariant", label: "Product Variant" },
-    { value: "PartNumber", label: "Part Number" },
+
     { value: "BOM", label: "BOM" },
     { value: "Routing", label: "Routing" },
   ],

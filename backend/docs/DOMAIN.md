@@ -108,6 +108,45 @@ Plant                           ProductModel
 
 ---
 
+## Document / Standard Framework
+
+All document-type modules (Work Instructions, Standard Work, Procedures, Material Flow Standards) share **one dynamic manufacturing structure tree**.
+
+**Architecture split**: StructureDocument owns content, target, inheritance, tree resolution. Document Control owns lifecycle, revision history, audit trail, approval, controlled copy, dates, owner, change reason. No separate Document Control tree. No duplicate framework.
+
+### Tree Hierarchy
+```
+Company
+ └── Plant
+      └── Production Line
+           └── Department
+                └── Resource Group
+                     └── Resource
+```
+
+### Allowed Backend Target Types
+COMPANY, PLANT, PRODUCTION_LINE, DEPARTMENT, RESOURCE_GROUP, RESOURCE
+
+### Domain Service Ownership
+- Inheritance resolution
+- Status computation (has-instruction / inherited / missing)
+- Validation
+- Versioning
+- Approval workflows
+- Override management (local override of inherited instruction)
+- Permission rules
+
+### Integration Rules
+- GraphQL resolvers: thin pass-through only — no inheritance/status calculation
+- Frontend: display resolved selected-node result only
+- No duplicated tree logic per module page
+- No mock operational data after backend wiring
+
+### Future Expansion
+Material Flow Standards target expansion to MaterialBin / Warehouse / Routing / RoutingStep requires separate governance approval.
+
+---
+
 ## Process Domain
 
 ### ProductModel

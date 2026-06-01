@@ -1,14 +1,13 @@
 import { ScrollText } from "lucide-react";
-import { KnowledgeModulePage } from "./KnowledgeModulePage";
-import { PROCEDURE_DOCS } from "./mockDocuments";
-import { PROCEDURES_CONFIG } from "./moduleConfig";
+import { StructureDocumentPage } from "./components/StructureDocumentPage";
 
 export function ProceduresPage() {
   return (
-    <KnowledgeModulePage
+    <StructureDocumentPage
+      documentType="PROCEDURE"
+      title="Procedures"
+      subtitle="Structure-based procedure management"
       icon={<ScrollText className="h-5 w-5 stroke-current" />}
-      documents={PROCEDURE_DOCS}
-      config={PROCEDURES_CONFIG}
     />
   );
 }

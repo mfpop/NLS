@@ -492,7 +492,7 @@ class NewCapacityService:
 
     @staticmethod
     def _resource_group_ids_for_scope(scope_type: str, scope_id: str) -> list[str]:
-        from manufacturing.models import Department, ProductionLineDepartmentAssignment, Resource, ResourceGroup
+        from manufacturing.models import Department, ProductionLineDepartmentAssignment, ProductionLineResourceGroup, Resource, ResourceGroup
 
         st = NewCapacityService._scope_value(scope_type)
         if st == "RESOURCE_GROUP":
@@ -503,10 +503,10 @@ class NewCapacityService:
         if st == "DEPARTMENT":
             return [str(value) for value in ResourceGroup.objects.filter(department_id=scope_id).values_list("id", flat=True)]
         if st == "PRODUCTION_LINE":
-            dept_ids = ProductionLineDepartmentAssignment.objects.filter(
-                production_line_id=scope_id,
-            ).values_list("department_id", flat=True)
-            return [str(value) for value in ResourceGroup.objects.filter(department_id__in=dept_ids).values_list("id", flat=True)]
+            return [str(value) for value in
+                    ProductionLineResourceGroup.objects.filter(
+                        production_line_id=scope_id, is_active=True,
+                    ).values_list("resource_group_id", flat=True)]
         if st == "PLANT":
             dept_ids = Department.objects.filter(plant_id=scope_id).values_list("id", flat=True)
             return [str(value) for value in ResourceGroup.objects.filter(department_id__in=dept_ids).values_list("id", flat=True)]

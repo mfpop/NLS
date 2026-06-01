@@ -135,6 +135,7 @@ const ROUTING_FIELDS = `
   partNumberId
   partNumber
   partDescription
+  productVariantId
   version
   status
   effectiveFrom

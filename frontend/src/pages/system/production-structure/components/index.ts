@@ -15,7 +15,7 @@ export { CompanyDetailView } from "./CompanyDetailView";
 export { PlantDetailView } from "./PlantDetailView";
 export { DepartmentDetailView } from "./DepartmentDetailView";
 export { ResourceGroupDetailView } from "./ResourceGroupDetailView";
-export { ResourceDetailView } from "./ResourceDetailView";
+export { ResourceDetailView, type ResourceForm } from "./ResourceDetailView";
 export { ProductionLineProductScopeSummary } from "./ProductionLineProductScopeSummary";
 export { InlineRow, Badge, SetupSignal, SectionHeader, FieldLabel, ErrorText, ErrorFieldWrapper, iCls, iClsError, sCls, sClsError, labelCls, labelClsRequired } from "./DetailComponents";
 export { ToolbarProvider, useToolbar } from "./ToolbarContext";

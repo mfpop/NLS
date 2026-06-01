@@ -37,6 +37,7 @@ export type TopLevelEntry = NavLeafItem | NavSection;
 
 export const sidebarNav: TopLevelEntry[] = [
   { type: "item", label: "Control Tower", to: "/", icon: Monitor },
+
   {
     type: "section", id: "myworkspace", label: "My Workspace", icon: LayoutDashboard,
     items: [

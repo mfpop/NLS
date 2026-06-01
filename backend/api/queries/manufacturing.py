@@ -16,6 +16,8 @@ from manufacturing.domain.reference_table_service import TABLE_TYPE_TO_CATEGORY 
 
 from api.types.manufacturing import (
     ManufacturingSnapshot, CompanyNode,
+    StructureDocumentNode, StructureDocumentTreeNode,
+    DocumentRevisionHistoryNode, DocumentAuditTrailNode,
     PlantNode, ProductionLineNode, DepartmentNode,
     ResourceGroupNode, ResourceGroupFlowUsageNode, ResourceNode,
     ProductionStructureTree, StructureChildNode,
@@ -1373,6 +1375,60 @@ class ManufacturingQuery:
             MaterialBinNode.from_db(bin_obj)
             for bin_obj in MaterialBin.objects.select_related("plant", "production_line", "resource_group", "material", "uom").filter(warehouse_code=warehouse_code)
         ]
+
+    # ── Document / Standard Framework ──
+
+    @strawberry.field(name="structureDocumentTree")
+    def structure_document_tree(self, document_type: str) -> list[StructureDocumentTreeNode]:
+        from manufacturing.domain.structure_document_service import StructureDocumentService
+        raw_tree = StructureDocumentService.build_structure_document_tree(document_type)
+        return [StructureDocumentTreeNode.from_dict(node) for node in raw_tree]
+
+    @strawberry.field(name="structureDocument")
+    def structure_document(
+        self, target_type: str, target_id: int, document_type: str
+    ) -> Optional[StructureDocumentNode]:
+        from manufacturing.domain.structure_document_service import StructureDocumentService
+        resolved = StructureDocumentService.resolve_selected_node_document_status(target_type, target_id, document_type)
+        if resolved.document:
+            return StructureDocumentNode.from_db(resolved.document)
+        return None
+
+    @strawberry.field(name="structureDocuments")
+    def structure_documents(
+        self, document_type: str, status: Optional[str] = None, target_type: Optional[str] = None, target_id: Optional[int] = None
+    ) -> list[StructureDocumentNode]:
+        from manufacturing.models import StructureDocument
+        qs = StructureDocument.objects.all()
+        if document_type:
+            qs = qs.filter(document_type=document_type)
+        if status:
+            qs = qs.filter(status=status)
+        if target_type:
+            qs = qs.filter(target_type=target_type)
+        if target_id is not None:
+            qs = qs.filter(target_id=target_id)
+        return [StructureDocumentNode.from_db(doc) for doc in qs.order_by("-updated_at")]
+
+    @strawberry.field(name="structureDocumentHistory")
+    def structure_document_history(self, target_type: str, target_id: int, document_type: str) -> list[StructureDocumentNode]:
+        from manufacturing.domain.structure_document_service import StructureDocumentService
+        docs = StructureDocumentService.get_document_history(target_type, target_id, document_type)
+        return [StructureDocumentNode.from_db(doc) for doc in docs]
+
+    # ── Document Control Queries ──
+
+    @strawberry.field(name="structureDocumentRevisionHistory")
+    def structure_document_revision_history(self, document_id: str) -> list[DocumentRevisionHistoryNode]:
+        from manufacturing.domain.structure_document_control_service import StructureDocumentControlService
+        entries = StructureDocumentControlService.get_revision_history(int(document_id))
+        return [DocumentRevisionHistoryNode.from_db(e) for e in entries]
+
+    @strawberry.field(name="structureDocumentAuditTrail")
+    def structure_document_audit_trail(self, document_id: str) -> list[DocumentAuditTrailNode]:
+        from manufacturing.domain.structure_document_control_service import StructureDocumentControlService
+        entries = StructureDocumentControlService.get_audit_trail(int(document_id))
+        return [DocumentAuditTrailNode.from_db(e) for e in entries]
 
     @strawberry.field(name="materialBinsByResourceGroup")
     def material_bins_by_resource_group(self, resource_group_id: str) -> list[MaterialBinNode]:

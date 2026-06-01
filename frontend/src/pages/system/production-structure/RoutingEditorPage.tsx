@@ -11,6 +11,7 @@ import { RESOURCE_GROUPS_QUERY } from "@/graphql/manufacturingQueries";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { PRODUCTION_LINE_QUERY } from "@/graphql/productionLineQueries";
 import { INVENTORY_LOCATIONS_QUERY, MATERIALS_QUERY } from "@/graphql/routingQueries";
+import { PRODUCT_VARIANTS_QUERY } from "@/graphql/productIdentityQueries";
 import { ProductionLineProductScopeSummary } from "./components";
 import type { ProductionLine } from "@/types/productionLine";
 
@@ -120,6 +121,7 @@ export function RoutingEditorPage() {
   const [routingMeta, setRoutingMeta] = useState({
     productFamilyId: "",
     productModelId: "",
+    productVariantId: "",
     version: "1.0",
     notes: "",
   });
@@ -149,6 +151,13 @@ export function RoutingEditorPage() {
   const lineModels = productionLine?.productModels ?? [];
   const materials = materialData?.materials ?? [];
   const inventoryLocations = locationData?.inventoryLocations ?? [];
+  const modelId = routingMeta.productModelId === "ALL" ? null : routingMeta.productModelId || null;
+  const { data: variantData } = useQuery<any>(PRODUCT_VARIANTS_QUERY, {
+    variables: { modelId, limit: 500, offset: 0 },
+    skip: !modelId,
+    fetchPolicy: "cache-and-network",
+  });
+  const variants = variantData?.productVariants?.items ?? [];
   const requestedScope = searchParams.get("routingScope");
   const resolveLineModelId = useCallback((id?: string | null, name?: string | null) => {
     if (!id && !name) return "";
@@ -192,6 +201,7 @@ export function RoutingEditorPage() {
       setRoutingMeta({
         productFamilyId: routing.productFamilyId || "",
         productModelId: resolveLineModelId(routing.productModelId, routing.productModelName) || routing.productModelId || "",
+        productVariantId: (routing as any).productVariantId || "",
         version: routing.version,
         notes: routing.notes,
       });
@@ -245,6 +255,7 @@ export function RoutingEditorPage() {
         productionLineId: productionLineId!,
         productFamilyId: routingMeta.productFamilyId || null,
         productModelId: modelId,
+        productVariantId: routingMeta.productVariantId || null,
         version: routingMeta.version || "1.0",
         notes: routingMeta.notes || "",
         steps: localSteps.map((step) => buildStepInput(step, step.routingId || routingId || "")),
@@ -537,7 +548,7 @@ export function RoutingEditorPage() {
         <SecondaryButton onClick={handleClose} shortcut="Esc">
           <ArrowLeft className="h-3 w-3 stroke-current" /> Back
         </SecondaryButton>
-        <select value={routingMeta.productModelId} onChange={(e) => { setRoutingMeta((p) => ({ ...p, productModelId: e.target.value })); markDirty(); }}
+        <select value={routingMeta.productModelId} onChange={(e) => { setRoutingMeta((p) => ({ ...p, productModelId: e.target.value, productVariantId: "" })); markDirty(); }}
           className={`h-7 rounded ${theme.input} px-2 text-[10px] outline-none`}>
           {lineModels.length === 0 ? (
             <option value="" disabled>No models assigned</option>
@@ -547,6 +558,11 @@ export function RoutingEditorPage() {
               {lineModels.map((m: any) => <option key={m.id} value={m.id}>{m.name} ({m.code})</option>)}
             </>
           )}
+        </select>
+        <select value={routingMeta.productVariantId} onChange={(e) => { setRoutingMeta((p) => ({ ...p, productVariantId: e.target.value })); markDirty(); }}
+          className={`h-7 rounded ${theme.input} px-2 text-[10px] outline-none`}>
+          <option value="">All variants</option>
+          {variants.map((v: any) => <option key={v.id} value={v.id}>{v.name}{v.partNumber ? ` · ${v.partNumber}` : " · —"}</option>)}
         </select>
         <input type="text" value={routingMeta.version} onChange={(e) => { setRoutingMeta((p) => ({ ...p, version: e.target.value })); markDirty(); }}
           className="h-7 w-14 rounded border border-border bg-card px-2 text-[10px] outline-none border-border bg-muted text-foreground ml-1" />

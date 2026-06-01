@@ -50,6 +50,39 @@ Domain owns:
 - No material flow without information flow
 - ProductionControl mandatory
 
+## Document / Standard Framework
+- Work Instructions, Standard Work, Procedures, Material Flow Standards: **one shared dynamic manufacturing structure tree**
+- Tree: Company → Plant → Production Line → Department → Resource Group → Resource
+- Allowed backend target types: COMPANY, PLANT, PRODUCTION_LINE, DEPARTMENT, RESOURCE_GROUP, RESOURCE
+
+### StructureDocument (shared framework)
+Owns:
+- Document content (title, code, content, revision)
+- Target attachment (target_type + target_id)
+- Inheritance resolution (Local / Inherited / Missing)
+- Structure-tree resolution (document per selected node)
+
+### Document Control (lifecycle governance)
+Owns:
+- Lifecycle metadata (review date, change reason, controlled copy)
+- Revision history (append-only snapshots)
+- Audit trail (append-only action log)
+- Approval/archive transitions (DRAFT → APPROVED → ARCHIVED)
+- Controlled copy state
+- Effective/review dates
+- Owner and change reason
+
+### Architecture rules
+- **No separate Document Control tree**
+- **No duplicate document framework**
+- **No separate model per document type** — single `StructureDocument` model
+- Domain services own: inheritance, status, lifecycle, validation, versioning, approval, override, permission rules
+- GraphQL resolvers: thin — no inheritance/status/lifecycle logic
+- Frontend: display resolved result only — must not calculate inheritance, status, or lifecycle
+- No duplicated tree logic per page
+- No frontend lifecycle/permission rules
+- Material Flow Standards target expansion to MaterialBin/Warehouse/Routing/RoutingStep requires separate governance approval
+
 ---
 
 # AGGREGATES

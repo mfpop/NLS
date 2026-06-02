@@ -1,0 +1,408 @@
+skills:
+  - id: chat_response
+    name: chat_response
+    domain: general
+    description: "Respond to general conversation and casual queries, triage unclear requests"
+    input_schema:
+      message:
+        type: string
+        description: "The user's input message"
+        required: true
+      context:
+        type: object
+        description: "Optional conversation context"
+        required: false
+    output_schema:
+      reply:
+        type: string
+        description: "The response message"
+      type:
+        type: string
+        description: "Response type identifier"
+    allowed_agents:
+      - "0.Nexus - General Chat"
+    forbidden_agents:
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "4.Nexus - Backend-GraphQL"
+      - "5.Nexus - Frontend-UI"
+    requires_context: false
+    side_effects: false
+    risk_level: low
+
+  - id: check_governance
+    name: check_governance
+    domain: governance
+    description: "Validate documents and processes against governance policies and active decisions"
+    input_schema:
+      document:
+        type: string
+        description: "The document or process to validate"
+        required: true
+      policies:
+        type: array
+        description: "List of policy references to check against"
+        required: false
+        items:
+          type: string
+    output_schema:
+      compliant:
+        type: boolean
+        description: "Whether the document is compliant"
+      violations:
+        type: array
+        description: "List of violations found"
+        items:
+          type: string
+      score:
+        type: number
+        description: "Compliance score 0.0-1.0"
+      summary:
+        type: string
+        description: "Summary of the evaluation"
+    allowed_agents:
+      - "1.Nexus - Governance"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "4.Nexus - Backend-GraphQL"
+      - "5.Nexus - Frontend-UI"
+    requires_context: true
+    side_effects: false
+    risk_level: high
+
+  - id: analyze_manufacturing_structure
+    name: analyze_manufacturing_structure
+    domain: manufacturing
+    description: "Analyze manufacturing hierarchy, BOM, routing, production lines, and capacity structure"
+    input_schema:
+      structure_id:
+        type: string
+        description: "ID of the structure to analyze"
+        required: true
+      depth:
+        type: integer
+        description: "Depth of analysis"
+        required: false
+        default: 3
+    output_schema:
+      tree:
+        type: object
+        description: "The analyzed structure tree"
+      summary:
+        type: string
+        description: "Analysis summary"
+      hierarchy:
+        type: object
+        description: "Organizational hierarchy breakdown"
+    allowed_agents:
+      - "2.Nexus - Manufacturing Structure"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "3.Nexus - Architecture Audit"
+      - "4.Nexus - Backend-GraphQL"
+      - "5.Nexus - Frontend-UI"
+    requires_context: true
+    side_effects: false
+    risk_level: medium
+
+  - id: audit_architecture
+    name: audit_architecture
+    domain: audit
+    description: "Audit completed implementation against governance, architecture, frontend/backend boundary rules, and tests"
+    input_schema:
+      target_path:
+        type: string
+        description: "Path to the codebase or design to audit"
+        required: true
+      ruleset:
+        type: string
+        description: "Ruleset to use for auditing"
+        required: false
+        default: "default"
+    output_schema:
+      score:
+        type: number
+        description: "Overall compliance score 0.0-1.0"
+      findings:
+        type: array
+        description: "List of audit findings"
+        items:
+          type: object
+      recommendations:
+        type: array
+        description: "List of recommendations"
+        items:
+          type: string
+      summary:
+        type: string
+        description: "Audit summary"
+    allowed_agents:
+      - "3.Nexus - Architecture Audit"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "4.Nexus - Backend-GraphQL"
+      - "5.Nexus - Frontend-UI"
+    requires_context: true
+    side_effects: false
+    risk_level: high
+
+  - id: validate_schema
+    name: validate_schema
+    domain: backend
+    description: "Validate GraphQL schema and backend API contracts against standards"
+    input_schema:
+      schema_text:
+        type: string
+        description: "The schema text to validate"
+        required: true
+      rules:
+        type: array
+        description: "Validation rules to apply"
+        required: false
+        items:
+          type: string
+    output_schema:
+      valid:
+        type: boolean
+        description: "Whether the schema is valid"
+      errors:
+        type: array
+        description: "Validation errors"
+        items:
+          type: string
+      warnings:
+        type: array
+        description: "Validation warnings"
+        items:
+          type: string
+    allowed_agents:
+      - "4.Nexus - Backend-GraphQL"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "5.Nexus - Frontend-UI"
+    requires_context: false
+    side_effects: false
+    risk_level: medium
+
+  - id: analyze_models
+    name: analyze_models
+    domain: backend
+    description: "Analyze Django models for correctness, relationships, and Clean Architecture compliance"
+    input_schema:
+      model_path:
+        type: string
+        description: "Path to the models file or directory"
+        required: true
+    output_schema:
+      models_found:
+        type: array
+        description: "Models discovered"
+        items:
+          type: object
+      relationships:
+        type: array
+        description: "Model relationships"
+        items:
+          type: object
+      issues:
+        type: array
+        description: "Issues found"
+        items:
+          type: object
+    allowed_agents:
+      - "4.Nexus - Backend-GraphQL"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "5.Nexus - Frontend-UI"
+    requires_context: false
+    side_effects: false
+    risk_level: medium
+
+  - id: analyze_services
+    name: analyze_services
+    domain: backend
+    description: "Analyze domain services for proper validation, transaction ownership, and invariant enforcement"
+    input_schema:
+      service_path:
+        type: string
+        description: "Path to the services file or directory"
+        required: true
+    output_schema:
+      services_found:
+        type: array
+        description: "Services discovered"
+        items:
+          type: object
+      validation_patterns:
+        type: array
+        description: "Validation patterns found"
+        items:
+          type: object
+      transaction_ownership:
+        type: array
+        description: "Transaction ownership patterns"
+        items:
+          type: object
+    allowed_agents:
+      - "4.Nexus - Backend-GraphQL"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "5.Nexus - Frontend-UI"
+    requires_context: false
+    side_effects: false
+    risk_level: medium
+
+  - id: analyze_graphql
+    name: analyze_graphql
+    domain: backend
+    description: "Analyze GraphQL resolvers, mutations, queries for thinness and proper delegation"
+    input_schema:
+      resolver_path:
+        type: string
+        description: "Path to the GraphQL resolvers file or directory"
+        required: true
+    output_schema:
+      resolvers_found:
+        type: array
+        description: "Resolvers discovered"
+        items:
+          type: object
+      thinness_check:
+        type: object
+        description: "Whether resolvers are thin or fat"
+      delegation_patterns:
+        type: array
+        description: "Delegation patterns found"
+        items:
+          type: object
+    allowed_agents:
+      - "4.Nexus - Backend-GraphQL"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "5.Nexus - Frontend-UI"
+    requires_context: false
+    side_effects: false
+    risk_level: medium
+
+  - id: analyze_ui
+    name: analyze_ui
+    domain: frontend
+    description: "Analyze frontend UI components for structure, accessibility, and design system compliance"
+    input_schema:
+      target_path:
+        type: string
+        description: "Path to the UI component files"
+        required: true
+    output_schema:
+      components_found:
+        type: array
+        description: "Components discovered"
+        items:
+          type: object
+      a11y_issues:
+        type: array
+        description: "Accessibility issues found"
+        items:
+          type: object
+      design_system_compliance:
+        type: boolean
+        description: "Whether design system rules are followed"
+    allowed_agents:
+      - "5.Nexus - Frontend-UI"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "4.Nexus - Backend-GraphQL"
+    requires_context: false
+    side_effects: false
+    risk_level: low
+
+  - id: validate_tailwind
+    name: validate_tailwind
+    domain: frontend
+    description: "Validate that frontend styling uses Tailwind CSS only, no custom CSS violations"
+    input_schema:
+      target_path:
+        type: string
+        description: "Path to the files to validate"
+        required: false
+        default: "."
+    output_schema:
+      tailwind_only:
+        type: boolean
+        description: "Whether only Tailwind CSS is used"
+      violations:
+        type: array
+        description: "Custom CSS violations found"
+        items:
+          type: object
+    allowed_agents:
+      - "5.Nexus - Frontend-UI"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "4.Nexus - Backend-GraphQL"
+    requires_context: false
+    side_effects: false
+    risk_level: low
+
+  - id: render_component
+    name: render_component
+    domain: frontend
+    description: "Generate or analyze frontend UI component code following the design system"
+    input_schema:
+      component_spec:
+        type: object
+        description: "Specification for the component to render"
+        required: true
+      framework:
+        type: string
+        description: "Target framework (e.g., react)"
+        required: false
+        default: "react"
+    output_schema:
+      code:
+        type: string
+        description: "Generated component code"
+      framework:
+        type: string
+        description: "Framework used"
+      tailwind_verified:
+        type: boolean
+        description: "Whether Tailwind usage was verified"
+      a11y_checked:
+        type: boolean
+        description: "Whether accessibility was checked"
+    allowed_agents:
+      - "5.Nexus - Frontend-UI"
+    forbidden_agents:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "3.Nexus - Architecture Audit"
+      - "4.Nexus - Backend-GraphQL"
+    requires_context: false
+    side_effects: true
+    risk_level: medium

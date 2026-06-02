@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "process",
     "execution",
     "improvement",
+    "check",
     "kpi_engine",
     "docs_manager",
 ]

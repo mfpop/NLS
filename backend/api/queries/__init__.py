@@ -11,8 +11,10 @@ from api.queries.manufacturing import ManufacturingQuery
 from api.queries.integration import IntegrationQuery
 from api.queries.mapping import MappingQuery
 from api.queries.lineage import LineageQuery
-from api.types.auth import UserNode
+from api.queries.mer import MERQuery
 from docs_manager.schema import DocumentationQuery
+from api.types.auth import UserNode
+from check.schema import CheckQuery
 
 
 @strawberry.type
@@ -26,6 +28,8 @@ class Query(
     IntegrationQuery,
     MappingQuery,
     LineageQuery,
+    MERQuery,
+    CheckQuery,
 ):
     """Root query — domain resolvers are added here as fields get implemented."""
 

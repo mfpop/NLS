@@ -47,6 +47,9 @@ from api.types.manufacturing import (
     OperatorAssignmentPayload, OperatorAssignmentUpdateInput,
     SeedGptLinePayload,
     CleanupGptLinePayload,
+    AuditNode, AuditPayload, AuditInput, AuditUpdateInput,
+    AuditChecklistItemNode, AuditChecklistItemPayload, AuditChecklistItemInput, AuditChecklistItemUpdateInput,
+    AuditFindingNode, AuditFindingPayload, AuditFindingInput, AuditFindingUpdateInput,
 )
 from api.types.auth import LoginInput, AuthPayload, UserNode
 from api.auth_utils import encode_jwt
@@ -2080,6 +2083,116 @@ class ManufacturingMutation:
             return DocumentControlPayload(ok=True, document=StructureDocumentNode.from_db(doc))
         except DocumentControlError as e:
             return DocumentControlPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    # ── Audit Mutations ──
+
+    @strawberry.mutation(name="createAudit")
+    def create_audit(self, info: Info, input: "AuditInput") -> "AuditPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            audit = AuditService.create_audit(
+                audit_type=input.audit_type,
+                target_type=input.target_type,
+                target_id=input.target_id,
+                title=input.title,
+                auditor=input.auditor or "",
+                audit_date=input.audit_date,
+                notes=input.notes or "",
+            )
+            return AuditPayload(ok=True, audit=AuditNode.from_db(audit))
+        except AuditServiceError as e:
+            return AuditPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="updateAudit")
+    def update_audit(self, info: Info, id: str, input: "AuditUpdateInput") -> "AuditPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            audit = AuditService.update_audit(
+                audit_id=int(id),
+                title=input.title,
+                auditor=input.auditor,
+                audit_date=input.audit_date,
+                notes=input.notes,
+                status=input.status,
+            )
+            return AuditPayload(ok=True, audit=AuditNode.from_db(audit))
+        except AuditServiceError as e:
+            return AuditPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="addAuditChecklistItem")
+    def add_audit_checklist_item(self, info: Info, audit_id: str, input: "AuditChecklistItemInput") -> "AuditChecklistItemPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            item = AuditService.add_checklist_item(
+                audit_id=int(audit_id),
+                question=input.question,
+                result=input.result,
+                comment=input.comment or "",
+            )
+            return AuditChecklistItemPayload(ok=True, item=AuditChecklistItemNode.from_db(item))
+        except AuditServiceError as e:
+            return AuditChecklistItemPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="updateAuditChecklistItem")
+    def update_audit_checklist_item(self, info: Info, id: str, input: "AuditChecklistItemUpdateInput") -> "AuditChecklistItemPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            item = AuditService.update_checklist_item(
+                item_id=int(id),
+                question=input.question,
+                result=input.result,
+                comment=input.comment,
+            )
+            return AuditChecklistItemPayload(ok=True, item=AuditChecklistItemNode.from_db(item))
+        except AuditServiceError as e:
+            return AuditChecklistItemPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="addAuditFinding")
+    def add_audit_finding(self, info: Info, audit_id: str, input: "AuditFindingInput") -> "AuditFindingPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            finding = AuditService.add_finding(
+                audit_id=int(audit_id),
+                description=input.description,
+                severity=input.severity,
+                owner=input.owner or "",
+                due_date=input.due_date,
+            )
+            return AuditFindingPayload(ok=True, finding=AuditFindingNode.from_db(finding))
+        except AuditServiceError as e:
+            return AuditFindingPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="updateAuditFinding")
+    def update_audit_finding(self, info: Info, id: str, input: "AuditFindingUpdateInput") -> "AuditFindingPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            finding = AuditService.update_finding(
+                finding_id=int(id),
+                description=input.description,
+                severity=input.severity,
+                status=input.status,
+                owner=input.owner,
+                due_date=input.due_date,
+            )
+            return AuditFindingPayload(ok=True, finding=AuditFindingNode.from_db(finding))
+        except AuditServiceError as e:
+            return AuditFindingPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="closeAuditFinding")
+    def close_audit_finding(self, info: Info, id: str) -> "AuditFindingPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            finding = AuditService.close_finding(finding_id=int(id))
+            return AuditFindingPayload(ok=True, finding=AuditFindingNode.from_db(finding))
+        except AuditServiceError as e:
+            return AuditFindingPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
 
     @strawberry.mutation(name="setStructureDocumentControlledCopy")
     def set_structure_document_controlled_copy(self, info: Info, input: ControlledCopyInput) -> DocumentControlPayload:

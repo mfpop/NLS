@@ -61,7 +61,7 @@ export function StructureDocumentEditor({
             <div className="text-sm font-bold text-foreground">
               {mode === "create" ? `Create ${documentTypeLabel}` : `Edit ${documentTypeLabel}`}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">
+            <div className="text-xs text-muted-foreground mt-0.5">
               {nodeName} &middot; {nodeTypeLabel}
             </div>
           </div>
@@ -79,7 +79,7 @@ export function StructureDocumentEditor({
         <form onSubmit={handleSubmit} className="p-4 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Title</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Title</label>
               <input
                 type="text"
                 value={title}
@@ -90,7 +90,7 @@ export function StructureDocumentEditor({
               />
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Code</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Code</label>
               <input
                 type="text"
                 value={code}
@@ -103,7 +103,7 @@ export function StructureDocumentEditor({
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Content</label>
+            <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Content</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -115,7 +115,7 @@ export function StructureDocumentEditor({
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Revision</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Revision</label>
               <input
                 type="text"
                 value={revision}
@@ -124,7 +124,7 @@ export function StructureDocumentEditor({
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Owner</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Owner</label>
               <input
                 type="text"
                 value={owner}
@@ -134,7 +134,7 @@ export function StructureDocumentEditor({
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Effective</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Effective</label>
               <input
                 type="date"
                 value={effectiveFrom}

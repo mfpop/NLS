@@ -661,7 +661,7 @@ export function UserProfilePage() {
   if (error && !profile) {
     console.error("Profile query error:", error.message);
     return (
-      <AppPageLayout title="Profile" subtitle="Manage your personal information and account settings." icon={<User />}>
+      <AppPageLayout title="Profile" subtitle="Manage your personal information and account settings." icon={<User />} iconClass={theme.iconBoxBrand}>
         <div className="p-4 space-y-3">
           <div className="mx-auto max-w-3xl rounded-3xl border border-danger bg-danger px-5 py-4 text-sm text-danger border-danger bg-danger text-danger">
             We couldn&apos;t load the profile right now.

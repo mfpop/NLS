@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { StructureDocumentStatusBadge } from "./StructureDocumentStatusBadge";
 import { StructureDocumentMetadata } from "./StructureDocumentMetadata";
 import { StructureDocumentEmptyState } from "./StructureDocumentEmptyState";
-import { RichTextEditor } from "./RichTextEditor";
+import { RichTextEditor } from "@/components/shared/RichTextEditor";
 import { generateWorkInstructionTemplate } from "./workInstructionTemplate";
 import { generateStandardWorkTemplate } from "./standardWorkTemplate";
 import { generateMaterialFlowStandardTemplate } from "./materialFlowStandardTemplate";
@@ -111,12 +111,12 @@ export function StructureDocumentDetailsPanel({
 
   if (error) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center px-4">
-          <p className="text-xs text-danger font-medium">Failed to load document</p>
-          <p className="text-[10px] text-muted-foreground mt-1">{error}</p>
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center px-4">
+            <p className="text-xs text-danger font-medium">Failed to load document</p>
+            <p className="text-xs text-muted-foreground mt-1">{error}</p>
+          </div>
         </div>
-      </div>
     );
   }
 
@@ -124,8 +124,6 @@ export function StructureDocumentDetailsPanel({
   const hasDocument = document !== null && status !== "MISSING";
   const isMissing = status === "MISSING";
   const isInherited = status === "INHERITED";
-  const isApproved = document?.status === "APPROVED";
-  const isArchived = document?.status === "ARCHIVED";
   const docLabel = documentTypeLabels[documentType] || "Document";
   const Icon = typeIcon[selectedNode.nodeType];
 
@@ -178,7 +176,7 @@ export function StructureDocumentDetailsPanel({
       <div className={`flex-1 min-h-0 ${editing ? "flex flex-col" : "overflow-y-auto"}`}>
         {/* Summary row */}
         <div className="border-b border-border/40 px-3 py-2">
-          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span className="font-semibold text-foreground">{docLabel}</span>
             <span className="w-px h-3 bg-border/40" />
             <span>{typeLabel[selectedNode.nodeType] || selectedNode.nodeType}</span>
@@ -193,13 +191,13 @@ export function StructureDocumentDetailsPanel({
             <form id="doc-editor-form" onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 gap-3">
               <div className="grid grid-cols-2 gap-3 shrink-0">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Title</label>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Title</label>
                   <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                     className="h-8 w-full rounded-xs border border-transparent bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-gray-400 focus:ring-1 focus:ring-ring/20"
                     required />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Code</label>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Code</label>
                   <input type="text" value={editCode} onChange={(e) => setEditCode(e.target.value)}
                     className="h-8 w-full rounded-xs border border-transparent bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-gray-400 focus:ring-1 focus:ring-ring/20"
                     required />
@@ -207,14 +205,14 @@ export function StructureDocumentDetailsPanel({
               </div>
 
               <div className="flex items-center justify-between shrink-0">
-                <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Content</label>
+                <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground">Content</label>
                 <div className="flex items-center gap-1.5">
                   {/* Import existing document */}
                   <button
                     type="button"
                     disabled={importing}
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[9px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors disabled:opacity-40"
+                    className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors disabled:opacity-40"
                     title="Import an existing document (PDF, DOCX, TXT, HTML)"
                   >
                     {importing ? (
@@ -247,7 +245,7 @@ export function StructureDocumentDetailsPanel({
                         const fn = templates[documentType];
                         if (fn) setEditContent(fn());
                       }}
-                      className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                      className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
                       title={`Insert lean ${documentTypeLabels[documentType]?.toLowerCase() || documentType} template`}
                     >
                       <FileText className="h-3 w-3 stroke-current" />
@@ -258,7 +256,7 @@ export function StructureDocumentDetailsPanel({
               </div>
 
               {importError && (
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-danger/10 text-danger text-[10px] font-medium shrink-0">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-danger/10 text-danger text-xs font-medium shrink-0">
                   <AlertCircle className="h-3 w-3 stroke-current shrink-0" />
                   <span>{importError}</span>
                 </div>
@@ -269,13 +267,12 @@ export function StructureDocumentDetailsPanel({
                   content={editContent}
                   onChange={(html) => setEditContent(html)}
                   placeholder="Write the work instruction content here — use headings, lists, tables, and formatting..."
-                  minHeight="250px"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3 shrink-0">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1">Revision</label>
+                  <label className="block text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1">Revision</label>
                   <input type="text" value={editRevision} onChange={(e) => setEditRevision(e.target.value)}
                     className="h-8 w-full rounded-xs border border-transparent bg-card px-2 text-xs text-foreground outline-none transition-colors focus:border-gray-400 focus:ring-1 focus:ring-ring/20" />
                 </div>
@@ -319,7 +316,7 @@ export function StructureDocumentDetailsPanel({
                   <StructureDocumentMetadata document={document} />
                   <div className="border border-gray-500/50 p-3">
                     <div className="flex items-center gap-1.5 mb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Content</span>
+                      <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Content</span>
                     </div>
                     <div
                       className="prose prose-sm prose-neutral dark:prose-invert max-w-none text-xs leading-relaxed"

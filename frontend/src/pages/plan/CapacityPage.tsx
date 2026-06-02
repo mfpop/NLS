@@ -503,7 +503,7 @@ export function CapacityPage() {
   };
 
   return (
-    <AppPageLayout title="Capacity Planning" subtitle="Calculate capacity, takt, constraints, and Yamazumi from production structure and plan data." icon={<BarChart3 />} toolbar={toolbar} footer={footer}>
+    <AppPageLayout title="Capacity Planning" subtitle="Calculate capacity, takt, constraints, and Yamazumi from production structure and plan data." icon={<BarChart3 />} iconClass={theme.iconBoxBrand} toolbar={toolbar} footer={footer}>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted bg-background">
         <div className={`shrink-0 border-b px-3 py-2 ${theme.subHeader}`}>
           <div className="flex flex-wrap items-center gap-2">

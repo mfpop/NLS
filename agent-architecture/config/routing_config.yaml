@@ -1,0 +1,98 @@
+routing:
+  intent_keywords:
+    governance:
+      - governance
+      - compliance
+      - policy
+      - regulation
+      - rule
+      - invariant
+      - forbidden
+      - permanent decision
+      - architecture law
+      - domain boundary
+      - constitution
+
+    manufacturing_structure:
+      - manufacturing
+      - production line
+      - plant
+      - department
+      - resource group
+      - resource
+      - routing
+      - bom
+      - material flow
+      - capacity
+      - company structure
+      - organizational hierarchy
+
+    architecture_audit:
+      - audit architecture
+      - verify implementation
+      - code review
+      - technical debt
+      - architecture compliance
+      - clean architecture check
+      - test coverage
+      - boundary check
+
+    backend_graphql:
+      - graphql
+      - schema
+      - resolver
+      - mutation
+      - query
+      - django
+      - mysql
+      - service
+      - repository
+      - migration
+      - api
+      - backend
+
+    frontend_ui:
+      - frontend
+      - ui
+      - react
+      - component
+      - tailwind
+      - form
+      - table
+      - modal
+      - layout
+      - navigation
+      - styling
+      - apollo
+
+  agent_mapping:
+    governance: "1.Nexus - Governance"
+    manufacturing_structure: "2.Nexus - Manufacturing Structure"
+    architecture_audit: "3.Nexus - Architecture Audit"
+    backend_graphql: "4.Nexus - Backend-GraphQL"
+    frontend_ui: "5.Nexus - Frontend-UI"
+    general_chat: "0.Nexus - General Chat"
+
+  fallback:
+    default: "0.Nexus - General Chat"
+    on_unknown_intent: "0.Nexus - General Chat"
+    on_multi_domain: "0.Nexus - General Chat"
+    on_governance_violation: "1.Nexus - Governance"
+    on_audit_required: "3.Nexus - Architecture Audit"
+
+  multi_agent_handoff:
+    enabled: true
+    order:
+      - "0.Nexus - General Chat"
+      - "1.Nexus - Governance"
+      - "2.Nexus - Manufacturing Structure"
+      - "4.Nexus - Backend-GraphQL"
+      - "5.Nexus - Frontend-UI"
+      - "3.Nexus - Architecture Audit"
+    forbidden_direct_routes:
+      - from: "*"
+        to: "1.Nexus - Governance"
+        unless: intent_is_governance
+      - from: "*"
+        to: "3.Nexus - Architecture Audit"
+        unless: intent_is_audit

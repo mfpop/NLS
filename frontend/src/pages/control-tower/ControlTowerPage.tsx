@@ -13,9 +13,36 @@ import {
   Package,
   Route,
   Wrench,
+  ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@apollo/client/react";
+import { useNavigate } from "react-router-dom";
 import { theme } from "../../styles/themeTokens";
+import { PageHeader } from "@/pages/shared/PageHeader";
+import { MER_SUMMARY_QUERY } from "@/graphql/merQueries";
+
+/* ── MER Summary Types ── */
+interface MERSummaryData {
+  total: number;
+  submitted: number;
+  underReview: number;
+  approved: number;
+  inProgress: number;
+  completed: number;
+  rejected: number;
+  cancelled: number;
+  overdue: number;
+  byType: { requestType: string; count: number }[];
+  byPriority: { priority: string; count: number }[];
+}
+
+const MER_TYPE_LABELS: Record<string, string> = {
+  ENGINEERING_CHANGE: "Eng. Change",
+  TOOLING: "Tooling",
+  PROCESS_IMPROVEMENT: "Process",
+  EQUIPMENT_MODIFICATION: "Equipment",
+};
 
 /* ── Sample data ── */
 const controlTowerData = {
@@ -225,36 +252,28 @@ function DrillDownPanel({ target, onClose }: { target: string; onClose: () => vo
 /* ── Page component ── */
 
 export function ControlTowerPage() {
+  const navigate = useNavigate();
   const { situation, primaryActions, priorityActions, kpiGroups, problems, myWork } = controlTowerData;
   const [drillDownTarget, setDrillDownTarget] = useState<string | null>(null);
 
+  const { data: merData } = useQuery<{ merSummary: MERSummaryData }>(MER_SUMMARY_QUERY, {
+    fetchPolicy: "cache-and-network",
+  });
+  const mer = merData?.merSummary;
+  const merActive = mer ? mer.submitted + mer.underReview + mer.approved + mer.inProgress : 0;
+  const hasOverdue = mer && mer.overdue > 0;
+
   return (
     <div className={`relative flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      {/* ── HEADER ── */}
-      <header className={`flex shrink-0 items-center justify-between border-b px-5 py-3 ${theme.header}`}>
-        <div className="flex items-center gap-3">
-          <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>
-            <Monitor className="h-5 w-5 stroke-current" />
-          </div>
-          <div>
-            <div className="flex items-center gap-10">
-              <h1 className={`text-lg font-bold tracking-tight leading-none ${theme.textPrimary}`}>Control Tower</h1>
-              <span className="rounded-full border border-warning/15 bg-warning/10 px-2 py-0.5 text-xs font-semibold leading-none text-warning">
-                At risk
-              </span>
-            </div>
-            <p className={`mt-0.5 text-sm ${theme.textSecondary}`}>
-              Live priorities, KPI risk, and supervisor actions
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          <span className="rounded-full border border-success/30 bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
-            ● Live
-          </span>
-        </div>
-      </header>
+      <PageHeader
+        icon={<Monitor className="h-5 w-5 stroke-current" />}
+        iconClass="bg-success/10 text-success"
+        title="Control Tower"
+        subtitle="Live priorities, KPI risk, and supervisor actions"
+      >
+        <span className="border border-warning/15 bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">At risk</span>
+        <span className="border border-success/30 bg-success/10 px-2 py-1 text-xs font-semibold text-success">● Live</span>
+      </PageHeader>
 
       {/* ── BODY ── */}
       <div className={`flex min-h-0 flex-1 overflow-hidden ${theme.page}`}>
@@ -340,6 +359,91 @@ export function ControlTowerPage() {
                 })}
               </div>
             </section>
+
+            {/* 3b. MER — Manufacturing Engineering Requests */}
+            {mer && mer.total > 0 && (
+              <section className="mt-4">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <ClipboardList className="h-3.5 w-3.5 text-indigo-500 stroke-current" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Engineering Requests</span>
+                    {hasOverdue && (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-bold bg-danger/10 text-danger border border-danger/20">
+                        <AlertTriangle className="h-2.5 w-2.5 stroke-current" />{mer!.overdue} overdue
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                    className="text-[10px] font-semibold text-primary hover:text-accent transition-colors"
+                  >
+                    View all →
+                  </button>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {/* Active MERs */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                    className="flex h-[52px] items-center justify-between border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 px-2.5 text-left motion-safe:transition-colors hover:bg-indigo-100 dark:hover:bg-indigo-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">Active</span>
+                      <span className="block text-lg font-bold leading-5 text-foreground">{merActive}</span>
+                    </span>
+                    <ChevronRight className="h-3 w-3 shrink-0 text-indigo-400 stroke-current opacity-60" />
+                  </button>
+                  {/* Submitted */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                    className="flex h-[52px] items-center justify-between border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 px-2.5 text-left motion-safe:transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400">Submitted</span>
+                      <span className="block text-lg font-bold leading-5 text-foreground">{mer.submitted + mer.underReview}</span>
+                    </span>
+                    <ChevronRight className="h-3 w-3 shrink-0 text-blue-400 stroke-current opacity-60" />
+                  </button>
+                  {/* Completed */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                    className="flex h-[52px] items-center justify-between border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 px-2.5 text-left motion-safe:transition-colors hover:bg-green-100 dark:hover:bg-green-900/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-green-600 dark:text-green-400">Completed</span>
+                      <span className="block text-lg font-bold leading-5 text-foreground">{mer.completed}</span>
+                    </span>
+                    <ChevronRight className="h-3 w-3 shrink-0 text-green-400 stroke-current opacity-60" />
+                  </button>
+                  {/* Total */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                    className="flex h-[52px] items-center justify-between border border-gray-200 dark:border-gray-700 bg-muted/50 px-2.5 text-left motion-safe:transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Total</span>
+                      <span className="block text-lg font-bold leading-5 text-foreground">{mer.total}</span>
+                    </span>
+                    <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground stroke-current opacity-60" />
+                  </button>
+                </div>
+                {/* By Type Breakdown */}
+                {mer.byType && mer.byType.length > 0 && (
+                  <div className="mt-1.5 grid grid-cols-4 gap-1">
+                    {mer.byType.map((t) => (
+                      <div key={t.requestType} className="flex items-center justify-between border border-border/40 bg-muted/30 px-2 py-1">
+                        <span className="text-[10px] font-medium text-muted-foreground truncate">{MER_TYPE_LABELS[t.requestType] || t.requestType}</span>
+                        <span className="text-xs font-bold text-foreground ml-1">{t.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* 4. PRIORITY ACTIONS */}
             <section className="mt-4">

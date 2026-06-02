@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import { theme } from "@/styles/themeTokens";
 import { useAuth } from "@/auth/AuthContext";
 import { resetActiveLineState } from "@/stores/activeLineStore";
 import { useSidebarStore } from "@/stores/sidebar";
@@ -24,6 +25,7 @@ export function SignOutPage() {
       title="Sign Out"
       subtitle="You have been signed out. Redirecting to login..."
       icon={<LogOut />}
+      iconClass={theme.iconBoxSubtle}
     />
   );
 }

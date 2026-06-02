@@ -1,0 +1,44 @@
+memory:
+  backend: json_store
+  base_path: ./memory/data
+
+  namespaces:
+    general_chat:
+      ttl_days: 30
+      max_items: 200
+
+    governance:
+      ttl_days: 365
+      max_items: 500
+
+    manufacturing_structure:
+      ttl_days: 365
+      max_items: 500
+
+    architecture_audit:
+      ttl_days: 90
+      max_items: 300
+
+    backend_graphql:
+      ttl_days: 90
+      max_items: 300
+
+    frontend_ui:
+      ttl_days: 90
+      max_items: 300
+
+    runtime:
+      ttl_days: 7
+      max_items: 100
+
+  rules:
+    governance_may_store_decisions: true
+    project_context_is_source_of_truth: true
+    never_override_project_context: true
+    expire_debug_output_immediately: true
+    never_store_temp_debug_as_permanent: true
+
+  embedding:
+    enabled: false
+    model: text-embedding-ada-002
+    dimension: 1536

@@ -1,6 +1,7 @@
 import { Moon, Palette, SlidersHorizontal, Sun } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { useThemeStore } from "@/stores/theme";
+import { theme as themeTokens } from "@/styles/themeTokens";
 
 export function UserPreferencesPage() {
   const theme = useThemeStore((state) => state.theme);
@@ -13,6 +14,7 @@ export function UserPreferencesPage() {
       title="Preferences"
       subtitle="Set your personal app preferences, notification options, and interface behavior defaults."
       icon={<SlidersHorizontal />}
+      iconClass={themeTokens.iconBoxBrand}
     >
       <div className="preferences-grid">
         <section className="preferences-card" aria-labelledby="theme-preference-title">

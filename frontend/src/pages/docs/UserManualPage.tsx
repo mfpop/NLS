@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client/react";
 import { BookOpen } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { theme } from "@/styles/themeTokens";
 import { MarkdownReader } from "@/pages/DocumentationCenter/MarkdownReader";
 import { DOCUMENTATION_FILE_QUERY } from "@/graphql";
 import type { DocumentationFileQueryData, DocumentationFileQueryVars } from "@/pages/DocumentationCenter/documentationTypes";
@@ -31,6 +32,7 @@ export function UserManualPage() {
     <div className="flex flex-col overflow-hidden h-full">
       <PageHeader
         icon={<BookOpen className="h-5 w-5 stroke-current" />}
+        iconClass={theme.iconBoxBlue}
         title="User Manual"
         subtitle="Lean manufacturing documentation and reference."
       />

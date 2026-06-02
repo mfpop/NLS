@@ -6,7 +6,7 @@ import {
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, FileSpreadsheet, RefreshCw,
   Package, Clock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig,
+  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -62,6 +62,7 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "Workload Distribution", to: "/plan/capacity/workload-distribution", icon: Grid3x3 },
         ],
       },
+      { type: "item", label: "MER", to: "/plan/manufacturing-engineering-requests", icon: Wrench },
     ],
   },
   {
@@ -79,15 +80,19 @@ export const sidebarNav: TopLevelEntry[] = [
       { type: "item", label: "Problems", to: "/check/problems", icon: CircleAlert },
       { type: "item", label: "Actions", to: "/check/actions", icon: ListChecks },
       { type: "item", label: "Audits", to: "/check/audits", icon: ClipboardCheck },
-      { type: "item", label: "Quality Control", to: "/check/quality", icon: ShieldCheck },
+      { type: "item", label: "Production Control", to: "/check/production-control", icon: Activity },
+      { type: "item", label: "Quality Control", to: "/check/quality-control", icon: ShieldCheck },
+      { type: "item", label: "Safety Control", to: "/check/safety-control", icon: AlertTriangle },
+      { type: "item", label: "Material Control", to: "/check/material-control", icon: Package },
     ],
   },
   {
     type: "section", id: "improve", label: "Improve", icon: TrendingUp,
     items: [
-      { type: "item", label: "Kaizen", to: "/improve/kaizen", icon: Sparkles },
-      { type: "item", label: "Continuous Improvement", to: "/improve/continuous-improvement", icon: RefreshCw },
       { type: "item", label: "Suggestions", to: "/improve/suggestions", icon: Lightbulb },
+      { type: "item", label: "Kaizen", to: "/improve/kaizen", icon: Sparkles },
+      { type: "item", label: "A3 / PDCA", to: "/improve/a3-pdca", icon: ClipboardList },
+      { type: "item", label: "Continuous Improvement", to: "/improve/continuous-improvement", icon: RefreshCw },
     ],
   },
   {

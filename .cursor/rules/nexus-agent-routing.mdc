@@ -1,0 +1,170 @@
+---
+description: Nexus agent routing, governance, context-loading, and output discipline rules
+globs: **/*.{ts,tsx,py,graphql,md,yaml,yml,json}
+alwaysApply: true
+---
+
+# Nexus Agent Routing & Governance Framework
+
+## Core Rule
+The local Nexus agents do not replace the LLM.
+They define role, scope, routing, project rules, context files, and allowed skills.
+
+The LLM remains responsible for:
+- reasoning
+- planning
+- implementation suggestions
+- code generation
+- review
+- debugging
+- synthesis
+- clarification
+- risk detection
+- final response quality
+
+## Source of Truth Priority
+Always apply this precedence order:
+
+1. `project_context/` files
+2. active `agent.yaml` role/rules
+3. `skill_registry.yaml` permissions
+4. current user request
+5. runtime memory
+6. general LLM knowledge
+
+Rules:
+- `project_context/` overrides memory.
+- `project_context/` overrides chat history.
+- Governance-approved rules must live in `project_context/`.
+- Memory is temporary support only.
+- Runtime memory must never create permanent rules.
+
+## Agent Routing
+Classify the request and select the correct agent:
+
+- General planning / prioritization / handoff → Nexus - General Chat
+- Rules / invariants / forbidden patterns → Nexus - Governance
+- Manufacturing domain structure → Nexus - Manufacturing Structure
+- Completed implementation verification → Nexus - Architecture Audit
+- Django / GraphQL / MySQL / services / migrations / tests → Nexus - Backend-GraphQL
+- React / Tailwind / Apollo / UI / layout / forms / themes → Nexus - Frontend-UI
+
+If the request spans multiple domains:
+- Use General Chat to define order.
+- Do not solve specialized work inside General Chat.
+- Produce ordered handoff steps.
+
+## Skill Usage Rule
+Use skills as structured tools, not as reasoning limits.
+
+Rules:
+- Router selects agent.
+- Agent selects allowed skill.
+- Skill returns structured output.
+- Result formatter converts output into final answer.
+- Skills must not call each other directly.
+- Skills must not define permanent governance rules.
+- Skills with `side_effects: true` require explicit implementation context.
+- Analysis-only skills must declare `side_effects: false`.
+
+## Preserve LLM Capability
+The LLM may still:
+- infer missing implications
+- detect contradictions
+- propose safer architecture
+- write code/instructions
+- explain tradeoffs
+- identify risks
+- improve wording
+- validate consistency
+- ask for missing context when needed
+
+But the LLM must not:
+- ignore `project_context/`
+- bypass the selected agent role
+- invent permanent rules
+- mix Governance and Audit responsibilities
+- let Frontend own business rules
+- let GraphQL resolvers own domain logic
+- use memory as source of truth
+- hardcode mock operational data
+- create unsupported targets or pages
+
+## Execution Pattern
+For every task:
+
+1. Read relevant `project_context/` files.
+2. Classify intent.
+3. Select agent.
+4. Verify the agent is allowed to handle the task.
+5. Select allowed skill if useful.
+6. Apply LeanSync active decisions.
+7. Produce output in the selected agent's format.
+8. If cross-domain, return ordered handoffs.
+9. If implementation is requested, include validation/test expectations.
+10. If decision is stable, instruct that it must be written to `project_context/`.
+
+## Context Loading
+Every agent must load only relevant context.
+
+Required shared context:
+- `project_context/CHAT_INDEX.md`
+- `project_context/LEAN_SYNC_MASTER_CONTEXT.md`
+- `project_context/ACTIVE_DECISIONS.md`
+
+Governance additionally loads:
+- `project_context/DOMAIN_CONSTITUTION.md`
+- `project_context/WORKSPACE_RULES.md`
+- `project_context/ARCHITECTURE.md`
+
+Backend additionally loads:
+- `project_context/ARCHITECTURE.md`
+- `project_context/DOMAIN_CONSTITUTION.md`
+- `project_context/ACTIVE_DECISIONS.md`
+
+Frontend additionally loads:
+- `project_context/WORKSPACE_RULES.md`
+- `project_context/ACTIVE_DECISIONS.md`
+
+## Output Discipline
+Default output must be:
+- concise
+- structured
+- copy/paste-ready
+- minimal-token
+- one instruction set when user asks for instructions
+- no duplicate markdown blocks
+- no long explanations unless explicitly requested
+
+## Forbidden Behavior
+Do not:
+- create new governance rules unless Governance is selected
+- audit completed work unless Architecture Audit is selected
+- implement backend work in Frontend agent
+- implement frontend work in Backend agent
+- use mock operational data as final implementation
+- expose backend-only terms in UI
+- treat chats or memory as permanent source of truth
+- bypass approved LeanSync architecture decisions
+
+## LeanSync Non-Negotiable Rules
+Always preserve:
+- Company → Plant → Department → ResourceGroup → Resource is organizational hierarchy.
+- Plant → ProductionLine → Assigned Resource Groups is operational flow.
+- ProductionLineResourceGroup is backend-only.
+- UI label is "Assigned Resource Groups".
+- Routing uses assigned ResourceGroups.
+- Capacity uses active assigned ResourceGroups.
+- ProductVariant.part_number is active finished-good part number storage.
+- PartNumber is compatibility-only.
+- BOM/Routing use productVariantId.
+- MaterialItem.part_number is used for BOM materials/components.
+- StructureDocument owns document content, target attachment, inheritance, and structure-tree resolution.
+- Document Control owns lifecycle governance.
+- No separate Document Control tree.
+- No frontend inheritance logic.
+- UI consumes GraphQL/backend state only.
+- No business rules in UI.
+- Domain services own validation, transactions, and invariants.
+- GraphQL resolvers stay thin.
+- Frontend styling uses Tailwind CSS only.

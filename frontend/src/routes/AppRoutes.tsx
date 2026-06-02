@@ -45,11 +45,29 @@ const KaizenPage = lazy(() =>
 const ProceduresPage = lazy(() =>
   import("@/pages/standardize/ProceduresPage").then((module) => ({ default: module.ProceduresPage }))
 );
+const ManufacturingEngineeringRequestsPage = lazy(() =>
+  import("@/pages/plan/ManufacturingEngineeringRequestsPage").then((module) => ({ default: module.ManufacturingEngineeringRequestsPage }))
+);
+const MERDashboardPage = lazy(() =>
+  import("@/pages/plan/MERDashboardPage").then((module) => ({ default: module.MERDashboardPage }))
+);
 const ProductionPlanPage = lazy(() =>
   import("@/pages/plan/ProductionPlanPage").then((module) => ({ default: module.ProductionPlanPage }))
 );
-const QualityPage = lazy(() =>
-  import("@/pages/check/QualityPage").then((module) => ({ default: module.QualityPage }))
+const QualityControlPage = lazy(() =>
+  import("@/pages/check/QualityControlPage").then((module) => ({ default: module.QualityControlPage }))
+);
+const ProductionControlPage = lazy(() =>
+  import("@/pages/check/ProductionControlPage").then((module) => ({ default: module.ProductionControlPage }))
+);
+const SafetyControlPage = lazy(() =>
+  import("@/pages/check/SafetyControlPage").then((module) => ({ default: module.SafetyControlPage }))
+);
+const MaterialControlPage = lazy(() =>
+  import("@/pages/check/MaterialControlPage").then((module) => ({ default: module.MaterialControlPage }))
+);
+const A3PdcaPage = lazy(() =>
+  import("@/pages/improve/A3PdcaPage").then((module) => ({ default: module.A3PdcaPage }))
 );
 const SuggestionsPage = lazy(() =>
   import("@/pages/improve/SuggestionsPage").then((module) => ({ default: module.SuggestionsPage }))
@@ -194,6 +212,8 @@ export function AppRoutes() {
           <Route path="execution/vsm" element={<VsmPage />} />
           <Route path="execution/daily-gemba-walk" element={<DailyGembaWalkPage />} />
           <Route path="plan/production-plan" element={<ProductionPlanPage />} />
+          <Route path="plan/manufacturing-engineering-requests" element={<ManufacturingEngineeringRequestsPage />} />
+          <Route path="plan/mer-dashboard" element={<MERDashboardPage />} />
           <Route path="plan/capacity" element={<CapacityPage />} />
           <Route path="plan/capacity/load" element={<CapacityPage />} />
           {/* REVIEW_ONLY: /plan/capacity/load — not in sidebar, may be internal deep-link */}
@@ -211,8 +231,12 @@ export function AppRoutes() {
           <Route path="check/problems" element={<ProblemsPage />} />
           <Route path="check/actions" element={<ActionsPage />} />
           <Route path="check/audits" element={<AuditsPage />} />
-          <Route path="check/quality" element={<QualityPage />} />
+          <Route path="check/quality-control" element={<QualityControlPage />} />
+          <Route path="check/production-control" element={<ProductionControlPage />} />
+          <Route path="check/safety-control" element={<SafetyControlPage />} />
+          <Route path="check/material-control" element={<MaterialControlPage />} />
           <Route path="improve/kaizen" element={<KaizenPage />} />
+          <Route path="improve/a3-pdca" element={<A3PdcaPage />} />
           <Route path="improve/continuous-improvement" element={<ContinuousImprovementPage />} />
           <Route path="improve/suggestions" element={<SuggestionsPage />} />
           <Route path="standardize/work-instructions" element={<WorkInstructionsPage />} />

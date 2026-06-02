@@ -250,6 +250,7 @@ export function ApplicationSettingsPage() {
     <div className="relative">
       <AppPageLayout
         icon={<Cog />}
+        iconClass={theme.iconBoxBrand}
         title="Application Settings"
         subtitle="Configure application behavior, security, localization, integrations, and diagnostics."
         toolbar={

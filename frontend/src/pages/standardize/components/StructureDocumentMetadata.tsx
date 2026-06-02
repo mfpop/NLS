@@ -18,16 +18,16 @@ export function StructureDocumentMetadata({ document }: StructureDocumentMetadat
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0">
           <div className="text-xs font-bold text-foreground">{document.title}</div>
-          <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+          <div className="text-xs text-muted-foreground font-medium mt-0.5">
             {document.code} &middot; rev {document.revision}
           </div>
         </div>
-        <span className={`shrink-0 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${docCfg.className}`}>
+        <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${docCfg.className}`}>
           {docCfg.label}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px]">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
         <div>
           <span className="block text-muted-foreground font-medium">Owner</span>
           <span className="block text-foreground font-semibold">{document.owner || "—"}</span>
@@ -46,10 +46,10 @@ export function StructureDocumentMetadata({ document }: StructureDocumentMetadat
         </div>
         <div className="col-span-2">
           <span className="block text-muted-foreground font-medium">Controlled Copy</span>
-          <span className={`inline-flex items-center rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none mt-0.5 ${
+          <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border mt-0.5 ${
             document.isControlledCopy
-              ? "bg-info/15 text-info border border-info/25"
-              : "bg-badge-neutral text-badge-neutral-foreground border border-border/60"
+              ? "bg-info/15 text-info border-info/25"
+              : "bg-badge-neutral text-badge-neutral-foreground border-border/60"
           }`}>
             {document.isControlledCopy ? "Controlled Copy" : "Uncontrolled Copy"}
           </span>

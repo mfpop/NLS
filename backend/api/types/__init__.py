@@ -1,6 +1,6 @@
 from api.types.application import ApplicationSettingNode, ErpStorageFileNode, ErpStoragePayload, ErpStorageListResult
 from api.types.execution import ExecutionSnapshot, WorkOrderNode
-from api.types.improvement import ImprovementSnapshot, KaizenNode
+from api.types.improvement import ImprovementSnapshot, SuggestionNode, KaizenDetailNode, KaizenActionNode, A3PDCANode, A3PDCAActionNode, ContinuousImprovementSummary
 from api.types.kpi import KpiSnapshot
 from api.types.manufacturing import ManufacturingSnapshot, PlantNode
 from api.types.lineage import (
@@ -22,6 +22,12 @@ __all__ = [
 	"ApplicationSettingNode",
 	"ImprovementSnapshot",
 	"KaizenNode",
+	"SuggestionNode",
+	"KaizenDetailNode",
+	"KaizenActionNode",
+	"A3PDCANode",
+	"A3PDCAActionNode",
+	"ContinuousImprovementSummary",
 	"KpiSnapshot",
 	"ManufacturingSnapshot",
 	"PlantNode",

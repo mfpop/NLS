@@ -55,7 +55,7 @@ function ToolbarActionButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-medium text-muted-foreground transition-colors ${
+      className={`inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-muted-foreground transition-colors ${
         disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-muted dark:hover:bg-muted"
       }`}
     >
@@ -292,7 +292,7 @@ export function StructureDocumentPage({
       `}</style>
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
       {successMsg && (
-        <div className="shrink-0 h-8 flex items-center justify-center bg-success/10 text-success text-[11px] font-semibold border-b border-success/20">
+        <div className="shrink-0 h-8 flex items-center justify-center bg-success/10 text-success text-sm font-semibold border-b border-success/20">
           {successMsg}
         </div>
       )}
@@ -320,14 +320,14 @@ export function StructureDocumentPage({
             <div className="flex items-center px-2 min-w-0 overflow-hidden">
               <div className="flex items-center h-7 w-full rounded-xs border border-gray-400 bg-card px-1 gap-1 transition-colors focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-ring/20">
                 <Search className="h-3 w-3 text-muted-foreground stroke-current shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search structure..."
-                  aria-label="Search structure"
-                  className="flex-1 min-w-0 bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground outline-none"
-                />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search structure..."
+                    aria-label="Search structure"
+                    className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
+                  />
                 {searchQuery && (
                   <button
                     type="button"
@@ -346,11 +346,11 @@ export function StructureDocumentPage({
               {editing ? (
                 <>
                   <button type="button" onClick={() => setEditing(false)}
-                    className="inline-flex h-7 items-center rounded px-2 text-[10px] font-medium text-muted-foreground hover:bg-muted dark:hover:bg-muted transition-colors">
+                    className="inline-flex h-7 items-center rounded px-2 text-xs font-medium text-muted-foreground hover:bg-muted dark:hover:bg-muted transition-colors">
                     Cancel
                   </button>
                   <button type="button" onClick={() => (globalThis.document.getElementById('doc-editor-form') as HTMLFormElement | null)?.requestSubmit()}
-                    className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-medium text-foreground bg-primary/80 backdrop-blur-sm hover:bg-primary/90 transition-colors">
+                    className="inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-foreground bg-primary/80 backdrop-blur-sm hover:bg-primary/90 transition-colors">
                     <Save className="h-3 w-3 stroke-current" />
                     Save
                   </button>
@@ -440,7 +440,7 @@ export function StructureDocumentPage({
       )}
 
       {/* Footer */}
-      <div className="no-print shrink-0 flex h-10 items-center gap-4 border-t border-border bg-muted px-4 text-[10px] font-medium text-muted-foreground">
+      <div className="no-print shrink-0 flex h-10 items-center gap-4 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
         <span>{title}</span>
         <span className="w-px h-3 bg-border/60" />
         <span>{treeNodes.length} root node{treeNodes.length !== 1 ? "s" : ""}</span>

@@ -108,15 +108,15 @@ export function KnowledgeModulePage({ icon, documents, config, controlMode = fal
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="text-[12px] font-semibold text-foreground line-clamp-2">{doc.title}</span>
-                      <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${STATUS_STYLES[doc.status]}`}>
+                      <span className="text-sm font-semibold text-foreground line-clamp-2">{doc.title}</span>
+                      <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[doc.status]}`}>
                         {doc.status}
                       </span>
                     </div>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">{doc.category} · {doc.revision}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{doc.category} · {doc.revision}</p>
                     <div className="mt-1.5 flex flex-wrap gap-1">
                       {doc.links.slice(0, 2).map((link) => (
-                        <span key={link.id} className="rounded bg-muted px-1.5 py-0.5 text-[9px] font-medium text-muted-foreground">
+                        <span key={link.id} className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                           {link.type}
                         </span>
                       ))}
@@ -131,17 +131,17 @@ export function KnowledgeModulePage({ icon, documents, config, controlMode = fal
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                  className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                 >
                   <ChevronLeft className="h-3 w-3" />
                   Prev
                 </button>
-                <span className="text-[10px] text-muted-foreground">{page} / {pageCount}</span>
+                <span className="text-xs text-muted-foreground">{page} / {pageCount}</span>
                 <button
                   type="button"
                   onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
                   disabled={page >= pageCount}
-                  className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                  className="inline-flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
                 >
                   Next
                   <ChevronRight className="h-3 w-3" />
@@ -176,14 +176,14 @@ function DocumentDetail({ doc, showYamazumiLink }: { doc: KnowledgeDocument; sho
       <header className="shrink-0 border-b border-border/25 px-5 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{doc.category}</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{doc.category}</p>
             <h2 className="mt-1 text-lg font-bold text-foreground">{doc.title}</h2>
           </div>
-          <span className={`rounded border px-2 py-1 text-[10px] font-semibold uppercase ${STATUS_STYLES[doc.status]}`}>
+          <span className={`inline-flex items-center px-2 py-1 text-[10px] font-semibold border ${STATUS_STYLES[doc.status]}`}>
             {doc.status}
           </span>
         </div>
-        <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-muted-foreground">
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1"><User className="h-3.5 w-3.5" /> Owner: <strong className="font-medium text-foreground">{doc.owner}</strong></span>
           <span className="inline-flex items-center gap-1"><FileCheck className="h-3.5 w-3.5" /> {doc.revision}</span>
           <span>Effective: {doc.effectiveDate}</span>
@@ -191,7 +191,7 @@ function DocumentDetail({ doc, showYamazumiLink }: { doc: KnowledgeDocument; sho
       </header>
 
       <section className="border-b border-border/20 px-5 py-3">
-        <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <GitBranch className="h-3.5 w-3.5" /> Linked process & resources
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -199,7 +199,7 @@ function DocumentDetail({ doc, showYamazumiLink }: { doc: KnowledgeDocument; sho
             <Link
               key={`${link.type}-${link.id}`}
               to={link.href}
-              className="inline-flex items-center gap-1 rounded-md border border-border/30 bg-muted/50 px-2 py-1 text-[11px] font-medium text-foreground hover:border-info/30 hover:bg-info/10 hover:text-info"
+              className="inline-flex items-center gap-1 rounded-md border border-border/30 bg-muted/50 px-2 py-1 text-xs font-medium text-foreground hover:border-info/30 hover:bg-info/10 hover:text-info"
             >
               <span className="text-muted-foreground">{link.type}</span>
               {link.label}
@@ -225,7 +225,7 @@ function DocumentDetail({ doc, showYamazumiLink }: { doc: KnowledgeDocument; sho
       )}
 
       <section className="border-b border-border/20 px-5 py-4">
-        <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Image className="h-3.5 w-3.5" /> Visual section
         </h3>
         <div className="flex min-h-[100px] items-center justify-center rounded-lg border border-dashed border-border/40 bg-muted/40 px-4 py-6 text-center">
@@ -234,7 +234,7 @@ function DocumentDetail({ doc, showYamazumiLink }: { doc: KnowledgeDocument; sho
       </section>
 
       <section className="border-b border-border/20 px-5 py-4">
-        <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListOrdered className="h-3.5 w-3.5" /> Work sequence
         </h3>
         <ol className="space-y-1.5">
@@ -248,7 +248,7 @@ function DocumentDetail({ doc, showYamazumiLink }: { doc: KnowledgeDocument; sho
       </section>
 
       <section className="px-5 py-4">
-        <h3 className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Shield className="h-3.5 w-3.5" /> Safety & quality notes
         </h3>
         <ul className="space-y-1 text-sm text-muted-foreground">

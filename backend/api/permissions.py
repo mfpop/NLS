@@ -25,8 +25,36 @@ _action_roles = {
     "toggle_production_line_status": MANAGER_PLUS,
     # Profile
     "update_profile": SUPERVISOR_PLUS,
-    # Other domains
+    # Improvement
+    "create_suggestion": SUPERVISOR_PLUS,
+    "update_suggestion": SUPERVISOR_PLUS,
+    "review_suggestion": SUPERVISOR_PLUS,
+    "accept_suggestion": SUPERVISOR_PLUS,
+    "reject_suggestion": SUPERVISOR_PLUS,
+    "convert_suggestion_to_kaizen": SUPERVISOR_PLUS,
+    "delete_suggestion": MANAGER_PLUS,
     "create_kaizen": SUPERVISOR_PLUS,
+    "update_kaizen": SUPERVISOR_PLUS,
+    "start_kaizen": SUPERVISOR_PLUS,
+    "complete_kaizen": SUPERVISOR_PLUS,
+    "cancel_kaizen": SUPERVISOR_PLUS,
+    "add_kaizen_action": SUPERVISOR_PLUS,
+    "update_kaizen_action": SUPERVISOR_PLUS,
+    "complete_kaizen_action": SUPERVISOR_PLUS,
+    "cancel_kaizen_action": SUPERVISOR_PLUS,
+    "create_a3_from_kaizen": SUPERVISOR_PLUS,
+    "create_a3_pdca": SUPERVISOR_PLUS,
+    "update_a3_pdca": SUPERVISOR_PLUS,
+    "move_a3_pdca_to_plan": SUPERVISOR_PLUS,
+    "move_a3_pdca_to_do": SUPERVISOR_PLUS,
+    "move_a3_pdca_to_check": SUPERVISOR_PLUS,
+    "move_a3_pdca_to_act": SUPERVISOR_PLUS,
+    "complete_a3_pdca": SUPERVISOR_PLUS,
+    "cancel_a3_pdca": SUPERVISOR_PLUS,
+    "add_a3_pdca_action": SUPERVISOR_PLUS,
+    "update_a3_pdca_action": SUPERVISOR_PLUS,
+    "complete_a3_pdca_action": SUPERVISOR_PLUS,
+    "cancel_a3_pdca_action": SUPERVISOR_PLUS,
     "start_work_order": SUPERVISOR_PLUS,
     "activate_process_flow": SUPERVISOR_PLUS,
     # Integration / ERP
@@ -51,6 +79,19 @@ _action_roles = {
     "view_structure_documents": SUPERVISOR_PLUS,
     "approve_structure_documents": MANAGER_PLUS,
     "archive_structure_documents": MANAGER_PLUS,
+    # MER
+    "create_mer": SUPERVISOR_PLUS,
+    "update_mer": SUPERVISOR_PLUS,
+    "approve_mer": MANAGER_PLUS,
+    "reject_mer": MANAGER_PLUS,
+    "start_mer": SUPERVISOR_PLUS,
+    "complete_mer": SUPERVISOR_PLUS,
+    "cancel_mer": SUPERVISOR_PLUS,
+    "convert_mer_to_kaizen": SUPERVISOR_PLUS,
+    "delete_mer": MANAGER_PLUS,
+    # Audits
+    "view_audits": SUPERVISOR_PLUS,
+    "manage_audits": MANAGER_PLUS,
 }
 
 

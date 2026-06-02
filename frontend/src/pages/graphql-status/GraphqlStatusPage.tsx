@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { SYSTEM_HEALTH_QUERY } from "@/graphql/system";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { theme } from "@/styles/themeTokens";
 import {
   Activity,
   AlertTriangle,
@@ -247,7 +248,7 @@ export function GraphqlStatusPage() {
     <div className="flex h-full flex-col overflow-hidden">
       <PageHeader
         icon={<StatusIcon state={overallState} />}
-        iconClass=""
+        iconClass={theme.iconBoxSubtle}
         title="Diagnostics / Runtime Health"
         subtitle={`Application runtime health overview. Last checked ${lastCheckedAt.toLocaleTimeString()}.`}
       >

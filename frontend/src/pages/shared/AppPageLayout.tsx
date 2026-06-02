@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { PageHeader, type SystemMessage } from "@/pages/shared/PageHeader";
-import { theme } from "../../styles/themeTokens";
 
 interface AppPageLayoutProps {
   icon: ReactNode;
@@ -14,7 +13,7 @@ interface AppPageLayoutProps {
   children?: ReactNode;
 }
 
-const DEFAULT_ICON_CLASS = `${theme.iconBoxEmerald}`;
+const DEFAULT_ICON_CLASS = "bg-muted text-muted-foreground";
 
 export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, toolbar, footer, children }: AppPageLayoutProps) {
   return (

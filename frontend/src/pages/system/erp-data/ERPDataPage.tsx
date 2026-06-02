@@ -1,6 +1,7 @@
 import { Database, Upload, RefreshCw, Search, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import { theme } from "@/styles/themeTokens";
 
 const cards = [
   { label: "ERP Import", icon: Upload, desc: "Upload files and execute ERP imports", to: "/system/erp-data/import", color: "text-violet-600", bg: "bg-violet-100" },
@@ -24,6 +25,7 @@ export function ERPDataPage() {
       title="ERP Data"
       subtitle="Configure and monitor ERP integration, file imports, and data synchronization."
       icon={<Database />}
+      iconClass={theme.iconBoxEmerald}
     >
       <div className="flex flex-col h-full overflow-hidden">
         <div className="shrink-0 flex h-9 items-center gap-2 border-b border-border/35 bg-muted px-3 select-none">

@@ -1,0 +1,53 @@
+logging:
+  version: 1
+  disable_existing_loggers: false
+
+  formatters:
+    detailed:
+      format: "%(asctime)s | %(levelname)-8s | %(name)s | task=%(task_id)s agent=%(agent_id)s skill=%(skill_name)s | %(message)s"
+    simple:
+      format: "%(levelname)-8s | %(message)s"
+
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: simple
+      stream: ext://sys.stdout
+
+    file:
+      class: logging.handlers.RotatingFileHandler
+      level: DEBUG
+      formatter: detailed
+      filename: logs/nexus.log
+      maxBytes: 10485760
+      backupCount: 5
+
+  loggers:
+    nexus:
+      level: DEBUG
+      handlers: [console, file]
+      propagate: false
+
+    nexus.routing:
+      level: DEBUG
+      handlers: [console, file]
+      propagate: false
+
+    nexus.execution:
+      level: DEBUG
+      handlers: [console, file]
+      propagate: false
+
+    nexus.skills:
+      level: INFO
+      handlers: [console, file]
+      propagate: false
+
+  tracked_fields:
+    - task_id
+    - agent_id
+    - skill_name
+    - context_files_used
+    - result_status
+    - errors

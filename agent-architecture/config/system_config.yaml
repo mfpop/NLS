@@ -1,0 +1,25 @@
+system:
+  name: Nexus Agent System
+  version: 1.1.0
+  log_level: INFO
+  max_retries: 3
+  timeout_seconds: 60
+  logging_enabled: true
+  strict_routing_enabled: true
+
+routing:
+  strategy: confidence_threshold
+  threshold: 0.6
+  fallback_agent: "0.Nexus - General Chat"
+  require_governance_for_rules: true
+  require_audit_for_verification: true
+
+execution:
+  max_loop_iterations: 10
+  store_results: true
+  parallel_skills: false
+  context_precedence:
+    - project_context
+    - config
+    - agent_yaml
+    - runtime_memory

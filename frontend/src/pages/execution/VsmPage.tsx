@@ -1,5 +1,6 @@
 import { GitBranch } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import { theme } from "@/styles/themeTokens";
 
 export function VsmPage() {
   return (
@@ -7,6 +8,7 @@ export function VsmPage() {
       title="Value Stream Map"
       subtitle="Review value stream flow, queue buildup, and lead-time signals across the active production path."
       icon={<GitBranch />}
+      iconClass={theme.iconBoxBlue}
     />
   );
 }

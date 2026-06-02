@@ -48,6 +48,16 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/plan/ProductionPlanPage"),
   },
   {
+    key: "plan-manufacturing-engineering-requests",
+    matches: (path) => path.startsWith("/plan/manufacturing-engineering-requests"),
+    load: () => import("@/pages/plan/ManufacturingEngineeringRequestsPage"),
+  },
+  {
+    key: "plan-mer-dashboard",
+    matches: (path) => path.startsWith("/plan/mer-dashboard"),
+    load: () => import("@/pages/plan/MERDashboardPage"),
+  },
+  {
     key: "plan-capacity",
     matches: (path) => path.startsWith("/plan/capacity"),
     load: () => import("@/pages/plan/CapacityPage"),
@@ -68,14 +78,34 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/check/AuditsPage"),
   },
   {
-    key: "check-quality",
-    matches: (path) => path.startsWith("/check/quality"),
-    load: () => import("@/pages/check/QualityPage"),
+    key: "check-quality-control",
+    matches: (path) => path.startsWith("/check/quality-control"),
+    load: () => import("@/pages/check/QualityControlPage"),
+  },
+  {
+    key: "check-production-control",
+    matches: (path) => path.startsWith("/check/production-control"),
+    load: () => import("@/pages/check/ProductionControlPage"),
+  },
+  {
+    key: "check-safety-control",
+    matches: (path) => path.startsWith("/check/safety-control"),
+    load: () => import("@/pages/check/SafetyControlPage"),
+  },
+  {
+    key: "check-material-control",
+    matches: (path) => path.startsWith("/check/material-control"),
+    load: () => import("@/pages/check/MaterialControlPage"),
   },
   {
     key: "improve-kaizen",
     matches: (path) => path.startsWith("/improve/kaizen"),
     load: () => import("@/pages/improve/KaizenPage"),
+  },
+  {
+    key: "improve-a3-pdca",
+    matches: (path) => path.startsWith("/improve/a3-pdca"),
+    load: () => import("@/pages/improve/A3PdcaPage"),
   },
   {
     key: "improve-continuous",

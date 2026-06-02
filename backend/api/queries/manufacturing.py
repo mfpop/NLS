@@ -37,6 +37,7 @@ from api.types.manufacturing import (
     WarehouseNode,
     CapacityPlanNode, CapacityPlanInputNode, CapacityPlanResultNode, CapacityYamazumiNode, CapacityScenarioNode,
     CapacityResultNode, CapacitySnapshotNode, PaginatedCapacitySnapshotResponse, WorkScheduleNode, CapacityProfileNode, CapacityRecalculationJobNode,
+    AuditNode,
 )
 
 
@@ -1743,3 +1744,38 @@ class ManufacturingQuery:
             steps=step_nodes,
             capacity_source=analysis["capacity_source"],
         )
+
+    # ── Audit Queries ──
+
+    @strawberry.field
+    def audits(
+        self,
+        audit_type: typing.Optional[str] = None,
+        status: typing.Optional[str] = None,
+        target_type: typing.Optional[str] = None,
+        target_id: typing.Optional[int] = None,
+        auditor: typing.Optional[str] = None,
+    ) -> list["AuditNode"]:
+        from api.permissions import ensure_access
+        ensure_access(user=None, action="view_audits")
+        from manufacturing.domain.audit_service import AuditService
+        audits = AuditService.list_audits(
+            audit_type=audit_type,
+            status=status,
+            target_type=target_type,
+            target_id=target_id,
+            auditor=auditor,
+        )
+        return [AuditNode.from_db(a) for a in audits]
+
+    @strawberry.field
+    def audit(self, id: str) -> typing.Optional["AuditNode"]:
+        from api.permissions import ensure_access
+        ensure_access(user=None, action="view_audits")
+        from manufacturing.domain.audit_service import AuditService
+        audit_obj = AuditService.get_audit(int(id))
+        if not audit_obj:
+            return None
+        items = list(audit_obj.checklist_items.all())
+        findings = list(audit_obj.findings.all())
+        return AuditNode.from_db(audit_obj, checklist=items, findings=findings)

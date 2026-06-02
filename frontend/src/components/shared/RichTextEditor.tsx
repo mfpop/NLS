@@ -10,7 +10,7 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import Placeholder from "@tiptap/extension-placeholder";
 import type { Editor } from "@tiptap/core";
-import { uploadImage } from "../../../utils/imageUpload";
+import { uploadImage } from "@/utils/imageUpload";
 import {
   Bold,
   Italic,
@@ -307,10 +307,6 @@ export function RichTextEditor({
           "prose prose-sm prose-neutral dark:prose-invert max-w-none focus:outline-none min-h-[200px] px-3 py-2 text-xs leading-relaxed",
         style: `min-height: ${minHeight}`,
       },
-      // Constrain images in editor content so they don't overflow the editor
-      // Dropped/pasted images use 'allowBase64' and get the Image extension's HTMLAttributes style,
-      // but additional CSS ensures existing images in loaded content also stay bounded.
-      // The Image extension's HTMLAttributes handles newly inserted images.
       handleDrop: (_view, event, _slice, moved) => {
         if (!moved && event.dataTransfer?.files?.length) {
           const file = event.dataTransfer.files[0];
@@ -380,9 +376,12 @@ export function RichTextEditor({
   if (!editor) return null;
 
   return (
-    <div className="flex flex-col border border-border/60 rounded-sm overflow-hidden bg-card">
+    <div className="flex flex-col h-full border border-gray-300 bg-card">
       <EditorToolbar editor={editor} />
+
+      <div className="flex-1 min-h-0 overflow-y-auto">
       <EditorContent editor={editor} />
+      </div>
 
       {/* ── Right-click context menu for table operations ── */}
       {contextMenu && (

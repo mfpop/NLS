@@ -72,7 +72,7 @@ export function DocumentControlPage() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
       {successMsg && (
-        <div className="shrink-0 h-8 flex items-center justify-center bg-success/10 text-success text-[11px] font-semibold border-b border-success/20">
+        <div className="shrink-0 h-8 flex items-center justify-center bg-success/10 text-success text-sm font-semibold border-b border-success/20">
           {successMsg}
         </div>
       )}
@@ -89,7 +89,7 @@ export function DocumentControlPage() {
           <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground stroke-current pointer-events-none" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search documents..."
-            className="h-7 w-full rounded text-[10px] text-foreground text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted pl-6 pr-1 outline-none transition-colors" />
+            className="h-7 w-full rounded text-xs text-foreground text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted pl-6 pr-1 outline-none transition-colors" />
           {search && <button type="button" onClick={() => setSearch("")}
             className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
             <X className="h-3 w-3 stroke-current" />
@@ -97,13 +97,13 @@ export function DocumentControlPage() {
         </div>
 
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
-          className="h-7 rounded text-[10px] text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
+          className="h-7 rounded text-xs text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
           <option value="">All Types</option>
           {docTypes.map((dt) => <option key={dt} value={dt}>{typeLabels[dt] || dt}</option>)}
         </select>
 
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-7 rounded text-[10px] text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
+          className="h-7 rounded text-xs text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
           <option value="">All Statuses</option>
           <option value="DRAFT">Draft</option>
           <option value="APPROVED">Approved</option>
@@ -111,7 +111,7 @@ export function DocumentControlPage() {
         </select>
 
         <select value={controlledFilter} onChange={(e) => setControlledFilter(e.target.value)}
-          className="h-7 rounded text-[10px] text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
+          className="h-7 rounded text-xs text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
           <option value="">All Copies</option>
           <option value="controlled">Controlled</option>
           <option value="uncontrolled">Uncontrolled</option>
@@ -130,10 +130,10 @@ export function DocumentControlPage() {
         {/* Table */}
         <div className={`${selectedDoc ? "w-[55%]" : "w-full"} min-w-0 overflow-y-auto border-r border-border`}>
           {loading && (
-            <div className="flex items-center justify-center py-12 text-[11px] text-muted-foreground">Loading...</div>
+            <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">Loading...</div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="flex items-center justify-center py-12 text-[11px] text-muted-foreground">No documents found.</div>
+            <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">No documents found.</div>
           )}
           {!loading && filtered.length > 0 && (
             <table className="w-full border-collapse">
@@ -154,7 +154,7 @@ export function DocumentControlPage() {
               <tbody>
                 {filtered.map((doc) => (
                   <tr key={doc.id}
-                    className={`border-b border-border/40 text-[11px] cursor-pointer transition-colors ${
+                    className={`border-b border-border/40 text-xs cursor-pointer transition-colors ${
                       selectedDoc?.id === doc.id ? "bg-primary/5" : "hover:bg-muted/40"
                     }`}
                     onClick={() => setSelectedDoc(doc)}>
@@ -163,20 +163,20 @@ export function DocumentControlPage() {
                     <td className="px-2 py-1.5 text-muted-foreground">{typeLabels[doc.documentType] || doc.documentType}</td>
                     <td className="px-2 py-1.5 text-muted-foreground">rev {doc.revision}</td>
                     <td className="px-2 py-1.5">
-                      <span className={`inline-flex items-center rounded-sm px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
-                        doc.status === "APPROVED" ? "bg-success/10 text-success border border-success/20" :
-                        doc.status === "ARCHIVED" ? "bg-badge-neutral text-badge-neutral-foreground border border-border/60" :
-                        "bg-warning/10 text-warning border border-warning/20"
+                      <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${
+                        doc.status === "APPROVED" ? "bg-success/10 text-success border-success/20" :
+                        doc.status === "ARCHIVED" ? "bg-badge-neutral text-badge-neutral-foreground border-border/60" :
+                        "bg-warning/10 text-warning border-warning/20"
                       }`}>{doc.status}</span>
                     </td>
                     <td className="px-2 py-1.5 text-muted-foreground">{doc.effectiveFrom || "—"}</td>
                     <td className="px-2 py-1.5 text-muted-foreground">{doc.reviewDate || "—"}</td>
                     <td className="px-2 py-1.5 text-muted-foreground truncate max-w-[100px]" title={doc.owner}>{doc.owner || "—"}</td>
                     <td className="px-2 py-1.5">
-                      <span className={`inline-flex items-center rounded-sm px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide leading-none ${
+                      <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${
                         doc.isControlledCopy
-                          ? "bg-info/15 text-info border border-info/25"
-                          : "bg-badge-neutral text-badge-neutral-foreground border border-border/60"
+                          ? "bg-info/15 text-info border-info/25"
+                          : "bg-badge-neutral text-badge-neutral-foreground border-border/60"
                       }`}>
                         {doc.isControlledCopy ? "C" : "U"}
                       </span>
@@ -228,7 +228,7 @@ export function DocumentControlPage() {
               <StructureDocumentMetadata document={selectedDoc} />
               <div className="border border-gray-500/50 p-3">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Content</span>
+                  <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Content</span>
                 </div>
                 <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
                   {selectedDoc.content || "No content"}

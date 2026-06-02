@@ -3505,3 +3505,165 @@ class RevisionHistoryPayload:
     ok: bool
     entries: list[DocumentRevisionHistoryNode] = strawberry.field(default_factory=list)
     errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
+# ── Audit Types ──
+
+
+@strawberry.type
+class AuditChecklistItemNode:
+    id: strawberry.ID
+    audit_id: strawberry.ID = strawberry.field(name="auditId")
+    question: str
+    result: typing.Optional[str] = None
+    comment: str = ""
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj) -> "AuditChecklistItemNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            audit_id=strawberry.ID(str(obj.audit_id)),
+            question=obj.question,
+            result=obj.result,
+            comment=obj.comment or "",
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class AuditFindingNode:
+    id: strawberry.ID
+    audit_id: strawberry.ID = strawberry.field(name="auditId")
+    description: str
+    severity: str
+    status: str
+    owner: str = ""
+    due_date: typing.Optional[str] = strawberry.field(name="dueDate", default=None)
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj) -> "AuditFindingNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            audit_id=strawberry.ID(str(obj.audit_id)),
+            description=obj.description,
+            severity=obj.severity,
+            status=obj.status,
+            owner=obj.owner or "",
+            due_date=obj.due_date.isoformat() if obj.due_date else None,
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class AuditNode:
+    id: strawberry.ID
+    audit_type: str = strawberry.field(name="auditType")
+    target_type: str = strawberry.field(name="targetType")
+    target_id: int = strawberry.field(name="targetId")
+    title: str
+    auditor: str = ""
+    audit_date: typing.Optional[str] = strawberry.field(name="auditDate", default=None)
+    status: str
+    score: typing.Optional[float] = None
+    notes: str = ""
+    checklist_items: list[AuditChecklistItemNode] = strawberry.field(name="checklistItems", default_factory=list)
+    findings: list[AuditFindingNode] = strawberry.field(default_factory=list)
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj, checklist: typing.Optional[list] = None, findings: typing.Optional[list] = None) -> "AuditNode":
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            audit_type=obj.audit_type,
+            target_type=obj.target_type,
+            target_id=obj.target_id,
+            title=obj.title,
+            auditor=obj.auditor or "",
+            audit_date=obj.audit_date.isoformat() if obj.audit_date else None,
+            status=obj.status,
+            score=obj.score,
+            notes=obj.notes or "",
+            checklist_items=[AuditChecklistItemNode.from_db(i) for i in (checklist or [])],
+            findings=[AuditFindingNode.from_db(f) for f in (findings or [])],
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.type
+class AuditPayload:
+    ok: bool
+    audit: typing.Optional[AuditNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
+@strawberry.type
+class AuditChecklistItemPayload:
+    ok: bool
+    item: typing.Optional[AuditChecklistItemNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
+@strawberry.type
+class AuditFindingPayload:
+    ok: bool
+    finding: typing.Optional[AuditFindingNode] = None
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+
+@strawberry.input
+class AuditInput:
+    audit_type: str = strawberry.field(name="auditType")
+    target_type: str = strawberry.field(name="targetType")
+    target_id: int = strawberry.field(name="targetId")
+    title: str
+    auditor: typing.Optional[str] = ""
+    audit_date: typing.Optional[str] = strawberry.field(name="auditDate", default=None)
+    notes: typing.Optional[str] = ""
+
+
+@strawberry.input
+class AuditUpdateInput:
+    title: typing.Optional[str] = None
+    auditor: typing.Optional[str] = None
+    audit_date: typing.Optional[str] = strawberry.field(name="auditDate", default=None)
+    notes: typing.Optional[str] = None
+    status: typing.Optional[str] = None
+
+
+@strawberry.input
+class AuditChecklistItemInput:
+    question: str
+    result: typing.Optional[str] = None
+    comment: typing.Optional[str] = ""
+
+
+@strawberry.input
+class AuditChecklistItemUpdateInput:
+    question: typing.Optional[str] = None
+    result: typing.Optional[str] = None
+    comment: typing.Optional[str] = None
+
+
+@strawberry.input
+class AuditFindingInput:
+    description: str
+    severity: str
+    owner: typing.Optional[str] = ""
+    due_date: typing.Optional[str] = strawberry.field(name="dueDate", default=None)
+
+
+@strawberry.input
+class AuditFindingUpdateInput:
+    description: typing.Optional[str] = None
+    severity: typing.Optional[str] = None
+    status: typing.Optional[str] = None
+    owner: typing.Optional[str] = None
+    due_date: typing.Optional[str] = strawberry.field(name="dueDate", default=None)

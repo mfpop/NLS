@@ -110,7 +110,19 @@ function isOverdue(dueDate: string | null): boolean {
 
 /* ── SUB-COMPONENTS ── */
 
-function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function FlatSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-4 w-0.5 bg-amber-500/60" />
+        <span className="text-xs font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</span>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children?: React.ReactNode }) {
   return (
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
@@ -162,7 +174,7 @@ const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: s
 
 function KpiCard({ label, value, muted }: { label: string; value: React.ReactNode; muted?: boolean }) {
   return (
-    <div className="border border-border/60 bg-card p-3 text-left">
+    <div className="border border-border/30 bg-card p-3 text-left">
       <div className="min-w-0 flex-1">
         <p className={`text-xs font-medium ${theme.textMuted} truncate`}>{label}</p>
         <p className={`text-lg font-bold ${muted ? theme.textMuted : theme.textPrimary}`}>{value}</p>
@@ -273,12 +285,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
               </div>
             </SectionCard>
 
-            <div>
-              <div className="border border-border/60 bg-card p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="h-4 w-0.5 bg-indigo-500/60 rounded-full" />
-                  <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>Breakdown</h3>
-                </div>
+              <FlatSection title="Breakdown">
                 <div className="space-y-2.5">
                   {summary.byType.map((t: { requestType: string; count: number }) => {
                     const meta = TYPE_META[t.requestType];
@@ -297,72 +304,58 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                     );
                   })}
                 </div>
-              </div>
-            </div>
+              </FlatSection>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="border border-border/60 bg-card p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-                  <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>Due This Week</h3>
-                  {upcomingDeadlines.length > 0 && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                      {upcomingDeadlines.length}
-                    </span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex flex-col">
+                <FlatSection title="Due This Week">
+                  {upcomingDeadlines.length === 0 ? (
+                    <p className={`text-xs italic ${theme.textMuted}`}>No upcoming deadlines</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {upcomingDeadlines.map((m) => {
+                        const days = daysUntil(m.dueDate);
+                        return (
+                          <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-border/10 last:border-0">
+                            <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
+                              <div className="text-xs text-amber-600 dark:text-amber-400">
+                                {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
+                              </div>
+                            </div>
+                            <StatusDot status={m.status} />
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
-                </div>
-                {upcomingDeadlines.length === 0 ? (
-                  <div className={`flex items-center justify-center h-20 text-xs italic ${theme.textMuted}`}>No upcoming deadlines</div>
-                ) : (
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {upcomingDeadlines.map((m) => {
-                      const days = daysUntil(m.dueDate);
-                      return (
-                        <button key={m.id} type="button"
-                          onClick={() => {/* select handled by parent */}}
-                          className="w-full flex items-center gap-2 border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10 p-2 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/20 transition-colors">
-                          <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
+                </FlatSection>
+              </div>
+
+              <div className="flex flex-col">
+                <FlatSection title="Recent Activity">
+                  {recentMERs.length === 0 ? (
+                    <p className={`text-xs italic ${theme.textMuted}`}>No recent activity</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {recentMERs.map((m) => (
+                        <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-border/10 last:border-0">
+                          <StatusDot status={m.status} />
                           <div className="min-w-0 flex-1">
                             <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
-                            <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                              {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
+                            <div className="text-xs text-muted-foreground">
+                              {m.merCode || `MER-${m.id}`} {"\u00B7"} {formatDate(m.createdAt)}
                             </div>
                           </div>
-                          <StatusDot status={m.status} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border border-border/60 bg-card p-4">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="h-4 w-0.5 bg-green-500/60 rounded-full" />
-                  <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>Recent Activity</h3>
-                </div>
-                {recentMERs.length === 0 ? (
-                  <div className={`flex items-center justify-center h-20 text-xs italic ${theme.textMuted}`}>No recent activity</div>
-                ) : (
-                  <div className="space-y-1.5">
-                    {recentMERs.map((m) => (
-                      <div key={m.id} className="w-full flex items-center gap-2 p-2 text-left hover:bg-muted/50 transition-colors">
-                        <StatusDot status={m.status} />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <span>{m.merCode || `MER-${m.id}`}</span>
-                            <span>{"\u00B7"}</span>
-                            <span>{formatDate(m.createdAt)}</span>
-                          </div>
+                          <span className={`text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
+                            {PRIORITY_META[m.priority]?.label || m.priority}
+                          </span>
                         </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
-                          {PRIORITY_META[m.priority]?.label || m.priority}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </FlatSection>
               </div>
             </div>
           </>
@@ -378,6 +371,9 @@ export function ManufacturingEngineeringRequestsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [filterAssignee, setFilterAssignee] = useState("");
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(1);
   const [mode, setMode] = useState<"view" | "edit" | "create">("view");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -433,6 +429,14 @@ export function ManufacturingEngineeringRequestsPage() {
     fetchPolicy: "cache-and-network",
   });
   const mers: MERNode[] = data?.manufacturingEngineeringRequests || [];
+  const filteredMers = filterAssignee
+    ? mers.filter((m) => m.assignedTo === filterAssignee)
+    : mers;
+  const pageCount = Math.max(1, Math.ceil(filteredMers.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const paginatedMers = filteredMers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => { setPage(1); }, [filterStatus, filterType, filterAssignee, search]);
 
   const { data: summaryData, loading: summaryLoading } = useQuery<{
     merSummary: {
@@ -602,59 +606,41 @@ export function ManufacturingEngineeringRequestsPage() {
   /* ── Form ── */
   const renderForm = () => (
     <div className="flex-1 min-h-0 overflow-hidden">
-      <div className="grid h-full min-h-0 grid-cols-[20%_80%] gap-6 px-5 py-3 min-w-0">
-        <div className="min-w-0 overflow-y-auto space-y-3 pr-2">
+      <div className="grid h-full min-h-0 grid-cols-[25%_75%] gap-6 px-5 py-3 min-w-0">
+        <div className="min-w-0 overflow-y-auto space-y-3">
+          <SectionCard title="Request Type">
+            <select value={g("requestType")} onChange={(e) => sf("requestType", e.target.value)} className={sCls}>
+              {REQUEST_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </SectionCard>
+          <SectionCard title="Status">
+            <div className="text-sm text-foreground font-medium">{mode === "create" ? "New" : sel?.status ? statusLabel(sel.status) : ""}</div>
+          </SectionCard>
+          <SectionCard title="Priority">
+            <select value={g("priority")} onChange={(e) => sf("priority", e.target.value)} className={sCls}>
+              {PRIORITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </SectionCard>
           <SectionCard title="Target">
             <div className="space-y-1.5">
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Type</p>
-                <select value={g("targetType")} onChange={(e) => { sf("targetType", e.target.value); sf("targetId", ""); }} className={sCls}>
-                  {TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Target</p>
-                <select value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} className={sCls}>
-                  <option value="">Select {form.targetType}...</option>
-                  {targetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-                {errors.targetId && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.targetId}</p>}
-                {targetLabel && <p className={`text-xs ${theme.textMuted} mt-1`}>{targetLabel}</p>}
-              </div>
+              <select value={g("targetType")} onChange={(e) => { sf("targetType", e.target.value); sf("targetId", ""); }} className={sCls}>
+                {TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <select value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} className={sCls}>
+                <option value="">Select {form.targetType}...</option>
+                {targetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              {errors.targetId && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.targetId}</p>}
             </div>
           </SectionCard>
-          <SectionCard title="Classification">
-            <div className="space-y-1.5">
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Request Type</p>
-                <select value={g("requestType")} onChange={(e) => sf("requestType", e.target.value)} className={sCls}>
-                  {REQUEST_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Category</p>
-                <select value={g("category")} onChange={(e) => sf("category", e.target.value)} className={sCls}>
-                  {CATEGORY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Priority</p>
-                <select value={g("priority")} onChange={(e) => sf("priority", e.target.value)} className={sCls}>
-                  {PRIORITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select></div>
-            </div>
+          <SectionCard title="Owner">
+            <input type="text" value={g("assignedTo")} onChange={(e) => sf("assignedTo", e.target.value)} placeholder="Assigned engineer" className={iCls} />
           </SectionCard>
-          <SectionCard title="People">
-            <div className="space-y-1.5">
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Submitted By</p>
-                <input type="text" value={g("submittedBy")} onChange={(e) => sf("submittedBy", e.target.value)} placeholder="Your name" className={iCls} /></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Assigned To</p>
-                <input type="text" value={g("assignedTo")} onChange={(e) => sf("assignedTo", e.target.value)} placeholder="Engineer" className={iCls} /></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Reviewer</p>
-                <input type="text" value={g("reviewer")} onChange={(e) => sf("reviewer", e.target.value)} placeholder="Reviewer" className={iCls} /></div>
-            </div>
+          <SectionCard title="Due Date">
+            <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} className={iCls} />
           </SectionCard>
-          <SectionCard title="Dates & Cost">
-            <div className="space-y-1.5">
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Start Date</p>
-                <input type="date" value={g("startDate")} onChange={(e) => sf("startDate", e.target.value)} className={iCls} /></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Due Date</p>
-                <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} className={iCls} /></div>
-              <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Estimated Cost ($)</p>
-                <input type="number" step="0.01" value={g("estimatedCost")} onChange={(e) => sf("estimatedCost", e.target.value)} placeholder="0.00" className={iCls} /></div>
-            </div>
+          <SectionCard title="Est. Cost ($)">
+            <input type="number" step="0.01" value={g("estimatedCost")} onChange={(e) => sf("estimatedCost", e.target.value)} placeholder="0.00" className={iCls} />
           </SectionCard>
         </div>
         <div className="min-w-0 min-h-0 h-full flex flex-col overflow-hidden mr-6 pb-6">
@@ -663,28 +649,26 @@ export function ManufacturingEngineeringRequestsPage() {
             {errors.title && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.title}</p>}
           </SectionCard>
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden mt-3">
-            <SectionCard title="Description"><span /></SectionCard>
+            <SectionCard title="Description" />
             <div className="flex-1 min-h-0 overflow-hidden border border-gray-300">
               <div className="h-full overflow-y-auto"><RichTextEditor content={g("description")} onChange={(html) => sf("description", html)}
                 placeholder="Describe the engineering request, problem, and expected outcome..." /></div>
             </div>
           </div>
-          <div className="mt-3 space-y-3">
-            <SectionCard title="Impact Assessment (CQDS)">
-              <div className="grid grid-cols-2 gap-3">
-                <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Cost Impact</p>
-                  <textarea value={g("impactCost")} onChange={(e) => sf("impactCost", e.target.value)} rows={2} placeholder="Cost implications..."
-                    className="h-14 w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" /></div>
-                <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Quality Impact</p>
-                  <textarea value={g("impactQuality")} onChange={(e) => sf("impactQuality", e.target.value)} rows={2} placeholder="Quality implications..."
-                    className="h-14 w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" /></div>
-                <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Delivery Impact</p>
-                  <textarea value={g("impactDelivery")} onChange={(e) => sf("impactDelivery", e.target.value)} rows={2} placeholder="Delivery implications..."
-                    className="h-14 w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" /></div>
-                <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Safety Impact</p>
-                  <textarea value={g("impactSafety")} onChange={(e) => sf("impactSafety", e.target.value)} rows={2} placeholder="Safety implications..."
-                    className="h-14 w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" /></div>
-              </div>
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <SectionCard title="Justification">
+              <textarea value={g("impactCost")} onChange={(e) => sf("impactCost", e.target.value)} rows={3}
+                placeholder="Why is this request needed?" className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" />
+            </SectionCard>
+            <SectionCard title="Expected Outcome">
+              <textarea value={g("impactQuality")} onChange={(e) => sf("impactQuality", e.target.value)} rows={3}
+                placeholder="What will change?" className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" />
+            </SectionCard>
+          </div>
+          <div className="mt-3">
+            <SectionCard title="Notes">
+              <textarea value={g("impactDelivery")} onChange={(e) => sf("impactDelivery", e.target.value)} rows={2}
+                placeholder="Additional notes..." className="w-full rounded border border-border bg-background px-2 py-1 text-xs text-foreground outline-none resize-none focus:border-amber-400 transition-colors" />
             </SectionCard>
           </div>
         </div>
@@ -780,71 +764,98 @@ export function ManufacturingEngineeringRequestsPage() {
                 </>
               )}
             </div>
-            {/* Content */}
+            {/* Content — Flat 2-column */}
             <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 mr-6">
-              <div className="grid grid-cols-2 gap-6 auto-rows-min">
-                <div className="space-y-4">
-                  <SectionCard title="Request Details">
-                    <p className={`text-sm font-semibold ${theme.textPrimary} mb-2`}>{sel.title}</p>
-                    {renderHtmlBlock(sel.description, "No description provided.")}
-                  </SectionCard>
-                  <SectionCard title="Impact Assessment (CQDS)">
+              <div className="grid grid-cols-[3fr_2fr] gap-8">
+                <div className="space-y-5">
+                  <FlatSection title="Request Summary">
                     <div className="space-y-2">
-                      <ImpactRow label="Cost" value={sel.impactCost} />
-                      <ImpactRow label="Quality" value={sel.impactQuality} />
-                      <ImpactRow label="Delivery" value={sel.impactDelivery} />
-                      <ImpactRow label="Safety" value={sel.impactSafety} />
+                      <p className={`text-sm font-semibold ${theme.textPrimary}`}>{sel.title}</p>
+                      {renderHtmlBlock(sel.description, "No description provided.")}
                     </div>
-                  </SectionCard>
+                  </FlatSection>
+                  <FlatSection title="Engineering Details">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Type</span><span className="text-foreground font-medium">{requestTypeLabel(sel.requestType)}</span></div>
+                      <ImpactRow label="Cost Impact" value={sel.impactCost} />
+                      <ImpactRow label="Quality Impact" value={sel.impactQuality} />
+                      <ImpactRow label="Delivery Impact" value={sel.impactDelivery} />
+                      <ImpactRow label="Safety Impact" value={sel.impactSafety} />
+                    </div>
+                  </FlatSection>
+                  {(sel.impactCost || sel.impactQuality) && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {sel.impactCost && (
+                        <FlatSection title="Justification">
+                          <p className="text-sm text-foreground">{sel.impactCost}</p>
+                        </FlatSection>
+                      )}
+                      {sel.impactQuality && (
+                        <FlatSection title="Expected Outcome">
+                          <p className="text-sm text-foreground">{sel.impactQuality}</p>
+                        </FlatSection>
+                      )}
+                    </div>
+                  )}
+                  <FlatSection title="Notes / Activity">
+                    <div className="space-y-3 text-sm">
+                      {(sel.reviewNotes || sel.rejectionReason) && (
+                        <div className={sel.status === "REJECTED" ? "border-l-2 border-red-400 pl-3 py-1" : "border-l-2 border-blue-400 pl-3 py-1"}>
+                          <p className={`text-xs font-semibold ${theme.textMuted} mb-1`}>{sel.status === "REJECTED" ? "Rejection Reason" : "Review Notes"}</p>
+                          {sel.status === "REJECTED" && sel.rejectionReason ? (
+                            <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 stroke-current" /><p className={`text-sm ${theme.textPrimary}`}>{sel.rejectionReason}</p></div>
+                          ) : <p className={`text-sm ${theme.textPrimary}`}>{sel.reviewNotes}</p>}
+                        </div>
+                      )}
+                      {sel.resultSummary && (
+                        <div><p className={`text-xs font-semibold ${theme.textMuted} mb-1`}>Result Summary</p>{renderHtmlBlock(sel.resultSummary)}</div>
+                      )}
+                      {sel.lessonsLearned && (
+                        <div><p className={`text-xs font-semibold ${theme.textMuted} mb-1`}>Lessons Learned</p>{renderHtmlBlock(sel.lessonsLearned)}</div>
+                      )}
+                      {sel.linkedKaizenId && (
+                        <div className="flex items-center gap-2"><GitBranch className="h-3.5 w-3.5 text-purple-600 stroke-current" /><span className="text-sm text-purple-700 font-medium">Kaizen #{sel.linkedKaizenId}</span></div>
+                      )}
+                    </div>
+                  </FlatSection>
                 </div>
-                <div className="space-y-4">
-                  <SectionCard title="Classification & Target">
-                    <div className="space-y-1.5 text-sm">
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Type</span><span className="text-foreground">{requestTypeLabel(sel.requestType)}</span></div>
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Category</span><span className="text-foreground">{CATEGORY_OPTIONS.find((o) => o.value === sel.category)?.label || sel.category || "-"}</span></div>
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Priority</span><span>{sel.priority ? <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${PRIORITY_STYLES[sel.priority] || ""}`}>{sel.priority}</span> : "-"}</span></div>
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Target</span><span className="text-foreground">{targetTypeLabel(sel.targetType)} {sel.targetId ? `#${sel.targetId}` : ""}</span></div>
+                <div className="space-y-5">
+                  <FlatSection title="Status & Actions">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[sel.status] || ""}`}>{statusLabel(sel.status)}</span>
+                      {sel.priority && <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${PRIORITY_STYLES[sel.priority] || ""}`}>{sel.priority}</span>}
                     </div>
-                  </SectionCard>
-                  <SectionCard title="People & Dates">
+                  </FlatSection>
+                  <FlatSection title="Target / Area">
                     <div className="space-y-1.5 text-sm">
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Submitted by</span><span className="text-foreground">{sel.submittedBy || "-"}</span></div>
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Assigned to</span><span className="text-foreground">{sel.assignedTo || "-"}</span></div>
-                      <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Reviewer</span><span className="text-foreground">{sel.reviewer || "-"}</span></div>
-                      {sel.startDate && <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Start</span><span className="text-foreground">{sel.startDate}</span></div>}
-                      {sel.dueDate && (
-                        <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Due</span>
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Target</span><span className="text-foreground">{targetTypeLabel(sel.targetType)} {sel.targetId ? `#${sel.targetId}` : ""}</span></div>
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Category</span><span className="text-foreground">{CATEGORY_OPTIONS.find((o) => o.value === sel.category)?.label || sel.category || "-"}</span></div>
+                    </div>
+                  </FlatSection>
+                  <FlatSection title="Cost / Effort">
+                    <div className="space-y-1.5 text-sm">
+                      {sel.estimatedCost != null ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Est. Cost</span><span className="text-foreground font-semibold">${sel.estimatedCost.toLocaleString()}</span></div> : null}
+                      {sel.actualCost != null ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Actual Cost</span><span className="text-foreground font-semibold">${sel.actualCost.toLocaleString()}</span></div> : null}
+                      {sel.estimatedCost == null && sel.actualCost == null ? <p className={`text-xs italic ${theme.textMuted}`}>No cost data</p> : null}
+                    </div>
+                  </FlatSection>
+                  <FlatSection title="Owner / Dates">
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Submitted by</span><span className="text-foreground">{sel.submittedBy || "-"}</span></div>
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Assigned to</span><span className="text-foreground">{sel.assignedTo || "-"}</span></div>
+                      {sel.reviewer ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Reviewer</span><span className="text-foreground">{sel.reviewer}</span></div> : null}
+                      {sel.startDate ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Start</span><span className="text-foreground">{sel.startDate}</span></div> : null}
+                      {sel.dueDate ? (
+                        <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Due</span>
                           <span className={`text-foreground ${isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-red-500 font-semibold" : ""}`}>
-                            {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" && <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />}
+                            {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" /> : null}
                             {sel.dueDate}
                           </span>
                         </div>
-                      )}
-                      {sel.completedDate && <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Completed</span><span className="text-green-600">{sel.completedDate}</span></div>}
-                      {sel.estimatedCost != null && <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Est. Cost</span><span className="text-foreground">${sel.estimatedCost.toLocaleString()}</span></div>}
-                      {sel.actualCost != null && <div className="flex gap-2"><span className="w-24 shrink-0 text-muted-foreground">Actual Cost</span><span className="text-foreground">${sel.actualCost.toLocaleString()}</span></div>}
+                      ) : null}
+                      {sel.completedDate ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Completed</span><span className="text-green-600">{sel.completedDate}</span></div> : null}
                     </div>
-                  </SectionCard>
-                  {(sel.reviewNotes || sel.rejectionReason) && (
-                    <SectionCard title={sel.status === "REJECTED" ? "Rejection Reason" : "Review Notes"}>
-                      {sel.status === "REJECTED" && sel.rejectionReason ? (
-                        <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 stroke-current" /><p className={`text-sm ${theme.textPrimary}`}>{sel.rejectionReason}</p></div>
-                      ) : <p className={`text-sm ${theme.textPrimary}`}>{sel.reviewNotes}</p>}
-                    </SectionCard>
-                  )}
-                  {sel.resultSummary && (
-                    <SectionCard title="Result Summary">{renderHtmlBlock(sel.resultSummary)}</SectionCard>
-                  )}
-                  {sel.lessonsLearned && (
-                    <SectionCard title="Lessons Learned">{renderHtmlBlock(sel.lessonsLearned)}</SectionCard>
-                  )}
-                  {sel.linkedKaizenId && (
-                    <SectionCard title="Linked Improvement">
-                      <div className="flex items-center gap-2"><GitBranch className="h-3.5 w-3.5 text-purple-600 stroke-current" />
-                        <span className="text-sm text-purple-700 font-medium">Linked to Kaizen #{sel.linkedKaizenId}</span>
-                      </div>
-                    </SectionCard>
-                  )}
+                  </FlatSection>
                 </div>
               </div>
             </div>
@@ -876,6 +887,12 @@ export function ManufacturingEngineeringRequestsPage() {
               <ToolbarSelect value={filterType} onChange={setFilterType}
                 options={[{ value: "", label: "All Types" }, ...REQUEST_TYPE_OPTIONS]}
                 className="w-44" />
+              <ToolbarSelect value={filterAssignee} onChange={setFilterAssignee}
+                options={[
+                  { value: "", label: "All Assignees" },
+                  ...Array.from(new Set(mers.map((m) => m.assignedTo).filter(Boolean))).map((a) => ({ value: a, label: a })),
+                ]}
+                className="w-32" />
               <div className="flex-1" />
               <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (
@@ -895,22 +912,22 @@ export function ManufacturingEngineeringRequestsPage() {
           <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
             <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Requests</span>
-              <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{mers.length}</span>
+              <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{filteredMers.length}</span>
             </div>
             <div className={`flex-1 overflow-y-auto ${theme.surfaceBg}`}>
               {loading && mers.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                   <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />Loading...</div>
-              ) : mers.length === 0 ? (
+              ) : filteredMers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <p className="text-xs font-medium text-muted-foreground">No engineering requests</p>
+                  <p className="text-xs font-medium text-muted-foreground">{filterAssignee ? "No requests match filter" : "No engineering requests"}</p>
                   <button type="button" onClick={hNew}
                     className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 dark:text-amber-400 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> Create MER</button>
                 </div>
               ) : (
                 <div>
-                  {mers.map((m) => (
+                  {paginatedMers.map((m) => (
                     <div key={m.id}
                       onClick={() => {
                         if (isForm && isDirty && mode === "edit") { if (!confirm("Unsaved changes. Discard?")) return; }
@@ -918,21 +935,28 @@ export function ManufacturingEngineeringRequestsPage() {
                         if (mode === "create") { clearForm(); }
                         if (isForm) { setIsDirty(false); setMode("view"); }
                       }}
-                      className={`group mx-1 my-0.5 flex h-14 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${selectedId === m.id ? "bg-table-selected border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"}`}>
+                      className={`group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${selectedId === m.id ? "bg-table-selected border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"}`}>
                       <div className="min-w-0 flex-1">
-                        <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                        <div className="flex items-center gap-2 mb-0.5">
                           <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`}>{m.title}</span>
-                          <div className="flex items-center gap-1">
-                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[m.status] || ""}`}>
-                              {m.status === "IN_PROGRESS" ? "Active" : statusLabel(m.status)}</span>
-                            {m.priority && m.priority !== "MEDIUM" && <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border ${PRIORITY_STYLES[m.priority] || ""}`}>{m.priority}</span>}
-                          </div>
+                          <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[m.status] || ""}`}>
+                            {m.status === "IN_PROGRESS" ? "Active" : statusLabel(m.status)}</span>
+                          {m.priority && m.priority !== "MEDIUM" && (
+                            <span className={`shrink-0 inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border ${PRIORITY_STYLES[m.priority] || ""}`}>{m.priority}</span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          {m.submittedBy && <span className={`text-xs ${theme.textMuted}`}>{m.submittedBy}</span>}
-                          <span className={`text-[10px] ${theme.textMuted}`}>{"\u00B7"}</span>
-                          <span className={`text-xs ${theme.textMuted}`}>{requestTypeLabel(m.requestType)}</span>
-                          {m.createdAt && <><span className={`text-[10px] ${theme.textMuted}`}>{"\u00B7"}</span><span className={`text-xs ${theme.textMuted}`}>{m.createdAt.slice(0, 10)}</span></>}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {m.submittedBy && <span>{m.submittedBy}</span>}
+                          <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                          <span>{requestTypeLabel(m.requestType)}</span>
+                          {m.dueDate && (
+                            <><span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                              <span className={isOverdue(m.dueDate) && m.status !== "COMPLETED" && m.status !== "CANCELLED" ? "text-red-500 font-semibold" : ""}>
+                                {isOverdue(m.dueDate) && m.status !== "COMPLETED" && m.status !== "CANCELLED" ? <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" /> : null}
+                                {m.dueDate}
+                              </span></>
+                          )}
+                          {m.merCode && <><span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" /><span className="font-mono">{m.merCode}</span></>}
                         </div>
                       </div>
                     </div>
@@ -940,8 +964,18 @@ export function ManufacturingEngineeringRequestsPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 h-8 flex items-center border-t border-border/50 bg-muted px-4">
-              <span className={`text-xs ${theme.textMuted}`}>{mers.length} request{mers.length !== 1 ? "s" : ""}</span>
+            <div className="shrink-0 h-8 flex items-center border-t border-border/50 bg-muted px-4 gap-2">
+              <span className={`text-xs ${theme.textMuted}`}>{filteredMers.length} request{filteredMers.length !== 1 ? "s" : ""}</span>
+              {pageCount > 1 && (
+                <>
+                  <span className="w-px h-3 bg-border/40" />
+                  <button type="button" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="inline-flex items-center justify-center h-5 w-5 text-[10px] font-medium text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">{"\u2039"}</button>
+                  <span className={`text-[10px] ${theme.textMuted} font-mono`}>{safePage}/{pageCount}</span>
+                  <button type="button" disabled={safePage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                    className="inline-flex items-center justify-center h-5 w-5 text-[10px] font-medium text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">{"\u203A"}</button>
+                </>
+              )}
             </div>
           </div>
           <div onMouseDown={handleSplitMouseDown}

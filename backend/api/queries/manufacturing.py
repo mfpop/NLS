@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 # Legacy types for backward compat
 import typing
 import strawberry as strawberry_decorator
+from strawberry.types import Info
 
 from manufacturing.domain.routing_service import RoutingService
 from manufacturing.domain.department_service import DepartmentService, DepartmentServiceError
@@ -15,6 +16,7 @@ from manufacturing.domain.capacity_service import CapacityPlanService
 from manufacturing.domain.reference_table_service import TABLE_TYPE_TO_CATEGORY as REF_TABLE_TYPE_TO_CATEGORY
 
 from api.types.manufacturing import (
+    AuditExecutionForm, AuditExecutionSection, AuditExecutionQuestion, AuditTemplateInfo, AuditExecutionSummary,
     ManufacturingSnapshot, CompanyNode,
     StructureDocumentNode, StructureDocumentTreeNode,
     DocumentRevisionHistoryNode, DocumentAuditTrailNode,
@@ -37,7 +39,7 @@ from api.types.manufacturing import (
     WarehouseNode,
     CapacityPlanNode, CapacityPlanInputNode, CapacityPlanResultNode, CapacityYamazumiNode, CapacityScenarioNode,
     CapacityResultNode, CapacitySnapshotNode, PaginatedCapacitySnapshotResponse, WorkScheduleNode, CapacityProfileNode, CapacityRecalculationJobNode,
-    AuditNode,
+    AuditNode, AuditTemplateNode, AuditTemplateCategoryNode, AuditTemplateQuestionNode,
 )
 
 
@@ -294,7 +296,7 @@ REFERENCE_TABLE_GROUPS: list[tuple[str, str, list[str]]] = [
     ("manufacturing", "Manufacturing", ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type", "product_model", "production_family"]),
     ("material_flow", "Material Flow", ["material_category", "inventory_type", "kanban_type", "container_type", "unit_type"]),
     ("lean_quality", "Lean / Quality", ["downtime_code", "defect_code", "scrap_reason", "kaizen_category", "priority", "label_badge", "maintenance_type", "material_flow_type", "process_type"]),
-    ("people", "People", ["skill_type", "role", "shift_team", "staff_user", "staff_assignment"]),
+    ("people", "People", ["skill_type", "role", "admin_department", "shift_team", "staff_user", "staff_assignment"]),
 ]
 
 REFERENCE_TABLE_LABELS: dict[str, str] = {
@@ -326,6 +328,7 @@ REFERENCE_TABLE_LABELS: dict[str, str] = {
     "process_type": "Process Types",
     "skill_type": "Skill Types",
     "role": "Roles",
+    "admin_department": "Administrative Departments",
     "shift_team": "Shift Teams",
     "staff_user": "Staff Users",
     "staff_assignment": "Staff Assignments",
@@ -360,6 +363,7 @@ REFERENCE_TABLE_LABELS_SINGULAR: dict[str, str] = {
     "process_type": "Process Type",
     "skill_type": "Skill Type",
     "role": "Role",
+    "admin_department": "Administrative Department",
     "shift_team": "Shift Team",
     "staff_user": "Staff User",
     "staff_assignment": "Staff Assignment",
@@ -393,6 +397,7 @@ REFERENCE_TABLE_DESCRIPTIONS: dict[str, str] = {
     "material_flow_type": "Material flow type classification",
     "process_type": "Process type classification",        "skill_type": "Skill and certification definitions for resources",
         "role": "Role definitions for permissions and assignments",
+        "admin_department": "Administrative departments for user organization and access scoping",
         "shift_team": "Shift team / crew definitions",
         "staff_user": "Staff/user records sourced from the backend user workflow",
         "staff_assignment": "Relationship between staff, role, plant and department that feeds staffing and ownership readiness",
@@ -408,7 +413,7 @@ REFERENCE_TABLE_SCOPE: dict[str, str] = {
     "defect_code": "GLOBAL", "scrap_reason": "GLOBAL", "kaizen_category": "GLOBAL",
     "priority": "GLOBAL", "label_badge": "GLOBAL", "maintenance_type": "GLOBAL",
     "material_flow_type": "GLOBAL", "process_type": "GLOBAL", "skill_type": "GLOBAL",
-    "role": "GLOBAL", "shift_team": "PLANT", "staff_user": "PLANT", "staff_assignment": "PLANT",
+    "role": "GLOBAL", "admin_department": "GLOBAL", "shift_team": "PLANT", "staff_user": "PLANT", "staff_assignment": "PLANT",
 }
 
 REFERENCE_USAGE_CONTEXT: dict[str, str] = {
@@ -433,6 +438,7 @@ REFERENCE_USAGE_CONTEXT: dict[str, str] = {
     "kaizen_category": "Used by improvement workflows",
     "skill_type": "Reusable skills/certifications used by resources, staff and training",
     "role": "Feeds permissions, ownership, approvals and manager/supervisor selections",
+    "admin_department": "Used by user profiles and role assignments for organizational scoping",
     "shift_team": "Production crews used by schedules, execution and staff assignments",
     "priority": "Used by task, problem and action prioritization",
     "label_badge": "Used by visual tagging across operational workflows",
@@ -474,6 +480,7 @@ CATEGORY_TO_TABLE_TYPE: dict[str, str] = {
     "production_family": "production_family",
     "skill_type": "skill_type",
     "role": "role",
+    "admin_department": "admin_department",
     "shift_team": "shift_team",
     "container_type": "container_type",
 }
@@ -1750,6 +1757,8 @@ class ManufacturingQuery:
     @strawberry.field
     def audits(
         self,
+        info: Info,
+        control_area: typing.Optional[str] = None,
         audit_type: typing.Optional[str] = None,
         status: typing.Optional[str] = None,
         target_type: typing.Optional[str] = None,
@@ -1757,9 +1766,10 @@ class ManufacturingQuery:
         auditor: typing.Optional[str] = None,
     ) -> list["AuditNode"]:
         from api.permissions import ensure_access
-        ensure_access(user=None, action="view_audits")
+        ensure_access(user=getattr(info.context, "user", None), action="view_audits")
         from manufacturing.domain.audit_service import AuditService
         audits = AuditService.list_audits(
+            control_area=control_area,
             audit_type=audit_type,
             status=status,
             target_type=target_type,
@@ -1769,13 +1779,188 @@ class ManufacturingQuery:
         return [AuditNode.from_db(a) for a in audits]
 
     @strawberry.field
-    def audit(self, id: str) -> typing.Optional["AuditNode"]:
+    def audit(self, info: Info, id: str) -> typing.Optional["AuditNode"]:
         from api.permissions import ensure_access
-        ensure_access(user=None, action="view_audits")
+        ensure_access(user=getattr(info.context, "user", None), action="view_audits")
         from manufacturing.domain.audit_service import AuditService
         audit_obj = AuditService.get_audit(int(id))
         if not audit_obj:
             return None
         items = list(audit_obj.checklist_items.all())
         findings = list(audit_obj.findings.all())
-        return AuditNode.from_db(audit_obj, checklist=items, findings=findings)
+        from manufacturing.models.audit import AuditAnswer, AuditTemplateQuestion
+        answers = list(AuditAnswer.objects.filter(audit=audit_obj).select_related("template_question").order_by("template_question__sequence"))
+        return AuditNode.from_db(audit_obj, checklist=items, findings=findings, answers=answers)
+
+    # ── Audit Template Queries ──
+
+    @strawberry.field(name="auditTemplates")
+    def audit_templates(
+        self,
+        audit_type: typing.Optional[str] = None,
+        module_scope: typing.Optional[str] = strawberry.field(name="moduleScope", default=None),
+        status: typing.Optional[str] = None,
+    ) -> list["AuditTemplateNode"]:
+        from manufacturing.domain.audit_service import AuditTemplateService
+        templates = AuditTemplateService.list_templates()
+        if audit_type:
+            templates = [t for t in templates if t.audit_type == audit_type]
+        if module_scope:
+            templates = [t for t in templates if t.module_scope == module_scope]
+        if status:
+            templates = [t for t in templates if t.status == status]
+        from manufacturing.models.audit import AuditTemplateCategory
+        cats = AuditTemplateCategory.objects.filter(
+            template__in=[t.id for t in templates]
+        ).prefetch_related("questions").order_by("template_id", "sequence")
+        cat_map: dict[int, list] = {}
+        for c in cats:
+            cat_map.setdefault(c.template_id, []).append(c)
+        return [
+            AuditTemplateNode.from_db(t, categories=cat_map.get(t.id, []))
+            for t in templates
+        ]
+
+    @strawberry.field(name="auditTemplate")
+    def audit_template(self, id: str) -> typing.Optional["AuditTemplateNode"]:
+        from manufacturing.domain.audit_service import AuditTemplateService
+        template = AuditTemplateService.get_template_with_data(int(id))
+        if not template:
+            return None
+        categories = list(template.categories.all())
+        return AuditTemplateNode.from_db(template, categories=categories)
+
+    @strawberry.field(name="auditExecutionForm")
+    def audit_execution_form(self, audit_id: str) -> typing.Optional["AuditExecutionForm"]:
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        from manufacturing.models.audit import Audit, AuditAnswer, AuditTemplate, AuditTemplateCategory, AuditTemplateQuestion, AuditFinding, ResponseType
+        from api.types.manufacturing import AuditExecutionForm, AuditTemplateInfo, AuditExecutionSection, AuditExecutionQuestion, AuditFindingNode, AuditExecutionSummary
+        from datetime import datetime
+
+        try:
+            audit = Audit.objects.get(id=int(audit_id))
+        except Audit.DoesNotExist:
+            return None
+
+        # Load template
+        template = audit.template
+        if not template:
+            return None
+
+        # Resolve target display name
+        target_display = f"{audit.target_type} #{audit.target_id}"
+        try:
+            from manufacturing.domain.audit_service import AUDIT_TARGET_MODEL_MAP
+            model = AUDIT_TARGET_MODEL_MAP.get(audit.target_type)
+            if model:
+                obj = model.objects.filter(id=audit.target_id).first()
+                if obj:
+                    target_display = getattr(obj, "name", str(obj))
+        except Exception:
+            pass
+
+        # Build answer lookup
+        answers_qs = AuditAnswer.objects.filter(audit=audit).select_related("template_question")
+        answer_by_qid: dict[int, AuditAnswer] = {}
+        for a in answers_qs:
+            if a.template_question_id:
+                answer_by_qid[a.template_question_id] = a
+
+        # Build sections with questions
+        categories = AuditTemplateCategory.objects.filter(template=template).order_by("sequence").prefetch_related("questions")
+        sections: list[AuditExecutionSection] = []
+        total_questions = 0
+        answered_count = 0
+        required_missing = 0
+        last_saved: typing.Optional[datetime] = None
+
+        def _is_nonconforming(response_type: str, value: str) -> bool:
+            if not value:
+                return False
+            if response_type in (ResponseType.PASS_FAIL_NA,):
+                return value == "FAIL"
+            if response_type in (ResponseType.YES_NO_NA,):
+                return value == "NO"
+            if response_type == ResponseType.SCORE_1_5:
+                try:
+                    return int(value) <= 2
+                except (ValueError, TypeError):
+                    return False
+            return False
+
+        for cat in categories:
+            questions_list = list(cat.questions.filter(is_active=True).order_by("sequence"))
+            exec_questions: list[AuditExecutionQuestion] = []
+            for q in questions_list:
+                total_questions += 1
+                answer = answer_by_qid.get(q.id)
+                val = answer.answer_value if answer else ""
+                comment = answer.comment if answer else ""
+                evidence = answer.evidence_url if answer else ""
+                finding_req = answer.finding_required if answer else False
+                nonconf = _is_nonconforming(q.response_type, val)
+                if answer and answer.updated_at and (last_saved is None or answer.updated_at > last_saved):
+                    last_saved = answer.updated_at
+                if val:
+                    answered_count += 1
+                elif q.is_required:
+                    required_missing += 1
+
+                exec_questions.append(AuditExecutionQuestion(
+                    id=strawberry.ID(str(q.id)),
+                    question_text=q.question,
+                    response_type=q.response_type,
+                    is_required=q.is_required,
+                    help_text=q.help_text or "",
+                    sequence=q.sequence,
+                    weight=q.weight,
+                    answer_id=strawberry.ID(str(answer.id)) if answer else None,
+                    answer_value=val,
+                    comment=comment,
+                    evidence_url=evidence,
+                    is_nonconforming=nonconf,
+                    finding_required=finding_req,
+                ))
+            sections.append(AuditExecutionSection(
+                id=strawberry.ID(str(cat.id)),
+                title=cat.name,
+                sequence=cat.sequence,
+                questions=exec_questions,
+            ))
+
+        # Findings
+        findings_qs = AuditFinding.objects.filter(audit=audit).order_by("-created_at")
+        findings = [AuditFindingNode.from_db(f) for f in findings_qs]
+
+        score = audit.score
+
+        summary = AuditExecutionSummary(
+            answered_count=answered_count,
+            total_questions=total_questions,
+            required_missing_count=required_missing,
+            findings_count=len(findings),
+            last_saved_at=last_saved.isoformat() if last_saved else None,
+            score=score,
+        )
+
+        return AuditExecutionForm(
+            id=strawberry.ID(str(audit.id)),
+            title=audit.title,
+            status=audit.status,
+            score=audit.score,
+            auditor=audit.auditor or "",
+            audit_date=audit.audit_date.isoformat() if audit.audit_date else None,
+            notes=audit.notes or "",
+            target_type=audit.target_type,
+            target_id=audit.target_id,
+            target_display_name=target_display,
+            template=AuditTemplateInfo(
+                id=strawberry.ID(str(template.id)),
+                code=template.code,
+                name=template.name,
+                version=template.version,
+            ),
+            sections=sections,
+            findings=findings,
+            summary=summary,
+        )

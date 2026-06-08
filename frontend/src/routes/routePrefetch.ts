@@ -8,11 +8,6 @@ type Matcher = {
 
 const matchers: Matcher[] = [
   {
-    key: "control-tower",
-    matches: (path) => path === "/" || path === "/control-tower",
-    load: () => import("@/pages/control-tower/ControlTowerPage"),
-  },
-  {
     key: "myworkspace-dashboard",
     matches: (path) => path.startsWith("/myworkspace/dashboard"),
     load: () => import("@/pages/myworkspace/MyDashboardPage"),
@@ -48,8 +43,8 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/plan/ProductionPlanPage"),
   },
   {
-    key: "plan-manufacturing-engineering-requests",
-    matches: (path) => path.startsWith("/plan/manufacturing-engineering-requests"),
+    key: "plan-mer",
+    matches: (path) => path.startsWith("/plan/mer"),
     load: () => import("@/pages/plan/ManufacturingEngineeringRequestsPage"),
   },
   {
@@ -61,21 +56,6 @@ const matchers: Matcher[] = [
     key: "plan-capacity",
     matches: (path) => path.startsWith("/plan/capacity"),
     load: () => import("@/pages/plan/CapacityPage"),
-  },
-  {
-    key: "check-problems",
-    matches: (path) => path.startsWith("/check/problems"),
-    load: () => import("@/pages/check/ProblemsPage"),
-  },
-  {
-    key: "check-actions",
-    matches: (path) => path.startsWith("/check/actions"),
-    load: () => import("@/pages/check/ActionsPage"),
-  },
-  {
-    key: "check-audits",
-    matches: (path) => path.startsWith("/check/audits"),
-    load: () => import("@/pages/check/AuditsPage"),
   },
   {
     key: "check-quality-control",
@@ -106,11 +86,6 @@ const matchers: Matcher[] = [
     key: "improve-a3-pdca",
     matches: (path) => path.startsWith("/improve/a3-pdca"),
     load: () => import("@/pages/improve/A3PdcaPage"),
-  },
-  {
-    key: "improve-continuous",
-    matches: (path) => path.startsWith("/improve/continuous-improvement"),
-    load: () => import("@/pages/improve/ContinuousImprovementPage"),
   },
   {
     key: "improve-suggestions",

@@ -1,3 +1,8 @@
+# Windows reserved device names (nul is a reserved name)
+nul
+backend/nul
+frontend/nul
+
 # Environment
 backend/.env
 .env

@@ -26,6 +26,7 @@ from check.services import (
 @strawberry.type
 class ProblemNode:
     id: int
+    control_area: str
     title: str
     description: str
     problem_type: str
@@ -45,6 +46,7 @@ class ProblemNode:
 @strawberry.type
 class ActionNode:
     id: int
+    control_area: str
     title: str
     description: str
     source_type: str
@@ -128,9 +130,12 @@ class DMRNode:
     quantity: Optional[float]
     uom: str
     defect_description: str
+    containment: str
+    severity: str
     disposition: Optional[str]
     status: str
     owner: str
+    due_date: Optional[str]
     closed_at: Optional[str]
     notes: str
     created_at: str
@@ -142,13 +147,24 @@ class RMANode:
     id: int
     rma_number: str
     customer_name: str
+    part_number: str
+    serial_lot: str
     product_variant_id: Optional[int]
     material_item_id: Optional[int]
     quantity: Optional[float]
     reason: str
     status: str
     received_date: Optional[str]
+    due_date: Optional[str]
     disposition: Optional[str]
+    customer_response_status: str
+    receiving_inspection_result: str
+    confirmed_defect: str
+    suspected_cause: str
+    confirmed_cause: str
+    disposition_owner: str
+    disposition_date: Optional[str]
+    customer_response: str
     owner: str
     notes: str
     created_at: str
@@ -257,7 +273,8 @@ class MaterialIssueNode:
 
 def _to_problem_node(p: Problem) -> ProblemNode:
     return ProblemNode(
-        id=p.id, title=p.title, description=p.description,
+        id=p.id, control_area=p.control_area,
+        title=p.title, description=p.description,
         problem_type=p.problem_type, target_type=p.target_type,
         target_id=p.target_id, severity=p.severity, status=p.status,
         reported_by=p.reported_by,
@@ -270,7 +287,8 @@ def _to_problem_node(p: Problem) -> ProblemNode:
 
 def _to_action_node(a: Action) -> ActionNode:
     return ActionNode(
-        id=a.id, title=a.title, description=a.description,
+        id=a.id, control_area=a.control_area,
+        title=a.title, description=a.description,
         source_type=a.source_type, source_id=a.source_id,
         owner=a.owner,
         due_date=a.due_date.isoformat() if a.due_date else None,
@@ -338,7 +356,9 @@ def _to_dmr_node(d: DMR) -> DMRNode:
         target_id=d.target_id,
         quantity=float(d.quantity) if d.quantity is not None else None,
         uom=d.uom, defect_description=d.defect_description,
+        containment=d.containment, severity=d.severity,
         disposition=d.disposition, status=d.status, owner=d.owner,
+        due_date=d.due_date.isoformat() if d.due_date else None,
         closed_at=d.closed_at.isoformat() if d.closed_at else None,
         notes=d.notes,
         created_at=d.created_at.isoformat() if d.created_at else "",
@@ -349,11 +369,22 @@ def _to_dmr_node(d: DMR) -> DMRNode:
 def _to_rma_node(r: RMA) -> RMANode:
     return RMANode(
         id=r.id, rma_number=r.rma_number, customer_name=r.customer_name,
+        part_number=r.part_number, serial_lot=r.serial_lot,
         product_variant_id=r.product_variant_id, material_item_id=r.material_item_id,
         quantity=float(r.quantity) if r.quantity is not None else None,
         reason=r.reason, status=r.status,
         received_date=r.received_date.isoformat() if r.received_date else None,
-        disposition=r.disposition, owner=r.owner, notes=r.notes,
+        due_date=r.due_date.isoformat() if r.due_date else None,
+        disposition=r.disposition,
+        customer_response_status=r.customer_response_status,
+        receiving_inspection_result=r.receiving_inspection_result,
+        confirmed_defect=r.confirmed_defect,
+        suspected_cause=r.suspected_cause,
+        confirmed_cause=r.confirmed_cause,
+        disposition_owner=r.disposition_owner,
+        disposition_date=r.disposition_date.isoformat() if r.disposition_date else None,
+        customer_response=r.customer_response,
+        owner=r.owner, notes=r.notes,
         created_at=r.created_at.isoformat() if r.created_at else "",
         updated_at=r.updated_at.isoformat() if r.updated_at else "",
     )
@@ -443,11 +474,13 @@ def _to_material_issue_node(m: MaterialIssue) -> MaterialIssueNode:
 class CheckQuery:
     # ── Problems ──
     @strawberry.field
-    def problems(self, status: Optional[str] = None,
+    def problems(self, control_area: Optional[str] = None,
+                 status: Optional[str] = None,
                  problem_type: Optional[str] = None,
                  target_type: Optional[str] = None,
                  search: Optional[str] = None) -> list[ProblemNode]:
         filters = {}
+        if control_area: filters["control_area"] = control_area
         if status: filters["status"] = status
         if problem_type: filters["problem_type"] = problem_type
         if target_type: filters["target_type"] = target_type
@@ -461,10 +494,12 @@ class CheckQuery:
 
     # ── Actions ──
     @strawberry.field
-    def actions(self, status: Optional[str] = None,
+    def actions(self, control_area: Optional[str] = None,
+                status: Optional[str] = None,
                 priority: Optional[str] = None,
                 search: Optional[str] = None) -> list[ActionNode]:
         filters = {}
+        if control_area: filters["control_area"] = control_area
         if status: filters["status"] = status
         if priority: filters["priority"] = priority
         if search: filters["search"] = search
@@ -630,13 +665,15 @@ class CheckMutation:
                        reported_by: str = "",
                        source_type: str = "",
                        source_id: Optional[int] = None,
+                       control_area: str = "PRODUCTION",
                        notes: str = "") -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
             "problem_type": problem_type, "target_type": target_type,
             "target_id": target_id, "severity": severity,
             "reported_by": reported_by, "source_type": source_type,
-            "source_id": source_id, "notes": notes,
+            "source_id": source_id, "control_area": control_area,
+            "notes": notes,
         }.items() if v is not None}
         p = ProblemService().create_problem(**kwargs)
         return f"Problem created: {p.title}"
@@ -683,11 +720,12 @@ class CheckMutation:
                       priority: str = "MEDIUM",
                       source_type: str = "",
                       source_id: Optional[int] = None,
+                      control_area: str = "PRODUCTION",
                       notes: str = "") -> str:
         kwargs = {"title": title, "description": description,
                   "owner": owner, "priority": priority,
                   "source_type": source_type, "source_id": source_id,
-                  "notes": notes}
+                  "control_area": control_area, "notes": notes}
         if due_date:
             from datetime import datetime
             kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
@@ -825,18 +863,25 @@ class CheckMutation:
                    target_id: Optional[int] = None,
                    description: str = "",
                    defect_description: str = "",
+                   containment: str = "",
+                   severity: str = "MEDIUM",
                    quantity: Optional[float] = None,
                    uom: str = "",
                    owner: str = "",
+                   due_date: Optional[str] = None,
                    notes: str = "") -> str:
         kwargs = {k: v for k, v in {
             "dmr_number": dmr_number, "title": title,
             "target_type": target_type, "target_id": target_id,
             "description": description,
             "defect_description": defect_description,
+            "containment": containment, "severity": severity,
             "quantity": quantity, "uom": uom,
             "owner": owner, "notes": notes,
         }.items() if v is not None}
+        if due_date:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
         d = QualityControlService().create_dmr(**kwargs)
         return f"DMR created: {d.dmr_number}"
 
@@ -845,13 +890,23 @@ class CheckMutation:
                    title: Optional[str] = None,
                    description: Optional[str] = None,
                    defect_description: Optional[str] = None,
+                   containment: Optional[str] = None,
+                   severity: Optional[str] = None,
+                   quantity: Optional[float] = None,
+                   uom: Optional[str] = None,
                    owner: Optional[str] = None,
+                   due_date: Optional[str] = None,
                    notes: Optional[str] = None) -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
             "defect_description": defect_description,
+            "containment": containment, "severity": severity,
+            "quantity": quantity, "uom": uom,
             "owner": owner, "notes": notes,
         }.items() if v is not None}
+        if due_date is not None:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date() if due_date else None
         QualityControlService().update_dmr(id, **kwargs)
         return "DMR updated"
 
@@ -867,6 +922,16 @@ class CheckMutation:
         return "DMR dispositioned"
 
     @strawberry.mutation
+    def quarantine_dmr(self, info: strawberry.types.Info, id: int) -> str:
+        QualityControlService().quarantine_dmr(id)
+        return "DMR moved to QUARANTINED"
+
+    @strawberry.mutation
+    def approve_disposition_dmr(self, info: strawberry.types.Info, id: int) -> str:
+        QualityControlService().approve_disposition_dmr(id)
+        return "DMR disposition approved"
+
+    @strawberry.mutation
     def close_dmr(self, info: strawberry.types.Info, id: int) -> str:
         QualityControlService().close_dmr(id)
         return "DMR closed"
@@ -880,28 +945,82 @@ class CheckMutation:
     @strawberry.mutation
     def create_rma(self, info: strawberry.types.Info, rma_number: str,
                    customer_name: str,
+                   part_number: str = "",
+                   serial_lot: str = "",
                    quantity: Optional[float] = None,
                    reason: str = "",
+                   due_date: Optional[str] = None,
+                   disposition: Optional[str] = None,
+                   customer_response_status: Optional[str] = None,
+                   receiving_inspection_result: Optional[str] = None,
+                   confirmed_defect: Optional[str] = None,
+                   suspected_cause: Optional[str] = None,
+                   confirmed_cause: Optional[str] = None,
+                   disposition_owner: Optional[str] = None,
+                   disposition_date: Optional[str] = None,
+                   customer_response: Optional[str] = None,
                    owner: str = "",
                    notes: str = "") -> str:
         kwargs = {k: v for k, v in {
             "rma_number": rma_number, "customer_name": customer_name,
+            "part_number": part_number, "serial_lot": serial_lot,
             "quantity": quantity, "reason": reason,
+            "disposition": disposition,
+            "customer_response_status": customer_response_status,
+            "receiving_inspection_result": receiving_inspection_result,
+            "confirmed_defect": confirmed_defect,
+            "suspected_cause": suspected_cause,
+            "confirmed_cause": confirmed_cause,
+            "disposition_owner": disposition_owner,
+            "customer_response": customer_response,
             "owner": owner, "notes": notes,
         }.items() if v is not None}
+        if due_date:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
+        if disposition_date:
+            from datetime import datetime
+            kwargs["disposition_date"] = datetime.strptime(disposition_date, "%Y-%m-%d").date()
         r = QualityControlService().create_rma(**kwargs)
         return f"RMA created: {r.rma_number}"
 
     @strawberry.mutation
     def update_rma(self, info: strawberry.types.Info, id: int,
                    customer_name: Optional[str] = None,
+                   part_number: Optional[str] = None,
+                   serial_lot: Optional[str] = None,
                    reason: Optional[str] = None,
+                   due_date: Optional[str] = None,
+                   disposition: Optional[str] = None,
+                   customer_response_status: Optional[str] = None,
+                   receiving_inspection_result: Optional[str] = None,
+                   confirmed_defect: Optional[str] = None,
+                   suspected_cause: Optional[str] = None,
+                   confirmed_cause: Optional[str] = None,
+                   disposition_owner: Optional[str] = None,
+                   disposition_date: Optional[str] = None,
+                   customer_response: Optional[str] = None,
                    owner: Optional[str] = None,
                    notes: Optional[str] = None) -> str:
         kwargs = {k: v for k, v in {
-            "customer_name": customer_name, "reason": reason,
+            "customer_name": customer_name, "part_number": part_number,
+            "serial_lot": serial_lot, "reason": reason,
+            "disposition": disposition,
+            "customer_response_status": customer_response_status,
+            "receiving_inspection_result": receiving_inspection_result,
+            "confirmed_defect": confirmed_defect,
+            "suspected_cause": suspected_cause,
+            "confirmed_cause": confirmed_cause,
+            "disposition_owner": disposition_owner,
+            "customer_response": customer_response,
             "owner": owner, "notes": notes,
         }.items() if v is not None}
+        if due_date is not None:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date() if due_date else None
+        if disposition_date is not None:
+            from datetime import datetime
+            kwargs["disposition_date"] = datetime.strptime(disposition_date, "%Y-%m-%d").date() if disposition_date else None
         QualityControlService().update_rma(id, **kwargs)
         return "RMA updated"
 

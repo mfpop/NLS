@@ -31,7 +31,8 @@ class MERMutation:
                 "request_type": input.request_type, "category": input.category,
                 "priority": input.priority, "target_type": input.target_type,
                 "target_id": input.target_id, "submitted_by": input.submitted_by,
-                "assigned_to": input.assigned_to, "reviewer": input.reviewer,
+                "owner": input.owner, "assigned_to": input.assigned_to,
+                "reviewer": input.reviewer,
                 "impact_cost": input.impact_cost, "impact_quality": input.impact_quality,
                 "impact_delivery": input.impact_delivery, "impact_safety": input.impact_safety,
             }
@@ -53,7 +54,7 @@ class MERMutation:
             svc = MERService()
             kwargs = {}
             for field in ("title", "description", "request_type", "category", "priority",
-                          "target_type", "target_id", "assigned_to", "reviewer",
+                          "target_type", "target_id", "owner", "assigned_to", "reviewer",
                           "impact_cost", "impact_quality", "impact_delivery", "impact_safety",
                           "estimated_cost", "actual_cost", "result_summary", "lessons_learned"):
                 val = getattr(input, field)

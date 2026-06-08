@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   Wrench, Plus, Pencil, RefreshCw, X, Check, Trash2, Printer,
@@ -11,7 +11,7 @@ import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/componen
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
-import { useTargetEntities, resolveTargetLabel } from "@/hooks/useTargetEntities";
+import { useTargetEntities } from "@/hooks/useTargetEntities";
 import { MER_LIST_QUERY, MER_SUMMARY_QUERY } from "@/graphql/merQueries";
 import {
   CREATE_MER_MUTATION, UPDATE_MER_MUTATION,
@@ -30,6 +30,16 @@ const STATUS_STYLES: Record<string, string> = {
   COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
   CANCELLED: "bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-300",
+};
+
+const STATUS_DOT: Record<string, string> = {
+  SUBMITTED: "bg-blue-500",
+  UNDER_REVIEW: "bg-yellow-500",
+  APPROVED: "bg-emerald-500",
+  IN_PROGRESS: "bg-amber-500",
+  COMPLETED: "bg-green-600",
+  REJECTED: "bg-red-500",
+  CANCELLED: "bg-gray-400",
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -72,7 +82,7 @@ interface MERNode {
   id: number; merCode: string; title: string; description: string;
   requestType: string; category: string; priority: string;
   targetType: string; targetId: number | null;
-  submittedBy: string; assignedTo: string; reviewer: string;
+  submittedBy: string; owner: string; assignedTo: string; reviewer: string;
   status: string; reviewNotes: string; rejectionReason: string;
   impactCost: string; impactQuality: string; impactDelivery: string; impactSafety: string;
   estimatedCost: number | null; actualCost: number | null;
@@ -84,7 +94,7 @@ interface MERNode {
 
 interface FormState {
   title: string; description: string; requestType: string; category: string; priority: string;
-  targetType: string; targetId: string; submittedBy: string; assignedTo: string; reviewer: string;
+  targetType: string; targetId: string; owner: string; assignedTo: string; reviewer: string;
   impactCost: string; impactQuality: string; impactDelivery: string; impactSafety: string;
   estimatedCost: string; startDate: string; dueDate: string;
 }
@@ -92,9 +102,14 @@ interface FormState {
 /* ── HELPERS ── */
 
 function statusLabel(s: string): string {
-  if (s === "UNDER_REVIEW") return "Under Review";
-  if (s === "IN_PROGRESS") return "In Progress";
-  return s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, " ");
+  if (s === "SUBMITTED") return "Sub.";
+  if (s === "UNDER_REVIEW") return "Review";
+  if (s === "APPROVED") return "Appr.";
+  if (s === "IN_PROGRESS") return "Active";
+  if (s === "COMPLETED") return "Done";
+  if (s === "REJECTED") return "Rej.";
+  if (s === "CANCELLED") return "Canc.";
+  return s;
 }
 function requestTypeLabel(t: string): string {
   return REQUEST_TYPE_OPTIONS.find((o) => o.value === t)?.label || t;
@@ -110,7 +125,7 @@ function isOverdue(dueDate: string | null): boolean {
 
 /* ── SUB-COMPONENTS ── */
 
-function FlatSection({ title, children }: { title: string; children: React.ReactNode }) {
+function FlatSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
       <div className="flex items-center gap-2 mb-3">
@@ -122,7 +137,7 @@ function FlatSection({ title, children }: { title: string; children: React.React
   );
 }
 
-function SectionCard({ title, action, children }: { title: string; action?: React.ReactNode; children?: React.ReactNode }) {
+function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children?: ReactNode }) {
   return (
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
@@ -172,11 +187,14 @@ const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: s
   EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-purple-200 dark:border-purple-800" },
 };
 
-function KpiCard({ label, value, muted }: { label: string; value: React.ReactNode; muted?: boolean }) {
+function KpiCard({ label, value, muted, dotClass, icon }: { label: string; value: ReactNode; muted?: boolean; dotClass?: string; icon?: ReactNode }) {
   return (
     <div className="border border-border/30 bg-card p-3 text-left">
       <div className="min-w-0 flex-1">
-        <p className={`text-xs font-medium ${theme.textMuted} truncate`}>{label}</p>
+        <p className={`text-xs font-medium ${theme.textMuted} truncate flex items-center gap-1.5`}>
+          {icon ? icon : dotClass ? <span className={`inline-block h-3 w-3 shrink-0 ${dotClass}`} /> : null}
+          {label}
+        </p>
         <p className={`text-lg font-bold ${muted ? theme.textMuted : theme.textPrimary}`}>{value}</p>
       </div>
     </div>
@@ -219,12 +237,7 @@ function formatDate(d: string | null): string {
 function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
   summary: any; summaryLoading: boolean; merList: any[]; onNew: () => void;
 }) {
-  const navigate = useNavigate();
 
-  const openCount = summary ? summary.submitted + summary.underReview + summary.approved + summary.inProgress : 0;
-  const pipelineTotal = summary ? summary.submitted + summary.underReview + summary.approved + summary.inProgress + summary.completed : 0;
-  const completionRate = pipelineTotal > 0 ? Math.round((summary.completed / pipelineTotal) * 100) : 0;
-  const rejectionRate = summary && summary.total > 0 ? Math.round((summary.rejected / summary.total) * 100) : 0;
   const totalEstimated = merList.reduce((sum, m) => sum + (m.estimatedCost || 0), 0);
 
   const recentMERs = [...merList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
@@ -273,14 +286,14 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
           <>
             <SectionCard title="Key Metrics">
               <div className="grid grid-cols-2 md:grid-cols-9 gap-2">
-                <KpiCard label="Submitted" value={summary.submitted} />
-                <KpiCard label="Under Review" value={summary.underReview} />
-                <KpiCard label="Approved" value={summary.approved} />
-                <KpiCard label="In Progress" value={summary.inProgress} />
-                <KpiCard label="Completed" value={summary.completed} />
-                <KpiCard label="Rejected" value={summary.rejected} muted={summary.rejected === 0} />
-                <KpiCard label="Cancelled" value={summary.cancelled} muted={summary.cancelled === 0} />
-                <KpiCard label="Overdue" value={summary.overdue} muted={summary.overdue === 0} />
+                <KpiCard label="Submitted" value={summary.submitted} dotClass={STATUS_DOT.SUBMITTED} />
+                <KpiCard label="Under Review" value={summary.underReview} dotClass={STATUS_DOT.UNDER_REVIEW} />
+                <KpiCard label="Approved" value={summary.approved} dotClass={STATUS_DOT.APPROVED} />
+                <KpiCard label="In Progress" value={summary.inProgress} dotClass={STATUS_DOT.IN_PROGRESS} />
+                <KpiCard label="Completed" value={summary.completed} dotClass={STATUS_DOT.COMPLETED} />
+                <KpiCard label="Rejected" value={summary.rejected} muted={summary.rejected === 0} dotClass={STATUS_DOT.REJECTED} />
+                <KpiCard label="Cancelled" value={summary.cancelled} muted={summary.cancelled === 0} dotClass={STATUS_DOT.CANCELLED} />
+                <KpiCard label="Overdue" value={summary.overdue} muted={summary.overdue === 0} icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-500 stroke-current shrink-0" />} />
                 <KpiCard label="Est. Cost" value={`$${totalEstimated.toLocaleString()}`} muted={totalEstimated === 0} />
               </div>
             </SectionCard>
@@ -379,7 +392,7 @@ export function ManufacturingEngineeringRequestsPage() {
   const [isDirty, setIsDirty] = useState(false);
   const [form, setForm] = useState<FormState>({
     title: "", description: "", requestType: "ENGINEERING_CHANGE", category: "", priority: "MEDIUM",
-    targetType: "Plant", targetId: "", submittedBy: "", assignedTo: "", reviewer: "",
+    targetType: "Plant", targetId: "", owner: "", assignedTo: "", reviewer: "",
     impactCost: "", impactQuality: "", impactDelivery: "", impactSafety: "",
     estimatedCost: "", startDate: "", dueDate: "",
   });
@@ -462,8 +475,7 @@ export function ManufacturingEngineeringRequestsPage() {
   const sel = selectedId ? mers.find((m) => m.id === selectedId) ?? null : null;
   const isForm = mode === "edit" || mode === "create";
 
-  const { targetOptions, allEntities } = useTargetEntities(form.targetType);
-  const targetLabel = resolveTargetLabel(allEntities, form.targetId);
+  const { targetOptions } = useTargetEntities(form.targetType);
 
   const g = (k: keyof FormState) => String(form[k] ?? "");
   const sf = (k: keyof FormState, v: unknown) => { setIsDirty(true); setForm((p) => ({ ...p, [k]: v })); };
@@ -471,7 +483,7 @@ export function ManufacturingEngineeringRequestsPage() {
   const clearForm = useCallback(() => {
     setForm({
       title: "", description: "", requestType: "ENGINEERING_CHANGE", category: "", priority: "MEDIUM",
-      targetType: "Plant", targetId: "", submittedBy: "", assignedTo: "", reviewer: "",
+      targetType: "Plant", targetId: "", owner: "", assignedTo: "", reviewer: "",
       impactCost: "", impactQuality: "", impactDelivery: "", impactSafety: "",
       estimatedCost: "", startDate: "", dueDate: "",
     });
@@ -482,7 +494,7 @@ export function ManufacturingEngineeringRequestsPage() {
     setForm({
       title: item.title, description: item.description, requestType: item.requestType,
       category: item.category, priority: item.priority, targetType: item.targetType || "Plant",
-      targetId: String(item.targetId ?? ""), submittedBy: item.submittedBy,
+      targetId: String(item.targetId ?? ""), owner: item.owner || item.submittedBy,
       assignedTo: item.assignedTo, reviewer: item.reviewer,
       impactCost: item.impactCost, impactQuality: item.impactQuality,
       impactDelivery: item.impactDelivery, impactSafety: item.impactSafety,
@@ -511,7 +523,7 @@ export function ManufacturingEngineeringRequestsPage() {
           title: form.title.trim(), description: form.description,
           requestType: form.requestType, category: form.category, priority: form.priority,
           targetType: form.targetType, targetId: form.targetId ? parseInt(form.targetId) : null,
-          assignedTo: form.assignedTo, reviewer: form.reviewer,
+          owner: form.owner, assignedTo: form.assignedTo, reviewer: form.reviewer,
           impactCost: form.impactCost, impactQuality: form.impactQuality,
           impactDelivery: form.impactDelivery, impactSafety: form.impactSafety,
           estimatedCost: form.estimatedCost ? parseFloat(form.estimatedCost) : null,
@@ -525,7 +537,7 @@ export function ManufacturingEngineeringRequestsPage() {
           title: form.title.trim(), description: form.description,
           requestType: form.requestType, category: form.category, priority: form.priority,
           targetType: form.targetType, targetId: form.targetId ? parseInt(form.targetId) : null,
-          submittedBy: form.submittedBy, assignedTo: form.assignedTo, reviewer: form.reviewer,
+          submittedBy: form.owner, owner: form.owner, assignedTo: form.assignedTo, reviewer: form.reviewer,
           impactCost: form.impactCost, impactQuality: form.impactQuality,
           impactDelivery: form.impactDelivery, impactSafety: form.impactSafety,
           estimatedCost: form.estimatedCost ? parseFloat(form.estimatedCost) : null,
@@ -627,14 +639,20 @@ export function ManufacturingEngineeringRequestsPage() {
                 {TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
               <select value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} className={sCls}>
-                <option value="">Select {form.targetType}...</option>
+                <option value="">Select {targetTypeLabel(form.targetType)}...</option>
                 {targetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
               {errors.targetId && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.targetId}</p>}
             </div>
           </SectionCard>
           <SectionCard title="Owner">
-            <input type="text" value={g("assignedTo")} onChange={(e) => sf("assignedTo", e.target.value)} placeholder="Assigned engineer" className={iCls} />
+            <input type="text" value={g("owner")} onChange={(e) => sf("owner", e.target.value)} placeholder="Accountable owner" className={iCls} />
+          </SectionCard>
+          <SectionCard title="Assigned Engineer">
+            <input type="text" value={g("assignedTo")} onChange={(e) => sf("assignedTo", e.target.value)} placeholder="Engineer assigned to execute" className={iCls} />
+          </SectionCard>
+          <SectionCard title="Reviewer">
+            <input type="text" value={g("reviewer")} onChange={(e) => sf("reviewer", e.target.value)} placeholder="Person responsible for review" className={iCls} />
           </SectionCard>
           <SectionCard title="Due Date">
             <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} className={iCls} />
@@ -839,10 +857,10 @@ export function ManufacturingEngineeringRequestsPage() {
                       {sel.estimatedCost == null && sel.actualCost == null ? <p className={`text-xs italic ${theme.textMuted}`}>No cost data</p> : null}
                     </div>
                   </FlatSection>
-                  <FlatSection title="Owner / Dates">
+                  <FlatSection title="People / Dates">
                     <div className="space-y-1.5 text-sm">
-                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Submitted by</span><span className="text-foreground">{sel.submittedBy || "-"}</span></div>
-                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Assigned to</span><span className="text-foreground">{sel.assignedTo || "-"}</span></div>
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Owner</span><span className="text-foreground">{sel.owner || sel.submittedBy || "-"}</span></div>
+                      <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Assigned Engineer</span><span className="text-foreground">{sel.assignedTo || "-"}</span></div>
                       {sel.reviewer ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Reviewer</span><span className="text-foreground">{sel.reviewer}</span></div> : null}
                       {sel.startDate ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Start</span><span className="text-foreground">{sel.startDate}</span></div> : null}
                       {sel.dueDate ? (
@@ -889,7 +907,7 @@ export function ManufacturingEngineeringRequestsPage() {
                 className="w-44" />
               <ToolbarSelect value={filterAssignee} onChange={setFilterAssignee}
                 options={[
-                  { value: "", label: "All Assignees" },
+                  { value: "", label: "All Engineers" },
                   ...Array.from(new Set(mers.map((m) => m.assignedTo).filter(Boolean))).map((a) => ({ value: a, label: a })),
                 ]}
                 className="w-32" />
@@ -937,28 +955,19 @@ export function ManufacturingEngineeringRequestsPage() {
                       }}
                       className={`group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${selectedId === m.id ? "bg-table-selected border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"}`}>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`}>{m.title}</span>
-                          <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[m.status] || ""}`}>
-                            {m.status === "IN_PROGRESS" ? "Active" : statusLabel(m.status)}</span>
+                        <div className="mb-0.5 flex items-center gap-1.5">
                           {m.priority && m.priority !== "MEDIUM" && (
-                            <span className={`shrink-0 inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border ${PRIORITY_STYLES[m.priority] || ""}`}>{m.priority}</span>
+                            <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${m.priority === "CRITICAL" ? "bg-red-500" : m.priority === "HIGH" ? "bg-orange-500" : "bg-gray-400"}`} />
                           )}
+                          <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`}>{m.title}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {m.submittedBy && <span>{m.submittedBy}</span>}
-                          <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
                           <span>{requestTypeLabel(m.requestType)}</span>
-                          {m.dueDate && (
-                            <><span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
-                              <span className={isOverdue(m.dueDate) && m.status !== "COMPLETED" && m.status !== "CANCELLED" ? "text-red-500 font-semibold" : ""}>
-                                {isOverdue(m.dueDate) && m.status !== "COMPLETED" && m.status !== "CANCELLED" ? <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" /> : null}
-                                {m.dueDate}
-                              </span></>
-                          )}
-                          {m.merCode && <><span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" /><span className="font-mono">{m.merCode}</span></>}
+                          <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                          <span className="min-w-0 flex-1 truncate">{m.owner || m.submittedBy || "-"}</span>
                         </div>
                       </div>
+                      <span className={`shrink-0 inline-block h-2.5 w-2.5 ${STATUS_DOT[m.status] || "bg-gray-400"}`} title={statusLabel(m.status)} />
                     </div>
                   ))}
                 </div>
@@ -984,7 +993,14 @@ export function ManufacturingEngineeringRequestsPage() {
           <div className={`print-area flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
         <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
-          <span>MER</span>
+          <div className="flex items-center gap-3">
+            {Object.entries(STATUS_DOT).map(([status, dotClass]) => (
+              <span key={status} className="flex items-center gap-1">
+                <span className={`inline-block h-2 w-2 ${dotClass}`} />
+                {statusLabel(status)}
+              </span>
+            ))}
+          </div>
           <span className="flex-1" />
           {sel && <><span>Created: {sel.createdAt?.slice(0, 10) || "-"}</span><span>Updated: {sel.updatedAt?.slice(0, 10) || "-"}</span></>}
           {summary && <span>Total: {summary.total} | Active: {summary.inProgress} | Completed: {summary.completed}</span>}

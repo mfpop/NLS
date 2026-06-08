@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
-import { useActiveLineId } from "@/stores/activeLineStore";
+import { useActiveLineId, useSelectedPlantId } from "@/stores/activeLineStore";
 import type { ProductionLine } from "@/types/productionLine";
 
 type ProductionLinesResult = {
@@ -14,6 +14,7 @@ function listItems(value: ProductionLinesResult["productionLines"] | null | unde
 
 export function useActiveLine() {
   const [productionLineId, setProductionLineId] = useActiveLineId();
+  const [selectedPlantId] = useSelectedPlantId();
   const { data, loading, error, refetch } = useQuery<ProductionLinesResult>(PRODUCTION_LINES_QUERY, {
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
@@ -31,6 +32,8 @@ export function useActiveLine() {
     }
   }, [activeLine, productionLineId, productionLines.length, setProductionLineId]);
 
+  const activePlantId = activeLine?.plantId ?? selectedPlantId;
+
   return {
     productionLineId,
     activeLine,
@@ -39,6 +42,8 @@ export function useActiveLine() {
     error,
     refetch,
     setActiveLine: setProductionLineId,
+    selectedPlantId,
+    activePlantId,
   };
 }
 

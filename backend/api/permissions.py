@@ -6,6 +6,13 @@ READ_ONLY_ROLES = {"guest"}
 MANAGER_PLUS = {"dept_manager", "app_owner", "db_admin"}
 SUPERVISOR_PLUS = {"supervisor", "dept_manager", "app_owner", "db_admin"}
 ADMIN_ROLES = {"app_owner", "db_admin"}
+LEGACY_ROLE_MAP = {
+    "admin": "db_admin",
+    "administrator": "db_admin",
+    "system_administrator": "db_admin",
+    "owner": "app_owner",
+    "manager": "dept_manager",
+}
 
 _action_roles = {
     # Plants
@@ -98,10 +105,19 @@ _action_roles = {
 def get_role(user: User | None) -> str:
     if user is None or not user.is_authenticated:
         return "guest"
+    # Django superusers/staff are treated as admin for API access.
+    if user.is_superuser or user.is_staff:
+        return "db_admin"
     try:
-        return user.role_profile.role
+        role = (user.role_profile.role or "").strip().lower()
+        return LEGACY_ROLE_MAP.get(role, role or "guest")
     except Exception:
-        return "guest"
+        try:
+            # Fallback for legacy profile model carrying role labels.
+            role = (user.profile.role or "").strip().lower()
+            return LEGACY_ROLE_MAP.get(role, role or "guest")
+        except Exception:
+            return "guest"
 
 
 def has_access(*, user: User | None = None, action: str = "", **_kwargs) -> bool:

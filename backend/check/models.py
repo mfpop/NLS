@@ -1,6 +1,8 @@
 from django.db import models
 from shared.models.base import TimeStampedModel
 from check.constants import (
+    CONTROL_AREA_CHOICES,
+    CONTROL_AREA_PRODUCTION,
     PROBLEM_TYPE_CHOICES,
     PROBLEM_STATUS_CHOICES,
     PROBLEM_STATUS_OPEN,
@@ -17,9 +19,18 @@ from check.constants import (
     CHECKLIST_RESULT_CHOICES,
     DMR_STATUS_CHOICES,
     DMR_STATUS_OPEN,
+    DMR_STATUS_QUARANTINED,
+    DMR_STATUS_DISPOSITION_PENDING,
+    DMR_STATUS_DISPOSITION_APPROVED,
     DMR_DISPOSITION_CHOICES,
+    SEVERITY_CHOICES,
+    SEVERITY_MEDIUM,
     RMA_STATUS_CHOICES,
     RMA_STATUS_OPEN,
+    RMA_DISPOSITION_CHOICES,
+    RMA_DISPOSITION_SCRAP,
+    RMA_CUSTOMER_RESPONSE_CHOICES,
+    RMA_CUSTOMER_RESPONSE_NOT_REQUIRED,
     INCIDENT_TYPE_CHOICES,
     INCIDENT_STATUS_CHOICES,
     INCIDENT_STATUS_OPEN,
@@ -32,6 +43,9 @@ from check.constants import (
 
 
 class Problem(TimeStampedModel):
+    control_area = models.CharField(
+        max_length=30, choices=CONTROL_AREA_CHOICES, default=CONTROL_AREA_PRODUCTION,
+    )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
     problem_type = models.CharField(max_length=50, choices=PROBLEM_TYPE_CHOICES)
@@ -56,6 +70,9 @@ class Problem(TimeStampedModel):
 
 
 class Action(TimeStampedModel):
+    control_area = models.CharField(
+        max_length=30, choices=CONTROL_AREA_CHOICES, default=CONTROL_AREA_PRODUCTION,
+    )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
     source_type = models.CharField(max_length=50, blank=True, default="")
@@ -170,6 +187,10 @@ class DMR(TimeStampedModel):
     quantity = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
     uom = models.CharField(max_length=50, blank=True, default="")
     defect_description = models.TextField(blank=True, default="")
+    containment = models.TextField(blank=True, default="")
+    severity = models.CharField(
+        max_length=20, choices=SEVERITY_CHOICES, default=SEVERITY_MEDIUM,
+    )
     disposition = models.CharField(
         max_length=30, null=True, blank=True, choices=DMR_DISPOSITION_CHOICES,
     )
@@ -177,6 +198,7 @@ class DMR(TimeStampedModel):
         max_length=30, choices=DMR_STATUS_CHOICES, default=DMR_STATUS_OPEN,
     )
     owner = models.CharField(max_length=255, blank=True, default="")
+    due_date = models.DateField(null=True, blank=True)
     closed_at = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True, default="")
 
@@ -191,6 +213,8 @@ class DMR(TimeStampedModel):
 class RMA(TimeStampedModel):
     rma_number = models.CharField(max_length=50, unique=True)
     customer_name = models.CharField(max_length=255)
+    part_number = models.CharField(max_length=100, blank=True, default="")
+    serial_lot = models.CharField(max_length=100, blank=True, default="")
     product_variant = models.ForeignKey(
         "manufacturing.ProductVariant", null=True, blank=True,
         on_delete=models.SET_NULL, related_name="rmas",
@@ -205,9 +229,21 @@ class RMA(TimeStampedModel):
         max_length=30, choices=RMA_STATUS_CHOICES, default=RMA_STATUS_OPEN,
     )
     received_date = models.DateField(null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
     disposition = models.CharField(
-        max_length=30, null=True, blank=True, choices=DMR_DISPOSITION_CHOICES,
+        max_length=30, null=True, blank=True, choices=RMA_DISPOSITION_CHOICES,
     )
+    customer_response_status = models.CharField(
+        max_length=30, choices=RMA_CUSTOMER_RESPONSE_CHOICES,
+        default=RMA_CUSTOMER_RESPONSE_NOT_REQUIRED,
+    )
+    receiving_inspection_result = models.TextField(blank=True, default="")
+    confirmed_defect = models.TextField(blank=True, default="")
+    suspected_cause = models.TextField(blank=True, default="")
+    confirmed_cause = models.TextField(blank=True, default="")
+    disposition_owner = models.CharField(max_length=255, blank=True, default="")
+    disposition_date = models.DateField(null=True, blank=True)
+    customer_response = models.TextField(blank=True, default="")
     owner = models.CharField(max_length=255, blank=True, default="")
     notes = models.TextField(blank=True, default="")
 

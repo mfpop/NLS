@@ -46,6 +46,7 @@ class ManufacturingEngineeringRequest(TimeStampedModel):
 
     # ── People ──
     submitted_by = models.CharField(max_length=255, blank=True, default="")
+    owner = models.CharField(max_length=255, blank=True, default="")
     assigned_to = models.CharField(max_length=255, blank=True, default="")
     reviewer = models.CharField(max_length=255, blank=True, default="")
 

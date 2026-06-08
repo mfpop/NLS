@@ -1,12 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Activity, BookOpen, CircleAlert, Cog,
+  Activity, BookOpen, Cog,
   Footprints, GitBranch, Layers, LayoutDashboard, ListChecks, Monitor, PanelTop,
   Settings, ShieldCheck, Sparkles, TrendingUp, Play, ClipboardList,
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
-  Lightbulb, FileSpreadsheet, RefreshCw,
-  Package, Clock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench,
+  Lightbulb, FileSpreadsheet,
+  Package, Clock, CalendarClock, GanttChartSquare, FileCheck,
+  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench, Key,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -27,7 +27,7 @@ export type NavEntry = NavLeafItem | NavGroupItem;
 
 export interface NavSection {
   type: "section";
-  id: "myworkspace" | "plan" | "execute" | "check" | "improve" | "standardize" | "system" | "docs";
+  id: "myworkspace" | "plan" | "execute" | "maintenance" | "check" | "improve" | "standardize" | "system" | "docs";
   label: string;
   icon: LucideIcon;
   items: NavEntry[];
@@ -62,7 +62,7 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "Workload Distribution", to: "/plan/capacity/workload-distribution", icon: Grid3x3 },
         ],
       },
-      { type: "item", label: "MER", to: "/plan/manufacturing-engineering-requests", icon: Wrench },
+      { type: "item", label: "MER", to: "/plan/mer", icon: Wrench },
     ],
   },
   {
@@ -75,11 +75,18 @@ export const sidebarNav: TopLevelEntry[] = [
     ],
   },
   {
+    type: "section", id: "maintenance", label: "Maintenance", icon: Wrench,
+    items: [
+      { type: "item", label: "Dashboard", to: "/maintenance/dashboard", icon: LayoutDashboard },
+      { type: "item", label: "Work Orders", to: "/maintenance/work-orders", icon: ClipboardList },
+      { type: "item", label: "Preventive Maintenance", to: "/maintenance/preventive", icon: CalendarClock },
+      { type: "item", label: "Breakdowns", to: "/maintenance/breakdowns", icon: AlertTriangle },
+      { type: "item", label: "Spare Parts", to: "/maintenance/spare-parts", icon: Package },
+    ],
+  },
+  {
     type: "section", id: "check", label: "Check", icon: Search,
     items: [
-      { type: "item", label: "Problems", to: "/check/problems", icon: CircleAlert },
-      { type: "item", label: "Actions", to: "/check/actions", icon: ListChecks },
-      { type: "item", label: "Audits", to: "/check/audits", icon: ClipboardCheck },
       { type: "item", label: "Production Control", to: "/check/production-control", icon: Activity },
       { type: "item", label: "Quality Control", to: "/check/quality-control", icon: ShieldCheck },
       { type: "item", label: "Safety Control", to: "/check/safety-control", icon: AlertTriangle },
@@ -92,7 +99,6 @@ export const sidebarNav: TopLevelEntry[] = [
       { type: "item", label: "Suggestions", to: "/improve/suggestions", icon: Lightbulb },
       { type: "item", label: "Kaizen", to: "/improve/kaizen", icon: Sparkles },
       { type: "item", label: "A3 / PDCA", to: "/improve/a3-pdca", icon: ClipboardList },
-      { type: "item", label: "Continuous Improvement", to: "/improve/continuous-improvement", icon: RefreshCw },
     ],
   },
   {
@@ -126,6 +132,8 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "ERP Import", to: "/system/erp-data/import", icon: Upload },
         ],
       },
+      { type: "item", label: "Audit Templates", to: "/system/audit-templates", icon: ClipboardCheck },
+      { type: "item", label: "Users & Roles", to: "/system/users-and-roles", icon: Users },
       {
         type: "group", label: "Application", icon: SlidersHorizontal,
         items: [
@@ -150,6 +158,7 @@ export const sidebarNav: TopLevelEntry[] = [
 export const navSectionIds = sidebarNav.filter((e) => e.type === "section").map((e) => (e as NavSection).id);
 
 export function sectionFromPath(path: string): string | null {
+  if (path.startsWith("/maintenance/")) return "maintenance";
   if (path.startsWith("/execution/")) return "execute";
   if (path.startsWith("/check/")) return "check";
   if (path.startsWith("/improve/")) return "improve";

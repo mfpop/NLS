@@ -24,20 +24,8 @@ const VsmPage = lazy(() =>
 const DailyGembaWalkPage = lazy(() =>
   import("@/pages/execution/DailyGembaWalkPage").then((module) => ({ default: module.DailyGembaWalkPage }))
 );
-const ProblemsPage = lazy(() =>
-  import("@/pages/check/ProblemsPage").then((module) => ({ default: module.ProblemsPage }))
-);
-const ActionsPage = lazy(() =>
-  import("@/pages/check/ActionsPage").then((module) => ({ default: module.ActionsPage }))
-);
-const AuditsPage = lazy(() =>
-  import("@/pages/check/AuditsPage").then((module) => ({ default: module.AuditsPage }))
-);
 const CapacityPage = lazy(() =>
   import("@/pages/plan/CapacityPage").then((module) => ({ default: module.CapacityPage }))
-);
-const ContinuousImprovementPage = lazy(() =>
-  import("@/pages/improve/ContinuousImprovementPage").then((module) => ({ default: module.ContinuousImprovementPage }))
 );
 const KaizenPage = lazy(() =>
   import("@/pages/improve/KaizenPage").then((module) => ({ default: module.KaizenPage }))
@@ -47,6 +35,21 @@ const ProceduresPage = lazy(() =>
 );
 const ManufacturingEngineeringRequestsPage = lazy(() =>
   import("@/pages/plan/ManufacturingEngineeringRequestsPage").then((module) => ({ default: module.ManufacturingEngineeringRequestsPage }))
+);
+const MaintenanceDashboardPage = lazy(() =>
+  import("@/pages/maintenance/MaintenanceDashboardPage").then((module) => ({ default: module.MaintenanceDashboardPage }))
+);
+const WorkOrdersPage = lazy(() =>
+  import("@/pages/maintenance/WorkOrdersPage").then((module) => ({ default: module.WorkOrdersPage }))
+);
+const PreventiveMaintenancePage = lazy(() =>
+  import("@/pages/maintenance/PreventiveMaintenancePage").then((module) => ({ default: module.PreventiveMaintenancePage }))
+);
+const BreakdownsPage = lazy(() =>
+  import("@/pages/maintenance/BreakdownsPage").then((module) => ({ default: module.BreakdownsPage }))
+);
+const SparePartsPage = lazy(() =>
+  import("@/pages/maintenance/SparePartsPage").then((module) => ({ default: module.SparePartsPage }))
 );
 const MERDashboardPage = lazy(() =>
   import("@/pages/plan/MERDashboardPage").then((module) => ({ default: module.MERDashboardPage }))
@@ -60,6 +63,7 @@ const QualityControlPage = lazy(() =>
 const ProductionControlPage = lazy(() =>
   import("@/pages/check/ProductionControlPage").then((module) => ({ default: module.ProductionControlPage }))
 );
+
 const SafetyControlPage = lazy(() =>
   import("@/pages/check/SafetyControlPage").then((module) => ({ default: module.SafetyControlPage }))
 );
@@ -144,8 +148,17 @@ const MaterialBinsPage = lazy(() =>
 const WarehousesPage = lazy(() =>
   import("@/pages/system/warehouses/WarehousesPage").then((module) => ({ default: module.WarehousesPage }))
 );
+const AuditTemplateManagerPage = lazy(() =>
+  import("@/pages/system/AuditTemplateManagerPage").then((module) => ({ default: module.AuditTemplateManagerPage }))
+);
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system/ApplicationSettingsPage").then((module) => ({ default: module.ApplicationSettingsPage }))
+);
+const AdministrativeDepartmentsPage = lazy(() =>
+  import("@/pages/system/AdministrativeDepartmentsPage").then((module) => ({ default: module.AdministrativeDepartmentsPage }))
+);
+  const UsersAndRolesPage = lazy(() =>
+  import("@/pages/system/UsersAndRolesPage").then((module) => ({ default: module.UsersAndRolesPage }))
 );
 const ERPDataPage = lazy(() =>
   import("@/pages/system/erp-data/ERPDataPage").then((module) => ({ default: module.ERPDataPage }))
@@ -212,7 +225,7 @@ export function AppRoutes() {
           <Route path="execution/vsm" element={<VsmPage />} />
           <Route path="execution/daily-gemba-walk" element={<DailyGembaWalkPage />} />
           <Route path="plan/production-plan" element={<ProductionPlanPage />} />
-          <Route path="plan/manufacturing-engineering-requests" element={<ManufacturingEngineeringRequestsPage />} />
+          <Route path="plan/mer" element={<ManufacturingEngineeringRequestsPage />} />
           <Route path="plan/mer-dashboard" element={<MERDashboardPage />} />
           <Route path="plan/capacity" element={<CapacityPage />} />
           <Route path="plan/capacity/load" element={<CapacityPage />} />
@@ -228,16 +241,21 @@ export function AppRoutes() {
           <Route path="plan/capacity/constraints" element={<CapacityPage />} />
           {/* REVIEW_ONLY: /plan/capacity/scenarios — not in sidebar, may be internal deep-link */}
           <Route path="plan/capacity/scenarios" element={<CapacityPage />} />
-          <Route path="check/problems" element={<ProblemsPage />} />
-          <Route path="check/actions" element={<ActionsPage />} />
-          <Route path="check/audits" element={<AuditsPage />} />
+          <Route path="check/problems" element={<Navigate to="/check/production-control?tab=problems" replace />} />
+          <Route path="check/actions" element={<Navigate to="/check/production-control?tab=actions" replace />} />
+          <Route path="check/audits" element={<Navigate to="/check/production-control" replace />} />
           <Route path="check/quality-control" element={<QualityControlPage />} />
           <Route path="check/production-control" element={<ProductionControlPage />} />
           <Route path="check/safety-control" element={<SafetyControlPage />} />
           <Route path="check/material-control" element={<MaterialControlPage />} />
+          <Route path="maintenance/dashboard" element={<MaintenanceDashboardPage />} />
+          <Route path="maintenance/work-orders" element={<WorkOrdersPage />} />
+          <Route path="maintenance/preventive" element={<PreventiveMaintenancePage />} />
+          <Route path="maintenance/breakdowns" element={<BreakdownsPage />} />
+          <Route path="maintenance/spare-parts" element={<SparePartsPage />} />
           <Route path="improve/kaizen" element={<KaizenPage />} />
           <Route path="improve/a3-pdca" element={<A3PdcaPage />} />
-          <Route path="improve/continuous-improvement" element={<ContinuousImprovementPage />} />
+          <Route path="improve/continuous-improvement" element={<Navigate to="/improve/suggestions" replace />} />
           <Route path="improve/suggestions" element={<SuggestionsPage />} />
           <Route path="standardize/work-instructions" element={<WorkInstructionsPage />} />
           <Route path="standardize/standard-work" element={<StandardWorkPage />} />
@@ -290,6 +308,9 @@ export function AppRoutes() {
           <Route path="system/diagnostics" element={<GraphqlStatusPage />} />
           <Route path="system/entity-visual-settings" element={<EntityVisualSettingsPage />} />
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
+          <Route path="system/administrative-departments" element={<AdministrativeDepartmentsPage />} />
+          <Route path="system/audit-templates" element={<AuditTemplateManagerPage />} />
+          <Route path="system/users-and-roles" element={<UsersAndRolesPage />} />
           <Route path="system/erp-data" element={<ERPDataPage />} />
           <Route path="system/erp-data/import" element={<ERPImportPage />} />
           <Route path="system/erp-data/erp-patterns" element={<ErpImportPatternPage />} />

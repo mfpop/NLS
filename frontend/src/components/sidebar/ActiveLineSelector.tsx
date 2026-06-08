@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client/react";
 import { ChevronDown, ChevronRight, Check } from "lucide-react";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
-import { useActiveLineId } from "@/stores/activeLineStore";
+import { useActiveLineId, useSelectedPlantId } from "@/stores/activeLineStore";
 import type { Plant } from "@/types/plant";
 import type { ProductionLine } from "@/types/productionLine";
 import { theme } from "@/styles/themeTokens";
@@ -12,6 +12,7 @@ export function ActiveLineSelector() {
   const [isOpen, setIsOpen] = useState(false);
   const [expandedPlant, setExpandedPlant] = useState("");
   const [activeLineId, setActiveLineId] = useActiveLineId();
+  const [selectedPlantId, setSelectedPlantId] = useSelectedPlantId();
   const ref = useRef<HTMLDivElement>(null);
 
   const { data: plantsData } = useQuery<{ plants: Plant[] }>(PLANTS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
@@ -55,23 +56,28 @@ export function ActiveLineSelector() {
     }
   }, [activeLineId, dbLines, activeLine, setActiveLineId]);
 
+  const selectedPlant = useMemo(() => plants.find((p) => p.id === selectedPlantId) ?? null, [selectedPlantId, plants]);
+
   const label = useMemo(() => {
-    if (!activeLine) return "All Lines";
-    return `${(activePlant?.name || activeLine.plantName || "Plant").slice(0, 16)} / ${activeLine.name.slice(0, 20)}`;
-  }, [activeLine, activePlant?.name]);
+    if (activeLine) return `${(activePlant?.name || activeLine.plantName || "Plant").slice(0, 16)} / ${activeLine.name.slice(0, 20)}`;
+    if (selectedPlant) return `${selectedPlant.name.slice(0, 20)} / All Lines`;
+    return "All Lines";
+  }, [activeLine, activePlant?.name, selectedPlant]);
 
   const selectPlant = useCallback((id: string) => {
-    const p = plantsRef.current.find((x) => x.id === id);
-    setActiveLineId(p?.lines[0]?.id ?? null);
+    setSelectedPlantId(id);
+    setActiveLineId(null);
     setIsOpen(false);
     setExpandedPlant("");
-  }, [setActiveLineId]);
+  }, [setSelectedPlantId, setActiveLineId]);
 
   const selectLine = useCallback((lineId: string) => {
+    const line = dbLines.find((l) => l.id === lineId);
+    if (line) setSelectedPlantId(line.plantId);
     setActiveLineId(lineId);
     setIsOpen(false);
     setExpandedPlant("");
-  }, [setActiveLineId]);
+  }, [setSelectedPlantId, setActiveLineId, dbLines]);
 
   return (
       <div ref={ref} className={`relative shrink-0 p-0 ${theme.sectionDivider} ${theme.page}`}>
@@ -115,7 +121,7 @@ export function ActiveLineSelector() {
             <div className={`px-3 py-2 text-[11px] ${theme.textMuted}`}>No production lines</div>
           )}
           <div className={`border-t border-border my-1`} />
-          <button type="button" onClick={() => { setActiveLineId(null); setIsOpen(false); }}
+          <button type="button" onClick={() => { setSelectedPlantId(null); setActiveLineId(null); setIsOpen(false); }}
             className={`flex items-center gap-2 w-full px-3 h-8 text-xs transition-colors ${!activeLineId ? "bg-accent bg-accent0/10 text-info font-semibold" : `${theme.textSecondary} ${theme.interactiveRow}`}`}
           >
             <span className="truncate flex-1 text-left">All Lines</span>

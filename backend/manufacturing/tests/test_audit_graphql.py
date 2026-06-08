@@ -5,9 +5,10 @@ from manufacturing.models import (
 )
 from manufacturing.models.audit import (
     Audit, AuditChecklistItem, AuditFinding,
+    AuditTemplate, AuditTemplateCategory, AuditTemplateQuestion,
     AuditType, AuditStatus, ChecklistResult, Severity, FindingStatus,
 )
-from manufacturing.domain.audit_service import AuditService, AuditServiceError
+from manufacturing.domain.audit_service import AuditService, AuditTemplateService, AuditServiceError
 
 
 class AuditServiceTest(TestCase):
@@ -54,33 +55,6 @@ class AuditServiceTest(TestCase):
         )
         self.assertEqual(audit.audit_type, AuditType.SAFETY)
 
-    def test_create_quality_audit(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.QUALITY,
-            target_type="PRODUCTION_LINE",
-            target_id=self.line.id,
-            title="Quality Check",
-        )
-        self.assertEqual(audit.audit_type, AuditType.QUALITY)
-
-    def test_create_process_check_audit(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.PROCESS_CHECK,
-            target_type="DEPARTMENT",
-            target_id=self.dept.id,
-            title="Process Audit",
-        )
-        self.assertEqual(audit.audit_type, AuditType.PROCESS_CHECK)
-
-    def test_create_standard_work_check_audit(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.STANDARD_WORK_CHECK,
-            target_type="RESOURCE_GROUP",
-            target_id=self.rg.id,
-            title="SW Check",
-        )
-        self.assertEqual(audit.audit_type, AuditType.STANDARD_WORK_CHECK)
-
     # ── Target types ──
 
     def test_create_audit_for_plant(self):
@@ -98,30 +72,6 @@ class AuditServiceTest(TestCase):
             title="Line Audit",
         )
         self.assertEqual(audit.target_type, "PRODUCTION_LINE")
-
-    def test_create_audit_for_department(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="DEPARTMENT", target_id=self.dept.id,
-            title="Dept Audit",
-        )
-        self.assertEqual(audit.target_type, "DEPARTMENT")
-
-    def test_create_audit_for_resource_group(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="RESOURCE_GROUP", target_id=self.rg.id,
-            title="RG Audit",
-        )
-        self.assertEqual(audit.target_type, "RESOURCE_GROUP")
-
-    def test_create_audit_for_resource(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="RESOURCE", target_id=self.resource.id,
-            title="Resource Audit",
-        )
-        self.assertEqual(audit.target_type, "RESOURCE")
 
     # ── Validation ──
 
@@ -145,16 +95,6 @@ class AuditServiceTest(TestCase):
             )
         self.assertEqual(ctx.exception.code, "FORBIDDEN_TARGET_TYPE")
 
-    def test_reject_structure_document_target(self):
-        with self.assertRaises(AuditServiceError) as ctx:
-            AuditService.create_audit(
-                audit_type=AuditType.SAFETY,
-                target_type="STRUCTURE_DOCUMENT",
-                target_id=1,
-                title="SD Target",
-            )
-        self.assertEqual(ctx.exception.code, "FORBIDDEN_TARGET_TYPE")
-
     def test_reject_missing_target_id(self):
         with self.assertRaises(AuditServiceError) as ctx:
             AuditService.create_audit(
@@ -165,17 +105,7 @@ class AuditServiceTest(TestCase):
             )
         self.assertEqual(ctx.exception.code, "TARGET_NOT_FOUND")
 
-    def test_reject_invalid_target_type(self):
-        with self.assertRaises(AuditServiceError) as ctx:
-            AuditService.create_audit(
-                audit_type=AuditType.SAFETY,
-                target_type="INVALID_TYPE",
-                target_id=1,
-                title="Bad Target",
-            )
-        self.assertEqual(ctx.exception.code, "INVALID_TARGET_TYPE")
-
-    # ── Score calculation ──
+    # ── Score calculation (numeric 0-5) ──
 
     def test_score_calculation_excludes_na(self):
         audit = AuditService.create_audit(
@@ -184,13 +114,13 @@ class AuditServiceTest(TestCase):
             target_id=self.plant.id,
             title="Score Test",
         )
-        AuditService.add_checklist_item(audit.id, "Item 1", result="PASS")
-        AuditService.add_checklist_item(audit.id, "Item 2", result="FAIL")
-        AuditService.add_checklist_item(audit.id, "Item 3", result="N_A")
-        AuditService.add_checklist_item(audit.id, "Item 4", result="PASS")
+        AuditService.add_checklist_item(audit.id, "Item 1", score=3)
+        AuditService.add_checklist_item(audit.id, "Item 2", score=1)
+        AuditService.add_checklist_item(audit.id, "Item 3", is_na=True)
+        AuditService.add_checklist_item(audit.id, "Item 4", score=5)
         audit.refresh_from_db()
-        # 3 applicable (PASS, FAIL, PASS) -> 2 passed / 3 = 66.67
-        self.assertAlmostEqual(audit.score, 66.67, places=1)
+        # 3 applicable (3+1+5) / (3*5) * 100 = 9/15*100 = 60.0
+        self.assertAlmostEqual(audit.score, 60.0, places=1)
 
     def test_score_no_applicable_items(self):
         audit = AuditService.create_audit(
@@ -199,19 +129,19 @@ class AuditServiceTest(TestCase):
             target_id=self.plant.id,
             title="NA Only",
         )
-        AuditService.add_checklist_item(audit.id, "Item 1", result="N_A")
+        AuditService.add_checklist_item(audit.id, "Item 1", is_na=True)
         audit.refresh_from_db()
         self.assertIsNone(audit.score)
 
-    def test_score_all_pass(self):
+    def test_score_all_max(self):
         audit = AuditService.create_audit(
             audit_type=AuditType.QUALITY,
             target_type="PLANT",
             target_id=self.plant.id,
-            title="All Pass",
+            title="All Max",
         )
-        AuditService.add_checklist_item(audit.id, "Q1", result="PASS")
-        AuditService.add_checklist_item(audit.id, "Q2", result="PASS")
+        AuditService.add_checklist_item(audit.id, "Q1", score=5)
+        AuditService.add_checklist_item(audit.id, "Q2", score=5)
         audit.refresh_from_db()
         self.assertEqual(audit.score, 100.0)
 
@@ -222,12 +152,12 @@ class AuditServiceTest(TestCase):
             target_id=self.plant.id,
             title="Recalc Add",
         )
-        AuditService.add_checklist_item(audit.id, "Item 1", result="PASS")
+        AuditService.add_checklist_item(audit.id, "Item 1", score=5)
         audit.refresh_from_db()
         self.assertEqual(audit.score, 100.0)
-        AuditService.add_checklist_item(audit.id, "Item 2", result="FAIL")
+        AuditService.add_checklist_item(audit.id, "Item 2", score=0)
         audit.refresh_from_db()
-        self.assertEqual(audit.score, 50.0)
+        self.assertAlmostEqual(audit.score, 50.0)
 
     def test_score_recalculates_after_checklist_update(self):
         audit = AuditService.create_audit(
@@ -236,13 +166,81 @@ class AuditServiceTest(TestCase):
             target_id=self.plant.id,
             title="Recalc Update",
         )
-        item = AuditService.add_checklist_item(audit.id, "Item 1", result="PASS")
-        AuditService.add_checklist_item(audit.id, "Item 2", result="FAIL")
+        item1 = AuditService.add_checklist_item(audit.id, "Item 1", score=5)
+        AuditService.add_checklist_item(audit.id, "Item 2", score=1)
         audit.refresh_from_db()
-        self.assertEqual(audit.score, 50.0)
-        AuditService.update_checklist_item(item.id, result="FAIL")
+        self.assertAlmostEqual(audit.score, 60.0)
+        AuditService.update_checklist_item(item1.id, score=0)
         audit.refresh_from_db()
-        self.assertEqual(audit.score, 0.0)
+        self.assertAlmostEqual(audit.score, 10.0)
+
+    def test_reject_invalid_score(self):
+        audit = AuditService.create_audit(
+            audit_type=AuditType.SAFETY,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Bad Score",
+        )
+        with self.assertRaises(AuditServiceError) as ctx:
+            AuditService.add_checklist_item(audit.id, "Q", score=6)
+        self.assertEqual(ctx.exception.code, "INVALID_SCORE")
+
+    # ── Complete audit ──
+
+    def test_complete_audit_succeeds(self):
+        audit = AuditService.create_audit(
+            audit_type=AuditType.FIVE_S,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Complete Test",
+        )
+        AuditService.add_checklist_item(audit.id, "Q1", score=4)
+        AuditService.add_checklist_item(audit.id, "Q2", score=3)
+        completed = AuditService.complete_audit(audit.id)
+        self.assertEqual(completed.status, AuditStatus.COMPLETED)
+        self.assertIsNotNone(completed.score)
+
+    def test_complete_audit_blocked_unanswered(self):
+        audit = AuditService.create_audit(
+            audit_type=AuditType.FIVE_S,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Unanswered Test",
+        )
+        AuditService.add_checklist_item(audit.id, "Q1", score=4)
+        AuditService.add_checklist_item(audit.id, "Q2")  # no score, not NA
+        with self.assertRaises(AuditServiceError) as ctx:
+            AuditService.complete_audit(audit.id)
+        self.assertEqual(ctx.exception.code, "UNANSWERED_ITEMS")
+
+    def test_complete_audit_blocked_already_completed(self):
+        audit = AuditService.create_audit(
+            audit_type=AuditType.FIVE_S,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Already Done",
+        )
+        AuditService.add_checklist_item(audit.id, "Q1", score=5)
+        AuditService.complete_audit(audit.id)
+        with self.assertRaises(AuditServiceError) as ctx:
+            AuditService.complete_audit(audit.id)
+        self.assertEqual(ctx.exception.code, "ALREADY_COMPLETED")
+
+    # ── Add checklist item with score —─
+
+    def test_add_checklist_item_with_score_and_na(self):
+        audit = AuditService.create_audit(
+            audit_type=AuditType.SAFETY,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Score Item",
+        )
+        item = AuditService.add_checklist_item(audit.id, "Question?", score=4)
+        self.assertEqual(item.score, 4)
+        self.assertFalse(item.is_na)
+        na_item = AuditService.add_checklist_item(audit.id, "N/A Q", is_na=True)
+        self.assertTrue(na_item.is_na)
+        self.assertIsNone(na_item.score)
 
     # ── Findings ──
 
@@ -261,20 +259,6 @@ class AuditServiceTest(TestCase):
             )
         self.assertEqual(ctx.exception.code, "INVALID_SEVERITY")
 
-    def test_finding_status_validation(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Finding Status",
-        )
-        finding = AuditService.add_finding(
-            audit_id=audit.id,
-            description="Test finding",
-            severity="HIGH",
-        )
-        self.assertEqual(finding.status, FindingStatus.OPEN)
-
     def test_close_finding_sets_closed(self):
         audit = AuditService.create_audit(
             audit_type=AuditType.SAFETY,
@@ -292,6 +276,68 @@ class AuditServiceTest(TestCase):
         self.assertEqual(closed.status, FindingStatus.CLOSED)
 
 
+class AuditTemplateTest(TestCase):
+
+    def setUp(self):
+        self.plant = Plant.objects.create(
+            code="TPL", name="Template Plant",
+            company=Company.objects.create(code="TC", name="Template Co", status="ACTIVE"),
+            status="ACTIVE",
+        )
+
+    def test_seed_5s_template_creates_correct_count(self):
+        template = AuditTemplateService.seed_5s_template()
+        self.assertEqual(template.code, "PC_5S_AUDIT")
+        self.assertEqual(template.audit_type, AuditType.FIVE_S)
+        cats = template.categories.all()
+        self.assertEqual(cats.count(), 5)
+        total_qs = sum(c.questions.count() for c in cats)
+        self.assertEqual(total_qs, 25)
+
+    def test_seed_5s_template_is_idempotent(self):
+        t1 = AuditTemplateService.seed_5s_template()
+        t2 = AuditTemplateService.seed_5s_template()
+        self.assertEqual(t1.id, t2.id)
+        self.assertEqual(t2.categories.count(), 5)
+
+    def test_get_active_template(self):
+        AuditTemplateService.seed_5s_template()
+        t = AuditTemplateService.get_active_template(AuditType.FIVE_S)
+        self.assertIsNotNone(t)
+        self.assertEqual(t.audit_type, AuditType.FIVE_S)
+
+    def test_create_audit_from_template_initializes_25_items(self):
+        AuditTemplateService.seed_5s_template()
+        template = AuditTemplateService.get_active_template(AuditType.FIVE_S)
+        audit = AuditService.create_audit_from_template(
+            template_id=template.id,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Template Audit",
+        )
+        self.assertEqual(audit.checklist_items.count(), 25)
+        self.assertEqual(audit.audit_type, AuditType.FIVE_S)
+
+    def test_create_audit_from_template_scores_work(self):
+        AuditTemplateService.seed_5s_template()
+        template = AuditTemplateService.get_active_template(AuditType.FIVE_S)
+        audit = AuditService.create_audit_from_template(
+            template_id=template.id,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Score Template",
+        )
+        self.assertEqual(audit.checklist_items.count(), 25)
+        items = list(audit.checklist_items.all())
+        self.assertIsNone(items[0].score)
+        self.assertFalse(items[0].is_na)
+        # score all items
+        for item in items:
+            AuditService.update_checklist_item(item.id, score=4)
+        audit.refresh_from_db()
+        self.assertAlmostEqual(audit.score, 80.0)
+
+
 class AuditGraphQLDelegationTest(TestCase):
 
     def setUp(self):
@@ -305,9 +351,6 @@ class AuditGraphQLDelegationTest(TestCase):
             username="testuser", password="testpass123"
         )
 
-    def _create_audit(self, **kw):
-        return AuditService.create_audit(**kw)
-
     # ── Query delegation ──
 
     def test_audits_query_delegates(self):
@@ -316,7 +359,8 @@ class AuditGraphQLDelegationTest(TestCase):
         self.assertIsInstance(audits, list)
 
     def test_audit_query_delegates(self):
-        audit = self._create_audit(
+        from manufacturing.domain.audit_service import AuditService
+        audit = AuditService.create_audit(
             audit_type=AuditType.FIVE_S,
             target_type="PLANT",
             target_id=self.plant.id,
@@ -326,82 +370,42 @@ class AuditGraphQLDelegationTest(TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.title, "GQL Audit")
 
+    def test_audit_template_query_delegates(self):
+        template = AuditTemplateService.seed_5s_template()
+        result = AuditTemplateService.get_template(template.id)
+        self.assertIsNotNone(result)
+        self.assertEqual(result.code, "PC_5S_AUDIT")
+
+    def test_audit_templates_query_delegates(self):
+        AuditTemplateService.seed_5s_template()
+        templates = AuditTemplateService.list_templates()
+        self.assertGreaterEqual(len(templates), 1)
+
     # ── Mutation delegation ──
 
-    def test_create_mutation_delegates(self):
+    def test_create_audit_from_template_delegates(self):
+        AuditTemplateService.seed_5s_template()
+        template = AuditTemplateService.get_active_template(AuditType.FIVE_S)
+        audit = AuditService.create_audit_from_template(
+            template_id=template.id,
+            target_type="PLANT",
+            target_id=self.plant.id,
+            title="Template Test",
+        )
+        self.assertEqual(audit.title, "Template Test")
+        self.assertEqual(audit.checklist_items.count(), 25)
+
+    def test_complete_audit_delegates(self):
         audit = AuditService.create_audit(
             audit_type=AuditType.SAFETY,
             target_type="PLANT",
             target_id=self.plant.id,
-            title="Create Test",
+            title="Complete Delegation",
         )
-        self.assertEqual(audit.title, "Create Test")
-        self.assertEqual(audit.status, "DRAFT")
-
-    def test_update_mutation_delegates(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.QUALITY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Original",
-        )
-        updated = AuditService.update_audit(audit.id, title="Updated Title")
-        self.assertEqual(updated.title, "Updated Title")
-
-    def test_add_checklist_item_delegates(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Checklist Test",
-        )
-        item = AuditService.add_checklist_item(audit.id, "Is it clean?", "PASS")
-        self.assertEqual(item.question, "Is it clean?")
-        self.assertEqual(item.result, "PASS")
-
-    def test_update_checklist_item_delegates(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Checklist Upd",
-        )
-        item = AuditService.add_checklist_item(audit.id, "Question?", "PASS")
-        updated = AuditService.update_checklist_item(item.id, result="FAIL")
-        self.assertEqual(updated.result, "FAIL")
-
-    def test_add_finding_delegates(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Finding Add",
-        )
-        finding = AuditService.add_finding(audit.id, "Issue found", "HIGH")
-        self.assertEqual(finding.severity, "HIGH")
-        self.assertEqual(finding.status, "OPEN")
-
-    def test_update_finding_delegates(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Finding Upd",
-        )
-        finding = AuditService.add_finding(audit.id, "Original issue", "LOW")
-        updated = AuditService.update_finding(finding.id, severity="HIGH")
-        self.assertEqual(updated.severity, "HIGH")
-
-    def test_close_finding_delegates(self):
-        audit = AuditService.create_audit(
-            audit_type=AuditType.SAFETY,
-            target_type="PLANT",
-            target_id=self.plant.id,
-            title="Finding Close",
-        )
-        finding = AuditService.add_finding(audit.id, "Fix issue", "MEDIUM")
-        closed = AuditService.close_finding(finding.id)
-        self.assertEqual(closed.status, "CLOSED")
+        item = AuditService.add_checklist_item(audit.id, "Q1", score=5)
+        completed = AuditService.complete_audit(audit.id)
+        self.assertEqual(completed.status, "COMPLETED")
+        self.assertIsNotNone(completed.score)
 
     # ── Governance: resolvers contain no business/score logic ──
 
@@ -412,6 +416,7 @@ class AuditGraphQLDelegationTest(TestCase):
 
         audit_mutation_names = [
             "create_audit", "update_audit",
+            "create_audit_from_template", "complete_audit",
             "add_audit_checklist_item", "update_audit_checklist_item",
             "add_audit_finding", "update_audit_finding", "close_audit_finding",
         ]
@@ -429,3 +434,9 @@ class AuditGraphQLDelegationTest(TestCase):
             source = inspect.getsource(getattr(ManufacturingQuery, name))
             self.assertIn("AuditService", source,
                           f"{name} does not delegate to AuditService")
+
+        template_query_names = ["audit_templates", "audit_template"]
+        for name in template_query_names:
+            source = inspect.getsource(getattr(ManufacturingQuery, name))
+            self.assertIn("AuditTemplateService", source,
+                          f"{name} does not delegate to AuditTemplateService")

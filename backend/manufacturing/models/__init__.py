@@ -44,7 +44,7 @@ from .reference_table import ReferenceTable
 from .reference_item import ReferenceItem
 from .config_option import ConfigOption
 from .structure_document import StructureDocument, DocumentType, TargetType, DocumentStatus, LifecycleAction, StructureDocumentRevisionHistory, StructureDocumentAuditTrail
-from .audit import Audit, AuditChecklistItem, AuditFinding, AuditType, AuditTargetType, AuditStatus, ChecklistResult, Severity, FindingStatus
+from .audit import Audit, AuditChecklistItem, AuditFinding, AuditAnswer, AuditType, AuditTargetType, AuditStatus, ChecklistResult, Severity, FindingStatus, TemplateStatus, ModuleScope, ResponseType
 
 __all__ = [
     "EntityStatus",
@@ -143,10 +143,14 @@ __all__ = [
     "Audit",
     "AuditChecklistItem",
     "AuditFinding",
+    "AuditAnswer",
     "AuditType",
     "AuditTargetType",
     "AuditStatus",
     "ChecklistResult",
     "Severity",
     "FindingStatus",
+    "TemplateStatus",
+    "ModuleScope",
+    "ResponseType",
 ]

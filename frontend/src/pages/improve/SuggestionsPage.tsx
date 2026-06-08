@@ -86,15 +86,6 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
     </section>
   );
 }
-function InlineRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="grid items-center gap-2" style={{ gridTemplateColumns: "100px minmax(0,1fr)" }}>
-      <span className={`text-xs font-medium ${theme.textMuted}`}>{label}</span>
-      <span className={`text-sm font-medium ${theme.textPrimary} min-w-0 truncate`}>{value}</span>
-    </div>
-  );
-}
-
 export function SuggestionsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
@@ -314,18 +305,89 @@ export function SuggestionsPage() {
 
   const renderDetail = () => {
     if (mode === "create" && !sel) return <div className="flex-1 flex flex-col overflow-hidden">{mutationError && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}{renderForm()}</div>;
-    if (!sel) return (
-      <div className={`flex flex-1 items-center justify-center ${theme.page} h-full`}>
-        <div className="text-center max-w-xs">
-          <div className={`text-sm font-semibold ${theme.textPrimary} mb-1.5`}>No suggestion selected</div>
-          <p className={`text-xs ${theme.textSecondary} leading-relaxed mb-4`}>Select a suggestion from the list or create a new improvement idea.</p>
-          <button type="button" onClick={hNew}
-            className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors ">
-            <Plus className="h-3.5 w-3.5 stroke-current" /> New Suggestion
-          </button>
+    if (!sel) {
+      const total = suggestions.length;
+      const newCount = suggestions.filter((s) => s.status === "NEW").length;
+      const reviewCount = suggestions.filter((s) => s.status === "UNDER_REVIEW").length;
+      const acceptedCount = suggestions.filter((s) => s.status === "ACCEPTED").length;
+      const rejectedCount = suggestions.filter((s) => s.status === "REJECTED").length;
+      const convertedCount = suggestions.filter((s) => s.status === "CONVERTED_TO_KAIZEN").length;
+      const conversionRate = total > 0 ? Math.round((convertedCount / total) * 100) : 0;
+
+      return (
+        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+          <div className="p-4 space-y-5">
+            <SectionCard title="Suggestions" action={conversionRate > 0 ? (
+              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">{conversionRate}% conversion</span>
+            ) : undefined}>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Total</p>
+                  <p className={`text-lg font-bold ${theme.textPrimary}`}>{total}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("NEW")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>New</p>
+                  <p className={`text-lg font-bold text-blue-600 dark:text-blue-400`}>{newCount}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("UNDER_REVIEW")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Under Review</p>
+                  <p className={`text-lg font-bold text-yellow-600 dark:text-yellow-400`}>{reviewCount}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("ACCEPTED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Accepted</p>
+                  <p className={`text-lg font-bold text-green-600 dark:text-green-400`}>{acceptedCount}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("REJECTED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Rejected</p>
+                  <p className={`text-lg font-bold ${theme.textMuted}`}>{rejectedCount}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("CONVERTED_TO_KAIZEN")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Converted</p>
+                  <p className={`text-lg font-bold text-purple-600 dark:text-purple-400`}>{convertedCount}</p>
+                </button>
+              </div>
+            </SectionCard>
+
+            {/* Status Breakdown */}
+            <SectionCard title="Status Breakdown">
+              {total === 0 ? (
+                <div className={`flex items-center justify-center h-16 text-xs italic ${theme.textMuted}`}>No suggestions yet. Create your first one to get started.</div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>New</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{newCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(newCount / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-blue-500" style={{ width: `${total > 0 ? (newCount / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Under Review</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{reviewCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(reviewCount / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-yellow-500" style={{ width: `${total > 0 ? (reviewCount / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Accepted</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{acceptedCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(acceptedCount / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-green-500" style={{ width: `${total > 0 ? (acceptedCount / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Rejected</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{rejectedCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(rejectedCount / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-gray-400" style={{ width: `${total > 0 ? (rejectedCount / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Converted to Kaizen</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{convertedCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(convertedCount / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-purple-500" style={{ width: `${total > 0 ? (convertedCount / total) * 100 : 0}%` }} /></div>
+                  </div>
+                </div>
+              )}
+            </SectionCard>
+
+            <div className="flex justify-center pt-2">
+              <button type="button" onClick={hNew}
+                className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+                <Plus className="h-3.5 w-3.5 stroke-current" /> New Suggestion
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
     return (
       <div className="flex-1 flex flex-col overflow-hidden">
         {mutationError && isForm && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}

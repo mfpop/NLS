@@ -53,20 +53,24 @@ export function PageHeader({ icon, iconClass, title, subtitle, systemMessage, on
           <div className={`truncate font-semibold leading-tight ${theme.textPrimary}`}>{title}</div>
           {subtitle && <div className={`truncate text-sm leading-tight ${theme.textSecondary}`}>{subtitle}</div>}
         </div>
-        {systemMessage && msgStyle && (
-          <div className={`flex items-center gap-2 px-3 py-1.5 border ${msgStyle.bg} ${msgStyle.border} ${msgStyle.text}`}>
-            {msgStyle.icon}
-            <span className="text-xs">{systemMessage.text}</span>
-            {onDismissSystemMessage && (
-              <button type="button" onClick={onDismissSystemMessage}>
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
-        )}
-        {children && (
+        {(systemMessage && msgStyle || children) && (
           <div className="flex items-center gap-2 shrink-0 ml-auto">
-            {children}
+            {systemMessage && msgStyle && (
+              <div className={`flex items-center gap-2 px-3 py-1.5 border rounded-md ${msgStyle.bg} ${msgStyle.border} ${msgStyle.text}`}>
+                {msgStyle.icon}
+                <span className="text-xs whitespace-nowrap">{systemMessage.text}</span>
+                {onDismissSystemMessage && (
+                  <button type="button" onClick={onDismissSystemMessage} className="hover:opacity-70">
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            )}
+            {children && (
+              <div className="flex items-center gap-2">
+                {children}
+              </div>
+            )}
           </div>
         )}
       </div>

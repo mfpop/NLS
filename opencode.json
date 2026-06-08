@@ -1,0 +1,111 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\02_Work\\localai\\lmd"
+      ],
+      "enabled": true
+    },
+    "git": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@cyanheads/git-mcp-server"
+      ],
+      "environment": {
+        "GIT_BASE_DIR": "D:\\02_Work\\localai\\lmd",
+        "MCP_LOG_LEVEL": "info"
+      },
+      "enabled": true
+    },
+    "database": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-server-mysql"
+      ],
+      "environment": {
+        "MYSQL_HOST": "127.0.0.1",
+        "MYSQL_PORT": "3306",
+        "MYSQL_USER": "root",
+        "MYSQL_PASS": "Nexus",
+        "MYSQL_DB": "nexusleansync"
+      },
+      "enabled": true
+    },
+    "docs-search": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "D:\\02_Work\\localai\\lmd\\docs",
+        "D:\\02_Work\\localai\\lmd\\agent-architecture\\project_context"
+      ],
+      "enabled": true
+    }
+  },
+  "permission": {
+    "read": "allow",
+    "grep": "allow",
+    "glob": "allow",
+    "list": "allow",
+    "edit": "ask",
+    "bash": "ask",
+    "webfetch": "ask",
+    "question": "ask",
+    "todowrite": "ask",
+    "skill": "ask",
+    "external_directory": "ask",
+    "lsp": "ask"
+  },
+  "instructions": [
+    "agent-architecture/orchestration/routing.md",
+    "agent-architecture/orchestration/permissions.md",
+    "agent-architecture/orchestration/workflow.md",
+    "agent-architecture/project_context/LEAN_SYNC_MASTER_CONTEXT.md",
+    "agent-architecture/project_context/ARCHITECTURE.md",
+    "agent-architecture/project_context/DOMAIN_CONSTITUTION.md",
+    "agent-architecture/project_context/WORKSPACE_RULES.md",
+    "agent-architecture/project_context/ACTIVE_DECISIONS.md",
+    "agent-architecture/agents/**/*.md",
+    "agent-architecture/agents/**/AGENT.md",
+    "agent-architecture/agents/**/agent.yaml",
+    "docs/**/*.md",
+    "docs/ARCHITECTURE.md",
+    "docs/DOMAIN_CONSTITUTION.md",
+    "docs/agent-routing.md"
+  ],
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".git/**",
+      ".venv/**",
+      "**/__pycache__/**",
+      "**/.pytest_cache/**",
+      "**/.mypy_cache/**",
+      "**/.ruff_cache/**",
+      "backend/media/**",
+      "**/.env",
+      "**/.env.*",
+      "**/secrets/**",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.pyc",
+      ".editorconfig",
+      "nul",
+      "old/**",
+      "_archive/**",
+      ".github/**"
+    ]
+  }
+}

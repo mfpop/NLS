@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import {
   Database, X, ChevronRight, ChevronDown, ChevronUp, Plus, Search, RefreshCw,
   Trash2, Save, FileSpreadsheet, ChevronsUpDown,
-  Lock, Info, Building2,
+  Lock, Info, Building2, Landmark,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { useToolbar } from "./components/ToolbarContext";
@@ -81,7 +81,7 @@ const TABLE_TYPE_LABELS: Record<string, string> = {
   material_category: "Material Categories", inventory_type: "Inventory Types", kanban_type: "Kanban Types", container_type: "Container Types", unit_type: "Unit Types",
   downtime_code: "Downtime Reasons", defect_code: "Quality Defect Types", scrap_reason: "Scrap Reasons", kaizen_category: "Lean / Quality Values",
   priority: "Priorities", label_badge: "Labels / Badges", maintenance_type: "Maintenance Types", material_flow_type: "Material Flow Types", process_type: "Process Types",
-  skill_type: "Skill Types", role: "Roles", shift_team: "Shift Teams", staff_user: "Staff Users", staff_assignment: "Staff Assignments",
+  skill_type: "Skill Types", role: "Roles", admin_department: "Administrative Departments", shift_team: "Shift Teams", staff_user: "Staff Users", staff_assignment: "Staff Assignments",
   product_model: "Product Models",
   production_family: "Production Families",
 };
@@ -92,7 +92,7 @@ const TABLE_TYPE_SINGULAR: Record<string, string> = {
   material_category: "Material Category", inventory_type: "Inventory Type", kanban_type: "Kanban Type", container_type: "Container Type", unit_type: "Unit Type",
   downtime_code: "Downtime Reason", defect_code: "Quality Defect Type", scrap_reason: "Scrap Reason", kaizen_category: "Lean / Quality Value",
   priority: "Priority", label_badge: "Label / Badge", maintenance_type: "Maintenance Type", material_flow_type: "Material Flow Type", process_type: "Process Type",
-  skill_type: "Skill Type", role: "Role", shift_team: "Shift Team", staff_user: "Staff User", staff_assignment: "Staff Assignment",
+  skill_type: "Skill Type", role: "Role", admin_department: "Administrative Department", shift_team: "Shift Team", staff_user: "Staff User", staff_assignment: "Staff Assignment",
   product_model: "Product Model",
   production_family: "Product Family",
 };
@@ -102,12 +102,12 @@ const TYPE_GROUPS: Record<string, string[]> = {
   manufacturing: ["manufacturing_type", "work_center_type", "machine_type", "operation_code", "routing_type", "product_model", "production_family"],
   material_flow: ["material_category", "inventory_type", "kanban_type", "container_type", "unit_type"],
   lean_quality: ["downtime_code", "defect_code", "scrap_reason", "kaizen_category", "priority", "label_badge", "maintenance_type", "material_flow_type", "process_type"],
-  people: ["skill_type", "role", "shift_team", "staff_user", "staff_assignment"],
+  people: ["skill_type", "role", "admin_department", "shift_team", "staff_user", "staff_assignment"],
 };
 
 const GROUP_ORDER = ["organization", "manufacturing", "material_flow", "lean_quality", "people"];
 const READ_ONLY_TABLE_TYPES = new Set<string>();
-const PEOPLE_TABLE_TYPES = new Set(["skill_type", "role", "shift_team", "staff_user", "staff_assignment"]);
+const PEOPLE_TABLE_TYPES = new Set(["skill_type", "role", "admin_department", "shift_team", "staff_user", "staff_assignment"]);
 
 // Scope declarations for reference table types
 // GLOBAL  — unaffected by Plant/Line selector
@@ -121,7 +121,7 @@ const TABLE_SCOPE: Record<string, TableScope> = {
   material_category: "GLOBAL", inventory_type: "GLOBAL", kanban_type: "GLOBAL", container_type: "GLOBAL", unit_type: "GLOBAL",
   downtime_code: "GLOBAL", defect_code: "GLOBAL", scrap_reason: "GLOBAL", kaizen_category: "GLOBAL", priority: "GLOBAL",
   label_badge: "GLOBAL", maintenance_type: "GLOBAL", material_flow_type: "GLOBAL", process_type: "GLOBAL",
-  skill_type: "GLOBAL", role: "GLOBAL",
+  skill_type: "GLOBAL", role: "GLOBAL", admin_department: "GLOBAL",
   shift_team: "PLANT",
   staff_user: "PLANT",
   staff_assignment: "PLANT",
@@ -173,6 +173,7 @@ const TYPE_PLACEHOLDERS: Record<string, Partial<Record<string, string>>> = {
   process_type: { name: "e.g. Welding", code: "e.g. WELD" },
   skill_type: { name: "e.g. Machine Operator", code: "e.g. OPER" },
   role: { name: "e.g. Operator", code: "e.g. OP" },
+  admin_department: { name: "e.g. Production Control", code: "e.g. PROD_CTRL" },
   shift_team: { name: "e.g. Team A (Day)", code: "e.g. A" },
   staff_user: { name: "Backend user display name", code: "Backend username" },
   staff_assignment: { name: "Assigned staff member", code: "Backend username" },
@@ -516,6 +517,9 @@ function ExplorerBrowser({ openGroup, toggleGroup, groupedFiltered, openCompany,
                             : "hover:bg-muted hover:bg-muted border-transparent"
                         }`}
                         style={{ paddingLeft: "36px", height: "30px" }}>
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded bg-entity-company-bg">
+                          <Landmark className="h-2.5 w-2.5 stroke-current text-entity-company" />
+                        </span>
                         <span className="flex-1 text-left text-[11px] font-medium text-muted-foreground">Company</span>
                         <span className="text-[9px] text-muted-foreground">setup</span>
                       </button>

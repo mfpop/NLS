@@ -138,6 +138,7 @@ export const TABLE_ENTITY_MAP: Record<string, string> = {
   kaizen_category: "resource",
   skill_type: "resourceGroup",
   role: "resourceGroup",
+  admin_department: "department",
   shift_team: "resourceGroup",
   staff_user: "department",
   staff_assignment: "department",

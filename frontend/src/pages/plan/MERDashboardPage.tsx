@@ -2,8 +2,8 @@ import { useState, useCallback, type ReactNode } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import {
-  RefreshCw, ClipboardList, AlertTriangle, Clock3,
-  ChevronRight, Wrench, Settings, Lightbulb, Cog,
+  RefreshCw, ClipboardList, Clock3,
+  Wrench, Settings, Lightbulb, Cog,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
 import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
@@ -247,7 +247,7 @@ export function MERDashboardPage() {
                   Create manufacturing engineering requests to see the analytics dashboard here.
                 </p>
                 <div className="flex gap-2">
-                    <button type="button" onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                    <button type="button" onClick={() => navigate("/plan/mer")}
                       className="inline-flex h-8 items-center gap-1.5 bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
                       New MER
                     </button>
@@ -263,7 +263,7 @@ export function MERDashboardPage() {
                 <SectionCard title="Key Metrics">
                   <div className="grid grid-cols-2 md:grid-cols-9 gap-2">
                     <KpiCard label="Submitted" value={summary.submitted}
-                      onClick={() => navigate("/plan/manufacturing-engineering-requests")} />
+                      onClick={() => navigate("/plan/mer")} />
                     <KpiCard label="Under Review" value={summary.underReview}
                       badge={summary.underReview > 0 ? { text: "Needs attention", color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300" } : undefined} />
                     <KpiCard label="Approved" value={summary.approved} />
@@ -367,7 +367,7 @@ export function MERDashboardPage() {
                           const days = daysUntil(m.dueDate);
                           return (
                             <button key={m.id} type="button"
-                              onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                              onClick={() => navigate("/plan/mer")}
                               className="w-full flex items-center gap-2 border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10 p-2 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/20 transition-colors ">
                               <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
                               <div className="min-w-0 flex-1">
@@ -397,7 +397,7 @@ export function MERDashboardPage() {
                         {recentMERs.map((m) => {
                           return (
                             <button key={m.id} type="button"
-                              onClick={() => navigate("/plan/manufacturing-engineering-requests")}
+                              onClick={() => navigate("/plan/mer")}
                               className="w-full flex items-center gap-2 p-2 text-left hover:bg-muted/50 transition-colors ">
                               <StatusDot status={m.status} />
                               <div className="min-w-0 flex-1">

@@ -65,11 +65,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [initialLoading, setInitialLoading] = useState(true);
 
+  // Development bypass: set localStorage dev_bypass=true to skip login
+  const devBypass = typeof window !== "undefined" && localStorage.getItem("dev_bypass") === "true";
+
   const [loginMutation] = useMutation(LOGIN_MUTATION);
   const [fetchMe] = useLazyQuery(ME_QUERY);
 
   useEffect(() => {
     let cancelled = false;
+    if (devBypass) {
+      setUser({
+        id: "1",
+        username: "dev_user",
+        email: "dev@example.com",
+        role: "ADMIN",
+        plant: "DEV_PLANT",
+        department: "Engineering",
+      });
+      setInitialLoading(false);
+      return;
+    }
     const token = getStoredToken();
     if (!token) {
       setInitialLoading(false);

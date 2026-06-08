@@ -27,6 +27,7 @@ class MERNode:
     target_type: str
     target_id: Optional[int]
     submitted_by: str
+    owner: str
     assigned_to: str
     reviewer: str
     status: str
@@ -55,8 +56,8 @@ class MERNode:
             description=m.description, request_type=m.request_type,
             category=m.category, priority=m.priority,
             target_type=m.target_type, target_id=m.target_id,
-            submitted_by=m.submitted_by, assigned_to=m.assigned_to,
-            reviewer=m.reviewer, status=m.status,
+            submitted_by=m.submitted_by, owner=m.owner,
+            assigned_to=m.assigned_to, reviewer=m.reviewer, status=m.status,
             review_notes=m.review_notes, rejection_reason=m.rejection_reason,
             impact_cost=m.impact_cost, impact_quality=m.impact_quality,
             impact_delivery=m.impact_delivery, impact_safety=m.impact_safety,
@@ -113,6 +114,7 @@ class MERInput:
     target_type: str = ""
     target_id: Optional[int] = None
     submitted_by: str = ""
+    owner: str = ""
     assigned_to: str = ""
     reviewer: str = ""
     impact_cost: str = ""
@@ -133,6 +135,7 @@ class MERUpdateInput:
     priority: Optional[str] = None
     target_type: Optional[str] = None
     target_id: Optional[int] = None
+    owner: Optional[str] = None
     assigned_to: Optional[str] = None
     reviewer: Optional[str] = None
     impact_cost: Optional[str] = None

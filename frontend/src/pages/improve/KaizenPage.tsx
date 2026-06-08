@@ -486,18 +486,89 @@ export function KaizenPage() {
   /* ── View / Detail ── */
   const renderDetail = () => {
     if (mode === "create" && !sel) return <div className="flex-1 flex flex-col min-h-0 overflow-hidden">{renderForm()}</div>;
-    if (!sel) return (
-      <div className={`flex flex-1 items-center justify-center ${theme.page} h-full`}>
-        <div className="text-center max-w-xs">
-          <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1.5`}>No kaizen selected</h3>
-          <p className={`text-xs ${theme.textSecondary} leading-relaxed mb-4`}>Select a kaizen or create a new improvement action.</p>
-          <button type="button" onClick={hNew}
-            className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
-            <Plus className="h-3.5 w-3.5 stroke-current" /> New Kaizen
-          </button>
+    if (!sel) {
+      const total = kaizens.length;
+      const planned = kaizens.filter((k) => k.status === "PLANNED").length;
+      const inProgress = kaizens.filter((k) => k.status === "IN_PROGRESS").length;
+      const completed = kaizens.filter((k) => k.status === "COMPLETED").length;
+      const cancelled = kaizens.filter((k) => k.status === "CANCELLED").length;
+      const overdue = kaizens.filter((k) => k.dueDate && isOverdue(k.dueDate) && k.status !== "COMPLETED").length;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return (
+        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+          <div className="p-4 space-y-5">
+            <SectionCard title="Kaizen" action={overdue > 0 ? (
+              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800">{overdue} overdue</span>
+            ) : undefined}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Total</p>
+                  <p className={`text-lg font-bold ${theme.textPrimary}`}>{total}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("PLANNED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Planned</p>
+                  <p className={`text-lg font-bold text-blue-600 dark:text-blue-400`}>{planned}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("IN_PROGRESS")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>In Progress</p>
+                  <p className={`text-lg font-bold text-amber-600 dark:text-amber-400`}>{inProgress}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("COMPLETED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Completed</p>
+                  <p className={`text-lg font-bold text-green-600 dark:text-green-400`}>{completed}</p>
+                </button>
+                <button type="button" onClick={() => setFilterStatus("CANCELLED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Cancelled</p>
+                  <p className={`text-lg font-bold ${theme.textMuted}`}>{cancelled}</p>
+                </button>
+                <div className="rounded-sm border border-border/60 bg-card p-3">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Overdue</p>
+                  <p className={`text-lg font-bold text-red-600 dark:text-red-400`}>{overdue}</p>
+                </div>
+                <div className="rounded-sm border border-border/60 bg-card p-3">
+                  <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Completion Rate</p>
+                  <p className={`text-lg font-bold ${theme.textMuted}`}>{completionRate}%</p>
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* Status Breakdown */}
+            <SectionCard title="Status Breakdown">
+              {total === 0 ? (
+                <div className={`flex items-center justify-center h-16 text-xs italic ${theme.textMuted}`}>No kaizens yet. Create your first improvement.</div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Planned</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{planned} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(planned / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-blue-500" style={{ width: `${total > 0 ? (planned / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>In Progress</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{inProgress} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(inProgress / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-amber-500" style={{ width: `${total > 0 ? (inProgress / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Completed</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{completed} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(completed / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-green-500" style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }} /></div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Cancelled</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{cancelled} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(cancelled / total * 100) : 0}%)</span></span></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-gray-400" style={{ width: `${total > 0 ? (cancelled / total) * 100 : 0}%` }} /></div>
+                  </div>
+                </div>
+              )}
+            </SectionCard>
+
+            <div className="flex justify-center pt-2">
+              <button type="button" onClick={hNew}
+                className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+                <Plus className="h-3.5 w-3.5 stroke-current" /> New Kaizen
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {mutationError && isForm && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}

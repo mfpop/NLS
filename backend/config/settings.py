@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     "check",
     "kpi_engine",
     "docs_manager",
+    "maintenance",
+    "administration",
 ]
 
 MIDDLEWARE = [

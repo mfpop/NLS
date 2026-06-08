@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "lmd.activeProductionLineId";
+const PLANT_KEY = "lmd.selectedPlantId";
 
 type ActiveLineSnapshot = {
   productionLineId: string | null;
+  selectedPlantId: string | null;
 };
 
 let snapshot: ActiveLineSnapshot = {
   productionLineId: typeof window === "undefined" ? null : window.localStorage.getItem(STORAGE_KEY),
+  selectedPlantId: typeof window === "undefined" ? null : window.localStorage.getItem(PLANT_KEY),
 };
 
 const listeners = new Set<() => void>();
@@ -21,7 +24,7 @@ export function getActiveLineId(): string | null {
 }
 
 export function setActiveLineId(productionLineId: string | null) {
-  snapshot = { productionLineId };
+  snapshot = { ...snapshot, productionLineId };
   if (typeof window !== "undefined") {
     if (productionLineId) {
       window.localStorage.setItem(STORAGE_KEY, productionLineId);
@@ -32,8 +35,21 @@ export function setActiveLineId(productionLineId: string | null) {
   emit();
 }
 
+export function setSelectedPlantId(plantId: string | null) {
+  snapshot = { ...snapshot, selectedPlantId: plantId };
+  if (typeof window !== "undefined") {
+    if (plantId) {
+      window.localStorage.setItem(PLANT_KEY, plantId);
+    } else {
+      window.localStorage.removeItem(PLANT_KEY);
+    }
+  }
+  emit();
+}
+
 export function resetActiveLineState() {
   setActiveLineId(null);
+  setSelectedPlantId(null);
 }
 
 export function useActiveLineId(): [string | null, (productionLineId: string | null) => void] {
@@ -43,14 +59,17 @@ export function useActiveLineId(): [string | null, (productionLineId: string | n
       return () => listeners.delete(listener);
     },
     () => snapshot,
-    () => ({ productionLineId: null })
+    () => ({ productionLineId: null, selectedPlantId: null })
   );
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
     const onStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        snapshot = { productionLineId: event.newValue };
+      if (event.key === STORAGE_KEY || event.key === PLANT_KEY) {
+        snapshot = {
+          productionLineId: window.localStorage.getItem(STORAGE_KEY),
+          selectedPlantId: window.localStorage.getItem(PLANT_KEY),
+        };
         emit();
       }
     };
@@ -60,4 +79,18 @@ export function useActiveLineId(): [string | null, (productionLineId: string | n
 
   const set = useCallback((productionLineId: string | null) => setActiveLineId(productionLineId), []);
   return [state.productionLineId, set];
+}
+
+export function useSelectedPlantId(): [string | null, (plantId: string | null) => void] {
+  const state = useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    () => snapshot,
+    () => ({ productionLineId: null, selectedPlantId: null })
+  );
+
+  const set = useCallback((plantId: string | null) => setSelectedPlantId(plantId), []);
+  return [state.selectedPlantId, set];
 }

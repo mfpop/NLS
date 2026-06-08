@@ -1,9 +1,9 @@
 import { gql } from "@apollo/client";
 
 export const PROBLEMS_QUERY = gql`
-  query Problems($status: String, $problemType: String, $targetType: String, $search: String) {
-    problems(status: $status, problemType: $problemType, targetType: $targetType, search: $search) {
-      id title description problemType targetType targetId severity status reportedBy reportedAt sourceType sourceId notes createdAt updatedAt
+  query Problems($controlArea: String, $status: String, $problemType: String, $targetType: String, $search: String) {
+    problems(controlArea: $controlArea, status: $status, problemType: $problemType, targetType: $targetType, search: $search) {
+      id controlArea title description problemType targetType targetId severity status reportedBy reportedAt sourceType sourceId notes createdAt updatedAt
     }
   }
 `;
@@ -17,9 +17,9 @@ export const PROBLEM_QUERY = gql`
 `;
 
 export const ACTIONS_QUERY = gql`
-  query Actions($status: String, $priority: String, $search: String) {
-    actions(status: $status, priority: $priority, search: $search) {
-      id title description sourceType sourceId owner dueDate status priority completedAt notes createdAt updatedAt
+  query Actions($controlArea: String, $status: String, $priority: String, $search: String) {
+    actions(controlArea: $controlArea, status: $status, priority: $priority, search: $search) {
+      id controlArea title description sourceType sourceId owner dueDate status priority completedAt notes createdAt updatedAt
     }
   }
 `;
@@ -75,7 +75,7 @@ export const QUALITY_CHECK_QUERY = gql`
 export const DMRS_QUERY = gql`
   query Dmrs($status: String, $targetType: String, $search: String) {
     dmrs(status: $status, targetType: $targetType, search: $search) {
-      id dmrNumber title description materialItemId productVariantId targetType targetId quantity uom defectDescription disposition status owner closedAt notes createdAt updatedAt
+      id dmrNumber title description materialItemId productVariantId targetType targetId quantity uom defectDescription containment severity disposition status owner dueDate closedAt notes createdAt updatedAt
     }
   }
 `;
@@ -83,7 +83,7 @@ export const DMRS_QUERY = gql`
 export const DMR_QUERY = gql`
   query Dmr($id: Int!) {
     dmr(id: $id) {
-      id dmrNumber title description materialItemId productVariantId targetType targetId quantity uom defectDescription disposition status owner closedAt notes createdAt updatedAt
+      id dmrNumber title description materialItemId productVariantId targetType targetId quantity uom defectDescription containment severity disposition status owner dueDate closedAt notes createdAt updatedAt
     }
   }
 `;
@@ -91,7 +91,7 @@ export const DMR_QUERY = gql`
 export const RMAS_QUERY = gql`
   query Rmas($status: String, $search: String) {
     rmas(status: $status, search: $search) {
-      id rmaNumber customerName productVariantId materialItemId quantity reason status receivedDate disposition owner notes createdAt updatedAt
+      id rmaNumber customerName partNumber serialLot productVariantId materialItemId quantity reason status receivedDate dueDate disposition customerResponseStatus receivingInspectionResult confirmedDefect suspectedCause confirmedCause dispositionOwner dispositionDate customerResponse owner notes createdAt updatedAt
     }
   }
 `;
@@ -99,7 +99,7 @@ export const RMAS_QUERY = gql`
 export const RMA_QUERY = gql`
   query Rma($id: Int!) {
     rma(id: $id) {
-      id rmaNumber customerName productVariantId materialItemId quantity reason status receivedDate disposition owner notes createdAt updatedAt
+      id rmaNumber customerName partNumber serialLot productVariantId materialItemId quantity reason status receivedDate dueDate disposition customerResponseStatus receivingInspectionResult confirmedDefect suspectedCause confirmedCause dispositionOwner dispositionDate customerResponse owner notes createdAt updatedAt
     }
   }
 `;

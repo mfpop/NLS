@@ -97,13 +97,13 @@ export const COMPLETE_QUALITY_CHECK_MUTATION = gql`
 
 // ── DMRs ──
 export const CREATE_DMR_MUTATION = gql`
-  mutation CreateDmr($dmrNumber: String!, $title: String!, $targetType: String!, $targetId: Int, $description: String, $defectDescription: String, $quantity: Float, $uom: String, $owner: String, $notes: String) {
-    createDmr(dmrNumber: $dmrNumber, title: $title, targetType: $targetType, targetId: $targetId, description: $description, defectDescription: $defectDescription, quantity: $quantity, uom: $uom, owner: $owner, notes: $notes)
+  mutation CreateDmr($dmrNumber: String!, $title: String!, $targetType: String!, $targetId: Int, $description: String, $defectDescription: String, $containment: String, $severity: String, $quantity: Float, $uom: String, $owner: String, $dueDate: String, $notes: String) {
+    createDmr(dmrNumber: $dmrNumber, title: $title, targetType: $targetType, targetId: $targetId, description: $description, defectDescription: $defectDescription, containment: $containment, severity: $severity, quantity: $quantity, uom: $uom, owner: $owner, dueDate: $dueDate, notes: $notes)
   }
 `;
 export const UPDATE_DMR_MUTATION = gql`
-  mutation UpdateDmr($id: Int!, $title: String, $description: String, $defectDescription: String, $owner: String, $notes: String) {
-    updateDmr(id: $id, title: $title, description: $description, defectDescription: $defectDescription, owner: $owner, notes: $notes)
+  mutation UpdateDmr($id: Int!, $title: String, $description: String, $defectDescription: String, $containment: String, $severity: String, $quantity: Float, $uom: String, $owner: String, $dueDate: String, $notes: String) {
+    updateDmr(id: $id, title: $title, description: $description, defectDescription: $defectDescription, containment: $containment, severity: $severity, quantity: $quantity, uom: $uom, owner: $owner, dueDate: $dueDate, notes: $notes)
   }
 `;
 export const REVIEW_DMR_MUTATION = gql`
@@ -111,6 +111,12 @@ export const REVIEW_DMR_MUTATION = gql`
 `;
 export const DISPOSITION_DMR_MUTATION = gql`
   mutation DispositionDmr($id: Int!, $disposition: String!) { dispositionDmr(id: $id, disposition: $disposition) }
+`;
+export const QUARANTINE_DMR_MUTATION = gql`
+  mutation QuarantineDmr($id: Int!) { quarantineDmr(id: $id) }
+`;
+export const APPROVE_DISPOSITION_DMR_MUTATION = gql`
+  mutation ApproveDispositionDmr($id: Int!) { approveDispositionDmr(id: $id) }
 `;
 export const CLOSE_DMR_MUTATION = gql`
   mutation CloseDmr($id: Int!) { closeDmr(id: $id) }
@@ -121,13 +127,13 @@ export const CANCEL_DMR_MUTATION = gql`
 
 // ── RMAs ──
 export const CREATE_RMA_MUTATION = gql`
-  mutation CreateRma($rmaNumber: String!, $customerName: String!, $quantity: Float, $reason: String, $owner: String, $notes: String) {
-    createRma(rmaNumber: $rmaNumber, customerName: $customerName, quantity: $quantity, reason: $reason, owner: $owner, notes: $notes)
+  mutation CreateRma($rmaNumber: String!, $customerName: String!, $partNumber: String, $serialLot: String, $quantity: Float, $reason: String, $dueDate: String, $disposition: String, $customerResponseStatus: String, $receivingInspectionResult: String, $confirmedDefect: String, $suspectedCause: String, $confirmedCause: String, $dispositionOwner: String, $dispositionDate: String, $customerResponse: String, $owner: String, $notes: String) {
+    createRma(rmaNumber: $rmaNumber, customerName: $customerName, partNumber: $partNumber, serialLot: $serialLot, quantity: $quantity, reason: $reason, dueDate: $dueDate, disposition: $disposition, customerResponseStatus: $customerResponseStatus, receivingInspectionResult: $receivingInspectionResult, confirmedDefect: $confirmedDefect, suspectedCause: $suspectedCause, confirmedCause: $confirmedCause, dispositionOwner: $dispositionOwner, dispositionDate: $dispositionDate, customerResponse: $customerResponse, owner: $owner, notes: $notes) { id }
   }
 `;
 export const UPDATE_RMA_MUTATION = gql`
-  mutation UpdateRma($id: Int!, $customerName: String, $reason: String, $owner: String, $notes: String) {
-    updateRma(id: $id, customerName: $customerName, reason: $reason, owner: $owner, notes: $notes)
+  mutation UpdateRma($id: Int!, $customerName: String, $partNumber: String, $serialLot: String, $reason: String, $dueDate: String, $disposition: String, $customerResponseStatus: String, $receivingInspectionResult: String, $confirmedDefect: String, $suspectedCause: String, $confirmedCause: String, $dispositionOwner: String, $dispositionDate: String, $customerResponse: String, $owner: String, $notes: String) {
+    updateRma(id: $id, customerName: $customerName, partNumber: $partNumber, serialLot: $serialLot, reason: $reason, dueDate: $dueDate, disposition: $disposition, customerResponseStatus: $customerResponseStatus, receivingInspectionResult: $receivingInspectionResult, confirmedDefect: $confirmedDefect, suspectedCause: $suspectedCause, confirmedCause: $confirmedCause, dispositionOwner: $dispositionOwner, dispositionDate: $dispositionDate, customerResponse: $customerResponse, owner: $owner, notes: $notes)
   }
 `;
 export const RECEIVE_RMA_MUTATION = gql`

@@ -28,6 +28,7 @@ const TABLE_NAME_TO_KEY: Record<string, string> = {
   "Kaizen Categories": "kaizen_category",
   "Skill Types": "skill_type",
   Roles: "role",
+  "Administrative Departments": "admin_department",
   "Shift Teams": "shift_team",
   "Product Models": "product_model",
   "Production Families": "production_family",
@@ -52,7 +53,7 @@ const GROUP_DESCRIPTIONS: Record<string, string> = {
   manufacturing: "Types, centers, machines, routes, codes, product models, families",
   material_flow: "Categories, inventory, kanban, containers, units",
   lean_quality: "Downtime, defects, scrap, kaizen categories",
-  people: "Skills, roles, shift teams",
+  people: "Skills, roles, departments, shift teams",
 };
 
 const GROUP_SHORTCUTS: Record<string, string> = {
@@ -60,7 +61,7 @@ const GROUP_SHORTCUTS: Record<string, string> = {
   manufacturing: "Define manufacturing types & work centers",
   material_flow: "Set material categories & inventory types",
   lean_quality: "Manage downtime codes & defect categories",
-  people: "Configure skills matrix & team roles",
+  people: "Configure skills, departments & team roles",
 };
 
 const CATEGORY_CODE_TO_TABLE_KEY: Record<string, string> = {
@@ -98,6 +99,7 @@ const CATEGORY_CODE_TO_TABLE_KEY: Record<string, string> = {
   kaizen_category: "kaizen_category",
   skill_type: "skill_type",
   role: "role",
+  admin_department: "admin_department",
   shift_team: "shift_team",
   product_model: "product_model",
   production_family: "production_family",
@@ -125,6 +127,7 @@ const TABLE_KEY_TO_GROUP: Record<string, string> = {
   kaizen_category: "lean_quality",
   skill_type: "people",
   role: "people",
+  admin_department: "people",
   shift_team: "people",
   product_model: "manufacturing",
   production_family: "manufacturing",

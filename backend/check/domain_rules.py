@@ -13,12 +13,14 @@ from check.constants import (
     CHECK_STATUS_COMPLETED,
     DMR_STATUS_OPEN,
     DMR_STATUS_UNDER_REVIEW,
-    DMR_STATUS_DISPOSITIONED,
+    DMR_STATUS_QUARANTINED,
+    DMR_STATUS_DISPOSITION_PENDING,
+    DMR_STATUS_DISPOSITION_APPROVED,
     DMR_STATUS_CLOSED,
     RMA_STATUS_OPEN,
     RMA_STATUS_RECEIVED,
     RMA_STATUS_UNDER_REVIEW,
-    RMA_STATUS_DISPOSITIONED,
+    RMA_STATUS_DISPOSITION_PENDING,
     RMA_STATUS_CLOSED,
     INCIDENT_STATUS_OPEN,
     INCIDENT_STATUS_CONTAINED,
@@ -72,19 +74,28 @@ def can_complete_check(current_status: str) -> bool:
 # ── DMR transitions ──
 
 def can_review_dmr(current_status: str) -> bool:
-    return current_status == DMR_STATUS_OPEN
+    return current_status in (DMR_STATUS_OPEN, DMR_STATUS_QUARANTINED)
 
 
 def can_disposition_dmr(current_status: str) -> bool:
-    return current_status == DMR_STATUS_UNDER_REVIEW
+    return current_status in (DMR_STATUS_UNDER_REVIEW, DMR_STATUS_QUARANTINED)
+
+
+def can_quarantine_dmr(current_status: str) -> bool:
+    return current_status in (DMR_STATUS_OPEN, DMR_STATUS_UNDER_REVIEW)
+
+
+def can_approve_disposition_dmr(current_status: str) -> bool:
+    return current_status == DMR_STATUS_DISPOSITION_PENDING
 
 
 def can_close_dmr(current_status: str) -> bool:
-    return current_status == DMR_STATUS_DISPOSITIONED
+    return current_status == DMR_STATUS_DISPOSITION_APPROVED
 
 
 def can_cancel_dmr(current_status: str) -> bool:
-    return current_status in (DMR_STATUS_OPEN, DMR_STATUS_UNDER_REVIEW, DMR_STATUS_DISPOSITIONED)
+    return current_status in (DMR_STATUS_OPEN, DMR_STATUS_UNDER_REVIEW, DMR_STATUS_QUARANTINED, DMR_STATUS_DISPOSITION_PENDING)
+
 
 
 # ── RMA transitions ──
@@ -102,11 +113,11 @@ def can_disposition_rma(current_status: str) -> bool:
 
 
 def can_close_rma(current_status: str) -> bool:
-    return current_status == RMA_STATUS_DISPOSITIONED
+    return current_status == RMA_STATUS_DISPOSITION_PENDING
 
 
 def can_cancel_rma(current_status: str) -> bool:
-    return current_status in (RMA_STATUS_OPEN, RMA_STATUS_RECEIVED, RMA_STATUS_UNDER_REVIEW, RMA_STATUS_DISPOSITIONED)
+    return current_status in (RMA_STATUS_OPEN, RMA_STATUS_RECEIVED, RMA_STATUS_UNDER_REVIEW, RMA_STATUS_DISPOSITION_PENDING)
 
 
 # ── Safety Incident transitions ──

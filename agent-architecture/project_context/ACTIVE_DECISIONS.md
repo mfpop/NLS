@@ -56,7 +56,18 @@ The following are LeanSync active decisions. These are stable and Governance-app
 44. MER belongs under Plan, not Improve.
 45. No financial validation engine. No forced MER creation.
 
+## Administration Layer
+49. AdministrativeDepartment is separate from manufacturing Department.
+50. Manufacturing Department remains production/shopfloor structure only.
+51. AdministrativeDepartment is used for user organization, responsibility, roles, and permissions.
+52. User access is based on AdministrativeDepartment, Role, and Company/Plant scope.
+53. User access must not depend on manufacturing Department.
+54. Application Settings contains settings only, not administrative master data.
+55. UserProfile must reference AdministrativeDepartment only — never manufacturing Department.
+56. Role/Permission logic is service-owned, not in resolvers or frontend.
+57. No resource-level permission matrix.
+
 ## Agent System Rules
-46. Memory is runtime-only and must never override `project_context/`.
-47. Governance-approved rules belong in `project_context/`.
-48. Skills must not define permanent governance rules.
+58. Memory is runtime-only and must never override `project_context/`.
+59. Governance-approved rules belong in `project_context/`.
+60. Skills must not define permanent governance rules.

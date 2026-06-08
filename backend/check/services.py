@@ -17,10 +17,11 @@ from check.constants import (
     PROBLEM_STATUS_CLOSED, PROBLEM_STATUS_CANCELLED,
     ACTION_STATUS_IN_PROGRESS, ACTION_STATUS_DONE, ACTION_STATUS_CANCELLED,
     CHECK_STATUS_COMPLETED,
-    DMR_STATUS_UNDER_REVIEW, DMR_STATUS_DISPOSITIONED,
+    DMR_STATUS_UNDER_REVIEW, DMR_STATUS_QUARANTINED,
+    DMR_STATUS_DISPOSITION_PENDING, DMR_STATUS_DISPOSITION_APPROVED,
     DMR_STATUS_CLOSED, DMR_STATUS_CANCELLED,
     RMA_STATUS_RECEIVED, RMA_STATUS_UNDER_REVIEW,
-    RMA_STATUS_DISPOSITIONED, RMA_STATUS_CLOSED, RMA_STATUS_CANCELLED,
+    RMA_STATUS_DISPOSITION_PENDING, RMA_STATUS_CLOSED, RMA_STATUS_CANCELLED,
     INCIDENT_STATUS_CONTAINED, INCIDENT_STATUS_UNDER_REVIEW,
     INCIDENT_STATUS_CLOSED, INCIDENT_STATUS_CANCELLED,
     MATERIAL_ISSUE_STATUS_CONTAINED, MATERIAL_ISSUE_STATUS_RESOLVED,
@@ -32,7 +33,7 @@ from check.domain_rules import (
     can_review_problem, can_contain_problem, can_close_problem, can_cancel_problem,
     can_start_action, can_complete_action, can_cancel_action,
     can_complete_check,
-    can_review_dmr, can_disposition_dmr, can_close_dmr, can_cancel_dmr,
+    can_review_dmr, can_disposition_dmr, can_quarantine_dmr, can_approve_disposition_dmr, can_close_dmr, can_cancel_dmr,
     can_receive_rma, can_review_rma, can_disposition_rma, can_close_rma, can_cancel_rma,
     can_contain_safety_incident, can_review_safety_incident,
     can_close_safety_incident, can_cancel_safety_incident,
@@ -114,6 +115,8 @@ class ProblemService:
     def list_problems(self, filters: dict | None = None) -> list[Problem]:
         qs = Problem.objects.all()
         if filters:
+            if filters.get("control_area"):
+                qs = qs.filter(control_area=filters["control_area"])
             if filters.get("status"):
                 qs = qs.filter(status=filters["status"])
             if filters.get("problem_type"):
@@ -186,6 +189,8 @@ class ActionService:
     def list_actions(self, filters: dict | None = None) -> list[Action]:
         qs = Action.objects.all()
         if filters:
+            if filters.get("control_area"):
+                qs = qs.filter(control_area=filters["control_area"])
             if filters.get("status"):
                 qs = qs.filter(status=filters["status"])
             if filters.get("priority"):
@@ -381,8 +386,28 @@ class QualityControlService:
             raise InvalidStatusTransitionError(
                 f"Cannot disposition DMR in status '{dmr.status}'"
             )
-        dmr.status = DMR_STATUS_DISPOSITIONED
+        dmr.status = DMR_STATUS_DISPOSITION_PENDING
         dmr.disposition = disposition
+        dmr.save()
+        return dmr
+
+    def quarantine_dmr(self, dmr_id: int) -> DMR:
+        dmr = self._get_dmr(dmr_id)
+        if not can_quarantine_dmr(dmr.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot quarantine DMR in status '{dmr.status}'"
+            )
+        dmr.status = DMR_STATUS_QUARANTINED
+        dmr.save()
+        return dmr
+
+    def approve_disposition_dmr(self, dmr_id: int) -> DMR:
+        dmr = self._get_dmr(dmr_id)
+        if not can_approve_disposition_dmr(dmr.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot approve DMR disposition in status '{dmr.status}'"
+            )
+        dmr.status = DMR_STATUS_DISPOSITION_APPROVED
         dmr.save()
         return dmr
 
@@ -448,7 +473,7 @@ class QualityControlService:
             raise InvalidStatusTransitionError(
                 f"Cannot disposition RMA in status '{rma.status}'"
             )
-        rma.status = RMA_STATUS_DISPOSITIONED
+        rma.status = RMA_STATUS_DISPOSITION_PENDING
         rma.disposition = disposition
         rma.save()
         return rma

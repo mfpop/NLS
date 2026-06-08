@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   ClipboardList, Plus, Pencil, RefreshCw, X, Check, Printer,
-  ArrowRight, FileText, Ban, PlusCircle, CheckCircle, XCircle,
+  ArrowRight, FileText, Ban, CheckCircle,
   AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
@@ -11,7 +11,7 @@ import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
 import { applyA3Template, applyPDCATemplate } from "./generateA3Template";
-import { useTargetEntities, resolveTargetLabel } from "@/hooks/useTargetEntities";
+import { useTargetEntities } from "@/hooks/useTargetEntities";
 import { A3_PDCA_RECORDS_QUERY } from "@/graphql/improvementQueries";
 import {
   CREATE_A3_PDCA_MUTATION,
@@ -22,9 +22,6 @@ import {
   MOVE_A3_PDCA_TO_ACT_MUTATION,
   COMPLETE_A3_PDCA_MUTATION,
   CANCEL_A3_PDCA_MUTATION,
-  ADD_A3_PDCA_ACTION_MUTATION,
-  COMPLETE_A3_PDCA_ACTION_MUTATION,
-  CANCEL_A3_PDCA_ACTION_MUTATION,
 } from "@/graphql/improvementMutations";
 
 /* ──────────────────────────────────────────────────────
@@ -153,6 +150,23 @@ function MethodToggle({ value, onChange }: { value: TemplateMethod; onChange: (v
   );
 }
 
+function FlatSection({ title, content }: { title: string; content: string }) {
+  return (
+    <div className="min-w-0 w-full">
+      <div className="flex items-center gap-2 mb-2">
+        <div className="h-3.5 w-0.5 bg-indigo-400/50 rounded-full" />
+        <span className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600/60 dark:text-indigo-400/60">{title}</span>
+      </div>
+      {content ? (
+        <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none w-full min-w-0 text-sm leading-snug"
+          dangerouslySetInnerHTML={{ __html: content }} />
+      ) : (
+        <p className="text-xs italic text-muted-foreground">Not defined</p>
+      )}
+    </div>
+  );
+}
+
 function ActionProgressBar({ actions }: { actions: A3PDCAActionNode[] }) {
   const { done, total } = actionProgress(actions);
   if (total === 0) return null;
@@ -190,11 +204,7 @@ export function A3PdcaPage() {
   const [confirmCancel, setConfirmCancel] = useState<number | null>(null);
 
   // Action form state
-  const [newActionPhase, setNewActionPhase] = useState("PLAN");
-  const [newActionTitle, setNewActionTitle] = useState("");
-  const [newActionOwner, setNewActionOwner] = useState("");
-  const [newActionDueDate, setNewActionDueDate] = useState("");
-  const [newActionDescription, setNewActionDescription] = useState("");
+  
 
   // Unsaved changes
   const [isDirty, setIsDirty] = useState(false);
@@ -203,8 +213,7 @@ export function A3PdcaPage() {
   const splitRef = useRef<HTMLDivElement>(null);
   const [leftPct, setLeftPct] = useState(20);
 
-  const { targetOptions, allEntities } = useTargetEntities(form.targetType);
-  const targetLabel = resolveTargetLabel(allEntities, form.targetId);
+  const { targetOptions } = useTargetEntities(form.targetType);
 
   useEffect(() => {
     if (successMsg) {
@@ -261,9 +270,7 @@ export function A3PdcaPage() {
   const [moveToAct] = useMutation(MOVE_A3_PDCA_TO_ACT_MUTATION);
   const [completeA3Pdca] = useMutation(COMPLETE_A3_PDCA_MUTATION);
   const [cancelA3Pdca] = useMutation(CANCEL_A3_PDCA_MUTATION);
-  const [addA3Action] = useMutation(ADD_A3_PDCA_ACTION_MUTATION);
-  const [completeA3Action] = useMutation(COMPLETE_A3_PDCA_ACTION_MUTATION);
-  const [cancelA3Action] = useMutation(CANCEL_A3_PDCA_ACTION_MUTATION);
+  
 
   const g = (k: keyof FormState) => String(form[k] ?? "");
   const sf = (k: keyof FormState, v: unknown) => {
@@ -380,35 +387,6 @@ export function A3PdcaPage() {
     setSuccessMsg("A3/PDCA cancelled"); setConfirmCancel(null); refetch();
   }, [confirmCancel, cancelA3Pdca, refetch]);
 
-  const hAddAction = useCallback(async () => {
-    if (!sel || !newActionTitle.trim()) return;
-    setMutationError(null);
-    const res = await addA3Action({
-      variables: {
-        a3PdcaId: sel.id, title: newActionTitle.trim(), phase: newActionPhase,
-        description: newActionDescription, owner: newActionOwner, dueDate: newActionDueDate || null,
-      },
-    });
-    if (res.error) { setMutationError(res.error?.message || "Add action failed"); return; }
-    setSuccessMsg("Action added");
-    setNewActionTitle(""); setNewActionOwner(""); setNewActionDueDate(""); setNewActionDescription("");
-    refetch();
-  }, [sel, newActionTitle, newActionPhase, newActionDescription, newActionOwner, newActionDueDate, addA3Action, refetch]);
-
-  const hCompleteAction = useCallback(async (actionId: number) => {
-    setMutationError(null);
-    const res = await completeA3Action({ variables: { id: actionId } });
-    if (res.error) { setMutationError(res.error?.message || "Complete action failed"); return; }
-    setSuccessMsg("Action completed"); refetch();
-  }, [completeA3Action, refetch]);
-
-  const hCancelAction = useCallback(async (actionId: number) => {
-    setMutationError(null);
-    const res = await cancelA3Action({ variables: { id: actionId } });
-    if (res.error) { setMutationError(res.error?.message || "Cancel action failed"); return; }
-    setSuccessMsg("Action cancelled"); refetch();
-  }, [cancelA3Action, refetch]);
-
   const hPrint = useCallback(() => { window.print(); }, []);
 
   const nextPhase = (status: string): string | null => {
@@ -422,197 +400,103 @@ export function A3PdcaPage() {
 
   /* ── Render helpers ── */
 
-  const renderRichField = (label: string, field: keyof FormState) => (
-    <div>
-      <p className={`text-[10px] font-medium ${theme.textMuted} mb-1`}>{label}</p>
-      <RichTextEditor content={g(field)} onChange={(html) => sf(field, html)}
-        placeholder={`Enter ${label.toLowerCase()}...`} />
-    </div>
-  );
-
-  const renderHtmlBlock = (content: string, fallback: string = "Not defined") => (
-    content ? (
-      <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none text-sm leading-snug"
-        dangerouslySetInnerHTML={{ __html: content }} />
-    ) : (
-      <p className={`text-xs italic ${theme.textMuted}`}>{fallback}</p>
-    )
-  );
-
-  const renderDocSection = (title: string, content: string, fallback?: string) => (
-    <div className="border-t border-border/20">
-      <div className={`text-xs font-bold uppercase tracking-wider ${theme.textMuted} px-2 py-1 bg-muted/30 flex items-center gap-1`}>
-        <div className="w-0.5 h-2.5 bg-indigo-400/60 dark:bg-indigo-500/50 rounded-full shrink-0" />
-        {title}
-      </div>
-      <div className="px-2 py-1.5">{renderHtmlBlock(content, fallback)}</div>
-    </div>
-  );
-
-  const renderPhaseActions = (phase: string, actions: A3PDCAActionNode[] | undefined) => {
-    const phaseActions = actions?.filter((a) => a.phase === phase) || [];
-    return (
-      <div className="border-t border-border/20">
-        <div className={`text-xs font-bold uppercase tracking-wider ${theme.textMuted} px-2 py-1 bg-muted/30 border-b border-border/20 flex items-center gap-1`}>
-          <div className="w-0.5 h-2.5 bg-indigo-400/60 dark:bg-indigo-500/50 rounded-full shrink-0" />
-          <span>Actions</span>
-          {phaseActions.length > 0 && <ActionProgressBar actions={phaseActions} />}
-          <div className="ml-auto">
-            <button type="button"
-              onClick={() => { setNewActionPhase(phase); setNewActionTitle(""); setNewActionOwner(""); setNewActionDueDate(""); setNewActionDescription(""); }}
-              className="inline-flex h-5 items-center gap-0.5 px-1.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors">
-              <PlusCircle className="h-2.5 w-2.5 stroke-current" /> Add
-            </button>
-          </div>
-        </div>
-        <div className="px-2 py-1.5">
-          {phaseActions.length === 0 && newActionPhase !== phase ? (
-            <p className={`text-xs italic ${theme.textMuted}`}>No actions.</p>
-          ) : (
-            <div className="grid grid-cols-3 gap-1">{phaseActions.map((action) => (
-              <div key={action.id} className={`group/action flex items-start gap-1.5 py-0.5 transition-colors hover:bg-muted/20 ${action.status === "DONE" ? "opacity-50" : ""}`}>
-                <div className="mt-0.5 shrink-0">
-                  {action.status === "DONE" ? (<CheckCircle className="h-3 w-3 text-green-500 stroke-current" />)
-                    : action.status === "CANCELLED" ? (<Ban className="h-3 w-3 text-red-400 stroke-current" />)
-                    : (<div className="h-3 w-3 rounded-full border-2 border-indigo-400 dark:border-indigo-500" />)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`min-w-0 text-xs font-medium ${action.status === "DONE" ? "line-through text-muted-foreground" : theme.textPrimary}`}>{action.title}</span>
-                    <span className={`inline-flex items-center px-1 py-px text-[9px] font-semibold border shrink-0 ${ACTION_STATUS_STYLES[action.status] || ""}`}>
-                      {action.status === "IN_PROGRESS" ? "Doing" : action.status.charAt(0) + action.status.slice(1).toLowerCase()}
-                    </span>
-                  </div>
-                  {action.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{action.description}</p>}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {action.owner && <span className="text-xs text-muted-foreground flex items-center gap-0.5"><span className="w-1 h-1 rounded-full bg-muted-foreground/40" />{action.owner}</span>}
-                    {action.dueDate && (
-                      <span className={`text-xs flex items-center gap-0.5 ${isOverdue(action.dueDate) && action.status !== "DONE" ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
-                        {isOverdue(action.dueDate) && action.status !== "DONE" && <AlertTriangle className="h-2 w-2 stroke-current" />}
-                        {action.dueDate}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/action:opacity-100 transition-opacity">
-                  {action.status === "OPEN" && (
-                    <button type="button" onClick={() => hCompleteAction(action.id)}
-                      className="inline-flex h-5 w-5 items-center justify-center text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors" title="Mark as done">
-                      <Check className="h-3 w-3 stroke-current" />
-                    </button>
-                  )}
-                  {(action.status === "OPEN" || action.status === "IN_PROGRESS") && (
-                    <button type="button" onClick={() => hCancelAction(action.id)}
-                      className="inline-flex h-5 w-5 items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Cancel action">
-                      <Ban className="h-3 w-3 stroke-current" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}</div>
-          )}
-          {newActionPhase === phase && (
-            <div className="pt-1.5 border-t border-border/10 mt-1 space-y-1">
-              <div className="flex items-center gap-1">
-                <input type="text" value={newActionTitle} onChange={(e) => setNewActionTitle(e.target.value)}
-                  placeholder="Title *" className="h-6 min-w-0 flex-1 rounded border border-border/40 bg-muted/50 px-1.5 text-xs outline-none text-foreground focus:border-indigo-400 transition-colors" />
-                <input type="text" value={newActionOwner} onChange={(e) => setNewActionOwner(e.target.value)}
-                  placeholder="Owner" className="h-6 w-16 rounded border border-border/40 bg-muted/50 px-1.5 text-xs outline-none text-foreground focus:border-indigo-400 transition-colors" />
-                <input type="date" value={newActionDueDate} onChange={(e) => setNewActionDueDate(e.target.value)}
-                  className="h-6 w-24 rounded border border-border/40 bg-muted/50 px-1.5 text-xs outline-none text-foreground focus:border-indigo-400 transition-colors" />
-                <button type="button" onClick={hAddAction} disabled={!newActionTitle.trim()}
-                  className={`inline-flex h-6 items-center gap-0.5 rounded px-2 text-[10px] font-semibold transition-all ${newActionTitle.trim() ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
-                  <Plus className="h-3 w-3 stroke-current" /> Add
-                </button>
-              </div>
-              <input type="text" value={newActionDescription} onChange={(e) => setNewActionDescription(e.target.value)}
-                placeholder="Description (optional)"
-                className="h-5 w-full rounded border border-border/40 bg-muted/50 px-1.5 text-xs outline-none text-foreground focus:border-indigo-400 transition-colors" />
-            </div>
-          )}
-        </div>
+  /* ── Form content (shared by create and edit) ── */
+  const renderForm = (_isCreate: boolean) => {
+    const richField = (label: string, field: keyof FormState) => (
+      <div className="min-w-0 w-full">
+        <p className={`text-[10px] font-medium ${theme.textMuted} mb-1`}>{label}</p>
+        <RichTextEditor content={g(field)} onChange={(html) => sf(field, html)}
+          placeholder={`Enter ${label.toLowerCase()}...`} />
       </div>
     );
-  };
-
-  /* ── Form content (shared by create and edit) ── */
-  const renderForm = (isCreate: boolean) => (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+    return (
+    <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full overflow-hidden">
       {mutationError && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Title *"
-              className={`${iCls} flex-1`} />
-            {errors.title && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.title}</p>}
-            <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold border ${templateMethod === "A3" ? "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800" : "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"}`}>
-              {templateMethod}
-            </span>
+      <div className="flex-1 min-h-0 min-w-0 w-full overflow-y-auto overflow-x-hidden px-4 py-3">
+        {errors.title && <p className={`text-[10px] ${theme.textCritical} mb-2`}>{errors.title}</p>}
+        {/* Title row (always full-width) */}
+        <div className="flex items-center gap-2 mb-4 w-full min-w-0">
+          <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Title *"
+            className={`${iCls} flex-1`} />
+          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold border shrink-0 ${templateMethod === "A3" ? "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800" : "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"}`}>
+            {templateMethod}
+          </span>
+          <button type="button" onClick={() => applyTemplate(templateMethod)}
+            className="inline-flex h-6 items-center gap-1 px-2 text-[10px] font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors rounded shrink-0">
+            <FileText className="h-3 w-3 stroke-current" /> Template
+          </button>
+        </div>
+
+        {/* Row 1: Background (left) + Metadata (right) — aligned bottoms */}
+        <div className="grid grid-cols-[65%_35%] gap-5 min-w-0 w-full mb-4">
+          <div className="min-w-0 w-full flex flex-col">
+            <p className={`text-[10px] font-medium ${theme.textMuted} mb-1`}>Background</p>
+            <div className="flex-1 min-h-0 border border-border/30 rounded-sm overflow-y-auto">
+              <RichTextEditor content={g("background")} onChange={(html) => sf("background", html)}
+                placeholder="Enter background..." />
+            </div>
           </div>
-          <SectionCard title={`${templateMethod} — Problem Definition`}
-            action={isCreate ? (
-              <button type="button" onClick={() => applyTemplate(templateMethod)}
-                className="inline-flex h-5 items-center gap-1 px-1.5 text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors">
-                <FileText className="h-3 w-3 stroke-current" /> Apply {templateMethod} Template
-              </button>
-            ) : undefined}>
-            <div className="space-y-2">
-              {renderRichField("Background", "background")}
-              {renderRichField("Problem Statement", "problemStatement")}
-            </div>
-          </SectionCard>
-          <SectionCard title="Current vs Target">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col h-full">{renderRichField("Current Condition", "currentCondition")}</div>
-              <div className="flex flex-col h-full">{renderRichField("Target Condition", "targetCondition")}</div>
-            </div>
-          </SectionCard>
-          {isCreate ? (
-            <>
-              <SectionCard title="Analysis">
-                {renderRichField("Root Cause Analysis", "rootCauseAnalysis")}
-              </SectionCard>
-              <SectionCard title="Countermeasures">
-                {renderRichField("Proposed Countermeasures", "countermeasures")}
-                <div className="mt-2">{renderRichField("Implementation Plan", "implementationPlan")}</div>
-              </SectionCard>
-            </>
-          ) : (
-            <SectionCard title="Analysis & Countermeasures">
-              {renderRichField("Root Cause Analysis", "rootCauseAnalysis")}
-              <div className="mt-2">{renderRichField("Countermeasures", "countermeasures")}</div>
-              <div className="mt-2">{renderRichField("Implementation Plan", "implementationPlan")}</div>
-            </SectionCard>
-          )}
-          <SectionCard title="Target & Classification">
-            <div className="space-y-1.5">
-              <div className="grid grid-cols-2 gap-1.5">
+          <div className="min-w-0 space-y-4 flex flex-col justify-between">
+            <SectionCard title="Target & Classification">
+              <div className="space-y-2">
                 <select value={g("targetType")} onChange={(e) => { sf("targetType", e.target.value); sf("targetId", ""); }} className={sCls}>
                   {TARGET_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
                 <select value={g("priority")} onChange={(e) => sf("priority", e.target.value)} className={sCls}>
                   {PRIORITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
+                <select value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} className={sCls}>
+                  <option value="">Select {form.targetType}...</option>
+                  {targetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                {errors.targetId && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.targetId}</p>}
               </div>
-              <select value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} className={sCls}>
-                <option value="">Select {form.targetType}...</option>
-                {targetOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-              {errors.targetId && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.targetId}</p>}
-              {targetLabel && <p className={`text-xs ${theme.textMuted} mt-0.5`}>{targetLabel}</p>}
-            </div>
-          </SectionCard>
-          <SectionCard title="Owner & Dates">
-            <div className="grid grid-cols-3 gap-1.5">
-              <input type="text" value={g("owner")} onChange={(e) => sf("owner", e.target.value)} placeholder="Owner" className={iCls} />
-              <input type="date" value={g("startDate")} onChange={(e) => sf("startDate", e.target.value)} className={iCls} />
-              <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} className={iCls} />
-            </div>
-          </SectionCard>
+            </SectionCard>
+            <SectionCard title="Owner & Dates">
+              <div className="space-y-2">
+                <input type="text" value={g("owner")} onChange={(e) => sf("owner", e.target.value)} placeholder="Owner" className={iCls} />
+                <input type="date" value={g("startDate")} onChange={(e) => sf("startDate", e.target.value)} className={iCls} />
+                <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} className={iCls} />
+              </div>
+            </SectionCard>
+          </div>
+        </div>
+
+        {/* Problem Statement — full width */}
+        <div className="mb-4 w-full min-w-0">
+          {richField("Problem Statement", "problemStatement")}
+        </div>
+
+        {/* Current Condition | Target Condition — full width 2-col, equal height */}
+        <div className="grid grid-cols-2 gap-4 mb-4 w-full min-w-0">
+          <div className="flex flex-col min-w-0">
+            <p className={`text-[10px] font-medium ${theme.textMuted} mb-1`}>Current Condition</p>
+            <div className="flex-1"><RichTextEditor content={g("currentCondition")} onChange={(html) => sf("currentCondition", html)} placeholder="Enter current condition..." /></div>
+          </div>
+          <div className="flex flex-col min-w-0">
+            <p className={`text-[10px] font-medium ${theme.textMuted} mb-1`}>Target Condition</p>
+            <div className="flex-1"><RichTextEditor content={g("targetCondition")} onChange={(html) => sf("targetCondition", html)} placeholder="Enter target condition..." /></div>
+          </div>
+        </div>
+
+        {/* Root Cause Analysis — full width */}
+        <div className="mb-4 w-full min-w-0">
+          {richField("Root Cause Analysis", "rootCauseAnalysis")}
+        </div>
+
+        {/* Countermeasures — full width */}
+        <div className="mb-4 w-full min-w-0">
+          {richField("Countermeasures", "countermeasures")}
+        </div>
+
+        {/* Implementation Plan — full width */}
+        <div className="mb-4 w-full min-w-0">
+          {richField("Implementation Plan", "implementationPlan")}
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   /* ── Main render ── */
   return (
@@ -638,34 +522,34 @@ export function A3PdcaPage() {
         </div>
         <div className="print-ignore">
           <Toolbar
-            left={isForm && mode === "create" ? (
-              <div className="flex items-center gap-3">
-                <MethodToggle value={templateMethod} onChange={(m) => { setTemplateMethod(m); applyTemplate(m); }} />
+            left={!isForm ? <ToolbarSearch value={search} onChange={setSearch} placeholder="Search A3/PDCA..." /> : <div />}
+            right={
+              <div className="flex items-center gap-2 w-full">
+                {!isForm && (
+                  <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
+                    options={[
+                      { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
+                      { value: "PLAN", label: "Plan" }, { value: "DO", label: "Do" },
+                      { value: "CHECK", label: "Check" }, { value: "ACT", label: "Act" },
+                      { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
+                    ]}
+                    className="w-36" />
+                )}
+                {isForm && mode === "create" && (
+                  <MethodToggle value={templateMethod} onChange={(m) => { setTemplateMethod(m); applyTemplate(m); }} />
+                )}
+                <div className="flex-1" />
+                {isForm ? (
+                  <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
+                ) : (
+                  <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} />
+                    <span className="h-5 w-px shrink-0 bg-border/25" />
+                    <ToolbarButton icon={Printer} label="Print" onClick={hPrint} disabled={!sel} />
+                    <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+                  </>
+                )}
               </div>
-            ) : isForm ? <div /> : (
-              <div className="flex items-center gap-3">
-                <ToolbarSearch value={search} onChange={setSearch} placeholder="Search A3/PDCA records..." />
-                <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
-                  options={[
-                    { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
-                    { value: "PLAN", label: "Plan" }, { value: "DO", label: "Do" },
-                    { value: "CHECK", label: "Check" }, { value: "ACT", label: "Act" },
-                    { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
-                  ]}
-                  className="w-40" />
-              </div>
-            )}
-            right={<>
-              {isForm ? (
-                <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
-              ) : (
-                <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} />
-                  <span className="h-5 w-px shrink-0 bg-border/25" />
-                  <ToolbarButton icon={Printer} label="Print" onClick={hPrint} disabled={!sel} />
-                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                </>
-              )}
-            </>}
+            }
           />
         </div>
         {mutationError && isForm && (
@@ -702,7 +586,6 @@ export function A3PdcaPage() {
                             if (!confirm("You have unsaved changes. Discard them?")) return;
                           }
                           setSelectedId(r.id); clearForm(); setIsDirty(false);
-                          setNewActionTitle(""); setNewActionOwner(""); setNewActionDueDate(""); setNewActionDescription("");
                           setMode("view");
                         }}
                         className={`group mx-1 my-0.5 flex h-14 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${selectedId === r.id ? "bg-table-selected border-l-2 border-l-indigo-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"}`}>
@@ -744,173 +627,178 @@ export function A3PdcaPage() {
           {/* Right panel */}
           <div className={`print-area flex flex-col min-h-0 min-w-0 flex-1 overflow-hidden ${isForm ? "" : "mode-enter"}`}>
             {!sel && !isForm ? (
-              <div className={`flex flex-1 items-center justify-center ${theme.page} h-full`}>
-                <div className="text-center max-w-xs">
-                  <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1`}>No A3/PDCA selected</h3>
-                  <p className={`text-xs ${theme.textSecondary} leading-relaxed mb-4`}>Select a record from the list or create a new one.</p>
-                  <button type="button" onClick={hNew}
-                    className="inline-flex h-8 items-center gap-1.5 bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
-                    <Plus className="h-3.5 w-3.5 stroke-current" /> New A3/PDCA
-                  </button>
+              <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                <div className="p-4 space-y-5">
+                  <SectionCard title="A3 / PDCA">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-indigo-300/50 transition-colors">
+                        <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Total</p>
+                        <p className={`text-lg font-bold ${theme.textPrimary}`}>{records.length}</p>
+                      </button>
+                      <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-indigo-300/50 transition-colors">
+                        <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Active</p>
+                        <p className={`text-lg font-bold text-indigo-600 dark:text-indigo-400`}>{records.filter((r) => !["COMPLETED", "CANCELLED"].includes(r.status)).length}</p>
+                      </button>
+                      <button type="button" onClick={() => setFilterStatus("COMPLETED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-indigo-300/50 transition-colors">
+                        <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Completed</p>
+                        <p className={`text-lg font-bold text-green-600 dark:text-green-400`}>{records.filter((r) => r.status === "COMPLETED").length}</p>
+                      </button>
+                      <div className="rounded-sm border border-border/60 bg-card p-3">
+                        <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Overdue</p>
+                        <p className={`text-lg font-bold text-red-600 dark:text-red-400`}>{records.filter((r) => r.dueDate && isOverdue(r.dueDate) && r.status !== "COMPLETED").length}</p>
+                      </div>
+                    </div>
+                  </SectionCard>
+
+                  {/* Phase Breakdown */}
+                  <SectionCard title="Phase Breakdown">
+                    {records.length === 0 ? (
+                      <div className={`flex items-center justify-center h-16 text-xs italic ${theme.textMuted}`}>No A3/PDCA records yet.</div>
+                    ) : (
+                      <div className="space-y-2">{[{ phase: "DRAFT", label: "Draft", color: "bg-gray-400" }, { phase: "PLAN", label: "Plan", color: "bg-blue-500" }, { phase: "DO", label: "Do", color: "bg-yellow-500" }, { phase: "CHECK", label: "Check", color: "bg-purple-500" }, { phase: "ACT", label: "Act", color: "bg-indigo-500" }, { phase: "COMPLETED", label: "Completed", color: "bg-green-500" }, { phase: "CANCELLED", label: "Cancelled", color: "bg-gray-400" }].map((p) => {
+                        const count = records.filter((r) => r.status === p.phase).length;
+                        return (
+                          <div key={p.phase}>
+                            <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>{p.label}</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{count} <span className={`${theme.textMuted} font-normal`}>({records.length > 0 ? Math.round(count / records.length * 100) : 0}%)</span></span></div>
+                            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-1"><div className={`h-full rounded-full ${p.color}`} style={{ width: `${records.length > 0 ? (count / records.length) * 100 : 0}%` }} /></div>
+                          </div>
+                        );
+                      })}</div>
+                    )}
+                  </SectionCard>
+
+                  <div className="flex justify-center pt-2">
+                    <button type="button" onClick={hNew}
+                      className="inline-flex h-8 items-center gap-1.5 bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
+                      <Plus className="h-3.5 w-3.5 stroke-current" /> New A3/PDCA
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : isForm ? (
               renderForm(mode === "create")
             ) : sel && (
-              /* ── VIEW MODE — Paper A3 Document Layout ── */
-              <div className="flex-1 min-h-0 overflow-y-auto">
-                <div className="max-w-4xl mx-auto border-x border-b border-border/20 bg-card shadow-sm" style={{ maxWidth: "100%" }}>
-                  {/* Document Header */}
-                  <div className="border-b-2 border-indigo-200 dark:border-indigo-800 px-3 py-2.5 flex items-start gap-3 print-area-header">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h2 className={`text-sm font-bold leading-tight ${theme.textPrimary}`}>{sel.title}</h2>
-                        <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${PHASE_STYLES[sel.status] || ""}`}>{phaseLabel(sel.status)}</span>
-                        {sel.priority && sel.priority !== "MEDIUM" && (
-                          <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${PRIORITY_STYLES[sel.priority] || ""}`}>{sel.priority}</span>
-                        )}
-                        <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">{templateMethod}</span>
-                      </div>
-                      <div className={`flex flex-wrap items-center gap-x-2 gap-y-0 text-xs ${theme.textMuted} leading-tight mt-0.5`}>
-                        {sel.a3Code && <span className="font-mono font-semibold">{sel.a3Code}</span>}
-                        {sel.owner && <span className="font-medium">{sel.owner}</span>}
-                        {sel.sourceType && <span>Source: {sel.sourceType}</span>}
-                        {sel.targetType && (
-                          <span>{(() => {
-                            const found = allEntities.find((e) => e.id === String(sel.targetId));
-                            return found ? `${sel.targetType}: ${found.name}` : `${sel.targetType} #${sel.targetId}`;
-                          })()}</span>
-                        )}
-                        {sel.startDate && <span>Start: {sel.startDate}</span>}
-                        {sel.dueDate && <span className={isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-red-500 font-semibold" : ""}>
-                          {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" && <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />}
-                          Due: {sel.dueDate}
-                        </span>}
-                        {sel.completedDate && <span className="text-green-600 dark:text-green-400">Completed: {sel.completedDate}</span>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      {["COMPLETED", "CANCELLED"].includes(sel.status) ? (
-                        <button type="button" onClick={hPrint}
-                          className="inline-flex h-7 items-center gap-1 border border-border/40 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:border-border/70 transition-all whitespace-nowrap">
-                          <Printer className="h-2.5 w-2.5 stroke-current" />
-                        </button>
-                      ) : (
-                        <>
-                          {nextPhase(sel.status) && (
-                            <button type="button" onClick={() => setConfirmTransition({ id: sel.id, phase: nextPhase(sel.status)! })}
-                              className={`inline-flex h-7 items-center gap-1 border px-2 text-[10px] font-semibold transition-all whitespace-nowrap ${sel.status === "DRAFT" ? "border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20"}`}>
-                              <ArrowRight className="h-2.5 w-2.5 stroke-current" />{phaseLabel(nextPhase(sel.status)!)}
-                            </button>
-                          )}
-                          <button type="button" onClick={() => setConfirmCancel(sel.id)}
-                            className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
-                            <XCircle className="h-2.5 w-2.5 stroke-current" />Cancel
-                          </button>
-                          <button type="button" onClick={hPrint}
-                            className="inline-flex h-7 items-center gap-1 border border-border/40 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:border-border/70 transition-all whitespace-nowrap">
-                            <Printer className="h-2.5 w-2.5 stroke-current" />
-                          </button>
-                        </>
+              /* ── VIEW MODE — App View ── */
+              <div className="flex-1 min-h-0 min-w-0 w-full overflow-y-auto overflow-x-hidden">
+                {/* Header */}
+                <div className="shrink-0 px-4 py-2.5 flex items-start gap-3 border-b border-border/20">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-bold text-foreground">{sel.title}</h2>
+                      <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${PHASE_STYLES[sel.status] || ""}`}>{phaseLabel(sel.status)}</span>
+                      {sel.priority && sel.priority !== "MEDIUM" && (
+                        <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${PRIORITY_STYLES[sel.priority] || ""}`}>{sel.priority}</span>
                       )}
                     </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0 text-xs text-muted-foreground mt-0.5">
+                      {sel.a3Code && <span className="font-mono">{sel.a3Code}</span>}
+                      {sel.owner && <span>{sel.owner}</span>}
+                      {sel.targetType && <span>{sel.targetType} #{sel.targetId}</span>}
+                      {sel.startDate && <span>Start: {sel.startDate}</span>}
+                      {sel.dueDate && (
+                        <span className={isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-red-500 font-semibold" : ""}>
+                          {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" && <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />}
+                          Due: {sel.dueDate}
+                        </span>
+                      )}
+                      {sel.completedDate && <span className="text-green-600">Completed: {sel.completedDate}</span>}
+                    </div>
                   </div>
-
-                  {/* Phase Progress Bar */}
-                  <div className="flex items-center border-b border-border/20 bg-muted/20 px-3 py-1.5">
-                    {PHASES.map((phase, idx) => {
-                      const isActive = sel.status === phase;
-                      const isPast = PHASES.indexOf(sel.status) >= idx && sel.status !== phase;
-                      const isCancelled = sel.status === "CANCELLED";
-                      return (
-                        <div key={phase} className="flex items-center gap-0.5">
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (PHASE_STYLES[phase] || "") + " font-bold ring-1 ring-indigo-300/50 dark:ring-indigo-600/50" : isCancelled ? "text-muted-foreground line-through" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
-                        {isPast && !isCancelled ? "✓ " : ""}{phaseLabel(phase)}
-                      </span>
-                      {idx < PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${PHASES.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>→</span>}
-                        </div>
-                      );
-                    })}
-                    {sel.actions && sel.actions.length > 0 && <div className="ml-auto"><ActionProgressBar actions={sel.actions} /></div>}
-                  </div>
-
-                  {/* Document Body — A3-style 2-Column Layout */}
-                  <div className="grid grid-cols-[1fr_1fr] auto-rows-min divide-x divide-border/20">
-                    <div className="divide-y divide-border/20">
-                      {renderDocSection("1. Background", sel.background)}
-                      {renderDocSection("2. Problem Statement", sel.problemStatement)}
-                      {renderDocSection("3. Current Condition", sel.currentCondition)}
-                      {renderDocSection("5. Root Cause Analysis", sel.rootCauseAnalysis)}
-                    </div>
-                    <div className="divide-y divide-border/20">
-                      {renderDocSection("4. Target Condition", sel.targetCondition)}
-                      {renderDocSection("6. Countermeasures", sel.countermeasures)}
-                    </div>
-                    <div className="col-span-full divide-y divide-border/20 border-t border-border/20">
-                      {renderDocSection("7. Implementation Plan", sel.implementationPlan)}
-                    </div>
-                    {/* DO Section */}
-                    <div className="divide-y divide-border/20 border-t border-border/20">
-                      <div className={`text-xs font-bold uppercase tracking-wider ${theme.textMuted} px-2 py-1 bg-amber-50/50 dark:bg-amber-950/10 border-b border-border/20 flex items-center gap-1`}>
-                        <div className="w-0.5 h-2.5 bg-amber-400/60 dark:bg-amber-500/50 rounded-full shrink-0" />
-                        DO Phase
-                      </div>
-                      {renderDocSection("Notes", sel.doNotes)}
-                      {renderDocSection("Blockers", sel.blockers)}
-                      {renderPhaseActions("DO", sel.actions)}
-                    </div>
-                    {/* CHECK Section */}
-                    <div className="divide-y divide-border/20 border-t border-border/20">
-                      <div className={`text-xs font-bold uppercase tracking-wider ${theme.textMuted} px-2 py-1 bg-purple-50/50 dark:bg-purple-950/10 border-b border-border/20 flex items-center gap-1`}>
-                        <div className="w-0.5 h-2.5 bg-purple-400/60 dark:bg-purple-500/50 rounded-full shrink-0" />
-                        CHECK Phase
-                      </div>
-                      {renderDocSection("Result Validation", sel.resultValidation)}
-                      {renderDocSection("Before/After", sel.beforeAfterComparison)}
-                      {renderDocSection("Effectiveness", sel.effectivenessCheck)}
-                      {renderPhaseActions("CHECK", sel.actions)}
-                    </div>
-                    {/* ACT — Full width */}
-                    <div className="col-span-full border-t-2 border-border/30">
-                      <div className={`text-xs font-bold uppercase tracking-wider ${theme.textMuted} px-2 py-1 bg-indigo-50/50 dark:bg-indigo-950/10 border-b border-border/20 flex items-center gap-1`}>
-                        <div className="w-0.5 h-2.5 bg-indigo-400/60 dark:bg-indigo-500/50 rounded-full shrink-0" />
-                        ACT Phase
-                      </div>
-                      <div className="grid grid-cols-2 divide-x divide-border/20">
-                        <div className="divide-y divide-border/20">
-                          {renderDocSection("Standardization", sel.standardizationActions)}
-                          {renderDocSection("Lessons Learned", sel.lessonsLearned)}
-                        </div>
-                        <div className="divide-y divide-border/20">
-                          {renderDocSection("Follow-up Plan", sel.followUpPlan)}
-                        </div>
-                      </div>
-                      {renderPhaseActions("ACT", sel.actions)}
-                    </div>
-                    {/* PLAN Actions — Full width */}
-                    <div className="col-span-full divide-y divide-border/20 border-t border-border/20">
-                      {renderPhaseActions("PLAN", sel.actions)}
-                    </div>
-                    {/* Result Summary */}
-                    {sel.resultSummary && (
-                      <div className="col-span-full border-t-2 border-green-200 dark:border-green-800">
-                        <div className={`text-xs font-bold uppercase tracking-wider text-green-700 dark:text-green-400 px-2 py-1 bg-green-50/50 dark:bg-green-950/10 border-b border-green-200/50 dark:border-green-800/50 flex items-center gap-1`}>
-                          <CheckCircle className="h-2.5 w-2.5 stroke-current shrink-0" /> Result Summary
-                        </div>
-                        <div className="px-2 py-2">{renderHtmlBlock(sel.resultSummary)}</div>
-                      </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {nextPhase(sel.status) && !["COMPLETED", "CANCELLED"].includes(sel.status) && (
+                      <button type="button" onClick={() => setConfirmTransition({ id: sel.id, phase: nextPhase(sel.status)! })}
+                        className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                        <ArrowRight className="h-2.5 w-2.5 stroke-current" />{phaseLabel(nextPhase(sel.status)!)}
+                      </button>
                     )}
-                    {sel.completedDate && (
-                      <div className="col-span-full border-t border-border/20 px-2 py-1 text-[10px] text-muted-foreground flex items-center gap-1">
-                        <CheckCircle className="h-2.5 w-2.5 text-green-500 stroke-current" /> Completed on {sel.completedDate}
+                    <button type="button" onClick={hPrint}
+                      className="inline-flex h-7 items-center gap-1 border border-border/40 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-all whitespace-nowrap">
+                      <Printer className="h-2.5 w-2.5 stroke-current" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Phase stepper */}
+                <div className="flex items-center px-4 py-1.5 border-b border-border/20 bg-muted/20">
+                  {PHASES.map((phase, idx) => {
+                    const isActive = sel.status === phase;
+                    const isPast = PHASES.indexOf(sel.status) >= idx && sel.status !== phase;
+                    const isCancelled = sel.status === "CANCELLED";
+                    return (
+                      <div key={phase} className="flex items-center gap-0.5">
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 ${isActive ? (PHASE_STYLES[phase] || "") + " font-bold ring-1 ring-indigo-300/50" : isCancelled ? "text-muted-foreground line-through" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
+                          {isPast && !isCancelled ? "✓ " : ""}{phaseLabel(phase)}
+                        </span>
+                        {idx < PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${PHASES.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>→</span>}
                       </div>
-                    )}
+                    );
+                  })}
+                  <div className="ml-auto"><ActionProgressBar actions={sel.actions} /></div>
+                </div>
+
+                {/* Body — flat 60/40 layout */}
+                <div className="p-4 w-full min-w-0">
+                  <div className="grid grid-cols-[3fr_2fr] gap-6 w-full min-w-0">
+                    {/* Left column */}
+                    <div className="space-y-5">
+                      <FlatSection title="Background" content={sel.background} />
+                      <FlatSection title="Problem Statement" content={sel.problemStatement} />
+                      <FlatSection title="Current Condition" content={sel.currentCondition} />
+                      <FlatSection title="Root Cause Analysis" content={sel.rootCauseAnalysis} />
+                      <FlatSection title="Implementation Plan" content={sel.implementationPlan} />
+                    </div>
+                    {/* Right column */}
+                    <div className="space-y-5">
+                      <FlatSection title="Target Condition" content={sel.targetCondition} />
+                      <FlatSection title="Countermeasures" content={sel.countermeasures} />
+                      <FlatSection title="Result Validation" content={sel.resultValidation} />
+                      <FlatSection title="Before / After" content={sel.beforeAfterComparison} />
+                      <FlatSection title="Effectiveness Check" content={sel.effectivenessCheck} />
+                      <FlatSection title="Follow-up Plan" content={sel.followUpPlan} />
+                    </div>
                   </div>
 
-                  {/* Document Footer */}
-                  <div className="border-t border-border/20 bg-muted/20 px-2 py-1 flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span className="font-semibold">A3 / PDCA Report</span>
-                    <span>Created: {sel.createdAt?.slice(0, 10) || "—"} · Updated: {sel.updatedAt?.slice(0, 10) || "—"}</span>
+                  {/* Full-width sections */}
+                  <div className="mt-6 space-y-5">
+                    <FlatSection title="Do — Notes" content={sel.doNotes} />
+                    <FlatSection title="Blockers" content={sel.blockers} />
+                    <FlatSection title="Standardization Actions" content={sel.standardizationActions} />
+                    <FlatSection title="Lessons Learned" content={sel.lessonsLearned} />
+                    {sel.resultSummary && <FlatSection title="Result Summary" content={sel.resultSummary} />}
+                  </div>
+
+                  {/* PDCA Actions */}
+                  <div className="mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-4 w-0.5 bg-indigo-400/60 rounded-full" />
+                      <span className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600/70 dark:text-indigo-400/70">PDCA Actions</span>
+                    </div>
+                    {sel.actions && sel.actions.length > 0 ? (
+                      <div className="space-y-1">
+                        {sel.actions.map((action) => (
+                          <div key={action.id} className="flex items-center gap-2 px-3 py-1.5 border border-border/30 bg-card text-sm">
+                            <div className="shrink-0">
+                              {action.status === "DONE" ? <CheckCircle className="h-3.5 w-3.5 text-green-500 stroke-current" />
+                                : action.status === "CANCELLED" ? <Ban className="h-3.5 w-3.5 text-red-400 stroke-current" />
+                                : <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400" />}
+                            </div>
+                            <span className="min-w-0 flex-1 truncate font-medium text-foreground">{action.title}</span>
+                            {action.owner && <span className="text-xs text-muted-foreground">{action.owner}</span>}
+                            {action.dueDate && (
+                              <span className={`text-xs ${isOverdue(action.dueDate) && action.status !== "DONE" ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+                                {isOverdue(action.dueDate) && action.status !== "DONE" && <AlertTriangle className="inline h-2 w-2 mr-0.5 stroke-current" />}
+                                {action.dueDate}
+                              </span>
+                            )}
+                            <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border ${ACTION_STATUS_STYLES[action.status] || ""}`}>
+                              {action.status === "IN_PROGRESS" ? "Doing" : action.status.charAt(0) + action.status.slice(1).toLowerCase()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs italic text-muted-foreground">No actions yet.</p>
+                    )}
                   </div>
                 </div>
               </div>

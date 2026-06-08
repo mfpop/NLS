@@ -34,6 +34,8 @@ interface ControlPageShellProps {
   headerMessage?: SystemMessage | null;
   onDismissHeaderMessage?: () => void;
   headerChildren?: ReactNode;
+  footerLeft?: ReactNode;
+  footerRight?: ReactNode;
 }
 
 const RECORD_TYPES: { id: RecordType; label: string }[] = [
@@ -80,6 +82,8 @@ export function ControlPageShell({
   headerMessage,
   onDismissHeaderMessage,
   headerChildren,
+  footerLeft,
+  footerRight,
 }: ControlPageShellProps) {
   const [selectedRecordType, setSelectedRecordType] = useState<RecordType | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -187,16 +191,18 @@ export function ControlPageShell({
             : renderOverview()}
         </div>
       </div>
-      <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-[10px]">Issues</span></span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="text-[10px]">Actions</span></span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className="text-[10px]">Audits</span></span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /><span className="text-[10px]">DMR</span></span>
-          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500" /><span className="text-[10px]">RMA</span></span>
-        </div>
+      <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-2 px-4 text-xs text-muted-foreground font-medium">
+        {footerLeft || (
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-[10px]">Issues</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="text-[10px]">Actions</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className="text-[10px]">Audits</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /><span className="text-[10px]">DMR</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500" /><span className="text-[10px]">RMA</span></span>
+          </div>
+        )}
         <span className="flex-1" />
-        <span>{selectedRecordType ? selectedRecordType.charAt(0) + selectedRecordType.slice(1).toLowerCase() : "Dashboard (overview)"}</span>
+        {footerRight || <span>{selectedRecordType ? selectedRecordType.charAt(0) + selectedRecordType.slice(1).toLowerCase() : "Dashboard (overview)"}</span>}
       </div>
     </div>
   );

@@ -54,6 +54,12 @@ export const auditTypeLabels: Record<string, string> = {
   QC_FINAL_INSPECTION: "Final Inspection Audit",
   QC_DMR_REVIEW: "DMR Review Check",
   QC_RMA_REVIEW: "RMA Review Check",
+  SAFETY_INSPECTION: "Safety Inspection",
+  SAFETY_AUDIT: "Safety Audit",
+  HAZARD_ASSESSMENT: "Hazard Assessment",
+  MATERIAL_AUDIT: "Material Audit",
+  FIFO_CHECK: "FIFO Compliance Check",
+  WAREHOUSE_AUDIT: "Warehouse Audit",
 };
 
 export function statusLabel(s: string): string {

@@ -16,6 +16,9 @@ import {
   ADD_AUDIT_TEMPLATE_QUESTION_MUTATION, UPDATE_AUDIT_TEMPLATE_QUESTION_MUTATION,
   REMOVE_AUDIT_TEMPLATE_QUESTION_MUTATION,
   INSTALL_DEFAULT_PC_TEMPLATES_MUTATION,
+  INSTALL_DEFAULT_QC_TEMPLATES_MUTATION,
+  INSTALL_DEFAULT_SAFETY_TEMPLATES_MUTATION,
+  INSTALL_DEFAULT_MATERIAL_TEMPLATES_MUTATION,
 } from "@/graphql/auditQueries";
 
 interface AuditTemplate {
@@ -127,7 +130,10 @@ export function AuditTemplateManagerPage() {
   const [addQuestion] = useMutation<any>(ADD_AUDIT_TEMPLATE_QUESTION_MUTATION, { refetchQueries: [AUDIT_TEMPLATES_QUERY] });
   const [updateQuestion] = useMutation<any>(UPDATE_AUDIT_TEMPLATE_QUESTION_MUTATION, { refetchQueries: [AUDIT_TEMPLATES_QUERY] });
   const [removeQuestion] = useMutation<any>(REMOVE_AUDIT_TEMPLATE_QUESTION_MUTATION, { refetchQueries: [AUDIT_TEMPLATES_QUERY] });
-  const [installDefaults] = useMutation<any>(INSTALL_DEFAULT_PC_TEMPLATES_MUTATION, { refetchQueries: [AUDIT_TEMPLATES_QUERY] });
+  const [installTemplatesPC] = useMutation<any>(INSTALL_DEFAULT_PC_TEMPLATES_MUTATION);
+  const [installTemplatesQC] = useMutation<any>(INSTALL_DEFAULT_QC_TEMPLATES_MUTATION);
+  const [installTemplatesSafety] = useMutation<any>(INSTALL_DEFAULT_SAFETY_TEMPLATES_MUTATION);
+  const [installTemplatesMaterial] = useMutation<any>(INSTALL_DEFAULT_MATERIAL_TEMPLATES_MUTATION);
 
   const btnClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50";
   const inputClass = "h-7 w-full rounded border border-input bg-card px-2 text-[11px] text-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring/30 transition-colors";
@@ -289,8 +295,22 @@ export function AuditTemplateManagerPage() {
           <div className="flex items-center gap-1 px-2 pb-1">
             <button type="button" onClick={() => { setShowCreateForm(!showCreateForm); setCreateForm({ code: "", name: "", auditType: "FIVE_S", moduleScope: "PRODUCTION_CONTROL", targetTypes: ["PRODUCTION_LINE"] }); }}
               className="inline-flex h-7 items-center gap-1 rounded bg-primary px-2 text-[10px] font-semibold text-primary-foreground hover:bg-primary/90"><Plus className="h-3 w-3" /> New</button>
-            <button type="button" onClick={async () => { await installDefaults(); setStatusMessage("Default templates installed."); }}
-              className={btnClass} title="Install default templates"><Copy className="h-3 w-3" /> Defaults</button>
+            <button type="button" onClick={async () => {
+              setSaving(true);
+              try {
+                await installTemplatesPC();
+                await installTemplatesQC();
+                await installTemplatesSafety();
+                await installTemplatesMaterial();
+                setStatusMessage("Default templates installed for all modules.");
+              } catch (err) {
+                setStatusMessage(err instanceof Error ? err.message : "Install failed.");
+              } finally {
+                await refetchTemplates();
+                setSaving(false);
+              }
+            }}
+              className={btnClass} disabled={saving} title="Install default templates for all modules"><Copy className="h-3 w-3" /> Defaults</button>
           </div>
 
           {showCreateForm && (

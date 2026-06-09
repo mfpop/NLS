@@ -1,7 +1,8 @@
-import { Search, X, RefreshCw, CheckCircle2, Archive, History, Shield, FileText } from "lucide-react";
+import { RefreshCw, CheckCircle2, Archive, History, Shield, FileText, X } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { useState, useCallback } from "react";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "@/styles/themeTokens";
 import { DocumentHistoryPanel } from "./components/DocumentHistoryPanel";
 import { StructureDocumentMetadata } from "./components/StructureDocumentMetadata";
@@ -83,47 +84,18 @@ export function DocumentControlPage() {
         subtitle="Lifecycle governance across all document types"
       />
 
-      {/* Toolbar / Filters */}
-      <div className="shrink-0 border-b border-border bg-muted h-10 px-2 flex items-center gap-2">
-        <div className="relative flex-1 min-w-0 max-w-[200px]">
-          <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground stroke-current pointer-events-none" />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search documents..."
-            className="h-7 w-full rounded text-xs text-foreground text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted pl-6 pr-1 outline-none transition-colors" />
-          {search && <button type="button" onClick={() => setSearch("")}
-            className="absolute right-0.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground">
-            <X className="h-3 w-3 stroke-current" />
-          </button>}
-        </div>
-
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
-          className="h-7 rounded text-xs text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
-          <option value="">All Types</option>
-          {docTypes.map((dt) => <option key={dt} value={dt}>{typeLabels[dt] || dt}</option>)}
-        </select>
-
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="h-7 rounded text-xs text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
-          <option value="">All Statuses</option>
-          <option value="DRAFT">Draft</option>
-          <option value="APPROVED">Approved</option>
-          <option value="ARCHIVED">Archived</option>
-        </select>
-
-        <select value={controlledFilter} onChange={(e) => setControlledFilter(e.target.value)}
-          className="h-7 rounded text-xs text-muted-foreground bg-transparent hover:bg-muted dark:hover:bg-muted px-1 appearance-none cursor-pointer transition-colors outline-none">
-          <option value="">All Copies</option>
-          <option value="controlled">Controlled</option>
-          <option value="uncontrolled">Uncontrolled</option>
-        </select>
-
-        <div className="flex-1" />
-
-        <button type="button" onClick={() => refetch()}
-          className="flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-muted-foreground hover:bg-muted dark:hover:bg-muted transition-colors shrink-0">
-          <RefreshCw className={`h-3 w-3 stroke-current ${loading ? "animate-spin" : ""}`} />
-        </button>
-      </div>
+      <Toolbar
+        left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search documents..." />}
+        right={
+          <>
+            <ToolbarSelect value={typeFilter} onChange={setTypeFilter} options={[{ value: "", label: "All Types" }, ...docTypes.map((dt) => ({ value: dt, label: typeLabels[dt] || dt }))]} />
+            <ToolbarSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: "", label: "All Statuses" }, { value: "DRAFT", label: "Draft" }, { value: "APPROVED", label: "Approved" }, { value: "ARCHIVED", label: "Archived" }]} />
+            <ToolbarSelect value={controlledFilter} onChange={setControlledFilter} options={[{ value: "", label: "All Copies" }, { value: "controlled", label: "Controlled" }, { value: "uncontrolled", label: "Uncontrolled" }]} />
+            <span className="mx-0.5 h-5 w-px bg-border/30" />
+            <ToolbarButton icon={RefreshCw} label={loading ? "Refreshing..." : "Refresh"} onClick={() => refetch()} disabled={loading} />
+          </>
+        }
+      />
 
       {/* Content: Table + Detail */}
       <div className="flex-1 min-h-0 flex overflow-hidden">

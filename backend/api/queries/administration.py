@@ -138,7 +138,7 @@ class AdministrationQuery:
         return [PermissionNode.from_db(p) for p in qs]
 
     @strawberry.field
-    def user_roles(self, user_profile_id: str) -> list[UserRoleAssignmentNode]:
+    def user_roles(self, user_profile_id: Optional[str] = None) -> list[UserRoleAssignmentNode]:
         assignments = UserAccessService.list_user_roles(user_profile_id)
         return [UserRoleAssignmentNode.from_db(a) for a in assignments]
 

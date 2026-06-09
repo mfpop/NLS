@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from api.mutations.manufacturing import ManufacturingMutation
+from api.mutations.manufacturing_structure import ManufacturingStructureMutation
 from api.types.manufacturing import ResourceGroupInput
 from manufacturing.domain.structure_service import StructureService, StructureServiceError
 from manufacturing.models import ResourceGroup
@@ -23,7 +23,7 @@ class GraphQLMutationDelegationTests(TestCase):
     def test_archive_resource_group_calls_structure_service(self):
         with patch.object(StructureService, "archive_resource_group") as mock:
             mock.return_value = None
-            mutation = ManufacturingMutation()
+            mutation = ManufacturingStructureMutation()
             try:
                 mutation.archive_resource_group("some-id")
             except AttributeError:
@@ -34,7 +34,7 @@ class GraphQLMutationDelegationTests(TestCase):
         with patch("manufacturing.models.ResourceGroup.save") as mock_save:
             with patch.object(StructureService, "archive_resource_group") as mock_service:
                 mock_service.side_effect = StructureServiceError("id", "NOT_FOUND", "not found")
-                mutation = ManufacturingMutation()
+                mutation = ManufacturingStructureMutation()
                 result = mutation.archive_resource_group("nonexistent-id")
                 self.assertFalse(result.ok)
                 mock_save.assert_not_called()
@@ -44,6 +44,6 @@ class GraphQLMutationDelegationTests(TestCase):
         with patch("manufacturing.models.ResourceGroup.save") as mock_save:
             with patch.object(StructureService, "archive_resource_group") as mock_service:
                 mock_service.side_effect = StructureServiceError("id", "NOT_FOUND", "not found")
-                mutation = ManufacturingMutation()
+                mutation = ManufacturingStructureMutation()
                 mutation.archive_resource_group("x")
                 mock_save.assert_not_called()

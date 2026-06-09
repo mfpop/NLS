@@ -7,7 +7,7 @@ from api.types.mapping import (
     ImportProfileNode, ImportFieldMappingNode,
     MappingValidationResultType,
 )
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from manufacturing.domain.erp_mapping_service import ERPMappingService, ERPMappingError
 
 

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Activity, Plus, RefreshCw, Save, ArrowLeft, Pencil, X, Archive, Trash2, Play, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Activity, Plus, Save, ArrowLeft, Pencil, X, Archive, Trash2, Play } from "lucide-react";
 import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -11,82 +11,10 @@ import { ProductionOverview } from "./ProductionOverview";
 import { useProductionAuditSection } from "./ProductionAuditSection.tsx";
 import { useProductionIssueSection } from "./ProductionIssueSection.tsx";
 import { useProductionActionSection } from "./ProductionActionSection.tsx";
-import { STATUS_STYLES, ISSUE_STATUS_STYLES, ACTION_STATUS_STYLES, PRIORITY_STYLES, SEVERITY_STYLES, statusLabel, auditTypeLabel } from "./ProductionStatusStyles.tsx";
+import { statusLabel, auditTypeLabel, targetTypeLabel } from "./ProductionStatusStyles.tsx";
 
-// ── Color config per record type ──
-const TYPE_CONFIG: Record<string, { dot: string; accent: string; label: string }> = {
-  AUDITS: { dot: "bg-blue-500", accent: "border-l-orange-500", label: "Audit" },
-  ISSUES: { dot: "bg-orange-500", accent: "border-l-orange-500", label: "Issue" },
-  ACTIONS: { dot: "bg-purple-500", accent: "border-l-purple-500", label: "Action" },
-};
 
-function typeColor(rt: string): string {
-  return TYPE_CONFIG[rt]?.dot || "bg-gray-400";
-}
-function typeAccent(rt: string): string {
-  return TYPE_CONFIG[rt]?.accent || "border-l-gray-400";
-}
-function typeLabel(rt: string): string {
-  return TYPE_CONFIG[rt]?.label || rt;
-}
 
-const STATUS_STYLE_MAP: Record<string, Record<string, string>> = {
-  AUDITS: STATUS_STYLES,
-  ISSUES: ISSUE_STATUS_STYLES,
-  ACTIONS: ACTION_STATUS_STYLES,
-};
-
-// ── Split Button ──
-function SplitButton({
-  label,
-  defaultAction,
-  options,
-  onDefault,
-  onOption,
-  disabled,
-}: {
-  label: string;
-  defaultAction: string;
-  options: { value: string; label: string }[];
-  onDefault: () => void;
-  onOption: (value: string) => void;
-  disabled?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative inline-flex">
-      <button type="button" onClick={onDefault} disabled={disabled}
-        className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-l">
-        <Plus className="h-3.5 w-3.5" />
-        <span>{label}</span>
-      </button>
-      <button type="button" onClick={() => setOpen(!open)} disabled={disabled}
-        className="inline-flex h-8 w-6 items-center justify-center bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed rounded-r border-l border-amber-500">
-        <ChevronDown className="h-3 w-3" />
-      </button>
-      {open && (
-        <div className="absolute top-full right-0 z-50 mt-0.5 w-36 rounded border border-border/40 bg-card shadow-lg py-1">
-          {options.map((opt) => (
-            <button key={opt.value} type="button"
-              onClick={() => { setOpen(false); onOption(opt.value); }}
-              className={`w-full text-left px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted ${opt.value === defaultAction ? "text-foreground" : "text-muted-foreground"}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function ProductionControlPage() {
   const [search, setSearch] = useState("");
@@ -131,52 +59,48 @@ export function ProductionControlPage() {
     { id: "actions", label: "Actions", renderList: actionS.renderList, renderDetail: actionS.renderDetail },
   ], [auditS, issueS, actionS]);
 
-  // ── Determine default New action ──
-  const getDefaultNewAction = useCallback((rt: RecordType | null): string => {
-    if (rt === "AUDITS") return "audit";
-    if (rt === "ISSUES") return "issue";
-    if (rt === "ACTIONS") return "action";
-    return "audit";
-  }, []);
 
-  const splitOptions = [
-    { value: "audit", label: "New Audit" },
-    { value: "issue", label: "New Issue" },
-    { value: "action", label: "New Action" },
-  ];
 
-  // ── Busy state ──
-  const busy = auditS.saving || issueS.creating || actionS.creating;
+  // ── Busy state (only actual async operations, not form-open state) ──
+  const busy = auditS.saving;
 
   // ── Toolbar wiring ──
   const toolbarSearchNode = useMemo(() => (
-    <>
-      <ToolbarSearch value={search} onChange={setSearch} placeholder="Search records..." />
-      <ToolbarSelect
-        value={filterStatus}
-        onChange={setFilterStatus}
-        options={[
-          { value: "", label: "All Status" },
-          { value: "DRAFT", label: "Draft" },
-          { value: "OPEN", label: "Open" },
-          { value: "COMPLETED", label: "Completed" },
-          { value: "ARCHIVED", label: "Archived" },
-        ]}
-      />
-    </>
-  ), [search, filterStatus]);
+    <ToolbarSearch value={search} onChange={setSearch} placeholder="Search records..." />
+  ), [search]);
 
-  // Unified New split handler
-  const handleNewAction = useCallback((rt: RecordType | null, value: string) => {
-    if (value === "audit") { auditS.hNew(); }
-    else if (value === "issue") { issueS.hNew(); }
-    else if (value === "action") { actionS.hNew(); }
-  }, [auditS, issueS, actionS]);
+  const toolbarFilters = useCallback((rt: RecordType | null) => {
+    const auditOpts = [
+      { value: "", label: "All Status" },
+      { value: "DRAFT", label: "Draft" },
+      { value: "OPEN", label: "Open" },
+      { value: "COMPLETED", label: "Completed" },
+      { value: "ARCHIVED", label: "Archived" },
+    ];
+    const issueOpts = [
+      { value: "", label: "All Status" },
+      { value: "OPEN", label: "Open" },
+      { value: "IN_PROGRESS", label: "In Progress" },
+      { value: "RESOLVED", label: "Resolved" },
+      { value: "CLOSED", label: "Closed" },
+      { value: "CANCELLED", label: "Cancelled" },
+    ];
+    const actionOpts = [
+      { value: "", label: "All Status" },
+      { value: "OPEN", label: "Open" },
+      { value: "IN_PROGRESS", label: "In Progress" },
+      { value: "COMPLETED", label: "Completed" },
+      { value: "CANCELLED", label: "Cancelled" },
+    ];
+    const opts = rt === "ISSUES" ? issueOpts : rt === "ACTIONS" ? actionOpts : auditOpts;
+    return <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={opts} />;
+  }, [filterStatus]);
 
   const handleNewDefault = useCallback((rt: RecordType | null) => {
-    const def = getDefaultNewAction(rt);
-    handleNewAction(rt, def);
-  }, [getDefaultNewAction, handleNewAction]);
+    if (rt === "AUDITS" || !rt) { auditS.hNew(); }
+    else if (rt === "ISSUES") { issueS.hNew(); }
+    else if (rt === "ACTIONS") { actionS.hNew(); }
+  }, [auditS, issueS, actionS]);
 
   // ── Toolbar actions ──
   const toolbarActions = useCallback((recordType: RecordType | null, resetSelection: () => void, _setSelection: (id: number) => void, setSelectedRecordType: (rt: RecordType) => void) => {
@@ -236,16 +160,23 @@ export function ProductionControlPage() {
 
     // ── Detail states ──
     if (auditDetail) {
-      const def = getDefaultNewAction("AUDITS");
+      if (auditS.editing) {
+        return (
+          <>
+            <ToolbarButton icon={Save} label={busy ? "Saving..." : "Save"} onClick={auditS.hSaveEdit} disabled={busy} />
+            <ToolbarButton icon={X} label="Cancel" onClick={auditS.hCancelEdit} />
+            <span className="h-5 w-px shrink-0 bg-border/25" />
+            <ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { auditS.hCancelNew(); resetSelection(); }} />
+          </>
+        );
+      }
       return (
         <>
-          <SplitButton label={splitOptions.find((o) => o.value === def)?.label || "New"} defaultAction={def} options={splitOptions}
-            onDefault={() => { setSelectedRecordType("AUDITS"); handleNewDefault("AUDITS"); }}
-            onOption={(v) => { setSelectedRecordType("AUDITS"); handleNewAction("AUDITS", v); }} />
-          <span className="h-5 w-px shrink-0 bg-border/25" />
+          <ToolbarButton icon={Plus} label="New" onClick={() => { setSelectedRecordType("AUDITS"); handleNewDefault("AUDITS"); }} />
           {auditS.canComplete && (
             <ToolbarButton icon={Play} label={busy ? "Completing..." : "Complete"} onClick={auditS.hComplete} disabled={busy} />
           )}
+          <ToolbarButton icon={Pencil} label="Edit" onClick={auditS.hStartEdit} />
           <ToolbarButton icon={Archive} label="Archive" onClick={() => auditS.setArchiveConfirmId(String(auditS.execId))} />
           <ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} />
           <span className="h-5 w-px shrink-0 bg-border/25" />
@@ -254,14 +185,11 @@ export function ProductionControlPage() {
       );
     }
     if (issueDetail) {
-      const def = getDefaultNewAction("ISSUES");
       const selItem = issueS.items.find((i: any) => i.id === issueS.selectedId);
       const editable = selItem && (selItem.status === "OPEN" || selItem.status === "IN_PROGRESS");
       return (
         <>
-          <SplitButton label={splitOptions.find((o) => o.value === def)?.label || "New"} defaultAction={def} options={splitOptions}
-            onDefault={() => { setSelectedRecordType("ISSUES"); handleNewDefault("ISSUES"); }}
-            onOption={(v) => { setSelectedRecordType("ISSUES"); handleNewAction("ISSUES", v); }} />
+          <ToolbarButton icon={Plus} label="New" onClick={() => { setSelectedRecordType("ISSUES"); handleNewDefault("ISSUES"); }} />
           {editable && (
             <>
               <ToolbarButton icon={Pencil} label="Edit" onClick={() => { if (selItem) issueS.hEdit(selItem); }} />
@@ -274,14 +202,11 @@ export function ProductionControlPage() {
       );
     }
     if (actionDetail) {
-      const def = getDefaultNewAction("ACTIONS");
       const selItem = actionS.items.find((a: any) => a.id === actionS.selectedId);
       const editable = selItem && (selItem.status === "OPEN" || selItem.status === "IN_PROGRESS");
       return (
         <>
-          <SplitButton label={splitOptions.find((o) => o.value === def)?.label || "New"} defaultAction={def} options={splitOptions}
-            onDefault={() => { setSelectedRecordType("ACTIONS"); handleNewDefault("ACTIONS"); }}
-            onOption={(v) => { setSelectedRecordType("ACTIONS"); handleNewAction("ACTIONS", v); }} />
+          <ToolbarButton icon={Plus} label="New" onClick={() => { setSelectedRecordType("ACTIONS"); handleNewDefault("ACTIONS"); }} />
           {editable && (
             <>
               <ToolbarButton icon={Pencil} label="Edit" onClick={() => { if (selItem) actionS.hEdit(selItem); }} />
@@ -296,16 +221,18 @@ export function ProductionControlPage() {
 
     // ── Dashboard (no selected record) ──
     if (dashboard) {
-      const def = getDefaultNewAction(recordType);
       return (
-        <SplitButton label={splitOptions.find((o) => o.value === def)?.label || "New"} defaultAction={def} options={splitOptions}
-          onDefault={() => { handleNewDefault(recordType); }}
-          onOption={(v) => { handleNewAction(recordType, v); }} />
+        <ToolbarButton icon={Plus} label="New" onClick={() => {
+          const rt = recordType || "AUDITS";
+          setSelectedRecordType(rt as RecordType);
+          _setSelection(-1);
+          handleNewDefault(rt as RecordType);
+        }} />
       );
     }
 
     return null;
-  }, [auditS, issueS, actionS, busy, getDefaultNewAction, splitOptions, handleNewAction, handleNewDefault]);
+  }, [auditS, issueS, actionS, busy, handleNewDefault]);
 
   const hRefreshAll = useCallback(() => {
     auditS.hRefresh();
@@ -313,11 +240,14 @@ export function ProductionControlPage() {
     actionS.hRefresh();
   }, [auditS, issueS, actionS]);
 
+  const ITEMS_PER_PAGE = 50;
+
   // ── Flat unified record list ──
   const renderUnifiedList = useCallback((
     onSelect: (recordType: RecordType, id: number | null) => void,
     filterRecordType?: RecordType | null,
     selectedId?: number | null,
+    page?: number,
   ) => {
     // Collect all records with metadata
     const rows: {
@@ -336,8 +266,8 @@ export function ProductionControlPage() {
     auditS.items.forEach((i: any) => {
       rows.push({
         rt: "AUDITS", id: Number(i.id), title: i.title || `Audit #${i.id}`,
-        typeLabel: auditTypeLabel(i.auditType || i.auditType || ""),
-        sub: i.targetType || "",
+        typeLabel: auditTypeLabel(i.auditType || ""),
+        sub: targetTypeLabel(i.targetType || ""),
         owner: i.auditor || "",
         date: i.auditDate || "",
         status: i.status || "DRAFT",
@@ -373,6 +303,8 @@ export function ProductionControlPage() {
     const filtered = filterRecordType ? rows.filter((r) => r.rt === filterRecordType) : rows;
     // Sort: newest first by ID
     filtered.sort((a, b) => b.id - a.id);
+    const curPage = page ?? 0;
+    const paged = filtered.slice(curPage * ITEMS_PER_PAGE, (curPage + 1) * ITEMS_PER_PAGE);
 
     // Left panel header label
     const headerLabels: Record<string, string> = {
@@ -385,79 +317,61 @@ export function ProductionControlPage() {
     return (
       <div className="flex flex-col min-h-0 h-full">
         {/* Header */}
-        <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-3">
-          <span className="text-xs font-semibold text-foreground">{headerLabel}</span>
+        <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4">
+          <span className="text-sm font-medium text-muted-foreground">{headerLabel}</span>
           <span className="ml-auto text-[10px] text-muted-foreground font-mono">{filtered.length}</span>
         </div>
         {/* List */}
         <div className="flex-1 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <div className="flex items-center justify-center h-24 text-xs text-muted-foreground px-4 text-center">
-              {filterRecordType ? `No ${headerLabel.toLowerCase()} found` : "No records found"}
-            </div>
+          {paged.length === 0 ? (
+            <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No records found</div>
           ) : (
-            <div className="divide-y divide-border/10">
-              {filtered.map((row) => {
-                const cfg = TYPE_CONFIG[row.rt];
-                const stMap = STATUS_STYLE_MAP[row.rt];
-                const stCls = stMap?.[row.status] || "";
-                const isSelected = selectedId === row.id;
+            paged.map((row) => {
+              const cfg = (() => {
+                const m: Record<string, { color: string; border: string; label: string }> = {
+                  AUDITS: { color: "bg-blue-500", border: "border-l-blue-500", label: "Audit" },
+                  ISSUES: { color: "bg-amber-500", border: "border-l-amber-500", label: "Issue" },
+                  ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", label: "Action" },
+                };
+                return m[row.rt];
+              })();
 
-                return (
-                  <div key={`${row.rt}-${row.id}`}
-                    onClick={() => onSelect(row.rt, row.id)}
-                    className={`group relative cursor-pointer transition-all duration-150 ${
-                      isSelected ? "bg-table-selected" : "hover:bg-table-row-hover"
-                    }`}
-                  >
-                    {/* Left accent bar */}
-                    {isSelected && (
-                      <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${typeAccent(row.rt)}`} />
-                    )}
-                    <div className="px-3 py-2.5 pl-4">
-                      {/* Top row: dot + title + badge */}
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className={`h-2 w-2 shrink-0 rounded-full ${typeColor(row.rt)}`} />
-                        <span className={`min-w-0 flex-1 truncate text-xs ${
-                          isSelected ? "font-bold text-foreground" : "font-semibold text-foreground"
-                        }`}>
-                          {row.title}
-                        </span>
-                        <span className="shrink-0 inline-flex items-center px-1 py-0.5 text-[9px] font-medium border rounded-sm bg-card/50">
-                          {typeLabel(row.rt)}
-                        </span>
-                        <span className={`shrink-0 inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${stCls}`}>
-                          {statusLabel(row.status)}
-                        </span>
-                        {row.score !== null && row.score !== undefined && (
-                          <span className={`shrink-0 inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${
-                            row.score >= 80 ? "border-green-300 text-green-700 bg-green-50/60" :
-                            row.score >= 60 ? "border-amber-300 text-amber-700 bg-amber-50/60" :
-                            "border-red-300 text-red-700 bg-red-50/60"
-                          }`}>
-                            {row.score}%
-                          </span>
-                        )}
-                      </div>
-                      {/* Bottom row: metadata */}
-                      <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground flex-wrap">
-                        {row.typeLabel && <span className="truncate max-w-[120px]">{row.typeLabel}</span>}
-                        {row.owner && <><span>·</span><span className="truncate max-w-[80px]">{row.owner}</span></>}
-                        {row.date && <><span>·</span><span>{row.date}</span></>}
-                        {row.sub && row.rt === "ISSUES" && !row.owner && <><span>·</span><span>{row.sub}</span></>}
-                        {row.priority && (row.rt === "ACTIONS" || row.rt === "ISSUES") && (
-                          <span className={`inline-flex items-center px-1 py-0.5 text-[8px] font-medium border ${
-                            (row.rt === "ISSUES" ? SEVERITY_STYLES : PRIORITY_STYLES)[row.priority] || ""
-                          }`}>
-                            {row.priority}
-                          </span>
-                        )}
-                      </div>
+              return (
+                <div
+                  key={`${row.rt}-${row.id}`}
+                  onClick={() => {
+                    if (row.rt === "AUDITS") { auditS.setExecId(row.id); }
+                    onSelect(row.rt, row.id);
+                  }}
+                  className={`group mx-1 my-0.5 cursor-pointer border-l-2 transition-all duration-150 ${
+                    selectedId === row.id
+                      ? `${cfg.border} bg-table-selected`
+                      : `border-l-transparent hover:bg-table-row-hover`
+                  }`}
+                >
+                  <div className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${cfg.color}`} />
+                      <span className="min-w-0 truncate text-sm font-semibold text-foreground flex-1">{row.title}</span>
+                      {row.status && (
+                        <span className="text-[10px] font-medium uppercase border border-border/40 px-1 py-0.5 rounded shrink-0">{statusLabel(row.status)}</span>
+                      )}
+                      {row.score !== null && row.score !== undefined && (
+                        <span className={`inline-flex items-center px-1 py-0.5 text-[8px] font-medium border ${
+                          row.score >= 80 ? "border-green-300 text-green-700 bg-green-50/60" :
+                          row.score >= 60 ? "border-amber-300 text-amber-700 bg-amber-50/60" :
+                          "border-red-300 text-red-700 bg-red-50/60"
+                        }`}>{row.score}%</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {row.date && <span className="text-[10px] text-muted-foreground">{row.date}</span>}
+                      {row.owner && <span className="text-[10px] text-muted-foreground">{row.owner}</span>}
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })
           )}
         </div>
       </div>
@@ -475,11 +389,6 @@ export function ProductionControlPage() {
     />
   ), [auditS.items, auditS.templates, auditS.hInstall, issueS.items, actionS.items]);
 
-  // ── Footer data ──
-  const openIssues = useMemo(() => issueS.items.filter((i: any) => i.status === "OPEN").length, [issueS.items]);
-  const openActions = useMemo(() => actionS.items.filter((a: any) => a.status === "OPEN" || a.status === "IN_PROGRESS").length, [actionS.items]);
-  const activeAudits = useMemo(() => auditS.items.filter((a: any) => a.status === "DRAFT" || a.status === "OPEN").length, [auditS.items]);
-
   // ── Shell ──
   return (
     <>
@@ -494,6 +403,7 @@ export function ProductionControlPage() {
         tabs={tabs}
         renderOverview={renderOverview}
         toolbarSearch={toolbarSearchNode}
+        toolbarFilters={toolbarFilters}
         toolbarActions={toolbarActions}
         renderUnifiedList={renderUnifiedList}
         onRefresh={hRefreshAll}
@@ -502,31 +412,6 @@ export function ProductionControlPage() {
           issueS.hCancelNew();
           actionS.hCancelNew();
         }}
-        footerLeft={
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-medium text-foreground">Production Control</span>
-            <span className="text-[10px] text-muted-foreground">·</span>
-            <span className="text-[10px] text-muted-foreground">All Records</span>
-          </div>
-        }
-        footerRight={
-          <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-              <span>{activeAudits}</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-              <span>{openIssues}</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-              <span>{openActions}</span>
-            </span>
-            <span className="text-muted-foreground/40">|</span>
-            <span>Visible: {auditS.items.length + issueS.items.length + actionS.items.length}</span>
-          </div>
-        }
       />
 
       {/* Confirmations */}

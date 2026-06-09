@@ -1,7 +1,7 @@
 import typing
 import strawberry
 
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from manufacturing.domain.plant_structure_compare_service import CompareRow, FieldDifference
 
 

@@ -7,7 +7,7 @@ from api.types.erp_import_pattern import (
     ErpImportPatternNode, ErpImportPatternFieldMappingNode,
     PatternValidationResultType, FieldMappingInput,
 )
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from manufacturing.domain.erp_import_pattern_service import ErpImportPatternService, ErpImportPatternError
 
 

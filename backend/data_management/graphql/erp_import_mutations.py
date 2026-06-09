@@ -4,7 +4,7 @@ import strawberry
 from strawberry.types import Info
 
 from api.permissions import ensure_access
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 
 from data_management.graphql.erp_import_types import (
     ErpSourceFileNode, ValidationResultType, ImportResultType,

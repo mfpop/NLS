@@ -128,7 +128,7 @@ export function MaterialOverview(props: OverviewProps) {
 
   const kpiCards: KpiCard[] = useMemo(() => [
     { label: "Material Audits Open", count: kpis.openAudits.length, color: "text-blue-600 dark:text-blue-400", sub: `${kpis.openAudits.length} pending review`, onClick: () => kpiClick({ tab: "audits", status: "OPEN" }) },
-    { label: "Open Issues", count: kpis.openIssues.length, color: "text-amber-600 dark:text-amber-400", sub: "Requires action", trend: kpis.openIssues.length > 3 ? "up" : kpis.openIssues.length === 0 ? "down" : "neutral", trendVal: `${kpis.openIssues.length > 0 ? "+" : ""}${kpis.openIssues.length}`, onClick: () => kpiClick({ tab: "issues", status: "OPEN" }) },
+    { label: "Open Problems", count: kpis.openIssues.length, color: "text-amber-600 dark:text-amber-400", sub: "Requires action", trend: kpis.openIssues.length > 3 ? "up" : kpis.openIssues.length === 0 ? "down" : "neutral", trendVal: `${kpis.openIssues.length > 0 ? "+" : ""}${kpis.openIssues.length}`, onClick: () => kpiClick({ tab: "issues", status: "OPEN" }) },
     { label: "Open Actions", count: kpis.openActions.length, color: "text-purple-600 dark:text-purple-400", sub: `${actions.length} total`, onClick: () => kpiClick({ tab: "actions", status: "OPEN" }) },
     { label: "Overdue Actions", count: kpis.overdueActions.length, color: "text-red-600 dark:text-red-400", sub: "Past due date", trend: kpis.overdueActions.length > 0 ? "up" : "down", trendVal: `${kpis.overdueActions.length}`, onClick: () => kpiClick({ tab: "actions" }) },
     { label: "Critical / High", count: kpis.criticalHigh.length, color: "text-red-600 dark:text-red-400", sub: "Needs immediate attention", onClick: () => kpiClick({ tab: "issues" }) },
@@ -154,7 +154,7 @@ export function MaterialOverview(props: OverviewProps) {
   const riskItems = useMemo(() => {
     const items: { id: string; priority: number; type: string; title: string; detail: string; color: string; onClick: () => void }[] = [];
     const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
-    for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-red-500", onClick: () => kpiClick({ tab: "issues" }) });
+    for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Problem", title: p.title || "Problem", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-red-500", onClick: () => kpiClick({ tab: "issues" }) });
     const overActions = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
     for (const a of overActions) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400", onClick: () => kpiClick({ tab: "actions" }) });
     const incomplete = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
@@ -172,7 +172,7 @@ export function MaterialOverview(props: OverviewProps) {
     }
     for (const p of problems) {
       if (p.dueDate && p.dueDate >= TODAY && p.dueDate <= WEEK_END_STR && p.status !== "CLOSED" && p.status !== "CANCELLED")
-        items.push({ id: `issue-${p.id}`, title: p.title, owner: p.reportedBy || p.owner || "", dueDate: p.dueDate, priority: p.severity || "MEDIUM", source: "Issue", onClick: () => kpiClick({ tab: "issues" }) });
+        items.push({ id: `issue-${p.id}`, title: p.title, owner: p.reportedBy || p.owner || "", dueDate: p.dueDate, priority: p.severity || "MEDIUM", source: "Problem", onClick: () => kpiClick({ tab: "issues" }) });
     }
     items.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
     return items.slice(0, 8);
@@ -196,7 +196,7 @@ export function MaterialOverview(props: OverviewProps) {
   const recentItems = useMemo(() => {
     const mapped = [
       ...actions.map((a: any) => ({ date: a.createdAt || "", type: "Action" as const, title: a.title, status: a.status, owner: a.owner || "", score: undefined, onClick: () => kpiClick({ tab: "actions" }) })),
-      ...problems.map((p: any) => ({ date: p.createdAt || "", type: "Issue" as const, title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", score: undefined, onClick: () => kpiClick({ tab: "issues" }) })),
+      ...problems.map((p: any) => ({ date: p.createdAt || "", type: "Problem" as const, title: p.title || "Problem", status: p.status, owner: p.reportedBy || p.owner || "", score: undefined, onClick: () => kpiClick({ tab: "issues" }) })),
       ...audits.map((a: any) => ({ date: a.createdAt || "", type: "Audit" as const, title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", score: a.score, onClick: () => kpiClick({ tab: "audits" }) })),
     ];
     return mapped.sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 12);
@@ -334,7 +334,7 @@ export function MaterialOverview(props: OverviewProps) {
                     <span className={`h-2 w-2 shrink-0 rounded-full ${item.color} group-hover:animate-pulse`} />
                     <span className="text-[10px] font-semibold text-muted-foreground w-10 shrink-0">{item.type}</span>
                     <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
-                    {item.detail && <span className="text-muted-foreground truncate max-w-[140px] hidden sm:inline">{item.detail}</span>}
+                    {item.detail && <span className="text-muted-foreground truncate max-w-35 hidden sm:inline">{item.detail}</span>}
                   </button>
                 ))}
               </div>
@@ -405,7 +405,7 @@ export function MaterialOverview(props: OverviewProps) {
               <div className="h-6 flex rounded-full overflow-hidden bg-white/30 dark:bg-slate-800/30 border border-white/10 dark:border-slate-700/10">
                 {statusDist.map((s) => (
                   <div key={s.label} style={{ width: `${s.pct}%` }}
-                    className={`${s.color} flex items-center justify-center text-[8px] font-bold text-white first:rounded-l-full last:rounded-r-full min-w-[20px] transition-all duration-500`}
+                    className={`${s.color} flex items-center justify-center text-[8px] font-bold text-white first:rounded-l-full last:rounded-r-full min-w-5 transition-all duration-500`}
                     title={`${s.label}: ${s.count} (${s.pct}%)`}
                   >
                     {s.pct > 10 ? s.pct + "%" : ""}
@@ -436,16 +436,16 @@ export function MaterialOverview(props: OverviewProps) {
               <div className="space-y-0.5 max-h-72 overflow-y-auto">
                 {recentItems.map((item, i) => {
                   const stCls = item.type === "Action" ? ACTION_STATUS_STYLES[item.status] || ACTION_STATUS_STYLES.OPEN
-                    : item.type === "Issue" ? ISSUE_STATUS_STYLES[item.status] || ISSUE_STATUS_STYLES.OPEN
+                    : item.type === "Problem" ? ISSUE_STATUS_STYLES[item.status] || ISSUE_STATUS_STYLES.OPEN
                     : STATUS_STYLES[item.status] || STATUS_STYLES.DRAFT;
-                  const typeIcon = item.type === "Action" ? "→" : item.type === "Issue" ? "!" : "◎";
+                  const typeIcon = item.type === "Action" ? "→" : item.type === "Problem" ? "!" : "◎";
                   return (
                     <button key={`${item.type}-${i}`} onClick={item.onClick}
                       className="w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
                     >
                       <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold ${
                         item.type === "Action" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                        : item.type === "Issue" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                        : item.type === "Problem" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                         : "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
                       }`}>{typeIcon}</span>
                       <span className="min-w-0 flex-1 truncate text-foreground">{item.title}</span>
@@ -473,7 +473,7 @@ export function MaterialOverview(props: OverviewProps) {
                 <p className="text-sm font-bold text-foreground">{audits.length}</p>
               </div>
               <div className="bg-white/40 dark:bg-slate-800/40 p-2">
-                <p className="text-muted-foreground text-[10px]">Total Issues</p>
+                <p className="text-muted-foreground text-[10px]">Total Problems</p>
                 <p className="text-sm font-bold text-foreground">{problems.length}</p>
               </div>
               <div className="bg-white/40 dark:bg-slate-800/40 p-2">

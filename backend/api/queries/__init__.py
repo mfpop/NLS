@@ -8,6 +8,9 @@ from api.queries.execution import ExecutionQuery
 from api.queries.improvement import ImprovementQuery
 from api.queries.kpi import KpiQuery
 from api.queries.manufacturing import ManufacturingQuery
+from api.queries.document_queries import DocumentQuery
+from api.queries.material_queries import MaterialQuery
+from api.queries.reference_queries import ReferenceQuery
 from api.queries.integration import IntegrationQuery
 from api.queries.mapping import MappingQuery
 from api.queries.lineage import LineageQuery
@@ -17,7 +20,6 @@ from docs_manager.schema import DocumentationQuery
 from api.types.auth import UserNode
 from check.schema import CheckQuery
 from maintenance.schema import MaintenanceQuery
-
 
 @strawberry.type
 class Query(
@@ -32,6 +34,9 @@ class Query(
     MappingQuery,
     LineageQuery,
     MERQuery,
+    ReferenceQuery,
+    MaterialQuery,
+    DocumentQuery,
     CheckQuery,
     MaintenanceQuery,
 ):

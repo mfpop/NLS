@@ -2,7 +2,7 @@ import typing
 import strawberry
 from datetime import datetime
 
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from api.types.pagination import PageInfo
 from manufacturing.models import (
     ImportJob, ImportValidationError, MappingRule,

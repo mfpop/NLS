@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { Bell, Check, Cog, DatabaseZap, Eye, Globe2, Info, Lock, RefreshCw, Save, ShieldCheck, SlidersHorizontal, TriangleAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
 import { APPLICATION_SETTINGS_QUERY } from "@/graphql/applicationSettingsQueries";
 import { UPDATE_APPLICATION_SETTINGS } from "@/graphql/applicationSettingsMutations";
 import type { ApplicationSetting, ApplicationSettingInput } from "@/types/applicationSettings";
@@ -146,7 +147,6 @@ export function ApplicationSettingsPage() {
   const { data, loading, error, refetch } = useQuery<{ applicationSettings: ApplicationSetting[] }>(APPLICATION_SETTINGS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const [updateSettings, { loading: saving }] = useMutation<UpdateApplicationSettingsResponse>(UPDATE_APPLICATION_SETTINGS, { refetchQueries: [APPLICATION_SETTINGS_QUERY] });
 
-  const buttonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted-foreground/70 disabled:opacity-100";
   const settingsByKey = useMemo(() => new Map((data?.applicationSettings ?? []).map((setting) => [setting.key, setting])), [data]);
   const dirtyInputs = useMemo<ApplicationSettingInput[]>(() => Object.entries(draft).map(([key, value]) => ({ key, value })), [draft]);
   const isDirty = dirtyInputs.length > 0;
@@ -254,24 +254,20 @@ export function ApplicationSettingsPage() {
         title="Application Settings"
         subtitle="Configure application behavior, security, localization, integrations, and diagnostics."
         toolbar={
-          <div className="flex w-full items-center gap-1">
-            <div className={`${buttonClass} pointer-events-none`}>
-              <Cog className="h-4 w-4 stroke-current" />
-              <span className="truncate max-w-28">Settings</span>
-            </div>
-            <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
-            <span className={`hidden text-[11px] font-medium md:inline ${theme.textMuted}`}>System behavior only</span>
-            <div className="flex-1" />
-            <button type="button" onClick={handleRefresh} disabled={isRefreshing}
-              className={buttonClass}>
-              <RefreshCw className={`h-3.5 w-3.5 stroke-current ${loading || isRefreshing ? "animate-spin" : ""}`} /> Refresh
-            </button>
-            <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
-            <button type="button" onClick={handleSave} disabled={!canAttemptSave} title={!settingsLoaded ? "Settings must load successfully before saving." : !isDirty ? "Make a change before saving." : !isValid ? validationErrors.join(", ") : "Save application settings"}
-              className={`inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-semibold border-0 transition-colors disabled:cursor-not-allowed ${!canAttemptSave ? "pointer-events-none bg-muted text-muted-foreground shadow-none" : theme.buttonSuccessSolid}`}>
-              {saving ? <RefreshCw className={`h-3.5 w-3.5 animate-spin stroke-current ${!canAttemptSave ? "text-muted-foreground" : ""}`} /> : <Save className={`h-3.5 w-3.5 stroke-current ${!canAttemptSave ? "text-muted-foreground" : ""}`} />} Save
-            </button>
-          </div>
+          <Toolbar
+            left={
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                <Cog className="h-4 w-4" />
+                <span className="hidden md:inline">System behavior only</span>
+              </div>
+            }
+            right={
+              <>
+                <ToolbarButton icon={RefreshCw} label={isRefreshing ? "Refreshing..." : "Refresh"} onClick={handleRefresh} disabled={isRefreshing || !settingsLoaded} />
+                <ToolbarButton icon={Save} label={saving ? "Saving..." : "Save"} onClick={handleSave} disabled={!canAttemptSave} variant="success" />
+              </>
+            }
+          />
         }
         footer={<span>Application Settings controls application behavior only. Manufacturing modules control manufacturing operations.</span>}
       >

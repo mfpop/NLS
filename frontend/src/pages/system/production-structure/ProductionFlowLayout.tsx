@@ -4,7 +4,7 @@ import { useMutation } from "@apollo/client/react";
 import { Database, Factory, TrendingUpDown, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X, Rocket } from "lucide-react";
 import { SEED_GPT_LINE_MUTATION, CLEANUP_GPT_LINE_MUTATION } from "@/graphql/productionLineMutations";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -271,54 +271,51 @@ export function ProductionFlowLayout() {
         )}
       </div>
 
-      <div className="flex shrink-0 select-none items-center border-b border-border/35 bg-muted h-10 py-1">
-        <div className="flex h-full items-center px-3" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
-          <ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search tree" />
-        </div>
-        <span className="h-5 w-px shrink-0 bg-border/25" />
-        <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
-          <ToolbarSelect
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={[
-              { value: "all", label: "All" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-            ]}
-          />
-          <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-          <ToolbarButton icon={Trash2} label={cleaning ? "Cleaning..." : "Cleanup GPT"} disabled={cleaning} onClick={async () => {
-            if (!window.confirm("This will delete ALL GPT line data (departments, RGs, resources, variant, PNs, BOM, line, bins). Continue?")) return;
-            try {
-              const { data } = await cleanupGptMutation();
-              if (data?.cleanupGptLine?.ok) {
-                setToast({ message: "GPT line cleaned up!", type: "success" });
-                refetch();
-              } else {
-                const msgs = data?.cleanupGptLine?.messages?.join("; ") || "Cleanup failed";
-                setToast({ message: msgs, type: "error" });
+      <Toolbar
+        left={<ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search tree" />}
+        right={
+          <>
+            <ToolbarSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: "all", label: "All" },
+                { value: "active", label: "Active" },
+                { value: "inactive", label: "Inactive" },
+              ]}
+            />
+            <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+            <ToolbarButton icon={Trash2} label={cleaning ? "Cleaning..." : "Cleanup GPT"} disabled={cleaning} onClick={async () => {
+              if (!window.confirm("This will delete ALL GPT line data (departments, RGs, resources, variant, PNs, BOM, line, bins). Continue?")) return;
+              try {
+                const { data } = await cleanupGptMutation();
+                if (data?.cleanupGptLine?.ok) {
+                  setToast({ message: "GPT line cleaned up!", type: "success" });
+                  refetch();
+                } else {
+                  const msgs = data?.cleanupGptLine?.messages?.join("; ") || "Cleanup failed";
+                  setToast({ message: msgs, type: "error" });
+                }
+              } catch (e) {
+                setToast({ message: e instanceof Error ? e.message : "Cleanup failed", type: "error" });
               }
-            } catch (e) {
-              setToast({ message: e instanceof Error ? e.message : "Cleanup failed", type: "error" });
-            }
-          }} />
-          <ToolbarButton icon={Rocket} label={seeding ? "Setting up..." : "GPT Setup"} disabled={seeding} onClick={async () => {
-            if (!window.confirm("This will reset the GPT line and overwrite existing data. Continue?")) return;
-            try {
-              const { data } = await seedGptMutation();
-              if (data?.seedGptLine?.ok) {
-                setToast({ message: "GPT Line setup complete!", type: "success" });
-                refetch();
-              } else {
-                const msgs = data?.seedGptLine?.messages?.join("; ") || "Setup failed";
-                setToast({ message: msgs, type: "error" });
+            }} />
+            <ToolbarButton icon={Rocket} label={seeding ? "Setting up..." : "GPT Setup"} disabled={seeding} onClick={async () => {
+              if (!window.confirm("This will reset the GPT line and overwrite existing data. Continue?")) return;
+              try {
+                const { data } = await seedGptMutation();
+                if (data?.seedGptLine?.ok) {
+                  setToast({ message: "GPT Line setup complete!", type: "success" });
+                  refetch();
+                } else {
+                  const msgs = data?.seedGptLine?.messages?.join("; ") || "Setup failed";
+                  setToast({ message: msgs, type: "error" });
+                }
+              } catch (e) {
+                setToast({ message: e instanceof Error ? e.message : "Setup failed", type: "error" });
               }
-            } catch (e) {
-              setToast({ message: e instanceof Error ? e.message : "Setup failed", type: "error" });
-            }
-          }} />
-          <span className="h-5 w-px shrink-0 bg-border/25" />
-          <div className="flex flex-1 items-center justify-end gap-3">
+            }} />
+            <span className="mx-0.5 h-5 w-px shrink-0 bg-border/30" />
             {isEditingCompany ? (
               <>
                 <ToolbarButton icon={Check} label="Save" onClick={() => companyRef.current?.save()} variant="success" />
@@ -332,9 +329,9 @@ export function ProductionFlowLayout() {
               </>
             )}
             {selectionFilteredOut && <span className="ml-2 text-[11px] text-muted-foreground">Selection filtered out</span>}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Content - resizable split */}
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">

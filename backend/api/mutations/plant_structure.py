@@ -4,7 +4,7 @@ from strawberry.types import Info
 from strawberry.file_uploads import Upload
 
 from api.permissions import ensure_access
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from api.types.plant_structure import (
     PlantStructureCompareRowType,
     PlantStructureFieldDifferenceType,

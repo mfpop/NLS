@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { ACTIONS_QUERY } from "@/graphql/checkQueries";
 import { CREATE_ACTION_MUTATION, UPDATE_ACTION_MUTATION, CANCEL_ACTION_MUTATION } from "@/graphql/checkMutations";
+import { RecordListPanel } from "@/components/shared/RecordListPanel";
 import { ACTION_STATUS_STYLES, PRIORITY_STYLES, SEL_INPUT, statusLabel } from "./ProductionStatusStyles.tsx";
 
 export function useProductionActionSection(
@@ -157,24 +158,28 @@ export function useProductionActionSection(
   };
 
   const renderList = (selId: number | null, onSelect: (id: number | null) => void) => (
-    <div className="flex flex-col min-h-0 h-full">
-      <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4">
-        <span className="text-sm font-medium text-muted-foreground">Actions</span>
-        <span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span>
-      </div>
-      <div className="flex-1 overflow-y-auto">
-        {items.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No actions found</div>
-        : <div className="py-0.5">{items.map((a: any) => (
-          <div key={a.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(a.id); onSelect(a.id); }}
-            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === a.id ? "bg-blue-50/60 dark:bg-blue-950/20 border-l-blue-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{a.title}</span><span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${ACTION_STATUS_STYLES[a.status] || ACTION_STATUS_STYLES.OPEN}`}>{statusLabel(a.status)}</span></div>
-              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">{a.priority && <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${PRIORITY_STYLES[a.priority] || PRIORITY_STYLES.MEDIUM}`}>{a.priority}</span>}{a.owner && <span>· {a.owner}</span>}{a.dueDate && <span>· {a.dueDate}</span>}</div>
-            </div>
+    <RecordListPanel
+      title="Actions"
+      records={items}
+      selectedId={selId}
+      onSelect={(id) => { setCreating(false); setEditing(false); setSelectedId(Number(id)); onSelect(Number(id)); }}
+      getId={(a: any) => String(a.id)}
+      emptyMessage="No actions found"
+      className="border-0 bg-transparent h-full"
+      renderRecord={(a: any, selected) => (
+        <>
+          <div className="flex items-center gap-2">
+            <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{a.title}</span>
+            <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${ACTION_STATUS_STYLES[a.status] || ACTION_STATUS_STYLES.OPEN}`}>{statusLabel(a.status)}</span>
           </div>
-        ))}</div>}
-      </div>
-    </div>
+          <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+            {a.priority && <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${PRIORITY_STYLES[a.priority] || PRIORITY_STYLES.MEDIUM}`}>{a.priority}</span>}
+            {a.owner && <span>· {a.owner}</span>}
+            {a.dueDate && <span>· {a.dueDate}</span>}
+          </div>
+        </>
+      )}
+    />
   );
 
   return {

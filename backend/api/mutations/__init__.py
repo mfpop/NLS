@@ -13,10 +13,24 @@ from api.mutations.mer import MERMutation
 from api.mutations.administration import AdministrationMutation
 from check.schema import CheckMutation
 from maintenance.schema import MaintenanceMutation
+from api.mutations.manufacturing_structure import ManufacturingStructureMutation
+from api.mutations.manufacturing_schedule import ManufacturingScheduleMutation
+from api.mutations.manufacturing_reference import ManufacturingReferenceMutation
+from api.mutations.manufacturing_resources import ManufacturingResourcesMutation
+from api.mutations.manufacturing_product_master import ManufacturingProductMasterMutation
+from api.mutations.manufacturing_capacity import ManufacturingCapacityMutation
+from api.mutations.manufacturing_audit import ManufacturingAuditMutation
 
 
 @strawberry.type
 class Mutation(
+    ManufacturingStructureMutation,
+    ManufacturingScheduleMutation,
+    ManufacturingReferenceMutation,
+    ManufacturingResourcesMutation,
+    ManufacturingProductMasterMutation,
+    ManufacturingCapacityMutation,
+    ManufacturingAuditMutation,
     ApplicationSettingsMutation,
     ManufacturingMutation,
     AdministrationMutation,

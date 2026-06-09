@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { ShieldCheck, Plus, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
+import { ShieldCheck, Plus, Save, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
@@ -29,6 +29,7 @@ export function QualityControlPage() {
   const actionS = useActionSection(search, filterStatus, showMsg);
   const dmrS = useDmrSection(search, filterStatus, activePlantId, productionLineId, showMsg);
   const rmaS = useRmaSection(search, filterStatus, showMsg);
+  const busy = auditS.saving || issueS.creating || actionS.creating || dmrS.creating || rmaS.creating;
 
   const hRefreshAll = useCallback(() => {
     setSearch("");
@@ -48,13 +49,16 @@ export function QualityControlPage() {
   const renderToolbarActions = (rt: RecordType | null, resetSelection: () => void, setSelection: (id: number) => void) => {
     if (rt === "AUDITS") {
       if (auditS.creating) {
-        return <><ToolbarButton icon={CheckCircle} label="Save Draft" onClick={auditS.hCreate} disabled={!auditS.canSave} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { auditS.hCancelNew(); resetSelection(); }} /></>;
+        return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy || !auditS.canSave} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { auditS.hCancelNew(); resetSelection(); }} /></>;
       }
       if (auditS.execId) {
         const selItem = auditS.items.find((i: any) => Number(i.id) === Number(auditS.execId));
         const status = selItem?.status || "";
+        if (auditS.editing) {
+          return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save"} onClick={auditS.hSaveEdit} disabled={busy} /><ToolbarButton icon={Ban} label="Cancel" onClick={auditS.hCancelEdit} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
+        }
         if (status === "DRAFT" || status === "OPEN") {
-          return <><ToolbarButton icon={CheckCircle} label="Save Draft" onClick={auditS.hCreate} /><ToolbarButton icon={Play} label="Complete" onClick={auditS.hComplete} /><ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
+          return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy} /><ToolbarButton icon={Pencil} label="Edit" onClick={auditS.hStartEdit} /><ToolbarButton icon={Play} label="Complete" onClick={auditS.hComplete} disabled={busy || !auditS.canComplete} /><ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
         }
         if (status === "COMPLETED") {
           return <><ToolbarButton icon={Plus} label="New Audit" onClick={() => { auditS.hNew(); setSelection(-1); }} /><ToolbarButton icon={Archive} label="Archive" onClick={() => auditS.setArchiveConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
@@ -141,24 +145,27 @@ export function QualityControlPage() {
     RMAS: { color: "bg-teal-500", border: "border-l-teal-500", hover: "hover:bg-teal-50/40 dark:hover:bg-teal-950/20", label: "RMA" },
   }), []);
 
+  const ITEMS_PER_PAGE = 50;
+
   const renderUnifiedList = useCallback((
     onSelect: (recordType: RecordType, id: number | null) => void,
     filterRecordType?: RecordType | null,
     selectedId?: number | null,
+    page?: number,
   ) => {
-    const rows: { rt: RecordType; id: number; title: string; sub: string; status: string }[] = [];
+    const rows: { rt: RecordType; id: number; title: string; sub: string; status: string; date: string; auditor: string }[] = [];
 
     // Collect items from each section
-    (auditS.items || []).forEach((i: any) => rows.push({ rt: "AUDITS", id: i.id, title: `Audit #${i.id}`, sub: i.auditType || i.title || "", status: i.status || "" }));
-    (issueS.items || []).forEach((i: any) => rows.push({ rt: "ISSUES", id: i.id, title: i.title || "Issue", sub: i.problemType || "", status: i.status || "" }));
-    (actionS.items || []).forEach((i: any) => rows.push({ rt: "ACTIONS", id: i.id, title: i.title || "Action", sub: i.owner || "", status: i.status || "" }));
-    (dmrS.items || []).forEach((i: any) => rows.push({ rt: "DMRS", id: i.id, title: `${i.dmrNumber || ""} ${i.title || ""}`.trim(), sub: `${i.targetType || ""} ${i.quantity != null ? `Qty: ${i.quantity}` : ""}`.trim(), status: i.status || "" }));
-    (rmaS.items || []).forEach((i: any) => rows.push({ rt: "RMAS", id: i.id, title: `${i.rmaNumber || ""} ${i.customerName || ""}`.trim(), sub: `${i.partNumber || ""}${i.quantity != null ? ` Qty: ${i.quantity}` : ""}`.trim(), status: i.status || "" }));
+    (auditS.items || []).forEach((i: any) => rows.push({ rt: "AUDITS", id: i.id, title: `Audit #${i.id}`, sub: i.auditType || i.title || "", status: i.status || "", date: i.auditDate || "", auditor: i.auditor || "" }));
+    (issueS.items || []).forEach((i: any) => rows.push({ rt: "ISSUES", id: i.id, title: i.title || "Issue", sub: i.problemType || "", status: i.status || "", date: i.createdAt || i.dueDate || "", auditor: i.reportedBy || i.owner || "" }));
+    (actionS.items || []).forEach((i: any) => rows.push({ rt: "ACTIONS", id: i.id, title: i.title || "Action", sub: i.owner || "", status: i.status || "", date: i.dueDate || i.createdAt || "", auditor: i.owner || "" }));
+    (dmrS.items || []).forEach((i: any) => rows.push({ rt: "DMRS", id: i.id, title: `${i.dmrNumber || ""} ${i.title || ""}`.trim(), sub: `${i.targetType || ""} ${i.quantity != null ? `Qty: ${i.quantity}` : ""}`.trim(), status: i.status || "", date: i.createdAt || "", auditor: "" }));
+    (rmaS.items || []).forEach((i: any) => rows.push({ rt: "RMAS", id: i.id, title: `${i.rmaNumber || ""} ${i.customerName || ""}`.trim(), sub: `${i.partNumber || ""}${i.quantity != null ? ` Qty: ${i.quantity}` : ""}`.trim(), status: i.status || "", date: i.createdAt || "", auditor: "" }));
 
     const filtered = filterRecordType ? rows.filter((r) => r.rt === filterRecordType) : rows;
-
-    // Sort: newest first by putting larger IDs first
     filtered.sort((a, b) => b.id - a.id);
+    const curPage = page ?? 0;
+    const paged = filtered.slice(curPage * ITEMS_PER_PAGE, (curPage + 1) * ITEMS_PER_PAGE);
 
     return (
       <div className="flex flex-col min-h-0 h-full">
@@ -167,10 +174,10 @@ export function QualityControlPage() {
           <span className="ml-auto text-[10px] text-muted-foreground font-mono">{filtered.length}</span>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {filtered.length === 0 ? (
+          {paged.length === 0 ? (
             <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No records found</div>
           ) : (
-            filtered.map((row) => {
+            paged.map((row) => {
               const cfg = TYPE_CONFIG[row.rt];
               return (
                 <div
@@ -188,13 +195,13 @@ export function QualityControlPage() {
                       <span className="min-w-0 truncate text-sm font-semibold text-foreground flex-1">
                         {row.title}
                       </span>
-                      <span className="text-[10px] text-muted-foreground bg-muted/50 px-1 py-0.5 rounded shrink-0">
-                        {cfg.label}
-                      </span>
+                      {row.status && (
+                        <span className="text-[10px] font-medium uppercase border border-border/40 px-1 py-0.5 rounded shrink-0">{row.status}</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      {row.sub && <span className="text-xs text-muted-foreground truncate">{row.sub}</span>}
-                      {row.status && <span className="text-[10px] text-muted-foreground uppercase">{row.status}</span>}
+                      {row.date && <span className="text-[10px] text-muted-foreground">{row.date}</span>}
+                      {row.auditor && <span className="text-[10px] text-muted-foreground">{row.auditor}</span>}
                     </div>
                   </div>
                 </div>

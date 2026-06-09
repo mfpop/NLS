@@ -1,7 +1,8 @@
-import { Search, X, RefreshCw, FilePlus, Pencil, CheckCircle2, Archive, Save, Printer, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, RefreshCw, FilePlus, Pencil, CheckCircle2, Archive, Save, Printer, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
+import { Toolbar, ToolbarSearch, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "@/styles/themeTokens";
 import { StructureDocumentTree } from "./StructureDocumentTree";
 import { StructureDocumentDetailsPanel } from "./StructureDocumentDetailsPanel";
@@ -38,32 +39,6 @@ interface StructureDocumentPageProps {
 
 const MIN_LEFT_PCT = 15;
 const MAX_LEFT_PCT = 50;
-
-function ToolbarActionButton({
-  icon: Icon,
-  label,
-  disabled,
-  onClick,
-}: {
-  icon: typeof FilePlus;
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={`inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-muted-foreground transition-colors ${
-        disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-muted dark:hover:bg-muted"
-      }`}
-    >
-      <Icon className="h-3 w-3 stroke-current" />
-      {label}
-    </button>
-  );
-}
 
 export function StructureDocumentPage({
   documentType,
@@ -314,80 +289,28 @@ export function StructureDocumentPage({
           </div>
         </div>
       ) : (
-        <div className="no-print shrink-0 border-b border-border bg-muted h-10" style={{ "--tree-width": `${leftPct}%` } as React.CSSProperties}>
-          <div className="h-full grid grid-cols-[var(--tree-width)_1fr]">
-            {/* Left: search */}
-            <div className="flex items-center px-2 min-w-0 overflow-hidden">
-              <div className="flex items-center h-7 w-full rounded-xs border border-gray-400 bg-card px-1 gap-1 transition-colors focus-within:border-gray-400 focus-within:ring-1 focus-within:ring-ring/20">
-                <Search className="h-3 w-3 text-muted-foreground stroke-current shrink-0" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search structure..."
-                    aria-label="Search structure"
-                    className="flex-1 min-w-0 bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none"
-                  />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    aria-label="Clear search"
-                    className="flex items-center justify-center h-5 w-5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    <X className="h-3 w-3 stroke-current" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Right: actions */}
-            <div className="flex items-center justify-end gap-1 px-2 min-w-0 overflow-hidden">
-              {editing ? (
-                <>
-                  <button type="button" onClick={() => setEditing(false)}
-                    className="inline-flex h-7 items-center rounded px-2 text-xs font-medium text-muted-foreground hover:bg-muted dark:hover:bg-muted transition-colors">
-                    Cancel
-                  </button>
-                  <button type="button" onClick={() => (globalThis.document.getElementById('doc-editor-form') as HTMLFormElement | null)?.requestSubmit()}
-                    className="inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-foreground bg-primary/80 backdrop-blur-sm hover:bg-primary/90 transition-colors">
-                    <Save className="h-3 w-3 stroke-current" />
-                    Save
-                  </button>
-                </>
-              ) : (
-                <>
-                  <ToolbarActionButton icon={FilePlus} label="Create" disabled={hasDocument && !isMissing} onClick={() => handleAction("create")} />
-                  <ToolbarActionButton icon={Pencil} label="Edit" disabled={!hasDocument || isArchived} onClick={() => handleAction("edit")} />
-                  <ToolbarActionButton icon={CheckCircle2} label="Approve" disabled={!hasDocument || isApproved || isArchived} onClick={() => handleAction("approve")} />
-                  <ToolbarActionButton icon={Archive} label="Archive" disabled={!hasDocument || isArchived} onClick={() => handleAction("archive")} />
-                  <ToolbarActionButton icon={Printer} label="Print" disabled={!hasDocument || editing} onClick={handlePrint} />
-
-                  <div className="w-px h-4 bg-border/40 mx-1" />
-
-                  <button
-                    type="button"
-                    onClick={() => setTreeCollapsed(prev => !prev)}
-                    className="flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-muted-foreground hover:bg-muted dark:hover:bg-muted transition-colors shrink-0"
-                    aria-label={treeCollapsed ? "Show structure tree" : "Hide structure tree"}
-                    title={treeCollapsed ? "Show structure tree" : "Hide structure tree"}
-                  >
-                    {treeCollapsed ? <ChevronRight className="h-3.5 w-3.5 stroke-current" /> : <ChevronLeft className="h-3.5 w-3.5 stroke-current" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => { refetchTree(); refetchDoc(); }}
-                    className="flex items-center justify-center h-7 w-7 rounded text-muted-foreground hover:text-muted-foreground hover:bg-muted dark:hover:bg-muted transition-colors shrink-0"
-                    aria-label="Refresh"
-                  >
-                    <RefreshCw className={`h-3 w-3 stroke-current ${treeLoading ? "animate-spin" : ""}`} />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        <Toolbar
+          left={<ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search structure..." />}
+          right={
+            editing ? (
+              <>
+                <ToolbarButton icon={X} label="Cancel" onClick={() => setEditing(false)} />
+                <ToolbarButton icon={Save} label="Save" onClick={() => (globalThis.document.getElementById('doc-editor-form') as HTMLFormElement | null)?.requestSubmit()} variant="success" />
+              </>
+            ) : (
+              <>
+                <ToolbarButton icon={FilePlus} label="Create" disabled={hasDocument && !isMissing} onClick={() => handleAction("create")} />
+                <ToolbarButton icon={Pencil} label="Edit" disabled={!hasDocument || isArchived} onClick={() => handleAction("edit")} />
+                <ToolbarButton icon={CheckCircle2} label="Approve" disabled={!hasDocument || isApproved || isArchived} onClick={() => handleAction("approve")} />
+                <ToolbarButton icon={Archive} label="Archive" disabled={!hasDocument || isArchived} onClick={() => handleAction("archive")} />
+                <ToolbarButton icon={Printer} label="Print" disabled={!hasDocument || editing} onClick={handlePrint} />
+                <span className="mx-0.5 h-5 w-px bg-border/30" />
+                <ToolbarButton icon={treeCollapsed ? ChevronRight : ChevronLeft} label="" onClick={() => setTreeCollapsed(prev => !prev)} />
+                <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => { refetchTree(); refetchDoc(); }} />
+              </>
+            )
+          }
+        />
       )}
 
       <div ref={containerRef} className="flex-1 min-h-0 flex overflow-hidden">

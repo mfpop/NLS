@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { Plus } from "lucide-react";
+import { Plus, MapPin, ClipboardList } from "lucide-react";
 import {
   AUDITS_QUERY, AUDIT_TEMPLATES_QUERY, AUDIT_EXECUTION_FORM_QUERY,
   CREATE_AUDIT_FROM_TEMPLATE_MUTATION, COMPLETE_AUDIT_MUTATION,
@@ -17,7 +17,6 @@ import { PRODUCTION_LINES_QUERY, DEPARTMENTS_QUERY, RESOURCE_GROUPS_QUERY, RESOU
 import { USER_PROFILES_QUERY } from "@/graphql/administrationQueries";
 import type { AuditTemplateData, AuditExecutionFormData, AuditFindingData } from "@/types/audit";
 import { STATUS_STYLES, SEL_INPUT, statusLabel, scoreGrade, isFailed } from "./QualityStatusStyles";
-import { InlineEditField } from "./InlineEditField";
 
 function SegCtl({ rt, val, onChange, disabled }: { rt: string; val: string; onChange: (v: string) => void; disabled?: boolean }) {
   if (disabled) {
@@ -79,6 +78,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   const [tplId, setTplId] = useState<string | null>(null);
   const [execTab, setExecTab] = useState<"form" | "findings">("form");
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [archiveConfirmId, setArchiveConfirmId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [closeFindingId, setCloseFindingId] = useState<string | null>(null);
@@ -97,7 +97,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   // Answer state
   const [draftAns, setDraftAns] = useState<Record<string, { v: string; c: string }>>({});
   const [localAns, setLocalAns] = useState<Record<string, { value: string; comment: string }>>({});
-  const [findingForAnswer, setFindingForAnswer] = useState<{ auditId: string; answerId: string | null; questionText: string } | null>(null);
+  const [findingForAnswer, setFindingForAnswer] = useState<{ auditId: string; answerId: string | null; questionText: string; questionId: string } | null>(null);
   const [findingDesc, setFindingDesc] = useState("");
   const [findingSev, setFindingSev] = useState("MEDIUM");
   const [findingDd, setFindingDd] = useState("");
@@ -106,7 +106,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   // ── Queries ──
   const auditsQ = useQuery<any>(AUDITS_QUERY, { variables: { controlArea, status: filterStatus || null }, fetchPolicy: "cache-and-network" });
   const audits: any[] = auditsQ.data?.audits || [];
-  const tplQ = useQuery<any>(AUDIT_TEMPLATES_QUERY, { variables: { moduleScope, status: "ACTIVE" }, fetchPolicy: "cache-first" });
+  const tplQ = useQuery<any>(AUDIT_TEMPLATES_QUERY, { variables: { moduleScope, status: "ACTIVE" }, fetchPolicy: "cache-and-network" });
   const templates: AuditTemplateData[] = (tplQ.data as any)?.auditTemplates || [];
   const selTpl = templates.find((t) => t.id === tplId);
 
@@ -208,7 +208,6 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     return qs;
   }, [selTpl]);
 
-  const isExecutable = execId && !creating;
   const reqMissing = execForm ? execForm.summary.requiredMissingCount : 0;
   const canComplete = execForm && (execForm.status === "DRAFT" || execForm.status === "OPEN") && reqMissing === 0;
 
@@ -222,7 +221,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
       if (isFail && !wasFail) {
         const allQs = execForm.sections.flatMap((s) => s.questions);
         const q = allQs.find((qq) => qq.id === qId);
-        if (q && q.answerId) { setFindingForAnswer({ auditId: execForm.id, answerId: q.answerId, questionText: q.questionText }); break; }
+        if (q) { setFindingForAnswer({ auditId: execForm.id, answerId: q.answerId || null, questionText: q.questionText, questionId: q.id }); break; }
       }
     }
     const snap: Record<string, string> = {};
@@ -254,7 +253,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     setCreating(true); setCreated(false); setExecId(null); setTplId(null); setExecTab("form");
     setFPlant(activePlantId || plants[0]?.id || ""); setFLine(productionLineId || "");
     setFDept(""); setFRg(""); setFRes(""); setFAuditor(""); setFDate(""); setFNotes("");
-    setDraftAns({}); setLocalAns({}); setErrors([]);
+    setDraftAns({}); setLocalAns({}); setErrors([]); setEditing(false);
   }, [activePlantId, productionLineId, plants]);
 
   const hSaveDraft = useCallback(async () => {
@@ -274,6 +273,10 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
         currentId = Number(d.audit.id);
         setExecId(currentId);
         setCreated(true);
+        // Migrate draft answers to local format after creation
+        const migrated: Record<string, { value: string; comment: string }> = {};
+        for (const [qId, a] of Object.entries(draftAns)) migrated[qId] = { value: a.v, comment: a.c };
+        setLocalAns(migrated);
       }
       const ans = created ? localAns : draftAns;
       const items = Object.entries(ans).filter(([, a]) => {
@@ -306,6 +309,51 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     setSaving(false);
   }, [created, execId, draftAns, localAns, bulkSave, completeMut, auditsQ, execQ, onMessage]);
 
+  const hStartEdit = useCallback(() => {
+    setEditing(true);
+  }, []);
+
+  const hCancelEdit = useCallback(() => {
+    setEditing(false);
+    // Reset header fields from execForm
+    if (execForm) {
+      const src: any = execForm;
+      setFAuditor(src.auditor || "");
+      setFDate(src.auditDate || "");
+      setFNotes(src.notes || "");
+      const targetType = src.targetType || "";
+      const targetId = src.targetId !== undefined && src.targetId !== null ? String(src.targetId) : "";
+      setFPlant(""); setFLine(""); setFDept(""); setFRg(""); setFRes("");
+      if (targetType === "PLANT") setFPlant(targetId);
+      else if (targetType === "PRODUCTION_LINE") setFLine(targetId);
+      else if (targetType === "DEPARTMENT") setFDept(targetId);
+      else if (targetType === "RESOURCE_GROUP") setFRg(targetId);
+      else if (targetType === "RESOURCE") setFRes(targetId);
+    }
+  }, [execForm]);
+
+  const hSaveEdit = useCallback(async () => {
+    if (!execForm) return;
+    setSaving(true);
+    const target = resolveTarget();
+    const input: any = {
+      auditor: fAuditor,
+      auditDate: fDate || null,
+      notes: fNotes,
+      targetType: target?.targetType || null,
+      targetId: target ? Number(target.targetId) : null,
+    };
+    const r = await updateAuditMut({ variables: { id: execForm.id, input } });
+    if (r.data?.updateAudit?.ok) {
+      onMessage("Audit updated");
+      setEditing(false);
+      await Promise.all([auditsQ.refetch(), execQ.refetch()]);
+    } else {
+      onMessage(r.data?.updateAudit?.errors?.[0]?.message || "Update failed");
+    }
+    setSaving(false);
+  }, [execForm, fAuditor, fDate, fNotes, resolveTarget, updateAuditMut, auditsQ, execQ, onMessage]);
+
   const hArchive = useCallback(async () => {
     if (!archiveConfirmId) return;
     await updateAuditMut({ variables: { id: archiveConfirmId, input: { status: "ARCHIVED" } } });
@@ -322,12 +370,27 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   const hFinding = useCallback(async () => {
     if (!findingForAnswer || !findingDesc.trim()) return;
     const auditId = Number(findingForAnswer.auditId);
-    const answerId = Number(findingForAnswer.answerId);
-    if (!Number.isFinite(auditId) || !Number.isFinite(answerId) || answerId <= 0) { onMessage("Finding cannot be created before the answer is saved"); return; }
+    let answerId = Number(findingForAnswer.answerId);
+    if (!Number.isFinite(auditId)) { onMessage("Audit not found"); return; }
+    // If answer hasn't been saved yet, save it first
+    if (!Number.isFinite(answerId) || answerId <= 0) {
+      const saveR = await bulkSave({ variables: { input: { auditId, answers: [{ questionId: Number(findingForAnswer.questionId || 0), answerValue: localAns[findingForAnswer.questionId]?.value || "FAIL", comment: "" }] } } });
+      if (!saveR.data?.saveAuditAnswersBulk?.ok) { onMessage("Answer could not be saved"); return; }
+      // Refetch to get the new answerId
+      await execQ.refetch();
+      const updatedForm: AuditExecutionFormData | null = (execQ.data as any)?.auditExecutionForm || null;
+      if (updatedForm) {
+        for (const sec of updatedForm.sections) {
+          const q = sec.questions.find((qq) => qq.id === findingForAnswer.questionId);
+          if (q && q.answerId) { answerId = Number(q.answerId); break; }
+        }
+      }
+      if (!Number.isFinite(answerId) || answerId <= 0) { onMessage("Finding cannot be created before the answer is saved"); return; }
+    }
     const r = await createFindingMut({ variables: { input: { auditId, answerId, description: findingDesc.trim(), severity: findingSev, owner: findingOwner, dueDate: findingDd || null } } });
     if (r.data?.createAuditFindingFromAnswer?.ok) { onMessage("Finding created"); setFindingForAnswer(null); setFindingDesc(""); setFindingDd(""); await Promise.all([execQ.refetch(), auditsQ.refetch()]); }
     else { onMessage(r.data?.createAuditFindingFromAnswer?.errors?.[0]?.message || "Finding create failed"); }
-  }, [findingForAnswer, findingDesc, findingSev, findingDd, findingOwner, createFindingMut, execQ, auditsQ, onMessage]);
+  }, [findingForAnswer, findingDesc, findingSev, findingDd, findingOwner, createFindingMut, execQ, auditsQ, onMessage, bulkSave, localAns]);
 
   const hCloseFinding = useCallback(async () => {
     if (!closeFindingId) return;
@@ -358,145 +421,295 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     const checklistLocked = isNew && !selTpl;
 
     return (
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
         {isNew ? (
-        <div className="shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-700/20">
-          <div className="px-4 py-2 border-b border-white/20 dark:border-slate-700/20"><h2 className="text-base font-bold text-foreground">New {areaLabel(controlArea)} Audit</h2></div>
-          <div className="flex">
-            <div className="w-[25%] shrink-0 overflow-hidden border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-2.5">
-              <div className="mb-1.5"><h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Source Location</h3></div>
-              <div><label className={labelCls}>Plant *{errLabel("plant")}</label><select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} className={fieldCls("plant")}><option value="">Select...</option>{plants.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-              <div><label className={labelCls}>Line</label><select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fPlant}><option value="">{fPlant ? "Optional..." : "Select Plant first"}</option>{lines.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
-              <div><label className={labelCls}>Department</label><select value={fDept} onChange={(e) => { setFDept(e.target.value); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fLine}><option value="">{fLine ? "Optional..." : "Select Line first"}</option>{depts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-              <div><label className={labelCls}>Resource Group</label><select value={fRg} onChange={(e) => { setFRg(e.target.value); setFRes(""); }} className={SEL_INPUT} disabled={!fDept}><option value="">{fDept ? "Optional..." : "Select Dept first"}</option>{rgs.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
-              <div><label className={labelCls}>Resource</label><select value={fRes} onChange={(e) => setFRes(e.target.value)} className={SEL_INPUT} disabled={!fRg}><option value="">{fRg ? "Optional..." : "Select RG first"}</option>{ress.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
-            </div>
-            <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">
-              <div><label className={labelCls}>Audit Type *{errLabel("type")}</label>
-                <select value={tplId ?? ""} onChange={(e) => { setTplId(e.target.value || null); setDraftAns({}); setErrors([]); }} className={fieldCls("type")}><option value="">Select type...</option>{templates.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className={labelCls}>Auditor *{errLabel("auditor")}</label>
-                  <select value={fAuditor} onChange={(e) => setFAuditor(e.target.value)} className={fieldCls("auditor")}><option value="">Select auditor...</option>{userProfiles.map((u: any) => <option key={u.id} value={u.fullName}>{u.fullName}</option>)}</select></div>
-                <div><label className={labelCls}>Date *{errLabel("date")}</label>
-                  <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} className={fieldCls("date")} /></div>
-              </div>
-              <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-                <label className="block text-xs font-semibold text-foreground mb-2">Notes</label>
-                <input type="text" value={fNotes} onChange={(e) => setFNotes(e.target.value)} className="h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none" placeholder="Optional notes..." />
-              </div>
-              {errors.length > 0 && <div className="flex flex-wrap gap-2">{errors.map((e, i) => <span key={i} className="text-[10px] font-medium text-amber-700 dark:text-amber-300">⚠ {e}</span>)}</div>}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-700/20 px-4 py-3">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <InlineEditField value={execForm?.title ?? ""} onSave={(v) => { if (execForm) updateAuditMut({ variables: { id: execForm.id, input: { title: v } } }).then(() => { onMessage("Title updated"); Promise.all([auditsQ.refetch(), execQ.refetch()]); }); }} label="title" />
-              <div className="flex items-center gap-2 mt-1 text-xs">
-                <span className="text-muted-foreground">{headerTpl?.name ?? ""} v{headerTpl?.version ?? ""}</span>
-                <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
-                <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[headerStatus] || ""}`}>{statusLabel(headerStatus)}</span>
-                {headerScore !== null && <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${scoreGrade(headerScore).cls}`}>{headerScore}%</span>}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 gap-3 mt-3">
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Audit Type</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{headerTpl?.name ?? "-"} v{headerTpl?.version ?? ""}</div></div>
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Plant</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{plants.find((p: any) => p.id === fPlant)?.name || fPlant || "-"}</div></div>
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Line</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{lines.find((l: any) => l.id === fLine)?.name || fLine || "-"}</div></div>
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Dept</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{depts.find((d: any) => d.id === fDept)?.name || fDept || "-"}</div></div>
-          </div>
-          <div className="grid grid-cols-4 gap-3 mt-2">
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Res Group</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{rgs.find((g: any) => g.id === fRg)?.name || fRg || "-"}</div></div>
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Resource</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{ress.find((r: any) => r.id === fRes)?.name || fRes || "-"}</div></div>
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Auditor</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{fAuditor || "-"}</div></div>
-            <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Date</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{fDate || "-"}</div></div>
-          </div>
-          <div className="mt-2"><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Notes</label><div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{fNotes || "-"}</div></div>
-        </div>
-      )}
+          <>
+            {/* Left column — setup */}
+            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 flex flex-col gap-4">
+              <h2 className="text-base font-bold text-foreground shrink-0">New {areaLabel(controlArea)} Audit</h2>
 
-        {/* Tabs */}
-        <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
-          <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
-          <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
-        </div>
+              <div className="shrink-0">
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
+                  Source Location
+                </h3>
+                <div className="space-y-2">
+                  <div><label className={labelCls}>Plant *{errLabel("plant")}</label><select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} className={fieldCls("plant")}><option value="">Select...</option>{plants.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                  <div><label className={labelCls}>Line</label><select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fPlant}><option value="">{fPlant ? "Optional..." : "Select Plant first"}</option>{lines.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
+                  <div><label className={labelCls}>Department</label><select value={fDept} onChange={(e) => { setFDept(e.target.value); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fLine}><option value="">{fLine ? "Optional..." : "Select Line first"}</option>{depts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
+                  <div><label className={labelCls}>Resource Group</label><select value={fRg} onChange={(e) => { setFRg(e.target.value); setFRes(""); }} className={SEL_INPUT} disabled={!fDept}><option value="">{fDept ? "Optional..." : "Select Dept first"}</option>{rgs.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
+                  <div><label className={labelCls}>Resource</label><select value={fRes} onChange={(e) => setFRes(e.target.value)} className={SEL_INPUT} disabled={!fRg}><option value="">{fRg ? "Optional..." : "Select RG first"}</option>{ress.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
+                </div>
+              </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {execTab === "form" && (
-            <div className="p-4 space-y-3">
-              {isNew && allQ.length === 0 && templates.length === 0 && (
-                <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
-                  <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+              <div className="flex flex-col flex-1 min-h-0">
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300 shrink-0">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
+                  Audit Details
+                </h3>
+                <div className="flex flex-col gap-2 flex-1 min-h-0">
+                  <div className="shrink-0"><label className={labelCls}>Audit Type *{errLabel("type")}</label>
+                    <select value={tplId ?? ""} onChange={(e) => { setTplId(e.target.value || null); setDraftAns({}); setErrors([]); }} className={fieldCls("type")}><option value="">Select type...</option>{templates.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
+                  <div className="shrink-0"><label className={labelCls}>Auditor *{errLabel("auditor")}</label>
+                    <select value={fAuditor} onChange={(e) => setFAuditor(e.target.value)} className={fieldCls("auditor")}><option value="">Select auditor...</option>{userProfiles.map((u: any) => <option key={u.id} value={u.fullName}>{u.fullName}</option>)}</select></div>
+                  <div className="shrink-0"><label className={labelCls}>Date *{errLabel("date")}</label>
+                    <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} className={fieldCls("date")} /></div>
+                  <div className="flex flex-col flex-1 min-h-0">
+                    <label className={labelCls}>Notes</label>
+                    <textarea value={fNotes} onChange={(e) => setFNotes(e.target.value)} className={`${SEL_INPUT} resize-none flex-1 min-h-0`} placeholder="Optional notes..." />
+                  </div>
+                </div>
+              </div>
+
+              {errors.length > 0 && (
+                <div className="space-y-1">
+                  <div className="text-[10px] font-medium text-amber-700 dark:text-amber-300">Complete required fields to save:</div>
+                  <div className="flex flex-wrap gap-1.5">{errors.map((e, i) => <span key={i} className="inline-flex items-center gap-1 rounded bg-amber-50/80 dark:bg-amber-950/80 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">⚠ {e}</span>)}</div>
                 </div>
               )}
-              {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
-              {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
-              {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
-                <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
-                  {isNew ? (() => {
-                    const grouped: Record<string, typeof allQ> = {};
-                    for (const q of allQ) (grouped[q.catName] ||= []).push(q);
-                    return Object.entries(grouped).map(([catName, qs]) => (
-                      <div key={catName}>
-                        <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
-                          <span className="text-xs font-bold text-foreground">{catName}</span>
-                          <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
-                        </div>
-                        {qs.map((q, idx) => {
-                          const v = getVal(q.id);
-                          const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                          return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                            <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                            <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
-                            <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
+            </div>
+
+            {/* Right column — tabs + checklist */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+                <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
+                <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+                {execTab === "form" && (
+                  <>
+                    {isNew && allQ.length === 0 && templates.length === 0 && (
+                      <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
+                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                      </div>
+                    )}
+                    {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
+                    {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
+                    {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
+                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+                        {isNew ? (() => {
+                          const grouped: Record<string, typeof allQ> = {};
+                          for (const q of allQ) (grouped[q.catName] ||= []).push(q);
+                          return Object.entries(grouped).map(([catName, qs]) => (
+                            <div key={catName}>
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                                <span className="text-xs font-bold text-foreground">{catName}</span>
+                                <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                              </div>
+                              {qs.map((q, idx) => {
+                                const v = getVal(q.id);
+                                const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
+                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
+                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                                  <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
+                                </div>;
+                              })}
+                            </div>
+                          ));
+                        })() : sections.map((sec: any) => {
+                          const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
+                          return <div key={sec.id}>
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                              <span className="text-xs font-bold text-foreground">{sec.title}</span>
+                              <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                            </div>
+                            {sec.questions.map((q: any, idx: number) => {
+                              const v = getVal(q.id);
+                              const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
+                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
+                                <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                                <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
+                              </div>;
+                            })}
                           </div>;
                         })}
                       </div>
-                    ));
-                  })() : sections.map((sec: any) => {
-                    const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
-                    return <div key={sec.id}>
-                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
-                        <span className="text-xs font-bold text-foreground">{sec.title}</span>
-                        <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
-                      </div>
-                      {sec.questions.map((q: any, idx: number) => {
-                        const v = getVal(q.id);
-                        const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                        return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                          <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                          <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
-                          <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
-                        </div>;
-                      })}
-                    </div>;
-                  })}
+                    )}
+                  </>
+                )}
+                {execTab === "findings" && !isNew && <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>}
+              </div>
+
+              {/* Finding dialog */}
+              {findingForAnswer && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
+                    <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
+                    <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Severity</label><select value={findingSev} onChange={(e) => setFindingSev(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
+                      <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Due Date</label><input type="date" value={findingDd} onChange={(e) => setFindingDd(e.target.value)} className={SEL_INPUT} /></div>
+                    </div>
+                    <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}>Create</button>
+                      <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-          )}
-          {execTab === "findings" && !isNew && <div className="p-4"><div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div></div>}
-        </div>
+          </>
+        ) : (
+          <>
+            {/* Left column — existing audit info */}
+            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-4">
+              <div>
+                <h2 className="text-base font-bold text-foreground">{execForm?.title ?? ""}</h2>
+                <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
+                  <span className="text-muted-foreground">{headerTpl?.name ?? ""} v{headerTpl?.version ?? ""}</span>
+                  <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                  <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${STATUS_STYLES[headerStatus] || ""}`}>{statusLabel(headerStatus)}</span>
+                  {headerScore !== null && <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${scoreGrade(headerScore).cls}`}>{headerScore}%</span>}
+                </div>
+              </div>
 
-        {/* Finding dialog */}
-        {findingForAnswer && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-            <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
-              <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
-              <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
-              <div className="grid grid-cols-2 gap-2">
-                <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Severity</label><select value={findingSev} onChange={(e) => setFindingSev(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
-                <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Due Date</label><input type="date" value={findingDd} onChange={(e) => setFindingDd(e.target.value)} className={SEL_INPUT} /></div>
-              </div>
-              <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
-              <div className="flex gap-2 justify-end">
-                <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}>Create</button>
-                <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
-              </div>
+              {editing ? (
+                <>
+                  <div className="shrink-0">
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
+                      Source Location
+                    </h3>
+                    <div className="space-y-2">
+                      <div><label className={labelCls}>Plant</label><select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} className={SEL_INPUT}><option value="">Select...</option>{plants.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+                      <div><label className={labelCls}>Line</label><select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fPlant}><option value="">{fPlant ? "Optional..." : "Select Plant first"}</option>{lines.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
+                      <div><label className={labelCls}>Dept</label><select value={fDept} onChange={(e) => { setFDept(e.target.value); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fLine}><option value="">{fLine ? "Optional..." : "Select Line first"}</option>{depts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
+                      <div><label className={labelCls}>Res Group</label><select value={fRg} onChange={(e) => { setFRg(e.target.value); setFRes(""); }} className={SEL_INPUT} disabled={!fDept}><option value="">{fDept ? "Optional..." : "Select Dept first"}</option>{rgs.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></div>
+                      <div><label className={labelCls}>Resource</label><select value={fRes} onChange={(e) => setFRes(e.target.value)} className={SEL_INPUT} disabled={!fRg}><option value="">{fRg ? "Optional..." : "Select RG first"}</option>{ress.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
+                      Details
+                    </h3>
+                    <div className="space-y-2">
+                      <div><label className={labelCls}>Auditor</label><select value={fAuditor} onChange={(e) => setFAuditor(e.target.value)} className={SEL_INPUT}><option value="">Select...</option>{userProfiles.map((u: any) => <option key={u.id} value={u.fullName}>{u.fullName}</option>)}</select></div>
+                      <div><label className={labelCls}>Date</label><input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} className={SEL_INPUT} /></div>
+                      <div><label className={labelCls}>Notes</label><textarea value={fNotes} onChange={(e) => setFNotes(e.target.value)} className={`${SEL_INPUT} resize-none h-16`} placeholder="Optional notes..." /></div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
+                      Audit Info
+                    </h3>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="text-foreground font-medium">{headerTpl?.name ?? "-"} v{headerTpl?.version ?? ""}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Plant</span><span className="text-foreground font-medium">{plants.find((p: any) => p.id === fPlant)?.name || fPlant || "-"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Line</span><span className="text-foreground font-medium">{lines.find((l: any) => l.id === fLine)?.name || fLine || "-"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Dept</span><span className="text-foreground font-medium">{depts.find((d: any) => d.id === fDept)?.name || fDept || "-"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Res Group</span><span className="text-foreground font-medium">{rgs.find((g: any) => g.id === fRg)?.name || fRg || "-"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Resource</span><span className="text-foreground font-medium">{ress.find((r: any) => r.id === fRes)?.name || fRes || "-"}</span></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
+                      Details
+                    </h3>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between"><span className="text-muted-foreground">Auditor</span><span className="text-foreground font-medium">{fAuditor || "-"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="text-foreground font-medium">{fDate || "-"}</span></div>
+                      <div className="flex justify-between"><span className="text-muted-foreground">Notes</span><span className="text-foreground font-medium truncate max-w-[200px]">{fNotes || "-"}</span></div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </div>
+
+            {/* Right column — tabs + checklist */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+                <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
+                <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+                {execTab === "form" && (
+                  <>
+                    {isNew && allQ.length === 0 && templates.length === 0 && (
+                      <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
+                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                      </div>
+                    )}
+                    {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
+                    {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
+                    {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
+                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+                        {isNew ? (() => {
+                          const grouped: Record<string, typeof allQ> = {};
+                          for (const q of allQ) (grouped[q.catName] ||= []).push(q);
+                          return Object.entries(grouped).map(([catName, qs]) => (
+                            <div key={catName}>
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                                <span className="text-xs font-bold text-foreground">{catName}</span>
+                                <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                              </div>
+                              {qs.map((q, idx) => {
+                                const v = getVal(q.id);
+                                const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
+                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
+                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                                  <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
+                                </div>;
+                              })}
+                            </div>
+                          ));
+                        })() : sections.map((sec: any) => {
+                          const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
+                          return <div key={sec.id}>
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                              <span className="text-xs font-bold text-foreground">{sec.title}</span>
+                              <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                            </div>
+                            {sec.questions.map((q: any, idx: number) => {
+                              const v = getVal(q.id);
+                              const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
+                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
+                                <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                                <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
+                              </div>;
+                            })}
+                          </div>;
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+                {execTab === "findings" && !isNew && <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>}
+              </div>
+
+              {/* Finding dialog */}
+              {findingForAnswer && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+                  <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
+                    <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
+                    <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Severity</label><select value={findingSev} onChange={(e) => setFindingSev(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
+                      <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Due Date</label><input type="date" value={findingDd} onChange={(e) => setFindingDd(e.target.value)} className={SEL_INPUT} /></div>
+                    </div>
+                    <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}>Create</button>
+                      <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     );
@@ -544,9 +757,15 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     setArchiveConfirmId,
     deleteConfirmId,
     setDeleteConfirmId,
-    hCancelNew: () => { setCreating(false); setCreated(false); setExecId(null); },
+    hCancelNew: () => { setCreating(false); setCreated(false); setExecId(null); setEditing(false); },
     canSave: !!tplId && fPlant !== "" && fAuditor.trim() !== "" && fDate !== "" && !!resolveTarget(),
+    canComplete: !!canComplete,
+    saving,
     templates,
     execForm,
+    editing,
+    hStartEdit,
+    hCancelEdit,
+    hSaveEdit,
   };
 }

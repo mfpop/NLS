@@ -66,6 +66,17 @@ export function statusLabel(s: string): string {
   return s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, " ");
 }
 
+export function targetTypeLabel(t: string): string {
+  const map: Record<string, string> = {
+    PLANT: "Plant",
+    PRODUCTION_LINE: "Production Line",
+    DEPARTMENT: "Department",
+    RESOURCE_GROUP: "Resource Group",
+    RESOURCE: "Resource",
+  };
+  return map[t] || t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function auditTypeLabel(t: string): string {
   return auditTypeLabels[t] || t.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }

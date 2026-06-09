@@ -1,8 +1,9 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.test import TestCase
+from django.contrib.auth.models import User
 
-from api.mutations.manufacturing import ManufacturingMutation
+from api.mutations.manufacturing_product_master import ManufacturingProductMasterMutation
 from api.types.manufacturing import PartNumberInput
 from manufacturing.domain.product_identity_service import ProductIdentityError, ProductIdentityService
 from manufacturing.models import PartNumber, ProductFamily, ProductModel, ProductVariant
@@ -144,7 +145,13 @@ class ProductIdentityServiceTests(TestCase):
 
 
 class ProductIdentityGraphQLTests(TestCase):
-    def test_create_part_number_mutation_delegates_to_service(self):
+    def _mock_info(self):
+        info = MagicMock()
+        info.context.user = User.objects.create_user(username="testuser", password="testpass", is_staff=True)
+        return info
+
+    @patch("api.mutations.manufacturing_product_master.ensure_access")
+    def test_create_part_number_mutation_delegates_to_service(self, _mock_perm):
         with patch.object(ProductIdentityService, "create_part_number") as mock:
             family = ProductFamily(id=1, code="F", name="Family")
             model = ProductModel(id=2, family=family, code="M", name="Model")
@@ -153,17 +160,19 @@ class ProductIdentityGraphQLTests(TestCase):
                 part_number="PN-1", description="Part", revision="",
                 uom="EA", status="ACTIVE", is_active=True,
             )
-            result = ManufacturingMutation().create_part_number(PartNumberInput(
-                family_id="1", model_id="2", variant_id="3", part_number="PN-1",
-            ))
+            result = ManufacturingProductMasterMutation().create_part_number(
+                self._mock_info(), PartNumberInput(
+                    family_id="1", model_id="2", variant_id="3", part_number="PN-1",
+                ),
+            )
             self.assertTrue(result.ok)
             mock.assert_called_once()
 
     def test_create_part_number_mutation_name_still_exists(self):
-        self.assertTrue(hasattr(ManufacturingMutation, "create_part_number"))
+        self.assertTrue(hasattr(ManufacturingProductMasterMutation, "create_part_number"))
 
     def test_update_part_number_mutation_name_still_exists(self):
-        self.assertTrue(hasattr(ManufacturingMutation, "update_part_number"))
+        self.assertTrue(hasattr(ManufacturingProductMasterMutation, "update_part_number"))
 
     def test_archive_part_number_mutation_name_still_exists(self):
-        self.assertTrue(hasattr(ManufacturingMutation, "archive_part_number"))
+        self.assertTrue(hasattr(ManufacturingProductMasterMutation, "archive_part_number"))

@@ -1,7 +1,11 @@
 from django.core.management import call_command
 from django.test import TestCase
 
-from api.mutations.manufacturing import ManufacturingMutation, ReferenceItemInput, _validate_reference_item_input
+from api.mutations.manufacturing_reference import (
+    ManufacturingReferenceMutation,
+    ReferenceItemInput,
+    _validate_reference_item_input,
+)
 from api.queries.manufacturing import LegacyReferenceItemNode
 from manufacturing.models import ReferenceCategory, ReferenceValue
 
@@ -72,7 +76,7 @@ class ReferenceDataTests(TestCase):
     def test_system_managed_record_cannot_be_deactivated(self):
         call_command("seed_lean_reference_values")
         locked = ReferenceValue.objects.get(category__code="status", code="locked")
-        result = ManufacturingMutation().deactivate_reference_item(str(locked.id))
+        result = ManufacturingReferenceMutation().deactivate_reference_item(str(locked.id))
         self.assertEqual(result.errors[0].code, "SYSTEM_MANAGED")
         locked.refresh_from_db()
         self.assertTrue(locked.is_active)

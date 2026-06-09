@@ -1,0 +1,7 @@
+class ReferenceItemInput:
+class ReferenceItemPayload:
+class LegacyReferenceItemResult:
+    @classmethod
+    @classmethod
+    @classmethod
+class ManufacturingMutation:

@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { Building2, Plus, RefreshCw, Archive, Pencil, Info, Search, Check, X, Loader2, TriangleAlert } from "lucide-react";
+import { Building2, Plus, RefreshCw, Archive, Pencil, Info, Check, X, Loader2, TriangleAlert } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarSelect } from "@/components/shared/Toolbar";
 import { ADMINISTRATIVE_DEPARTMENTS_QUERY, COMPANIES_LIST_QUERY, USERS_LIST_QUERY } from "@/graphql/administrationQueries";
 import { CREATE_ADMINISTRATIVE_DEPARTMENT, UPDATE_ADMINISTRATIVE_DEPARTMENT, ARCHIVE_ADMINISTRATIVE_DEPARTMENT } from "@/graphql/administrationMutations";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -133,8 +134,6 @@ export function AdministrativeDepartmentsPage() {
     catch { return iso; }
   };
 
-  const buttonClass = "inline-flex h-8 items-center gap-1.5 rounded px-2.5 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
     <AppPageLayout
       icon={<Building2 />}
@@ -142,19 +141,20 @@ export function AdministrativeDepartmentsPage() {
       title="Administrative Departments"
       subtitle="Manage departments for user organization, responsibility, and access scoping."
       toolbar={
-        <div className="flex w-full items-center gap-1">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search departments..." className="h-7 w-full rounded border border-input bg-card pl-7 pr-2 text-[11px] text-foreground outline-none focus:border-ring" />
-          </div>
-          <select value={selectedCompany} onChange={(e) => setSelectedCompany(e.target.value)} className="h-7 rounded border border-input bg-card px-2 text-[11px] text-foreground outline-none focus:border-ring">
-            <option value="">All Companies</option>
-            {companies.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <span className="mx-1 h-5 w-px shrink-0 bg-muted" />
-          <button type="button" onClick={() => refetch()} className={buttonClass} disabled={loading}><RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh</button>
-          <button type="button" onClick={() => { resetForm(); setShowForm(true); }} className="inline-flex h-8 items-center gap-1.5 rounded bg-primary px-2.5 text-[10px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"><Plus className="h-3.5 w-3.5" /> New Department</button>
-        </div>
+        <Toolbar
+          left={
+            <>
+              <ToolbarSearch value={search} onChange={setSearch} placeholder="Search departments..." />
+              <ToolbarSelect value={selectedCompany} onChange={setSelectedCompany} options={[{ value: "", label: "All Companies" }, ...companies.map((c) => ({ value: c.id, label: c.name }))]} />
+            </>
+          }
+          right={
+            <>
+              <ToolbarButton icon={RefreshCw} label={loading ? "Refreshing..." : "Refresh"} onClick={() => refetch()} disabled={loading} />
+              <ToolbarButton icon={Plus} label="New Department" onClick={() => { resetForm(); setShowForm(true); }} />
+            </>
+          }
+        />
       }
     >
       <div className="h-full overflow-y-auto p-2">

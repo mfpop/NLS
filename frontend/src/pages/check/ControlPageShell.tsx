@@ -24,8 +24,9 @@ interface ControlPageShellProps {
   iconClass: string;
   tabs: ControlTabConfig[];
   defaultTab?: string;
+  recordTypeLabels?: Partial<Record<RecordType, string>>;
   renderOverview: () => ReactNode;
-  renderUnifiedList?: (onSelect: (recordType: RecordType, id: number | null) => void, filterRecordType?: RecordType | null, selectedId?: number | null) => ReactNode;
+  renderUnifiedList?: (onSelect: (recordType: RecordType, id: number | null) => void, filterRecordType?: RecordType | null, selectedId?: number | null, page?: number) => ReactNode;
   toolbarSearch?: ReactNode;
   toolbarFilters?: ((recordType: RecordType | null) => ReactNode) | ReactNode;
   toolbarActions?: ReactNode | ((recordType: RecordType | null, resetSelection: () => void, setSelection: (id: number) => void, setSelectedRecordType: (rt: RecordType) => void) => ReactNode);
@@ -34,8 +35,8 @@ interface ControlPageShellProps {
   headerMessage?: SystemMessage | null;
   onDismissHeaderMessage?: () => void;
   headerChildren?: ReactNode;
-  footerLeft?: ReactNode;
-  footerRight?: ReactNode;
+  footerLeft?: ReactNode | ((selectedRecordType: RecordType | null, page: number, totalPages: number) => ReactNode);
+  footerRight?: ReactNode | ((selectedRecordType: RecordType | null, page: number, totalPages: number) => ReactNode);
 }
 
 const RECORD_TYPES: { id: RecordType; label: string }[] = [
@@ -72,6 +73,7 @@ export function ControlPageShell({
   icon: Icon,
   iconClass,
   tabs,
+  recordTypeLabels,
   renderOverview,
   renderUnifiedList,
   toolbarSearch,
@@ -92,6 +94,7 @@ export function ControlPageShell({
     ? (tabs.find((t) => t.id === selectedRecordType.toLowerCase())?.id || tabs[0]?.id || "")
     : "";
 
+  const [page, setPage] = useState(0);
   const splitRef = useRef<HTMLDivElement>(null);
   const [leftPct, setLeftPct] = useState(20);
 
@@ -119,6 +122,7 @@ export function ControlPageShell({
   const handleRecordTypeClick = (rt: RecordType) => {
     setSelectedRecordType((prev) => prev === rt ? null : rt);
     setSelectedId(null);
+    setPage(0);
     onRecordTypeChange?.();
   };
 
@@ -127,6 +131,7 @@ export function ControlPageShell({
   const resetSelection = useCallback(() => { setSelectedId(null); }, []);
   const setSelection = useCallback((id: number) => { setSelectedId(id); }, []);
   const actionsNode = typeof toolbarActions === "function" ? toolbarActions(selectedRecordType, resetSelection, setSelection, setSelectedRecordType) : toolbarActions;
+  const getRecordTypeLabel = useCallback((rt: RecordType) => recordTypeLabels?.[rt] || RECORD_TYPES.find((item) => item.id === rt)?.label || rt, [recordTypeLabels]);
 
   // Only show radio buttons for record types that have a matching tab
   const availableRecordTypes = useMemo(() =>
@@ -154,7 +159,7 @@ export function ControlPageShell({
           right={
             <div className="flex items-center gap-1 px-2 w-full">
               {availableRecordTypes.map((rt) => (
-                <RadioButton key={rt.id} selected={selectedRecordType === rt.id} label={rt.label} onClick={() => handleRecordTypeClick(rt.id)} />
+                <RadioButton key={rt.id} selected={selectedRecordType === rt.id} label={getRecordTypeLabel(rt.id)} onClick={() => handleRecordTypeClick(rt.id)} />
               ))}
               <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
               {filterNode}
@@ -171,16 +176,25 @@ export function ControlPageShell({
         />
       </div>
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
-        <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-          {renderUnifiedList
-            ? renderUnifiedList((rt, id) => { setSelectedRecordType(rt); setSelectedId(id); }, selectedRecordType, selectedId)
-            : selectedRecordType && tab
-              ? tab.renderList(selectedId, setSelectedId)
-              : (
-                <div className="flex flex-1 items-center justify-center text-[10px] text-muted-foreground p-4 text-center">
-                  Select Audits, Issues, Actions, DMR, or RMA above.
-                </div>
-              )}
+        <div className="print-ignore flex flex-col min-h-0 bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
+          <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
+            {renderUnifiedList
+              ? renderUnifiedList((rt, id) => { setSelectedRecordType(rt); setSelectedId(id); setPage(0); }, selectedRecordType, selectedId, page)
+              : selectedRecordType && tab
+                ? tab.renderList(selectedId, setSelectedId)
+                : (
+                  <div className="flex flex-1 items-center justify-center text-[10px] text-muted-foreground p-4 text-center">
+                    Select Audits, {getRecordTypeLabel("ISSUES")}, {getRecordTypeLabel("ACTIONS")}, {getRecordTypeLabel("DMRS")}, or {getRecordTypeLabel("RMAS")} above.
+                  </div>
+                )}
+          </div>
+          {selectedRecordType && (
+            <div className="shrink-0 border-t border-border/30 bg-muted/20 flex h-8 items-center gap-2 px-3 text-[10px] text-muted-foreground">
+              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="font-medium hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed">◀ Prev</button>
+              <span className="font-mono">Page {page + 1}</span>
+              <button onClick={() => setPage(p => p + 1)} className="font-medium hover:text-foreground">Next ▶</button>
+            </div>
+          )}
         </div>
         <div onMouseDown={handleSplitMouseDown}
           className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10"
@@ -192,17 +206,21 @@ export function ControlPageShell({
         </div>
       </div>
       <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-2 px-4 text-xs text-muted-foreground font-medium">
-        {footerLeft || (
+        {typeof footerLeft === "function" ? footerLeft(selectedRecordType, page, 0) : footerLeft || (
           <div className="flex items-center gap-3 shrink-0">
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-[10px]">Issues</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="text-[10px]">Actions</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className="text-[10px]">Audits</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /><span className="text-[10px]">DMR</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500" /><span className="text-[10px]">RMA</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-[10px]">{getRecordTypeLabel("ISSUES")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="text-[10px]">{getRecordTypeLabel("ACTIONS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className="text-[10px]">{getRecordTypeLabel("AUDITS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /><span className="text-[10px]">{getRecordTypeLabel("DMRS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500" /><span className="text-[10px]">{getRecordTypeLabel("RMAS")}</span></span>
           </div>
         )}
         <span className="flex-1" />
-        {footerRight || <span>{selectedRecordType ? selectedRecordType.charAt(0) + selectedRecordType.slice(1).toLowerCase() : "Dashboard (overview)"}</span>}
+        {typeof footerRight === "function" ? footerRight(selectedRecordType, page, 0) : footerRight || (
+          <div className="flex items-center gap-3">
+            {!selectedRecordType && <span className="text-[10px] text-muted-foreground">Dashboard (overview)</span>}
+          </div>
+        )}
       </div>
     </div>
   );

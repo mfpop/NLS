@@ -2,7 +2,7 @@ import typing
 import strawberry
 from strawberry.types import Info
 
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from data_management.models import ErpPattern, ErpPatternMapping, ErpSourceFile, ErpImportLog
 
 

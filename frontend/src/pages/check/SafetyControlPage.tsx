@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { AlertTriangle, Plus, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
+import { AlertTriangle, Plus, Save, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
 import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -29,6 +29,7 @@ export function SafetyControlPage() {
   const issueS = useIssueSection(search, filterStatus, showMsg, CONTROL_AREA);
   const actionS = useActionSection(search, filterStatus, showMsg, CONTROL_AREA);
   const auditS = useAuditSection(search, filterStatus, "", "", showMsg, CONTROL_AREA, "SAFETY_CONTROL", INSTALL_DEFAULT_SAFETY_TEMPLATES_MUTATION);
+  const busy = auditS.saving || issueS.creating || actionS.creating;
 
   // ── Overview Data ──
   const { data: problemsData } = useQuery(PROBLEMS_QUERY, { variables: { controlArea: CONTROL_AREA }, fetchPolicy: "cache-and-network" });
@@ -48,13 +49,16 @@ export function SafetyControlPage() {
   const renderToolbarActions = (rt: RecordType | null, resetSelection: () => void, setSelection: (id: number) => void, setSelectedRecordType: (rt: RecordType) => void) => {
     if (rt === "AUDITS" || rt === null) {
       if (auditS.creating) {
-        return <><ToolbarButton icon={CheckCircle} label="Save Draft" onClick={auditS.hCreate} disabled={!auditS.canSave} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { auditS.hCancelNew(); resetSelection(); setSelectedRecordType("AUDITS"); }} /></>;
+        return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy || !auditS.canSave} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { auditS.hCancelNew(); resetSelection(); setSelectedRecordType("AUDITS"); }} /></>;
       }
       if (auditS.execId && auditS.execForm) {
         const st = auditS.execForm.status || "";
         const canComplete = (st === "DRAFT" || st === "OPEN") && (auditS.execForm.summary?.requiredMissingCount ?? 0) === 0;
+        if (auditS.editing) {
+          return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save"} onClick={auditS.hSaveEdit} disabled={busy} /><ToolbarButton icon={Ban} label="Cancel" onClick={auditS.hCancelEdit} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
+        }
         if (st === "DRAFT" || st === "OPEN") {
-          return <><ToolbarButton icon={CheckCircle} label="Save Draft" onClick={auditS.hCreate} /><ToolbarButton icon={Play} label="Complete" onClick={auditS.hComplete} disabled={!canComplete} /><ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
+          return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy} /><ToolbarButton icon={Pencil} label="Edit" onClick={auditS.hStartEdit} /><ToolbarButton icon={Play} label="Complete" onClick={auditS.hComplete} disabled={busy || !canComplete} /><ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
         }
         if (st === "COMPLETED") {
           return <><ToolbarButton icon={Plus} label="New Audit" onClick={() => { setSelectedRecordType("AUDITS"); auditS.hNew(); setSelection(-1); }} /><ToolbarButton icon={Archive} label="Archive" onClick={() => auditS.setArchiveConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
@@ -109,23 +113,28 @@ export function SafetyControlPage() {
     ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action" },
   }), []);
 
+  const ITEMS_PER_PAGE = 50;
+
   const renderUnifiedList = useCallback((
     onSelect: (recordType: RecordType, id: number | null) => void,
     filterRecordType?: RecordType | null,
     selectedId?: number | null,
+    page?: number,
   ) => {
-    const rows: { rt: RecordType; id: number; title: string; sub: string; status: string }[] = [];
-    auditS.items.forEach((i: any) => rows.push({ rt: "AUDITS", id: i.id, title: i.title || `Audit #${i.id}`, sub: i.auditType || "", status: i.status || "" }));
-    issueS.items.forEach((i: any) => rows.push({ rt: "ISSUES", id: i.id, title: i.title || "Issue", sub: i.problemType || "", status: i.status || "" }));
-    actionS.items.forEach((i: any) => rows.push({ rt: "ACTIONS", id: i.id, title: i.title || "Action", sub: i.owner || "", status: i.status || "" }));
+    const rows: { rt: RecordType; id: number; title: string; sub: string; status: string; date: string; auditor: string }[] = [];
+    auditS.items.forEach((i: any) => rows.push({ rt: "AUDITS", id: i.id, title: i.title || `Audit #${i.id}`, sub: i.auditType || "", status: i.status || "", date: i.auditDate || "", auditor: i.auditor || "" }));
+    issueS.items.forEach((i: any) => rows.push({ rt: "ISSUES", id: i.id, title: i.title || "Issue", sub: i.problemType || "", status: i.status || "", date: i.createdAt || i.dueDate || "", auditor: i.reportedBy || i.owner || "" }));
+    actionS.items.forEach((i: any) => rows.push({ rt: "ACTIONS", id: i.id, title: i.title || "Action", sub: i.owner || "", status: i.status || "", date: i.dueDate || i.createdAt || "", auditor: i.owner || "" }));
     const filtered = filterRecordType ? rows.filter((r) => r.rt === filterRecordType) : rows;
     filtered.sort((a, b) => b.id - a.id);
+    const curPage = page ?? 0;
+    const paged = filtered.slice(curPage * ITEMS_PER_PAGE, (curPage + 1) * ITEMS_PER_PAGE);
     return (
       <div className="flex flex-col min-h-0 h-full">
         <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4"><span className="text-sm font-medium text-muted-foreground">Records</span><span className="ml-auto text-[10px] text-muted-foreground font-mono">{filtered.length}</span></div>
         <div className="flex-1 overflow-y-auto">
-          {filtered.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No records found</div>
-          : filtered.map((row) => {
+          {paged.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No records found</div>
+          : paged.map((row) => {
             const cfg = TYPE_CONFIG[row.rt as keyof typeof TYPE_CONFIG];
             return (
               <div key={`${row.rt}-${row.id}`} onClick={() => { if (row.rt === "AUDITS") auditS.setExecId(row.id); onSelect(row.rt, row.id); }}
@@ -135,8 +144,8 @@ export function SafetyControlPage() {
                     : `border-l-transparent hover:bg-table-row-hover`
                 }`}>
                 <div className="px-3 py-2">
-                  <div className="flex items-center gap-2"><span className={`h-2 w-2 shrink-0 rounded-full ${cfg.color}`} /><span className="min-w-0 truncate text-sm font-semibold text-foreground flex-1">{row.title}</span><span className="text-[10px] text-muted-foreground bg-muted/50 px-1 py-0.5 rounded shrink-0">{cfg.label}</span></div>
-                  <div className="flex items-center gap-2 mt-0.5">{row.sub && <span className="text-xs text-muted-foreground truncate">{row.sub}</span>}{row.status && <span className="text-[10px] text-muted-foreground uppercase">{row.status}</span>}</div>
+                  <div className="flex items-center gap-2"><span className={`h-2 w-2 shrink-0 rounded-full ${cfg.color}`} /><span className="min-w-0 truncate text-sm font-semibold text-foreground flex-1">{row.title}</span>{row.status && <span className="text-[10px] font-medium uppercase border border-border/40 px-1 py-0.5 rounded shrink-0">{row.status}</span>}</div>
+                  <div className="flex items-center gap-2 mt-0.5">{row.date && <span className="text-[10px] text-muted-foreground">{row.date}</span>}{row.auditor && <span className="text-[10px] text-muted-foreground">{row.auditor}</span>}</div>
                 </div>
               </div>
             );

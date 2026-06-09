@@ -170,6 +170,28 @@ export const USER_ROLES_QUERY = gql`
   }
 `;
 
+export const USER_ROLES_ALL_QUERY = gql`
+  query UserRolesAll {
+    userRoles {
+      id
+      userProfileId
+      username
+      fullName
+      roleId
+      roleCode
+      roleName
+      companyId
+      companyName
+      plantId
+      plantName
+      administrativeDepartmentId
+      administrativeDepartmentName
+      isActive
+      assignedAt
+    }
+  }
+`;
+
 export const USER_PERMISSIONS_QUERY = gql`
   query UserPermissions($userProfileId: String!) {
     userPermissions(userProfileId: $userProfileId) {

@@ -1,7 +1,7 @@
 import typing
 import strawberry
 
-from api.types.manufacturing import MutationError
+from api.common.errors import MutationError
 from manufacturing.models.erp_import_pattern import ErpImportPattern, ErpImportPatternFieldMapping
 
 

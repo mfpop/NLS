@@ -488,12 +488,13 @@ class UserAccessService:
         return assignment
 
     @staticmethod
-    def list_user_roles(profile_id):
-        return UserRoleAssignment.objects.select_related(
+    def list_user_roles(profile_id=None):
+        qs = UserRoleAssignment.objects.select_related(
             "role", "company", "plant", "administrative_department",
-        ).filter(
-            user_profile_id=profile_id, is_active=True,
-        )
+        ).filter(is_active=True)
+        if profile_id:
+            qs = qs.filter(user_profile_id=profile_id)
+        return qs
 
     @staticmethod
     def get_user_permissions(profile_id):

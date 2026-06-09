@@ -6,7 +6,7 @@ import { CREATE_ACTION_MUTATION, UPDATE_ACTION_MUTATION, COMPLETE_ACTION_MUTATIO
 import { ACTION_STATUS_STYLES, PRIORITY_STYLES, SEL_INPUT, statusLabel } from "./QualityStatusStyles";
 import { InlineEditField } from "./InlineEditField";
 
-export function useActionSection(_search: string, filterStatus: string, onMessage: (msg: string) => void, controlArea: string = "QUALITY") {
+export function useActionSection(_search: string, filterStatus: string, onMessage: (msg: string, tone?: "success" | "error") => void, controlArea: string = "QUALITY") {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -48,9 +48,15 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
   }, []);
   const hCreate = useCallback(async () => {
     if (!aTitle.trim()) return;
-    await createMut({ variables: { title: aTitle.trim(), description: aDesc || null, owner: aOwner || null, dueDate: aDueDate || null, priority: aPriority, sourceType: aSourceType === "MANUAL" ? null : aSourceType, sourceId: aSourceType === "MANUAL" ? null : aSourceId, notes: aNotes || null } });
-    onMessage("Action created"); setCreating(false); refetch();
-  }, [aTitle, aDesc, aOwner, aDueDate, aPriority, aSourceType, aSourceId, aNotes, createMut, refetch, onMessage]);
+    try {
+      const r: any = await createMut({ variables: { title: aTitle.trim(), description: aDesc || null, owner: aOwner || null, dueDate: aDueDate || null, priority: aPriority, sourceType: aSourceType === "MANUAL" ? null : aSourceType, sourceId: aSourceType === "MANUAL" ? null : aSourceId, controlArea: controlArea || null, notes: aNotes || null } });
+      if (r.errors?.length) { onMessage(r.errors[0].message || "Save failed", "error"); return; }
+      if (!r.data) { onMessage("Save failed - unexpected response", "error"); return; }
+      onMessage("Action created"); setCreating(false); refetch();
+    } catch (e: any) {
+      onMessage(e?.message || "Save failed", "error");
+    }
+  }, [aTitle, aDesc, aOwner, aDueDate, aPriority, aSourceType, aSourceId, controlArea, aNotes, createMut, refetch, onMessage]);
 
   const hEdit = useCallback((item: any) => {
     setEId(item.id); setEditing(true); setCreating(false);
@@ -61,18 +67,45 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
   }, []);
   const hSaveEdit = useCallback(async () => {
     if (!eId || !eTitle.trim()) return;
-    await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, owner: eOwner.trim() || null, priority: ePriority } });
-    onMessage("Action updated"); setEditing(false); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, owner: eOwner.trim() || null, priority: ePriority } });
+      if (r.errors?.length) { onMessage(r.errors[0].message || "Update failed", "error"); return; }
+      if (!r.data) { onMessage("Update failed - unexpected response", "error"); return; }
+      onMessage("Action updated"); setEditing(false); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Update failed", "error");
+    }
   }, [eId, eTitle, eDesc, eOwner, ePriority, updateMut, refetch, onMessage]);
   const hComplete = useCallback(async (id: number) => {
-    await completeMut({ variables: { id } }); onMessage("Action completed"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await completeMut({ variables: { id } });
+      if (r.errors?.length) { onMessage(r.errors[0].message || "Complete failed", "error"); return; }
+      if (!r.data) { onMessage("Complete failed - unexpected response", "error"); return; }
+      onMessage("Action completed"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Complete failed", "error");
+    }
   }, [completeMut, refetch, onMessage]);
   const hCancel = useCallback(async (id: number) => {
-    await cancelMut({ variables: { id } }); onMessage("Action cancelled"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id } });
+      if (r.errors?.length) { onMessage(r.errors[0].message || "Cancel failed", "error"); return; }
+      if (!r.data) { onMessage("Cancel failed - unexpected response", "error"); return; }
+      onMessage("Action cancelled"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Cancel failed", "error");
+    }
   }, [cancelMut, refetch, onMessage]);
   const hDelete = useCallback(async () => {
     if (!deleteConfirmId) return;
-    await cancelMut({ variables: { id: deleteConfirmId } }); onMessage("Action deleted"); setDeleteConfirmId(null); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id: deleteConfirmId } });
+      if (r.errors?.length) { onMessage(r.errors[0].message || "Delete failed", "error"); return; }
+      if (!r.data) { onMessage("Delete failed - unexpected response", "error"); return; }
+      onMessage("Action deleted"); setDeleteConfirmId(null); setSelectedId(null); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Delete failed", "error");
+    }
   }, [deleteConfirmId, cancelMut, refetch, onMessage]);
 
   const sourceTypeOpts = [{ value: "ISSUE", label: "Issue" }, { value: "AUDIT_FINDING", label: "Audit Finding" }, { value: "MANUAL", label: "Manual" }];
@@ -127,8 +160,14 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
     const srcLabel = item.sourceType === "PROBLEM" ? "Issue" : item.sourceType === "AUDIT_FINDING" ? "Audit Finding" : "Manual";
     const statCls = ACTION_STATUS_STYLES[item.status] || ACTION_STATUS_STYLES.OPEN;
     const hUpdateAction = async (field: string, val: string) => {
-      await updateMut({ variables: { id: item.id, [field]: val || null } });
-      onMessage("Updated"); setTimeout(() => refetch(), 200);
+      try {
+        const r: any = await updateMut({ variables: { id: item.id, [field]: val || null } });
+        if (r.errors?.length) { onMessage(r.errors[0].message || "Update failed", "error"); return; }
+        if (!r.data) { onMessage("Update failed - unexpected response", "error"); return; }
+        onMessage("Updated"); setTimeout(() => refetch(), 200);
+      } catch (e: any) {
+        onMessage(e?.message || "Update failed", "error");
+      }
     };
     return (
       <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">

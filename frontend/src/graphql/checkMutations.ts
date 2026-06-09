@@ -2,8 +2,8 @@ import { gql } from "@apollo/client";
 
 // ── Problems ──
 export const CREATE_PROBLEM_MUTATION = gql`
-  mutation CreateProblem($title: String!, $problemType: String!, $targetType: String!, $targetId: Int, $description: String, $severity: String, $reportedBy: String, $sourceType: String, $sourceId: Int, $notes: String) {
-    createProblem(title: $title, problemType: $problemType, targetType: $targetType, targetId: $targetId, description: $description, severity: $severity, reportedBy: $reportedBy, sourceType: $sourceType, sourceId: $sourceId, notes: $notes)
+  mutation CreateProblem($title: String!, $problemType: String!, $targetType: String!, $targetId: Int, $description: String, $severity: String, $reportedBy: String, $sourceType: String, $sourceId: Int, $controlArea: String, $notes: String) {
+    createProblem(title: $title, problemType: $problemType, targetType: $targetType, targetId: $targetId, description: $description, severity: $severity, reportedBy: $reportedBy, sourceType: $sourceType, sourceId: $sourceId, controlArea: $controlArea, notes: $notes)
   }
 `;
 export const UPDATE_PROBLEM_MUTATION = gql`
@@ -26,8 +26,8 @@ export const CANCEL_PROBLEM_MUTATION = gql`
 
 // ── Actions ──
 export const CREATE_ACTION_MUTATION = gql`
-  mutation CreateAction($title: String!, $description: String, $owner: String, $dueDate: String, $priority: String, $sourceType: String, $sourceId: Int, $notes: String) {
-    createAction(title: $title, description: $description, owner: $owner, dueDate: $dueDate, priority: $priority, sourceType: $sourceType, sourceId: $sourceId, notes: $notes)
+  mutation CreateAction($title: String!, $description: String, $owner: String, $dueDate: String, $priority: String, $sourceType: String, $sourceId: Int, $controlArea: String, $notes: String) {
+    createAction(title: $title, description: $description, owner: $owner, dueDate: $dueDate, priority: $priority, sourceType: $sourceType, sourceId: $sourceId, controlArea: $controlArea, notes: $notes)
   }
 `;
 export const UPDATE_ACTION_MUTATION = gql`

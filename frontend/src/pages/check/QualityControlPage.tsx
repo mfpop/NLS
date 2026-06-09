@@ -61,7 +61,7 @@ export function QualityControlPage() {
           return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy} /><ToolbarButton icon={Pencil} label="Edit" onClick={auditS.hStartEdit} /><ToolbarButton icon={Play} label="Complete" onClick={auditS.hComplete} disabled={busy || !auditS.canComplete} /><ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
         }
         if (status === "COMPLETED") {
-          return <><ToolbarButton icon={Plus} label="New Audit" onClick={() => { auditS.hNew(); setSelection(-1); }} /><ToolbarButton icon={Archive} label="Archive" onClick={() => auditS.setArchiveConfirmId(String(auditS.execId))} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
+          return <><ToolbarButton icon={Plus} label="New Audit" onClick={() => { auditS.hNew(); setSelection(-1); }} /><ToolbarButton icon={Archive} label="Archive" onClick={() => auditS.setArchiveConfirmId(String(auditS.execId))} /><ToolbarButton icon={Play} label="Create Findings" onClick={auditS.hCreateFindings} disabled={busy || !auditS.hCreateFindings} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
         }
         return <><ToolbarButton icon={Plus} label="New Audit" onClick={() => { auditS.hNew(); setSelection(-1); }} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
       }
@@ -182,7 +182,10 @@ export function QualityControlPage() {
               return (
                 <div
                   key={`${row.rt}-${row.id}`}
-                  onClick={() => onSelect(row.rt, row.id)}
+                  onClick={() => {
+                if (row.rt === "AUDITS") auditS.setExecId(row.id);
+                onSelect(row.rt, row.id);
+              }}
                   className={`group mx-1 my-0.5 cursor-pointer border-l-2 transition-all duration-150 ${
                     selectedId === row.id
                       ? `${cfg.border} bg-table-selected`

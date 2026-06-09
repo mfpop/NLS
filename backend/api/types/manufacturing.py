@@ -393,9 +393,10 @@ from api.types.audit import (  # noqa: F401
     AuditAnswerNode, AuditAnswerPayload, AuditChecklistItemNode,
     AuditChecklistItemPayload, AuditExecutionForm, AuditExecutionQuestion,
     AuditExecutionSection, AuditExecutionSummary, AuditFindingNode,
-    AuditFindingPayload, AuditInstallTemplatesPayload, AuditNode,
-    AuditPayload, AuditTemplateCategoryNode, AuditTemplateInfo,
+    AuditFindingPayload, AuditFindingsPayload, AuditInstallTemplatesPayload,
+    AuditNode, AuditPayload, AuditTemplateCategoryNode, AuditTemplateInfo,
     AuditTemplateNode, AuditTemplatePayload, AuditTemplateQuestionNode,
+    CreateLinkedIssuePayload, CreateLinkedActionPayload,
     SaveAuditAnswersBulkPayload,
 )
 

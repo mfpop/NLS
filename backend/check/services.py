@@ -13,9 +13,10 @@ from check.models import (
     MaterialCheck, MaterialChecklistItem, MaterialIssue,
 )
 from check.constants import (
-    PROBLEM_STATUS_IN_REVIEW, PROBLEM_STATUS_CONTAINED,
+    PROBLEM_STATUS_IN_REVIEW, PROBLEM_STATUS_IN_PROGRESS,
+    PROBLEM_STATUS_CONTAINED, PROBLEM_STATUS_RESOLVED,
     PROBLEM_STATUS_CLOSED, PROBLEM_STATUS_CANCELLED,
-    ACTION_STATUS_IN_PROGRESS, ACTION_STATUS_DONE, ACTION_STATUS_CANCELLED,
+    ACTION_STATUS_IN_PROGRESS, ACTION_STATUS_COMPLETED, ACTION_STATUS_DONE, ACTION_STATUS_CANCELLED,
     CHECK_STATUS_COMPLETED,
     DMR_STATUS_UNDER_REVIEW, DMR_STATUS_QUARANTINED,
     DMR_STATUS_DISPOSITION_PENDING, DMR_STATUS_DISPOSITION_APPROVED,
@@ -82,6 +83,16 @@ class ProblemService:
         problem.save()
         return problem
 
+    def start_problem(self, problem_id: int) -> Problem:
+        problem = self._get(problem_id)
+        if not can_start_problem(problem.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot start problem in status '{problem.status}'"
+            )
+        problem.status = PROBLEM_STATUS_IN_PROGRESS
+        problem.save()
+        return problem
+
     def contain_problem(self, problem_id: int) -> Problem:
         problem = self._get(problem_id)
         if not can_contain_problem(problem.status):
@@ -92,6 +103,16 @@ class ProblemService:
         problem.save()
         return problem
 
+    def resolve_problem(self, problem_id: int) -> Problem:
+        problem = self._get(problem_id)
+        if not can_resolve_problem(problem.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot resolve problem in status '{problem.status}'"
+            )
+        problem.status = PROBLEM_STATUS_RESOLVED
+        problem.save()
+        return problem
+
     def close_problem(self, problem_id: int) -> Problem:
         problem = self._get(problem_id)
         if not can_close_problem(problem.status):
@@ -99,6 +120,7 @@ class ProblemService:
                 f"Cannot close problem in status '{problem.status}'"
             )
         problem.status = PROBLEM_STATUS_CLOSED
+        problem.closed_at = datetime.now()
         problem.save()
         return problem
 
@@ -165,14 +187,18 @@ class ActionService:
         action.save()
         return action
 
-    def complete_action(self, action_id: int) -> Action:
+    def complete_action(self, action_id: int, completed_by: str = "", completion_notes: str = "") -> Action:
         action = self._get(action_id)
         if not can_complete_action(action.status):
             raise InvalidStatusTransitionError(
                 f"Cannot complete action in status '{action.status}'"
             )
-        action.status = ACTION_STATUS_DONE
+        action.status = ACTION_STATUS_COMPLETED
         action.completed_at = datetime.now()
+        if completed_by:
+            action.completed_by = completed_by
+        if completion_notes:
+            action.completion_notes = completion_notes
         action.save()
         return action
 
@@ -183,6 +209,30 @@ class ActionService:
                 f"Cannot cancel action in status '{action.status}'"
             )
         action.status = ACTION_STATUS_CANCELLED
+        action.save()
+        return action
+
+    def create_action_from_issue(self, issue_id: int, **kwargs) -> Action:
+        """Create an action linked to a control issue (Problem)."""
+        issue = Problem.objects.filter(id=issue_id).first()
+        if not issue:
+            raise ProblemNotFoundError(f"Problem {issue_id} not found")
+        validate_non_empty(kwargs.get("title", ""), "title")
+        kwargs.setdefault("control_area", issue.control_area)
+        kwargs.setdefault("source_type", "ISSUE")
+        kwargs.setdefault("source_id", issue_id)
+        kwargs["linked_issue"] = issue
+        action = Action(**kwargs)
+        action.save()
+        return action
+
+    def link_issue(self, action_id: int, issue_id: int) -> Action:
+        """Link an existing action to a control issue."""
+        action = self._get(action_id)
+        issue = Problem.objects.filter(id=issue_id).first()
+        if not issue:
+            raise ProblemNotFoundError(f"Problem {issue_id} not found")
+        action.linked_issue = issue
         action.save()
         return action
 
@@ -197,6 +247,8 @@ class ActionService:
                 qs = qs.filter(priority=filters["priority"])
             if filters.get("search"):
                 qs = qs.filter(title__icontains=filters["search"])
+            if filters.get("linked_issue_id"):
+                qs = qs.filter(linked_issue_id=filters["linked_issue_id"])
         return list(qs)
 
     def get_action(self, action_id: int) -> Action | None:

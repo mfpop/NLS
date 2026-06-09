@@ -51,6 +51,9 @@ export function MaterialControlPage() {
       if (auditS.creating) {
         return <><ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy || !auditS.canSave} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { auditS.hCancelNew(); resetSelection(); }} /></>;
       }
+      if (auditS.execId && !auditS.execForm) {
+        return <><ToolbarButton icon={ArrowLeft} label="Back" onClick={resetSelection} /></>;
+      }
       if (auditS.execId && auditS.execForm) {
         const st = auditS.execForm.status || "";
         const canComplete = (st === "DRAFT" || st === "OPEN") && (auditS.execForm.summary?.requiredMissingCount ?? 0) === 0;

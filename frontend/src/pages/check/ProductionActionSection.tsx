@@ -9,7 +9,7 @@ import { ACTION_STATUS_STYLES, PRIORITY_STYLES, SEL_INPUT, statusLabel } from ".
 export function useProductionActionSection(
   _search: string,
   _filterStatus: string,
-  onMessage: (msg: string) => void,
+  onMessage: (msg: string, tone?: "success" | "error") => void,
   targetFilter: { targetType: string; targetId: number } | null,
   controlArea: string = "PRODUCTION",
 ) {
@@ -58,9 +58,22 @@ export function useProductionActionSection(
   }, []);
   const hCreate = useCallback(async () => {
     if (!aTitle.trim()) return;
-    const r = await createMut({ variables: { title: aTitle.trim(), description: aDesc || null, owner: aOwner || null, dueDate: aDueDate || null, priority: aPriority, sourceType: aSourceType === "MANUAL" ? null : aSourceType, sourceId: aSourceType === "MANUAL" ? null : aSourceId, notes: aNotes || null, controlArea } });
-    if (r.data) { onMessage("Action created"); setCreating(false); setTimeout(() => refetch(), 200); }
-    else { onMessage(r.error?.message || "Create failed"); }
+    try {
+      const r: any = await createMut({ variables: { title: aTitle.trim(), description: aDesc || null, owner: aOwner || null, dueDate: aDueDate || null, priority: aPriority, sourceType: aSourceType === "MANUAL" ? null : aSourceType, sourceId: aSourceType === "MANUAL" ? null : aSourceId, notes: aNotes || null, controlArea } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to create action", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to create action - unexpected response", "error");
+        return;
+      }
+      onMessage("Action created");
+      setCreating(false);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to create action", "error");
+    }
   }, [aTitle, aDesc, aOwner, aDueDate, aPriority, aSourceType, aSourceId, aNotes, createMut, controlArea, refetch, onMessage]);
 
   const hEdit = useCallback((item: any) => {
@@ -72,15 +85,60 @@ export function useProductionActionSection(
   }, []);
   const hSaveEdit = useCallback(async () => {
     if (!eId || !eTitle.trim()) return;
-    await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, owner: eOwner.trim() || null, priority: ePriority } });
-    onMessage("Action updated"); setEditing(false); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, owner: eOwner.trim() || null, priority: ePriority } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to update action", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to update action - unexpected response", "error");
+        return;
+      }
+      onMessage("Action updated");
+      setEditing(false);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to update action", "error");
+    }
   }, [eId, eTitle, eDesc, eOwner, ePriority, updateMut, refetch, onMessage]);
   const hCancel = useCallback(async (id: number) => {
-    await cancelMut({ variables: { id } }); onMessage("Action cancelled"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to cancel action", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to cancel action - unexpected response", "error");
+        return;
+      }
+      onMessage("Action cancelled");
+      setSelectedId(null);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to cancel action", "error");
+    }
   }, [cancelMut, refetch, onMessage]);
   const hDelete = useCallback(async () => {
     if (!deleteConfirmId) return;
-    await cancelMut({ variables: { id: deleteConfirmId } }); onMessage("Action deleted"); setDeleteConfirmId(null); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id: deleteConfirmId } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to delete action", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to delete action - unexpected response", "error");
+        return;
+      }
+      onMessage("Action deleted");
+      setDeleteConfirmId(null);
+      setSelectedId(null);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to delete action", "error");
+    }
   }, [deleteConfirmId, cancelMut, refetch, onMessage]);
 
   const sourceTypeOpts = [{ value: "ISSUE", label: "Issue" }, { value: "AUDIT_FINDING", label: "Audit Finding" }, { value: "MANUAL", label: "Manual" }];
@@ -161,12 +219,10 @@ export function useProductionActionSection(
     <RecordListPanel
       title="Actions"
       records={items}
-      selectedId={selId}
-      onSelect={(id) => { setCreating(false); setEditing(false); setSelectedId(Number(id)); onSelect(Number(id)); }}
+      selectedId={selId !== null ? String(selId) : null}        onSelect={(id) => { const nid = Number(id); setCreating(false); setEditing(false); setSelectedId(nid); onSelect(nid); }}
       getId={(a: any) => String(a.id)}
       emptyMessage="No actions found"
-      className="border-0 bg-transparent h-full"
-      renderRecord={(a: any, selected) => (
+      className="border-0 bg-transparent h-full"        renderRecord={(a: any, _selected) => (
         <>
           <div className="flex items-center gap-2">
             <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{a.title}</span>

@@ -512,6 +512,7 @@ class ManufacturingQuery:
         from manufacturing.models.audit import (
             Audit, AuditAnswer,
             AuditTemplate, AuditTemplateCategory, AuditTemplateQuestion,
+            AuditFinding,
         )
         from api.utils.converters import _iso
         try:

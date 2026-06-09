@@ -163,4 +163,6 @@ class CreateAuditFindingFromAnswerInput:
     answer_id: int = strawberry.field(name="answerId")
     description: str
     severity: str = "MINOR"
+    owner: typing.Optional[str] = ""
+    due_date: typing.Optional[str] = strawberry.field(name="dueDate", default=None)
     corrective_action: typing.Optional[str] = strawberry.field(name="correctiveAction", default="")

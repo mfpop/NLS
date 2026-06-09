@@ -692,3 +692,65 @@ export const INSTALL_DEFAULT_MATERIAL_TEMPLATES_MUTATION = gql`
     }
   }
 `;
+
+// ── New Audit Mutations (Cancel, Bulk Findings, Issue/Action from Finding) ──
+
+export const CANCEL_AUDIT_MUTATION = gql`
+  mutation CancelAudit($id: String!) {
+    cancelAudit(id: $id) {
+      ok
+      audit {
+        ${AUDIT_FIELDS}
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const CREATE_FINDINGS_FROM_AUDIT_MUTATION = gql`
+  mutation CreateFindingsFromAudit($auditId: String!, $severity: String) {
+    createFindingsFromAudit(auditId: $auditId, severity: $severity) {
+      ok
+      findings {
+        ${FINDING_FIELDS}
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const CREATE_ISSUE_FROM_FINDING_MUTATION = gql`
+  mutation CreateIssueFromFinding($findingId: String!, $title: String!, $description: String, $severity: String, $owner: String) {
+    createIssueFromFinding(findingId: $findingId, title: $title, description: $description, severity: $severity, owner: $owner) {
+      ok
+      issueId
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const CREATE_ACTION_FROM_FINDING_MUTATION = gql`
+  mutation CreateActionFromFinding($findingId: String!, $title: String!, $description: String, $priority: String, $owner: String) {
+    createActionFromFinding(findingId: $findingId, title: $title, description: $description, priority: $priority, owner: $owner) {
+      ok
+      actionId
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;

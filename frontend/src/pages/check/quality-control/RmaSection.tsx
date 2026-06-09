@@ -117,7 +117,7 @@ export function useRmaSection(
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
     try {
-      await createMut({
+      const r: any = await createMut({
         variables: {
           rmaNumber: fNumber.trim(),
           customerName: fCustomer.trim(),
@@ -139,47 +139,63 @@ export function useRmaSection(
           notes: fNotes.trim() || undefined,
         },
       });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to create RMA", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to create RMA - unexpected response", "error");
+        return;
+      }
       onMessage("RMA created");
       setCreating(false);
       q.refetch();
-    } catch {
-      onMessage("Failed to create RMA", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to create RMA", "error");
     }
   }, [fNumber, fCustomer, fPartNumber, fSerialLot, fQty, fReason, fOwner, fDueDate, fNotes, fDisposition, fCustResp, fInspectionResult, fConfirmedDefect, fSuspectedCause, fConfirmedCause, fDispositionOwner, fDispositionDate, fCustomerResponse, validate, createMut, q, onMessage]);
 
   const hUpdate = useCallback(async (field: string, val: string) => {
     if (!selectedId) return;
     try {
-      await updateMut({ variables: { id: selectedId, [field]: val || null } });
+      const r: any = await updateMut({ variables: { id: selectedId, [field]: val || null } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to update", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to update - unexpected response", "error");
+        return;
+      }
       onMessage("Updated");
       q.refetch();
-    } catch {
-      onMessage("Failed to update", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to update", "error");
     }
   }, [selectedId, updateMut, q, onMessage]);
 
   const hReceive = useCallback(async () => {
     if (!selectedId) return;
-    try { await receiveMut({ variables: { id: selectedId } }); onMessage("RMA received"); q.refetch(); }
-    catch { onMessage("Failed to receive RMA", "error"); }
+    try { const r: any = await receiveMut({ variables: { id: selectedId } }); if (r.errors?.length) { onMessage(r.errors[0]?.message || "Failed to receive RMA", "error"); return; } if (!r.data) { onMessage("Failed to receive RMA - unexpected response", "error"); return; } onMessage("RMA received"); q.refetch(); }
+    catch (e: any) { onMessage(e?.message || "Failed to receive RMA", "error"); }
   }, [selectedId, receiveMut, q, onMessage]);
 
   const hDisposition = useCallback(async () => {
     if (!selectedId) return;
-    try { await dispMut({ variables: { id: selectedId, disposition: fDisposition } }); onMessage("RMA dispositioned"); q.refetch(); }
-    catch { onMessage("Failed to set disposition", "error"); }
+    try { const r: any = await dispMut({ variables: { id: selectedId, disposition: fDisposition } }); if (r.errors?.length) { onMessage(r.errors[0]?.message || "Failed to set disposition", "error"); return; } if (!r.data) { onMessage("Failed to set disposition - unexpected response", "error"); return; } onMessage("RMA dispositioned"); q.refetch(); }
+    catch (e: any) { onMessage(e?.message || "Failed to set disposition", "error"); }
   }, [selectedId, fDisposition, dispMut, q, onMessage]);
 
   const hClose = useCallback(async () => {
     if (!selectedId) return;
-    try { await closeMut({ variables: { id: selectedId } }); onMessage("RMA closed"); q.refetch(); }
-    catch { onMessage("Failed to close RMA", "error"); }
+    try { const r: any = await closeMut({ variables: { id: selectedId } }); if (r.errors?.length) { onMessage(r.errors[0]?.message || "Failed to close RMA", "error"); return; } if (!r.data) { onMessage("Failed to close RMA - unexpected response", "error"); return; } onMessage("RMA closed"); q.refetch(); }
+    catch (e: any) { onMessage(e?.message || "Failed to close RMA", "error"); }
   }, [selectedId, closeMut, q, onMessage]);
 
   const hCancel = useCallback(async () => {
     if (!selectedId) return;
-    try { await cancelMut({ variables: { id: selectedId } }); onMessage("RMA cancelled"); q.refetch(); }
-    catch { onMessage("Failed to cancel RMA", "error"); }
+    try { const r: any = await cancelMut({ variables: { id: selectedId } }); if (r.errors?.length) { onMessage(r.errors[0]?.message || "Failed to cancel RMA", "error"); return; } if (!r.data) { onMessage("Failed to cancel RMA - unexpected response", "error"); return; } onMessage("RMA cancelled"); q.refetch(); }
+    catch (e: any) { onMessage(e?.message || "Failed to cancel RMA", "error"); }
   }, [selectedId, cancelMut, q, onMessage]);
 
   // ── Styles ──

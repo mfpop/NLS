@@ -9,7 +9,7 @@ import { ISSUE_STATUS_STYLES, SEVERITY_STYLES, SEL_INPUT, statusLabel } from "./
 export function useProductionIssueSection(
   _search: string,
   filterStatus: string,
-  onMessage: (msg: string) => void,
+  onMessage: (msg: string, tone?: "success" | "error") => void,
   targetFilter: { targetType: string; targetId: number } | null,
   controlArea: string = "PRODUCTION",
 ) {
@@ -60,16 +60,29 @@ export function useProductionIssueSection(
   }, []);
   const hCreate = useCallback(async () => {
     if (!iTitle.trim()) return;
-    const r = await createMut({
-      variables: {
-        title: iTitle.trim(), problemType: iType, severity: iSeverity, description: iDesc || null,
-        reportedBy: iOwner || null, sourceType: iSourceType === "MANUAL" ? null : iSourceType,
-        sourceId: iSourceType === "MANUAL" ? null : iSourceId, notes: iNotes || null,
-        controlArea, targetType: targetFilter?.targetType || "PLANT", targetId: targetFilter?.targetId || null,
-      },
-    });
-    if (r.data) { onMessage("Issue created"); setCreating(false); setTimeout(() => refetch(), 200); }
-    else { onMessage(r.error?.message || "Create failed"); }
+    try {
+      const r: any = await createMut({
+        variables: {
+          title: iTitle.trim(), problemType: iType, severity: iSeverity, description: iDesc || null,
+          reportedBy: iOwner || null, sourceType: iSourceType === "MANUAL" ? null : iSourceType,
+          sourceId: iSourceType === "MANUAL" ? null : iSourceId, notes: iNotes || null,
+          controlArea, targetType: targetFilter?.targetType || "PLANT", targetId: targetFilter?.targetId || null,
+        },
+      });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to create issue", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to create issue - unexpected response", "error");
+        return;
+      }
+      onMessage("Issue created");
+      setCreating(false);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to create issue", "error");
+    }
   }, [iTitle, iType, iSeverity, iDesc, iOwner, iSourceType, iSourceId, iNotes, createMut, controlArea, targetFilter, refetch, onMessage]);
 
   const hEdit = useCallback((item: any) => {
@@ -81,15 +94,60 @@ export function useProductionIssueSection(
   }, []);
   const hSaveEdit = useCallback(async () => {
     if (!eId || !eTitle.trim()) return;
-    await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, severity: eSeverity, notes: eNotes.trim() || null } });
-    onMessage("Issue updated"); setEditing(false); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, severity: eSeverity, notes: eNotes.trim() || null } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to update issue", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to update issue - unexpected response", "error");
+        return;
+      }
+      onMessage("Issue updated");
+      setEditing(false);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to update issue", "error");
+    }
   }, [eId, eTitle, eDesc, eSeverity, eNotes, updateMut, refetch, onMessage]);
   const hCancel = useCallback(async (id: number) => {
-    await cancelMut({ variables: { id } }); onMessage("Issue cancelled"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to cancel issue", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to cancel issue - unexpected response", "error");
+        return;
+      }
+      onMessage("Issue cancelled");
+      setSelectedId(null);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to cancel issue", "error");
+    }
   }, [cancelMut, refetch, onMessage]);
   const hDelete = useCallback(async () => {
     if (!deleteConfirmId) return;
-    await cancelMut({ variables: { id: deleteConfirmId } }); onMessage("Issue deleted"); setDeleteConfirmId(null); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id: deleteConfirmId } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to delete issue", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to delete issue - unexpected response", "error");
+        return;
+      }
+      onMessage("Issue deleted");
+      setDeleteConfirmId(null);
+      setSelectedId(null);
+      setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to delete issue", "error");
+    }
   }, [deleteConfirmId, cancelMut, refetch, onMessage]);
 
   const problemTypeOpts = [{ value: "OPERATIONAL", label: "Operational" }, { value: "QUALITY", label: "Quality" }, { value: "SAFETY", label: "Safety" }, { value: "MATERIAL", label: "Material" }, { value: "MAINTENANCE", label: "Maintenance" }];
@@ -177,12 +235,10 @@ export function useProductionIssueSection(
     <RecordListPanel
       title="Issues"
       records={items}
-      selectedId={selId}
-      onSelect={(id) => { setCreating(false); setEditing(false); setSelectedId(Number(id)); onSelect(Number(id)); }}
+      selectedId={selId !== null ? String(selId) : null}        onSelect={(id) => { const nid = Number(id); setCreating(false); setEditing(false); setSelectedId(nid); onSelect(nid); }}
       getId={(p: any) => String(p.id)}
       emptyMessage="No issues found"
-      className="border-0 bg-transparent h-full"
-      renderRecord={(p: any, selected) => (
+      className="border-0 bg-transparent h-full"        renderRecord={(p: any, _selected) => (
         <>
           <div className="flex items-center gap-2">
             <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{p.title || "Issue"}</span>

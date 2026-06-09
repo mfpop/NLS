@@ -276,6 +276,24 @@ class AuditTemplatePayload:
     template: typing.Optional[AuditTemplateNode] = None
     errors: list[MutationError] = strawberry.field(default_factory=list)
 
+@strawberry.type
+class AuditFindingsPayload:
+    ok: bool
+    findings: list[AuditFindingNode] = strawberry.field(default_factory=list)
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class CreateLinkedIssuePayload:
+    ok: bool
+    issue_id: typing.Optional[strawberry.ID] = strawberry.field(name="issueId", default=None)
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
+@strawberry.type
+class CreateLinkedActionPayload:
+    ok: bool
+    action_id: typing.Optional[strawberry.ID] = strawberry.field(name="actionId", default=None)
+    errors: list[MutationError] = strawberry.field(default_factory=list)
+
 
 # ── Audit Execution Form Types ──
 

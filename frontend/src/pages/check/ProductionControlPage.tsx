@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Activity, Plus, Save, ArrowLeft, Pencil, X, Archive, Trash2, Play } from "lucide-react";
+import { Activity, Plus, Save, ArrowLeft, Pencil, X, Archive, Trash2, Play, Ban, AlertTriangle } from "lucide-react";
 import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -163,20 +163,29 @@ export function ProductionControlPage() {
       if (auditS.editing) {
         return (
           <>
-            <ToolbarButton icon={Save} label={busy ? "Saving..." : "Save"} onClick={auditS.hSaveEdit} disabled={busy} />
+            <ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Edit"} onClick={auditS.hSaveEdit} disabled={busy} />
             <ToolbarButton icon={X} label="Cancel" onClick={auditS.hCancelEdit} />
             <span className="h-5 w-px shrink-0 bg-border/25" />
             <ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { auditS.hCancelNew(); resetSelection(); }} />
           </>
         );
       }
+      const hasFailedItems = auditS.execForm?.sections?.some((s: any) => s.questions?.some((q: any) => q.answerValue === "FAIL" || q.answerValue === "NO")) ?? false;
+      const hasFindings = (auditS.execForm?.findings?.length ?? 0) > 0;
       return (
         <>
+          <ToolbarButton icon={Save} label={busy ? "Saving..." : "Save Draft"} onClick={auditS.hCreate} disabled={busy} />
           <ToolbarButton icon={Plus} label="New" onClick={() => { setSelectedRecordType("AUDITS"); handleNewDefault("AUDITS"); }} />
           {auditS.canComplete && (
             <ToolbarButton icon={Play} label={busy ? "Completing..." : "Complete"} onClick={auditS.hComplete} disabled={busy} />
           )}
           <ToolbarButton icon={Pencil} label="Edit" onClick={auditS.hStartEdit} />
+          {(auditS.execForm?.status === "DRAFT" || auditS.execForm?.status === "OPEN") && (
+            <ToolbarButton icon={Ban} label="Cancel Audit" onClick={() => auditS.setCancelConfirmId(String(auditS.execId))} />
+          )}
+          {hasFailedItems && !hasFindings && (
+            <ToolbarButton icon={AlertTriangle} label={busy ? "Creating..." : "Create Findings"} onClick={auditS.hCreateFindings} disabled={busy} />
+          )}
           <ToolbarButton icon={Archive} label="Archive" onClick={() => auditS.setArchiveConfirmId(String(auditS.execId))} />
           <ToolbarButton icon={Trash2} label="Delete" onClick={() => auditS.setDeleteConfirmId(String(auditS.execId))} />
           <span className="h-5 w-px shrink-0 bg-border/25" />
@@ -428,6 +437,13 @@ export function ProductionControlPage() {
         onConfirm={auditS.hDelete}
         title="Delete Audit"
         message="Are you sure you want to delete this audit?"
+      />
+      <ConfirmDialog
+        open={auditS.cancelConfirmId !== null}
+        onClose={() => auditS.setCancelConfirmId(null)}
+        onConfirm={auditS.hCancelAudit}
+        title="Cancel Audit"
+        message="Are you sure you want to cancel this audit? This will change the status to CANCELLED."
       />
       <ConfirmDialog
         open={issueS.deleteConfirmId !== null}

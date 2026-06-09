@@ -6,7 +6,7 @@ from api.permissions import ensure_access
 from api.types.manufacturing import (
     AuditNode, AuditPayload, AuditInput, AuditUpdateInput,
     AuditChecklistItemNode, AuditChecklistItemPayload, AuditChecklistItemInput, AuditChecklistItemUpdateInput,
-    AuditFindingNode, AuditFindingPayload, AuditFindingInput, AuditFindingUpdateInput,
+    AuditFindingNode, AuditFindingPayload, AuditFindingsPayload, AuditFindingInput, AuditFindingUpdateInput,
     AuditAnswerNode, AuditAnswerPayload,
     AuditTemplateNode, AuditInstallTemplatesPayload, AuditTemplatePayload,
     AuditTemplateCreateInput, AuditTemplateUpdateInput,
@@ -14,6 +14,7 @@ from api.types.manufacturing import (
     AuditTemplateQuestionInput, AuditTemplateQuestionUpdateInput,
     CreateAuditFromTemplateInput, SaveAuditAnswerInput, SaveAuditAnswersBulkInput, SaveAuditAnswersBulkPayload,
     CreateAuditFindingFromAnswerInput,
+    CreateLinkedIssuePayload, CreateLinkedActionPayload,
     MutationError,
 )
 
@@ -444,3 +445,43 @@ class ManufacturingAuditMutation:
             return AuditFindingPayload(ok=True, finding=AuditFindingNode.from_db(finding))
         except AuditServiceError as e:
             return AuditFindingPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="cancelAudit")
+    def cancel_audit(self, info: Info, id: str) -> "AuditPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            audit = AuditService.cancel_audit(audit_id=int(id))
+            return AuditPayload(ok=True, audit=AuditNode.from_db(audit))
+        except AuditServiceError as e:
+            return AuditPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="createFindingsFromAudit")
+    def create_findings_from_audit(self, info: Info, audit_id: str, severity: typing.Optional[str] = "MEDIUM") -> "AuditFindingsPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            findings = AuditService.create_findings_from_audit(audit_id=int(audit_id), default_severity=severity or "MEDIUM")
+            return AuditFindingsPayload(ok=True, findings=[AuditFindingNode.from_db(f) for f in findings])
+        except AuditServiceError as e:
+            return AuditFindingsPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="createIssueFromFinding")
+    def create_issue_from_finding(self, info: Info, finding_id: str, title: str, description: typing.Optional[str] = "", severity: typing.Optional[str] = "MEDIUM", owner: typing.Optional[str] = "") -> "CreateLinkedIssuePayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            problem = AuditService.create_issue_from_finding(finding_id=int(finding_id), title=title, description=description or "", severity=severity or "MEDIUM", owner=owner or "")
+            return CreateLinkedIssuePayload(ok=True, issue_id=strawberry.ID(str(problem.id)))
+        except AuditServiceError as e:
+            return CreateLinkedIssuePayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])
+
+    @strawberry.mutation(name="createActionFromFinding")
+    def create_action_from_finding(self, info: Info, finding_id: str, title: str, description: typing.Optional[str] = "", priority: typing.Optional[str] = "MEDIUM", owner: typing.Optional[str] = "") -> "CreateLinkedActionPayload":
+        ensure_access(user=_user(info), action="manage_audits")
+        from manufacturing.domain.audit_service import AuditService, AuditServiceError
+        try:
+            action = AuditService.create_action_from_finding(finding_id=int(finding_id), title=title, description=description or "", priority=priority or "MEDIUM", owner=owner or "")
+            return CreateLinkedActionPayload(ok=True, action_id=strawberry.ID(str(action.id)))
+        except AuditServiceError as e:
+            return CreateLinkedActionPayload(ok=False, errors=[MutationError(field=e.field, code=e.code, message=e.message)])

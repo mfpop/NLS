@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Plus, MapPin, ClipboardList } from "lucide-react";
-import { RecordListPanel } from "@/components/shared/RecordListPanel";
 import {
   AUDITS_QUERY, AUDIT_TEMPLATES_QUERY, AUDIT_EXECUTION_FORM_QUERY,
   CREATE_AUDIT_FROM_TEMPLATE_MUTATION, COMPLETE_AUDIT_MUTATION,
   SAVE_AUDIT_ANSWERS_BULK_MUTATION, CLOSE_FINDING_MUTATION,
   CREATE_AUDIT_FINDING_FROM_ANSWER_MUTATION,
   UPDATE_AUDIT_MUTATION, DELETE_AUDIT_MUTATION,
+  CANCEL_AUDIT_MUTATION, CREATE_FINDINGS_FROM_AUDIT_MUTATION,
   INSTALL_DEFAULT_PC_TEMPLATES_MUTATION,
 } from "@/graphql/auditQueries";
 import type { DocumentNode } from "graphql";
@@ -22,7 +22,7 @@ export function useProductionAuditSection(
   filterStatus: string,
   activePlantId: string | null,
   productionLineId: string | null,
-  onMessage: (msg: string) => void,
+  onMessage: (msg: string, tone?: "success" | "error") => void,
   controlArea: string = "PRODUCTION",
   moduleScope: string = "PRODUCTION_CONTROL",
   installMutation?: DocumentNode,
@@ -37,6 +37,7 @@ export function useProductionAuditSection(
   const [editing, setEditing] = useState(false);
   const [archiveConfirmId, setArchiveConfirmId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const [closeFindingId, setCloseFindingId] = useState<string | null>(null);
   void closeFindingId; // kept for future findings close wiring
   const [errors, setErrors] = useState<string[]>([]);
@@ -97,6 +98,8 @@ export function useProductionAuditSection(
   const [completeMut] = useMutation<any>(COMPLETE_AUDIT_MUTATION);
   const [bulkSave] = useMutation<any>(SAVE_AUDIT_ANSWERS_BULK_MUTATION);
   const [createFindingMut] = useMutation<any>(CREATE_AUDIT_FINDING_FROM_ANSWER_MUTATION);
+  const [cancelAuditMut] = useMutation<any>(CANCEL_AUDIT_MUTATION);
+  const [createFindingsFromAuditMut] = useMutation<any>(CREATE_FINDINGS_FROM_AUDIT_MUTATION);
   const [updateAuditMut] = useMutation<any>(UPDATE_AUDIT_MUTATION);
   const [deleteAuditMut] = useMutation<any>(DELETE_AUDIT_MUTATION);
   const [installTpl] = useMutation<any>(installMutation || INSTALL_DEFAULT_PC_TEMPLATES_MUTATION);
@@ -241,9 +244,16 @@ export function useProductionAuditSection(
         const r = await bulkSave({ variables: { input: { auditId: currentId, answers: items } } });
         if (!r.data?.saveAuditAnswersBulk?.ok) { onMessage(r.data?.saveAuditAnswersBulk?.errors?.[0]?.message || "Save failed"); setSaving(false); return; }
       }
-      onMessage("Draft saved");
-      await Promise.all([auditsQ.refetch(), execQ.refetch()]);
-      if (!created && currentId) setCreating(false);
+      const wasNewAudit = !created;
+      if (wasNewAudit && currentId) {
+        setCreating(false);
+        onMessage("Audit created and draft saved.");
+        await auditsQ.refetch();
+      } else {
+        onMessage("Draft saved.");
+        await Promise.all([auditsQ.refetch(), execQ.refetch()]);
+      }
+      if (!wasNewAudit) { /* already done */ }
     } catch { onMessage("Save failed"); }
     setSaving(false);
   }, [tplId, fAuditor, fDate, fNotes, draftAns, localAns, created, execId, validateHeader, resolveTarget, createAuditMut, bulkSave, auditsQ, execQ, selTpl, onMessage]);
@@ -324,28 +334,82 @@ export function useProductionAuditSection(
     if (!findingForAnswer || !findingDesc.trim()) return;
     const auditId = Number(findingForAnswer.auditId);
     let answerId = Number(findingForAnswer.answerId);
-    if (!Number.isFinite(auditId)) { onMessage("Audit not found"); return; }
-    // If answer hasn't been saved yet, save it first
-    if (!Number.isFinite(answerId) || answerId <= 0) {
-      const saveR = await bulkSave({ variables: { input: { auditId, answers: [{ questionId: Number(findingForAnswer.questionId || 0), answerValue: localAns[findingForAnswer.questionId]?.value || "FAIL", comment: "" }] } } });
-      if (!saveR.data?.saveAuditAnswersBulk?.ok) { onMessage("Answer could not be saved"); return; }
-      // Refetch to get the new answerId
-      await execQ.refetch();
-      const updatedForm: AuditExecutionFormData | null = (execQ.data as any)?.auditExecutionForm || null;
-      if (updatedForm) {
-        for (const sec of updatedForm.sections) {
-          const q = sec.questions.find((qq) => qq.id === findingForAnswer.questionId);
-          if (q && q.answerId) { answerId = Number(q.answerId); break; }
+    if (!Number.isFinite(auditId)) { onMessage("Audit not found", "error"); return; }
+    try {
+      // If answer hasn't been saved yet, save it first
+      if (!Number.isFinite(answerId) || answerId <= 0) {
+        const saveR: any = await bulkSave({ variables: { input: { auditId: String(auditId), answers: [{ questionId: Number(findingForAnswer.questionId || 0), answerValue: localAns[findingForAnswer.questionId]?.value || "FAIL", comment: "" }] } } });
+        if (!saveR.data?.saveAuditAnswersBulk?.ok) { onMessage("Answer could not be saved", "error"); return; }
+        // Refetch to get the new answerId
+        await execQ.refetch();
+        const updatedForm: AuditExecutionFormData | null = (execQ.data as any)?.auditExecutionForm || null;
+        if (updatedForm) {
+          for (const sec of updatedForm.sections) {
+            const q = sec.questions.find((qq) => qq.id === findingForAnswer.questionId);
+            if (q && q.answerId) { answerId = Number(q.answerId); break; }
+          }
         }
+        if (!Number.isFinite(answerId) || answerId <= 0) { onMessage("Finding cannot be created before the answer is saved", "error"); return; }
       }
-      if (!Number.isFinite(answerId) || answerId <= 0) { onMessage("Finding cannot be created before the answer is saved"); return; }
+      const r: any = await createFindingMut({
+        variables: {
+          input: {
+            auditId: String(auditId),
+            questionId: Number(findingForAnswer.questionId),
+            answerId,
+            description: findingDesc.trim(),
+            severity: findingSev,
+            owner: findingOwner,
+            dueDate: findingDd || null,
+          },
+        },
+      });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Finding create failed", "error");
+        return;
+      }
+      if (r.data?.createAuditFindingFromAnswer?.ok) { onMessage("Finding created"); setFindingForAnswer(null); setFindingDesc(""); setFindingDd(""); await Promise.all([execQ.refetch(), auditsQ.refetch()]); }
+      else { onMessage(r.data?.createAuditFindingFromAnswer?.errors?.[0]?.message || "Finding create failed", "error"); }
+    } catch (e: any) {
+      onMessage(e?.message || "Finding create failed", "error");
     }
-    const r = await createFindingMut({ variables: { input: { auditId, answerId, description: findingDesc.trim(), severity: findingSev, owner: findingOwner, dueDate: findingDd || null } } });
-    if (r.data?.createAuditFindingFromAnswer?.ok) { onMessage("Finding created"); setFindingForAnswer(null); setFindingDesc(""); setFindingDd(""); await Promise.all([execQ.refetch(), auditsQ.refetch()]); }
-    else { onMessage(r.data?.createAuditFindingFromAnswer?.errors?.[0]?.message || "Finding create failed"); }
   }, [findingForAnswer, findingDesc, findingSev, findingDd, findingOwner, createFindingMut, execQ, auditsQ, onMessage, bulkSave, localAns]);
 
   // hCloseFinding callback removed — was dead code (never wired to UI)
+
+  const hCancelAudit = useCallback(async () => {
+    if (!cancelConfirmId) return;
+    const r = await cancelAuditMut({ variables: { id: cancelConfirmId } });
+    if (r.data?.cancelAudit?.ok) {
+      onMessage("Audit cancelled"); setCancelConfirmId(null); setExecId(null);
+      await Promise.all([auditsQ.refetch(), execQ.refetch()]);
+    } else {
+      onMessage(r.data?.cancelAudit?.errors?.[0]?.message || "Cancel failed");
+      setCancelConfirmId(null);
+    }
+  }, [cancelConfirmId, cancelAuditMut, auditsQ, execQ, onMessage]);
+
+  const hCreateFindings = useCallback(async () => {
+    if (!execId) return;
+    setSaving(true);
+    try {
+      const r: any = await createFindingsFromAuditMut({ variables: { auditId: String(execId), severity: "MEDIUM" } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Create findings failed", "error");
+        setSaving(false);
+        return;
+      }
+      if (r.data?.createFindingsFromAudit?.ok) {
+        onMessage(`Created ${r.data.createFindingsFromAudit.findings.length} finding(s)`);
+        await Promise.all([execQ.refetch(), auditsQ.refetch()]);
+      } else {
+        onMessage(r.data?.createFindingsFromAudit?.errors?.[0]?.message || "Create findings failed");
+      }
+    } catch (e: any) {
+      onMessage(e?.message || "Create findings failed", "error");
+    }
+    setSaving(false);
+  }, [execId, createFindingsFromAuditMut, execQ, auditsQ, onMessage]);
 
   const hInstall = useCallback(async () => { await installTpl(); onMessage("Templates installed"); tplQ.refetch(); }, [installTpl, tplQ, onMessage]);
 
@@ -357,8 +421,8 @@ export function useProductionAuditSection(
   // ── Render Form ──
   const renderForm = () => {
     const isNew = creating && !created;
-    const answersLocked = isNew && selTpl && !created;
-    const headerTpl = isNew ? selTpl : (execForm?.template ?? null);
+  const answersLocked = false;
+  const headerTpl = isNew ? selTpl : (execForm?.template ?? null);
     const sections = isNew && selTpl ? selTpl.categories : (execForm?.sections ?? []);
     const headerStatus = isNew ? "DRAFT" : (execForm?.status ?? "DRAFT");
     const headerScore = isNew ? null : (execForm?.score ?? null);
@@ -697,6 +761,7 @@ export function useProductionAuditSection(
         </div>
       </div>
     );
+    if (execId && !execForm) return <div className="flex flex-1 items-center justify-center h-full"><div className="text-xs text-muted-foreground animate-pulse">Loading audit form...</div></div>;
     return renderForm();
   };
 
@@ -723,6 +788,10 @@ export function useProductionAuditSection(
     setArchiveConfirmId,
     deleteConfirmId,
     setDeleteConfirmId,
+    cancelConfirmId,
+    setCancelConfirmId,
+    hCancelAudit,
+    hCreateFindings,
     hCancelNew: () => { setCreating(false); setCreated(false); setExecId(null); setEditing(false); },
     saving,
     canSave: !!tplId && fPlant !== "" && fAuditor.trim() !== "" && fDate !== "" && !!resolveTarget(),

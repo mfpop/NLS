@@ -39,7 +39,7 @@ export const PRIORITY_STYLES: Record<string, string> = {
   LOW: "border-gray-300 text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30",
 };
 
-export const SEL_INPUT = "h-8 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-sm text-foreground outline-none focus:border-blue-500";
+export const SEL_INPUT = "h-8 w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-border/50 dark:border-slate-600/50 px-2 text-sm text-foreground outline-none focus:border-blue-500 focus:bg-white/80 dark:focus:bg-slate-800/80 focus:ring-1 focus:ring-blue-500/30";
 export const WARN = "text-amber-700 dark:text-amber-300";
 
 export const auditTypeLabels: Record<string, string> = {

@@ -3,7 +3,9 @@
 from check.constants import (
     PROBLEM_STATUS_OPEN,
     PROBLEM_STATUS_IN_REVIEW,
+    PROBLEM_STATUS_IN_PROGRESS,
     PROBLEM_STATUS_CONTAINED,
+    PROBLEM_STATUS_RESOLVED,
     PROBLEM_STATUS_CLOSED,
     PROBLEM_STATUS_CANCELLED,
     ACTION_STATUS_OPEN,
@@ -39,16 +41,24 @@ def can_review_problem(current_status: str) -> bool:
     return current_status == PROBLEM_STATUS_OPEN
 
 
+def can_start_problem(current_status: str) -> bool:
+    return current_status == PROBLEM_STATUS_OPEN
+
+
 def can_contain_problem(current_status: str) -> bool:
-    return current_status == PROBLEM_STATUS_IN_REVIEW
+    return current_status in (PROBLEM_STATUS_OPEN, PROBLEM_STATUS_IN_REVIEW, PROBLEM_STATUS_IN_PROGRESS)
+
+
+def can_resolve_problem(current_status: str) -> bool:
+    return current_status in (PROBLEM_STATUS_IN_PROGRESS, PROBLEM_STATUS_CONTAINED)
 
 
 def can_close_problem(current_status: str) -> bool:
-    return current_status == PROBLEM_STATUS_CONTAINED
+    return current_status in (PROBLEM_STATUS_CONTAINED, PROBLEM_STATUS_RESOLVED)
 
 
 def can_cancel_problem(current_status: str) -> bool:
-    return current_status in (PROBLEM_STATUS_OPEN, PROBLEM_STATUS_IN_REVIEW, PROBLEM_STATUS_CONTAINED)
+    return current_status in (PROBLEM_STATUS_OPEN, PROBLEM_STATUS_IN_REVIEW, PROBLEM_STATUS_IN_PROGRESS, PROBLEM_STATUS_CONTAINED)
 
 
 # ── Action transitions ──

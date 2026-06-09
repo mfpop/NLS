@@ -4,8 +4,9 @@ import { Plus, MapPin, ClipboardList } from "lucide-react";
 import {
   AUDITS_QUERY, AUDIT_TEMPLATES_QUERY, AUDIT_EXECUTION_FORM_QUERY,
   CREATE_AUDIT_FROM_TEMPLATE_MUTATION, COMPLETE_AUDIT_MUTATION,
-  SAVE_AUDIT_ANSWERS_BULK_MUTATION, CLOSE_FINDING_MUTATION,
+  SAVE_AUDIT_ANSWERS_BULK_MUTATION,  CLOSE_FINDING_MUTATION,
   CREATE_AUDIT_FINDING_FROM_ANSWER_MUTATION,
+  CREATE_FINDINGS_FROM_AUDIT_MUTATION,
   UPDATE_AUDIT_MUTATION, DELETE_AUDIT_MUTATION,
   INSTALL_DEFAULT_QC_TEMPLATES_MUTATION,
   INSTALL_DEFAULT_SAFETY_TEMPLATES_MUTATION,
@@ -69,7 +70,7 @@ function FindingsTable({ findings, onClose }: { findings: AuditFindingData[]; on
   );
 }
 
-export function useAuditSection(search: string, filterStatus: string, activePlantId: string | null, productionLineId: string | null, onMessage: (msg: string) => void, controlArea: string = "QUALITY", moduleScope: string = "QUALITY_CONTROL", installMutation?: DocumentNode) {
+export function useAuditSection(search: string, filterStatus: string, activePlantId: string | null, productionLineId: string | null, onMessage: (msg: string, tone?: "success" | "error") => void, controlArea: string = "QUALITY", moduleScope: string = "QUALITY_CONTROL", installMutation?: DocumentNode) {
   // ── State ──
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
@@ -136,6 +137,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   const [completeMut] = useMutation<any>(COMPLETE_AUDIT_MUTATION);
   const [bulkSave] = useMutation<any>(SAVE_AUDIT_ANSWERS_BULK_MUTATION);
   const [createFindingMut] = useMutation<any>(CREATE_AUDIT_FINDING_FROM_ANSWER_MUTATION);
+  const [createFindingsFromAuditMut] = useMutation<any>(CREATE_FINDINGS_FROM_AUDIT_MUTATION);
   const [closeFindingMut] = useMutation<any>(CLOSE_FINDING_MUTATION);
   const [updateAuditMut] = useMutation<any>(UPDATE_AUDIT_MUTATION);
   const [deleteAuditMut] = useMutation<any>(DELETE_AUDIT_MUTATION);
@@ -288,9 +290,17 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
         const r = await bulkSave({ variables: { input: { auditId: currentId, answers: items } } });
         if (!r.data?.saveAuditAnswersBulk?.ok) { onMessage(r.data?.saveAuditAnswersBulk?.errors?.[0]?.message || "Save failed"); setSaving(false); return; }
       }
-      onMessage("Draft saved");
-      await Promise.all([auditsQ.refetch(), execQ.refetch()]);
-      if (!created && currentId) { setCreating(false); }
+      const wasNewAudit = !created;
+      if (wasNewAudit && currentId) {
+        // For new audits: mark creating as done BEFORE refetching so execQ is no longer skipped
+        setCreating(false);
+        onMessage("Audit created and draft saved.");
+        await auditsQ.refetch();
+        // execQ will auto-fire on next render because skip condition (creating) is now false
+      } else {
+        onMessage("Draft saved.");
+        await Promise.all([auditsQ.refetch(), execQ.refetch()]);
+      }
     } catch { onMessage("Save failed"); }
     setSaving(false);
   }, [tplId, fAuditor, fDate, fNotes, draftAns, localAns, created, execId, validateHeader, resolveTarget, createAuditMut, bulkSave, auditsQ, execQ, selTpl, onMessage]);
@@ -371,31 +381,73 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     if (!findingForAnswer || !findingDesc.trim()) return;
     const auditId = Number(findingForAnswer.auditId);
     let answerId = Number(findingForAnswer.answerId);
-    if (!Number.isFinite(auditId)) { onMessage("Audit not found"); return; }
-    // If answer hasn't been saved yet, save it first
-    if (!Number.isFinite(answerId) || answerId <= 0) {
-      const saveR = await bulkSave({ variables: { input: { auditId, answers: [{ questionId: Number(findingForAnswer.questionId || 0), answerValue: localAns[findingForAnswer.questionId]?.value || "FAIL", comment: "" }] } } });
-      if (!saveR.data?.saveAuditAnswersBulk?.ok) { onMessage("Answer could not be saved"); return; }
-      // Refetch to get the new answerId
-      await execQ.refetch();
-      const updatedForm: AuditExecutionFormData | null = (execQ.data as any)?.auditExecutionForm || null;
-      if (updatedForm) {
-        for (const sec of updatedForm.sections) {
-          const q = sec.questions.find((qq) => qq.id === findingForAnswer.questionId);
-          if (q && q.answerId) { answerId = Number(q.answerId); break; }
+    if (!Number.isFinite(auditId)) { onMessage("Audit not found", "error"); return; }
+    try {
+      // If answer hasn't been saved yet, save it first
+      if (!Number.isFinite(answerId) || answerId <= 0) {
+        const saveR: any = await bulkSave({ variables: { input: { auditId: String(auditId), answers: [{ questionId: Number(findingForAnswer.questionId || 0), answerValue: localAns[findingForAnswer.questionId]?.value || "FAIL", comment: "" }] } } });
+        if (!saveR.data?.saveAuditAnswersBulk?.ok) { onMessage("Answer could not be saved", "error"); return; }
+        // Refetch to get the new answerId
+        await execQ.refetch();
+        const updatedForm: AuditExecutionFormData | null = (execQ.data as any)?.auditExecutionForm || null;
+        if (updatedForm) {
+          for (const sec of updatedForm.sections) {
+            const q = sec.questions.find((qq) => qq.id === findingForAnswer.questionId);
+            if (q && q.answerId) { answerId = Number(q.answerId); break; }
+          }
         }
+        if (!Number.isFinite(answerId) || answerId <= 0) { onMessage("Finding cannot be created before the answer is saved", "error"); return; }
       }
-      if (!Number.isFinite(answerId) || answerId <= 0) { onMessage("Finding cannot be created before the answer is saved"); return; }
+      const r: any = await createFindingMut({
+        variables: {
+          input: {
+            auditId: String(auditId),
+            questionId: Number(findingForAnswer.questionId),
+            answerId,
+            description: findingDesc.trim(),
+            severity: findingSev,
+            owner: findingOwner,
+            dueDate: findingDd || null,
+          },
+        },
+      });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Finding create failed", "error");
+        return;
+      }
+      if (r.data?.createAuditFindingFromAnswer?.ok) { onMessage("Finding created"); setFindingForAnswer(null); setFindingDesc(""); setFindingDd(""); await Promise.all([execQ.refetch(), auditsQ.refetch()]); }
+      else { onMessage(r.data?.createAuditFindingFromAnswer?.errors?.[0]?.message || "Finding create failed", "error"); }
+    } catch (e: any) {
+      onMessage(e?.message || "Finding create failed", "error");
     }
-    const r = await createFindingMut({ variables: { input: { auditId, answerId, description: findingDesc.trim(), severity: findingSev, owner: findingOwner, dueDate: findingDd || null } } });
-    if (r.data?.createAuditFindingFromAnswer?.ok) { onMessage("Finding created"); setFindingForAnswer(null); setFindingDesc(""); setFindingDd(""); await Promise.all([execQ.refetch(), auditsQ.refetch()]); }
-    else { onMessage(r.data?.createAuditFindingFromAnswer?.errors?.[0]?.message || "Finding create failed"); }
   }, [findingForAnswer, findingDesc, findingSev, findingDd, findingOwner, createFindingMut, execQ, auditsQ, onMessage, bulkSave, localAns]);
 
   const hCloseFinding = useCallback(async () => {
     if (!closeFindingId) return;
     await closeFindingMut({ variables: { id: closeFindingId } }); setCloseFindingId(null); onMessage("Finding closed");
   }, [closeFindingId, closeFindingMut, onMessage]);
+
+  const hCreateFindings = useCallback(async () => {
+    if (!execId) return;
+    setSaving(true);
+    try {
+      const r: any = await createFindingsFromAuditMut({ variables: { auditId: String(execId), severity: "MEDIUM" } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Create findings failed", "error");
+        setSaving(false);
+        return;
+      }
+      if (r.data?.createFindingsFromAudit?.ok) {
+        onMessage(`Created ${r.data.createFindingsFromAudit.findings.length} finding(s)`);
+        await Promise.all([execQ.refetch(), auditsQ.refetch()]);
+      } else {
+        onMessage(r.data?.createFindingsFromAudit?.errors?.[0]?.message || "Create findings failed");
+      }
+    } catch (e: any) {
+      onMessage(e?.message || "Create findings failed", "error");
+    }
+    setSaving(false);
+  }, [execId, createFindingsFromAuditMut, execQ, auditsQ, onMessage]);
 
   const hInstall = useCallback(async () => { await installTpl(); onMessage("Templates installed"); tplQ.refetch(); }, [installTpl, tplQ, onMessage]);
 
@@ -735,6 +787,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   const renderDetail = (id: number | null) => {
     if (creating) return renderForm();
     if (!id) return <div className="flex flex-1 items-center justify-center h-full"><div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">{areaLabel(controlArea)} Audits</h3><p className="text-xs text-muted-foreground/70">Template-based {areaLabel(controlArea).toLowerCase()} audits.</p><button onClick={hNew} className={`mt-4 inline-flex h-8 items-center gap-1.5 px-4 text-sm font-semibold text-white hover:brightness-110 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}><Plus className="h-3.5 w-3.5" /> New Audit</button></div></div>;
+    if (execId && !execForm) return <div className="flex flex-1 items-center justify-center h-full"><div className="text-xs text-muted-foreground animate-pulse">Loading audit form...</div></div>;
     return renderForm();
   };
 
@@ -751,6 +804,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
     hComplete,
     hArchive,
     hDelete,
+    hCreateFindings: !!execForm ? hCreateFindings : undefined,
     hInstall,
     hRefresh,
     archiveConfirmId,

@@ -6,7 +6,7 @@ import { CREATE_PROBLEM_MUTATION, UPDATE_PROBLEM_MUTATION, CANCEL_PROBLEM_MUTATI
 import { ISSUE_STATUS_STYLES, SEVERITY_STYLES, SEL_INPUT, statusLabel } from "./QualityStatusStyles";
 import { InlineEditField } from "./InlineEditField";
 
-export function useIssueSection(_search: string, filterStatus: string, onMessage: (msg: string) => void, controlArea: string = "QUALITY") {
+export function useIssueSection(_search: string, filterStatus: string, onMessage: (msg: string, tone?: "success" | "error") => void, controlArea: string = "QUALITY") {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -48,9 +48,15 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
   }, []);
   const hCreate = useCallback(async () => {
     if (!iTitle.trim()) return;
-    await createMut({ variables: { title: iTitle.trim(), problemType: iType, targetType: "PLANT", targetId: null, severity: iSeverity, description: iDesc || null, reportedBy: iOwner || null, sourceType: iSourceType === "MANUAL" ? null : iSourceType, sourceId: iSourceType === "MANUAL" ? null : iSourceId, notes: iNotes || null } });
-    onMessage("Issue created"); setCreating(false); refetch();
-  }, [iTitle, iType, iSeverity, iDesc, iOwner, iSourceType, iSourceId, iNotes, createMut, refetch, onMessage]);
+    try {
+      const r: any = await createMut({ variables: { title: iTitle.trim(), problemType: iType, targetType: "PLANT", targetId: null, severity: iSeverity, description: iDesc || null, reportedBy: iOwner || null, sourceType: iSourceType === "MANUAL" ? null : iSourceType, sourceId: iSourceType === "MANUAL" ? null : iSourceId, controlArea: controlArea || null, notes: iNotes || null } });
+      if (r.errors?.length) { onMessage(r.errors[0].message || "Save failed", "error"); return; }
+      if (!r.data) { onMessage("Save failed - unexpected response", "error"); return; }
+      onMessage("Issue created"); setCreating(false); refetch();
+    } catch (e: any) {
+      onMessage(e?.message || "Save failed", "error");
+    }
+  }, [iTitle, iType, iSeverity, iDesc, iOwner, iSourceType, iSourceId, controlArea, iNotes, createMut, refetch, onMessage]);
 
   const hEdit = useCallback((item: any) => {
     setEId(item.id); setEditing(true); setCreating(false);
@@ -61,17 +67,42 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
   }, []);
   const hSaveEdit = useCallback(async () => {
     if (!eId || !eTitle.trim()) return;
-    await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, severity: eSeverity, notes: eNotes.trim() || null } });
-    onMessage("Issue updated"); setEditing(false); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await updateMut({ variables: { id: eId, title: eTitle.trim(), description: eDesc.trim() || null, severity: eSeverity, notes: eNotes.trim() || null } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0].message || "Update failed", "error");
+        return;
+      }
+      onMessage("Issue updated"); setEditing(false); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Update failed", "error");
+    }
   }, [eId, eTitle, eDesc, eSeverity, eNotes, updateMut, refetch, onMessage]);
   const hCancel = useCallback(async (id: number) => {
-    await cancelMut({ variables: { id } }); onMessage("Issue cancelled"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0].message || "Cancel failed", "error");
+        return;
+      }
+      onMessage("Issue cancelled"); setSelectedId(null); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Cancel failed", "error");
+    }
   }, [cancelMut, refetch, onMessage]);
   const hDelete = useCallback(async () => {
     if (!deleteConfirmId) return;
-    await cancelMut({ variables: { id: deleteConfirmId } }); onMessage("Issue deleted"); setDeleteConfirmId(null); setSelectedId(null); setTimeout(() => refetch(), 200);
+    try {
+      const r: any = await cancelMut({ variables: { id: deleteConfirmId } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0].message || "Delete failed", "error");
+        return;
+      }
+      onMessage("Issue deleted"); setDeleteConfirmId(null); setSelectedId(null); setTimeout(() => refetch(), 200);
+    } catch (e: any) {
+      onMessage(e?.message || "Delete failed", "error");
+    }
   }, [deleteConfirmId, cancelMut, refetch, onMessage]);
-
   const problemTypeOpts = [{ value: "QUALITY", label: "Quality" }, { value: "SAFETY", label: "Safety" }, { value: "MATERIAL", label: "Material" }, { value: "EQUIPMENT", label: "Equipment" }, { value: "PROCESS", label: "Process" }];
   const iSourceTypeOpts = [{ value: "AUDIT_FINDING", label: "Audit Finding" }, { value: "MANUAL", label: "Manual" }];
 

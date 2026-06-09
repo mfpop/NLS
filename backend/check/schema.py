@@ -38,7 +38,18 @@ class ProblemNode:
     reported_at: str
     source_type: str
     source_id: Optional[int]
+    owner: str
+    due_date: Optional[str]
     notes: str
+    closed_at: Optional[str]
+    plant: str
+    production_line: str
+    department: str
+    resource_group: str
+    resource: str
+    containment_notes: str
+    root_cause: str
+    resolution_notes: str
     created_at: str
     updated_at: str
 
@@ -49,14 +60,26 @@ class ActionNode:
     control_area: str
     title: str
     description: str
+    action_type: str
     source_type: str
     source_id: Optional[int]
+    linked_issue_id: Optional[int]
     owner: str
+    assigned_to: str
     due_date: Optional[str]
     status: str
     priority: str
     completed_at: Optional[str]
+    completed_by: str
+    completion_notes: str
     notes: str
+    target_type: str
+    target_id: Optional[int]
+    plant: str
+    production_line: str
+    department: str
+    resource_group: str
+    resource: str
     created_at: str
     updated_at: str
 
@@ -279,7 +302,17 @@ def _to_problem_node(p: Problem) -> ProblemNode:
         target_id=p.target_id, severity=p.severity, status=p.status,
         reported_by=p.reported_by,
         reported_at=p.reported_at.isoformat() if p.reported_at else "",
-        source_type=p.source_type, source_id=p.source_id, notes=p.notes,
+        source_type=p.source_type, source_id=p.source_id,
+        owner=p.owner,
+        due_date=p.due_date.isoformat() if p.due_date else None,
+        notes=p.notes,
+        closed_at=p.closed_at.isoformat() if p.closed_at else None,
+        plant=p.plant, production_line=p.production_line,
+        department=p.department, resource_group=p.resource_group,
+        resource=p.resource,
+        containment_notes=p.containment_notes,
+        root_cause=p.root_cause,
+        resolution_notes=p.resolution_notes,
         created_at=p.created_at.isoformat() if p.created_at else "",
         updated_at=p.updated_at.isoformat() if p.updated_at else "",
     )
@@ -289,12 +322,20 @@ def _to_action_node(a: Action) -> ActionNode:
     return ActionNode(
         id=a.id, control_area=a.control_area,
         title=a.title, description=a.description,
+        action_type=a.action_type,
         source_type=a.source_type, source_id=a.source_id,
-        owner=a.owner,
+        linked_issue_id=a.linked_issue_id,
+        owner=a.owner, assigned_to=a.assigned_to,
         due_date=a.due_date.isoformat() if a.due_date else None,
         status=a.status, priority=a.priority,
         completed_at=a.completed_at.isoformat() if a.completed_at else None,
+        completed_by=a.completed_by,
+        completion_notes=a.completion_notes,
         notes=a.notes,
+        target_type=a.target_type, target_id=a.target_id,
+        plant=a.plant, production_line=a.production_line,
+        department=a.department, resource_group=a.resource_group,
+        resource=a.resource,
         created_at=a.created_at.isoformat() if a.created_at else "",
         updated_at=a.updated_at.isoformat() if a.updated_at else "",
     )
@@ -660,21 +701,40 @@ class CheckMutation:
     def create_problem(self, info: strawberry.types.Info, title: str,
                        problem_type: str, target_type: str,
                        target_id: Optional[int] = None,
-                       description: str = "",
+                       description: Optional[str] = None,
                        severity: str = "MEDIUM",
-                       reported_by: str = "",
-                       source_type: str = "",
+                       reported_by: Optional[str] = None,
+                       source_type: Optional[str] = None,
                        source_id: Optional[int] = None,
                        control_area: str = "PRODUCTION",
-                       notes: str = "") -> str:
+                       owner: Optional[str] = None,
+                       due_date: Optional[str] = None,
+                       notes: Optional[str] = None,
+                       plant: Optional[str] = None,
+                       production_line: Optional[str] = None,
+                       department: Optional[str] = None,
+                       resource_group: Optional[str] = None,
+                       resource: Optional[str] = None,
+                       containment_notes: Optional[str] = None,
+                       root_cause: Optional[str] = None,
+                       resolution_notes: Optional[str] = None) -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
             "problem_type": problem_type, "target_type": target_type,
             "target_id": target_id, "severity": severity,
             "reported_by": reported_by, "source_type": source_type,
             "source_id": source_id, "control_area": control_area,
-            "notes": notes,
+            "owner": owner, "notes": notes,
+            "plant": plant, "production_line": production_line,
+            "department": department, "resource_group": resource_group,
+            "resource": resource,
+            "containment_notes": containment_notes,
+            "root_cause": root_cause,
+            "resolution_notes": resolution_notes,
         }.items() if v is not None}
+        if due_date:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
         p = ProblemService().create_problem(**kwargs)
         return f"Problem created: {p.title}"
 
@@ -683,11 +743,30 @@ class CheckMutation:
                        title: Optional[str] = None,
                        description: Optional[str] = None,
                        severity: Optional[str] = None,
-                       notes: Optional[str] = None) -> str:
+                       owner: Optional[str] = None,
+                       due_date: Optional[str] = None,
+                       notes: Optional[str] = None,
+                       plant: Optional[str] = None,
+                       production_line: Optional[str] = None,
+                       department: Optional[str] = None,
+                       resource_group: Optional[str] = None,
+                       resource: Optional[str] = None,
+                       containment_notes: Optional[str] = None,
+                       root_cause: Optional[str] = None,
+                       resolution_notes: Optional[str] = None) -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
-            "severity": severity, "notes": notes,
+            "severity": severity, "owner": owner, "notes": notes,
+            "plant": plant, "production_line": production_line,
+            "department": department, "resource_group": resource_group,
+            "resource": resource,
+            "containment_notes": containment_notes,
+            "root_cause": root_cause,
+            "resolution_notes": resolution_notes,
         }.items() if v is not None}
+        if due_date is not None:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date() if due_date else None
         ProblemService().update_problem(id, **kwargs)
         return "Problem updated"
 
@@ -695,6 +774,16 @@ class CheckMutation:
     def review_problem(self, info: strawberry.types.Info, id: int) -> str:
         ProblemService().review_problem(id)
         return "Problem moved to IN_REVIEW"
+
+    @strawberry.mutation
+    def start_problem(self, info: strawberry.types.Info, id: int) -> str:
+        ProblemService().start_problem(id)
+        return "Problem moved to IN_PROGRESS"
+
+    @strawberry.mutation
+    def resolve_problem(self, info: strawberry.types.Info, id: int) -> str:
+        ProblemService().resolve_problem(id)
+        return "Problem resolved"
 
     @strawberry.mutation
     def contain_problem(self, info: strawberry.types.Info, id: int) -> str:
@@ -714,18 +803,37 @@ class CheckMutation:
     # ── Actions ──
     @strawberry.mutation
     def create_action(self, info: strawberry.types.Info, title: str,
-                      description: str = "",
-                      owner: str = "",
+                      description: Optional[str] = None,
+                      action_type: str = "CORRECTIVE",
+                      owner: Optional[str] = None,
+                      assigned_to: Optional[str] = None,
                       due_date: Optional[str] = None,
                       priority: str = "MEDIUM",
-                      source_type: str = "",
+                      source_type: Optional[str] = None,
                       source_id: Optional[int] = None,
+                      linked_issue_id: Optional[int] = None,
                       control_area: str = "PRODUCTION",
-                      notes: str = "") -> str:
-        kwargs = {"title": title, "description": description,
-                  "owner": owner, "priority": priority,
-                  "source_type": source_type, "source_id": source_id,
-                  "control_area": control_area, "notes": notes}
+                      notes: Optional[str] = None,
+                      target_type: Optional[str] = None,
+                      target_id: Optional[int] = None,
+                      plant: Optional[str] = None,
+                      production_line: Optional[str] = None,
+                      department: Optional[str] = None,
+                      resource_group: Optional[str] = None,
+                      resource: Optional[str] = None) -> str:
+        kwargs = {k: v for k, v in {
+            "title": title, "description": description,
+            "action_type": action_type,
+            "owner": owner, "assigned_to": assigned_to,
+            "priority": priority,
+            "source_type": source_type, "source_id": source_id,
+            "linked_issue_id": linked_issue_id,
+            "control_area": control_area, "notes": notes,
+            "target_type": target_type, "target_id": target_id,
+            "plant": plant, "production_line": production_line,
+            "department": department, "resource_group": resource_group,
+            "resource": resource,
+        }.items() if v is not None}
         if due_date:
             from datetime import datetime
             kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
@@ -736,12 +844,29 @@ class CheckMutation:
     def update_action(self, info: strawberry.types.Info, id: int,
                       title: Optional[str] = None,
                       description: Optional[str] = None,
+                      action_type: Optional[str] = None,
                       owner: Optional[str] = None,
-                      priority: Optional[str] = None) -> str:
+                      assigned_to: Optional[str] = None,
+                      priority: Optional[str] = None,
+                      due_date: Optional[str] = None,
+                      notes: Optional[str] = None,
+                      plant: Optional[str] = None,
+                      production_line: Optional[str] = None,
+                      department: Optional[str] = None,
+                      resource_group: Optional[str] = None,
+                      resource: Optional[str] = None) -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
-            "owner": owner, "priority": priority,
+            "action_type": action_type,
+            "owner": owner, "assigned_to": assigned_to,
+            "priority": priority, "notes": notes,
+            "plant": plant, "production_line": production_line,
+            "department": department, "resource_group": resource_group,
+            "resource": resource,
         }.items() if v is not None}
+        if due_date is not None:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date() if due_date else None
         ActionService().update_action(id, **kwargs)
         return "Action updated"
 
@@ -751,9 +876,47 @@ class CheckMutation:
         return "Action started"
 
     @strawberry.mutation
-    def complete_action(self, info: strawberry.types.Info, id: int) -> str:
-        ActionService().complete_action(id)
+    def complete_action(self, info: strawberry.types.Info, id: int,
+                        completed_by: str = "",
+                        completion_notes: str = "") -> str:
+        ActionService().complete_action(id, completed_by=completed_by,
+                                        completion_notes=completion_notes)
         return "Action completed"
+
+    @strawberry.mutation
+    def create_action_from_issue(self, info: strawberry.types.Info,
+                                 issue_id: int, title: str,
+                                 description: str = "",
+                                 action_type: str = "CORRECTIVE",
+                                 assigned_to: str = "",
+                                 due_date: Optional[str] = None,
+                                 priority: str = "MEDIUM",
+                                 notes: str = "",
+                                 plant: str = "",
+                                 production_line: str = "",
+                                 department: str = "",
+                                 resource_group: str = "",
+                                 resource: str = "") -> str:
+        kwargs = {k: v for k, v in {
+            "title": title, "description": description,
+            "action_type": action_type,
+            "assigned_to": assigned_to,
+            "priority": priority, "notes": notes,
+            "plant": plant, "production_line": production_line,
+            "department": department, "resource_group": resource_group,
+            "resource": resource,
+        }.items() if v is not None}
+        if due_date:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
+        a = ActionService().create_action_from_issue(issue_id, **kwargs)
+        return f"Action created from issue: {a.title}"
+
+    @strawberry.mutation
+    def link_action_to_issue(self, info: strawberry.types.Info,
+                             action_id: int, issue_id: int) -> str:
+        ActionService().link_issue(action_id, issue_id)
+        return "Action linked to issue"
 
     @strawberry.mutation
     def cancel_action(self, info: strawberry.types.Info, id: int) -> str:

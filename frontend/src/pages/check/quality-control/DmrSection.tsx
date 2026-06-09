@@ -175,7 +175,7 @@ export function useDmrSection(
     const target = resolveTarget();
     if (!target) return;
     try {
-      await createMut({
+      const r: any = await createMut({
         variables: {
           dmrNumber: fNumber.trim(),
           title: fTitle.trim(),
@@ -192,55 +192,95 @@ export function useDmrSection(
           notes: fNotes.trim(),
         },
       });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to create DMR", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to create DMR - unexpected response", "error");
+        return;
+      }
       onMessage("DMR created");
       setCreating(false);
       q.refetch();
-    } catch {
-      onMessage("Failed to create DMR", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to create DMR", "error");
     }
   }, [fNumber, fTitle, fSeverity, fDefectDesc, fContainment, fQty, fUom, fOwner, fDueDate, fNotes, validate, resolveTarget, createMut, q, onMessage]);
 
   const hUpdate = useCallback(async (field: string, val: string) => {
     if (!selectedId) return;
     try {
-      await updateMut({ variables: { id: selectedId, [field]: val || null } });
+      const r: any = await updateMut({ variables: { id: selectedId, [field]: val || null } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to update", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to update - unexpected response", "error");
+        return;
+      }
       onMessage("Updated");
       q.refetch();
-    } catch {
-      onMessage("Failed to update", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to update", "error");
     }
   }, [selectedId, updateMut, q, onMessage]);
 
   const hDisposition = useCallback(async () => {
     if (!selectedId) return;
     try {
-      await dispMut({ variables: { id: selectedId, disposition: fDisposition } });
+      const r: any = await dispMut({ variables: { id: selectedId, disposition: fDisposition } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to set disposition", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to set disposition - unexpected response", "error");
+        return;
+      }
       onMessage("DMR dispositioned");
       q.refetch();
-    } catch {
-      onMessage("Failed to set disposition", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to set disposition", "error");
     }
   }, [selectedId, fDisposition, dispMut, q, onMessage]);
 
   const hClose = useCallback(async () => {
     if (!selectedId) return;
     try {
-      await closeMut({ variables: { id: selectedId } });
+      const r: any = await closeMut({ variables: { id: selectedId } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to close DMR", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to close DMR - unexpected response", "error");
+        return;
+      }
       onMessage("DMR closed");
       q.refetch();
-    } catch {
-      onMessage("Failed to close DMR", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to close DMR", "error");
     }
   }, [selectedId, closeMut, q, onMessage]);
 
   const hCancel = useCallback(async () => {
     if (!selectedId) return;
     try {
-      await cancelMut({ variables: { id: selectedId } });
+      const r: any = await cancelMut({ variables: { id: selectedId } });
+      if (r.errors?.length) {
+        onMessage(r.errors[0]?.message || "Failed to cancel DMR", "error");
+        return;
+      }
+      if (!r.data) {
+        onMessage("Failed to cancel DMR - unexpected response", "error");
+        return;
+      }
       onMessage("DMR cancelled");
       q.refetch();
-    } catch {
-      onMessage("Failed to cancel DMR", "error");
+    } catch (e: any) {
+      onMessage(e?.message || "Failed to cancel DMR", "error");
     }
   }, [selectedId, cancelMut, q, onMessage]);
 

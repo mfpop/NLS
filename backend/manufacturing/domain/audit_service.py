@@ -2446,3 +2446,87 @@ class AuditService:
                 field="id", code="NOT_FOUND", message=f"Audit {audit_id} not found"
             )
         return cls._calculate_score(audit_id)
+
+    @classmethod
+    @transaction.atomic
+    def cancel_audit(cls, audit_id: int) -> Audit:
+        try:
+            audit = Audit.objects.select_for_update().get(id=audit_id)
+        except Audit.DoesNotExist:
+            raise AuditServiceError(field="id", code="NOT_FOUND", message=f"Audit {audit_id} not found")
+        if audit.status in (AuditStatus.COMPLETED, "ARCHIVED"):
+            raise AuditServiceError(field="status", code="INVALID_STATUS", message="Cannot cancel a completed or archived audit")
+        audit.status = "CANCELLED"
+        audit.save()
+        return audit
+
+    @classmethod
+    @transaction.atomic
+    def create_findings_from_audit(cls, audit_id: int, default_severity: str = Severity.MEDIUM) -> list[AuditFinding]:
+        try:
+            audit = Audit.objects.get(id=audit_id)
+        except Audit.DoesNotExist:
+            raise AuditServiceError(field="id", code="NOT_FOUND", message=f"Audit {audit_id} not found")
+        answers = AuditAnswer.objects.filter(audit=audit).filter(
+            db_models.Q(answer_value__iexact="FAIL") | db_models.Q(answer_value__iexact="NO")
+        )
+        created = []
+        for ans in answers:
+            existing = AuditFinding.objects.filter(audit=audit, answer=ans).exists()
+            if existing:
+                continue
+            finding = AuditFinding.objects.create(
+                audit=audit,
+                answer=ans,
+                description=f"Finding for: {ans.answer_value} — {ans.template_question.question if ans.template_question_id else 'Question'}",
+                severity=default_severity,
+                owner="",
+            )
+            ans.finding_required = True
+            ans.save(update_fields=["finding_required"])
+            created.append(finding)
+        return created
+
+    @classmethod
+    @transaction.atomic
+    def create_issue_from_finding(cls, finding_id: int, title: str, description: str = "", severity: str = Severity.MEDIUM, owner: str = "") -> object:
+        from manufacturing.models.audit import AuditFinding as AF
+        try:
+            finding = AF.objects.select_related("audit").get(id=finding_id)
+        except AF.DoesNotExist:
+            raise AuditServiceError(field="findingId", code="NOT_FOUND", message=f"Finding {finding_id} not found")
+        from check.models import Problem
+        problem = Problem.objects.create(
+            title=title,
+            problem_type="QUALITY" if finding.severity in ("HIGH", "CRITICAL") else "OPERATIONAL",
+            target_type=finding.audit.target_type,
+            target_id=finding.audit.target_id,
+            description=description or finding.description,
+            severity=severity,
+            reported_by=owner or "",
+            source_type="AUDIT_FINDING",
+            source_id=finding.id,
+            control_area=finding.audit.control_area,
+        )
+        return problem
+
+    @classmethod
+    @transaction.atomic
+    def create_action_from_finding(cls, finding_id: int, title: str, description: str = "", priority: str = "MEDIUM", owner: str = "") -> object:
+        from manufacturing.models.audit import AuditFinding as AF
+        try:
+            finding = AF.objects.select_related("audit").get(id=finding_id)
+        except AF.DoesNotExist:
+            raise AuditServiceError(field="findingId", code="NOT_FOUND", message=f"Finding {finding_id} not found")
+        from check.models import Action
+        action = Action.objects.create(
+            title=title,
+            description=description or finding.description,
+            owner=owner or "",
+            priority=priority,
+            source_type="AUDIT_FINDING",
+            source_id=finding.id,
+            control_area=finding.audit.control_area,
+        )
+        return action
+

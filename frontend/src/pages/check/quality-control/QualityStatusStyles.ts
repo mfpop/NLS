@@ -104,7 +104,7 @@ export const CUSTOMER_RESPONSE_OPTIONS = [
   { value: "CLOSED", label: "Closed" },
 ];
 
-export const SEL_INPUT = "h-8 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-sm text-foreground outline-none focus:border-blue-500";
+export const SEL_INPUT = "h-8 w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-border/50 dark:border-slate-600/50 px-2 text-sm text-foreground outline-none focus:border-blue-500 focus:bg-white/80 dark:focus:bg-slate-800/80 focus:ring-1 focus:ring-blue-500/30";
 
 export function statusLabel(s: string): string {
   return s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, " ");

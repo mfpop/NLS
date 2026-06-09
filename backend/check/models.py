@@ -59,7 +59,20 @@ class Problem(TimeStampedModel):
     reported_at = models.DateTimeField(auto_now_add=True)
     source_type = models.CharField(max_length=50, blank=True, default="")
     source_id = models.IntegerField(null=True, blank=True)
+    owner = models.CharField(max_length=255, blank=True, default="")
+    due_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True, default="")
+    closed_at = models.DateTimeField(null=True, blank=True)
+    # Source location fields for target resolution
+    plant = models.CharField(max_length=100, blank=True, default="")
+    production_line = models.CharField(max_length=100, blank=True, default="")
+    department = models.CharField(max_length=100, blank=True, default="")
+    resource_group = models.CharField(max_length=100, blank=True, default="")
+    resource = models.CharField(max_length=100, blank=True, default="")
+    # Resolution fields
+    containment_notes = models.TextField(blank=True, default="")
+    root_cause = models.TextField(blank=True, default="")
+    resolution_notes = models.TextField(blank=True, default="")
 
     class Meta:
         app_label = "check"
@@ -75,9 +88,15 @@ class Action(TimeStampedModel):
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
+    action_type = models.CharField(max_length=50, blank=True, default="CORRECTIVE")
     source_type = models.CharField(max_length=50, blank=True, default="")
     source_id = models.IntegerField(null=True, blank=True)
+    linked_issue = models.ForeignKey(
+        "Problem", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="actions",
+    )
     owner = models.CharField(max_length=255, blank=True, default="")
+    assigned_to = models.CharField(max_length=255, blank=True, default="")
     due_date = models.DateField(null=True, blank=True)
     status = models.CharField(
         max_length=30, choices=ACTION_STATUS_CHOICES, default=ACTION_STATUS_OPEN,
@@ -86,7 +105,17 @@ class Action(TimeStampedModel):
         max_length=20, choices=ACTION_PRIORITY_CHOICES, default=ACTION_PRIORITY_MEDIUM,
     )
     completed_at = models.DateTimeField(null=True, blank=True)
+    completed_by = models.CharField(max_length=255, blank=True, default="")
+    completion_notes = models.TextField(blank=True, default="")
     notes = models.TextField(blank=True, default="")
+    # Target fields
+    target_type = models.CharField(max_length=100, blank=True, default="")
+    target_id = models.IntegerField(null=True, blank=True)
+    plant = models.CharField(max_length=100, blank=True, default="")
+    production_line = models.CharField(max_length=100, blank=True, default="")
+    department = models.CharField(max_length=100, blank=True, default="")
+    resource_group = models.CharField(max_length=100, blank=True, default="")
+    resource = models.CharField(max_length=100, blank=True, default="")
 
     class Meta:
         app_label = "check"

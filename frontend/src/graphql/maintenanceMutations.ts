@@ -7,8 +7,9 @@ export const CREATE_WORK_ORDER_MUTATION = gql`
     $plantId: Int, $productionLineId: Int, $departmentId: Int, $resourceGroupId: Int, $resourceId: Int,
     $description: String, $priority: String,
     $requestedBy: String, $assignedTo: String,
-    $dueDate: String, $workInstructions: String,
+    $dueDate: String, $plannedStartDate: String, $plannedEndDate: String, $workInstructions: String,
     $failureMode: String, $safetyNotes: String,
+    $requiredTools: String,
     $labourEstimate: Float
   ) {
     createWorkOrder(
@@ -18,8 +19,9 @@ export const CREATE_WORK_ORDER_MUTATION = gql`
       departmentId: $departmentId, resourceGroupId: $resourceGroupId, resourceId: $resourceId,
       description: $description, priority: $priority,
       requestedBy: $requestedBy, assignedTo: $assignedTo,
-      dueDate: $dueDate, workInstructions: $workInstructions,
+      dueDate: $dueDate, plannedStartDate: $plannedStartDate, plannedEndDate: $plannedEndDate, workInstructions: $workInstructions,
       failureMode: $failureMode, safetyNotes: $safetyNotes,
+      requiredTools: $requiredTools,
       labourEstimate: $labourEstimate
     ) {
       ok workOrderId number message
@@ -29,24 +31,32 @@ export const CREATE_WORK_ORDER_MUTATION = gql`
 
 export const UPDATE_WORK_ORDER_MUTATION = gql`
   mutation UpdateWorkOrder(
-    $id: Int!, $title: String, $description: String,
+    $id: Int!, $title: String, $description: String, $workOrderType: String,
     $priority: String, $assignedTo: String,
+    $requestedBy: String,
     $targetType: String, $targetId: Int,
     $plantId: Int, $productionLineId: Int, $departmentId: Int, $resourceGroupId: Int, $resourceId: Int,
-    $dueDate: String, $workInstructions: String,
+    $dueDate: String, $plannedStartDate: String, $plannedEndDate: String, $workInstructions: String,
     $failureMode: String, $safetyNotes: String,
-    $labourEstimate: Float
+    $requiredTools: String, $labourEstimate: Float,
+    $workPerformed: String, $completionNotes: String, $partsUsedNotes: String,
+    $downtimeMinutes: Int, $rootCause: String, $correctiveAction: String, $verificationResult: String,
+    $actualStartDate: String, $actualEndDate: String, $actualLaborHours: Float
   ) {
     updateWorkOrder(
       id: $id,
-      title: $title, description: $description,
+      title: $title, description: $description, workOrderType: $workOrderType,
       priority: $priority, assignedTo: $assignedTo,
+      requestedBy: $requestedBy,
       targetType: $targetType, targetId: $targetId,
       plantId: $plantId, productionLineId: $productionLineId,
       departmentId: $departmentId, resourceGroupId: $resourceGroupId, resourceId: $resourceId,
-      dueDate: $dueDate, workInstructions: $workInstructions,
+      dueDate: $dueDate, plannedStartDate: $plannedStartDate, plannedEndDate: $plannedEndDate, workInstructions: $workInstructions,
       failureMode: $failureMode, safetyNotes: $safetyNotes,
-      labourEstimate: $labourEstimate
+      requiredTools: $requiredTools, labourEstimate: $labourEstimate,
+      workPerformed: $workPerformed, completionNotes: $completionNotes, partsUsedNotes: $partsUsedNotes,
+      downtimeMinutes: $downtimeMinutes, rootCause: $rootCause, correctiveAction: $correctiveAction, verificationResult: $verificationResult,
+      actualStartDate: $actualStartDate, actualEndDate: $actualEndDate, actualLaborHours: $actualLaborHours
     )
   }
 `;
@@ -95,16 +105,18 @@ export const APPROVE_WORK_ORDER_MUTATION = gql`
 
 export const COMPLETE_WORK_ORDER_MUTATION = gql`
   mutation CompleteWorkOrder(
-    $id: Int!, $completionNotes: String,
+    $id: Int!, $workPerformed: String, $completionNotes: String,
     $downtimeMinutes: Int, $rootCause: String,
     $correctiveAction: String, $verificationResult: String,
-    $actualEndDate: String
+    $actualEndDate: String, $actualLaborHours: Float,
+    $partsUsedNotes: String
   ) {
     completeWorkOrder(
-      id: $id, completionNotes: $completionNotes,
+      id: $id, workPerformed: $workPerformed, completionNotes: $completionNotes,
       downtimeMinutes: $downtimeMinutes, rootCause: $rootCause,
       correctiveAction: $correctiveAction, verificationResult: $verificationResult,
-      actualEndDate: $actualEndDate
+      actualEndDate: $actualEndDate, actualLaborHours: $actualLaborHours,
+      partsUsedNotes: $partsUsedNotes
     )
   }
 `;

@@ -111,6 +111,8 @@ class WorkOrderService:
         validate_non_empty(kwargs.get("title", ""), "title")
         if kwargs.get("target_type"):
             validate_target_type(kwargs["target_type"])
+        if "labour_estimate" in kwargs and "labor_estimate" not in kwargs:
+            kwargs["labor_estimate"] = kwargs.pop("labour_estimate")
         # Clean empty-string numeric IDs
         for int_field in ["target_id", "plant_id", "production_line_id",
                            "department_id", "resource_group_id", "resource_id"]:
@@ -126,6 +128,8 @@ class WorkOrderService:
         wo = self._get(wo_id)
         if kwargs.get("target_type"):
             validate_target_type(kwargs["target_type"])
+        if "labour_estimate" in kwargs and "labor_estimate" not in kwargs:
+            kwargs["labor_estimate"] = kwargs.pop("labour_estimate")
         # Clean empty-string numeric IDs
         for int_field in ["target_id", "plant_id", "production_line_id",
                            "department_id", "resource_group_id", "resource_id"]:
@@ -219,12 +223,15 @@ class WorkOrderService:
         wo.save()
         return wo
 
-    def complete_work_order(self, wo_id: int, completion_notes: str = "",
+    def complete_work_order(self, wo_id: int, work_performed: str = "",
+                            completion_notes: str = "",
                             downtime_minutes: int = None,
                             root_cause: str = "",
                             corrective_action: str = "",
                             verification_result: str = "",
-                            actual_end_date=None) -> MaintenanceWorkOrder:
+                            actual_end_date=None,
+                            actual_labor_hours: float = None,
+                            parts_used_notes: str = "") -> MaintenanceWorkOrder:
         wo = self._get(wo_id)
         if not can_complete_work_order(wo.status):
             raise InvalidStatusTransitionError(
@@ -232,6 +239,8 @@ class WorkOrderService:
             )
         wo.status = WORK_ORDER_STATUS_COMPLETED
         wo.actual_end_date = actual_end_date or timezone.now()
+        if work_performed:
+            wo.work_performed = work_performed
         if completion_notes:
             wo.completion_notes = completion_notes
         if downtime_minutes is not None:
@@ -242,6 +251,10 @@ class WorkOrderService:
             wo.corrective_action = corrective_action
         if verification_result:
             wo.verification_result = verification_result
+        if actual_labor_hours is not None:
+            wo.actual_labor_hours = actual_labor_hours
+        if parts_used_notes:
+            wo.parts_used_notes = parts_used_notes
         wo.save()
         return wo
 
@@ -483,6 +496,8 @@ class BreakdownService:
         validate_non_empty(kwargs.get("title", ""), "title")
         if kwargs.get("target_type"):
             validate_target_type(kwargs["target_type"])
+        if kwargs.get("is_equipment_down") and not kwargs.get("downtime_start"):
+            kwargs["downtime_start"] = timezone.now()
         bd = Breakdown(**kwargs)
         if not bd.number:
             bd.number = _generate_breakdown_number()
@@ -510,7 +525,14 @@ class BreakdownService:
         return bd
 
     def complete_repair(self, bd_id: int, repair_summary: str = "",
-                        root_cause: str = "") -> Breakdown:
+                        root_cause: str = "",
+                        confirmed_root_cause: str = "",
+                        corrective_action: str = "",
+                        verification_result: str = "",
+                        completion_notes: str = "",
+                        repair_notes: str = "",
+                        parts_required: str = "",
+                        downtime_end=None) -> Breakdown:
         bd = self._get(bd_id)
         if not can_complete_breakdown_repair(bd.status):
             raise InvalidStatusTransitionError(
@@ -518,12 +540,30 @@ class BreakdownService:
             )
         bd.status = BREAKDOWN_STATUS_REPAIRED
         bd.repair_completed_at = timezone.now()
+        if not bd.downtime_start:
+            bd.downtime_start = bd.repair_started_at
+        bd.downtime_end = downtime_end or bd.repair_completed_at
         if repair_summary:
             bd.repair_summary = repair_summary
         if root_cause:
             bd.root_cause = root_cause
-        if bd.repair_started_at and bd.repair_completed_at:
-            delta = bd.repair_completed_at - bd.repair_started_at
+        if confirmed_root_cause:
+            bd.confirmed_root_cause = confirmed_root_cause
+            bd.root_cause = confirmed_root_cause
+        if corrective_action:
+            bd.corrective_action = corrective_action
+        if verification_result:
+            bd.verification_result = verification_result
+        if completion_notes:
+            bd.completion_notes = completion_notes
+            if not bd.repair_summary:
+                bd.repair_summary = completion_notes
+        if repair_notes:
+            bd.repair_notes = repair_notes
+        if parts_required:
+            bd.parts_required = parts_required
+        if bd.downtime_start and bd.downtime_end:
+            delta = bd.downtime_end - bd.downtime_start
             bd.downtime_minutes = int(delta.total_seconds() / 60)
         bd.save()
         return bd

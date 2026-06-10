@@ -211,7 +211,7 @@ export function SparePartsDashboard({
                   const pct = Math.round((cnt / parts.length) * 100);
                   return (
                     <div key={cat} className="flex items-center gap-2 py-0.5">
-                      <span className="text-[10px] font-medium text-muted-foreground min-w-[80px] truncate">{cat}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground min-w-20 truncate">{cat}</span>
                       <div className="flex-1 h-4 bg-muted/30 rounded-sm overflow-hidden">
                         <div className="h-full bg-teal-500/30 rounded-sm transition-all" style={{ width: `${pct}%` }} />
                       </div>
@@ -348,7 +348,7 @@ function Row({
       <span className="text-[9px] font-semibold text-muted-foreground w-14 shrink-0 uppercase">{type}</span>
       {refNum && <span className="text-[9px] font-mono text-muted-foreground w-16 shrink-0">{refNum}</span>}
       <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">{title}</span>
-      {detail && <span className="text-[10px] text-muted-foreground truncate max-w-[140px] hidden sm:inline">{detail}</span>}
+      {detail && <span className="text-[10px] text-muted-foreground truncate max-w-35 hidden sm:inline">{detail}</span>}
       {right}
     </div>
   );

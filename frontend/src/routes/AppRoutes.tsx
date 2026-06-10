@@ -200,6 +200,10 @@ const UserManualPage = lazy(() =>
   import("@/pages/docs/UserManualPage").then((module) => ({ default: module.UserManualPage }))
 );
 
+const DemoDataPage = lazy(() =>
+  import("@/demo/DemoDataPage").then((module) => ({ default: module.DemoDataPage }))
+);
+
 const NotFoundPage = lazy(() =>
   import("@/pages/not-found/NotFoundPage").then((module) => ({ default: module.NotFoundPage }))
 );
@@ -215,6 +219,7 @@ export function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/demo" element={<DemoDataPage />} />
         <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
                     <Route index element={<ControlTowerPage />} />
           <Route path="control-tower" element={<ControlTowerPage />} />

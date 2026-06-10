@@ -177,6 +177,17 @@ export function BreakdownsPage() {
         danger
       />
 
+      {/* Close Dialog */}
+      <ConfirmDialog
+        open={section.confirmAction?.action === "close"}
+        onClose={() => section.setConfirmAction(null)}
+        onConfirm={section.confirmClose}
+        title="Close Breakdown"
+        message="Confirm closure after verification is complete. This marks the breakdown as closed."
+        confirmLabel="Close Breakdown"
+        danger={false}
+      />
+
       {/* Create WO Dialog */}
       <ConfirmDialog
         open={section.woDialogOpen}

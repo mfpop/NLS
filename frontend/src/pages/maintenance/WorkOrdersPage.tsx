@@ -21,6 +21,15 @@ import {
 } from "@/graphql/maintenanceQueries";
 import { MaintenanceDashboard } from "./work-orders/MaintenanceDashboard";
 import {
+  mockWorkOrderDashboard,
+  mockMaintenanceWorkOrders,
+  mockSpareParts,
+  mockBreakdowns,
+  mockDuePmPlans,
+  mockLowStockSpareParts,
+  mockSparePartUsages,
+} from "@/demo/maintenanceMockData";
+import {
   CREATE_WORK_ORDER_MUTATION, UPDATE_WORK_ORDER_MUTATION,
   SUBMIT_WORK_ORDER_MUTATION, ASSIGN_WORK_ORDER_MUTATION,
   START_WORK_ORDER_MUTATION, HOLD_WORK_ORDER_FOR_PARTS_MUTATION,
@@ -81,10 +90,12 @@ interface WorkOrder {
   actualStartDate: string | null; actualEndDate: string | null;
   downtimeMinutes: number | null;
   workInstructions: string; failureMode: string; safetyNotes: string;
-  laborEstimate: number | null;
-  completionNotes: string; rootCause: string; correctiveAction: string; verificationResult: string;
+  requiredTools: string;
+  laborEstimate: number | null; actualLaborHours: number | null;
+  workPerformed: string; completionNotes: string; partsUsedNotes: string;
+  rootCause: string; correctiveAction: string; verificationResult: string;
   sparePartsRequired: string | null; attachments: string | null;
-  linkedPmId: number | null; linkedBreakdownId: number | null;
+  linkedPmId: number | null; linkedBreakdownId: number | null; linkedMerId: number | null;
   createdAt?: string; updatedAt?: string;
 }
 
@@ -110,6 +121,19 @@ function statusLabel(s: string): string {
 
 function typeLabel(t: string): string {
   return TYPE_OPTIONS.find((o) => o.value === t)?.label?.split(" - ")[1] || t;
+}
+
+function formatMaybeJson(v: string | null | undefined): string {
+  if (!v) return "";
+  try {
+    const parsed = JSON.parse(v);
+    if (Array.isArray(parsed) || (parsed && typeof parsed === "object")) {
+      return JSON.stringify(parsed, null, 2);
+    }
+  } catch {
+    // Keep the original string when it is not valid JSON.
+  }
+  return v;
 }
 
 const statusColors: Record<string, string> = {
@@ -174,13 +198,13 @@ function TargetSelector({
   disabled?: boolean;
   plantError?: string;
 }) {
-  const { data: plants } = useQuery(PLANTS_QUERY);
+  const { data: plants } = useQuery(PLANTS_QUERY, { errorPolicy: "all" });
   const plantList: { id: string; name: string }[] = (plants as any)?.plants || [];
-  const { data: lines } = useQuery(PRODUCTION_LINES_QUERY, { variables: { plantId: plantId?.toString() }, skip: !plantId });
+  const { data: lines } = useQuery(PRODUCTION_LINES_QUERY, { variables: { plantId: plantId?.toString() }, skip: !plantId, errorPolicy: "all" });
   const lineList: { id: string; name: string }[] = (lines as any)?.productionLines || [];
-  const { data: depts } = useQuery(DEPARTMENTS_QUERY, { variables: { status: "active" }, skip: !plantId });
+  const { data: depts } = useQuery(DEPARTMENTS_QUERY, { variables: { status: "active" }, skip: !plantId, errorPolicy: "all" });
   const deptList: { id: string; name: string }[] = (depts as any)?.departments?.filter((d: any) => d.plantId === plantId?.toString()) || [];
-  const { data: rgs } = useQuery(RESOURCE_GROUPS_QUERY, { variables: { departmentId: deptId?.toString() }, skip: !deptId });
+  const { data: rgs } = useQuery(RESOURCE_GROUPS_QUERY, { variables: { departmentId: deptId?.toString() }, skip: !deptId, errorPolicy: "all" });
   const rgList: { id: string; name: string }[] = (rgs as any)?.resourceGroups || [];
 
   const baseCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-indigo-500 transition-colors disabled:opacity-40";
@@ -216,7 +240,7 @@ function TargetSelector({
       </Fld>
       <Fld label="Department">
         <select value={deptId ?? ""} onChange={(e) => { setDeptId(e.target.value ? Number(e.target.value) : null); setRgId(null); setResourceId(null); }}
-          disabled={disabled || !lineId} className={baseCls}>
+          disabled={disabled || !plantId} className={baseCls}>
           <option value="">Select department...</option>
           {deptList.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
@@ -268,7 +292,7 @@ export function WorkOrdersPage() {
   }, []); // only on mount
 
   const splitRef = useRef<HTMLDivElement>(null);
-  const [leftPct, setLeftPct] = useState(20);
+  const [leftPct, setLeftPct] = useState(24);
 
   const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -292,30 +316,31 @@ export function WorkOrdersPage() {
   const { productionLineId, activePlantId } = useActiveLine();
 
   // ── Queries ──
-  const { data: dashData } = useQuery(WORK_ORDER_DASHBOARD_QUERY, { fetchPolicy: "cache-and-network" });
-  const dash: DashboardData = (dashData as any)?.workOrderDashboard || { openWorkOrders: 0, inProgress: 0, overdue: 0, completed: 0, preventive: 0, correctiveBreakdown: 0, waitingParts: 0, dueThisWeek: 0, totalDowntimeMinutes: 0 };
+  const { data: dashData } = useQuery(WORK_ORDER_DASHBOARD_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const dash: DashboardData = (dashData as any)?.workOrderDashboard ?? mockWorkOrderDashboard.workOrderDashboard;
 
   const { data: listData, loading: listLoading, refetch } = useQuery(WORK_ORDERS_QUERY, {
     variables: { search: search || undefined, workOrderType: filterType || undefined, status: filterStatus || undefined, overdue: filterOverdue || undefined },
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
-  const workOrders: WorkOrder[] = (listData as any)?.maintenanceWorkOrders || [];
+  const workOrders: WorkOrder[] = (listData as any)?.maintenanceWorkOrders ?? mockMaintenanceWorkOrders.maintenanceWorkOrders;
   const sel = useMemo(() => selId ? workOrders.find((w) => w.id === selId) ?? null : null, [selId, workOrders]);
 
-  const { data: partsData } = useQuery(SPARE_PARTS_QUERY, { variables: { status: "ACTIVE" }, fetchPolicy: "cache-first" });
-  const spareParts: SparePart[] = (partsData as any)?.spareParts || [];
+  const { data: partsData } = useQuery(SPARE_PARTS_QUERY, { variables: { status: "ACTIVE" }, fetchPolicy: "cache-first", errorPolicy: "all" });
+  const spareParts: SparePart[] = (partsData as any)?.spareParts ?? mockSpareParts.spareParts;
 
-  const { data: bdData } = useQuery(BREAKDOWNS_QUERY, { fetchPolicy: "cache-first" });
-  const breakdowns: any[] = (bdData as any)?.breakdowns || [];
+  const { data: bdData } = useQuery(BREAKDOWNS_QUERY, { fetchPolicy: "cache-first", errorPolicy: "all" });
+  const breakdowns: any[] = (bdData as any)?.breakdowns ?? mockBreakdowns.breakdowns;
 
-  const { data: duePMData } = useQuery(DUE_PM_QUERY, { fetchPolicy: "cache-first" });
-  const duePlans: any[] = (duePMData as any)?.duePreventiveMaintenance || [];
+  const { data: duePMData } = useQuery(DUE_PM_QUERY, { fetchPolicy: "cache-first", errorPolicy: "all" });
+  const duePlans: any[] = (duePMData as any)?.duePreventiveMaintenance ?? mockDuePmPlans.duePreventiveMaintenance;
 
-  const { data: lowStockData } = useQuery(LOW_STOCK_SPARE_PARTS_QUERY, { fetchPolicy: "cache-first" });
-  const lowStockParts: any[] = (lowStockData as any)?.lowStockSpareParts || [];
+  const { data: lowStockData } = useQuery(LOW_STOCK_SPARE_PARTS_QUERY, { fetchPolicy: "cache-first", errorPolicy: "all" });
+  const lowStockParts: any[] = (lowStockData as any)?.lowStockSpareParts ?? mockLowStockSpareParts.lowStockSpareParts;
 
-  const { data: usageData } = useQuery(SPARE_PART_USAGES_QUERY, { variables: { workOrderId: selId || undefined }, skip: !selId, fetchPolicy: "cache-and-network" });
-  const partUsages: any[] = (usageData as any)?.sparePartUsages || [];
+  const { data: usageData } = useQuery(SPARE_PART_USAGES_QUERY, { variables: { workOrderId: selId || undefined }, skip: !selId, fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const partUsages: any[] = (usageData as any)?.sparePartUsages ?? mockSparePartUsages.sparePartUsages;
 
   // ── Mutations ──
   const [createWO] = useMutation(CREATE_WORK_ORDER_MUTATION);
@@ -404,9 +429,12 @@ export function WorkOrdersPage() {
           priority: form.priority, requestedBy: form.requestedBy.trim() || undefined,
           assignedTo: form.assignedTo.trim() || undefined,
           dueDate: form.dueDate || undefined,
+          plannedStartDate: form.plannedStartDate || undefined,
+          plannedEndDate: form.plannedEndDate || undefined,
           workInstructions: form.workInstructions.trim() || undefined,
           failureMode: form.failureMode.trim() || undefined,
           safetyNotes: form.safetyNotes.trim() || undefined,
+          requiredTools: form.requiredTools.trim() || undefined,
           labourEstimate: form.laborEstimate ? Number(form.laborEstimate) : undefined,
         },
       });
@@ -421,21 +449,37 @@ export function WorkOrdersPage() {
     try {
       await updateWO({
         variables: {
-          id: selId, title: form.title.trim(), description: form.description.trim() || undefined,
-          priority: form.priority, assignedTo: form.assignedTo.trim() || undefined,
+          id: selId,
+          title: form.title.trim(),
+          description: form.description.trim(),
+          workOrderType: form.workOrderType,
+          priority: form.priority, assignedTo: form.assignedTo.trim(),
+          requestedBy: form.requestedBy.trim(),
           plantId: form.plantId, productionLineId: form.productionLineId,
           departmentId: form.departmentId, resourceGroupId: form.resourceGroupId,
           resourceId: form.resourceId,
           dueDate: form.dueDate || undefined,
-          workInstructions: form.workInstructions.trim() || undefined,
-          failureMode: form.failureMode.trim() || undefined,
-          safetyNotes: form.safetyNotes.trim() || undefined,
-          labourEstimate: form.laborEstimate ? Number(form.laborEstimate) : undefined,
+          plannedStartDate: form.plannedStartDate || null,
+          plannedEndDate: form.plannedEndDate || null,
+          workInstructions: form.workInstructions.trim(),
+          failureMode: form.failureMode.trim(),
+          safetyNotes: form.safetyNotes.trim(),
+          requiredTools: form.requiredTools.trim(),
+          labourEstimate: form.laborEstimate ? Number(form.laborEstimate) : null,
+          workPerformed: completeForm.workPerformed.trim(),
+          completionNotes: completeForm.completionNotes.trim(),
+          partsUsedNotes: completeForm.partsUsedNotes.trim(),
+          downtimeMinutes: completeForm.downtimeMinutes ? Number(completeForm.downtimeMinutes) : null,
+          rootCause: completeForm.rootCause.trim(),
+          correctiveAction: completeForm.correctiveAction.trim(),
+          verificationResult: completeForm.verificationResult.trim(),
+          actualEndDate: completeForm.actualEndDate || null,
+          actualLaborHours: completeForm.actualLaborHours ? Number(completeForm.actualLaborHours) : null,
         },
       });
       msg("Updated"); setView("dashboard"); setEditMode(false); refetch();
     } catch (e: any) { err(e.message || "Update failed"); }
-  }, [selId, form, updateWO, refetch]);
+  }, [selId, form, completeForm, updateWO, refetch]);
 
   const hStartEdit = useCallback(() => {
     if (!sel) return;
@@ -450,10 +494,21 @@ export function WorkOrdersPage() {
       plannedEndDate: sel.plannedEndDate?.slice(0, 10) || "",
       workInstructions: sel.workInstructions,
       failureMode: sel.failureMode, safetyNotes: sel.safetyNotes,
-      requiredTools: "", laborEstimate: sel.laborEstimate?.toString() || "",
+      requiredTools: sel.requiredTools || "", laborEstimate: sel.laborEstimate?.toString() || "",
+    });
+    setCompleteForm({
+      workPerformed: sel.workPerformed || "",
+      completionNotes: sel.completionNotes || "",
+      downtimeMinutes: sel.downtimeMinutes != null ? sel.downtimeMinutes.toString() : "",
+      actualEndDate: sel.actualEndDate?.slice(0, 10) || todayStr,
+      actualLaborHours: sel.actualLaborHours != null ? sel.actualLaborHours.toString() : "",
+      rootCause: sel.rootCause || "",
+      correctiveAction: sel.correctiveAction || "",
+      verificationResult: sel.verificationResult || "",
+      partsUsedNotes: sel.partsUsedNotes || "",
     });
     setFormErrors({}); setEditMode(true); setView("form");
-  }, [sel]);
+  }, [sel, todayStr]);
 
   const hNewWO = useCallback(() => {
     setSelId(null);
@@ -483,7 +538,7 @@ export function WorkOrdersPage() {
   }, [selId, sparePartId, sparePartQty, sparePartNotes, recordUsage, refetch]);
 
   // ── Derived ──
-  const isEditable = sel?.status === "DRAFT";
+  const isEditable = !!(sel?.status && !["ARCHIVED"].includes(sel.status));
   const isInProg = sel?.status && ["OPEN", "ASSIGNED", "IN_PROGRESS", "WAITING_PARTS", "WAITING_APPROVAL"].includes(sel.status);
   const isCompleteCancel = sel?.status && ["COMPLETED", "CANCELLED", "ARCHIVED"].includes(sel.status);
 
@@ -618,7 +673,7 @@ export function WorkOrdersPage() {
     return (
       <div className="flex flex-1 min-h-0">
         {/* Left column: Target → Metadata → Schedule — scrolls independently */}
-        <div className="w-[25%] min-w-[220px] max-w-[280px] border-r border-border/20 bg-card/30 overflow-y-auto">
+        <div className="w-[25%] min-w-55 max-w-70 border-r border-border/20 bg-card/30 overflow-y-auto">
           <div className="p-3 space-y-2">
             {/* 1. Target */}
             <div>
@@ -631,7 +686,7 @@ export function WorkOrdersPage() {
                 deptId={form.departmentId} setDeptId={(v) => setForm({ ...form, departmentId: v })}
                 rgId={form.resourceGroupId} setRgId={(v) => setForm({ ...form, resourceGroupId: v })}
                 resourceId={form.resourceId} setResourceId={(v) => setForm({ ...form, resourceId: v })}
-                disabled={editMode}
+                disabled={false}
                 plantError={formErrors.plantId}
               />
             </div>
@@ -803,8 +858,8 @@ export function WorkOrdersPage() {
               </div>
             </div>
 
-            {/* 5. Completion Evidence (shown when editing IN_PROGRESS) */}
-            {editMode && sel?.status === "IN_PROGRESS" && (
+            {/* 5. Completion Evidence */}
+            {editMode && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-2">
                   <CheckCircle className="h-3 w-3" /> Completion Evidence
@@ -896,6 +951,12 @@ export function WorkOrdersPage() {
                 <div className="rounded-lg bg-card/50 border border-border/30 p-3"><p className="text-sm text-foreground whitespace-pre-wrap">{sel.workInstructions}</p></div>
               </div>
             )}
+            {sel.requiredTools && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Required Tools</p>
+                <p className="text-sm text-foreground whitespace-pre-wrap">{sel.requiredTools}</p>
+              </div>
+            )}
             {sel.safetyNotes && (
               <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900/30 dark:bg-orange-950/20 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-600 mb-1">⚠ Safety Notes</p>
@@ -906,6 +967,12 @@ export function WorkOrdersPage() {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Work Performed</p>
                 <div className="rounded-lg bg-card/50 border border-border/30 p-3"><p className="text-sm text-foreground whitespace-pre-wrap">{sel.completionNotes}</p></div>
+              </div>
+            )}
+            {sel.workPerformed && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Detailed Work Performed</p>
+                <div className="rounded-lg bg-card/50 border border-border/30 p-3"><p className="text-sm text-foreground whitespace-pre-wrap">{sel.workPerformed}</p></div>
               </div>
             )}
             {sel.rootCause && (
@@ -947,16 +1014,45 @@ export function WorkOrdersPage() {
                 </div>
               </div>
             )}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Spare Parts Required</p>
+              {sel.sparePartsRequired ? (
+                <div className="rounded-lg bg-card/50 border border-border/30 p-3">
+                  <p className="text-sm text-foreground whitespace-pre-wrap font-mono">{formatMaybeJson(sel.sparePartsRequired)}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Attachments</p>
+              {sel.attachments ? (
+                <div className="rounded-lg bg-card/50 border border-border/30 p-3">
+                  <p className="text-sm text-foreground whitespace-pre-wrap font-mono">{formatMaybeJson(sel.attachments)}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Labor</p>
-                <p className="text-sm text-foreground">{sel.laborEstimate != null ? `${sel.laborEstimate} hrs` : "—"}</p>
+                <p className="text-sm text-foreground">
+                  {sel.laborEstimate != null ? `${sel.laborEstimate} hrs est.` : "—"}
+                  {sel.actualLaborHours != null ? ` / ${sel.actualLaborHours} hrs actual` : ""}
+                </p>
               </div>
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Downtime</p>
                 <p className="text-sm font-semibold text-foreground">{sel.downtimeMinutes != null ? `${sel.downtimeMinutes.toLocaleString()} min` : "—"}</p>
               </div>
             </div>
+            {sel.partsUsedNotes && (
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Parts Used Notes</p>
+                <div className="rounded-lg bg-card/50 border border-border/30 p-3"><p className="text-sm text-foreground whitespace-pre-wrap">{sel.partsUsedNotes}</p></div>
+              </div>
+            )}
             {sel.status === "IN_PROGRESS" && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 flex items-center gap-1">
@@ -966,7 +1062,7 @@ export function WorkOrdersPage() {
                   <div className="space-y-1">
                     <label className="block text-[10px] text-muted-foreground">Part</label>
                     <select value={sparePartId} onChange={(e) => setSparePartId(e.target.value)}
-                      className="h-7 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none min-w-[160px]">
+                      className="h-7 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none min-w-40">
                       <option value="">Select part...</option>
                       {spareParts.filter((p) => p.quantityOnHand > 0).map((p) => (
                         <option key={p.id} value={p.id}>{p.partNumber} - {p.name} ({p.quantityOnHand} {p.uom})</option>
@@ -987,7 +1083,7 @@ export function WorkOrdersPage() {
           </div>
         </div>
         {/* Right 35%: Status → Priority → Type → Target → Requested By → Assigned To → Schedule → Linked */}
-        <div className="w-[35%] min-w-[200px] max-w-[280px] border-l border-border/20 bg-card/20 overflow-y-auto">
+        <div className="w-[35%] min-w-50 max-w-70 border-l border-border/20 bg-card/20 overflow-y-auto">
           <div className="p-4 space-y-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Details</p>
             <div className="space-y-2.5">
@@ -1002,6 +1098,14 @@ export function WorkOrdersPage() {
               <div>
                 <p className="text-[10px] text-muted-foreground">Type</p>
                 <p className="text-sm font-semibold text-foreground">{typeLabel(sel.workOrderType)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Target Type</p>
+                <p className="text-sm text-foreground">{sel.targetType || "—"}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Target ID</p>
+                <p className="text-sm text-foreground">{sel.targetId != null ? `#${sel.targetId}` : "—"}</p>
               </div>
               <div>
                 <p className="text-[10px] text-muted-foreground">Target</p>
@@ -1040,9 +1144,19 @@ export function WorkOrdersPage() {
                 <div className="flex flex-wrap gap-1">
                   {sel.linkedPmId && <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">PM #{sel.linkedPmId}</span>}
                   {sel.linkedBreakdownId && <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">BD #{sel.linkedBreakdownId}</span>}
+                  {sel.linkedMerId && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">MER #{sel.linkedMerId}</span>}
                 </div>
               </div>
             )}
+            <div className="border-t border-border/20 pt-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Metadata</p>
+              <div className="space-y-0.5 text-xs text-foreground">
+                <p>Record ID: {sel.id}</p>
+                <p>WO Number: {sel.number || "—"}</p>
+                <p>Created At: {sel.createdAt ? sel.createdAt.replace("T", " ").slice(0, 19) : "—"}</p>
+                <p>Updated At: {sel.updatedAt ? sel.updatedAt.replace("T", " ").slice(0, 19) : "—"}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1078,7 +1192,14 @@ export function WorkOrdersPage() {
             ) : (
               <div>{workOrders.map((wo) => (
                 <div key={wo.id} role="option" aria-selected={selId === wo.id}
+                  tabIndex={0}
                   onClick={() => { setSelId(wo.id); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelId(wo.id);
+                    }
+                  }}
                   className={`group mx-1 my-0.5 flex h-14 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${
                     selId === wo.id ? "bg-table-selected border-l-2 border-l-indigo-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                   }`}>
@@ -1133,7 +1254,7 @@ export function WorkOrdersPage() {
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
       {(successMsg || errorMsg) && (
-        <div className={`shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b ${
+        <div role={errorMsg ? "alert" : "status"} aria-live={errorMsg ? "assertive" : "polite"} className={`shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b ${
           errorMsg
             ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-300"
             : "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300"
@@ -1207,14 +1328,15 @@ export function WorkOrdersPage() {
           if (!completeForm.completionNotes.trim()) { err("Completion notes are required"); return; }
           if (!completeForm.actualEndDate) { err("Actual end date is required"); return; }
           doAction("complete", confirmAction.id, {
+            workPerformed: completeForm.workPerformed || undefined,
             completionNotes: completeForm.completionNotes || undefined,
             downtimeMinutes: completeForm.downtimeMinutes ? Number(completeForm.downtimeMinutes) : null,
             rootCause: completeForm.rootCause || undefined,
             correctiveAction: completeForm.correctiveAction || undefined,
             verificationResult: completeForm.verificationResult || undefined,
             actualEndDate: completeForm.actualEndDate || undefined,
-            // Note: workPerformed, actualLaborHours, partsUsedNotes collected in UI
-            // but not yet stored in backend model; included in completionNotes for now
+            actualLaborHours: completeForm.actualLaborHours ? Number(completeForm.actualLaborHours) : null,
+            partsUsedNotes: completeForm.partsUsedNotes || undefined,
           });
         }}
         title="Complete Work Order"

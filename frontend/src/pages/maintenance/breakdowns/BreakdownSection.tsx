@@ -6,6 +6,7 @@ import {
   CalendarClock, AlertCircle, Activity,
 } from "lucide-react";
 import { BREAKDOWNS_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
+import { mockBreakdowns } from "@/demo/maintenanceMockData";
 import {
   START_BREAKDOWN_REPAIR_MUTATION, COMPLETE_BREAKDOWN_REPAIR_MUTATION,
   CLOSE_BREAKDOWN_MUTATION, CANCEL_BREAKDOWN_MUTATION,
@@ -66,6 +67,7 @@ export interface BreakdownSectionResult {
   resolveForm: { confirmedRootCause: string; correctiveAction: string; verificationResult: string; completionNotes: string; downtimeEnd: string };
   setResolveForm: (f: { confirmedRootCause: string; correctiveAction: string; verificationResult: string; completionNotes: string; downtimeEnd: string }) => void;
   confirmResolve: () => Promise<void>;
+  confirmClose: () => Promise<void>;
   refetch: () => void;
   reportMode: "add" | "edit" | null;
   startAddReport: () => void;
@@ -132,6 +134,7 @@ export function useBreakdownSection(
   const { data, loading, refetch } = useQuery(BREAKDOWNS_QUERY, {
     variables: { search: search || undefined, status: filterStatus || undefined, severity: filterSeverity || undefined },
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
 
   const [reportMode, setReportMode] = useState<"add" | "edit" | null>(null);
@@ -157,7 +160,7 @@ export function useBreakdownSection(
   const [reportBDMut] = useMutation(REPORT_BREAKDOWN_MUTATION);
   const [updateBDMut] = useMutation(UPDATE_BREAKDOWN_MUTATION);
 
-  const breakdowns: Breakdown[] = (data as any)?.breakdowns || [];
+  const breakdowns: Breakdown[] = (data as any)?.breakdowns ?? mockBreakdowns.breakdowns;
   const sel = selectedId ? breakdowns.find((b) => b.id === selectedId) ?? null : null;
 
   const doAction = useCallback(async (action: string, id: number, extra?: Record<string, any>) => {
@@ -187,6 +190,11 @@ export function useBreakdownSection(
     await doAction("resolve", confirmAction.id, resolveForm);
     setResolveForm({ confirmedRootCause: "", correctiveAction: "", verificationResult: "", completionNotes: "", downtimeEnd: "" });
   }, [confirmAction, doAction, resolveForm]);
+
+  const confirmClose = useCallback(async () => {
+    if (!confirmAction) return;
+    await doAction("close", confirmAction.id);
+  }, [confirmAction, doAction]);
 
   const startAddReport = useCallback(() => {
     setReportForm({
@@ -275,7 +283,7 @@ export function useBreakdownSection(
 
   const handleAction = useCallback((action: string) => {
     if (!sel) return;
-    if (action === "resolve" || action === "cancel") {
+    if (action === "resolve" || action === "cancel" || action === "close") {
       setConfirmAction({ id: sel.id, action });
     } else if (action === "create-wo") {
       openWODialog();
@@ -308,7 +316,15 @@ export function useBreakdownSection(
           <div>
             {breakdowns.map((bd) => (
               <div key={bd.id} role="option" aria-selected={selectedId === bd.id}
+                tabIndex={0}
                 onClick={() => { onSelect(bd.id); setSelectedId(bd.id); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelect(bd.id);
+                    setSelectedId(bd.id);
+                  }
+                }}
                 className={`group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${
                   selectedId === bd.id ? "bg-table-selected border-l-2 border-l-orange-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                 }`}>
@@ -350,7 +366,7 @@ export function useBreakdownSection(
   const renderInlineForm = useCallback((isEdit: boolean) => (
     <div className="flex flex-1 min-h-0">
       {/* Left 25%: Target + Metadata */}
-      <div className="w-[25%] min-w-[200px] border-r border-border/20 bg-card/30 overflow-y-auto p-4 space-y-4">
+      <div className="w-[25%] min-w-50 border-r border-border/20 bg-card/30 overflow-y-auto p-4 space-y-4">
         <SectionTitle icon={<Target className="h-3 w-3" />} label="Target Location" />
         {isEdit && sel ? (
           <div className="space-y-2">
@@ -373,11 +389,18 @@ export function useBreakdownSection(
           </select>
         </Field>
         <Field label="Priority *">
-          <select value={isEdit ? updateForm.priority : reportForm.priority}
-            onChange={(e) => isEdit ? setUpdateForm({ ...updateForm, priority: e.target.value }) : setReportForm({ ...reportForm, priority: e.target.value })}
-            className={selCls}>
-            {PRIORITY_OPTIONS.filter((o) => o.value).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+          {isEdit ? (
+            <div className="space-y-1">
+              <p className="text-sm text-foreground">{sel?.priority || "MEDIUM"}</p>
+              <p className="text-[10px] text-muted-foreground">Priority updates are not persisted from Breakdown edit yet.</p>
+            </div>
+          ) : (
+            <select value={reportForm.priority}
+              onChange={(e) => setReportForm({ ...reportForm, priority: e.target.value })}
+              className={selCls}>
+              {PRIORITY_OPTIONS.filter((o) => o.value).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          )}
         </Field>
         <Field label="Reported By *">
           <input type="text" value={isEdit ? (sel?.reportedBy || "") : reportForm.reportedBy}
@@ -385,9 +408,16 @@ export function useBreakdownSection(
             className={inpCls} placeholder="Your name" disabled={isEdit} />
         </Field>
         <Field label="Assigned Technician">
-          <input type="text" value={isEdit ? updateForm.assignedTo : reportForm.assignedTo}
-            onChange={(e) => isEdit ? setUpdateForm({ ...updateForm, assignedTo: e.target.value }) : setReportForm({ ...reportForm, assignedTo: e.target.value })}
-            className={inpCls} placeholder="Technician name" />
+          {isEdit ? (
+            <div className="space-y-1">
+              <p className="text-sm text-foreground">{sel?.assignedTo || "—"}</p>
+              <p className="text-[10px] text-muted-foreground">Assignment updates are not persisted from Breakdown edit yet.</p>
+            </div>
+          ) : (
+            <input type="text" value={reportForm.assignedTo}
+              onChange={(e) => setReportForm({ ...reportForm, assignedTo: e.target.value })}
+              className={inpCls} placeholder="Technician name" />
+          )}
         </Field>
         <Field label="Reported Date/Time">
           <p className="text-sm text-foreground">{isEdit && sel ? (sel.reportedAt?.slice(0, 16) || "—") : new Date().toLocaleString()}</p>
@@ -423,9 +453,16 @@ export function useBreakdownSection(
                 className={texCls} placeholder="Describe what happened..." />
             </Field>
             <Field label="Failure Mode / Symptom *">
-              <textarea value={isEdit ? updateForm.failureMode : reportForm.failureMode}
-                onChange={(e) => isEdit ? setUpdateForm({ ...updateForm, failureMode: e.target.value }) : setReportForm({ ...reportForm, failureMode: e.target.value })}
-                className={texCls} placeholder="Observed symptoms, error codes, noise, vibration..." />
+              {isEdit ? (
+                <div className="space-y-1">
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{sel?.failureMode || "—"}</p>
+                  <p className="text-[10px] text-muted-foreground">Failure mode updates are not persisted from Breakdown edit yet.</p>
+                </div>
+              ) : (
+                <textarea value={reportForm.failureMode}
+                  onChange={(e) => setReportForm({ ...reportForm, failureMode: e.target.value })}
+                  className={texCls} placeholder="Observed symptoms, error codes, noise, vibration..." />
+              )}
             </Field>
             {!isEdit && (
               <>
@@ -576,7 +613,7 @@ export function useBreakdownSection(
         </div>
 
         {/* Right 35%: Metadata sidebar */}
-        <div className="w-[35%] min-w-[200px] border-l border-border/20 bg-card/20 overflow-y-auto p-4 space-y-4">
+        <div className="w-[35%] min-w-50 border-l border-border/20 bg-card/20 overflow-y-auto p-4 space-y-4">
           <SectionTitle label="Details" />
           <div className="space-y-3">
             <MetaRow label="Status" value={<span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${BREAKDOWN_STATUS_STYLES[sel.status] || ""}`}>{wfLabel(sel.status)}</span>} />
@@ -620,6 +657,7 @@ export function useBreakdownSection(
     resolveForm,
     setResolveForm,
     confirmResolve,
+    confirmClose,
     refetch,
     reportMode,
     startAddReport,

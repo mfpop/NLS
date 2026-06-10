@@ -33,13 +33,14 @@ export { resolveTarget };
 export type { CascadeValue };
 
 export function TargetCascade({ value, onChange, plantRequired, disabled }: TargetCascadeProps) {
-  const { data: plantsData } = useQuery(PLANTS_QUERY, { fetchPolicy: "cache-first" });
+  const { data: plantsData } = useQuery(PLANTS_QUERY, { fetchPolicy: "cache-first", errorPolicy: "all" });
   const plants: { id: string; name: string }[] = (plantsData as any)?.plants || [];
 
   const { data: linesData } = useQuery(PRODUCTION_LINES_QUERY, {
     variables: { plantId: value.plantId || undefined },
     skip: !value.plantId,
     fetchPolicy: "cache-first",
+    errorPolicy: "all",
   });
   const lines: { id: string; name: string }[] = (linesData as any)?.productionLines || [];
 
@@ -47,6 +48,7 @@ export function TargetCascade({ value, onChange, plantRequired, disabled }: Targ
     variables: { status: "active" },
     skip: !value.plantId,
     fetchPolicy: "cache-first",
+    errorPolicy: "all",
   });
   const depts: { id: string; name: string; plantId: string }[] = (
     (deptsData as any)?.departments || []
@@ -56,6 +58,7 @@ export function TargetCascade({ value, onChange, plantRequired, disabled }: Targ
     variables: { departmentId: value.deptId || undefined },
     skip: !value.deptId,
     fetchPolicy: "cache-first",
+    errorPolicy: "all",
   });
   const rgs: { id: string; name: string }[] = (rgsData as any)?.resourceGroups || [];
 

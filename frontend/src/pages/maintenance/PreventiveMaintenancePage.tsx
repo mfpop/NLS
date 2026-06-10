@@ -12,6 +12,11 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PM_PLANS_QUERY, DUE_PM_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { PmDashboard } from "./pm/PmDashboard";
 import {
+  mockPmPlans,
+  mockDuePmPlans,
+  mockMaintenanceWorkOrders,
+} from "@/demo/maintenanceMockData";
+import {
   CREATE_PM_MUTATION, UPDATE_PM_MUTATION,
   ACTIVATE_PM_MUTATION, PAUSE_PM_MUTATION, ARCHIVE_PM_MUTATION, GENERATE_WO_FROM_PM_MUTATION,
 } from "@/graphql/maintenanceMutations";
@@ -116,11 +121,12 @@ function TargetSelector({
   disabled?: boolean;
 }) {
   const { activePlantId } = useActiveLine();
-  const { data: plants } = useQuery(PLANTS_QUERY);
+  const { data: plants } = useQuery(PLANTS_QUERY, { errorPolicy: "all" });
   const plantList: { id: string; name: string }[] = (plants as any)?.plants || [];
   const { data: lines } = useQuery(PRODUCTION_LINES_QUERY, {
     variables: { plantId: activePlantId ? String(activePlantId) : undefined },
     skip: !activePlantId,
+    errorPolicy: "all",
   });
   const lineList: { id: string; name: string }[] = (lines as any)?.productionLines || [];
   const baseCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-purple-500 transition-colors disabled:opacity-40";
@@ -201,8 +207,9 @@ export function PreventiveMaintenancePage() {
       priority: filterPriority || undefined,
     },
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
-  const { data: dueData } = useQuery(DUE_PM_QUERY, { fetchPolicy: "cache-and-network" });
+  const { data: dueData } = useQuery(DUE_PM_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
 
   const [createPM] = useMutation(CREATE_PM_MUTATION, { refetchQueries: [{ query: PM_PLANS_QUERY }, { query: DUE_PM_QUERY }] });
   const [updatePM] = useMutation(UPDATE_PM_MUTATION);
@@ -211,8 +218,8 @@ export function PreventiveMaintenancePage() {
   const [archivePM] = useMutation(ARCHIVE_PM_MUTATION);
   const [generateWO] = useMutation(GENERATE_WO_FROM_PM_MUTATION, { refetchQueries: [{ query: WORK_ORDERS_QUERY }] });
 
-  const plans: PMPlan[] = (data as any)?.preventiveMaintenancePlans || [];
-  const duePlans: PMPlan[] = (dueData as any)?.duePreventiveMaintenance || [];
+  const plans: PMPlan[] = (data as any)?.preventiveMaintenancePlans ?? mockPmPlans.preventiveMaintenancePlans;
+  const duePlans: PMPlan[] = (dueData as any)?.duePreventiveMaintenance ?? mockDuePmPlans.duePreventiveMaintenance;
 
   const sel = useMemo(() => {
     if (!selId) return null;
@@ -223,9 +230,10 @@ export function PreventiveMaintenancePage() {
     variables: { search: sel?.code || undefined },
     skip: !selId || !sel,
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
 
-  const linkedWOs: any[] = (linkedWOsData as any)?.maintenanceWorkOrders || [];
+  const linkedWOs: any[] = (linkedWOsData as any)?.maintenanceWorkOrders ?? mockMaintenanceWorkOrders.maintenanceWorkOrders;
 
   const [form, setForm] = useState({
     title: "",

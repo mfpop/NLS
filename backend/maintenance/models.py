@@ -55,9 +55,13 @@ class MaintenanceWorkOrder(TimeStampedModel):
     work_instructions = models.TextField(blank=True, default="")
     failure_mode = models.TextField(blank=True, default="")
     safety_notes = models.TextField(blank=True, default="")
+    required_tools = models.TextField(blank=True, default="")
     labor_estimate = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    actual_labor_hours = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     # Completion fields
+    work_performed = models.TextField(blank=True, default="")
     completion_notes = models.TextField(blank=True, default="")
+    parts_used_notes = models.TextField(blank=True, default="")
     root_cause = models.TextField(blank=True, default="")
     corrective_action = models.TextField(blank=True, default="")
     verification_result = models.TextField(blank=True, default="")
@@ -129,15 +133,34 @@ class Breakdown(TimeStampedModel):
         max_length=20, choices=BREAKDOWN_SEVERITY_CHOICES,
         default=BREAKDOWN_SEVERITY_MEDIUM,
     )
+    priority = models.CharField(
+        max_length=20, choices=WORK_ORDER_PRIORITY_CHOICES,
+        default=WORK_ORDER_PRIORITY_MEDIUM,
+    )
     status = models.CharField(
         max_length=30, choices=BREAKDOWN_STATUS_CHOICES,
         default=BREAKDOWN_STATUS_REPORTED,
     )
     reported_by = models.CharField(max_length=255, blank=True, default="")
+    assigned_to = models.CharField(max_length=255, blank=True, default="")
     reported_at = models.DateTimeField(auto_now_add=True)
     repair_started_at = models.DateTimeField(null=True, blank=True)
     repair_completed_at = models.DateTimeField(null=True, blank=True)
+    downtime_start = models.DateTimeField(null=True, blank=True)
+    downtime_end = models.DateTimeField(null=True, blank=True)
     downtime_minutes = models.IntegerField(null=True, blank=True)
+    failure_mode = models.TextField(blank=True, default="")
+    safety_impact = models.TextField(blank=True, default="")
+    production_impact = models.TextField(blank=True, default="")
+    is_equipment_down = models.BooleanField(default=False)
+    temporary_containment = models.TextField(blank=True, default="")
+    suspected_cause = models.TextField(blank=True, default="")
+    confirmed_root_cause = models.TextField(blank=True, default="")
+    corrective_action = models.TextField(blank=True, default="")
+    parts_required = models.TextField(blank=True, default="")
+    repair_notes = models.TextField(blank=True, default="")
+    verification_result = models.TextField(blank=True, default="")
+    completion_notes = models.TextField(blank=True, default="")
     root_cause = models.TextField(blank=True, default="")
     repair_summary = models.TextField(blank=True, default="")
     # Optional link to WO

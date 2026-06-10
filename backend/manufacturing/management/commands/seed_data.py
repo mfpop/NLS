@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from manufacturing.models import (
     Plant, Department, ProductionLine,
     ResourceGroup, Resource, ReferenceTable,
-    Profile, UserRole,
+    Profile, UserRole, ProductionLineDepartmentAssignment,
 )
 
 
@@ -32,7 +32,7 @@ class Command(BaseCommand):
 
         plants_data = [
             {
-                "code": "MP-01", "name": "Main Plant", "status": "active",
+                "code": "PP-01", "name": "Main Plant", "status": "active",
                 "building": "Building A",
                 "address": "123 Industrial Blvd",
                 "city": "Detroit", "state": "MI", "country": "USA",
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                 "description": "Primary assembly facility for cylinder and STB unit production.",
             },
             {
-                "code": "SP-01", "name": "Secondary Plant", "status": "active",
+                "code": "PP-02", "name": "Secondary Plant", "status": "active",
                 "building": "Building B",
                 "address": "456 Manufacturing Dr",
                 "city": "Toledo", "state": "OH", "country": "USA",
@@ -121,118 +121,131 @@ class Command(BaseCommand):
             Plant.objects.create(**data)
             self.stdout.write(f"  Created plant: {data['name']}")
 
-    # ── Departments (reusable master data — no plant FK) ──
+    # ── Departments ──
 
     def _seed_departments(self):
+        main_plant = Plant.objects.get(code="PP-01")
         depts_data = [
             {
                 "code": "ASM", "name": "Assembly", "status": "active",
                 "manager": "John Smith", "employees": 45,
+                "plant": main_plant,
             },
             {
                 "code": "MCH", "name": "Machining", "status": "active",
                 "manager": "Sarah Chen", "employees": 32,
+                "plant": main_plant,
             },
             {
                 "code": "QC", "name": "Quality Control", "status": "active",
                 "manager": "Mike Brown", "employees": 18,
+                "plant": main_plant,
             },
             {
                 "code": "LOG", "name": "Logistics", "status": "active",
                 "manager": "Ana Garcia", "employees": 22,
+                "plant": main_plant,
             },
             {
                 "code": "MTN", "name": "Maintenance", "status": "inactive",
                 "manager": "David Kim", "employees": 14,
+                "plant": main_plant,
             },
             {
                 "code": "WLD", "name": "Welding", "status": "active",
                 "manager": "Robert Chen", "employees": 28,
+                "plant": main_plant,
             },
             {
                 "code": "CIT", "name": "Coating Internal", "status": "active",
                 "manager": "Maria Lopez", "employees": 15,
+                "plant": main_plant,
             },
             {
                 "code": "CET", "name": "Coating External", "status": "active",
                 "manager": "James Wilson", "employees": 14,
+                "plant": main_plant,
             },
             {
                 "code": "PKG", "name": "Packaging", "status": "active",
                 "manager": "Emily Davis", "employees": 20,
+                "plant": main_plant,
             },
         ]
 
         for data in depts_data:
-            if not Department.objects.filter(code=data["code"]).exists():
+            # First try plant+code, then plant+name (handles legacy codes from imports like '118'->'WLD')
+            dept = (
+                Department.objects.filter(plant=data["plant"], code=data["code"]).first()
+                or Department.objects.filter(plant=data["plant"], name=data["name"]).first()
+            )
+            if dept is None:
                 Department.objects.create(**data)
                 self.stdout.write(f"  Created department: {data['name']}")
             else:
-                self.stdout.write(f"  Department already exists: {data['name']}")
+                # Update code if it differs (handles legacy codes from imports)
+                if dept.code != data["code"]:
+                    self.stdout.write(f"  Updated department {dept.name}: code {dept.code} -> {data['code']}")
+                    dept.code = data["code"]
+                    dept.save(update_fields=["code"])
+                else:
+                    self.stdout.write(f"  Department already exists: {data['name']}")
 
     # ── Production Lines (now has code + departments M2M) ──
 
     def _seed_production_lines(self):
-        main_plant = Plant.objects.get(code="MP-01")
-        secondary = Plant.objects.get(code="SP-01")
+        main_plant = Plant.objects.get(code="PP-01")
+        secondary = Plant.objects.get(code="PP-02")
 
-        assembly = Department.objects.get(code="ASM")
-        machining = Department.objects.get(code="MCH")
-        qc = Department.objects.get(code="QC")
-        logistics = Department.objects.get(code="LOG")
-        welding = Department.objects.get(code="WLD")
-        coating_internal = Department.objects.get(code="CIT")
-        coating_external = Department.objects.get(code="CET")
-        packaging = Department.objects.get(code="PKG")
+        # Departments scoped by plant
+        def dept(p, code):
+            return Department.objects.get(plant=p, code=code)
 
         lines_data = [
             {
-                "code": "C2-LN", "name": "C2-Cylinder Assembly", "status": "active",
+                "code": "C2-LN", "name": "C2-Cylinder Assembly", "status": "ACTIVE",
                 "plant": main_plant, "is_constraint": True,
-                "models_produced": "C2 Cylinder, STB Valve Body, Flange Ring",
                 "shift_pattern": "2-shift (Morn/Aftn)",
-                "depts": [assembly, machining, qc],
+                "depts": [dept(main_plant, "ASM"), dept(main_plant, "MCH"), dept(main_plant, "QC")],
             },
             {
-                "code": "STB-LN", "name": "Line B (STB Units)", "status": "active",
+                "code": "STB-LN", "name": "Line B (STB Units)", "status": "ACTIVE",
                 "plant": main_plant,
-                "models_produced": "STB Unit Type A, STB Unit Type B",
                 "shift_pattern": "2-shift (Morn/Aftn)",
-                "depts": [assembly, machining],
+                "depts": [dept(main_plant, "ASM"), dept(main_plant, "MCH")],
             },
             {
-                "code": "PIPE-LN", "name": "Line C (Pipes)", "status": "active",
+                "code": "PIPE-LN", "name": "Line C (Pipes)", "status": "ACTIVE",
                 "plant": main_plant,
-                "models_produced": "Pipe Assembly DN40, Pipe Assembly DN80",
                 "shift_pattern": "1-shift (Morning)",
-                "depts": [machining],
+                "depts": [dept(main_plant, "MCH")],
             },
             {
-                "code": "LN-A", "name": "Line A", "status": "active", "plant": main_plant,
-                "models_produced": "Assembly Base Unit",
+                "code": "LN-A", "name": "Line A", "status": "ACTIVE", "plant": main_plant,
                 "shift_pattern": "2-shift (Morn/Aftn)",
-                "depts": [assembly],
+                "depts": [dept(main_plant, "ASM")],
             },
             {
-                "code": "LN-B2", "name": "Line B (Shared)", "status": "active",
+                "code": "LN-B2", "name": "Line B (Shared)", "status": "ACTIVE",
                 "plant": secondary,
-                "models_produced": "Forklift Attachment, Pallet Adapter",
                 "shift_pattern": "1-shift (Afternoon)",
-                "depts": [logistics],
+                "depts": [dept(secondary, "PKG")],
             },
             {
-                "code": "LN-C2", "name": "Line C (Quality)", "status": "inactive",
+                "code": "LN-C2", "name": "Line C (Quality)", "status": "INACTIVE",
                 "plant": secondary,
-                "models_produced": "QC Test Specimen",
                 "shift_pattern": "1-shift (Morning)",
-                "depts": [qc],
+                "depts": [dept(secondary, "ASM")],
             },
             {
-                "code": "C2-UL", "name": "C2 Units Line", "status": "active",
+                "code": "C2-UL", "name": "C2 Units Line", "status": "ACTIVE",
                 "plant": main_plant, "is_constraint": True,
-                "models_produced": "C2 Unit Type A, C2 Unit Type B, C2 Unit Type C",
                 "shift_pattern": "2-shift (Morn/Aftn)",
-                "depts": [assembly, machining, welding, coating_internal, coating_external, packaging],
+                "depts": [
+                    dept(main_plant, "ASM"), dept(main_plant, "MCH"),
+                    dept(main_plant, "WLD"), dept(main_plant, "CIT"),
+                    dept(main_plant, "CET"), dept(main_plant, "PKG"),
+                ],
             },
         ]
 
@@ -240,20 +253,26 @@ class Command(BaseCommand):
             depts = data.pop("depts", [])
             line, created = ProductionLine.objects.get_or_create(code=data["code"], defaults=data)
             if created:
-                line.departments.set(depts)
+                for seq, dept in enumerate(depts):
+                    ProductionLineDepartmentAssignment.objects.create(
+                        production_line=line,
+                        department=dept,
+                        sequence=seq,
+                    )
                 self.stdout.write(f"  Created production line: {data['name']}")
             else:
                 self.stdout.write(f"  Production line already exists: {data['name']}")
 
-    # ── Resource Groups (now has code, no plant FK) ──
+    # ── Resource Groups ──
 
     def _seed_resource_groups(self):
-        assembly = Department.objects.get(code="ASM")
-        machining = Department.objects.get(code="MCH")
-        qc = Department.objects.get(code="QC")
-        logistics = Department.objects.get(code="LOG")
-        welding = Department.objects.get(code="WLD")
-        packaging = Department.objects.get(code="PKG")
+        main_plant = Plant.objects.get(code="PP-01")
+        assembly = Department.objects.get(plant=main_plant, code="ASM")
+        machining = Department.objects.get(plant=main_plant, code="MCH")
+        qc = Department.objects.get(plant=main_plant, code="QC")
+        logistics = Department.objects.get(plant=main_plant, code="LOG")
+        welding = Department.objects.get(plant=main_plant, code="WLD")
+        packaging = Department.objects.get(plant=main_plant, code="PKG")
 
         groups_data = [
             {
@@ -686,7 +705,7 @@ class Command(BaseCommand):
             plant.save()
 
         for line in ProductionLine.objects.all():
-            line.department_count = line.departments.count()
+            line.department_count = line.department_assignments.count()
             line.save()
 
         for dept in Department.objects.all():

@@ -49,8 +49,12 @@ class MaintenanceWorkOrderNode:
     work_instructions: str
     failure_mode: str
     safety_notes: str
+    required_tools: str
     labor_estimate: Optional[float]
+    actual_labor_hours: Optional[float]
+    work_performed: str
     completion_notes: str
+    parts_used_notes: str
     root_cause: str
     corrective_action: str
     verification_result: str
@@ -107,12 +111,28 @@ class BreakdownNode:
     target_type: str
     target_id: Optional[int]
     severity: str
+    priority: str
     status: str
     reported_by: str
+    assigned_to: str
     reported_at: str
     repair_started_at: Optional[str]
     repair_completed_at: Optional[str]
+    downtime_start: Optional[str]
+    downtime_end: Optional[str]
     downtime_minutes: Optional[int]
+    failure_mode: str
+    safety_impact: str
+    production_impact: str
+    is_equipment_down: bool
+    temporary_containment: str
+    suspected_cause: str
+    confirmed_root_cause: str
+    corrective_action: str
+    parts_required: str
+    repair_notes: str
+    verification_result: str
+    completion_notes: str
     root_cause: str
     repair_summary: str
     linked_work_order_id: Optional[int]
@@ -204,8 +224,12 @@ def _to_wo_node(wo: MaintenanceWorkOrder) -> MaintenanceWorkOrderNode:
         work_instructions=wo.work_instructions,
         failure_mode=wo.failure_mode,
         safety_notes=wo.safety_notes,
+        required_tools=wo.required_tools,
         labor_estimate=float(wo.labor_estimate) if wo.labor_estimate else None,
+        actual_labor_hours=float(wo.actual_labor_hours) if wo.actual_labor_hours else None,
+        work_performed=wo.work_performed,
         completion_notes=wo.completion_notes,
+        parts_used_notes=wo.parts_used_notes,
         root_cause=wo.root_cause,
         corrective_action=wo.corrective_action,
         verification_result=wo.verification_result,
@@ -250,12 +274,28 @@ def _to_breakdown_node(bd: Breakdown) -> BreakdownNode:
         target_type=bd.target_type,
         target_id=bd.target_id,
         severity=bd.severity,
+        priority=bd.priority,
         status=bd.status,
         reported_by=bd.reported_by,
+        assigned_to=bd.assigned_to,
         reported_at=bd.reported_at.isoformat() if bd.reported_at else "",
         repair_started_at=bd.repair_started_at.isoformat() if bd.repair_started_at else None,
         repair_completed_at=bd.repair_completed_at.isoformat() if bd.repair_completed_at else None,
+        downtime_start=bd.downtime_start.isoformat() if bd.downtime_start else None,
+        downtime_end=bd.downtime_end.isoformat() if bd.downtime_end else None,
         downtime_minutes=bd.downtime_minutes,
+        failure_mode=bd.failure_mode,
+        safety_impact=bd.safety_impact,
+        production_impact=bd.production_impact,
+        is_equipment_down=bd.is_equipment_down,
+        temporary_containment=bd.temporary_containment,
+        suspected_cause=bd.suspected_cause,
+        confirmed_root_cause=bd.confirmed_root_cause,
+        corrective_action=bd.corrective_action,
+        parts_required=bd.parts_required,
+        repair_notes=bd.repair_notes,
+        verification_result=bd.verification_result,
+        completion_notes=bd.completion_notes,
         root_cause=bd.root_cause,
         repair_summary=bd.repair_summary,
         linked_work_order_id=bd.linked_work_order_id,
@@ -441,12 +481,15 @@ class MaintenanceMutation:
         requested_by: str = "",
         assigned_to: str = "",
         due_date: Optional[str] = None,
+        planned_start_date: Optional[str] = None,
+        planned_end_date: Optional[str] = None,
         work_instructions: str = "",
         failure_mode: str = "",
         safety_notes: str = "",
+        required_tools: str = "",
         labour_estimate: Optional[float] = None,
     ) -> WorkOrderCreateResponse:
-        from datetime import date
+        from datetime import date, datetime
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
             "work_order_type": work_order_type,
@@ -459,10 +502,15 @@ class MaintenanceMutation:
             "work_instructions": work_instructions,
             "failure_mode": failure_mode,
             "safety_notes": safety_notes,
+            "required_tools": required_tools,
             "labour_estimate": labour_estimate,
         }.items() if v is not None and v != ""}
         if due_date:
             kwargs["due_date"] = date.fromisoformat(due_date)
+        if planned_start_date:
+            kwargs["planned_start_date"] = datetime.fromisoformat(planned_start_date)
+        if planned_end_date:
+            kwargs["planned_end_date"] = datetime.fromisoformat(planned_end_date)
         wo = WorkOrderService().create_work_order(**kwargs)
         return WorkOrderCreateResponse(ok=True, work_order_id=wo.id, number=wo.number or "", message=f"Work order created: {wo.number}")
 
@@ -471,7 +519,9 @@ class MaintenanceMutation:
         self, id: int,
         title: Optional[str] = None,
         description: Optional[str] = None,
+        work_order_type: Optional[str] = None,
         priority: Optional[str] = None,
+        requested_by: Optional[str] = None,
         assigned_to: Optional[str] = None,
         target_type: Optional[str] = None,
         target_id: Optional[int] = None,
@@ -481,15 +531,30 @@ class MaintenanceMutation:
         resource_group_id: Optional[int] = None,
         resource_id: Optional[int] = None,
         due_date: Optional[str] = None,
+        planned_start_date: Optional[str] = None,
+        planned_end_date: Optional[str] = None,
         work_instructions: Optional[str] = None,
         failure_mode: Optional[str] = None,
         safety_notes: Optional[str] = None,
+        required_tools: Optional[str] = None,
         labour_estimate: Optional[float] = None,
+        work_performed: Optional[str] = None,
+        completion_notes: Optional[str] = None,
+        parts_used_notes: Optional[str] = None,
+        downtime_minutes: Optional[int] = None,
+        root_cause: Optional[str] = None,
+        corrective_action: Optional[str] = None,
+        verification_result: Optional[str] = None,
+        actual_start_date: Optional[str] = None,
+        actual_end_date: Optional[str] = None,
+        actual_labor_hours: Optional[float] = None,
     ) -> str:
-        from datetime import date
+        from datetime import date, datetime
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
+            "work_order_type": work_order_type,
             "priority": priority, "assigned_to": assigned_to,
+            "requested_by": requested_by,
             "target_type": target_type, "target_id": target_id,
             "plant_id": plant_id, "production_line_id": production_line_id,
             "department_id": department_id, "resource_group_id": resource_group_id,
@@ -497,13 +562,30 @@ class MaintenanceMutation:
             "work_instructions": work_instructions,
             "failure_mode": failure_mode,
             "safety_notes": safety_notes,
+            "required_tools": required_tools,
             "labour_estimate": labour_estimate,
-        }.items() if v is not None and v != ""}
+            "work_performed": work_performed,
+            "completion_notes": completion_notes,
+            "parts_used_notes": parts_used_notes,
+            "downtime_minutes": downtime_minutes,
+            "root_cause": root_cause,
+            "corrective_action": corrective_action,
+            "verification_result": verification_result,
+            "actual_labor_hours": actual_labor_hours,
+        }.items() if v is not None}
         if due_date is not None:
             if due_date:
                 kwargs["due_date"] = date.fromisoformat(due_date)
             else:
                 kwargs["due_date"] = None
+        if planned_start_date is not None:
+            kwargs["planned_start_date"] = datetime.fromisoformat(planned_start_date) if planned_start_date else None
+        if planned_end_date is not None:
+            kwargs["planned_end_date"] = datetime.fromisoformat(planned_end_date) if planned_end_date else None
+        if actual_start_date is not None:
+            kwargs["actual_start_date"] = datetime.fromisoformat(actual_start_date) if actual_start_date else None
+        if actual_end_date is not None:
+            kwargs["actual_end_date"] = datetime.fromisoformat(actual_end_date) if actual_end_date else None
         WorkOrderService().update_work_order(id, **kwargs)
         return "Work order updated"
 
@@ -544,21 +626,28 @@ class MaintenanceMutation:
 
     @strawberry.mutation
     def complete_work_order(self, id: int,
+                            work_performed: str = "",
                             completion_notes: str = "",
                             downtime_minutes: Optional[int] = None,
                             root_cause: str = "",
                             corrective_action: str = "",
                             verification_result: str = "",
-                            actual_end_date: Optional[str] = None) -> str:
+                            actual_end_date: Optional[str] = None,
+                            actual_labor_hours: Optional[float] = None,
+                            parts_used_notes: str = "") -> str:
         from datetime import datetime
         aed = datetime.fromisoformat(actual_end_date) if actual_end_date else None
         WorkOrderService().complete_work_order(
-            id, completion_notes=completion_notes,
+            id,
+            work_performed=work_performed,
+            completion_notes=completion_notes,
             downtime_minutes=downtime_minutes,
             root_cause=root_cause,
             corrective_action=corrective_action,
             verification_result=verification_result,
             actual_end_date=aed,
+            actual_labor_hours=actual_labor_hours,
+            parts_used_notes=parts_used_notes,
         )
         return "Work order completed"
 
@@ -673,12 +762,25 @@ class MaintenanceMutation:
         target_id: Optional[int] = None,
         description: str = "",
         severity: str = "MEDIUM",
+        priority: str = "MEDIUM",
         reported_by: str = "",
+        assigned_to: str = "",
+        failure_mode: str = "",
+        safety_impact: str = "",
+        production_impact: str = "",
+        is_equipment_down: bool = False,
+        temporary_containment: str = "",
     ) -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
             "target_type": target_type, "target_id": target_id,
-            "severity": severity, "reported_by": reported_by,
+            "severity": severity, "priority": priority,
+            "reported_by": reported_by, "assigned_to": assigned_to,
+            "failure_mode": failure_mode,
+            "safety_impact": safety_impact,
+            "production_impact": production_impact,
+            "is_equipment_down": is_equipment_down,
+            "temporary_containment": temporary_containment,
         }.items() if v is not None}
         bd = BreakdownService().report_breakdown(**kwargs)
         return f"Breakdown reported: {bd.number}"
@@ -689,10 +791,36 @@ class MaintenanceMutation:
         title: Optional[str] = None,
         description: Optional[str] = None,
         severity: Optional[str] = None,
+        priority: Optional[str] = None,
+        assigned_to: Optional[str] = None,
+        failure_mode: Optional[str] = None,
+        safety_impact: Optional[str] = None,
+        production_impact: Optional[str] = None,
+        is_equipment_down: Optional[bool] = None,
+        temporary_containment: Optional[str] = None,
+        suspected_cause: Optional[str] = None,
+        corrective_action: Optional[str] = None,
+        parts_required: Optional[str] = None,
+        repair_notes: Optional[str] = None,
+        verification_result: Optional[str] = None,
+        completion_notes: Optional[str] = None,
     ) -> str:
         kwargs = {k: v for k, v in {
             "title": title, "description": description,
             "severity": severity,
+            "priority": priority,
+            "assigned_to": assigned_to,
+            "failure_mode": failure_mode,
+            "safety_impact": safety_impact,
+            "production_impact": production_impact,
+            "is_equipment_down": is_equipment_down,
+            "temporary_containment": temporary_containment,
+            "suspected_cause": suspected_cause,
+            "corrective_action": corrective_action,
+            "parts_required": parts_required,
+            "repair_notes": repair_notes,
+            "verification_result": verification_result,
+            "completion_notes": completion_notes,
         }.items() if v is not None}
         BreakdownService().update_breakdown(id, **kwargs)
         return "Breakdown updated"
@@ -705,9 +833,29 @@ class MaintenanceMutation:
     @strawberry.mutation
     def complete_breakdown_repair(self, id: int,
                                   repair_summary: str = "",
-                                  root_cause: str = "") -> str:
+                                  root_cause: str = "",
+                                  confirmed_root_cause: str = "",
+                                  corrective_action: str = "",
+                                  verification_result: str = "",
+                                  completion_notes: str = "",
+                                  repair_notes: str = "",
+                                  parts_required: str = "",
+                                  downtime_end: Optional[str] = None) -> str:
+        dt_end = None
+        if downtime_end:
+            from datetime import datetime
+            dt_end = datetime.fromisoformat(downtime_end)
         BreakdownService().complete_repair(
-            id, repair_summary=repair_summary, root_cause=root_cause,
+            id,
+            repair_summary=repair_summary,
+            root_cause=root_cause,
+            confirmed_root_cause=confirmed_root_cause,
+            corrective_action=corrective_action,
+            verification_result=verification_result,
+            completion_notes=completion_notes,
+            repair_notes=repair_notes,
+            parts_required=parts_required,
+            downtime_end=dt_end,
         )
         return "Breakdown repair completed"
 

@@ -49,8 +49,8 @@ const WORK_ORDER_FIELDS = `
   plannedStartDate plannedEndDate
   actualStartDate actualEndDate
   downtimeMinutes
-  workInstructions failureMode safetyNotes laborEstimate
-  completionNotes rootCause correctiveAction verificationResult
+  workInstructions failureMode safetyNotes requiredTools laborEstimate actualLaborHours
+  workPerformed completionNotes partsUsedNotes rootCause correctiveAction verificationResult
   sparePartsRequired attachments
   linkedPmId linkedBreakdownId linkedMerId
   createdAt updatedAt

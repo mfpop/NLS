@@ -8,8 +8,12 @@ import {
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { SPARE_PARTS_QUERY, SPARE_PART_USAGES_QUERY } from "@/graphql/maintenanceQueries";
+import { SPARE_PARTS_QUERY, SPARE_PART_USAGES_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { SparePartsDashboard } from "./spare-parts/SparePartsDashboard";
+import {
+  mockSpareParts,
+  mockSparePartUsages,
+} from "@/demo/maintenanceMockData";
 import {
   CREATE_SPARE_PART_MUTATION, UPDATE_SPARE_PART_MUTATION,
   ADJUST_SPARE_PART_QUANTITY_MUTATION,
@@ -57,6 +61,13 @@ interface SparePart {
 interface UsageRecord {
   id: number; partId: number; workOrderId: number;
   quantity: number; usedBy: string; usedAt: string; notes: string;
+}
+
+interface WorkOrderOption {
+  id: number;
+  number: string;
+  title: string;
+  status: string;
 }
 
 function Fld({ label, children, required, error }: { label: string; children: React.ReactNode; required?: boolean; error?: string }) {
@@ -115,16 +126,33 @@ export function SparePartsPage() {
       category: filterCategory || undefined,
     },
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
-  const parts: SparePart[] = (data as any)?.spareParts || [];
+  const parts: SparePart[] = (data as any)?.spareParts ?? mockSpareParts.spareParts;
   const sel = useMemo(() => selId ? parts.find((p) => p.id === selId) ?? null : null, [selId, parts]);
 
   const { data: usageData } = useQuery(SPARE_PART_USAGES_QUERY, {
     variables: { sparePartId: selId || undefined },
     skip: !selId,
     fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
   });
-  const usages: UsageRecord[] = (usageData as any)?.sparePartUsages || [];
+  const usages: UsageRecord[] = (usageData as any)?.sparePartUsages ?? mockSparePartUsages.sparePartUsages;
+
+  const { data: workOrdersData } = useQuery(WORK_ORDERS_QUERY, {
+    fetchPolicy: "cache-first",
+    errorPolicy: "all",
+  });
+  const workOrderOptions: WorkOrderOption[] = ((workOrdersData as any)?.maintenanceWorkOrders ?? [])
+    .map((wo: any) => ({
+      id: wo.id,
+      number: wo.number,
+      title: wo.title,
+      status: wo.status,
+    }))
+    .filter((wo: WorkOrderOption) => !!wo.id)
+    .sort((a: WorkOrderOption, b: WorkOrderOption) => b.id - a.id)
+    .slice(0, 50);
 
   // ── Mutations ──
   const [createPart] = useMutation(CREATE_SPARE_PART_MUTATION, { refetchQueries: [{ query: SPARE_PARTS_QUERY }] });
@@ -212,12 +240,24 @@ export function SparePartsPage() {
     try {
       let m = "";
       if (action === "adjust") {
+        if (!extra?.amount || Number(extra.amount) === 0) {
+          err("Enter a non-zero adjustment amount");
+          return;
+        }
         const r = await adjustQuantity({ variables: { id, adjustment: extra?.amount || 0 } });
         m = (r as any)?.data?.adjustSparePartQuantity || "Quantity adjusted";
         setAdjustingId(null); setAdjustQty(0);
       } else if (action === "inactive") { await markInactive({ variables: { id } }); m = "Marked inactive"; }
       else if (action === "obsolete") { await markObsolete({ variables: { id } }); m = "Marked obsolete"; }
       else if (action === "record-usage") {
+        if (!extra?.workOrderId || Number(extra.workOrderId) <= 0) {
+          err("Select a valid Work Order");
+          return;
+        }
+        if (!extra?.quantity || Number(extra.quantity) <= 0) {
+          err("Quantity must be greater than zero");
+          return;
+        }
         await recordUsage({
           variables: {
             partId: id, workOrderId: Number(extra?.workOrderId),
@@ -285,7 +325,7 @@ export function SparePartsPage() {
   // ── Form ──
   const renderForm = () => (
     <div className="flex flex-1 min-h-0">
-      <div className="w-[25%] min-w-[200px] border-r border-border/20 bg-card/30 p-4 space-y-4 overflow-visible">
+      <div className="w-[25%] min-w-50 border-r border-border/20 bg-card/30 p-4 space-y-4 overflow-visible">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <Hash className="h-3 w-3" /> Part Info & Location
         </p>
@@ -408,6 +448,7 @@ export function SparePartsPage() {
                     className="h-7 w-20 border border-input bg-background px-2 text-xs outline-none focus:border-teal-400"
                     placeholder="+/- qty" />
                   <button onClick={() => doAction("adjust", sel.id, { amount: adjustQty })}
+                    disabled={adjustQty === 0}
                     className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2 text-[10px] font-semibold text-white hover:bg-teal-700 transition-colors">
                     Apply
                   </button>
@@ -681,7 +722,7 @@ export function SparePartsPage() {
           </div>
           {view === "form" ? (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center max-w-[180px]">
+              <div className="text-center max-w-45">
                 <Package className="mx-auto h-8 w-8 text-muted-foreground/20 stroke-current mb-2" />
                 <p className="text-xs text-muted-foreground">Creating/editing part</p>
               </div>
@@ -808,7 +849,8 @@ export function SparePartsPage() {
       <ConfirmDialog open={recordUsageOpen} onClose={() => setRecordUsageOpen(false)}
         onConfirm={() => {
           if (!sel) return;
-          if (!usageForm.workOrderId.trim()) { err("Work Order ID is required"); return; }
+          if (!usageForm.workOrderId.trim()) { err("Work Order is required"); return; }
+          if (!usageForm.quantity.trim() || Number(usageForm.quantity) <= 0) { err("Quantity must be greater than zero"); return; }
           doAction("record-usage", sel.id, {
             workOrderId: usageForm.workOrderId,
             quantity: usageForm.quantity,
@@ -822,9 +864,14 @@ export function SparePartsPage() {
       >
         <div className="mt-3 space-y-3">
           <div>
-            <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Work Order ID *</label>
-            <input type="number" placeholder="e.g. 42" value={usageForm.workOrderId} onChange={(e) => setUsageForm({ ...usageForm, workOrderId: e.target.value })}
-              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-teal-400 transition-colors" />
+            <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Work Order *</label>
+            <select value={usageForm.workOrderId} onChange={(e) => setUsageForm({ ...usageForm, workOrderId: e.target.value })}
+              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-teal-400 transition-colors">
+              <option value="">Select work order...</option>
+              {workOrderOptions.map((wo) => (
+                <option key={wo.id} value={wo.id}>{wo.number} - {wo.title} ({wo.status})</option>
+              ))}
+            </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

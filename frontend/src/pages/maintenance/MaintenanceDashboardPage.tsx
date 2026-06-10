@@ -11,6 +11,13 @@ import {
   MAINTENANCE_SUMMARY_QUERY, WORK_ORDERS_QUERY, BREAKDOWNS_QUERY,
   DUE_PM_QUERY, LOW_STOCK_SPARE_PARTS_QUERY,
 } from "@/graphql/maintenanceQueries";
+import {
+  mockMaintenanceSummary,
+  mockMaintenanceWorkOrders,
+  mockBreakdowns,
+  mockDuePmPlans,
+  mockLowStockSpareParts,
+} from "@/demo/maintenanceMockData";
 
 // ── Types ──
 
@@ -154,17 +161,17 @@ export function MaintenanceDashboardPage() {
   const navigate = useNavigate();
 
   // ── Queries ──
-  const { data: summaryData, loading: summaryLoading, error: summaryError, refetch: summaryRefetch } = useQuery(MAINTENANCE_SUMMARY_QUERY, { fetchPolicy: "cache-and-network" });
-  const { data: woData, refetch: woRefetch } = useQuery(WORK_ORDERS_QUERY, { fetchPolicy: "cache-and-network" });
-  const { data: bdData, refetch: bdRefetch } = useQuery(BREAKDOWNS_QUERY, { fetchPolicy: "cache-and-network" });
-  const { data: duePmData, refetch: duePmRefetch } = useQuery(DUE_PM_QUERY, { fetchPolicy: "cache-and-network" });
-  const { data: lowStockData, refetch: lowStockRefetch } = useQuery(LOW_STOCK_SPARE_PARTS_QUERY, { fetchPolicy: "cache-and-network" });
+  const { data: summaryData, loading: summaryLoading, error: summaryError, refetch: summaryRefetch } = useQuery(MAINTENANCE_SUMMARY_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: woData, refetch: woRefetch } = useQuery(WORK_ORDERS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: bdData, refetch: bdRefetch } = useQuery(BREAKDOWNS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: duePmData, refetch: duePmRefetch } = useQuery(DUE_PM_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
+  const { data: lowStockData, refetch: lowStockRefetch } = useQuery(LOW_STOCK_SPARE_PARTS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
 
-  const summary: MaintenanceSummary | undefined = (summaryData as any)?.maintenanceSummary;
-  const workOrders: WorkOrder[] = (woData as any)?.maintenanceWorkOrders || [];
-  const breakdowns: Breakdown[] = (bdData as any)?.breakdowns || [];
-  const duePlans: PMPlan[] = (duePmData as any)?.duePreventiveMaintenance || [];
-  const lowStockParts: LowStockPart[] = (lowStockData as any)?.lowStockSpareParts || [];
+  const summary: MaintenanceSummary | undefined = (summaryData as any)?.maintenanceSummary ?? mockMaintenanceSummary.maintenanceSummary;
+  const workOrders: WorkOrder[] = (woData as any)?.maintenanceWorkOrders ?? mockMaintenanceWorkOrders.maintenanceWorkOrders;
+  const breakdowns: Breakdown[] = (bdData as any)?.breakdowns ?? mockBreakdowns.breakdowns;
+  const duePlans: PMPlan[] = (duePmData as any)?.duePreventiveMaintenance ?? mockDuePmPlans.duePreventiveMaintenance;
+  const lowStockParts: LowStockPart[] = (lowStockData as any)?.lowStockSpareParts ?? mockLowStockSpareParts.lowStockSpareParts;
 
   const hRefresh = useCallback(() => {
     Promise.all([summaryRefetch(), woRefetch(), bdRefetch(), duePmRefetch(), lowStockRefetch()]);
@@ -247,7 +254,7 @@ export function MaintenanceDashboardPage() {
     );
   }
 
-  if (summaryError) {
+  if (summaryError && !summary) {
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
         <PageHeader icon={<Wrench className="h-5 w-5 stroke-current" />} iconClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400" title="Maintenance Dashboard" subtitle="TPM & maintenance performance command center" />

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Plus } from "lucide-react";
 import { DMRS_QUERY, DMR_QUERY } from "@/graphql/checkQueries";
-import { CREATE_DMR_MUTATION, UPDATE_DMR_MUTATION, DISPOSITION_DMR_MUTATION, CLOSE_DMR_MUTATION, CANCEL_DMR_MUTATION } from "@/graphql/checkMutations";
+import { CREATE_DMR_MUTATION, DISPOSITION_DMR_MUTATION, CLOSE_DMR_MUTATION, CANCEL_DMR_MUTATION } from "@/graphql/checkMutations";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { PRODUCTION_LINES_QUERY, DEPARTMENTS_QUERY, RESOURCE_GROUPS_QUERY, RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { DMR_STATUS_STYLES, DMR_DISPOSITION_OPTIONS, DEFECT_CATEGORY_OPTIONS, SEL_INPUT, statusLabel } from "./QualityStatusStyles";
@@ -105,7 +105,6 @@ export function useDmrSection(
 
   // ── Mutations ──
   const [createMut] = useMutation(CREATE_DMR_MUTATION);
-  const [updateMut] = useMutation(UPDATE_DMR_MUTATION);
   const [dispMut] = useMutation(DISPOSITION_DMR_MUTATION);
   const [closeMut] = useMutation(CLOSE_DMR_MUTATION);
   const [cancelMut] = useMutation(CANCEL_DMR_MUTATION);
@@ -207,25 +206,6 @@ export function useDmrSection(
       onMessage(e?.message || "Failed to create DMR", "error");
     }
   }, [fNumber, fTitle, fSeverity, fDefectDesc, fContainment, fQty, fUom, fOwner, fDueDate, fNotes, validate, resolveTarget, createMut, q, onMessage]);
-
-  const hUpdate = useCallback(async (field: string, val: string) => {
-    if (!selectedId) return;
-    try {
-      const r: any = await updateMut({ variables: { id: selectedId, [field]: val || null } });
-      if (r.errors?.length) {
-        onMessage(r.errors[0]?.message || "Failed to update", "error");
-        return;
-      }
-      if (!r.data) {
-        onMessage("Failed to update - unexpected response", "error");
-        return;
-      }
-      onMessage("Updated");
-      q.refetch();
-    } catch (e: any) {
-      onMessage(e?.message || "Failed to update", "error");
-    }
-  }, [selectedId, updateMut, q, onMessage]);
 
   const hDisposition = useCallback(async () => {
     if (!selectedId) return;

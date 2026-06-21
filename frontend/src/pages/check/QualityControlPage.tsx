@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { ShieldCheck, Plus, Save, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
-import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import { useActiveLine } from "@/hooks/useActiveLine";
@@ -12,7 +12,7 @@ import { useActionSection } from "./quality-control/ActionSection";
 import { useDmrSection } from "./quality-control/DmrSection";
 import { useRmaSection } from "./quality-control/RmaSection";
 
-export function QualityControlPage() {
+export function QualityManagementPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function QualityControlPage() {
 
   const headerMsg: SystemMessage | null = useMemo(() => successMsg ? { text: successMsg, type: msgTone } : null, [successMsg, msgTone]);
 
-  // ── Toolbar actions (spec-compliant) ──
+  // ── Toolbar actions ──
   const renderToolbarActions = (rt: RecordType | null, resetSelection: () => void, setSelection: (id: number) => void) => {
     if (rt === "AUDITS") {
       if (auditS.creating) {
@@ -136,13 +136,14 @@ export function QualityControlPage() {
     return null;
   };
 
-  // ── Unified list (all records with color coding) ──
+  // ── Unified list (all records with type badges) ──
   const TYPE_CONFIG = useMemo(() => ({
-    AUDITS: { color: "bg-blue-500", border: "border-l-blue-500", hover: "hover:bg-blue-50/40 dark:hover:bg-blue-950/20", label: "Audit" },
-    ISSUES: { color: "bg-amber-500", border: "border-l-amber-500", hover: "hover:bg-amber-50/40 dark:hover:bg-amber-950/20", label: "Issue" },
-    ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action" },
-    DMRS: { color: "bg-orange-500", border: "border-l-orange-500", hover: "hover:bg-orange-50/40 dark:hover:bg-orange-950/20", label: "DMR" },
-    RMAS: { color: "bg-teal-500", border: "border-l-teal-500", hover: "hover:bg-teal-50/40 dark:hover:bg-teal-950/20", label: "RMA" },
+    AUDITS: { color: "bg-blue-500", border: "border-l-blue-500", hover: "hover:bg-blue-50/40 dark:hover:bg-blue-950/20", label: "Audit", badge: "[AUDIT]" },
+    ISSUES: { color: "bg-amber-500", border: "border-l-amber-500", hover: "hover:bg-amber-50/40 dark:hover:bg-amber-950/20", label: "Issue", badge: "[ISSUE]" },
+    ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action", badge: "[ACTION]" },
+    DMRS: { color: "bg-orange-500", border: "border-l-orange-500", hover: "hover:bg-orange-50/40 dark:hover:bg-orange-950/20", label: "DMR", badge: "[DMR]" },
+    RMAS: { color: "bg-teal-500", border: "border-l-teal-500", hover: "hover:bg-teal-50/40 dark:hover:bg-teal-950/20", label: "RMA", badge: "[RMA]" },
+    EVENTS: { color: "bg-red-500", border: "border-l-red-500", hover: "hover:bg-red-50/40 dark:hover:bg-red-950/20", label: "Event", badge: "[EVENT]" },
   }), []);
 
   const ITEMS_PER_PAGE = 50;
@@ -155,7 +156,6 @@ export function QualityControlPage() {
   ) => {
     const rows: { rt: RecordType; id: number; title: string; sub: string; status: string; date: string; auditor: string }[] = [];
 
-    // Collect items from each section
     (auditS.items || []).forEach((i: any) => rows.push({ rt: "AUDITS", id: i.id, title: `Audit #${i.id}`, sub: i.auditType || i.title || "", status: i.status || "", date: i.auditDate || "", auditor: i.auditor || "" }));
     (issueS.items || []).forEach((i: any) => rows.push({ rt: "ISSUES", id: i.id, title: i.title || "Issue", sub: i.problemType || "", status: i.status || "", date: i.createdAt || i.dueDate || "", auditor: i.reportedBy || i.owner || "" }));
     (actionS.items || []).forEach((i: any) => rows.push({ rt: "ACTIONS", id: i.id, title: i.title || "Action", sub: i.owner || "", status: i.status || "", date: i.dueDate || i.createdAt || "", auditor: i.owner || "" }));
@@ -183,9 +183,9 @@ export function QualityControlPage() {
                 <div
                   key={`${row.rt}-${row.id}`}
                   onClick={() => {
-                if (row.rt === "AUDITS") auditS.setExecId(row.id);
-                onSelect(row.rt, row.id);
-              }}
+                    if (row.rt === "AUDITS") auditS.setExecId(row.id);
+                    onSelect(row.rt, row.id);
+                  }}
                   className={`group mx-1 my-0.5 cursor-pointer border-l-2 transition-all duration-150 ${
                     selectedId === row.id
                       ? `${cfg.border} bg-table-selected`
@@ -195,6 +195,7 @@ export function QualityControlPage() {
                   <div className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       <span className={`h-2 w-2 shrink-0 rounded-full ${cfg.color}`} />
+                      <span className="text-[10px] font-bold text-muted-foreground w-14 shrink-0">{cfg.badge}</span>
                       <span className="min-w-0 truncate text-sm font-semibold text-foreground flex-1">
                         {row.title}
                       </span>
@@ -222,13 +223,16 @@ export function QualityControlPage() {
         headerMessage={headerMsg}
         onDismissHeaderMessage={hDismissMsg}
         controlArea="QUALITY"
-        title="Quality Control"
-        subtitle="Monitor product quality, track defects, and enforce quality standards across production."
+        title="Quality Management"
+        subtitle="Monitor quality performance, manage audits, track issues, DMRs, RMAs, and corrective actions across production."
         icon={ShieldCheck}
         iconClass="bg-cyan-100 text-cyan-600 dark:bg-cyan-900/40 dark:text-cyan-400"
+        filterMode="dropdown"
         renderOverview={() => <QualityOverview audits={auditS.items} problems={issueS.items} actions={actionS.items} dmrs={dmrS.items} rmas={rmaS.items} auditTemplates={auditS.templates} onInstallTemplates={auditS.hInstall} />}
         renderUnifiedList={renderUnifiedList}
-        toolbarSearch={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search..." />}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search quality records..."
         toolbarFilters={(rt: RecordType | null) => {
           const opts = rt === "AUDITS"
             ? [{ value: "", label: "All" }, { value: "DRAFT", label: "Draft" }, { value: "OPEN", label: "Open" }, { value: "COMPLETED", label: "Completed" }, { value: "ARCHIVED", label: "Archived" }]
@@ -237,7 +241,7 @@ export function QualityControlPage() {
               : rt === "ACTIONS"
                 ? [{ value: "", label: "All" }, { value: "OPEN", label: "Open" }, { value: "IN_PROGRESS", label: "In Progress" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }]
                 : [{ value: "", label: "All" }, { value: "OPEN", label: "Open" }, { value: "UNDER_REVIEW", label: "Under Review" }, { value: "CLOSED", label: "Closed" }, { value: "CANCELLED", label: "Cancelled" }];
-          return <ToolbarSelect value={filterStatus} onChange={setFilterStatus} className="w-32" options={opts} />;
+          return <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} className="w-32" options={opts} />;
         }}
         onRefresh={hRefreshAll}
         onRecordTypeChange={() => {
@@ -278,3 +282,6 @@ export function QualityControlPage() {
     </div>
   );
 }
+
+// Retain old export name for backward compatibility with lazy imports
+export const QualityControlPage = QualityManagementPage;

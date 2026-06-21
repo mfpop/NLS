@@ -67,6 +67,21 @@ The following are LeanSync active decisions. These are stable and Governance-app
 56. Role/Permission logic is service-owned, not in resolvers or frontend.
 57. No resource-level permission matrix.
 
+## Safety Compliance Extension
+70. Safety Compliance extension is approved as bounded operational record tracking.
+71. It is not a legal/regulatory engine. It does not provide medical/legal advice.
+72. It does not submit official regulatory reports.
+73. It does not replace HR, insurance, medical, legal, or ERP systems.
+74. Check = audits/checklists only.
+75. Safety = events and safety compliance records.
+76. CAPA here is safety-scoped only, not global enterprise CAPA.
+77. Injury Claims and Medical Cases are permission-protected — only MANAGER_PLUS roles may edit/view confidential notes.
+78. Medical confidential notes must never be exposed to unauthorized users.
+79. No mock/hardcoded operational records.
+80. Domain services own validation and lifecycle transitions.
+81. GraphQL resolvers are thin.
+82. No duplicate Check/Audit framework.
+
 ## Agent System Rules
 58. Memory is runtime-only and must never override `project_context/`.
 59. Governance-approved rules belong in `project_context/`.

@@ -14,7 +14,7 @@ import {
   Package,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarCrudActions } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarCrudActions } from "@/components/shared/Toolbar";
 import { EntityWorkspacePage } from "@/pages/system/production-structure/components/EntityWorkspacePage";
 import { theme } from "@/styles/themeTokens";
 import {
@@ -601,7 +601,7 @@ function ProductMasterContentHeader({
   return (
     <Toolbar
       left={
-        <ToolbarSelect
+        <ToolbarDropdown
           value={activeTab}
           onChange={(v) => onTabChange(v as Tab)}
           options={tabs.map((tab) => ({ value: tab.id, label: tab.label }))}
@@ -611,7 +611,7 @@ function ProductMasterContentHeader({
       right={
         <>
           <ToolbarSearch value={searchText} onChange={onSearchTextChange} placeholder="Search product master data" />
-          <ToolbarSelect
+          <ToolbarDropdown
             value={statusFilter}
             onChange={(v) => onStatusFilterChange(v as "all" | "active" | "archived")}
             options={[

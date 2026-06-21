@@ -1,5 +1,6 @@
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Search, X, Plus, Pencil, Trash2, RefreshCw, Check, Archive } from "lucide-react";
+import { Search, X, Plus, Pencil, Trash2, RefreshCw, Check, Archive, ChevronDown } from "lucide-react";
 
 // ── Search Input ──
 interface SearchProps {
@@ -11,25 +12,25 @@ interface SearchProps {
 
 export function ToolbarSearch({ value, onChange, placeholder = "Search", disabled = false }: SearchProps) {
   return (
-    <div className="relative min-w-0 flex-1 mx-2">
+    <div className="relative flex h-8 w-full items-center bg-slate-100 dark:bg-slate-800 rounded-[2px] overflow-hidden focus-within:after:absolute focus-within:after:bottom-0 focus-within:after:left-0 focus-within:after:h-[2px] focus-within:after:w-full focus-within:after:bg-sky-500 disabled:pointer-events-none disabled:opacity-50">
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="h-8 w-full border-0 border-b-2 border-b-transparent bg-transparent pr-7 pl-2 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:bg-muted/40 focus:border-b-blue-500 focus:bg-transparent disabled:pointer-events-none disabled:opacity-50"
+        className="h-full w-full bg-transparent pl-3 pr-11 text-sm text-slate-800 placeholder:text-slate-500 outline-none disabled:pointer-events-none"
       />
-      <Search className={`absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 stroke-current text-muted-foreground/60 pointer-events-none ${disabled ? "opacity-40" : ""}`} />
-      {value && (
+      {value && !disabled && (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute right-7 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground/60 hover:bg-muted/70 hover:text-foreground"
+          className="absolute right-7 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600"
         >
-          <X className="h-3.5 w-3.5 stroke-current" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
+      <Search className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 pointer-events-none" />
     </div>
   );
 }
@@ -47,10 +48,69 @@ export function ToolbarSelect({ value, onChange, options, className = "" }: Filt
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`h-8 shrink-0 cursor-pointer border-0 border-b-2 border-b-transparent bg-transparent px-1.5 text-xs text-foreground outline-none transition-colors hover:bg-muted/40 focus:border-b-blue-500 disabled:pointer-events-none disabled:opacity-50 ${className}`}
+      className={`h-8 shrink-0 cursor-pointer border border-slate-300 bg-white rounded-sm px-2 text-sm text-slate-800 outline-none transition-colors hover:border-slate-400 focus:border-emerald-500 disabled:pointer-events-none disabled:opacity-50 ${className}`}
     >
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
+  );
+}
+
+// ── Toolbar Dropdown ──
+interface ToolbarDropdownProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: Array<{ value: string; label: string }>;
+  placeholder?: string;
+  className?: string;
+}
+
+export function ToolbarDropdown({ value, onChange, options, placeholder = "All", className = "" }: ToolbarDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const sel = options.find((o) => o.value === value);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, handleKeyDown]);
+
+  return (
+    <div className={`relative shrink-0 ${className}`} ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}        className={`h-8 min-w-[140px] px-2 rounded-[2px] border border-slate-300 bg-white text-sm text-slate-800 flex items-center justify-between gap-2 hover:bg-slate-50 active:bg-slate-100`}
+        >
+          <span className="truncate">{sel ? sel.label : placeholder}</span>
+          <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+        </button>
+        {open && (
+          <div className="absolute left-0 top-full z-50 mt-1 min-w-[180px] rounded-[4px] border border-slate-200 bg-white shadow-md ring-1 ring-black/5 py-1">
+            {options.map((o) => (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => { onChange(o.value); setOpen(false); }}
+                className={`flex h-8 w-full items-center gap-2 px-3 text-sm text-left hover:bg-slate-100 ${o.value === value ? "font-medium text-slate-950" : "text-slate-800"}`}
+              >
+                {o.value === value ? <span className="h-2 w-2 shrink-0 rounded-full bg-slate-900" /> : <span className="w-3.5 shrink-0" />}
+                <span className="truncate">{o.label}</span>
+              </button>
+            ))}
+          </div>
+      )}
+    </div>
   );
 }
 
@@ -61,12 +121,13 @@ interface ActionButtonProps {
   onClick?: () => void;
   disabled?: boolean;
   title?: string;
-  variant?: "default" | "success";
+  variant?: "default" | "success" | "destructive" | "primary";
   active?: boolean;
+  className?: string;
 }
 
-export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, title, variant = "default", active = false }: ActionButtonProps) {
-  const base = "inline-flex h-8 items-center gap-1.5 border-0 border-b-2 border-b-transparent px-2 text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-50";
+export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, title, variant = "default", active = false, className = "" }: ActionButtonProps) {
+  const base = "inline-flex h-8 items-center gap-1.5 px-2 text-xs font-medium rounded-[2px] whitespace-nowrap transition-colors disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent";
   if (variant === "success") {
     return (
       <button
@@ -74,7 +135,35 @@ export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, ti
         onClick={onClick}
         title={title}
         disabled={disabled}
-        className={`${base} text-emerald-600 hover:border-b-emerald-500 hover:bg-emerald-50/50 active:bg-emerald-100/60 ${active ? "border-b-emerald-500 bg-emerald-50/60" : ""}`}
+        className={`${base} text-emerald-700 hover:bg-emerald-50 active:bg-emerald-100 ${active ? "bg-emerald-50 text-emerald-800" : ""} ${className}`}
+      >
+        <Icon className="h-4 w-4 stroke-current" />
+        <span>{label}</span>
+      </button>
+    );
+  }
+  if (variant === "destructive") {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        disabled={disabled}
+        className={`${base} text-red-600 hover:bg-red-50 active:bg-red-100 ${active ? "bg-red-50 text-red-700" : ""} ${className}`}
+      >
+        <Icon className="h-4 w-4 stroke-current" />
+        <span>{label}</span>
+      </button>
+    );
+  }
+  if (variant === "primary") {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={title}
+        disabled={disabled}
+        className={`${base} text-emerald-700 bg-transparent hover:bg-emerald-50 active:bg-emerald-100 ${active ? "bg-emerald-50" : ""} ${className}`}
       >
         <Icon className="h-4 w-4 stroke-current" />
         <span>{label}</span>
@@ -87,7 +176,7 @@ export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, ti
       onClick={onClick}
       title={title}
       disabled={disabled}
-      className={`${base} text-foreground hover:border-b-blue-500 hover:bg-muted/50 active:bg-muted/70 ${active ? "border-b-blue-500 bg-blue-50/60 text-blue-700" : ""}`}
+      className={`${base} text-slate-700 hover:bg-slate-100 active:bg-slate-200 ${active ? "bg-slate-100 text-slate-800" : ""} ${className}`}
     >
       <Icon className="h-4 w-4 stroke-current" />
       <span>{label}</span>
@@ -98,24 +187,27 @@ export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, ti
 // ── Toolbar Layout ──
 interface ToolbarProps {
   left?: React.ReactNode;
+  center?: React.ReactNode;
   right?: React.ReactNode;
-  hideLeft?: boolean;
   className?: string;
+  leftWidth?: string;
 }
 
-export function Toolbar({ left, right, hideLeft = false, className = "" }: ToolbarProps) {
+export function Toolbar({ left, center, right, className = "", leftWidth = "w-[20%]" }: ToolbarProps) {
   return (
-    <div className={`flex w-full shrink-0 select-none items-center border-b border-border/30 bg-muted/80 h-10 gap-0 ${className}`}>
-      {!hideLeft && left && (
-        <div className="flex min-w-0 flex-[2] items-center gap-1">
-          {left}
-        </div>
-      )}
-      {right && (
-        <div className="flex min-w-0 flex-[8] items-center justify-end gap-0.5">
-          {right}
-        </div>
-      )}
+    <div className={`flex h-10 shrink-0 items-center border-b border-border bg-white overflow-hidden select-none ${className}`}>
+      <div className={`${leftWidth} min-w-[240px] max-w-[360px] border-r border-border px-2 flex items-center h-full`}>
+        {left && <div className="w-full">{left}</div>}
+      </div>
+      <div className="flex flex-1 min-w-0 items-center gap-2 px-2 h-full">
+        {center && <div className="flex items-center gap-2 shrink-0">{center}</div>}
+        {right && (
+          <>
+            <div className="flex-1 min-w-0" />
+            <div className="flex items-center gap-2 shrink-0">{right}</div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -162,7 +254,7 @@ export function ToolbarCrudActions({
       <ToolbarButton icon={Pencil} label="Edit" onClick={onEdit} disabled={!onEdit || !canEdit} title="Edit selected (Enter)" />
       {!hideDelete && <ToolbarButton icon={Archive} label="Archive" onClick={onDelete} disabled={!onDelete || !canDelete} title="Archive selected" />}
       {!hideDelete && <ToolbarButton icon={Trash2} label="Delete" onClick={onDeletePermanent} disabled={!onDeletePermanent || !canDeletePermanent} title="Permanently delete selected" />}
-      {!hideDelete && <span className="mx-0.5 h-5 w-px shrink-0 bg-border/30" />}
+      {!hideDelete && <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" />}
       <ToolbarButton icon={RefreshCw} label="Refresh" onClick={onRefresh} disabled={!onRefresh || !canRefresh} title="Refresh list" />
     </>
   );

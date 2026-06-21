@@ -6,7 +6,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -526,14 +526,17 @@ export function A3PdcaPage() {
             right={
               <div className="flex items-center gap-2 w-full">
                 {!isForm && (
-                  <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
-                    options={[
-                      { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
-                      { value: "PLAN", label: "Plan" }, { value: "DO", label: "Do" },
-                      { value: "CHECK", label: "Check" }, { value: "ACT", label: "Act" },
-                      { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
-                    ]}
-                    className="w-36" />
+                  <>
+                    <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
+                      options={[
+                        { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
+                        { value: "PLAN", label: "Plan" }, { value: "DO", label: "Do" },
+                        { value: "CHECK", label: "Check" }, { value: "ACT", label: "Act" },
+                        { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
+                      ]}
+                      className="w-36" />
+
+                  </>
                 )}
                 {isForm && mode === "create" && (
                   <MethodToggle value={templateMethod} onChange={(m) => { setTemplateMethod(m); applyTemplate(m); }} />

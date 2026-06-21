@@ -24,6 +24,12 @@ from check.constants import (
     RMA_STATUS_UNDER_REVIEW,
     RMA_STATUS_DISPOSITION_PENDING,
     RMA_STATUS_CLOSED,
+    EVENT_STATUS_DRAFT,
+    EVENT_STATUS_REPORTED,
+    EVENT_STATUS_UNDER_REVIEW,
+    EVENT_STATUS_ACTION_REQUIRED,
+    EVENT_STATUS_CLOSED,
+    EVENT_STATUS_CANCELLED,
     INCIDENT_STATUS_OPEN,
     INCIDENT_STATUS_CONTAINED,
     INCIDENT_STATUS_UNDER_REVIEW,
@@ -32,6 +38,32 @@ from check.constants import (
     MATERIAL_ISSUE_STATUS_CONTAINED,
     MATERIAL_ISSUE_STATUS_RESOLVED,
     MATERIAL_ISSUE_STATUS_CLOSED,
+    CLAIM_STATUS_DRAFT,
+    CLAIM_STATUS_OPEN,
+    CLAIM_STATUS_UNDER_REVIEW,
+    CLAIM_STATUS_WAITING_INFO,
+    CLAIM_STATUS_CLOSED,
+    CLAIM_STATUS_CANCELLED,
+    MEDICAL_STATUS_DRAFT,
+    MEDICAL_STATUS_OPEN,
+    MEDICAL_STATUS_MONITORING,
+    MEDICAL_STATUS_RETURNED_TO_WORK,
+    MEDICAL_STATUS_CLOSED,
+    MEDICAL_STATUS_CANCELLED,
+    ENV_REPORT_STATUS_DRAFT,
+    ENV_REPORT_STATUS_REPORTED,
+    ENV_REPORT_STATUS_UNDER_REVIEW,
+    ENV_REPORT_STATUS_ACTION_REQUIRED,
+    ENV_REPORT_STATUS_CLOSED,
+    ENV_REPORT_STATUS_CANCELLED,
+    CAPA_STATUS_DRAFT,
+    CAPA_STATUS_OPEN,
+    CAPA_STATUS_IN_PROGRESS,
+    CAPA_STATUS_PENDING_EFFECTIVENESS,
+    CAPA_STATUS_EFFECTIVE,
+    CAPA_STATUS_INEFFECTIVE,
+    CAPA_STATUS_CLOSED,
+    CAPA_STATUS_CANCELLED,
 )
 
 
@@ -130,7 +162,24 @@ def can_cancel_rma(current_status: str) -> bool:
     return current_status in (RMA_STATUS_OPEN, RMA_STATUS_RECEIVED, RMA_STATUS_UNDER_REVIEW, RMA_STATUS_DISPOSITION_PENDING)
 
 
-# ── Safety Incident transitions ──
+# ── Safety Event transitions ──
+
+def can_report_event(current_status: str) -> bool:
+    return current_status == EVENT_STATUS_DRAFT
+
+def can_review_event(current_status: str) -> bool:
+    return current_status == EVENT_STATUS_REPORTED
+
+def can_require_action_event(current_status: str) -> bool:
+    return current_status == EVENT_STATUS_UNDER_REVIEW
+
+def can_close_event(current_status: str) -> bool:
+    return current_status in (EVENT_STATUS_UNDER_REVIEW, EVENT_STATUS_ACTION_REQUIRED)
+
+def can_cancel_event(current_status: str) -> bool:
+    return current_status in (EVENT_STATUS_DRAFT, EVENT_STATUS_REPORTED, EVENT_STATUS_UNDER_REVIEW)
+
+# ── Safety Incident transitions (legacy) ──
 
 def can_contain_safety_incident(current_status: str) -> bool:
     return current_status == INCIDENT_STATUS_OPEN
@@ -147,6 +196,83 @@ def can_close_safety_incident(current_status: str) -> bool:
 def can_cancel_safety_incident(current_status: str) -> bool:
     return current_status in (INCIDENT_STATUS_OPEN, INCIDENT_STATUS_CONTAINED, INCIDENT_STATUS_UNDER_REVIEW)
 
+
+# ── Safety Injury Claim transitions ──
+
+def can_open_claim(current_status: str) -> bool:
+    return current_status == CLAIM_STATUS_DRAFT
+
+def can_review_claim(current_status: str) -> bool:
+    return current_status == CLAIM_STATUS_OPEN
+
+def can_wait_info_claim(current_status: str) -> bool:
+    return current_status == CLAIM_STATUS_UNDER_REVIEW
+
+def can_close_claim(current_status: str) -> bool:
+    return current_status in (CLAIM_STATUS_UNDER_REVIEW, CLAIM_STATUS_WAITING_INFO)
+
+def can_cancel_claim(current_status: str) -> bool:
+    return current_status in (CLAIM_STATUS_DRAFT, CLAIM_STATUS_OPEN, CLAIM_STATUS_UNDER_REVIEW, CLAIM_STATUS_WAITING_INFO)
+
+# ── Safety Medical Case transitions ──
+
+def can_open_medical(current_status: str) -> bool:
+    return current_status == MEDICAL_STATUS_DRAFT
+
+def can_monitor_medical(current_status: str) -> bool:
+    return current_status == MEDICAL_STATUS_OPEN
+
+def can_return_to_work(current_status: str) -> bool:
+    return current_status == MEDICAL_STATUS_MONITORING
+
+def can_close_medical(current_status: str) -> bool:
+    return current_status in (MEDICAL_STATUS_MONITORING, MEDICAL_STATUS_RETURNED_TO_WORK)
+
+def can_cancel_medical(current_status: str) -> bool:
+    return current_status in (MEDICAL_STATUS_DRAFT, MEDICAL_STATUS_OPEN, MEDICAL_STATUS_MONITORING)
+
+# ── Safety Environmental Report transitions ──
+
+def can_report_env_report(current_status: str) -> bool:
+    return current_status == ENV_REPORT_STATUS_DRAFT
+
+def can_review_env_report(current_status: str) -> bool:
+    return current_status == ENV_REPORT_STATUS_REPORTED
+
+def can_require_action_env_report(current_status: str) -> bool:
+    return current_status == ENV_REPORT_STATUS_UNDER_REVIEW
+
+def can_close_env_report(current_status: str) -> bool:
+    return current_status in (ENV_REPORT_STATUS_UNDER_REVIEW, ENV_REPORT_STATUS_ACTION_REQUIRED)
+
+def can_cancel_env_report(current_status: str) -> bool:
+    return current_status in (ENV_REPORT_STATUS_DRAFT, ENV_REPORT_STATUS_REPORTED, ENV_REPORT_STATUS_UNDER_REVIEW)
+
+# ── Safety CAPA transitions ──
+
+def can_open_capa(current_status: str) -> bool:
+    return current_status == CAPA_STATUS_DRAFT
+
+def can_start_capa(current_status: str) -> bool:
+    return current_status == CAPA_STATUS_OPEN
+
+def can_pending_effectiveness_capa(current_status: str) -> bool:
+    return current_status == CAPA_STATUS_IN_PROGRESS
+
+def can_complete_effectiveness_capa(current_status: str) -> bool:
+    return current_status == CAPA_STATUS_PENDING_EFFECTIVENESS
+
+def can_close_effective_capa(current_status: str) -> bool:
+    return current_status == CAPA_STATUS_EFFECTIVE
+
+def can_reopen_capa(current_status: str) -> bool:
+    return current_status == CAPA_STATUS_INEFFECTIVE
+
+def can_close_capa(current_status: str) -> bool:
+    return current_status in (CAPA_STATUS_EFFECTIVE, CAPA_STATUS_INEFFECTIVE)
+
+def can_cancel_capa(current_status: str) -> bool:
+    return current_status in (CAPA_STATUS_DRAFT, CAPA_STATUS_OPEN, CAPA_STATUS_IN_PROGRESS, CAPA_STATUS_PENDING_EFFECTIVENESS)
 
 # ── Material Issue transitions ──
 

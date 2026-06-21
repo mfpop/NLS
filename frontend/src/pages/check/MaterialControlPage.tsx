@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { Package, Plus, Save, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
-import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import type { SystemMessage } from "@/pages/shared/PageHeader";
@@ -179,7 +179,7 @@ export function MaterialControlPage() {
             : rt === "ISSUES"
               ? [{ value: "", label: "All" }, { value: "OPEN", label: "Open" }, { value: "IN_REVIEW", label: "In Review" }, { value: "CONTAINED", label: "Contained" }, { value: "CLOSED", label: "Closed" }, { value: "CANCELLED", label: "Cancelled" }]
               : [{ value: "", label: "All" }, { value: "OPEN", label: "Open" }, { value: "IN_PROGRESS", label: "In Progress" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }];
-          return <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={opts} className="w-32" />;
+          return <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={opts} className="w-32" />;
         }}
         onRefresh={hRefreshAll}
         onRecordTypeChange={() => {

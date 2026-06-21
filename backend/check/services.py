@@ -9,8 +9,9 @@ from check.models import (
     ProductionCheck, ProductionChecklistItem,
     QualityCheck, QualityChecklistItem,
     DMR, RMA,
-    SafetyCheck, SafetyChecklistItem, SafetyIncident,
+    SafetyCheck, SafetyChecklistItem, SafetyIncident, SafetyEvent,
     MaterialCheck, MaterialChecklistItem, MaterialIssue,
+    SafetyInjuryClaim, SafetyMedicalCase, SafetyEnvironmentalReport, SafetyCAPA,
 )
 from check.constants import (
     PROBLEM_STATUS_IN_REVIEW, PROBLEM_STATUS_IN_PROGRESS,
@@ -23,6 +24,8 @@ from check.constants import (
     DMR_STATUS_CLOSED, DMR_STATUS_CANCELLED,
     RMA_STATUS_RECEIVED, RMA_STATUS_UNDER_REVIEW,
     RMA_STATUS_DISPOSITION_PENDING, RMA_STATUS_CLOSED, RMA_STATUS_CANCELLED,
+    EVENT_STATUS_REPORTED, EVENT_STATUS_UNDER_REVIEW,
+    EVENT_STATUS_ACTION_REQUIRED, EVENT_STATUS_CLOSED, EVENT_STATUS_CANCELLED,
     INCIDENT_STATUS_CONTAINED, INCIDENT_STATUS_UNDER_REVIEW,
     INCIDENT_STATUS_CLOSED, INCIDENT_STATUS_CANCELLED,
     MATERIAL_ISSUE_STATUS_CONTAINED, MATERIAL_ISSUE_STATUS_RESOLVED,
@@ -36,6 +39,7 @@ from check.domain_rules import (
     can_complete_check,
     can_review_dmr, can_disposition_dmr, can_quarantine_dmr, can_approve_disposition_dmr, can_close_dmr, can_cancel_dmr,
     can_receive_rma, can_review_rma, can_disposition_rma, can_close_rma, can_cancel_rma,
+    can_report_event, can_review_event, can_require_action_event, can_close_event, can_cancel_event,
     can_contain_safety_incident, can_review_safety_incident,
     can_close_safety_incident, can_cancel_safety_incident,
     can_contain_material_issue, can_resolve_material_issue,
@@ -45,9 +49,12 @@ from check.exceptions import (
     ProblemNotFoundError, ActionNotFoundError,
     ProductionCheckNotFoundError, QualityCheckNotFoundError,
     DMRNotFoundError, RMANotFoundError,
-    SafetyCheckNotFoundError, SafetyIncidentNotFoundError,
+    SafetyCheckNotFoundError, SafetyEventNotFoundError, SafetyIncidentNotFoundError,
     MaterialCheckNotFoundError, MaterialIssueNotFoundError,
     InvalidStatusTransitionError,
+    SafetyInjuryClaimNotFoundError, SafetyMedicalCaseNotFoundError,
+    SafetyEnvironmentalReportNotFoundError, SafetyCAPANotFoundError,
+    SafetyComplianceValidationError, SafetyCompliancePermissionError,
 )
 
 
@@ -773,6 +780,118 @@ class SafetyControlService:
 
 
 # ──────────────────────────────────────────────
+#  SafetyEventService
+# ──────────────────────────────────────────────
+
+class SafetyEventService:
+    def create_event(self, **kwargs) -> SafetyEvent:
+        validate_non_empty(kwargs.get("title", ""), "title")
+        if kwargs.get("target_type"):
+            validate_target_type(kwargs["target_type"])
+        if "reported_at" not in kwargs or not kwargs.get("reported_at"):
+            from datetime import datetime
+            kwargs["reported_at"] = datetime.now()
+        event = SafetyEvent(**kwargs)
+        event.save()
+        return event
+
+    def update_event(self, event_id: int, **kwargs) -> SafetyEvent:
+        event = self._get(event_id)
+        if kwargs.get("target_type"):
+            validate_target_type(kwargs["target_type"])
+        for key, value in kwargs.items():
+            setattr(event, key, value)
+        event.save()
+        return event
+
+    def report_event(self, event_id: int) -> SafetyEvent:
+        event = self._get(event_id)
+        if not can_report_event(event.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot report event in status '{event.status}'"
+            )
+        event.status = EVENT_STATUS_REPORTED
+        event.save()
+        return event
+
+    def review_event(self, event_id: int) -> SafetyEvent:
+        event = self._get(event_id)
+        if not can_review_event(event.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot review event in status '{event.status}'"
+            )
+        event.status = EVENT_STATUS_UNDER_REVIEW
+        event.save()
+        return event
+
+    def require_action_event(self, event_id: int) -> SafetyEvent:
+        event = self._get(event_id)
+        if not can_require_action_event(event.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot mark event action-required in status '{event.status}'"
+            )
+        event.status = EVENT_STATUS_ACTION_REQUIRED
+        event.save()
+        return event
+
+    def close_event(self, event_id: int) -> SafetyEvent:
+        event = self._get(event_id)
+        if not can_close_event(event.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot close event in status '{event.status}'"
+            )
+        event.status = EVENT_STATUS_CLOSED
+        from datetime import datetime
+        event.closed_at = datetime.now()
+        event.save()
+        return event
+
+    def cancel_event(self, event_id: int) -> SafetyEvent:
+        event = self._get(event_id)
+        if not can_cancel_event(event.status):
+            raise InvalidStatusTransitionError(
+                f"Cannot cancel event in status '{event.status}'"
+            )
+        event.status = EVENT_STATUS_CANCELLED
+        event.save()
+        return event
+
+    def list_events(self, filters: dict | None = None) -> list[SafetyEvent]:
+        qs = SafetyEvent.objects.all()
+        if filters:
+            if filters.get("event_type"):
+                types = [t.strip() for t in filters["event_type"].split(",") if t.strip()]
+                if len(types) == 1:
+                    qs = qs.filter(event_type=types[0])
+                else:
+                    qs = qs.filter(event_type__in=types)
+            if filters.get("status"):
+                qs = qs.filter(status=filters["status"])
+            if filters.get("target_type"):
+                qs = qs.filter(target_type=filters["target_type"])
+            if filters.get("severity"):
+                qs = qs.filter(severity=filters["severity"])
+            if filters.get("search"):
+                qs = qs.filter(title__icontains=filters["search"])
+            if filters.get("is_overdue"):
+                from datetime import date
+                qs = qs.filter(
+                    Q(status__in=["ACTION_REQUIRED", "UNDER_REVIEW"]) &
+                    Q(occurred_at__lt=date.today())
+                )
+        return list(qs)
+
+    def get_event(self, event_id: int) -> SafetyEvent | None:
+        return SafetyEvent.objects.filter(id=event_id).first()
+
+    def _get(self, event_id: int) -> SafetyEvent:
+        event = SafetyEvent.objects.filter(id=event_id).first()
+        if not event:
+            raise SafetyEventNotFoundError(f"SafetyEvent {event_id} not found")
+        return event
+
+
+# ──────────────────────────────────────────────
 #  MaterialControlService
 # ──────────────────────────────────────────────
 
@@ -930,3 +1049,474 @@ class MaterialControlService:
         if not issue:
             raise MaterialIssueNotFoundError(f"MaterialIssue {issue_id} not found")
         return issue
+
+
+# ──────────────────────────────────────────────
+#  SafetyInjuryClaimService
+# ──────────────────────────────────────────────
+
+class SafetyInjuryClaimService:
+    def create(self, **kwargs) -> SafetyInjuryClaim:
+        validate_non_empty(kwargs.get("claimant_name", ""), "claimant_name")
+        validate_non_empty(kwargs.get("claim_type", ""), "claim_type")
+        if kwargs.get("safety_event"):
+            self._validate_event_exists(kwargs["safety_event"])
+            self._validate_event_has_injury(kwargs["safety_event"], kwargs.get("override_reason", ""))
+        if "override_reason" in kwargs:
+            del kwargs["override_reason"]
+        claim = SafetyInjuryClaim(**kwargs)
+        claim.save()
+        return claim
+
+    def update(self, claim_id: int, **kwargs) -> SafetyInjuryClaim:
+        claim = self._get(claim_id)
+        if kwargs.get("safety_event"):
+            self._validate_event_exists(kwargs["safety_event"])
+            self._validate_event_has_injury(kwargs["safety_event"], kwargs.get("override_reason", ""))
+        skip = {"override_reason"}
+        for key, value in kwargs.items():
+            if key not in skip:
+                setattr(claim, key, value)
+        claim.save()
+        return claim
+
+    def open_claim(self, claim_id: int) -> SafetyInjuryClaim:
+        from check.domain_rules import can_open_claim
+        claim = self._get(claim_id)
+        if not can_open_claim(claim.status):
+            raise InvalidStatusTransitionError(f"Cannot open claim in status '{claim.status}'")
+        claim.status = "OPEN"
+        from datetime import datetime
+        claim.opened_at = datetime.now()
+        claim.save()
+        return claim
+
+    def review_claim(self, claim_id: int) -> SafetyInjuryClaim:
+        from check.domain_rules import can_review_claim
+        claim = self._get(claim_id)
+        if not can_review_claim(claim.status):
+            raise InvalidStatusTransitionError(f"Cannot review claim in status '{claim.status}'")
+        claim.status = "UNDER_REVIEW"
+        claim.save()
+        return claim
+
+    def wait_info_claim(self, claim_id: int) -> SafetyInjuryClaim:
+        from check.domain_rules import can_wait_info_claim
+        claim = self._get(claim_id)
+        if not can_wait_info_claim(claim.status):
+            raise InvalidStatusTransitionError(f"Cannot set waiting info for claim in status '{claim.status}'")
+        claim.status = "WAITING_INFO"
+        claim.save()
+        return claim
+
+    def close_claim(self, claim_id: int) -> SafetyInjuryClaim:
+        from check.domain_rules import can_close_claim
+        claim = self._get(claim_id)
+        if not can_close_claim(claim.status):
+            raise InvalidStatusTransitionError(f"Cannot close claim in status '{claim.status}'")
+        claim.status = "CLOSED"
+        from datetime import datetime
+        claim.closed_at = datetime.now()
+        claim.save()
+        return claim
+
+    def cancel_claim(self, claim_id: int) -> SafetyInjuryClaim:
+        from check.domain_rules import can_cancel_claim
+        claim = self._get(claim_id)
+        if not can_cancel_claim(claim.status):
+            raise InvalidStatusTransitionError(f"Cannot cancel claim in status '{claim.status}'")
+        claim.status = "CANCELLED"
+        claim.save()
+        return claim
+
+    def list(self, filters: dict | None = None) -> list[SafetyInjuryClaim]:
+        qs = SafetyInjuryClaim.objects.all()
+        if filters:
+            if filters.get("status"):
+                qs = qs.filter(status=filters["status"])
+            if filters.get("claim_type"):
+                qs = qs.filter(claim_type=filters["claim_type"])
+            if filters.get("safety_event_id"):
+                qs = qs.filter(safety_event_id=filters["safety_event_id"])
+            if filters.get("search"):
+                qs = qs.filter(claimant_name__icontains=filters["search"])
+        return list(qs)
+
+    def get(self, claim_id: int) -> SafetyInjuryClaim | None:
+        return SafetyInjuryClaim.objects.filter(id=claim_id).first()
+
+    def _get(self, claim_id: int) -> SafetyInjuryClaim:
+        claim = SafetyInjuryClaim.objects.filter(id=claim_id).first()
+        if not claim:
+            raise SafetyInjuryClaimNotFoundError(f"SafetyInjuryClaim {claim_id} not found")
+        return claim
+
+    def _validate_event_exists(self, event_id: int):
+        if not SafetyEvent.objects.filter(id=event_id).exists():
+            raise SafetyComplianceValidationError(f"SafetyEvent {event_id} does not exist")
+
+    def _validate_event_has_injury(self, event_id: int, override_reason: str = ""):
+        event = SafetyEvent.objects.filter(id=event_id).first()
+        if event and not event.injury_involved and not override_reason:
+            raise SafetyComplianceValidationError(
+                "Linked safety event does not have injury_involved=True. Provide override_reason if intentional."
+            )
+
+
+# ──────────────────────────────────────────────
+#  SafetyMedicalCaseService
+# ──────────────────────────────────────────────
+
+class SafetyMedicalCaseService:
+    def create(self, **kwargs) -> SafetyMedicalCase:
+        validate_non_empty(kwargs.get("care_type", ""), "care_type")
+        if kwargs.get("safety_event"):
+            self._validate_event_exists(kwargs["safety_event"])
+        if kwargs.get("injury_claim"):
+            self._validate_claim_exists(kwargs["injury_claim"])
+        if kwargs.get("affected_person_id"):
+            self._validate_person_exists(kwargs["affected_person_id"])
+            kwargs["affected_person_id"] = kwargs.pop("affected_person_id")
+        case = SafetyMedicalCase(**kwargs)
+        case.save()
+        return case
+
+    def update(self, case_id: int, **kwargs) -> SafetyMedicalCase:
+        case = self._get(case_id)
+        if kwargs.get("safety_event"):
+            self._validate_event_exists(kwargs["safety_event"])
+        if kwargs.get("injury_claim"):
+            self._validate_claim_exists(kwargs["injury_claim"])
+        if kwargs.get("affected_person_id"):
+            self._validate_person_exists(kwargs["affected_person_id"])
+            kwargs["affected_person_id"] = kwargs.pop("affected_person_id")
+        for key, value in kwargs.items():
+            setattr(case, key, value)
+        case.save()
+        return case
+
+    def open_case(self, case_id: int) -> SafetyMedicalCase:
+        from check.domain_rules import can_open_medical
+        case = self._get(case_id)
+        if not can_open_medical(case.status):
+            raise InvalidStatusTransitionError(f"Cannot open medical case in status '{case.status}'")
+        case.status = "OPEN"
+        case.save()
+        return case
+
+    def monitor_case(self, case_id: int) -> SafetyMedicalCase:
+        from check.domain_rules import can_monitor_medical
+        case = self._get(case_id)
+        if not can_monitor_medical(case.status):
+            raise InvalidStatusTransitionError(f"Cannot monitor medical case in status '{case.status}'")
+        case.status = "MONITORING"
+        case.save()
+        return case
+
+    def return_to_work(self, case_id: int) -> SafetyMedicalCase:
+        from check.domain_rules import can_return_to_work
+        case = self._get(case_id)
+        if not can_return_to_work(case.status):
+            raise InvalidStatusTransitionError(f"Cannot return to work for case in status '{case.status}'")
+        case.status = "RETURNED_TO_WORK"
+        from datetime import datetime
+        case.return_to_work_date = datetime.now()
+        case.save()
+        return case
+
+    def close_case(self, case_id: int) -> SafetyMedicalCase:
+        from check.domain_rules import can_close_medical
+        case = self._get(case_id)
+        if not can_close_medical(case.status):
+            raise InvalidStatusTransitionError(f"Cannot close medical case in status '{case.status}'")
+        case.status = "CLOSED"
+        case.save()
+        return case
+
+    def cancel_case(self, case_id: int) -> SafetyMedicalCase:
+        from check.domain_rules import can_cancel_medical
+        case = self._get(case_id)
+        if not can_cancel_medical(case.status):
+            raise InvalidStatusTransitionError(f"Cannot cancel medical case in status '{case.status}'")
+        case.status = "CANCELLED"
+        case.save()
+        return case
+
+    def list(self, filters: dict | None = None) -> list[SafetyMedicalCase]:
+        qs = SafetyMedicalCase.objects.all()
+        if filters:
+            if filters.get("status"):
+                qs = qs.filter(status=filters["status"])
+            if filters.get("care_type"):
+                qs = qs.filter(care_type=filters["care_type"])
+            if filters.get("safety_event_id"):
+                qs = qs.filter(safety_event_id=filters["safety_event_id"])
+            if filters.get("injury_claim_id"):
+                qs = qs.filter(injury_claim_id=filters["injury_claim_id"])
+        return list(qs)
+
+    def get(self, case_id: int) -> SafetyMedicalCase | None:
+        return SafetyMedicalCase.objects.filter(id=case_id).first()
+
+    def _get(self, case_id: int) -> SafetyMedicalCase:
+        case = SafetyMedicalCase.objects.filter(id=case_id).first()
+        if not case:
+            raise SafetyMedicalCaseNotFoundError(f"SafetyMedicalCase {case_id} not found")
+        return case
+
+    def _validate_event_exists(self, event_id: int):
+        if not SafetyEvent.objects.filter(id=event_id).exists():
+            raise SafetyComplianceValidationError(f"SafetyEvent {event_id} does not exist")
+
+    def _validate_claim_exists(self, claim_id: int):
+        if not SafetyInjuryClaim.objects.filter(id=claim_id).exists():
+            raise SafetyComplianceValidationError(f"SafetyInjuryClaim {claim_id} does not exist")
+
+    def _validate_person_exists(self, person_id: int):
+        from administration.models import UserProfile
+        if not UserProfile.objects.filter(id=person_id).exists():
+            raise SafetyComplianceValidationError(f"UserProfile {person_id} does not exist")
+
+
+# ──────────────────────────────────────────────
+#  SafetyEnvironmentalReportService
+# ──────────────────────────────────────────────
+
+class SafetyEnvironmentalReportService:
+    def create(self, **kwargs) -> SafetyEnvironmentalReport:
+        validate_non_empty(kwargs.get("title", ""), "title")
+        validate_non_empty(kwargs.get("report_type", ""), "report_type")
+        if kwargs.get("safety_event"):
+            self._validate_event_exists(kwargs["safety_event"])
+            self._validate_event_env_impact(kwargs["safety_event"], kwargs.get("override_reason", ""))
+        if "override_reason" in kwargs:
+            del kwargs["override_reason"]
+        report = SafetyEnvironmentalReport(**kwargs)
+        report.save()
+        return report
+
+    def update(self, report_id: int, **kwargs) -> SafetyEnvironmentalReport:
+        report = self._get(report_id)
+        if kwargs.get("safety_event"):
+            self._validate_event_exists(kwargs["safety_event"])
+            self._validate_event_env_impact(kwargs["safety_event"], kwargs.get("override_reason", ""))
+        skip = {"override_reason"}
+        for key, value in kwargs.items():
+            if key not in skip:
+                setattr(report, key, value)
+        report.save()
+        return report
+
+    def report(self, report_id: int) -> SafetyEnvironmentalReport:
+        from check.domain_rules import can_report_env_report
+        report = self._get(report_id)
+        if not can_report_env_report(report.status):
+            raise InvalidStatusTransitionError(f"Cannot report in status '{report.status}'")
+        report.status = "REPORTED"
+        from datetime import datetime
+        report.reported_at = datetime.now()
+        report.save()
+        return report
+
+    def review(self, report_id: int) -> SafetyEnvironmentalReport:
+        from check.domain_rules import can_review_env_report
+        report = self._get(report_id)
+        if not can_review_env_report(report.status):
+            raise InvalidStatusTransitionError(f"Cannot review in status '{report.status}'")
+        report.status = "UNDER_REVIEW"
+        report.save()
+        return report
+
+    def require_action(self, report_id: int) -> SafetyEnvironmentalReport:
+        from check.domain_rules import can_require_action_env_report
+        report = self._get(report_id)
+        if not can_require_action_env_report(report.status):
+            raise InvalidStatusTransitionError(f"Cannot require action in status '{report.status}'")
+        report.status = "ACTION_REQUIRED"
+        report.save()
+        return report
+
+    def close(self, report_id: int) -> SafetyEnvironmentalReport:
+        from check.domain_rules import can_close_env_report
+        report = self._get(report_id)
+        if not can_close_env_report(report.status):
+            raise InvalidStatusTransitionError(f"Cannot close in status '{report.status}'")
+        report.status = "CLOSED"
+        report.save()
+        return report
+
+    def cancel(self, report_id: int) -> SafetyEnvironmentalReport:
+        from check.domain_rules import can_cancel_env_report
+        report = self._get(report_id)
+        if not can_cancel_env_report(report.status):
+            raise InvalidStatusTransitionError(f"Cannot cancel in status '{report.status}'")
+        report.status = "CANCELLED"
+        report.save()
+        return report
+
+    def list(self, filters: dict | None = None) -> list[SafetyEnvironmentalReport]:
+        qs = SafetyEnvironmentalReport.objects.all()
+        if filters:
+            if filters.get("status"):
+                qs = qs.filter(status=filters["status"])
+            if filters.get("report_type"):
+                qs = qs.filter(report_type=filters["report_type"])
+            if filters.get("safety_event_id"):
+                qs = qs.filter(safety_event_id=filters["safety_event_id"])
+            if filters.get("search"):
+                qs = qs.filter(title__icontains=filters["search"])
+        return list(qs)
+
+    def get(self, report_id: int) -> SafetyEnvironmentalReport | None:
+        return SafetyEnvironmentalReport.objects.filter(id=report_id).first()
+
+    def _get(self, report_id: int) -> SafetyEnvironmentalReport:
+        report = SafetyEnvironmentalReport.objects.filter(id=report_id).first()
+        if not report:
+            raise SafetyEnvironmentalReportNotFoundError(f"SafetyEnvironmentalReport {report_id} not found")
+        return report
+
+    def _validate_event_exists(self, event_id: int):
+        if not SafetyEvent.objects.filter(id=event_id).exists():
+            raise SafetyComplianceValidationError(f"SafetyEvent {event_id} does not exist")
+
+    def _validate_event_env_impact(self, event_id: int, override_reason: str = ""):
+        event = SafetyEvent.objects.filter(id=event_id).first()
+        if event and not event.environmental_impact and not override_reason:
+            raise SafetyComplianceValidationError(
+                "Linked safety event does not have environmental_impact=True. Provide override_reason if intentional."
+            )
+
+
+# ──────────────────────────────────────────────
+#  SafetyCAPAService
+# ──────────────────────────────────────────────
+
+class SafetyCAPAService:
+    CAPA_SOURCE_TYPES = ["SAFETY_EVENT", "SAFETY_CHECK", "INJURY_CLAIM", "MEDICAL_CASE", "ENVIRONMENTAL_REPORT"]
+
+    def create(self, **kwargs) -> SafetyCAPA:
+        validate_non_empty(kwargs.get("title", ""), "title")
+        source_type = kwargs.get("source_type", "")
+        if source_type:
+            if source_type not in self.CAPA_SOURCE_TYPES:
+                raise SafetyComplianceValidationError(
+                    f"Invalid source_type '{source_type}'. Must be one of: {', '.join(self.CAPA_SOURCE_TYPES)}"
+                )
+            self._validate_source_exists(kwargs["source_type"], kwargs.get("source_id", None))
+        capa = SafetyCAPA(**kwargs)
+        capa.save()
+        return capa
+
+    def update(self, capa_id: int, **kwargs) -> SafetyCAPA:
+        capa = self._get(capa_id)
+        source_type = kwargs.get("source_type", capa.source_type)
+        if source_type and source_type not in self.CAPA_SOURCE_TYPES:
+            raise SafetyComplianceValidationError(
+                f"Invalid source_type '{source_type}'. Must be one of: {', '.join(self.CAPA_SOURCE_TYPES)}"
+            )
+        source_id = kwargs.get("source_id", capa.source_id)
+        if source_type and source_id:
+            self._validate_source_exists(source_type, source_id)
+        for key, value in kwargs.items():
+            setattr(capa, key, value)
+        capa.save()
+        return capa
+
+    def open(self, capa_id: int) -> SafetyCAPA:
+        from check.domain_rules import can_open_capa
+        capa = self._get(capa_id)
+        if not can_open_capa(capa.status):
+            raise InvalidStatusTransitionError(f"Cannot open CAPA in status '{capa.status}'")
+        capa.status = "OPEN"
+        capa.save()
+        return capa
+
+    def start(self, capa_id: int) -> SafetyCAPA:
+        from check.domain_rules import can_start_capa
+        capa = self._get(capa_id)
+        if not can_start_capa(capa.status):
+            raise InvalidStatusTransitionError(f"Cannot start CAPA in status '{capa.status}'")
+        capa.status = "IN_PROGRESS"
+        capa.save()
+        return capa
+
+    def pending_effectiveness(self, capa_id: int) -> SafetyCAPA:
+        from check.domain_rules import can_pending_effectiveness_capa
+        capa = self._get(capa_id)
+        if not can_pending_effectiveness_capa(capa.status):
+            raise InvalidStatusTransitionError(f"Cannot set pending effectiveness in status '{capa.status}'")
+        capa.status = "PENDING_EFFECTIVENESS"
+        capa.save()
+        return capa
+
+    def complete_effectiveness(self, capa_id: int, effective: bool) -> SafetyCAPA:
+        from check.domain_rules import can_complete_effectiveness_capa
+        capa = self._get(capa_id)
+        if not can_complete_effectiveness_capa(capa.status):
+            raise InvalidStatusTransitionError(f"Cannot complete effectiveness in status '{capa.status}'")
+        from datetime import datetime
+        capa.status = "EFFECTIVE" if effective else "INEFFECTIVE"
+        capa.effectiveness_result = "EFFECTIVE" if effective else "INEFFECTIVE"
+        capa.completed_at = datetime.now()
+        capa.save()
+        return capa
+
+    def close(self, capa_id: int) -> SafetyCAPA:
+        from check.domain_rules import can_close_capa
+        capa = self._get(capa_id)
+        if not can_close_capa(capa.status):
+            raise InvalidStatusTransitionError(f"Cannot close CAPA in status '{capa.status}'")
+        from datetime import datetime
+        capa.status = "CLOSED"
+        if not capa.completed_at:
+            capa.completed_at = datetime.now()
+        capa.save()
+        return capa
+
+    def cancel(self, capa_id: int) -> SafetyCAPA:
+        from check.domain_rules import can_cancel_capa
+        capa = self._get(capa_id)
+        if not can_cancel_capa(capa.status):
+            raise InvalidStatusTransitionError(f"Cannot cancel CAPA in status '{capa.status}'")
+        capa.status = "CANCELLED"
+        capa.save()
+        return capa
+
+    def list(self, filters: dict | None = None) -> list[SafetyCAPA]:
+        qs = SafetyCAPA.objects.all()
+        if filters:
+            if filters.get("status"):
+                qs = qs.filter(status=filters["status"])
+            if filters.get("source_type"):
+                qs = qs.filter(source_type=filters["source_type"])
+            if filters.get("source_id"):
+                qs = qs.filter(source_id=filters["source_id"])
+            if filters.get("owner"):
+                qs = qs.filter(owner__icontains=filters["owner"])
+            if filters.get("search"):
+                qs = qs.filter(title__icontains=filters["search"])
+        return list(qs)
+
+    def get(self, capa_id: int) -> SafetyCAPA | None:
+        return SafetyCAPA.objects.filter(id=capa_id).first()
+
+    def _get(self, capa_id: int) -> SafetyCAPA:
+        capa = SafetyCAPA.objects.filter(id=capa_id).first()
+        if not capa:
+            raise SafetyCAPANotFoundError(f"SafetyCAPA {capa_id} not found")
+        return capa
+
+    def _validate_source_exists(self, source_type: str, source_id: int | None):
+        if not source_id:
+            return
+        models_map = {
+            "SAFETY_EVENT": SafetyEvent,
+            "SAFETY_CHECK": SafetyCheck,
+            "INJURY_CLAIM": SafetyInjuryClaim,
+            "MEDICAL_CASE": SafetyMedicalCase,
+            "ENVIRONMENTAL_REPORT": SafetyEnvironmentalReport,
+        }
+        model_cls = models_map.get(source_type)
+        if model_cls and not model_cls.objects.filter(id=source_id).exists():
+            raise SafetyComplianceValidationError(f"{source_type} {source_id} does not exist")

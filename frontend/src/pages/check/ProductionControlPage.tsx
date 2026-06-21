@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Activity, Plus, Save, ArrowLeft, Pencil, X, Archive, Trash2, Play, Ban, AlertTriangle } from "lucide-react";
-import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useActiveLine } from "@/hooks/useActiveLine";
@@ -93,7 +93,7 @@ export function ProductionControlPage() {
       { value: "CANCELLED", label: "Cancelled" },
     ];
     const opts = rt === "ISSUES" ? issueOpts : rt === "ACTIONS" ? actionOpts : auditOpts;
-    return <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={opts} />;
+    return <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={opts} />;
   }, [filterStatus]);
 
   const handleNewDefault = useCallback((rt: RecordType | null) => {

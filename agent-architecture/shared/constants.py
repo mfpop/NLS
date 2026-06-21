@@ -8,6 +8,7 @@ AGENT_IDS = {
     "architecture_audit": "3.Nexus - Architecture Audit",
     "backend_graphql": "4.Nexus - Backend-GraphQL",
     "frontend_ui": "5.Nexus - Frontend-UI",
+    "manager": "10.Nexus - Manager",
 }
 
 INTENT_TO_AGENT: dict[Intent, str] = {
@@ -30,5 +31,6 @@ CONTEXT_FILES = [
     "project_context/ACTIVE_DECISIONS.md",
 ]
 
+DEFAULT_NEXUS_AGENT = "10.Nexus - Manager"
 MAX_RETRIES = 3
 DEFAULT_TIMEOUT_SECONDS = 60

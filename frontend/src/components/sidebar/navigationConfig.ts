@@ -6,7 +6,8 @@ import {
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, FileSpreadsheet,
   Package, Clock, CalendarClock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench, Key,
+  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench, ShieldAlert, CheckCircle,
+  Siren, Radar, TriangleAlert, BriefcaseMedical, HeartPulse, Leaf, CircleCheckBig,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -27,7 +28,7 @@ export type NavEntry = NavLeafItem | NavGroupItem;
 
 export interface NavSection {
   type: "section";
-  id: "myworkspace" | "plan" | "execute" | "maintenance" | "check" | "improve" | "standardize" | "system" | "docs";
+  id: "myworkspace" | "plan" | "execute" | "maintenance" | "check" | "improve" | "standardize" | "system" | "docs" | "safety";
   label: string;
   icon: LucideIcon;
   items: NavEntry[];
@@ -45,6 +46,7 @@ export const sidebarNav: TopLevelEntry[] = [
       { type: "item", label: "My Tasks", to: "/myworkspace/tasks", icon: ListChecks },
     ],
   },
+
   {
     type: "section", id: "plan", label: "Plan", icon: ClipboardList,
     items: [
@@ -75,24 +77,15 @@ export const sidebarNav: TopLevelEntry[] = [
     ],
   },
   {
-    type: "section", id: "maintenance", label: "Maintenance", icon: Wrench,
-    items: [
-      { type: "item", label: "Dashboard", to: "/maintenance/dashboard", icon: LayoutDashboard },
-      { type: "item", label: "Work Orders", to: "/maintenance/work-orders", icon: ClipboardList },
-      { type: "item", label: "Preventive Maintenance", to: "/maintenance/preventive", icon: CalendarClock },
-      { type: "item", label: "Breakdowns", to: "/maintenance/breakdowns", icon: AlertTriangle },
-      { type: "item", label: "Spare Parts", to: "/maintenance/spare-parts", icon: Package },
-    ],
-  },
-  {
     type: "section", id: "check", label: "Check", icon: Search,
     items: [
       { type: "item", label: "Production Control", to: "/check/production-control", icon: Activity },
-      { type: "item", label: "Quality Control", to: "/check/quality-control", icon: ShieldCheck },
-      { type: "item", label: "Safety Control", to: "/check/safety-control", icon: AlertTriangle },
+      { type: "item", label: "Quality Management", to: "/check/quality-control", icon: ShieldCheck },
       { type: "item", label: "Material Control", to: "/check/material-control", icon: Package },
+      { type: "item", label: "Safety Audits", to: "/check/safety-audits", icon: ClipboardCheck },
     ],
   },
+
   {
     type: "section", id: "improve", label: "Improve", icon: TrendingUp,
     items: [
@@ -111,6 +104,36 @@ export const sidebarNav: TopLevelEntry[] = [
       { type: "item", label: "Document Control", to: "/standardize/document-control", icon: FileCheck },
     ],
   },
+
+  {
+    type: "section", id: "maintenance", label: "Maintenance", icon: Wrench,
+    items: [
+      { type: "item", label: "Dashboard", to: "/maintenance/dashboard", icon: LayoutDashboard },
+      { type: "item", label: "Work Orders", to: "/maintenance/work-orders", icon: ClipboardList },
+      { type: "item", label: "Preventive Maintenance", to: "/maintenance/preventive", icon: CalendarClock },
+      { type: "item", label: "Breakdowns", to: "/maintenance/breakdowns", icon: AlertTriangle },
+      { type: "item", label: "Spare Parts", to: "/maintenance/spare-parts", icon: Package },
+    ],
+  },
+  {
+    type: "section", id: "safety", label: "Safety", icon: ShieldCheck,
+    items: [
+      { type: "item", label: "Dashboard", to: "/safety/dashboard", icon: LayoutDashboard },
+      { type: "item", label: "Incidents / Accidents", to: "/safety/incidents", icon: Siren },
+      { type: "item", label: "Near Misses", to: "/safety/near-misses", icon: Radar },
+      { type: "item", label: "Hazards / Observations", to: "/safety/hazards", icon: TriangleAlert },
+      {
+        type: "group", label: "Compliance", icon: ClipboardCheck,
+        items: [
+          { type: "item", label: "Injury Claims", to: "/safety/compliance/injury-claims", icon: BriefcaseMedical },
+          { type: "item", label: "Medical Cases", to: "/safety/compliance/medical-cases", icon: HeartPulse },
+          { type: "item", label: "Environmental Reports", to: "/safety/compliance/environmental-reports", icon: Leaf },
+          { type: "item", label: "CAPA", to: "/safety/compliance/capa", icon: CircleCheckBig },
+        ],
+      },
+    ],
+  },
+
   {
     type: "section", id: "system", label: "System", icon: Settings,
     items: [
@@ -155,6 +178,15 @@ export const sidebarNav: TopLevelEntry[] = [
   },
 ];
 
+export const navigationGroups: TopLevelEntry[][] = [
+  [sidebarNav[0]],
+  [sidebarNav[1]],
+  [sidebarNav[2], sidebarNav[3], sidebarNav[4]],
+  [sidebarNav[5], sidebarNav[6]],
+  [sidebarNav[7], sidebarNav[8]],
+  [sidebarNav[9], sidebarNav[10]],
+];
+
 export const navSectionIds = sidebarNav.filter((e) => e.type === "section").map((e) => (e as NavSection).id);
 
 export function sectionFromPath(path: string): string | null {
@@ -163,6 +195,7 @@ export function sectionFromPath(path: string): string | null {
   if (path.startsWith("/check/")) return "check";
   if (path.startsWith("/improve/")) return "improve";
   if (path.startsWith("/plan/")) return "plan";
+  if (path.startsWith("/safety/")) return "safety";
   if (path.startsWith("/myworkspace/")) return "myworkspace";
   if (path.startsWith("/standardize/")) return "standardize";
   if (path.startsWith("/system/")) return "system";

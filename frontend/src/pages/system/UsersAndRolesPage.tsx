@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { ShieldCheck, Plus, Pencil, RefreshCw, Save, X, UserRound, Trash2 } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarSelect } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarDropdown } from "@/components/shared/Toolbar";
 import { RecordListPanel } from "@/components/shared/RecordListPanel";
 import {
   ADMINISTRATIVE_DEPARTMENTS_QUERY,
@@ -212,9 +212,9 @@ export function UsersAndRolesPage() {
       fetchPolicy: "cache-and-network",
     },
   );
-  const [createUserProfile] = useMutation(CREATE_USER_PROFILE);
-  const [updateUserProfile] = useMutation(UPDATE_USER_PROFILE);
-  const [assignRoleToUser] = useMutation(ASSIGN_ROLE_TO_USER);
+  const [createUserProfile] = useMutation<any>(CREATE_USER_PROFILE);
+  const [updateUserProfile] = useMutation<any>(UPDATE_USER_PROFILE);
+  const [assignRoleToUser] = useMutation<any>(ASSIGN_ROLE_TO_USER);
   const [removeRoleFromUser] = useMutation(REMOVE_ROLE_FROM_USER);
   const users = profileData?.userProfiles ?? [];
   const assignments = (assignmentData?.userRoles ?? []).filter((a) => a.isActive);
@@ -567,7 +567,7 @@ export function UsersAndRolesPage() {
   const toolbarSearch = <ToolbarSearch value={userSearch} onChange={setUserSearch} placeholder="Search users" />;
   const toolbarFilters = (
     <div className="flex items-center gap-2">
-      <ToolbarSelect
+      <ToolbarDropdown
         value={statusFilter}
         onChange={setStatusFilter}
         options={[
@@ -577,7 +577,9 @@ export function UsersAndRolesPage() {
         ]}
         className="w-28"
       />
-      <ToolbarSelect value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} className="w-36" />
+
+      <ToolbarDropdown value={roleFilter} onChange={setRoleFilter} options={roleFilterOptions} className="w-36" />
+
     </div>
   );
   const footer = (

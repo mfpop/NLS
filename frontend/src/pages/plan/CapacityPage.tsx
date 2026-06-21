@@ -363,7 +363,7 @@ export function CapacityPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [_editing, setEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [inputs, setInputs] = useState({

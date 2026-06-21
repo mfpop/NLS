@@ -50,6 +50,57 @@ export interface EducationInput {
   period: string;
 }
 
+export interface ProfileSkill {
+  id: string;
+  userProfileId: string;
+  name: string;
+  category: "SKILL" | "CERTIFICATION" | "LICENSE" | "TRAINING";
+  level: string;
+  issuer: string;
+  issuedDate: string | null;
+  expiresDate: string | null;
+  notes: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProfileSkillInput {
+  userProfileId: string;
+  name: string;
+  category?: string;
+  level?: string;
+  issuer?: string;
+  issuedDate?: string | null;
+  expiresDate?: string | null;
+  notes?: string;
+}
+
+export interface ProfileSkillsQueryData {
+  profileSkills: ProfileSkill[];
+}
+
+export interface CreateProfileSkillResult {
+  createProfileSkill: {
+    skill?: ProfileSkill;
+    errors?: Array<{ field: string; message: string }>;
+  };
+}
+
+export interface UpdateProfileSkillResult {
+  updateProfileSkill: {
+    skill?: ProfileSkill;
+    errors?: Array<{ field: string; message: string }>;
+  };
+}
+
+export interface ArchiveProfileSkillResult {
+  archiveProfileSkill: {
+    skill?: ProfileSkill;
+    errors?: Array<{ field: string; message: string }>;
+  };
+}
+
 export interface ProfileInput {
   name: string;
   role: string;

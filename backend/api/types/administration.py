@@ -308,6 +308,72 @@ class UserRoleAssignmentNode:
         )
 
 
+# ── ProfileSkill ──
+
+@strawberry.type
+class ProfileSkillNode:
+    id: strawberry.ID
+    user_profile_id: strawberry.ID = strawberry.field(name="userProfileId")
+    name: str
+    category: str
+    level: str = ""
+    issuer: str = ""
+    issued_date: typing.Optional[str] = strawberry.field(name="issuedDate", default=None)
+    expires_date: typing.Optional[str] = strawberry.field(name="expiresDate", default=None)
+    notes: str = ""
+    is_active: bool = strawberry.field(name="isActive")
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+    @classmethod
+    def from_db(cls, obj) -> "ProfileSkillNode":
+        from administration.models import ProfileSkill
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            user_profile_id=strawberry.ID(str(obj.user_profile_id)),
+            name=obj.name,
+            category=obj.category,
+            level=obj.level or "",
+            issuer=obj.issuer or "",
+            issued_date=obj.issued_date.isoformat() if obj.issued_date else None,
+            expires_date=obj.expires_date.isoformat() if obj.expires_date else None,
+            notes=obj.notes or "",
+            is_active=obj.is_active,
+            created_at=_iso(obj.created_at),
+            updated_at=_iso(obj.updated_at),
+        )
+
+
+@strawberry.input
+class CreateProfileSkillInput:
+    user_profile_id: str = strawberry.field(name="userProfileId")
+    name: str
+    category: typing.Optional[str] = "SKILL"
+    level: typing.Optional[str] = ""
+    issuer: typing.Optional[str] = ""
+    issued_date: typing.Optional[str] = strawberry.field(name="issuedDate", default=None)
+    expires_date: typing.Optional[str] = strawberry.field(name="expiresDate", default=None)
+    notes: typing.Optional[str] = ""
+
+
+@strawberry.input
+class UpdateProfileSkillInput:
+    name: typing.Optional[str] = None
+    category: typing.Optional[str] = None
+    level: typing.Optional[str] = None
+    issuer: typing.Optional[str] = None
+    issued_date: typing.Optional[str] = strawberry.field(name="issuedDate", default=None)
+    expires_date: typing.Optional[str] = strawberry.field(name="expiresDate", default=None)
+    notes: typing.Optional[str] = None
+    is_active: typing.Optional[bool] = strawberry.field(name="isActive", default=None)
+
+
+@strawberry.type
+class ProfileSkillPayload:
+    skill: typing.Optional[ProfileSkillNode] = None
+    errors: typing.Optional[list[MutationError]] = None
+
+
 @strawberry.input
 class AssignRoleToUserInput:
     user_profile_id: str = strawberry.field(name="userProfileId")

@@ -2,7 +2,7 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { SidebarNavItem } from "./SidebarNavItem";
 import type { NavEntry } from "./navigationConfig";
-import { sidebarIndent, sidebarNavTokens, sectionColors } from "./sidebarStyles";
+import { sidebarIndent, sidebarNavTokens, sidebarState, sectionColors } from "./sidebarStyles";
 
 export function SidebarNavGroup({ id, sectionId, label, icon: Icon, items, pathname, openSection, openNestedGroup, onToggle, onNestedToggle, onNavigate }: {
   id: string; sectionId?: string; label: string; icon: LucideIcon; items: NavEntry[]; pathname: string;
@@ -10,17 +10,17 @@ export function SidebarNavGroup({ id, sectionId, label, icon: Icon, items, pathn
   onToggle: (id: string) => void; onNestedToggle: (label: string | null) => void; onNavigate?: () => void;
 }) {
   const isOpen = openSection === id;
-  const colors = sectionColors[sectionId ?? "control"] ?? sectionColors.control;
+  const moduleColor = sectionColors[sectionId ?? "control"] ?? sectionColors.control;
 
   return (
     <div>
       <button type="button" onClick={() => onToggle(id)}
-        className={`${sidebarNavTokens.row} ${sidebarNavTokens.inactive} ${colors.icon} ${colors.hoverBg}`}
+        className={`${sidebarNavTokens.row} ${sidebarNavTokens.inactive} ${sidebarState.item}`}
         style={{ paddingLeft: sidebarIndent(0) }}
       >
-        <Icon className={`${sidebarNavTokens.icon} ${colors.icon}`} />
-        <span className={`${sidebarNavTokens.label} ${colors.icon} font-medium`}>{label}</span>
-        <ChevronDown className={`${sidebarNavTokens.chevron} ${colors.chevron} ${isOpen ? "rotate-0" : "-rotate-90"}`} />
+        <Icon className={`${sidebarNavTokens.icon} ${moduleColor}`} />
+        <span className={`${sidebarNavTokens.label} text-sidebar-foreground font-medium`}>{label}</span>
+        <ChevronDown className={`${sidebarNavTokens.chevronActive} ${isOpen ? sidebarState.chevronEm : sidebarState.chevron} ${isOpen ? "rotate-0" : "-rotate-90"}`} />
       </button>
       <div className={`${sidebarNavTokens.submenu} ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
         <div className={sidebarNavTokens.submenuInner}>
@@ -41,7 +41,7 @@ function NavEntryRow({ entry, depth = 0, pathname, openNestedGroup, onNestedTogg
   const isApplicationGroup = entry.type === "group" && entry.label === "Application";
   const isErpGroup = entry.type === "group" && entry.label === "ERP Data";
   const groupId = isProductionGroup ? "production" : isApplicationGroup ? "settings" : isErpGroup ? "erpData" : undefined;
-  const colors = sectionColors[groupId ?? "control"] ?? sectionColors.control;
+  const moduleColor = sectionColors[groupId ?? "control"] ?? sectionColors.control;
 
   if (entry.type === "item") {
     const itemSectionId = sidebarItemCategory(entry.label);
@@ -55,12 +55,12 @@ function NavEntryRow({ entry, depth = 0, pathname, openNestedGroup, onNestedTogg
       <button type="button" onClick={() => {
         onNestedToggle(openNestedGroup === entry.label ? null : entry.label);
       }}
-        className={`${sidebarNavTokens.row} ${sidebarNavTokens.inactive} ${colors.icon} ${colors.hoverBg}`}
+        className={`${sidebarNavTokens.row} ${sidebarNavTokens.inactive} ${sidebarState.item}`}
         style={{ paddingLeft: sidebarIndent(depth) }}
       >
-        <ChevronRight className={`${sidebarNavTokens.chevron} ${colors.chevron} ${isOpen ? "rotate-90" : ""}`} />
-        <entry.icon className={`${sidebarNavTokens.icon} ${colors.icon}`} />
-        <span className={`${sidebarNavTokens.label} ${colors.icon} font-medium`}>{entry.label}</span>
+        <ChevronRight className={`${sidebarNavTokens.chevronActive} ${isOpen ? sidebarState.chevronEm : sidebarState.chevron} ${isOpen ? "rotate-90" : ""}`} />
+        <entry.icon className={`${sidebarNavTokens.icon} ${moduleColor}`} />
+        <span className={`${sidebarNavTokens.label} text-sidebar-foreground font-medium`}>{entry.label}</span>
       </button>
       <div className={`${sidebarNavTokens.submenu} ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}>
         <div className={`${sidebarNavTokens.submenuInner}${entry.label === "ERP Data" ? " space-y-[5px]" : ""}`}>
@@ -100,6 +100,11 @@ function sidebarItemCategory(label: string): string | undefined {
       return "validationErrors";
     case "Integration Status":
       return "integrationStatus";
+    case "Injury Claims":
+    case "Medical Cases":
+    case "Environmental Reports":
+    case "CAPA":
+      return "safety";
     default:
       return undefined;
   }

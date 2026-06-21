@@ -8,6 +8,7 @@ interface AppPageLayoutProps {
   subtitle: string;
   systemMessage?: SystemMessage | null;
   onDismissSystemMessage?: () => void;
+  headerChildren?: ReactNode;
   toolbar?: ReactNode;
   leftColumn?: ReactNode;
   leftColumnWidth?: string;
@@ -18,12 +19,14 @@ interface AppPageLayoutProps {
 const DEFAULT_ICON_CLASS = "bg-muted text-muted-foreground";
 const DEFAULT_LEFT_WIDTH = "w-72";
 
-export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, toolbar, leftColumn, leftColumnWidth = DEFAULT_LEFT_WIDTH, footer, children }: AppPageLayoutProps) {
+export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, headerChildren, toolbar, leftColumn, leftColumnWidth = DEFAULT_LEFT_WIDTH, footer, children }: AppPageLayoutProps) {
   const hasLeftColumn = !!leftColumn;
 
   return (
     <div className="flex flex-col overflow-hidden h-full">
-      <PageHeader icon={icon} iconClass={iconClass} title={title} subtitle={subtitle} systemMessage={systemMessage} onDismissSystemMessage={onDismissSystemMessage} />
+      <PageHeader icon={icon} iconClass={iconClass} title={title} subtitle={subtitle} systemMessage={systemMessage} onDismissSystemMessage={onDismissSystemMessage}>
+        {headerChildren}
+      </PageHeader>
       {toolbar && (
         <div className="shrink-0">
           {toolbar}
@@ -32,10 +35,10 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
       <div className="flex-1 min-h-0 overflow-hidden">
         {hasLeftColumn ? (
           <div className="flex h-full min-h-0">
-            <div className={`shrink-0 border-r border-border/20 bg-card/40 overflow-y-auto ${leftColumnWidth}`}>
+            <div className={`shrink-0 border-r border-border bg-muted/30 overflow-y-auto px-2 ${leftColumnWidth}`}>
               {leftColumn}
             </div>
-            <div className="flex-1 min-w-0 overflow-auto">
+            <div className="flex-1 min-w-0 overflow-hidden">
               {children}
             </div>
           </div>

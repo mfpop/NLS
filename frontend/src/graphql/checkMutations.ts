@@ -201,6 +201,30 @@ export const CANCEL_SAFETY_INCIDENT_MUTATION = gql`
   mutation CancelSafetyIncident($id: Int!) { cancelSafetyIncident(id: $id) }
 `;
 
+// ── Safety Events ──
+export const CREATE_SAFETY_EVENT_MUTATION = gql`
+  mutation CreateSafetyEvent($title: String!, $eventType: String!, $targetType: String!, $severity: String, $targetId: Int, $description: String, $reportedBy: String, $occurredAt: String, $locationText: String, $immediateAction: String, $injuryInvolved: Boolean, $propertyDamage: Boolean, $environmentalImpact: Boolean, $owner: String, $notes: String) {
+    createSafetyEvent(title: $title, eventType: $eventType, targetType: $targetType, severity: $severity, targetId: $targetId, description: $description, reportedBy: $reportedBy, occurredAt: $occurredAt, locationText: $locationText, immediateAction: $immediateAction, injuryInvolved: $injuryInvolved, propertyDamage: $propertyDamage, environmentalImpact: $environmentalImpact, owner: $owner, notes: $notes)
+  }
+`;
+export const UPDATE_SAFETY_EVENT_MUTATION = gql`
+  mutation UpdateSafetyEvent($id: Int!, $title: String, $description: String, $severity: String, $owner: String, $locationText: String, $immediateAction: String, $injuryInvolved: Boolean, $propertyDamage: Boolean, $environmentalImpact: Boolean, $notes: String) {
+    updateSafetyEvent(id: $id, title: $title, description: $description, severity: $severity, owner: $owner, locationText: $locationText, immediateAction: $immediateAction, injuryInvolved: $injuryInvolved, propertyDamage: $propertyDamage, environmentalImpact: $environmentalImpact, notes: $notes)
+  }
+`;
+export const REPORT_SAFETY_EVENT_MUTATION = gql`
+  mutation ReportSafetyEvent($id: Int!) { reportSafetyEvent(id: $id) }
+`;
+export const REVIEW_SAFETY_EVENT_MUTATION = gql`
+  mutation ReviewSafetyEvent($id: Int!) { reviewSafetyEvent(id: $id) }
+`;
+export const CLOSE_SAFETY_EVENT_MUTATION = gql`
+  mutation CloseSafetyEvent($id: Int!) { closeSafetyEvent(id: $id) }
+`;
+export const CANCEL_SAFETY_EVENT_MUTATION = gql`
+  mutation CancelSafetyEvent($id: Int!) { cancelSafetyEvent(id: $id) }
+`;
+
 // ── Material Checks ──
 export const CREATE_MATERIAL_CHECK_MUTATION = gql`
   mutation CreateMaterialCheck($title: String!, $checkType: String!, $targetType: String!, $targetId: Int, $checkedBy: String, $checkDate: String, $notes: String) {
@@ -248,4 +272,114 @@ export const CLOSE_MATERIAL_ISSUE_MUTATION = gql`
 `;
 export const CANCEL_MATERIAL_ISSUE_MUTATION = gql`
   mutation CancelMaterialIssue($id: Int!) { cancelMaterialIssue(id: $id) }
+`;
+
+// ── Safety Injury Claims ──
+export const CREATE_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation CreateSafetyInjuryClaim($claimantName: String!, $claimType: String!, $safetyEventId: Int, $claimNumber: String, $claimantEmployeeId: String, $injurySummary: String, $bodyArea: String, $lostTime: Boolean, $restrictedWork: Boolean, $reportedToInsurer: Boolean, $insurerReference: String, $owner: String, $notes: String) {
+    createSafetyInjuryClaim(claimantName: $claimantName, claimType: $claimType, safetyEventId: $safetyEventId, claimNumber: $claimNumber, claimantEmployeeId: $claimantEmployeeId, injurySummary: $injurySummary, bodyArea: $bodyArea, lostTime: $lostTime, restrictedWork: $restrictedWork, reportedToInsurer: $reportedToInsurer, insurerReference: $insurerReference, owner: $owner, notes: $notes)
+  }
+`;
+export const UPDATE_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation UpdateSafetyInjuryClaim($id: Int!, $claimantName: String, $claimType: String, $safetyEventId: Int, $injurySummary: String, $bodyArea: String, $lostTime: Boolean, $restrictedWork: Boolean, $reportedToInsurer: Boolean, $insurerReference: String, $owner: String, $notes: String) {
+    updateSafetyInjuryClaim(id: $id, claimantName: $claimantName, claimType: $claimType, safetyEventId: $safetyEventId, injurySummary: $injurySummary, bodyArea: $bodyArea, lostTime: $lostTime, restrictedWork: $restrictedWork, reportedToInsurer: $reportedToInsurer, insurerReference: $insurerReference, owner: $owner, notes: $notes)
+  }
+`;
+export const OPEN_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation OpenSafetyInjuryClaim($id: Int!) { openSafetyInjuryClaim(id: $id) }
+`;
+export const REVIEW_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation ReviewSafetyInjuryClaim($id: Int!) { reviewSafetyInjuryClaim(id: $id) }
+`;
+export const WAIT_INFO_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation WaitInfoSafetyInjuryClaim($id: Int!) { waitInfoSafetyInjuryClaim(id: $id) }
+`;
+export const CLOSE_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation CloseSafetyInjuryClaim($id: Int!) { closeSafetyInjuryClaim(id: $id) }
+`;
+export const CANCEL_SAFETY_INJURY_CLAIM_MUTATION = gql`
+  mutation CancelSafetyInjuryClaim($id: Int!) { cancelSafetyInjuryClaim(id: $id) }
+`;
+
+// ── Safety Medical Cases ──
+export const CREATE_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation CreateSafetyMedicalCase($careType: String!, $affectedPersonId: Int, $safetyEventId: Int, $injuryClaimId: Int, $caseNumber: String, $visitRequired: Boolean, $visitDate: String, $workRestriction: Boolean, $restrictionSummary: String, $returnToWorkDate: String, $confidentialNotes: String, $owner: String, $notes: String) {
+    createSafetyMedicalCase(careType: $careType, affectedPersonId: $affectedPersonId, safetyEventId: $safetyEventId, injuryClaimId: $injuryClaimId, caseNumber: $caseNumber, visitRequired: $visitRequired, visitDate: $visitDate, workRestriction: $workRestriction, restrictionSummary: $restrictionSummary, returnToWorkDate: $returnToWorkDate, confidentialNotes: $confidentialNotes, owner: $owner, notes: $notes)
+  }
+`;
+export const UPDATE_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation UpdateSafetyMedicalCase($id: Int!, $affectedPersonId: Int, $careType: String, $caseNumber: String, $visitRequired: Boolean, $visitDate: String, $workRestriction: Boolean, $restrictionSummary: String, $returnToWorkDate: String, $confidentialNotes: String, $owner: String, $notes: String) {
+    updateSafetyMedicalCase(id: $id, affectedPersonId: $affectedPersonId, careType: $careType, caseNumber: $caseNumber, visitRequired: $visitRequired, visitDate: $visitDate, workRestriction: $workRestriction, restrictionSummary: $restrictionSummary, returnToWorkDate: $returnToWorkDate, confidentialNotes: $confidentialNotes, owner: $owner, notes: $notes)
+  }
+`;
+export const OPEN_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation OpenSafetyMedicalCase($id: Int!) { openSafetyMedicalCase(id: $id) }
+`;
+export const MONITOR_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation MonitorSafetyMedicalCase($id: Int!) { monitorSafetyMedicalCase(id: $id) }
+`;
+export const RETURN_TO_WORK_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation ReturnToWorkSafetyMedicalCase($id: Int!) { returnToWorkSafetyMedicalCase(id: $id) }
+`;
+export const CLOSE_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation CloseSafetyMedicalCase($id: Int!) { closeSafetyMedicalCase(id: $id) }
+`;
+export const CANCEL_SAFETY_MEDICAL_CASE_MUTATION = gql`
+  mutation CancelSafetyMedicalCase($id: Int!) { cancelSafetyMedicalCase(id: $id) }
+`;
+
+// ── Safety Environmental Reports ──
+export const CREATE_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation CreateSafetyEnvironmentalReport($title: String!, $reportType: String!, $safetyEventId: Int, $description: String, $materialInvolved: String, $estimatedQuantity: Float, $unit: String, $containmentAction: String, $cleanupRequired: Boolean, $reportedExternally: Boolean, $externalReference: String, $occurredAt: String, $owner: String, $notes: String) {
+    createSafetyEnvironmentalReport(title: $title, reportType: $reportType, safetyEventId: $safetyEventId, description: $description, materialInvolved: $materialInvolved, estimatedQuantity: $estimatedQuantity, unit: $unit, containmentAction: $containmentAction, cleanupRequired: $cleanupRequired, reportedExternally: $reportedExternally, externalReference: $externalReference, occurredAt: $occurredAt, owner: $owner, notes: $notes)
+  }
+`;export const UPDATE_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation UpdateSafetyEnvironmentalReport($id: Int!, $title: String, $reportType: String, $description: String, $materialInvolved: String, $estimatedQuantity: Float, $unit: String, $containmentAction: String, $cleanupRequired: Boolean, $reportedExternally: Boolean, $externalReference: String, $safetyEventId: Int, $occurredAt: String, $owner: String, $notes: String, $targetType: String, $targetId: Int, $locationText: String) {
+    updateSafetyEnvironmentalReport(id: $id, title: $title, reportType: $reportType, description: $description, materialInvolved: $materialInvolved, estimatedQuantity: $estimatedQuantity, unit: $unit, containmentAction: $containmentAction, cleanupRequired: $cleanupRequired, reportedExternally: $reportedExternally, externalReference: $externalReference, safetyEventId: $safetyEventId, occurredAt: $occurredAt, owner: $owner, notes: $notes, targetType: $targetType, targetId: $targetId, locationText: $locationText)
+  }`;
+export const REPORT_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation ReportSafetyEnvironmentalReport($id: Int!) { reportSafetyEnvironmentalReport(id: $id) }
+`;
+export const REVIEW_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation ReviewSafetyEnvironmentalReport($id: Int!) { reviewSafetyEnvironmentalReport(id: $id) }
+`;
+export const REQUIRE_ACTION_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation RequireActionSafetyEnvironmentalReport($id: Int!) { requireActionSafetyEnvironmentalReport(id: $id) }
+`;
+export const CLOSE_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation CloseSafetyEnvironmentalReport($id: Int!) { closeSafetyEnvironmentalReport(id: $id) }
+`;
+export const CANCEL_SAFETY_ENV_REPORT_MUTATION = gql`
+  mutation CancelSafetyEnvironmentalReport($id: Int!) { cancelSafetyEnvironmentalReport(id: $id) }
+`;
+
+// ── Safety CAPAs ──
+export const OPEN_SAFETY_CAPA_MUTATION = gql`
+  mutation OpenSafetyCAPA($id: Int!) { openSafetyCAPA(id: $id) }
+`;
+
+export const CREATE_SAFETY_CAPA_MUTATION = gql`
+  mutation CreateSafetyCAPA($title: String!, $sourceType: String, $sourceId: Int, $problemStatement: String, $rootCause: String, $containmentAction: String, $correctiveAction: String, $preventiveAction: String, $owner: String, $dueDate: String, $effectivenessCheckRequired: Boolean, $notes: String) {
+    createSafetyCAPA(title: $title, sourceType: $sourceType, sourceId: $sourceId, problemStatement: $problemStatement, rootCause: $rootCause, containmentAction: $containmentAction, correctiveAction: $correctiveAction, preventiveAction: $preventiveAction, owner: $owner, dueDate: $dueDate, effectivenessCheckRequired: $effectivenessCheckRequired, notes: $notes)
+  }
+`;
+export const UPDATE_SAFETY_CAPA_MUTATION = gql`
+  mutation UpdateSafetyCAPA($id: Int!, $title: String, $sourceType: String, $sourceId: Int, $problemStatement: String, $rootCause: String, $containmentAction: String, $correctiveAction: String, $preventiveAction: String, $owner: String, $dueDate: String, $effectivenessCheckRequired: Boolean, $notes: String) {
+    updateSafetyCAPA(id: $id, title: $title, sourceType: $sourceType, sourceId: $sourceId, problemStatement: $problemStatement, rootCause: $rootCause, containmentAction: $containmentAction, correctiveAction: $correctiveAction, preventiveAction: $preventiveAction, owner: $owner, dueDate: $dueDate, effectivenessCheckRequired: $effectivenessCheckRequired, notes: $notes)
+  }
+`;
+export const START_SAFETY_CAPA_MUTATION = gql`
+  mutation StartSafetyCAPA($id: Int!) { startSafetyCAPA(id: $id) }
+`;
+export const PENDING_EFFECTIVENESS_SAFETY_CAPA_MUTATION = gql`
+  mutation PendingEffectivenessSafetyCAPA($id: Int!) { pendingEffectivenessSafetyCAPA(id: $id) }
+`;
+export const COMPLETE_EFFECTIVENESS_SAFETY_CAPA_MUTATION = gql`
+  mutation CompleteEffectivenessSafetyCAPA($id: Int!, $effective: Boolean!) { completeEffectivenessSafetyCAPA(id: $id, effective: $effective) }
+`;
+export const CLOSE_SAFETY_CAPA_MUTATION = gql`
+  mutation CloseSafetyCAPA($id: Int!) { closeSafetyCAPA(id: $id) }
+`;
+export const CANCEL_SAFETY_CAPA_MUTATION = gql`
+  mutation CancelSafetyCAPA($id: Int!) { cancelSafetyCAPA(id: $id) }
 `;

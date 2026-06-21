@@ -19,10 +19,6 @@ describe("DemoDataPage - Shared Layout", () => {
     vi.clearAllMocks();
   });
 
-  const switchToLiveShopfloor = () => {
-    fireEvent.click(screen.getAllByText("Live Shopfloor")[0]);
-  };
-
   it("renders DEMO MODE banner", () => {
     renderPage();
     expect(screen.getByText("DEMO MODE")).toBeDefined();
@@ -174,6 +170,10 @@ describe("DemoDataPage - Live Shopfloor View", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  const switchToLiveShopfloor = () => {
+    fireEvent.click(screen.getAllByText("Live Shopfloor")[0]);
+  };
 
   it("renders Line Context section after switching", async () => {
     renderPage();

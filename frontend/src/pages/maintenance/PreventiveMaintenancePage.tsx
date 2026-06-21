@@ -7,7 +7,8 @@ import {
   Save, XCircle, ClipboardList, Wrench, Pencil,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { SplitToolbar } from "@/components/shared/SplitToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PM_PLANS_QUERY, DUE_PM_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { PmDashboard } from "./pm/PmDashboard";
@@ -735,46 +736,48 @@ export function PreventiveMaintenancePage() {
         )}
       </PageHeader>
       <div className="print-ignore">
-        <Toolbar
-          left={view === "dashboard" ? <div /> : <ToolbarSearch value={search} onChange={setSearch} placeholder="Search PM plans..." />}
-          right={
+        <SplitToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search PM plans..."
+          filters={view !== "dashboard" && view !== "form" ? (
             <>
-              {view !== "dashboard" && view !== "form" && (
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-28" />
+
+              <ToolbarDropdown value={filterFreq} onChange={setFilterFreq} options={FREQ_OPTIONS} className="w-32" />
+
+              <ToolbarDropdown value={filterPriority} onChange={setFilterPriority} options={PRIORITY_FILTER_OPTIONS} className="w-28" />
+
+            </>
+          ) : undefined}
+          actions={
+            <div className="flex items-center gap-1 shrink-0">
+              {view === "form" ? (
                 <>
-                  <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-28" />
-                  <ToolbarSelect value={filterFreq} onChange={setFilterFreq} options={FREQ_OPTIONS} className="w-32" />
-                  <ToolbarSelect value={filterPriority} onChange={setFilterPriority} options={PRIORITY_FILTER_OPTIONS} className="w-28" />
+                  <ToolbarButton icon={Save} label={editMode ? "Update" : "Create"}
+                    onClick={hSave} variant="success" />
+                  <ToolbarButton icon={XCircle} label="Cancel" onClick={hCancelForm} />
+                </>
+              ) : view === "dashboard" ? (
+                <>
+                  <ToolbarButton icon={Plus} label="New PM" onClick={hNew} />
+                  <ToolbarButton icon={ClipboardList} label="All Plans" onClick={() => { setFilterStatus(""); setView("detail"); }} />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+                </>
+              ) : (
+                <>
+                  <ToolbarButton icon={CalendarClock} label="Dashboard" onClick={() => { setSelId(null); setView("dashboard"); }} />
+                  <ToolbarButton icon={Plus} label="New PM" onClick={hNew} />
+                  {sel && canEdit && <ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} />}
+                  {sel && canActivate && <ToolbarButton icon={Play} label="Activate" onClick={() => doAction("activate", sel.id)} />}
+                  {sel && canPause && <ToolbarButton icon={Pause} label="Pause" onClick={() => doAction("pause", sel.id)} />}
+                  {sel && canArchive && <ToolbarButton icon={Archive} label="Archive" onClick={() => doAction("archive", sel.id)} />}
+                  {sel && canGenerate && <ToolbarButton icon={Plus} label="Generate WO" onClick={() => setConfirmAction({ id: sel.id, action: "generate" })} variant="success" />}
+                  <span className="h-5 w-px shrink-0 bg-border/25 mx-1" />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
                 </>
               )}
-              <div className="flex-1" />
-              <div className="flex items-center gap-1 shrink-0">
-                {view === "form" ? (
-                  <>
-                    <ToolbarButton icon={Save} label={editMode ? "Update" : "Create"}
-                      onClick={hSave} variant="success" />
-                    <ToolbarButton icon={XCircle} label="Cancel" onClick={hCancelForm} />
-                  </>
-                ) : view === "dashboard" ? (
-                  <>
-                    <ToolbarButton icon={Plus} label="New PM" onClick={hNew} />
-                    <ToolbarButton icon={ClipboardList} label="All Plans" onClick={() => { setFilterStatus(""); setView("detail"); }} />
-                    <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                  </>
-                ) : (
-                  <>
-                    <ToolbarButton icon={CalendarClock} label="Dashboard" onClick={() => { setSelId(null); setView("dashboard"); }} />
-                    <ToolbarButton icon={Plus} label="New PM" onClick={hNew} />
-                    {sel && canEdit && <ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} />}
-                    {sel && canActivate && <ToolbarButton icon={Play} label="Activate" onClick={() => doAction("activate", sel.id)} />}
-                    {sel && canPause && <ToolbarButton icon={Pause} label="Pause" onClick={() => doAction("pause", sel.id)} />}
-                    {sel && canArchive && <ToolbarButton icon={Archive} label="Archive" onClick={() => doAction("archive", sel.id)} />}
-                    {sel && canGenerate && <ToolbarButton icon={Plus} label="Generate WO" onClick={() => setConfirmAction({ id: sel.id, action: "generate" })} variant="success" />}
-                    <span className="h-5 w-px shrink-0 bg-border/25 mx-1" />
-                    <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                  </>
-                )}
-              </div>
-            </>
+            </div>
           }
         />
       </div>

@@ -5,7 +5,7 @@ import {
   Play, CheckCircle, Ban, AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ACTIONS_QUERY } from "@/graphql/checkQueries";
@@ -379,10 +379,12 @@ export function ActionsPage() {
         <div>
           <Toolbar left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search actions..." />}
             right={<>
-              <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={ACTION_STATUS_OPTIONS} className="w-32" />
-              <ToolbarSelect value={filterOwner} onChange={setFilterOwner}
+
+              <ToolbarDropdown value={filterOwner} onChange={setFilterOwner}
                 options={[{ value: "", label: "All Owners" }, { value: "filter", label: "Show Filtered" }]} className="w-32" />
+
               <div className="flex-1" />
               <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (

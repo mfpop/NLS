@@ -5,7 +5,7 @@ import {
   ThumbsUp, ThumbsDown, RotateCcw, MessageSquare, AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -513,9 +513,10 @@ export function SuggestionsPage() {
           <Toolbar
             left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search suggestions..." />}
             right={<>
-              <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "", label: "All Statuses" }, { value: "NEW", label: "New" }, { value: "UNDER_REVIEW", label: "Under Review" }, { value: "ACCEPTED", label: "Accepted" }, { value: "REJECTED", label: "Rejected" }, { value: "CONVERTED_TO_KAIZEN", label: "Converted" }]}
                 className="w-40" />
+
               <div className="flex-1" />
               <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (

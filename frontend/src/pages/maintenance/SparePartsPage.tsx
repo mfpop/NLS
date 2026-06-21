@@ -6,7 +6,8 @@ import {
   MapPin, Hash, Archive, Save, FileText, CheckCircle, Clock, ClipboardList,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { SplitToolbar } from "@/components/shared/SplitToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SPARE_PARTS_QUERY, SPARE_PART_USAGES_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { SparePartsDashboard } from "./spare-parts/SparePartsDashboard";
@@ -562,45 +563,47 @@ export function SparePartsPage() {
         subtitle="Manage spare parts inventory — kanban min/max levels"
       />
       <div className="print-ignore">
-        <Toolbar
-          left={view === "dashboard" ? <div /> : <ToolbarSearch value={search} onChange={setSearch} placeholder="Search parts by name or number..." />}
-          right={
+        <SplitToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search parts by name or number..."
+          filters={view !== "dashboard" && view !== "form" ? (
             <>
-              {view !== "dashboard" && view !== "form" && (
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-28" />
+
+              <ToolbarDropdown value={filterCategory} onChange={setFilterCategory} options={CATEGORY_OPTIONS} className="w-36" />
+
+              <ToolbarDropdown value={filterStock} onChange={setFilterStock} options={LOW_STOCK_FILTER_OPTIONS} className="w-36" />
+
+            </>
+          ) : undefined}
+          actions={
+            <div className="flex items-center gap-1 shrink-0">
+              {view === "form" ? (
                 <>
-                  <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-28" />
-                  <ToolbarSelect value={filterCategory} onChange={setFilterCategory} options={CATEGORY_OPTIONS} className="w-36" />
-                  <ToolbarSelect value={filterStock} onChange={setFilterStock} options={LOW_STOCK_FILTER_OPTIONS} className="w-36" />
+                  <ToolbarButton icon={Save} label={editMode ? "Update" : "Save"} onClick={hSave} variant="success" />
+                  <ToolbarButton icon={XCircle} label="Cancel" onClick={hCancelForm} />
+                </>
+              ) : view === "dashboard" ? (
+                <>
+                  <ToolbarButton icon={Plus} label="New Part" onClick={hNew} />
+                  <ToolbarButton icon={ClipboardList} label="All Parts" onClick={() => { setFilterStock(""); setView("detail"); }} />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+                </>
+              ) : (
+                <>
+                  <ToolbarButton icon={Package} label="Dashboard" onClick={() => { setSelId(null); setView("dashboard"); }} />
+                  <ToolbarButton icon={Plus} label="New Part" onClick={hNew} />
+                  {sel && canEdit && <ToolbarButton icon={Minus} label="Adjust" onClick={() => { setAdjustingId(sel.id); setAdjustQty(0); }} />}
+                  {sel && sel.status === "ACTIVE" && <ToolbarButton icon={Plus} label="Record Usage" onClick={() => setRecordUsageOpen(true)} />}
+                  {sel && sel.status === "ACTIVE" && <ToolbarButton icon={Archive} label="Inactive" onClick={() => setConfirmAction({ id: sel.id, action: "inactive" })} />}
+                  {sel && sel.status === "INACTIVE" && <ToolbarButton icon={XCircle} label="Obsolete" onClick={() => setConfirmAction({ id: sel.id, action: "obsolete" })} />}
+                  {sel && canEdit && <ToolbarButton icon={Save} label="Edit" onClick={hEdit} />}
+                  <span className="h-5 w-px shrink-0 bg-border/25 mx-1" />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
                 </>
               )}
-              <div className="flex-1" />
-              <div className="flex items-center gap-1 shrink-0">
-                {view === "form" ? (
-                  <>
-                    <ToolbarButton icon={Save} label={editMode ? "Update" : "Save"} onClick={hSave} variant="success" />
-                    <ToolbarButton icon={XCircle} label="Cancel" onClick={hCancelForm} />
-                  </>
-                ) : view === "dashboard" ? (
-                  <>
-                    <ToolbarButton icon={Plus} label="New Part" onClick={hNew} />
-                    <ToolbarButton icon={ClipboardList} label="All Parts" onClick={() => { setFilterStock(""); setView("detail"); }} />
-                    <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                  </>
-                ) : (
-                  <>
-                    <ToolbarButton icon={Package} label="Dashboard" onClick={() => { setSelId(null); setView("dashboard"); }} />
-                    <ToolbarButton icon={Plus} label="New Part" onClick={hNew} />
-                    {sel && canEdit && <ToolbarButton icon={Minus} label="Adjust" onClick={() => { setAdjustingId(sel.id); setAdjustQty(0); }} />}
-                    {sel && sel.status === "ACTIVE" && <ToolbarButton icon={Plus} label="Record Usage" onClick={() => setRecordUsageOpen(true)} />}
-                    {sel && sel.status === "ACTIVE" && <ToolbarButton icon={Archive} label="Inactive" onClick={() => setConfirmAction({ id: sel.id, action: "inactive" })} />}
-                    {sel && sel.status === "INACTIVE" && <ToolbarButton icon={XCircle} label="Obsolete" onClick={() => setConfirmAction({ id: sel.id, action: "obsolete" })} />}
-                    {sel && canEdit && <ToolbarButton icon={Save} label="Edit" onClick={hEdit} />}
-                    <span className="h-5 w-px shrink-0 bg-border/25 mx-1" />
-                    <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                  </>
-                )}
-              </div>
-            </>
+            </div>
           }
         />
       </div>

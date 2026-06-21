@@ -191,13 +191,6 @@ const EXEC_FORM_COMPLETED_RETURN = {
   refetch: vi.fn().mockResolvedValue({}),
 };
 
-function makeExecFormReturn(form: typeof MOCK_EXEC_FORM_DRAFT) {
-  return {
-    data: { auditExecutionForm: form }, loading: false,
-    refetch: vi.fn().mockResolvedValue({}),
-  };
-}
-
 // ── Test Harness ───────────────────────────────────────────
 
 import React from "react";
@@ -213,8 +206,8 @@ interface TestHarnessProps {
 }
 
 function TestHarness({ controlArea = "QUALITY", moduleScope = "QUALITY_CONTROL", installMutation = undefined, activePlantId = null, productionLineId = null }: TestHarnessProps) {
-  const [search, setSearch] = React.useState("");
-  const [filterStatus, setFilterStatus] = React.useState("");
+  const [search, _setSearch] = React.useState("");
+  const [filterStatus, _setFilterStatus] = React.useState("");
   const [msg, setMsg] = React.useState("");
   const [selId, setSelId] = React.useState<number | null>(null);
 

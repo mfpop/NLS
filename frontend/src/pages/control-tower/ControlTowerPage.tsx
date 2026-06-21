@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { theme } from "../../styles/themeTokens";
-import { PageHeader } from "@/pages/shared/PageHeader";
+import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 
 /* ── Sample data ── */
 const controlTowerData = {
@@ -230,19 +230,19 @@ export function ControlTowerPage() {
   const [drillDownTarget, setDrillDownTarget] = useState<string | null>(null);
 
   return (
-    <div className={`relative flex h-full flex-col overflow-hidden ${theme.page}`} style={{ minHeight: 0 }}>
-      <PageHeader
-        icon={<Monitor className="h-5 w-5 stroke-current" />}
-        iconClass="bg-success/10 text-success"
-        title="Control Tower"
-        subtitle="Live priorities, KPI risk, and supervisor actions"
-      >
-        <span className="border border-warning/15 bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">At risk</span>
-        <span className="border border-success/30 bg-success/10 px-2 py-1 text-xs font-semibold text-success">● Live</span>
-      </PageHeader>
-
-      {/* ── BODY ── */}
-      <div className={`flex min-h-0 flex-1 overflow-hidden ${theme.page}`}>
+    <AppPageLayout
+      icon={<Monitor className="h-5 w-5 stroke-current" />}
+      iconClass="bg-success/10 text-success"
+      title="Control Tower"
+      subtitle="Live priorities, KPI risk, and supervisor actions"
+      headerChildren={
+        <>
+          <span className="border border-warning/15 bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">At risk</span>
+          <span className="border border-success/30 bg-success/10 px-2 py-1 text-xs font-semibold text-success">● Live</span>
+        </>
+      }
+    >
+      <div className="relative h-full">
         <div className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden">
           {/* ════ LEFT COLUMN ════ */}
           <div className="flex min-h-0 flex-col overflow-y-auto pl-4 py-4 bg-background/70 backdrop-blur-md lg:overflow-hidden">
@@ -464,8 +464,8 @@ export function ControlTowerPage() {
             </div>
           </aside>
         </div>
+        {drillDownTarget && <DrillDownPanel target={drillDownTarget} onClose={() => setDrillDownTarget(null)} />}
       </div>
-      {drillDownTarget && <DrillDownPanel target={drillDownTarget} onClose={() => setDrillDownTarget(null)} />}
-    </div>
+    </AppPageLayout>
   );
 }

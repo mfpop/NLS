@@ -108,7 +108,7 @@ const mocks = [
 function renderPage() {
   return render(
     <MemoryRouter>
-      <MockedProvider mocks={mocks} addTypename={false}>
+      <MockedProvider mocks={mocks}>
         <LinePerformancePage />
       </MockedProvider>
     </MemoryRouter>
@@ -199,7 +199,7 @@ describe("LinePerformancePage", () => {
   it("shows loading skeleton initially", () => {
     const { container } = render(
       <MemoryRouter>
-        <MockedProvider mocks={mocks} addTypename={false}>
+        <MockedProvider mocks={mocks}>
           <LinePerformancePage />
         </MockedProvider>
       </MemoryRouter>
@@ -227,7 +227,7 @@ describe("LinePerformancePage", () => {
 
     render(
       <MemoryRouter>
-        <MockedProvider mocks={errorMock} addTypename={false}>
+        <MockedProvider mocks={errorMock}>
           <LinePerformancePage />
         </MockedProvider>
       </MemoryRouter>

@@ -4,7 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks";
 import { useDocumentation } from "@/hooks/useDocumentation";
 import { APP_NAME } from "@/config";
-import { ToolbarSearch, ToolbarSelect } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarDropdown } from "@/components/shared/Toolbar";
 import { MarkdownReader } from "./MarkdownReader";
 import type { DocumentationFile } from "./documentationTypes";
 import { useReadingPreferences, READING_THEME_STYLES } from "@/stores/readingPreferences";
@@ -166,7 +166,7 @@ export function DocumentationCenter() {
 
           {/* Category filter */}
           <div className={`px-2 py-1.5 border-b ${themeStyle.border}`}>
-            <ToolbarSelect value={categoryFilter} onChange={setCategoryFilter}
+            <ToolbarDropdown value={categoryFilter} onChange={setCategoryFilter}
               options={categories.map((cat) => ({ value: cat, label: cat === "All" ? "All Categories" : cat }))}
               className="w-full" />
           </div>

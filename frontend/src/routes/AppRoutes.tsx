@@ -67,6 +67,27 @@ const ProductionControlPage = lazy(() =>
 const SafetyControlPage = lazy(() =>
   import("@/pages/check/SafetyControlPage").then((module) => ({ default: module.SafetyControlPage }))
 );
+const SafetyAuditsPage = lazy(() =>
+  import("@/pages/check/SafetyAuditsPage").then((module) => ({ default: module.SafetyAuditsPage }))
+);
+const SafetyDashboard = lazy(() =>
+  import("@/pages/safety/SafetyDashboardPage").then((module) => ({ default: module.SafetyDashboardPage }))
+);
+const SafetyEventsPage = lazy(() =>
+  import("@/pages/safety/SafetyEventsPage").then((module) => ({ default: module.SafetyEventsPage }))
+);
+const SafetyInjuryClaimsPage = lazy(() =>
+  import("@/pages/safety/SafetyInjuryClaimsPage").then((module) => ({ default: module.SafetyInjuryClaimsPage }))
+);
+const SafetyMedicalCasesPage = lazy(() =>
+  import("@/pages/safety/SafetyMedicalCasesPage").then((module) => ({ default: module.SafetyMedicalCasesPage }))
+);
+const SafetyEnvReportsPage = lazy(() =>
+  import("@/pages/safety/SafetyEnvReportsPage").then((module) => ({ default: module.SafetyEnvReportsPage }))
+);
+const SafetyCAPAPage = lazy(() =>
+  import("@/pages/safety/SafetyCAPAPage").then((module) => ({ default: module.SafetyCAPAPage }))
+);
 const MaterialControlPage = lazy(() =>
   import("@/pages/check/MaterialControlPage").then((module) => ({ default: module.MaterialControlPage }))
 );
@@ -199,6 +220,9 @@ const TechnicalDocsPage = lazy(() =>
 const UserManualPage = lazy(() =>
   import("@/pages/docs/UserManualPage").then((module) => ({ default: module.UserManualPage }))
 );
+const DocumentationSetupPage = lazy(() =>
+  import("@/pages/docs/DocumentationSetupPage").then((module) => ({ default: module.DocumentationSetupPage }))
+);
 
 const DemoDataPage = lazy(() =>
   import("@/demo/DemoDataPage").then((module) => ({ default: module.DemoDataPage }))
@@ -252,7 +276,16 @@ export function AppRoutes() {
           <Route path="check/quality-control" element={<QualityControlPage />} />
           <Route path="check/production-control" element={<ProductionControlPage />} />
           <Route path="check/safety-control" element={<SafetyControlPage />} />
+          <Route path="check/safety-audits" element={<SafetyAuditsPage />} />
           <Route path="check/material-control" element={<MaterialControlPage />} />
+          <Route path="safety/dashboard" element={<SafetyDashboard />} />
+          <Route path="safety/incidents" element={<SafetyEventsPage />} />
+          <Route path="safety/near-misses" element={<SafetyEventsPage />} />
+          <Route path="safety/hazards" element={<SafetyEventsPage />} />
+          <Route path="safety/compliance/injury-claims" element={<SafetyInjuryClaimsPage />} />
+          <Route path="safety/compliance/medical-cases" element={<SafetyMedicalCasesPage />} />
+          <Route path="safety/compliance/environmental-reports" element={<SafetyEnvReportsPage />} />
+          <Route path="safety/compliance/capa" element={<SafetyCAPAPage />} />
           <Route path="maintenance/dashboard" element={<MaintenanceDashboardPage />} />
           <Route path="maintenance/work-orders" element={<WorkOrdersPage />} />
           <Route path="maintenance/preventive" element={<PreventiveMaintenancePage />} />
@@ -330,6 +363,7 @@ export function AppRoutes() {
           <Route path="docs/training-materials" element={<TrainingMaterialsPage />} />
           <Route path="docs/release-notes" element={<ReleaseNotesPage />} />
           <Route path="docs/technical-docs" element={<TechnicalDocsPage />} />
+          <Route path="docs/setup" element={<DocumentationSetupPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

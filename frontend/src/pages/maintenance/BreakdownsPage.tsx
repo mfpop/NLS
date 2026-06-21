@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
-import { AlertTriangle, Plus, Play, CheckCircle, XCircle, Wrench, Pencil } from "lucide-react";
-import { ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { AlertTriangle, Plus, CheckCircle, XCircle, Wrench, Pencil } from "lucide-react";
+import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ControlPageShell, type RecordType } from "@/pages/check/ControlPageShell";
 import type { SystemMessage } from "@/pages/shared/PageHeader";
@@ -104,11 +104,15 @@ export function BreakdownsPage() {
           : <BreakdownOverview breakdowns={section.items} />
         }
         renderUnifiedList={renderUnifiedList}
-        toolbarSearch={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search breakdowns..." />}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search breakdowns..."
         toolbarFilters={
           <>
-            <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-32" />
-            <ToolbarSelect value={filterSeverity} onChange={setFilterSeverity} options={SEVERITY_OPTIONS} className="w-28" />
+            <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-32" />
+
+            <ToolbarDropdown value={filterSeverity} onChange={setFilterSeverity} options={SEVERITY_OPTIONS} className="w-28" />
+
           </>
         }
         toolbarActions={renderToolbarActions}

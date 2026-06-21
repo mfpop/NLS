@@ -302,8 +302,8 @@ export function LinePerformancePage() {
         <LinkedIssuesActionsPanel
           issues={dashboard?.linkedIssues ?? []}
           actions={dashboard?.linkedActions ?? []}
-          onNewIssue={handleNewIssue}
-          onNewAction={handleNewAction}
+          onNewIssue={() => handleNewIssue(undefined as unknown as NewIssueFormData)}
+          onNewAction={() => handleNewAction(undefined as unknown as NewActionFormData)}
         />
       </div>
     );

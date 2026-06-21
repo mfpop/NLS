@@ -188,3 +188,39 @@ class UserRoleAssignment(TimeStampedModel):
 
     def __str__(self):
         return f"{self.user_profile} -> {self.role.code}"
+
+
+class ProfileSkill(TimeStampedModel):
+    CATEGORY_CHOICES = [
+        ("SKILL", "Skill"),
+        ("CERTIFICATION", "Certification"),
+        ("LICENSE", "License"),
+        ("TRAINING", "Training"),
+    ]
+
+    user_profile = models.ForeignKey(
+        UserProfile, on_delete=models.CASCADE,
+        related_name="skills",
+    )
+    name = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default="SKILL")
+    level = models.CharField(max_length=100, blank=True, default="")
+    issuer = models.CharField(max_length=200, blank=True, default="")
+    issued_date = models.DateField(null=True, blank=True)
+    expires_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True, default="")
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "administration_profile_skill"
+        ordering = ["-created_at"]
+        verbose_name = "Profile Skill"
+        verbose_name_plural = "Profile Skills"
+        indexes = [
+            models.Index(fields=["user_profile"], name="admin_skill_user_idx"),
+            models.Index(fields=["category"], name="admin_skill_cat_idx"),
+            models.Index(fields=["is_active"], name="admin_skill_active_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_category_display()})"

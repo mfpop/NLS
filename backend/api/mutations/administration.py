@@ -9,6 +9,13 @@ from administration.services import (
     RoleService, RoleServiceError,
     UserAccessService, UserAccessServiceError,
 )
+from administration.services import (
+    AdministrativeDepartmentService, AdministrativeDepartmentServiceError,
+    UserProfileService, UserProfileServiceError,
+    RoleService, RoleServiceError,
+    UserAccessService, UserAccessServiceError,
+    ProfileSkillService, ProfileSkillServiceError,
+)
 from api.types.administration import (
     AdministrativeDepartmentNode,
     AdministrativeDepartmentPayload,
@@ -28,6 +35,10 @@ from api.types.administration import (
     AssignRoleToUserInput,
     AssignRolePayload,
     UserRoleAssignmentNode,
+    ProfileSkillNode,
+    ProfileSkillPayload,
+    CreateProfileSkillInput,
+    UpdateProfileSkillInput,
     MutationError,
 )
 
@@ -262,6 +273,62 @@ class AdministrationMutation:
             action=input.action,
         )
         return PermissionPayload(permission=PermissionNode.from_db(perm))
+
+    # ── ProfileSkill ──
+
+    @strawberry.mutation
+    def create_profile_skill(
+        self, info: Info, input: CreateProfileSkillInput,
+    ) -> ProfileSkillPayload:
+        try:
+            skill = ProfileSkillService.create(
+                user_profile_id=input.user_profile_id,
+                name=input.name,
+                category=input.category or "SKILL",
+                level=input.level or "",
+                issuer=input.issuer or "",
+                issued_date=input.issued_date,
+                expires_date=input.expires_date,
+                notes=input.notes or "",
+            )
+            return ProfileSkillPayload(
+                skill=ProfileSkillNode.from_db(skill),
+            )
+        except ProfileSkillServiceError as exc:
+            return ProfileSkillPayload(
+                errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)],
+            )
+
+    @strawberry.mutation
+    def update_profile_skill(
+        self, info: Info, id: str, input: UpdateProfileSkillInput,
+    ) -> ProfileSkillPayload:
+        try:
+            kwargs = {}
+            for field in ("name", "category", "level", "issuer", "issued_date", "expires_date", "notes", "is_active"):
+                v = getattr(input, field, None)
+                if v is not None:
+                    kwargs[field] = v
+            skill = ProfileSkillService.update(id, **kwargs)
+            return ProfileSkillPayload(
+                skill=ProfileSkillNode.from_db(skill),
+            )
+        except ProfileSkillServiceError as exc:
+            return ProfileSkillPayload(
+                errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)],
+            )
+
+    @strawberry.mutation
+    def archive_profile_skill(self, info: Info, id: str) -> ProfileSkillPayload:
+        try:
+            skill = ProfileSkillService.archive(id)
+            return ProfileSkillPayload(
+                skill=ProfileSkillNode.from_db(skill),
+            )
+        except ProfileSkillServiceError as exc:
+            return ProfileSkillPayload(
+                errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)],
+            )
 
     # ── User Role Assignment ──
 

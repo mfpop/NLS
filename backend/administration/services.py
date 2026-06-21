@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import (
     AdministrativeDepartment, UserProfile, Role,
     Permission, RolePermission, UserRoleAssignment,
+    ProfileSkill,
 )
 
 
@@ -48,6 +49,14 @@ class RoleServiceError(Exception):
 
 
 class UserAccessServiceError(Exception):
+    def __init__(self, field, code, message):
+        self.field = field
+        self.code = code
+        self.message = message
+        super().__init__(message)
+
+
+class ProfileSkillServiceError(Exception):
     def __init__(self, field, code, message):
         self.field = field
         self.code = code
@@ -531,8 +540,6 @@ class UserAccessService:
                 return False
         return True
 
-    # ── Scope Enforcement ────────────────────────────────────────────
-
     @staticmethod
     def get_profile_for_user(user: User) -> UserProfile | None:
         """Get the UserProfile for a Django user, if one exists."""
@@ -628,5 +635,107 @@ class UserAccessService:
                 f"You do not have the '{permission_code}' permission.",
             )
 
+
+class ProfileSkillService:
+
+    @staticmethod
+    @transaction.atomic
+    def create(user_profile_id, name, category="SKILL", level="", issuer="",
+               issued_date=None, expires_date=None, notes=""):
+        try:
+            profile = UserProfile.objects.get(id=user_profile_id)
+        except UserProfile.DoesNotExist:
+            raise ProfileSkillServiceError(
+                "userProfileId", "NOT_FOUND", "User profile not found.",
+            )
+        if not name or not name.strip():
+            raise ProfileSkillServiceError(
+                "name", "REQUIRED", "Skill name is required.",
+            )
+        valid_categories = {c[0] for c in ProfileSkill.CATEGORY_CHOICES}
+        if category not in valid_categories:
+            raise ProfileSkillServiceError(
+                "category", "INVALID", f"Category must be one of: {', '.join(valid_categories)}.",
+            )
+        if expires_date and issued_date and expires_date < issued_date:
+            raise ProfileSkillServiceError(
+                "expiresDate", "INVALID", "Expiration date cannot be before issue date.",
+            )
+        return ProfileSkill.objects.create(
+            user_profile=profile,
+            name=name.strip(),
+            category=category,
+            level=level.strip(),
+            issuer=issuer.strip(),
+            issued_date=issued_date,
+            expires_date=expires_date,
+            notes=notes.strip(),
+        )
+
+    @staticmethod
+    @transaction.atomic
+    def update(skill_id, **kwargs):
+        try:
+            skill = ProfileSkill.objects.get(id=skill_id)
+        except ProfileSkill.DoesNotExist:
+            raise ProfileSkillServiceError(
+                "id", "NOT_FOUND", "Profile skill not found.",
+            )
+        if "name" in kwargs:
+            name = kwargs["name"]
+            if not name or not name.strip():
+                raise ProfileSkillServiceError(
+                    "name", "REQUIRED", "Skill name is required.",
+                )
+        if "category" in kwargs:
+            valid_categories = {c[0] for c in ProfileSkill.CATEGORY_CHOICES}
+            if kwargs["category"] not in valid_categories:
+                raise ProfileSkillServiceError(
+                    "category", "INVALID", f"Category must be one of: {', '.join(valid_categories)}.",
+                )
+        expires = kwargs.get("expires_date", skill.expires_date)
+        issued = kwargs.get("issued_date", skill.issued_date)
+        if expires and issued and expires < issued:
+            raise ProfileSkillServiceError(
+                "expiresDate", "INVALID", "Expiration date cannot be before issue date.",
+            )
+        for field in ("name", "category", "level", "issuer", "issued_date", "expires_date", "notes", "is_active"):
+            if field in kwargs:
+                setattr(skill, field, kwargs[field])
+        skill.save()
+        return skill
+
+    @staticmethod
+    @transaction.atomic
+    def archive(skill_id):
+        try:
+            skill = ProfileSkill.objects.get(id=skill_id)
+        except ProfileSkill.DoesNotExist:
+            raise ProfileSkillServiceError(
+                "id", "NOT_FOUND", "Profile skill not found.",
+            )
+        skill.is_active = False
+        skill.save()
+        return skill
+
+    @staticmethod
+    def list(user_profile_id=None, category=None, is_active=None):
+        qs = ProfileSkill.objects.select_related("user_profile").all()
+        if user_profile_id:
+            qs = qs.filter(user_profile_id=user_profile_id)
+        if category:
+            qs = qs.filter(category=category)
+        if is_active is not None:
+            qs = qs.filter(is_active=is_active)
+        return qs
+
+    @staticmethod
+    def get(skill_id):
+        try:
+            return ProfileSkill.objects.select_related("user_profile").get(id=skill_id)
+        except ProfileSkill.DoesNotExist:
+            raise ProfileSkillServiceError(
+                "id", "NOT_FOUND", "Profile skill not found.",
+            )
 
 

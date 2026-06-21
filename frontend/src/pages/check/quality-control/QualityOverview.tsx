@@ -1,11 +1,10 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   RMA_STATUS_STYLES, DMR_STATUS_STYLES,
   ISSUE_STATUS_STYLES, ACTION_STATUS_STYLES,
-  SEVERITY_STYLES, PRIORITY_STYLES,
-  STATUS_STYLES, DMR_DISPOSITION_OPTIONS,
-  RMA_DISPOSITION_OPTIONS, statusLabel,
+  PRIORITY_STYLES,
+  STATUS_STYLES, statusLabel,
 } from "./QualityStatusStyles";
 
 interface OverviewProps {
@@ -18,19 +17,16 @@ interface OverviewProps {
   onInstallTemplates?: () => void;
 }
 
-// ── Constants ──
 const NOW = new Date();
 const TODAY = NOW.toISOString().slice(0, 10);
-const WEEK_END = new Date(NOW);
-WEEK_END.setDate(WEEK_END.getDate() + 7);
-const WEEK_END_STR = WEEK_END.toISOString().slice(0, 10);
+const WEEK_START = new Date(NOW);
+WEEK_START.setDate(WEEK_START.getDate() - 7);
+const WEEK_START_STR = WEEK_START.toISOString().slice(0, 10);
+const MONTH_START = new Date(NOW);
+MONTH_START.setDate(MONTH_START.getDate() - 30);
+const MONTH_START_STR = MONTH_START.toISOString().slice(0, 10);
 
 type NavTarget = { tab: string; status?: string };
-
-// ── Helpers ──
-function badgeCls(cls: string): string {
-  return `inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${cls}`;
-}
 
 function SectionH({ label, color = "bg-cyan-500" }: { label: string; color?: string }) {
   return (
@@ -41,27 +37,21 @@ function SectionH({ label, color = "bg-cyan-500" }: { label: string; color?: str
   );
 }
 
-function EmptyRow({ msg }: { msg: string }) {
-  return <div className="text-xs text-muted-foreground italic py-1">{msg}</div>;
-}
-
-function RowBtn({
-  children, onClick, cls = "",
-}: {
-  children: React.ReactNode; onClick?: () => void; cls?: string;
-}) {
-  if (!onClick) return <div className={`flex items-center gap-2 text-xs py-0.5 px-0.5 ${cls}`}>{children}</div>;
+function KpiCard({ label, count, color, onClick }: { label: string; count: string | number; color: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`w-full text-left flex items-center gap-2 text-xs py-0.5 px-0.5 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer ${cls}`}>
-      {children}
+    <button onClick={onClick}
+      className="cursor-pointer text-left bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+    >
+      <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+      <p className={`text-base font-bold ${color}`}>{count}</p>
     </button>
   );
 }
 
-// ── Component ──
 export function QualityOverview(props: OverviewProps) {
   const { audits, problems, actions, dmrs, rmas, auditTemplates, onInstallTemplates } = props;
   const navigate = useNavigate();
+  const [workQueueTab, setWorkQueueTab] = useState<"open" | "recent" | "completed">("open");
 
   const kpiClick = useCallback((target: NavTarget) => {
     const params = new URLSearchParams();
@@ -70,149 +60,172 @@ export function QualityOverview(props: OverviewProps) {
     navigate(`/check/quality-control?${params.toString()}`, { replace: true });
   }, [navigate]);
 
-  // ── Computed KPI data ──
+  // ── KPI data ──
   const kpis = useMemo(() => {
     const openIssues = problems.filter((p) => p.status === "OPEN" || p.status === "IN_REVIEW");
+    const criticalIssues = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
     const openActions = actions.filter((a) => a.status === "OPEN" || a.status === "IN_PROGRESS");
-    const openDmrs = dmrs.filter((d) => d.status === "OPEN" || d.status === "UNDER_REVIEW" || d.status === "QUARANTINED");
-    const openRmas = rmas.filter((r) => r.status === "OPEN" || r.status === "RECEIVED" || r.status === "UNDER_REVIEW" || r.status === "DISPOSITION_PENDING" || r.status === "CUSTOMER_RESPONSE_PENDING");
-    const overdueActions = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
-    const criticalHigh = [
-      ...problems.filter((p) => p.severity === "CRITICAL" || p.severity === "HIGH"),
-      ...actions.filter((a) => a.priority === "CRITICAL" || a.priority === "HIGH"),
-    ].filter((i: any) => i.status !== "CLOSED" && i.status !== "COMPLETED" && i.status !== "CANCELLED");
     const completedAudits = audits.filter((a) => a.status === "COMPLETED");
     const completionRate = audits.length > 0 ? Math.round((completedAudits.length / audits.length) * 100) : 0;
-    return { openIssues, openActions, openDmrs, openRmas, overdueActions, criticalHigh, completedAudits, completionRate };
-  }, [problems, actions, dmrs, rmas, audits]);
 
-  // ── Risk Board ──
-  const riskItems = useMemo(() => {
-    const items: { id: string; priority: number; type: string; title: string; detail: string; color: string; onClick: () => void }[] = [];
+    // Defect rate: DMRs created in last 30 days as proxy
+    const dmr30 = dmrs.filter((d) => d.createdAt && d.createdAt >= MONTH_START_STR);
+    const defectRate = dmrs.length > 0 ? Math.round((dmr30.length / Math.max(dmrs.length, 1)) * 100) : 0;
 
-    // 1. Customer-impacting RMA (RMA awaiting customer response)
-    const custImpactRma = rmas.filter((r) => r.status === "CUSTOMER_RESPONSE_PENDING");
-    for (const r of custImpactRma) {
-      items.push({
-        id: `rma-${r.id}`, priority: 1, type: "RMA", title: `${r.rmaNumber || ""} ${r.customerName || ""}`.trim(),
-        detail: r.partNumber || "", color: "bg-red-500",
-        onClick: () => kpiClick({ tab: "rmas" }),
-      });
-    }
+    // First Pass Yield: rough proxy using completed audits with scores >= 80
+    const highScoreAudits = completedAudits.filter((a) => a.score !== null && a.score !== undefined && a.score >= 80);
+    const fpy = completedAudits.length > 0 ? Math.round((highScoreAudits.length / completedAudits.length) * 100) : 0;
 
-    // 2. Critical/high issues
-    const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
-    for (const p of hiProblems) {
-      items.push({
-        id: `issue-${p.id}`, priority: 2, type: "Issue", title: p.title || "Issue",
-        detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-orange-500",
-        onClick: () => kpiClick({ tab: "issues" }),
-      });
-    }
+    const openDmrs = dmrs.filter((d) => d.status === "OPEN" || d.status === "UNDER_REVIEW" || d.status === "QUARANTINED");
+    const openRmas = rmas.filter((r) => r.status === "OPEN" || r.status === "RECEIVED" || r.status === "UNDER_REVIEW" || r.status === "DISPOSITION_PENDING" || r.status === "CUSTOMER_RESPONSE_PENDING");
 
-    // 3. Overdue actions
-    const overActions = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
-    for (const a of overActions) {
-      items.push({
-        id: `action-${a.id}`, priority: 3, type: "Action", title: a.title || "Action",
-        detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400",
-        onClick: () => kpiClick({ tab: "actions" }),
-      });
-    }
+    return { openIssues, criticalIssues, openActions, completionRate, defectRate, fpy, openDmrs, openRmas };
+  }, [problems, actions, audits, dmrs, rmas]);
 
-    // 4. Quarantined DMR
-    const qDmrs = dmrs.filter((d) => d.status === "QUARANTINED");
-    for (const d of qDmrs) {
-      items.push({
-        id: `dmr-${d.id}`, priority: 4, type: "DMR", title: `${d.dmrNumber || ""} ${d.title || ""}`.trim(),
-        detail: `Qty: ${d.quantity || "—"} ${d.uom || ""}`.trim(), color: "bg-orange-500",
-        onClick: () => kpiClick({ tab: "dmrs" }),
-      });
-    }
+  // ── Work Queue ──
+  const workQueueItems = useMemo(() => {
+    const items: { id: string; priority: number; sortPriority: number; type: string; title: string; status: string; owner: string; date: string; onClick: () => void }[] = [];
 
-    // 5. Disposition-pending DMR/RMA
-    const dispPendDmrs = dmrs.filter((d) => d.status === "DISPOSITION_PENDING");
-    for (const d of dispPendDmrs) {
-      items.push({
-        id: `dmr-disp-${d.id}`, priority: 5, type: "DMR", title: `${d.dmrNumber || ""} - Disposition Pending`,
-        detail: `${d.severity || ""}`.trim(), color: "bg-indigo-500",
-        onClick: () => kpiClick({ tab: "dmrs" }),
-      });
-    }
-    const dispPendRmas = rmas.filter((r) => r.status === "DISPOSITION_PENDING");
-    for (const r of dispPendRmas) {
-      items.push({
-        id: `rma-disp-${r.id}`, priority: 5, type: "RMA", title: `${r.rmaNumber || ""} - Disposition Pending`,
-        detail: `${r.customerName || ""}`.trim(), color: "bg-indigo-500",
-        onClick: () => kpiClick({ tab: "rmas" }),
-      });
-    }
+    const priorityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
 
-    // 6. Failed audit findings - we don't have findings data here, so skip
-    // 7. Incomplete audits
-    const incompleteAudits = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
-    for (const a of incompleteAudits) {
-      items.push({
-        id: `audit-${a.id}`, priority: 7, type: "Audit", title: a.title || `Audit #${a.id}`,
-        detail: a.auditType || "", color: "bg-amber-500",
-        onClick: () => kpiClick({ tab: "audits" }),
-      });
-    }
-
-    items.sort((a, b) => a.priority - b.priority);
-    return items.slice(0, 12);
-  }, [rmas, problems, actions, dmrs, audits, kpiClick]);
-
-  // ── Due This Week ──
-  const dueThisWeek = useMemo(() => {
-    const items: { id: string; title: string; owner: string; dueDate: string; priority: string; source: string; type: "action" | "issue" | "dmr"; onClick: () => void }[] = [];
-    for (const a of actions) {
-      if (a.dueDate && a.dueDate >= TODAY && a.dueDate <= WEEK_END_STR && a.status !== "COMPLETED" && a.status !== "CANCELLED") {
-        items.push({
-          id: `action-${a.id}`, title: a.title, owner: a.owner || "", dueDate: a.dueDate, priority: a.priority || "MEDIUM",
-          source: a.sourceType ? statusLabel(a.sourceType) : "Action", type: "action",
-          onClick: () => kpiClick({ tab: "actions" }),
-        });
-      }
-    }
+    // Open issues (open + in_review)
     for (const p of problems) {
-      if (p.dueDate && p.dueDate >= TODAY && p.dueDate <= WEEK_END_STR && p.status !== "CLOSED" && p.status !== "CANCELLED") {
+      if (p.status === "OPEN" || p.status === "IN_REVIEW") {
+        const pri = priorityRank[p.severity] ?? 3;
         items.push({
-          id: `issue-${p.id}`, title: p.title, owner: p.reportedBy || p.owner || "", dueDate: p.dueDate, priority: p.severity || "MEDIUM",
-          source: "Issue", type: "issue",
+          id: `issue-${p.id}`, priority: pri, sortPriority: 0,
+          type: "Issue", title: p.title || "Issue",
+          status: p.status, owner: p.reportedBy || p.owner || "",
+          date: p.createdAt || "",
           onClick: () => kpiClick({ tab: "issues" }),
         });
       }
     }
-    for (const d of dmrs) {
-      if (d.dueDate && d.dueDate >= TODAY && d.dueDate <= WEEK_END_STR && d.status !== "CLOSED" && d.status !== "CANCELLED") {
+
+    // Open actions (open + in_progress)
+    for (const a of actions) {
+      if (a.status === "OPEN" || a.status === "IN_PROGRESS") {
+        const pri = priorityRank[a.priority] ?? 3;
         items.push({
-          id: `dmr-${d.id}`, title: `${d.dmrNumber || ""} ${d.title || ""}`.trim(), owner: d.owner || "", dueDate: d.dueDate, priority: d.severity || "MEDIUM",
-          source: "DMR", type: "dmr",
+          id: `action-${a.id}`, priority: pri, sortPriority: 1,
+          type: "Corrective Action", title: a.title || "Action",
+          status: a.status, owner: a.owner || "",
+          date: a.dueDate || a.createdAt || "",
+          onClick: () => kpiClick({ tab: "actions" }),
+        });
+      }
+    }
+
+    // Draft/Open audits
+    for (const a of audits) {
+      if (a.status === "DRAFT" || a.status === "OPEN") {
+        items.push({
+          id: `audit-${a.id}`, priority: 2, sortPriority: 2,
+          type: "Audit", title: a.title || `Audit #${a.id}`,
+          status: a.status, owner: a.auditor || "",
+          date: a.dueDate || a.auditDate || a.createdAt || "",
+          onClick: () => kpiClick({ tab: "audits" }),
+        });
+      }
+    }
+
+    // Open DMRs
+    for (const d of dmrs) {
+      if (d.status === "OPEN" || d.status === "UNDER_REVIEW" || d.status === "QUARANTINED") {
+        const pri = priorityRank[d.severity] ?? 3;
+        items.push({
+          id: `dmr-${d.id}`, priority: pri, sortPriority: 3,
+          type: "DMR", title: `${d.dmrNumber || ""} ${d.title || ""}`.trim(),
+          status: d.status, owner: d.owner || "",
+          date: d.dueDate || d.createdAt || "",
           onClick: () => kpiClick({ tab: "dmrs" }),
         });
       }
     }
-    items.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-    return items.slice(0, 6);
-  }, [actions, problems, dmrs, kpiClick]);
 
-  // ── Incomplete Audits ──
-  const incompleteAudits = useMemo(() => {
-    return audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN").slice(0, 5);
+    // Open RMAs
+    for (const r of rmas) {
+      if (r.status === "OPEN" || r.status === "RECEIVED" || r.status === "UNDER_REVIEW" || r.status === "DISPOSITION_PENDING") {
+        const pri = priorityRank[r.severity] ?? 3;
+        items.push({
+          id: `rma-${r.id}`, priority: pri, sortPriority: 4,
+          type: "RMA", title: `${r.rmaNumber || ""} ${r.customerName || ""}`.trim(),
+          status: r.status, owner: r.owner || "",
+          date: r.dueDate || r.createdAt || "",
+          onClick: () => kpiClick({ tab: "rmas" }),
+        });
+      }
+    }
+
+    items.sort((a, b) => a.priority - b.priority || a.sortPriority - b.sortPriority);
+    return items;
+  }, [problems, actions, audits, dmrs, rmas, kpiClick]);
+
+  // ── Recent items ──
+  const recentItems = useMemo(() => {
+    const mapped: { id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void }[] = [
+      ...actions.filter((a) => a.status !== "CANCELLED").map((a: any) => ({ id: `action-${a.id}`, date: a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", onClick: () => kpiClick({ tab: "actions" }) })),
+      ...problems.filter((p) => p.status !== "CANCELLED").map((p: any) => ({ id: `issue-${p.id}`, date: p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", onClick: () => kpiClick({ tab: "issues" }) })),
+      ...audits.map((a: any) => ({ id: `audit-${a.id}`, date: a.createdAt || "0", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", onClick: () => kpiClick({ tab: "audits" }) })),
+      ...dmrs.filter((d) => d.status !== "CANCELLED").map((d: any) => ({ id: `dmr-${d.id}`, date: d.createdAt || "0", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", onClick: () => kpiClick({ tab: "dmrs" }) })),
+      ...rmas.filter((r) => r.status !== "CANCELLED").map((r: any) => ({ id: `rma-${r.id}`, date: r.createdAt || "0", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", onClick: () => kpiClick({ tab: "rmas" }) })),
+    ];
+    return mapped.sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
+  }, [actions, problems, audits, dmrs, rmas, kpiClick]);
+
+  // ── Completed items ──
+  const completedItems = useMemo(() => {
+    const mapped: { id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void }[] = [
+      ...actions.filter((a) => a.status === "COMPLETED").map((a: any) => ({ id: `action-${a.id}`, date: a.updatedAt || a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", onClick: () => kpiClick({ tab: "actions" }) })),
+      ...problems.filter((p) => p.status === "CLOSED").map((p: any) => ({ id: `issue-${p.id}`, date: p.updatedAt || p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", onClick: () => kpiClick({ tab: "issues" }) })),
+      ...audits.filter((a) => a.status === "COMPLETED" || a.status === "ARCHIVED").map((a: any) => ({ id: `audit-${a.id}`, date: a.updatedAt || a.createdAt || "", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", onClick: () => kpiClick({ tab: "audits" }) })),
+      ...dmrs.filter((d) => d.status === "CLOSED").map((d: any) => ({ id: `dmr-${d.id}`, date: d.closedAt || d.updatedAt || d.createdAt || "", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", onClick: () => kpiClick({ tab: "dmrs" }) })),
+      ...rmas.filter((r) => r.status === "CLOSED").map((r: any) => ({ id: `rma-${r.id}`, date: r.updatedAt || r.createdAt || "", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", onClick: () => kpiClick({ tab: "rmas" }) })),
+    ];
+    return mapped.sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
+  }, [actions, problems, audits, dmrs, rmas, kpiClick]);
+
+  // ── Overdue audits ──
+  const overdueAudits = useMemo(() => {
+    return audits.filter((a) => a.dueDate && a.dueDate < TODAY && (a.status === "DRAFT" || a.status === "OPEN"));
   }, [audits]);
 
-  // ── Recent Activity ──
-  const recentItems = useMemo(() => {
-    const mapped: { date: string; type: string; title: string; status: string; owner: string; onClick: () => void }[] = [
-      ...actions.map((a: any) => ({ date: a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", onClick: () => kpiClick({ tab: "actions" }) })),
-      ...problems.map((p: any) => ({ date: p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", onClick: () => kpiClick({ tab: "issues" }) })),
-      ...audits.map((a: any) => ({ date: a.createdAt || "", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", onClick: () => kpiClick({ tab: "audits" }) })),
-      ...dmrs.map((d: any) => ({ date: d.createdAt || "", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", onClick: () => kpiClick({ tab: "dmrs" }) })),
-      ...rmas.map((r: any) => ({ date: r.createdAt || "", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", onClick: () => kpiClick({ tab: "rmas" }) })),
-    ];
-    return mapped.sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 8);
-  }, [actions, problems, audits, dmrs, rmas, kpiClick]);
+  // ── Open Quality Audits (excludes overdue to avoid duplicates) ──
+  const openQualityAudits = useMemo(() => {
+    const overdueIds = new Set(overdueAudits.map((a: any) => a.id));
+    return audits.filter((a) => (a.status === "DRAFT" || a.status === "OPEN") && !overdueIds.has(a.id)).slice(0, 10);
+  }, [audits, overdueAudits]);
+
+  // ── Quality Performance ──
+  const qualityPerformance = useMemo(() => {
+    const dmr30 = dmrs.filter((d) => d.createdAt && d.createdAt >= MONTH_START_STR);
+    const dmr7 = dmrs.filter((d) => d.createdAt && d.createdAt >= WEEK_START_STR);
+    const prevDmr30 = dmrs.filter((d) => d.createdAt && d.createdAt >= `${NOW.getFullYear() - (NOW.getMonth() === 0 ? 1 : 0)}-${String(NOW.getMonth() === 0 ? 12 : NOW.getMonth()).padStart(2, "0")}-01` && d.createdAt < MONTH_START_STR);
+    const prevDmr7 = dmrs.filter((d) => d.createdAt && d.createdAt >= `${new Date(NOW.getTime() - 14 * 86400000).toISOString().slice(0, 10)}` && d.createdAt < WEEK_START_STR);
+
+    const completedAudits = audits.filter((a) => a.status === "COMPLETED");
+    const recentCompletedAudits = audits.filter((a) => a.status === "COMPLETED" && a.updatedAt && a.updatedAt >= MONTH_START_STR);
+    const prevCompletedAudits = audits.filter((a) => a.status === "COMPLETED" && a.updatedAt && a.updatedAt >= MONTH_START_STR && a.updatedAt < WEEK_START_STR);
+
+    const totalQty = dmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
+    const defectQty30 = dmr30.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
+    const totalQtyAll = Math.max(dmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0), 1);
+    const scrapDmrs = dmrs.filter((d) => d.disposition === "SCRAP");
+    const scrapQty = scrapDmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
+    const reworkDmrs = dmrs.filter((d) => d.disposition === "REWORK");
+    const reworkQty = reworkDmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
+
+    const highScoreAudits = recentCompletedAudits.filter((a) => a.score !== null && a.score !== undefined && a.score >= 80);
+    const prevHighScore = prevCompletedAudits.filter((a) => a.score !== null && a.score !== undefined && a.score >= 80);
+
+    return {
+      defectRate: { current: dmr30.length > 0 ? Math.round((dmr30.length / Math.max(dmrs.length, 1)) * 100) : 0, previous: prevDmr30.length > 0 ? Math.round((prevDmr30.length / Math.max(dmrs.length, 1)) * 100) : 0 },
+      scrapRate: { current: totalQty > 0 ? Math.round((scrapQty / totalQtyAll) * 100) : 0, previous: 0 },
+      reworkRate: { current: totalQty > 0 ? Math.round((reworkQty / totalQtyAll) * 100) : 0, previous: 0 },
+      fpy: { current: recentCompletedAudits.length > 0 ? Math.round((highScoreAudits.length / recentCompletedAudits.length) * 100) : 0, previous: prevCompletedAudits.length > 0 ? Math.round((prevHighScore.length / prevCompletedAudits.length) * 100) : 0 },
+      auditCompliance: { current: audits.length > 0 ? Math.round((completedAudits.length / audits.length) * 100) : 0, previous: 0 },
+    };
+  }, [dmrs, audits]);
 
   // ── DMR Status Breakdown ──
   const dmrStatusBreakdown = useMemo(() => {
@@ -234,7 +247,21 @@ export function QualityOverview(props: OverviewProps) {
     }));
   }, [rmas]);
 
-  // ── Top Defect Categories (keyword-based from DMR defect descriptions and RMA reasons) ──
+  // ── Audit Type Breakdown ──
+  const auditTypeBreakdown = useMemo(() => {
+    const map: Record<string, { total: number; completed: number; draft: number; scores: number[] }> = {};
+    for (const a of audits) {
+      const t = a.auditType || "Other";
+      if (!map[t]) map[t] = { total: 0, completed: 0, draft: 0, scores: [] };
+      map[t].total++;
+      if (a.status === "COMPLETED") map[t].completed++;
+      if (a.status === "DRAFT") map[t].draft++;
+      if (a.score !== null && a.score !== undefined) map[t].scores.push(a.score);
+    }
+    return Object.entries(map).sort((a, b) => b[1].total - a[1].total);
+  }, [audits]);
+
+  // ── Top Defect Categories ──
   const defectCategories = useMemo(() => {
     const keywords: Record<string, { pattern: RegExp; short: string }> = {
       DIMENSIONAL: { pattern: /dimension|tolerance|size|length|width|height|thickness|diameter|bore|clearance|fit|gap|out.?of.?spec/i, short: "Dimensional" },
@@ -259,197 +286,166 @@ export function QualityOverview(props: OverviewProps) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [dmrs, rmas]);
 
-  // ── Audit Type Breakdown ──
-  // ── Audit Type Breakdown ──
-  const auditTypeBreakdown = useMemo(() => {
-    const map: Record<string, { total: number; completed: number; draft: number; scores: number[] }> = {};
-    for (const a of audits) {
-      const t = a.auditType || "Other";
-      if (!map[t]) map[t] = { total: 0, completed: 0, draft: 0, scores: [] };
-      map[t].total++;
-      if (a.status === "COMPLETED") map[t].completed++;
-      if (a.status === "DRAFT") map[t].draft++;
-      if (a.score !== null && a.score !== undefined) map[t].scores.push(a.score);
-    }
-    return Object.entries(map).sort((a, b) => b[1].total - a[1].total);
-  }, [audits]);
+  // ── Trend indicator ──
+  function TrendBadge({ current, previous }: { current: number; previous: number }) {
+    const diff = current - previous;
+    const isBetter = diff <= 0;
+    if (previous === 0) return <span className="text-[10px] text-muted-foreground">—</span>;
+    return (
+      <span className={`text-[10px] font-medium ${isBetter ? "text-green-600" : "text-red-600"}`}>
+        {isBetter ? "\u2193" : "\u2191"} {Math.abs(diff)}%
+      </span>
+    );
+  }
 
-  // ── Template install banner ──
-  const showInstallBanner = props.auditTemplates?.length === 0 && props.onInstallTemplates;
+  // ── Work Queue items display helper ──
+  function renderWorkQueueItems(items: typeof workQueueItems) {
+    if (items.length === 0) return null;
+    return (
+      <div className="space-y-0.5">
+        {items.slice(0, 8).map((item) => (
+          <button key={item.id} onClick={item.onClick}
+            className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+          >
+            <span className={`h-2 w-2 shrink-0 rounded-full ${
+              item.priority <= 0 ? "bg-red-500" : item.priority <= 1 ? "bg-orange-500" : item.priority <= 2 ? "bg-amber-500" : "bg-slate-400"
+            }`} />
+            <span className="text-[10px] font-semibold text-muted-foreground w-24 shrink-0">{item.type}</span>
+            <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
+            {item.owner && <span className="text-muted-foreground shrink-0 hidden sm:inline text-[10px]">{item.owner}</span>}
+            {item.date && <span className="text-muted-foreground shrink-0 text-[10px]">{item.date.slice(0, 10)}</span>}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
-  // ── Render ──
   return (
     <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
       {/* ═══ KPI Row ═══ */}
       <div className="grid grid-cols-8 gap-2">
-        {[
-          { label: "Open Issues", count: kpis.openIssues.length, color: "text-amber-600 dark:text-amber-400", onClick: () => kpiClick({ tab: "issues", status: "OPEN" }) },
-          { label: "Open Actions", count: kpis.openActions.length, color: "text-purple-600 dark:text-purple-400", onClick: () => kpiClick({ tab: "actions", status: "OPEN" }) },
-          { label: "Open DMRs", count: kpis.openDmrs.length, color: "text-orange-600 dark:text-orange-400", onClick: () => kpiClick({ tab: "dmrs", status: "OPEN" }) },
-          { label: "Open RMAs", count: kpis.openRmas.length, color: "text-teal-600 dark:text-teal-400", onClick: () => kpiClick({ tab: "rmas", status: "OPEN" }) },
-          { label: "Overdue Actions", count: kpis.overdueActions.length, color: "text-red-600 dark:text-red-400", onClick: () => kpiClick({ tab: "actions" }) },
-          { label: "Critical / High", count: kpis.criticalHigh.length, color: "text-red-600 dark:text-red-400", onClick: () => kpiClick({ tab: "issues" }) },
-          { label: "Completed Audits", count: kpis.completedAudits.length, color: "text-green-600 dark:text-green-400", onClick: () => kpiClick({ tab: "audits", status: "COMPLETED" }) },
-          { label: "Audit Completion", count: `${kpis.completionRate}%`, color: "text-foreground", onClick: () => kpiClick({ tab: "audits" }) },
-        ].map((kpi) => (
-          <button key={kpi.label} onClick={kpi.onClick}
-            className="cursor-pointer text-left bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
-          >
-            <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
-            <p className={`text-base font-bold ${kpi.color}`}>{kpi.count}</p>
-          </button>
-        ))}
+        <KpiCard label="Open Issues" count={kpis.openIssues.length} color="text-amber-600 dark:text-amber-400" onClick={() => kpiClick({ tab: "issues", status: "OPEN" })} />
+        <KpiCard label="Critical Issues" count={kpis.criticalIssues.length} color="text-red-600 dark:text-red-400" onClick={() => kpiClick({ tab: "issues" })} />
+        <KpiCard label="Open Corrective Actions" count={kpis.openActions.length} color="text-violet-600 dark:text-violet-400" onClick={() => kpiClick({ tab: "actions", status: "OPEN" })} />
+        <KpiCard label="Audit Completion" count={`${kpis.completionRate}%`} color="text-blue-600 dark:text-blue-400" onClick={() => kpiClick({ tab: "audits" })} />
+        <KpiCard label="Defect Rate" count={`${kpis.defectRate}%`} color="text-orange-600 dark:text-orange-400" onClick={() => kpiClick({ tab: "dmrs" })} />
+        <KpiCard label="First Pass Yield" count={`${kpis.fpy}%`} color="text-green-600 dark:text-green-400" onClick={() => kpiClick({ tab: "audits", status: "COMPLETED" })} />
+        <KpiCard label="Open DMR" count={kpis.openDmrs.length} color="text-orange-600 dark:text-orange-400" onClick={() => kpiClick({ tab: "dmrs", status: "OPEN" })} />
+        <KpiCard label="Open RMA" count={kpis.openRmas.length} color="text-teal-600 dark:text-teal-400" onClick={() => kpiClick({ tab: "rmas", status: "OPEN" })} />
       </div>
 
       {/* ═══ Main Content: 60/40 ═══ */}
       <div className="flex gap-3">
         {/* ── Left 60% ── */}
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
-          {/* Quality Risk Board */}
+          {/* Work Queue */}
           <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Quality Risk Board" color="bg-red-500" />
-            {riskItems.length === 0 ? (
-              <EmptyRow msg="No quality risks need attention" />
-            ) : (
-              <div className="space-y-0.5">
-                {riskItems.map((item) => (
-                  <button key={item.id} onClick={item.onClick}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+            <div className="flex items-center justify-between mb-2">
+              <SectionH label="Work Queue" color="bg-violet-500" />
+              <div className="flex items-center gap-1">
+                {(["open", "recent", "completed"] as const).map((tab) => (
+                  <button key={tab} onClick={() => setWorkQueueTab(tab)}
+                    className={`px-2 py-0.5 text-[10px] font-semibold uppercase transition-colors ${
+                      workQueueTab === tab
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                    }`}
                   >
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${item.color}`} />
-                    <span className="text-[10px] font-semibold text-muted-foreground w-10 shrink-0">{item.type}</span>
-                    <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
-                    {item.detail && <span className="text-muted-foreground truncate max-w-[120px] hidden sm:inline">{item.detail}</span>}
+                    {tab === "open" ? `Open (${workQueueItems.length})` : tab === "recent" ? "Recent" : "Completed"}
                   </button>
                 ))}
-              </div>
-            )}
-          </div>
-
-          {/* Due This Week */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Due This Week" color="bg-blue-500" />
-            {dueThisWeek.length === 0 ? (
-              <EmptyRow msg="No items due this week" />
-            ) : (
-              <div className="space-y-0.5">
-                {dueThisWeek.map((item) => (
-                  <button key={item.id} onClick={item.onClick}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
-                  >
-                    <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
-                    {item.owner && <span className="text-muted-foreground shrink-0 hidden sm:inline">{item.owner}</span>}
-                    <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.MEDIUM}`}>
-                      {statusLabel(item.priority)}
-                    </span>
-                    <span className="text-muted-foreground shrink-0 text-[10px]">{item.dueDate}</span>
-                    <span className="text-[10px] text-muted-foreground bg-muted/40 px-1 py-0.5 shrink-0">{item.source}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Quality Audits Needing Completion */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Quality Audits Needing Completion" color="bg-cyan-500" />
-            {incompleteAudits.length === 0 ? (
-              <EmptyRow msg="No incomplete audits" />
-            ) : (
-              <div className="space-y-0.5">
-                {incompleteAudits.map((a: any) => (
-                  <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
-                  >
-                    <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
-                    <span className="text-muted-foreground shrink-0 hidden sm:inline">{a.auditType || "—"}</span>
-                    {a.auditor && <span className="text-muted-foreground shrink-0 hidden sm:inline">{a.auditor}</span>}
-                    <span className={badgeCls(STATUS_STYLES[a.status] || STATUS_STYLES.DRAFT)}>{statusLabel(a.status)}</span>
-                    {a.score !== null && a.score !== undefined && (
-                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${
-                        a.score >= 80 ? "border-green-300 text-green-700 bg-green-50/80" : a.score >= 60 ? "border-amber-300 text-amber-700 bg-amber-50/80" : "border-red-300 text-red-700 bg-red-50/80"
-                      }`}>{a.score}%</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Right 40% ── */}
-        <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
-          {/* Recent Quality Activity */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Recent Quality Activity" color="bg-violet-500" />
-            {recentItems.length === 0 ? (
-              <EmptyRow msg="No recent activity" />
-            ) : (
-              <div className="space-y-0.5">
-                {recentItems.map((item, i) => {
-                  const stCls = item.type === "Action" ? ACTION_STATUS_STYLES[item.status] || ACTION_STATUS_STYLES.OPEN
-                    : item.type === "Issue" ? ISSUE_STATUS_STYLES[item.status] || ISSUE_STATUS_STYLES.OPEN
-                    : item.type === "Audit" ? STATUS_STYLES[item.status] || STATUS_STYLES.DRAFT
-                    : item.type === "DMR" ? DMR_STATUS_STYLES[item.status] || DMR_STATUS_STYLES.OPEN
-                    : item.type === "RMA" ? RMA_STATUS_STYLES[item.status] || RMA_STATUS_STYLES.OPEN
-                    : "border-gray-300 text-gray-600 bg-gray-50/80";
-                  return (
-                    <button key={`${item.type}-${i}`} onClick={item.onClick}
-                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
-                    >
-                      <span className="text-[10px] font-semibold text-muted-foreground shrink-0 w-10">{item.type}</span>
-                      <span className="min-w-0 flex-1 truncate text-foreground">{item.title}</span>
-                      {item.owner && <span className="text-muted-foreground shrink-0 hidden sm:inline">{item.owner}</span>}
-                      <span className={badgeCls(stCls)}>{statusLabel(item.status)}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* DMR / RMA Status */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="DMR / RMA Status" color="bg-teal-500" />
-            <div className="grid grid-cols-2 gap-3">
-              {/* DMR side */}
-              <div>
-                <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-orange-500" /> DMR
-                </p>
-                <div className="space-y-1">
-                  {dmrStatusBreakdown.map((s) => (
-                    <div key={s.status} className="flex items-center justify-between text-xs">
-                      <button onClick={() => kpiClick({ tab: "dmrs", status: s.status === "CLOSED" ? undefined : s.status })}
-                        className={`cursor-pointer inline-flex items-center gap-1 px-1 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
-                      >
-                        <span className="font-semibold">{s.count}</span> {s.label}
-                      </button>
-                      {s.count > 0 && <span className="text-muted-foreground text-[10px]">{s.status === "CLOSED" ? "closed" : s.status === "QUARANTINED" ? "quarantined" : "active"}</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* RMA side */}
-              <div>
-                <p className="text-[10px] font-bold text-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                  <span className="h-2 w-2 rounded-full bg-teal-500" /> RMA
-                </p>
-                <div className="space-y-1">
-                  {rmaStatusBreakdown.map((s) => (
-                    <div key={s.status} className="flex items-center justify-between text-xs">
-                      <button onClick={() => kpiClick({ tab: "rmas", status: s.status === "CLOSED" ? undefined : s.status })}
-                        className={`cursor-pointer inline-flex items-center gap-1 px-1 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
-                      >
-                        <span className="font-semibold">{s.count}</span> {s.label}
-                      </button>
-                      {s.count > 0 && <span className="text-muted-foreground text-[10px]">{s.status === "CLOSED" ? "closed" : "active"}</span>}
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
+            {workQueueTab === "open" && renderWorkQueueItems(workQueueItems)}
+            {workQueueTab === "recent" && renderWorkQueueItems(recentItems)}
+            {workQueueTab === "completed" && renderWorkQueueItems(completedItems)}
+            {workQueueTab === "open" && workQueueItems.length === 0 && (
+              <div className="text-xs text-muted-foreground italic py-1">No open items requiring attention</div>
+            )}
+            {workQueueTab === "recent" && recentItems.length === 0 && (
+              <div className="text-xs text-muted-foreground italic py-1">No recent activity</div>
+            )}
+            {workQueueTab === "completed" && completedItems.length === 0 && (
+              <div className="text-xs text-muted-foreground italic py-1">No completed items</div>
+            )}
           </div>
+
+          {/* Open Quality Audits */}
+          {openQualityAudits.length > 0 || overdueAudits.length > 0 ? (
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <SectionH label="Open Quality Audits" color="bg-red-500" />
+              {overdueAudits.length > 0 && (
+                <div className="mb-2">
+                  <p className="text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1">Overdue</p>
+                  {overdueAudits.map((a: any) => (
+                    <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
+                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    >
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                      <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
+                      <span className="text-muted-foreground shrink-0 text-[10px]">{a.auditType || ""}</span>
+                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${STATUS_STYLES[a.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(a.status)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {openQualityAudits.length > 0 && (
+                <div>
+                  {overdueAudits.length > 0 && <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1">In Progress / Draft</p>}
+                  {openQualityAudits.map((a: any) => (
+                    <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
+                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    >
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                      <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
+                      <span className="text-muted-foreground shrink-0 text-[10px]">{a.auditType || ""}</span>
+                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${STATUS_STYLES[a.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(a.status)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {/* DMR Status */}
+          {dmrs.length > 0 && (
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-1 h-4 shrink-0 bg-orange-500" />
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">DMR Status</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {dmrStatusBreakdown.map((s) => (
+                  <button key={s.status} onClick={() => kpiClick({ tab: "dmrs", status: s.status === "CLOSED" ? undefined : s.status })}
+                    className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
+                  >
+                    <span className="font-semibold">{s.count}</span> {s.label}
+                  </button>
+                ))}
+                {dmrs.length === 0 && <span className="text-xs text-muted-foreground italic">No DMRs</span>}
+              </div>
+            </div>
+          )}
+
+          {/* RMA Status */}
+          {rmas.length > 0 && (
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-1 h-4 shrink-0 bg-teal-500" />
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">RMA Status</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {rmaStatusBreakdown.map((s) => (
+                  <button key={s.status} onClick={() => kpiClick({ tab: "rmas", status: s.status === "CLOSED" ? undefined : s.status })}
+                    className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
+                  >
+                    <span className="font-semibold">{s.count}</span> {s.label}
+                  </button>
+                ))}
+                {rmas.length === 0 && <span className="text-xs text-muted-foreground italic">No RMAs</span>}
+              </div>
+            </div>
+          )}
 
           {/* Top Defect Categories */}
           {defectCategories.length > 0 && (
@@ -464,36 +460,65 @@ export function QualityOverview(props: OverviewProps) {
                   </button>
                 ))}
               </div>
-              {defectCategories.length === 0 && <EmptyRow msg="No defect data" />}
+            </div>
+          )}
+        </div>
+
+        {/* ── Right 40% ── */}
+        <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
+          {/* Quality Performance */}
+          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SectionH label="Quality Performance" color="bg-cyan-500" />
+            <div className="space-y-2">
+              <div className="grid grid-cols-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pb-1 border-b border-white/10 dark:border-slate-700/10">
+                <span>Metric</span>
+                <span className="text-right">Current</span>
+                <span className="text-right">Previous</span>
+                <span className="text-right">Trend</span>
+              </div>
+              {[
+                { label: "Defect Rate", current: `${qualityPerformance.defectRate.current}%`, previous: `${qualityPerformance.defectRate.previous}%`, cur: qualityPerformance.defectRate.current, prev: qualityPerformance.defectRate.previous },
+                { label: "Scrap Rate", current: `${qualityPerformance.scrapRate.current}%`, previous: `${qualityPerformance.scrapRate.previous}%`, cur: qualityPerformance.scrapRate.current, prev: qualityPerformance.scrapRate.previous },
+                { label: "Rework Rate", current: `${qualityPerformance.reworkRate.current}%`, previous: `${qualityPerformance.reworkRate.previous}%`, cur: qualityPerformance.reworkRate.current, prev: qualityPerformance.reworkRate.previous },
+                { label: "First Pass Yield", current: `${qualityPerformance.fpy.current}%`, previous: `${qualityPerformance.fpy.previous}%`, cur: qualityPerformance.fpy.current, prev: qualityPerformance.fpy.previous },
+                { label: "Audit Compliance", current: `${qualityPerformance.auditCompliance.current}%`, previous: `${qualityPerformance.auditCompliance.previous}%`, cur: qualityPerformance.auditCompliance.current, prev: qualityPerformance.auditCompliance.previous },
+              ].map((m) => (
+                <div key={m.label} className="grid grid-cols-4 text-xs items-center py-0.5 border-b border-white/5 dark:border-slate-700/5 last:border-b-0">
+                  <span className="text-foreground font-medium">{m.label}</span>
+                  <span className="text-right text-foreground">{m.current}</span>
+                  <span className="text-right text-muted-foreground">{m.previous}</span>
+                  <span className="text-right"><TrendBadge current={m.cur} previous={m.prev} /></span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Audit Type Breakdown */}
+          {auditTypeBreakdown.length > 0 && (
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <SectionH label="Audit Breakdown" color="bg-blue-500" />
+              <div className="flex flex-wrap gap-3">
+                {auditTypeBreakdown.map(([type, data]) => {
+                  const avg = data.scores.length > 0 ? Math.round(data.scores.reduce((a: number, b: number) => a + b, 0) / data.scores.length) : null;
+                  return (
+                    <button key={type} onClick={() => kpiClick({ tab: "audits" })}
+                      className="cursor-pointer min-w-[150px] flex-1 text-left text-xs border-r border-white/20 dark:border-slate-700/20 last:border-r-0 pr-3 last:pr-0 hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors rounded-l px-1 py-0.5"
+                    >
+                      <p className="font-semibold text-foreground truncate">{type.replace(/_/g, " ")}</p>
+                      <p className="text-muted-foreground">{data.total} total · {data.completed} done · {data.draft} draft</p>
+                      {avg !== null && (
+                        <p className="text-muted-foreground">
+                          Avg score: <span className={avg >= 80 ? "text-green-600 font-semibold" : avg >= 60 ? "text-amber-600 font-semibold" : "text-red-600 font-semibold"}>{avg}%</span>
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* ═══ Bottom: Audit Type Breakdown ═══ */}
-      {auditTypeBreakdown.length > 0 && (
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-          <SectionH label="Audit Type Breakdown" color="bg-blue-500" />
-          <div className="flex flex-wrap gap-3">
-            {auditTypeBreakdown.map(([type, data]) => {
-              const avg = data.scores.length > 0 ? Math.round(data.scores.reduce((a: number, b: number) => a + b, 0) / data.scores.length) : null;
-              return (
-                <button key={type} onClick={() => kpiClick({ tab: "audits" })}
-                  className="cursor-pointer min-w-[150px] flex-1 text-left text-xs border-r border-white/20 dark:border-slate-700/20 last:border-r-0 pr-3 last:pr-0 hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors rounded-l px-1 py-0.5"
-                >
-                  <p className="font-semibold text-foreground truncate">{type.replace(/_/g, " ")}</p>
-                  <p className="text-muted-foreground">{data.total} total · {data.completed} done · {data.draft} draft</p>
-                  {avg !== null && (
-                    <p className="text-muted-foreground">
-                      Avg score: <span className={avg >= 80 ? "text-green-600 font-semibold" : avg >= 60 ? "text-amber-600 font-semibold" : "text-red-600 font-semibold"}>{avg}%</span>
-                    </p>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Template install banner */}
       {auditTemplates && auditTemplates.length === 0 && onInstallTemplates && (

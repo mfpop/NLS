@@ -175,3 +175,115 @@ export const MATERIAL_ISSUE_QUERY = gql`
     }
   }
 `;
+
+export const SAFETY_EVENTS_QUERY = gql`
+  query SafetyEvents($eventType: String, $status: String, $targetType: String, $severity: String, $search: String) {
+    safetyEvents(eventType: $eventType, status: $status, targetType: $targetType, severity: $severity, search: $search) {
+      id eventType severity status targetType targetId title description reportedBy reportedAt occurredAt locationText immediateAction injuryInvolved propertyDamage environmentalImpact owner closedAt notes createdAt updatedAt
+    }
+  }
+`;
+
+export const SAFETY_EVENT_QUERY = gql`
+  query SafetyEvent($id: Int!) {
+    safetyEvent(id: $id) {
+      id eventType severity status targetType targetId title description reportedBy reportedAt occurredAt locationText immediateAction injuryInvolved propertyDamage environmentalImpact owner closedAt notes createdAt updatedAt
+    }
+  }
+`;
+
+// ── Safety Compliance ──
+export const SAFETY_INJURY_CLAIMS_QUERY = gql`
+  query SafetyInjuryClaims($status: String, $claimType: String, $search: String) {
+    safetyInjuryClaims(status: $status, claimType: $claimType, search: $search) {
+      id safetyEventId claimNumber claimantName claimantEmployeeId claimType status injurySummary bodyArea lostTime restrictedWork reportedToInsurer insurerReference openedAt closedAt owner notes createdAt updatedAt
+    }
+  }
+`;
+
+export const SAFETY_INJURY_CLAIM_QUERY = gql`
+  query SafetyInjuryClaim($id: Int!) {
+    safetyInjuryClaim(id: $id) {
+      id safetyEventId claimNumber claimantName claimantEmployeeId claimType status injurySummary bodyArea lostTime restrictedWork reportedToInsurer insurerReference openedAt closedAt owner notes createdAt updatedAt
+    }
+  }
+`;
+
+export const SAFETY_MEDICAL_CASES_QUERY = gql`
+  query SafetyMedicalCases($status: String, $careType: String) {
+    safetyMedicalCases(status: $status, careType: $careType) {
+      id safetyEventId injuryClaimId affectedPersonId caseNumber status careType visitRequired visitDate workRestriction restrictionSummary returnToWorkDate confidentialNotes owner notes createdAt updatedAt
+    }
+  }
+`;
+
+export const SAFETY_MEDICAL_CASE_QUERY = gql`
+  query SafetyMedicalCase($id: Int!) {
+    safetyMedicalCase(id: $id) {
+      id safetyEventId injuryClaimId affectedPersonId caseNumber status careType visitRequired visitDate workRestriction restrictionSummary returnToWorkDate confidentialNotes owner notes createdAt updatedAt
+    }
+  }
+`;export const SAFETY_ENV_REPORTS_QUERY = gql`
+  query SafetyEnvironmentalReports($status: String, $reportType: String, $search: String) {
+    safetyEnvironmentalReports(status: $status, reportType: $reportType, search: $search) {
+      id safetyEventId reportType status title description materialInvolved estimatedQuantity unit containmentAction cleanupRequired reportedExternally externalReference occurredAt reportedAt targetType targetId locationText owner notes createdAt updatedAt
+    }
+  }`;export const SAFETY_ENV_REPORT_QUERY = gql`
+  query SafetyEnvironmentalReport($id: Int!) {
+    safetyEnvironmentalReport(id: $id) {
+      id safetyEventId reportType status title description materialInvolved estimatedQuantity unit containmentAction cleanupRequired reportedExternally externalReference occurredAt reportedAt targetType targetId locationText owner notes createdAt updatedAt
+    }
+  }`;
+
+export const SAFETY_CAPAS_QUERY = gql`
+  query SafetyCAPAs($status: String, $sourceType: String, $search: String) {
+    safetyCAPAs(status: $status, sourceType: $sourceType, search: $search) {
+      id sourceType sourceId title problemStatement rootCause containmentAction correctiveAction preventiveAction owner dueDate completedAt effectivenessCheckRequired effectivenessResult status notes createdAt updatedAt
+    }
+  }
+`;
+
+export const SAFETY_CAPA_QUERY = gql`
+  query SafetyCAPA($id: Int!) {
+    safetyCAPA(id: $id) {
+      id sourceType sourceId title problemStatement rootCause containmentAction correctiveAction preventiveAction owner dueDate completedAt effectivenessCheckRequired effectivenessResult status notes createdAt updatedAt
+    }
+  }
+`;
+
+export const SAFETY_COMPLIANCE_SUMMARY_QUERY = gql`
+  query SafetyComplianceSummary {
+    safetyComplianceSummary {
+      openClaims openMedicalCases openEnvironmentalReports openCAPAs overdueCAPAs
+    }
+  }
+`;
+
+export const SAFETY_DASHBOARD_SUMMARY_QUERY = gql`
+  query SafetyDashboardSummary {
+    safetyDashboardSummary {
+      totalEvents
+      openEvents
+      underReviewEvents
+      actionRequiredEvents
+      closedEvents
+      criticalEvents
+      highSeverityEvents
+      incidents
+      accidents
+      nearMisses
+      hazards
+      observations
+      overdueFollowUps
+      byEventType { eventType count }
+      bySeverity { severity count }
+      byStatus { status count }
+      recentEvents {
+        id eventType severity status title description occurredAt reportedAt
+      }
+      overdueEvents {
+        id eventType severity status title description occurredAt reportedAt
+      }
+    }
+  }
+`;

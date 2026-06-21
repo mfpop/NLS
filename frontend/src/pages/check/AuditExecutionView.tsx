@@ -100,7 +100,7 @@ export function AuditExecutionView({
   const [findingOwner, setFindingOwner] = useState("");
   const [closeFindingId, setCloseFindingId] = useState<string | null>(null);
 
-  const { productionLineId, activeLine } = useActiveLine();
+  const { productionLineId: _productionLineId, activeLine } = useActiveLine();
   const activePlantId = (activeLine as any)?.plantId ?? null;
 
   const { data: tplData, refetch: refetchTpl } = useQuery<any>(AUDIT_TEMPLATES_QUERY, { variables: { moduleScope: controlArea === "PRODUCTION" ? "PRODUCTION_CONTROL" : "QUALITY_CONTROL", status: "ACTIVE" }, fetchPolicy: "cache-first" });
@@ -131,8 +131,6 @@ export function AuditExecutionView({
   const [updateAuditMut] = useMutation<any>(UPDATE_AUDIT_MUTATION);
   const [deleteAuditMut] = useMutation<any>(DELETE_AUDIT_MUTATION);
   const [installTpl] = useMutation<any>(INSTALL_DEFAULT_PC_TEMPLATES_MUTATION);
-
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const templateQuestions = useMemo(() => {
     if (!selTpl) return [];
@@ -382,7 +380,6 @@ export function AuditExecutionView({
   const totalQ = isNew ? allQ.length : (execForm?.summary.totalQuestions ?? 0);
   const ansCount = isNew ? Object.values(draftAns).filter((a) => a.v !== "").length : (execForm?.summary.answeredCount ?? 0);
   const findings = isNew ? [] : (execForm?.findings ?? []);
-  const canComplete = execForm && (headerStatus === "DRAFT" || headerStatus === "OPEN");
 
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">

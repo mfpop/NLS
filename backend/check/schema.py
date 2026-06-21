@@ -6,8 +6,9 @@ from check.models import (
     ProductionCheck, ProductionChecklistItem,
     QualityCheck, QualityChecklistItem,
     DMR, RMA,
-    SafetyCheck, SafetyChecklistItem, SafetyIncident,
+    SafetyCheck, SafetyChecklistItem, SafetyIncident, SafetyEvent,
     MaterialCheck, MaterialChecklistItem, MaterialIssue,
+    SafetyInjuryClaim, SafetyMedicalCase, SafetyEnvironmentalReport, SafetyCAPA,
 )
 from check.services import (
     ProblemService,
@@ -15,7 +16,12 @@ from check.services import (
     ProductionControlService,
     QualityControlService,
     SafetyControlService,
+    SafetyEventService,
     MaterialControlService,
+    SafetyInjuryClaimService,
+    SafetyMedicalCaseService,
+    SafetyEnvironmentalReportService,
+    SafetyCAPAService,
 )
 
 
@@ -220,6 +226,31 @@ class SafetyCheckNode:
     checklist_items: list[SafetyChecklistItemNode]
     created_at: str
     updated_at: str
+
+
+@strawberry.type
+class SafetyEventNode:
+    id: int
+    event_type: str = strawberry.field(name="eventType")
+    severity: str
+    status: str
+    target_type: str = strawberry.field(name="targetType")
+    target_id: Optional[int] = strawberry.field(name="targetId")
+    title: str
+    description: str
+    reported_by: str = strawberry.field(name="reportedBy")
+    reported_at: str = strawberry.field(name="reportedAt")
+    occurred_at: Optional[str] = strawberry.field(name="occurredAt", default=None)
+    location_text: str = strawberry.field(name="locationText")
+    immediate_action: str = strawberry.field(name="immediateAction")
+    injury_involved: bool = strawberry.field(name="injuryInvolved")
+    property_damage: bool = strawberry.field(name="propertyDamage")
+    environmental_impact: bool = strawberry.field(name="environmentalImpact")
+    owner: str
+    closed_at: Optional[str] = strawberry.field(name="closedAt", default=None)
+    notes: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
 
 
 @strawberry.type
@@ -455,6 +486,27 @@ def _to_safety_check_node(c: SafetyCheck) -> SafetyCheckNode:
     )
 
 
+def _to_safety_event_node(e: SafetyEvent) -> SafetyEventNode:
+    return SafetyEventNode(
+        id=e.id, event_type=e.event_type, severity=e.severity,
+        status=e.status, target_type=e.target_type,
+        target_id=e.target_id, title=e.title, description=e.description,
+        reported_by=e.reported_by,
+        reported_at=e.reported_at.isoformat() if e.reported_at else "",
+        occurred_at=e.occurred_at.isoformat() if e.occurred_at else None,
+        location_text=e.location_text or "",
+        immediate_action=e.immediate_action or "",
+        injury_involved=e.injury_involved,
+        property_damage=e.property_damage,
+        environmental_impact=e.environmental_impact,
+        owner=e.owner or "",
+        closed_at=e.closed_at.isoformat() if e.closed_at else None,
+        notes=e.notes or "",
+        created_at=e.created_at.isoformat() if e.created_at else "",
+        updated_at=e.updated_at.isoformat() if e.updated_at else "",
+    )
+
+
 def _to_safety_incident_node(i: SafetyIncident) -> SafetyIncidentNode:
     return SafetyIncidentNode(
         id=i.id, title=i.title, description=i.description,
@@ -505,6 +557,195 @@ def _to_material_issue_node(m: MaterialIssue) -> MaterialIssueNode:
         created_at=m.created_at.isoformat() if m.created_at else "",
         updated_at=m.updated_at.isoformat() if m.updated_at else "",
     )
+
+
+# ──────────────────────────────────────────────
+#  Safety Compliance Nodes
+# ──────────────────────────────────────────────
+
+@strawberry.type
+class SafetyInjuryClaimNode:
+    id: int
+    safety_event_id: Optional[int] = strawberry.field(name="safetyEventId")
+    claim_number: str = strawberry.field(name="claimNumber")
+    claimant_name: str = strawberry.field(name="claimantName")
+    claimant_employee_id: str = strawberry.field(name="claimantEmployeeId")
+    claim_type: str = strawberry.field(name="claimType")
+    status: str
+    injury_summary: str = strawberry.field(name="injurySummary")
+    body_area: str = strawberry.field(name="bodyArea")
+    lost_time: bool = strawberry.field(name="lostTime")
+    restricted_work: bool = strawberry.field(name="restrictedWork")
+    reported_to_insurer: bool = strawberry.field(name="reportedToInsurer")
+    insurer_reference: str = strawberry.field(name="insurerReference")
+    opened_at: Optional[str] = strawberry.field(name="openedAt", default=None)
+    closed_at: Optional[str] = strawberry.field(name="closedAt", default=None)
+    owner: str
+    notes: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+
+@strawberry.type
+class SafetyMedicalCaseNode:
+    id: int
+    safety_event_id: Optional[int] = strawberry.field(name="safetyEventId")
+    injury_claim_id: Optional[int] = strawberry.field(name="injuryClaimId")
+    affected_person_id: Optional[int] = strawberry.field(name="affectedPersonId")
+    case_number: str = strawberry.field(name="caseNumber")
+    status: str
+    care_type: str = strawberry.field(name="careType")
+    visit_required: bool = strawberry.field(name="visitRequired")
+    visit_date: Optional[str] = strawberry.field(name="visitDate", default=None)
+    work_restriction: bool = strawberry.field(name="workRestriction", default=False)
+    restriction_summary: str = strawberry.field(name="restrictionSummary")
+    return_to_work_date: Optional[str] = strawberry.field(name="returnToWorkDate", default=None)
+    confidential_notes: str = strawberry.field(name="confidentialNotes")
+    owner: str
+    notes: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+
+def _to_medical_case_node(m) -> SafetyMedicalCaseNode:
+    return SafetyMedicalCaseNode(
+        id=m.id, safety_event_id=m.safety_event_id,
+        injury_claim_id=m.injury_claim_id,
+        affected_person_id=m.affected_person_id,
+        case_number=m.case_number, status=m.status,
+        care_type=m.care_type,
+        visit_required=m.visit_required,
+        visit_date=m.visit_date.isoformat() if m.visit_date else None,
+        work_restriction=m.work_restriction,
+        restriction_summary=m.restriction_summary,
+        return_to_work_date=m.return_to_work_date.isoformat() if m.return_to_work_date else None,
+        confidential_notes=m.confidential_notes,
+        owner=m.owner, notes=m.notes,
+        created_at=m.created_at.isoformat() if m.created_at else "",
+        updated_at=m.updated_at.isoformat() if m.updated_at else "",
+    )
+
+
+def _to_injury_claim_node(c) -> SafetyInjuryClaimNode:
+    return SafetyInjuryClaimNode(
+        id=c.id, safety_event_id=c.safety_event_id,
+        claim_number=c.claim_number or "",
+        claimant_name=c.claimant_name,
+        claimant_employee_id=c.claimant_employee_id or "",
+        claim_type=c.claim_type, status=c.status,
+        injury_summary=c.injury_summary or "",
+        body_area=c.body_area or "",
+        lost_time=c.lost_time,
+        restricted_work=c.restricted_work,
+        reported_to_insurer=c.reported_to_insurer,
+        insurer_reference=c.insurer_reference or "",
+        opened_at=c.opened_at.isoformat() if c.opened_at else None,
+        closed_at=c.closed_at.isoformat() if c.closed_at else None,
+        owner=c.owner, notes=c.notes or "",
+        created_at=c.created_at.isoformat() if c.created_at else "",
+        updated_at=c.updated_at.isoformat() if c.updated_at else "",
+    )
+
+
+@strawberry.type
+class SafetyEnvironmentalReportNode:
+    id: int
+    safety_event_id: Optional[int] = strawberry.field(name="safetyEventId")
+    report_type: str = strawberry.field(name="reportType")
+    status: str
+    title: str
+    description: str
+    material_involved: str = strawberry.field(name="materialInvolved")
+    estimated_quantity: Optional[float] = strawberry.field(name="estimatedQuantity", default=None)
+    unit: str
+    containment_action: str = strawberry.field(name="containmentAction")
+    cleanup_required: bool = strawberry.field(name="cleanupRequired")
+    reported_externally: bool = strawberry.field(name="reportedExternally")
+    external_reference: str = strawberry.field(name="externalReference")
+    occurred_at: Optional[str] = strawberry.field(name="occurredAt", default=None)
+    reported_at: str = strawberry.field(name="reportedAt")
+    target_type: str = strawberry.field(name="targetType")
+    target_id: Optional[int] = strawberry.field(name="targetId", default=None)
+    location_text: str = strawberry.field(name="locationText")
+    owner: str
+    notes: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+
+@strawberry.type
+class SafetyCAPANode:
+    id: int
+    source_type: str = strawberry.field(name="sourceType")
+    source_id: Optional[int] = strawberry.field(name="sourceId")
+    title: str
+    problem_statement: str = strawberry.field(name="problemStatement")
+    root_cause: str = strawberry.field(name="rootCause")
+    containment_action: str = strawberry.field(name="containmentAction")
+    corrective_action: str = strawberry.field(name="correctiveAction")
+    preventive_action: str = strawberry.field(name="preventiveAction")
+    owner: str
+    due_date: Optional[str] = strawberry.field(name="dueDate", default=None)
+    completed_at: Optional[str] = strawberry.field(name="completedAt", default=None)
+    effectiveness_check_required: bool = strawberry.field(name="effectivenessCheckRequired")
+    effectiveness_result: Optional[str] = strawberry.field(name="effectivenessResult", default=None)
+    status: str
+    notes: str
+    created_at: str = strawberry.field(name="createdAt")
+    updated_at: str = strawberry.field(name="updatedAt")
+
+
+@strawberry.type
+class SafetyComplianceSummaryNode:
+    open_claims: int = strawberry.field(name="openClaims")
+    open_medical_cases: int = strawberry.field(name="openMedicalCases")
+    open_environmental_reports: int = strawberry.field(name="openEnvironmentalReports")
+    open_capas: int = strawberry.field(name="openCAPAs")
+    overdue_capas: int = strawberry.field(name="overdueCAPAs")
+
+
+# ──────────────────────────────────────────────
+#  Safety Dashboard Types
+# ──────────────────────────────────────────────
+
+@strawberry.type
+class SafetyEventTypeCount:
+    event_type: str = strawberry.field(name="eventType")
+    count: int
+
+
+@strawberry.type
+class SafetySeverityCount:
+    severity: str
+    count: int
+
+
+@strawberry.type
+class SafetyStatusCount:
+    status: str
+    count: int
+
+
+@strawberry.type
+class SafetyDashboardSummaryNode:
+    total_events: int = strawberry.field(name="totalEvents")
+    by_event_type: list[SafetyEventTypeCount] = strawberry.field(name="byEventType")
+    by_severity: list[SafetySeverityCount] = strawberry.field(name="bySeverity")
+    by_status: list[SafetyStatusCount] = strawberry.field(name="byStatus")
+    open_events: int = strawberry.field(name="openEvents")
+    under_review_events: int = strawberry.field(name="underReviewEvents")
+    action_required_events: int = strawberry.field(name="actionRequiredEvents")
+    closed_events: int = strawberry.field(name="closedEvents")
+    critical_events: int = strawberry.field(name="criticalEvents")
+    high_severity_events: int = strawberry.field(name="highSeverityEvents")
+    incidents: int
+    accidents: int
+    near_misses: int = strawberry.field(name="nearMisses")
+    hazards: int
+    observations: int
+    overdue_follow_ups: int = strawberry.field(name="overdueFollowUps")
+    recent_events: list[SafetyEventNode] = strawberry.field(name="recentEvents")
+    overdue_events: list[SafetyEventNode] = strawberry.field(name="overdueEvents")
 
 
 # ──────────────────────────────────────────────
@@ -635,7 +876,87 @@ class CheckQuery:
         c = SafetyControlService().get_safety_check(id)
         return _to_safety_check_node(c) if c else None
 
-    # ── Safety Incidents ──
+    # ── Safety Dashboard Summary ──
+    @strawberry.field(name="safetyDashboardSummary")
+    def safety_dashboard_summary(self) -> SafetyDashboardSummaryNode:
+        from django.db.models import Count, Q
+        from datetime import date
+        qs = SafetyEvent.objects.all()
+        total = qs.count()
+        by_type = list(qs.values("event_type").annotate(count=Count("id")).order_by("event_type"))
+        by_severity = list(qs.values("severity").annotate(count=Count("id")).order_by("severity"))
+        by_status = list(qs.values("status").annotate(count=Count("id")).order_by("status"))
+        open_events = qs.exclude(status__in=["CLOSED", "CANCELLED"]).count()
+        under_review_events = qs.filter(status="UNDER_REVIEW").count()
+        action_required_events = qs.filter(status="ACTION_REQUIRED").count()
+        closed_events = qs.filter(status__in=["CLOSED", "CANCELLED"]).count()
+        critical_events = qs.filter(severity="CRITICAL").exclude(status__in=["CLOSED", "CANCELLED"]).count()
+        high_severity_events = qs.filter(severity__in=["HIGH", "CRITICAL"]).exclude(status__in=["CLOSED", "CANCELLED"]).count()
+
+        def type_count(t: str) -> int:
+            entry = next((e for e in by_type if e["event_type"] == t), None)
+            return entry["count"] if entry else 0
+
+        incidents = type_count("INCIDENT")
+        accidents = type_count("ACCIDENT")
+        near_misses = type_count("NEAR_MISS")
+        hazards = type_count("HAZARD")
+        observations = type_count("OBSERVATION")
+        overdue_follow_ups = SafetyEvent.objects.filter(
+            Q(status="ACTION_REQUIRED") | Q(status="UNDER_REVIEW"),
+            occurred_at__lt=date.today(),
+        ).count()
+
+        recent = qs.order_by("-created_at")[:10]
+        return SafetyDashboardSummaryNode(
+            total_events=total,
+            by_event_type=[SafetyEventTypeCount(event_type=e["event_type"], count=e["count"]) for e in by_type],
+            by_severity=[SafetySeverityCount(severity=s["severity"], count=s["count"]) for s in by_severity],
+            by_status=[SafetyStatusCount(status=s["status"], count=s["count"]) for s in by_status],
+            open_events=open_events,
+            under_review_events=under_review_events,
+            action_required_events=action_required_events,
+            closed_events=closed_events,
+            critical_events=critical_events,
+            high_severity_events=high_severity_events,
+            incidents=incidents,
+            accidents=accidents,
+            near_misses=near_misses,
+            hazards=hazards,
+            observations=observations,
+            overdue_follow_ups=overdue_follow_ups,
+            recent_events=[_to_safety_event_node(e) for e in recent],
+            overdue_events=[_to_safety_event_node(e) for e in
+                           SafetyEvent.objects.filter(
+                               Q(status__in=["ACTION_REQUIRED", "UNDER_REVIEW"]) &
+                               Q(occurred_at__lt=date.today())
+                           ).order_by("occurred_at")[:6]],
+        )
+
+    # ── Safety Events ──
+    @strawberry.field(name="safetyEvents")
+    def safety_events(self, event_type: Optional[str] = None,
+                      status: Optional[str] = None,
+                      target_type: Optional[str] = None,
+                      severity: Optional[str] = None,
+                      search: Optional[str] = None,
+                      is_overdue: Optional[bool] = strawberry.field(name="isOverdue", default=None)) -> list[SafetyEventNode]:
+        filters = {}
+        if event_type: filters["event_type"] = event_type
+        if status: filters["status"] = status
+        if target_type: filters["target_type"] = target_type
+        if severity: filters["severity"] = severity
+        if search: filters["search"] = search
+        if is_overdue is not None:
+            filters["is_overdue"] = is_overdue
+        return [_to_safety_event_node(e) for e in SafetyEventService().list_events(filters)]
+
+    @strawberry.field(name="safetyEvent")
+    def safety_event(self, id: int) -> Optional[SafetyEventNode]:
+        e = SafetyEventService().get_event(id)
+        return _to_safety_event_node(e) if e else None
+
+    # ── Safety Incidents (legacy) ──
     @strawberry.field
     def safety_incidents(self, status: Optional[str] = None,
                          incident_type: Optional[str] = None,
@@ -688,6 +1009,92 @@ class CheckQuery:
     def material_issue(self, id: int) -> Optional[MaterialIssueNode]:
         m = MaterialControlService().get_material_issue(id)
         return _to_material_issue_node(m) if m else None
+
+    # ── Safety Compliance Summary ──
+    @strawberry.field(name="safetyComplianceSummary")
+    def safety_compliance_summary(self) -> SafetyComplianceSummaryNode:
+        from datetime import date
+        from django.db.models import Q
+        open_claims = SafetyInjuryClaim.objects.filter(status="OPEN").count()
+        open_medical = SafetyMedicalCase.objects.filter(status="OPEN").count()
+        open_env = SafetyEnvironmentalReport.objects.filter(status__in=["DRAFT", "REPORTED", "UNDER_REVIEW", "ACTION_REQUIRED"]).count()
+        open_capas = SafetyCAPA.objects.exclude(status__in=["CLOSED", "CANCELLED", "EFFECTIVE", "INEFFECTIVE"]).count()
+        overdue_capas = SafetyCAPA.objects.filter(
+            due_date__lt=date.today(),
+        ).exclude(status__in=["CLOSED", "CANCELLED"]).count()
+        return SafetyComplianceSummaryNode(
+            open_claims=open_claims,
+            open_medical_cases=open_medical,
+            open_environmental_reports=open_env,
+            open_capas=open_capas,
+            overdue_capas=overdue_capas,
+        )
+
+    # ── Safety Injury Claims ──
+    @strawberry.field(name="safetyInjuryClaims")
+    def safety_injury_claims(self, status: Optional[str] = None,
+                             claim_type: Optional[str] = None,
+                             search: Optional[str] = None) -> list[SafetyInjuryClaimNode]:
+        filters = {}
+        if status: filters["status"] = status
+        if claim_type: filters["claim_type"] = claim_type
+        if search: filters["search"] = search
+        svc = SafetyInjuryClaimService()
+        return [_to_injury_claim_node(c) for c in svc.list(filters)]
+
+    @strawberry.field(name="safetyInjuryClaim")
+    def safety_injury_claim(self, id: int) -> Optional[SafetyInjuryClaimNode]:
+        c = SafetyInjuryClaimService().get(id)
+        return _to_injury_claim_node(c) if c else None
+
+    # ── Safety Medical Cases ──
+    @strawberry.field(name="safetyMedicalCases")
+    def safety_medical_cases(self, status: Optional[str] = None,
+                             care_type: Optional[str] = None) -> list[SafetyMedicalCaseNode]:
+        filters = {}
+        if status: filters["status"] = status
+        if care_type: filters["care_type"] = care_type
+        svc = SafetyMedicalCaseService()
+        return [_to_medical_case_node(m) for m in svc.list(filters)]
+
+    @strawberry.field(name="safetyMedicalCase")
+    def safety_medical_case(self, id: int) -> Optional[SafetyMedicalCaseNode]:
+        m = SafetyMedicalCaseService().get(id)
+        return _to_medical_case_node(m) if m else None
+
+    # ── Safety Environmental Reports ──
+    @strawberry.field(name="safetyEnvironmentalReports")
+    def safety_environmental_reports(self, status: Optional[str] = None,
+                                     report_type: Optional[str] = None,
+                                     search: Optional[str] = None) -> list[SafetyEnvironmentalReportNode]:
+        filters = {}
+        if status: filters["status"] = status
+        if report_type: filters["report_type"] = report_type
+        if search: filters["search"] = search
+        svc = SafetyEnvironmentalReportService()
+        return [_to_env_report_node(r) for r in svc.list(filters)]
+
+    @strawberry.field(name="safetyEnvironmentalReport")
+    def safety_environmental_report(self, id: int) -> Optional[SafetyEnvironmentalReportNode]:
+        r = SafetyEnvironmentalReportService().get(id)
+        return _to_env_report_node(r) if r else None
+
+    # ── Safety CAPAs ──
+    @strawberry.field(name="safetyCAPAs")
+    def safety_capas(self, status: Optional[str] = None,
+                     source_type: Optional[str] = None,
+                     search: Optional[str] = None) -> list[SafetyCAPANode]:
+        filters = {}
+        if status: filters["status"] = status
+        if source_type: filters["source_type"] = source_type
+        if search: filters["search"] = search
+        svc = SafetyCAPAService()
+        return [_to_capa_node(c) for c in svc.list(filters)]
+
+    @strawberry.field(name="safetyCAPA")
+    def safety_capa(self, id: int) -> Optional[SafetyCAPANode]:
+        c = SafetyCAPAService().get(id)
+        return _to_capa_node(c) if c else None
 
 
 # ──────────────────────────────────────────────
@@ -1261,7 +1668,89 @@ class CheckMutation:
         SafetyControlService().complete_safety_check(id)
         return "Safety check completed"
 
-    # ── Safety Incidents ──
+    # ── Safety Events ──
+    @strawberry.mutation(name="createSafetyEvent")
+    def create_safety_event(self, info: strawberry.types.Info, title: str,
+                            event_type: str, target_type: str,
+                            severity: str = "MEDIUM",
+                            target_id: Optional[int] = None,
+                            description: str = "",
+                            reported_by: str = "",
+                            occurred_at: Optional[str] = None,
+                            location_text: str = "",
+                            immediate_action: str = "",
+                            injury_involved: bool = False,
+                            property_damage: bool = False,
+                            environmental_impact: bool = False,
+                            owner: str = "",
+                            notes: str = "") -> int:
+        kwargs = {k: v for k, v in {
+            "title": title, "event_type": event_type,
+            "target_type": target_type, "target_id": target_id,
+            "severity": severity, "description": description,
+            "reported_by": reported_by,
+            "location_text": location_text,
+            "immediate_action": immediate_action,
+            "injury_involved": injury_involved,
+            "property_damage": property_damage,
+            "environmental_impact": environmental_impact,
+            "owner": owner, "notes": notes,
+        }.items() if v is not None}
+        if occurred_at:
+            from datetime import datetime
+            kwargs["occurred_at"] = datetime.fromisoformat(occurred_at)
+        e = SafetyEventService().create_event(**kwargs)
+        return e.id
+
+    @strawberry.mutation(name="updateSafetyEvent")
+    def update_safety_event(self, info: strawberry.types.Info, id: int,
+                            title: Optional[str] = None,
+                            description: Optional[str] = None,
+                            severity: Optional[str] = None,
+                            owner: Optional[str] = None,
+                            target_type: Optional[str] = None,
+                            target_id: Optional[int] = None,
+                            location_text: Optional[str] = None,
+                            immediate_action: Optional[str] = None,
+                            injury_involved: Optional[bool] = None,
+                            property_damage: Optional[bool] = None,
+                            environmental_impact: Optional[bool] = None,
+                            notes: Optional[str] = None) -> str:
+        kwargs = {k: v for k, v in {
+            "title": title, "description": description,
+            "severity": severity, "owner": owner,
+            "target_type": target_type, "target_id": target_id,
+            "location_text": location_text,
+            "immediate_action": immediate_action,
+            "injury_involved": injury_involved,
+            "property_damage": property_damage,
+            "environmental_impact": environmental_impact,
+            "notes": notes,
+        }.items() if v is not None}
+        SafetyEventService().update_event(id, **kwargs)
+        return "Safety event updated"
+
+    @strawberry.mutation(name="reportSafetyEvent")
+    def report_safety_event(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEventService().report_event(id)
+        return "Safety event reported"
+
+    @strawberry.mutation(name="reviewSafetyEvent")
+    def review_safety_event(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEventService().review_event(id)
+        return "Safety event moved to UNDER_REVIEW"
+
+    @strawberry.mutation(name="closeSafetyEvent")
+    def close_safety_event(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEventService().close_event(id)
+        return "Safety event closed"
+
+    @strawberry.mutation(name="cancelSafetyEvent")
+    def cancel_safety_event(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEventService().cancel_event(id)
+        return "Safety event cancelled"
+
+    # ── Safety Incidents (legacy) ──
     @strawberry.mutation
     def create_safety_incident(self, info: strawberry.types.Info, title: str,
                                incident_type: str, target_type: str,
@@ -1421,3 +1910,368 @@ class CheckMutation:
     def cancel_material_issue(self, info: strawberry.types.Info, id: int) -> str:
         MaterialControlService().cancel_material_issue(id)
         return "Material issue cancelled"
+
+    # ── Safety Injury Claims ──
+    @strawberry.mutation(name="createSafetyInjuryClaim")
+    def create_safety_injury_claim(self, info: strawberry.types.Info, claimant_name: str,
+                                   claim_type: str, safety_event_id: Optional[int] = None,
+                                   claim_number: str = "",
+                                   claimant_employee_id: str = "",
+                                   injury_summary: str = "",
+                                   body_area: str = "",
+                                   lost_time: bool = False,
+                                   restricted_work: bool = False,
+                                   reported_to_insurer: bool = False,
+                                   insurer_reference: str = "",
+                                   owner: str = "",
+                                   notes: str = "",
+                                   override_reason: str = "") -> int:
+        kwargs = {k: v for k, v in {
+            "safety_event": safety_event_id,
+            "claim_number": claim_number, "claimant_name": claimant_name,
+            "claimant_employee_id": claimant_employee_id, "claim_type": claim_type,
+            "injury_summary": injury_summary, "body_area": body_area,
+            "lost_time": lost_time, "restricted_work": restricted_work,
+            "reported_to_insurer": reported_to_insurer,
+            "insurer_reference": insurer_reference,
+            "owner": owner, "notes": notes,
+            "override_reason": override_reason,
+        }.items() if v is not None}
+        c = SafetyInjuryClaimService().create(**kwargs)
+        return c.id
+
+    @strawberry.mutation(name="updateSafetyInjuryClaim")
+    def update_safety_injury_claim(self, info: strawberry.types.Info, id: int,
+                                   claimant_name: Optional[str] = None,
+                                   claim_type: Optional[str] = None,
+                                   safety_event_id: Optional[int] = None,
+                                   claim_number: Optional[str] = None,
+                                   claimant_employee_id: Optional[str] = None,
+                                   injury_summary: Optional[str] = None,
+                                   body_area: Optional[str] = None,
+                                   lost_time: Optional[bool] = None,
+                                   restricted_work: Optional[bool] = None,
+                                   reported_to_insurer: Optional[bool] = None,
+                                   insurer_reference: Optional[str] = None,
+                                   owner: Optional[str] = None,
+                                   notes: Optional[str] = None) -> str:
+        kwargs = {k: v for k, v in {
+            "claimant_name": claimant_name, "claim_type": claim_type,
+            "safety_event": safety_event_id,
+            "claim_number": claim_number,
+            "claimant_employee_id": claimant_employee_id,
+            "injury_summary": injury_summary, "body_area": body_area,
+            "lost_time": lost_time, "restricted_work": restricted_work,
+            "reported_to_insurer": reported_to_insurer,
+            "insurer_reference": insurer_reference,
+            "owner": owner, "notes": notes,
+        }.items() if v is not None}
+        SafetyInjuryClaimService().update(id, **kwargs)
+        return "Safety injury claim updated"
+
+    @strawberry.mutation(name="openSafetyInjuryClaim")
+    def open_safety_injury_claim(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyInjuryClaimService().open_claim(id)
+        return "Safety injury claim opened"
+
+    @strawberry.mutation(name="reviewSafetyInjuryClaim")
+    def review_safety_injury_claim(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyInjuryClaimService().review_claim(id)
+        return "Safety injury claim moved to UNDER_REVIEW"
+
+    @strawberry.mutation(name="waitInfoSafetyInjuryClaim")
+    def wait_info_safety_injury_claim(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyInjuryClaimService().wait_info_claim(id)
+        return "Safety injury claim set to WAITING_INFO"
+
+    @strawberry.mutation(name="closeSafetyInjuryClaim")
+    def close_safety_injury_claim(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyInjuryClaimService().close_claim(id)
+        return "Safety injury claim closed"
+
+    @strawberry.mutation(name="cancelSafetyInjuryClaim")
+    def cancel_safety_injury_claim(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyInjuryClaimService().cancel_claim(id)
+        return "Safety injury claim cancelled"
+
+    # ── Safety Medical Cases ──
+    @strawberry.mutation(name="createSafetyMedicalCase")
+    def create_safety_medical_case(self, info: strawberry.types.Info, care_type: str,
+                                   safety_event_id: Optional[int] = None,
+                                   injury_claim_id: Optional[int] = None,
+                                   affected_person_id: Optional[int] = None,
+                                   case_number: str = "",
+                                   visit_required: bool = False,
+                                   visit_date: Optional[str] = None,
+                                   work_restriction: bool = False,
+                                   restriction_summary: str = "",
+                                   return_to_work_date: Optional[str] = None,
+                                   confidential_notes: str = "",
+                                   owner: str = "",
+                                   notes: str = "") -> int:
+        from datetime import datetime
+        kwargs = {k: v for k, v in {
+            "safety_event": safety_event_id,
+            "injury_claim": injury_claim_id,
+            "affected_person_id": affected_person_id,
+            "case_number": case_number, "care_type": care_type,
+            "visit_required": visit_required, "work_restriction": work_restriction,
+            "restriction_summary": restriction_summary,
+            "confidential_notes": confidential_notes,
+            "owner": owner, "notes": notes,
+        }.items() if v is not None}
+        if visit_date:
+            kwargs["visit_date"] = datetime.fromisoformat(visit_date)
+        if return_to_work_date:
+            kwargs["return_to_work_date"] = datetime.fromisoformat(return_to_work_date)
+        m = SafetyMedicalCaseService().create(**kwargs)
+        return m.id
+
+    @strawberry.mutation(name="updateSafetyMedicalCase")
+    def update_safety_medical_case(self, info: strawberry.types.Info, id: int,
+                                   care_type: Optional[str] = None,
+                                   case_number: Optional[str] = None,
+                                   affected_person_id: Optional[int] = None,
+                                   visit_required: Optional[bool] = None,
+                                   visit_date: Optional[str] = None,
+                                   work_restriction: Optional[bool] = None,
+                                   restriction_summary: Optional[str] = None,
+                                   return_to_work_date: Optional[str] = None,
+                                   confidential_notes: Optional[str] = None,
+                                   owner: Optional[str] = None,
+                                   notes: Optional[str] = None) -> str:
+        kwargs = {k: v for k, v in {
+            "care_type": care_type, "case_number": case_number,
+            "affected_person_id": affected_person_id,
+            "visit_required": visit_required,
+            "work_restriction": work_restriction,
+            "restriction_summary": restriction_summary,
+            "confidential_notes": confidential_notes,
+            "owner": owner, "notes": notes,
+        }.items() if v is not None}
+        if visit_date is not None:
+            from datetime import datetime
+            kwargs["visit_date"] = datetime.fromisoformat(visit_date) if visit_date else None
+        if return_to_work_date is not None:
+            from datetime import datetime
+            kwargs["return_to_work_date"] = datetime.fromisoformat(return_to_work_date) if return_to_work_date else None
+        SafetyMedicalCaseService().update(id, **kwargs)
+        return "Safety medical case updated"
+
+    @strawberry.mutation(name="openSafetyMedicalCase")
+    def open_safety_medical_case(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyMedicalCaseService().open_case(id)
+        return "Safety medical case opened"
+
+    @strawberry.mutation(name="monitorSafetyMedicalCase")
+    def monitor_safety_medical_case(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyMedicalCaseService().monitor_case(id)
+        return "Safety medical case moved to MONITORING"
+
+    @strawberry.mutation(name="returnToWorkSafetyMedicalCase")
+    def return_to_work_safety_medical_case(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyMedicalCaseService().return_to_work(id)
+        return "Safety medical case marked RETURNED_TO_WORK"
+
+    @strawberry.mutation(name="closeSafetyMedicalCase")
+    def close_safety_medical_case(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyMedicalCaseService().close_case(id)
+        return "Safety medical case closed"
+
+    @strawberry.mutation(name="cancelSafetyMedicalCase")
+    def cancel_safety_medical_case(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyMedicalCaseService().cancel_case(id)
+        return "Safety medical case cancelled"
+
+    # ── Safety Environmental Reports ──
+    @strawberry.mutation(name="createSafetyEnvironmentalReport")
+    def create_safety_environmental_report(self, info: strawberry.types.Info, title: str,
+                                           report_type: str, safety_event_id: Optional[int] = None,
+                                           description: str = "",
+                                           material_involved: str = "",
+                                           estimated_quantity: Optional[float] = None,
+                                           unit: str = "",
+                                           containment_action: str = "",
+                                           cleanup_required: bool = False,
+                                           reported_externally: bool = False,
+                                           external_reference: str = "",
+                                           occurred_at: Optional[str] = None,
+                                           owner: str = "",
+                                           notes: str = "",
+                                           override_reason: str = "") -> int:
+        kwargs = {k: v for k, v in {
+            "safety_event": safety_event_id,
+            "title": title, "report_type": report_type,
+            "description": description,
+            "material_involved": material_involved,
+            "estimated_quantity": estimated_quantity,
+            "unit": unit, "containment_action": containment_action,
+            "cleanup_required": cleanup_required,
+            "reported_externally": reported_externally,
+            "external_reference": external_reference,
+            "owner": owner, "notes": notes,
+            "override_reason": override_reason,
+        }.items() if v is not None}
+        if occurred_at:
+            from datetime import datetime
+            kwargs["occurred_at"] = datetime.fromisoformat(occurred_at)
+        r = SafetyEnvironmentalReportService().create(**kwargs)
+        return r.id
+
+    @strawberry.mutation(name="updateSafetyEnvironmentalReport")
+    def update_safety_environmental_report(self, info: strawberry.types.Info, id: int,
+                                           title: Optional[str] = None,
+                                           report_type: Optional[str] = None,
+                                           description: Optional[str] = None,
+                                           material_involved: Optional[str] = None,
+                                           estimated_quantity: Optional[float] = None,
+                                           unit: Optional[str] = None,
+                                           containment_action: Optional[str] = None,
+                                           cleanup_required: Optional[bool] = None,
+                                           reported_externally: Optional[bool] = None,
+                                           external_reference: Optional[str] = None,
+                                           safety_event_id: Optional[int] = None,
+                                           occurred_at: Optional[str] = None,
+                                           owner: Optional[str] = None,
+                                           notes: Optional[str] = None,
+                                           target_type: Optional[str] = None,
+                                           target_id: Optional[int] = None,
+                                           location_text: Optional[str] = None) -> str:
+        kwargs = {k: v for k, v in {
+            "title": title, "report_type": report_type,
+            "description": description,
+            "material_involved": material_involved,
+            "estimated_quantity": estimated_quantity,
+            "unit": unit, "containment_action": containment_action,
+            "cleanup_required": cleanup_required,
+            "reported_externally": reported_externally,
+            "external_reference": external_reference,
+            "safety_event": safety_event_id,
+            "owner": owner, "notes": notes,
+            "target_type": target_type,
+            "target_id": target_id,
+            "location_text": location_text,
+        }.items() if v is not None}
+        if occurred_at is not None:
+            from datetime import datetime
+            kwargs["occurred_at"] = datetime.fromisoformat(occurred_at) if occurred_at else None
+        SafetyEnvironmentalReportService().update(id, **kwargs)
+        return "Safety environmental report updated"
+
+    @strawberry.mutation(name="reportSafetyEnvironmentalReport")
+    def report_safety_environmental_report(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEnvironmentalReportService().report(id)
+        return "Safety environmental report reported"
+
+    @strawberry.mutation(name="reviewSafetyEnvironmentalReport")
+    def review_safety_environmental_report(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEnvironmentalReportService().review(id)
+        return "Safety environmental report moved to UNDER_REVIEW"
+
+    @strawberry.mutation(name="requireActionSafetyEnvironmentalReport")
+    def require_action_safety_environmental_report(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEnvironmentalReportService().require_action(id)
+        return "Safety environmental report set to ACTION_REQUIRED"
+
+    @strawberry.mutation(name="closeSafetyEnvironmentalReport")
+    def close_safety_environmental_report(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEnvironmentalReportService().close(id)
+        return "Safety environmental report closed"
+
+    @strawberry.mutation(name="cancelSafetyEnvironmentalReport")
+    def cancel_safety_environmental_report(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyEnvironmentalReportService().cancel(id)
+        return "Safety environmental report cancelled"
+
+    # ── Safety CAPAs ──
+    @strawberry.mutation(name="createSafetyCAPA")
+    def create_safety_capa(self, info: strawberry.types.Info, title: str,
+                           source_type: str = "", source_id: Optional[int] = None,
+                           problem_statement: str = "",
+                           root_cause: str = "",
+                           containment_action: str = "",
+                           corrective_action: str = "",
+                           preventive_action: str = "",
+                           owner: str = "",
+                           due_date: Optional[str] = None,
+                           effectiveness_check_required: bool = False,
+                           notes: str = "") -> int:
+        kwargs = {k: v for k, v in {
+            "title": title, "source_type": source_type,
+            "source_id": source_id,
+            "problem_statement": problem_statement,
+            "root_cause": root_cause,
+            "containment_action": containment_action,
+            "corrective_action": corrective_action,
+            "preventive_action": preventive_action,
+            "owner": owner,
+            "effectiveness_check_required": effectiveness_check_required,
+            "notes": notes,
+        }.items() if v is not None}
+        if due_date:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date()
+        c = SafetyCAPAService().create(**kwargs)
+        return c.id
+
+    @strawberry.mutation(name="updateSafetyCAPA")
+    def update_safety_capa(self, info: strawberry.types.Info, id: int,
+                           title: Optional[str] = None,
+                           source_type: Optional[str] = None,
+                           source_id: Optional[int] = None,
+                           problem_statement: Optional[str] = None,
+                           root_cause: Optional[str] = None,
+                           containment_action: Optional[str] = None,
+                           corrective_action: Optional[str] = None,
+                           preventive_action: Optional[str] = None,
+                           owner: Optional[str] = None,
+                           due_date: Optional[str] = None,
+                           effectiveness_check_required: Optional[bool] = None,
+                           notes: Optional[str] = None) -> str:
+        kwargs = {k: v for k, v in {
+            "title": title, "source_type": source_type,
+            "source_id": source_id,
+            "problem_statement": problem_statement,
+            "root_cause": root_cause,
+            "containment_action": containment_action,
+            "corrective_action": corrective_action,
+            "preventive_action": preventive_action,
+            "owner": owner,
+            "effectiveness_check_required": effectiveness_check_required,
+            "notes": notes,
+        }.items() if v is not None}
+        if due_date is not None:
+            from datetime import datetime
+            kwargs["due_date"] = datetime.strptime(due_date, "%Y-%m-%d").date() if due_date else None
+        SafetyCAPAService().update(id, **kwargs)
+        return "Safety CAPA updated"
+
+    @strawberry.mutation(name="openSafetyCAPA")
+    def open_safety_capa(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyCAPAService().open(id)
+        return "Safety CAPA opened"
+
+    @strawberry.mutation(name="startSafetyCAPA")
+    def start_safety_capa(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyCAPAService().start(id)
+        return "Safety CAPA started"
+
+    @strawberry.mutation(name="pendingEffectivenessSafetyCAPA")
+    def pending_effectiveness_safety_capa(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyCAPAService().pending_effectiveness(id)
+        return "Safety CAPA set to PENDING_EFFECTIVENESS"
+
+    @strawberry.mutation(name="completeEffectivenessSafetyCAPA")
+    def complete_effectiveness_safety_capa(self, info: strawberry.types.Info, id: int, effective: bool) -> str:
+        SafetyCAPAService().complete_effectiveness(id, effective)
+        return f"Safety CAPA effectiveness {'effective' if effective else 'ineffective'}"
+
+    @strawberry.mutation(name="closeSafetyCAPA")
+    def close_safety_capa(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyCAPAService().close(id)
+        return "Safety CAPA closed"
+
+    @strawberry.mutation(name="cancelSafetyCAPA")
+    def cancel_safety_capa(self, info: strawberry.types.Info, id: int) -> str:
+        SafetyCAPAService().cancel(id)
+        return "Safety CAPA cancelled"

@@ -45,6 +45,10 @@ class SafetyCheckNotFoundError(CheckError):
     """Raised when a safety check is not found."""
 
 
+class SafetyEventNotFoundError(CheckError):
+    """Raised when a safety event is not found."""
+
+
 class SafetyIncidentNotFoundError(CheckError):
     """Raised when a safety incident is not found."""
 
@@ -55,3 +59,27 @@ class MaterialCheckNotFoundError(CheckError):
 
 class MaterialIssueNotFoundError(CheckError):
     """Raised when a material issue is not found."""
+
+
+class SafetyInjuryClaimNotFoundError(CheckError):
+    """Raised when a safety injury claim is not found."""
+
+
+class SafetyMedicalCaseNotFoundError(CheckError):
+    """Raised when a safety medical case is not found."""
+
+
+class SafetyEnvironmentalReportNotFoundError(CheckError):
+    """Raised when a safety environmental report is not found."""
+
+
+class SafetyCAPANotFoundError(CheckError):
+    """Raised when a safety CAPA is not found."""
+
+
+class SafetyComplianceValidationError(CheckValidationError):
+    """Raised when safety compliance validation fails."""
+
+
+class SafetyCompliancePermissionError(CheckError):
+    """Raised when user lacks permission for safety compliance records."""

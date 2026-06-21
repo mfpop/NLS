@@ -73,16 +73,19 @@ routing:
     frontend_ui: "5.Nexus - Frontend-UI"
     general_chat: "0.Nexus - General Chat"
 
+  default_entry: "10.Nexus - Manager"
+
   fallback:
-    default: "0.Nexus - General Chat"
-    on_unknown_intent: "0.Nexus - General Chat"
-    on_multi_domain: "0.Nexus - General Chat"
+    default: "10.Nexus - Manager"
+    on_unknown_intent: "10.Nexus - Manager"
+    on_multi_domain: "10.Nexus - Manager"
     on_governance_violation: "1.Nexus - Governance"
     on_audit_required: "3.Nexus - Architecture Audit"
 
   multi_agent_handoff:
     enabled: true
     order:
+      - "10.Nexus - Manager"
       - "0.Nexus - General Chat"
       - "1.Nexus - Governance"
       - "2.Nexus - Manufacturing Structure"

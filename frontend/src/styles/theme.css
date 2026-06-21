@@ -51,6 +51,7 @@
   --sidebar-standardize: 215 12% 42%;
   --sidebar-system: 215 12% 40%;
   --sidebar-manufacturing: 350 22% 44%;
+  --sidebar-safety: 0 38% 46%;
   --sidebar-material-bins: 35 30% 44%;
   --sidebar-flow: 190 30% 40%;
   --sidebar-components: 204 34% 42%;
@@ -121,6 +122,7 @@
   --sidebar-standardize: 214 22% 76%;
   --sidebar-system: 214 20% 74%;
   --sidebar-manufacturing: 350 42% 70%;
+  --sidebar-safety: 0 42% 65%;
   --sidebar-material-bins: 38 32% 62%;
   --sidebar-flow: 188 48% 62%;
   --sidebar-components: 204 50% 68%;
@@ -218,6 +220,7 @@
   --sidebar-standardize: 215 12% 42%;
   --sidebar-system: 215 12% 40%;
   --sidebar-manufacturing: 350 22% 44%;
+  --sidebar-safety: 0 38% 46%;
   --sidebar-material-bins: 35 30% 44%;
   --sidebar-flow: 190 30% 40%;
   --sidebar-components: 204 34% 42%;
@@ -270,43 +273,43 @@
 }
 
 [data-theme="system"] {
-  --background: 42 18% 94%;
-  --foreground: 220 10% 14%;
-  --app-shell: 110 11% 90%;
-  --card: 42 20% 98%;
-  --card-foreground: 220 10% 14%;
+  --background: 0 0% 97%;
+  --foreground: 0 0% 12%;
+  --app-shell: 0 0% 97%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 220 10% 14%;
-  --muted: 42 16% 89%;
-  --muted-foreground: 215 8% 32%;
-  --border: 35 10% 86%;
-  --input: 35 14% 78%;
-  --border-strong: hsl(35 14% 72%);
-  --ring: 22 60% 40%;
-  --primary: 22 60% 40%;
+  --popover-foreground: 0 0% 12%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 54%;
+  --border: 0 0% 93%;
+  --input: 0 0% 90%;
+  --border-strong: hsl(0 0% 90%);
+  --ring: 206 100% 42%;
+  --primary: 206 100% 42%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 100 10% 86%;
-  --secondary-foreground: 220 10% 22%;
-  --accent: 22 60% 40%;
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 213 5% 39%;
+  --accent: 208 85% 40%;
   --accent-foreground: 0 0% 100%;
-  --success: 143 34% 30%;
+  --success: 142 46% 39%;
   --success-foreground: 0 0% 100%;
-  --warning: 36 58% 50%;
-  --warning-foreground: 220 10% 14%;
-  --danger: 0 44% 52%;
+  --warning: 36 64% 42%;
+  --warning-foreground: 0 0% 100%;
+  --danger: 0 52% 46%;
   --danger-foreground: 0 0% 100%;
-  --info: 202 33% 44%;
+  --info: 199 80% 38%;
   --info-foreground: 0 0% 100%;
-  --sidebar: 110 10% 91%;
-  --sidebar-foreground: 220 10% 22%;
-  --sidebar-muted: 220 7% 38%;
-  --sidebar-hover-bg: 100 10% 84%;
-  --sidebar-active-bg: 22 20% 84%;
-  --sidebar-active-fg: 22 50% 34%;
-  --sidebar-control: 202 28% 38%;
-  --sidebar-control-hover: 202 28% 38%;
-  --sidebar-control-active-bg: 202 20% 86%;
-  --sidebar-control-active-fg: 202 34% 32%;
+  --sidebar: 0 0% 95%;
+  --sidebar-foreground: 0 0% 12%;
+  --sidebar-muted: 0 0% 54%;
+  --sidebar-hover-bg: 0 0% 93%;
+  --sidebar-active-bg: 210 75% 92%;
+  --sidebar-active-fg: 206 100% 42%;
+  --sidebar-control: 206 100% 42%;
+  --sidebar-control-hover: 206 100% 42%;
+  --sidebar-control-active-bg: 210 75% 92%;
+  --sidebar-control-active-fg: 206 100% 42%;
   --sidebar-workspace: 258 22% 42%;
   --sidebar-plan: 36 34% 38%;
   --sidebar-execute: 142 20% 34%;
@@ -315,6 +318,7 @@
   --sidebar-standardize: 220 8% 34%;
   --sidebar-system: 220 8% 32%;
   --sidebar-manufacturing: 0 18% 38%;
+  --sidebar-safety: 0 34% 40%;
   --sidebar-material-bins: 35 22% 36%;
   --sidebar-flow: 190 24% 34%;
   --sidebar-components: 202 22% 36%;
@@ -323,24 +327,24 @@
   --sidebar-settings: 220 8% 32%;
   --sidebar-docs: 110 18% 34%;
   --sidebar-erp: 220 8% 32%;
-  --sidebar-active: 22 20% 84%;
-  --sidebar-active-foreground: 22 50% 34%;
-  --sidebar-hover: 100 10% 84%;
-  --toolbar: 42 18% 96%;
+  --sidebar-active: 210 75% 92%;
+  --sidebar-active-foreground: 206 100% 42%;
+  --sidebar-hover: 0 0% 93%;
+  --toolbar: 0 0% 98%;
   --table: 0 0% 100%;
-  --table-header: 42 16% 89%;
+  --table-header: 0 0% 95%;
   --table-row: 0 0% 100%;
-  --table-row-hover: 42 18% 92%;
-  --table-selected: 22 18% 88%;
-  --selection-border: 22 16% 72%;
+  --table-row-hover: 0 0% 97%;
+  --table-selected: 210 75% 92%;
+  --selection-border: 206 100% 42%;
   --kpi: 0 0% 100%;
-  --kpi-border: 35 14% 84%;
-  --alert: 31 84% 90%;
-  --alert-border: 31 68% 62%;
-  --badge-neutral: 42 16% 89%;
-  --badge-neutral-foreground: 215 8% 32%;
-  --status-active: 143 34% 30%;
-  --status-inactive: 35 8% 50%;
+  --kpi-border: 0 0% 93%;
+  --alert: 38 48% 96%;
+  --alert-border: 36 28% 86%;
+  --badge-neutral: 0 0% 95%;
+  --badge-neutral-foreground: 213 5% 39%;
+  --status-active: 142 46% 39%;
+  --status-inactive: 0 0% 62%;
   --entity-company: 142 24% 36%;
   --entity-company-bg: 142 16% 90%;
   --entity-plant: 214 30% 40%;
@@ -363,7 +367,7 @@
   --entity-profile-bg: 340 14% 90%;
   --entity-routing: 15 32% 38%;
   --entity-routing-bg: 15 18% 90%;
-  --shadow-color: 22 60% 20%;
+  --shadow-color: 0 0% 80%;
 }
 
 :root,
@@ -388,6 +392,8 @@
   --accent-hover: hsl(var(--accent));
   --accent-soft: hsl(var(--accent) / 0.14);
   --success-soft: hsl(var(--success) / 0.14);
+  --danger-soft: hsl(var(--danger) / 0.14);
+  --info-soft: hsl(var(--info) / 0.14);
   color-scheme: light;
 }
 

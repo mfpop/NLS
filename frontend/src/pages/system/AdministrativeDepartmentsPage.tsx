@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Building2, Plus, RefreshCw, Archive, Pencil, Info, Check, X, Loader2, TriangleAlert } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarSelect } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarDropdown } from "@/components/shared/Toolbar";
 import { ADMINISTRATIVE_DEPARTMENTS_QUERY, COMPANIES_LIST_QUERY, USERS_LIST_QUERY } from "@/graphql/administrationQueries";
 import { CREATE_ADMINISTRATIVE_DEPARTMENT, UPDATE_ADMINISTRATIVE_DEPARTMENT, ARCHIVE_ADMINISTRATIVE_DEPARTMENT } from "@/graphql/administrationMutations";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -145,7 +145,8 @@ export function AdministrativeDepartmentsPage() {
           left={
             <>
               <ToolbarSearch value={search} onChange={setSearch} placeholder="Search departments..." />
-              <ToolbarSelect value={selectedCompany} onChange={setSelectedCompany} options={[{ value: "", label: "All Companies" }, ...companies.map((c) => ({ value: c.id, label: c.name }))]} />
+              <ToolbarDropdown value={selectedCompany} onChange={setSelectedCompany} options={[{ value: "", label: "All Companies" }, ...companies.map((c) => ({ value: c.id, label: c.name }))]} />
+
             </>
           }
           right={

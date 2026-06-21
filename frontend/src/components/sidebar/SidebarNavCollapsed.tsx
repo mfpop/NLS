@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { useLocation, NavLink } from "react-router-dom";
 import { sidebarNav, sectionFromPath } from "./navigationConfig";
 import type { NavEntry, NavGroupItem, NavSection } from "./navigationConfig";
-import { sectionColors } from "./sidebarStyles";
+import { sectionColors, sidebarState } from "./sidebarStyles";
 
 function firstRoute(items: NavEntry[]): string {
   const first = items[0];
@@ -12,22 +12,19 @@ function firstRoute(items: NavEntry[]): string {
 
 function PopupItem({ to, icon: Icon, label, colors, isActive, depth = 0, onClick }: {
   to: string; icon: React.ComponentType<{ className?: string }>; label: string;
-  colors: { activeBg: string; textActive: string; icon: string; hoverBg: string };
+  colors: { iconColor: string };
   isActive: boolean; depth?: number; onClick: () => void;
 }) {
+  const stateClass = isActive ? sidebarState.childActive : sidebarState.child;
   return (
     <NavLink
       to={to}
       end={to === "/"}
       onClick={onClick}
-      className={`flex items-center gap-2.5 h-8 px-3 text-xs rounded-md transition-colors ${
-        isActive
-          ? `${colors.activeBg} ${colors.textActive} font-semibold`
-          : `${colors.hoverBg} ${colors.icon}`
-      }`}
+      className={`flex items-center gap-2.5 h-8 px-3 text-xs rounded-md transition-colors ${stateClass} ${isActive ? "font-semibold" : ""}`}
       style={{ paddingLeft: 12 + depth * 16 }}
     >
-      <Icon className="h-3.5 w-3.5 shrink-0 stroke-current" />
+      <Icon className={`h-3.5 w-3.5 shrink-0 stroke-current ${colors.iconColor}`} />
       <span className="truncate">{label}</span>
     </NavLink>
   );
@@ -36,7 +33,7 @@ function PopupItem({ to, icon: Icon, label, colors, isActive, depth = 0, onClick
 function PopupContent({ entry, pathname, onItemClick }: {
   entry: NavSection; pathname: string; onItemClick: () => void;
 }) {
-  const colors = sectionColors[entry.id] ?? sectionColors.control;
+  const iconColor = sectionColors[entry.id] ?? sectionColors.control;
 
   return (
     <div className="py-1">
@@ -44,20 +41,20 @@ function PopupContent({ entry, pathname, onItemClick }: {
         if (item.type === "item") {
           return (
             <PopupItem key={item.to} to={item.to} icon={item.icon} label={item.label}
-              colors={colors} isActive={pathname === item.to} depth={0} onClick={onItemClick} />
+              colors={{ iconColor }} isActive={pathname === item.to} depth={0} onClick={onItemClick} />
           );
         }
         return (
           <div key={item.label}>
-            <div className="flex items-center gap-2.5 h-7 px-3 text-[11px] font-medium text-muted-foreground">
-              <item.icon className="h-3 w-3 shrink-0 stroke-current" />
+            <div className="flex items-center gap-2.5 h-7 px-3 text-[11px] font-medium text-sidebar-muted">
+              <item.icon className={`h-3 w-3 shrink-0 stroke-current ${iconColor}`} />
               <span className="truncate">{item.label}</span>
             </div>
             {(item as NavGroupItem).items.map((child) => {
               if (child.type === "item") {
                 return (
                   <PopupItem key={child.to} to={child.to} icon={child.icon} label={child.label}
-                    colors={colors} isActive={pathname === child.to} depth={1} onClick={onItemClick} />
+                    colors={{ iconColor }} isActive={pathname === child.to} depth={1} onClick={onItemClick} />
                 );
               }
               return null;
@@ -114,8 +111,9 @@ export function SidebarNavCollapsed() {
           const key = entry.type === "item" ? entry.to : entry.id;
 
           if (entry.type === "item") {
-            const colors = sectionColors.control;
+            const iconColor = sectionColors.control;
             const isActive = pathname === entry.to;
+            const stateClass = isActive ? "bg-sidebar-active-bg text-sidebar-active-fg" : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-foreground";
             return (
           <div key={key} ref={(el) => { iconRefs.current.set(key, el); }}
             onMouseEnter={() => openPopup(key)}
@@ -124,13 +122,9 @@ export function SidebarNavCollapsed() {
             <NavLink
               to={entry.to}
                   end={entry.to === "/"}
-                  className={`flex items-center justify-center h-8 w-8 rounded-md transition-colors ${
-                    isActive
-                      ? `${colors.activeBg} ${colors.textActive}`
-                      : `${colors.hoverBg} ${colors.icon}`
-                  }`}
+                  className={`flex items-center justify-center h-8 w-8 rounded-md transition-colors ${stateClass}`}
                 >
-                  <entry.icon className={`h-4 w-4 stroke-current ${isActive ? "stroke-[2.5]" : ""}`} />
+                  <entry.icon className={`h-4 w-4 stroke-current ${iconColor} ${isActive ? "stroke-[2.5]" : ""}`} />
                 </NavLink>
               </div>
             );
@@ -138,8 +132,9 @@ export function SidebarNavCollapsed() {
 
           const section = entry as NavSection;
           const to = firstRoute(section.items);
-          const colors = sectionColors[section.id] ?? sectionColors.control;
+          const iconColor = sectionColors[section.id] ?? sectionColors.control;
           const isActive = routeSection === section.id;
+          const stateClass = isActive ? "bg-sidebar-active-bg text-sidebar-active-fg" : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-foreground";
 
           return (
             <div key={key} ref={(el) => { iconRefs.current.set(key, el); }}
@@ -148,13 +143,9 @@ export function SidebarNavCollapsed() {
             >
               <NavLink
                 to={to}
-                className={`flex items-center justify-center h-8 w-8 rounded-md transition-colors ${
-                  isActive
-                    ? `${colors.activeBg} ${colors.textActive}`
-                    : `${colors.hoverBg} ${colors.icon}`
-                }`}
+                className={`flex items-center justify-center h-8 w-8 rounded-md transition-colors ${stateClass}`}
               >
-                <section.icon className={`h-4 w-4 stroke-current ${isActive ? "stroke-[2.5]" : ""}`} />
+                <section.icon className={`h-4 w-4 stroke-current ${iconColor} ${isActive ? "stroke-[2.5]" : ""}`} />
               </NavLink>
             </div>
           );
@@ -183,7 +174,7 @@ export function SidebarNavCollapsed() {
           }}
           onMouseLeave={closePopup}
         >
-          <div className="px-3 py-1.5 text-xs font-semibold border-b border-border">
+          <div className="px-3 py-1.5 text-xs font-semibold text-sidebar-foreground border-b border-border">
             {currentEntry.label}
           </div>
           <PopupContent entry={currentEntry} pathname={pathname} onItemClick={closeImmediate} />

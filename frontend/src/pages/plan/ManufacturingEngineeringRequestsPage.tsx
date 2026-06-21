@@ -7,7 +7,8 @@ import {
   AlertTriangle, Ban, Settings, Lightbulb, Cog, Clock3,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { SplitToolbar } from "@/components/shared/SplitToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -20,26 +21,24 @@ import {
   CONVERT_MER_TO_KAIZEN_MUTATION, DELETE_MER_MUTATION,
 } from "@/graphql/merMutations";
 
-/* ── CONSTANTS ── */
-
-const STATUS_STYLES: Record<string, string> = {
+/* ── CONSTANTS ── */  const STATUS_STYLES: Record<string, string> = {
   SUBMITTED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  UNDER_REVIEW: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  UNDER_REVIEW: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
   APPROVED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-  IN_PROGRESS: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  IN_PROGRESS: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
   COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
   REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  CANCELLED: "bg-gray-100 text-gray-800 dark:bg-gray-800/40 dark:text-gray-300",
+  CANCELLED: "bg-slate-100 text-slate-800 dark:bg-slate-800/40 dark:text-slate-300",
 };
 
 const STATUS_DOT: Record<string, string> = {
   SUBMITTED: "bg-blue-500",
-  UNDER_REVIEW: "bg-yellow-500",
+  UNDER_REVIEW: "bg-amber-500",
   APPROVED: "bg-emerald-500",
-  IN_PROGRESS: "bg-amber-500",
+  IN_PROGRESS: "bg-orange-500",
   COMPLETED: "bg-green-600",
   REJECTED: "bg-red-500",
-  CANCELLED: "bg-gray-400",
+  CANCELLED: "bg-slate-400",
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -125,6 +124,63 @@ function isOverdue(dueDate: string | null): boolean {
 
 /* ── SUB-COMPONENTS ── */
 
+function MERDetailSkeleton() {
+  const s = "bg-muted rounded animate-pulse";
+  return (
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      {/* Header skeleton */}
+      <div className="shrink-0 border-b border-border/30 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <div className={`h-5 w-56 ${s}`} />
+          <div className={`h-5 w-12 ${s}`} />
+          <div className={`h-5 w-16 ${s}`} />
+          <div className={`h-5 w-28 ${s}`} />
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <div className={`h-3 w-24 ${s}`} />
+          <div className={`h-3 w-20 ${s}`} />
+        </div>
+      </div>
+      {/* Action buttons bar skeleton */}
+      <div className="shrink-0 border-b border-border/20 bg-muted/20 px-4 py-2 flex items-center gap-2">
+        <div className={`h-6 w-16 ${s}`} />
+        <div className={`h-6 w-16 ${s}`} />
+        <div className={`h-6 w-16 ${s}`} />
+      </div>
+      {/* Workflow progress skeleton */}
+      <div className="shrink-0 flex items-center gap-1 border-b border-border/20 bg-muted/20 px-3 py-2">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className={`h-4 w-14 ${s}`} />
+        ))}
+      </div>
+      {/* 2-column content skeleton */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 mr-6">
+        <div className="grid grid-cols-[3fr_2fr] gap-8">
+          <div className="space-y-5">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className={`h-4 w-32 ${s}`} />
+                <div className={`h-3 w-full ${s}`} />
+                <div className={`h-3 w-3/4 ${s}`} />
+                <div className={`h-3 w-2/4 ${s}`} />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="space-y-2">
+                <div className={`h-4 w-28 ${s}`} />
+                <div className={`h-3 w-full ${s}`} />
+                <div className={`h-3 w-3/4 ${s}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FlatSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
@@ -165,12 +221,12 @@ function ImpactRow({ label, value }: { label: string; value: string }) {
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   SUBMITTED: { label: "Submitted", color: "bg-blue-500" },
-  UNDER_REVIEW: { label: "Under Review", color: "bg-yellow-500" },
+  UNDER_REVIEW: { label: "Under Review", color: "bg-amber-500" },
   APPROVED: { label: "Approved", color: "bg-emerald-500" },
-  IN_PROGRESS: { label: "In Progress", color: "bg-amber-500" },
+  IN_PROGRESS: { label: "In Progress", color: "bg-orange-500" },
   COMPLETED: { label: "Completed", color: "bg-green-600" },
   REJECTED: { label: "Rejected", color: "bg-red-500" },
-  CANCELLED: { label: "Cancelled", color: "bg-gray-400" },
+  CANCELLED: { label: "Cancelled", color: "bg-slate-400" },
 };
 
 const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -189,10 +245,10 @@ const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: s
 
 function KpiCard({ label, value, muted, dotClass, icon }: { label: string; value: ReactNode; muted?: boolean; dotClass?: string; icon?: ReactNode }) {
   return (
-    <div className="border border-border/30 bg-card p-3 text-left">
+    <div className="border border-border/30 bg-card px-2.5 py-2 text-left">
       <div className="min-w-0 flex-1">
-        <p className={`text-xs font-medium ${theme.textMuted} truncate flex items-center gap-1.5`}>
-          {icon ? icon : dotClass ? <span className={`inline-block h-3 w-3 shrink-0 ${dotClass}`} /> : null}
+        <p className={`text-[11px] font-medium ${theme.textMuted} truncate flex items-center gap-1.5`}>
+          {icon ? icon : dotClass ? <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${dotClass}`} /> : null}
           {label}
         </p>
         <p className={`text-lg font-bold ${muted ? theme.textMuted : theme.textPrimary}`}>{value}</p>
@@ -205,13 +261,13 @@ function BarRow({ label, count, total, color }: { label: string; count: number; 
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   const barColor = color || "bg-indigo-500/60";
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       <div className="flex items-center justify-between">
-        <span className={`text-xs ${theme.textPrimary}`}>{label}</span>
-        <span className={`text-xs font-semibold ${theme.textPrimary}`}>{count} <span className={`${theme.textMuted} font-normal`}>({pct}%)</span></span>
+        <span className={`text-[11px] ${theme.textPrimary}`}>{label}</span>
+        <span className={`text-[11px] font-semibold ${theme.textPrimary}`}>{count} <span className={`${theme.textMuted} font-normal`}>({pct}%)</span></span>
       </div>
-      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${pct}%` }} />
+      <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${Math.max(pct, 3)}%` }} />
       </div>
     </div>
   );
@@ -285,7 +341,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
         ) : (
           <>
             <SectionCard title="Key Metrics">
-              <div className="grid grid-cols-2 md:grid-cols-9 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 gap-1.5">
                 <KpiCard label="Submitted" value={summary.submitted} dotClass={STATUS_DOT.SUBMITTED} />
                 <KpiCard label="Under Review" value={summary.underReview} dotClass={STATUS_DOT.UNDER_REVIEW} />
                 <KpiCard label="Approved" value={summary.approved} dotClass={STATUS_DOT.APPROVED} />
@@ -299,7 +355,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
             </SectionCard>
 
               <FlatSection title="Breakdown">
-                <div className="space-y-2.5">
+                <div className="space-y-1.5">
                   {summary.byType.map((t: { requestType: string; count: number }) => {
                     const meta = TYPE_META[t.requestType];
                     const barColors: Record<string, string> = {
@@ -329,7 +385,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                       {upcomingDeadlines.map((m) => {
                         const days = daysUntil(m.dueDate);
                         return (
-                          <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-border/10 last:border-0">
+                          <div key={m.id} className="flex items-center gap-2 py-1 border-b border-slate-200 last:border-0">
                             <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
@@ -353,15 +409,17 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                   ) : (
                     <div className="space-y-1">
                       {recentMERs.map((m) => (
-                        <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-border/10 last:border-0">
-                          <StatusDot status={m.status} />
+                        <div key={m.id} className="flex items-center gap-2 py-1 border-b border-slate-200 last:border-0">
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1.5">
+                              <StatusDot status={m.status} />
+                              <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
+                            </div>
+                            <div className="text-xs text-slate-500 ml-4">
                               {m.merCode || `MER-${m.id}`} {"\u00B7"} {formatDate(m.createdAt)}
                             </div>
                           </div>
-                          <span className={`text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
+                          <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
                             {PRIORITY_META[m.priority]?.label || m.priority}
                           </span>
                         </div>
@@ -385,7 +443,7 @@ export function ManufacturingEngineeringRequestsPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterAssignee, setFilterAssignee] = useState("");
-  const PAGE_SIZE = 25;
+  const [autoPageSize, setAutoPageSize] = useState(25);
   const [page, setPage] = useState(1);
   const [mode, setMode] = useState<"view" | "edit" | "create">("view");
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -429,6 +487,41 @@ export function ManufacturingEngineeringRequestsPage() {
     document.addEventListener("mouseup", onUp);
   }, []);
 
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const scrollableRef = useRef<HTMLDivElement>(null);
+  const paginatedMersRef = useRef<MERNode[]>([]);
+  const selectedIdRef = useRef(selectedId);
+  selectedIdRef.current = selectedId;
+
+  /* ── Selection transition skeleton ── */
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  const prevSelIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (prevSelIdRef.current !== selectedId && selectedId !== null) {
+      setShowSkeleton(true);
+      const t = setTimeout(() => setShowSkeleton(false), 300);
+      prevSelIdRef.current = selectedId;
+      return () => clearTimeout(t);
+    }
+    prevSelIdRef.current = selectedId;
+  }, [selectedId]);
+
+  /* ── Auto-calculate visible rows per page ── */
+  useEffect(() => {
+    const el = scrollableRef.current;
+    if (!el) return;
+    const ITEM_HEIGHT = 68; // h-16 (64px) + my-0.5 (4px vertical margin)
+    const calc = () => {
+      setAutoPageSize(Math.max(3, Math.floor(el.clientHeight / ITEM_HEIGHT)));
+    };
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const effectivePageSize = autoPageSize;
+
   useEffect(() => {
     if (successMsg) { const t = setTimeout(() => setSuccessMsg(null), 5000); return () => clearTimeout(t); }
   }, [successMsg]);
@@ -445,9 +538,48 @@ export function ManufacturingEngineeringRequestsPage() {
   const filteredMers = filterAssignee
     ? mers.filter((m) => m.assignedTo === filterAssignee)
     : mers;
-  const pageCount = Math.max(1, Math.ceil(filteredMers.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(filteredMers.length / effectivePageSize));
   const safePage = Math.min(page, pageCount);
-  const paginatedMers = filteredMers.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedMers = filteredMers.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize);
+  paginatedMersRef.current = paginatedMers;
+
+  /* ── Keyboard navigation for list ── */
+  const scrollItemIntoView = useCallback((id: number) => {
+    setTimeout(() => {
+      const el = document.querySelector(`[data-mer-id="${id}"]`);
+      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 0);
+  }, []);
+
+  useEffect(() => {
+    const el = listContainerRef.current;
+    if (!el) return;
+    const handler = (e: KeyboardEvent) => {
+      if (mode !== "view") return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT") return;
+      if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+      e.preventDefault();
+      const items = paginatedMersRef.current;
+      if (items.length === 0) return;
+      const currentIdx = selectedIdRef.current
+        ? items.findIndex((m) => m.id === selectedIdRef.current)
+        : -1;
+      if (e.key === "ArrowDown") {
+        const nextIdx = currentIdx < items.length - 1 ? currentIdx + 1 : 0;
+        const nextId = items[nextIdx].id;
+        setSelectedId(nextId);
+        scrollItemIntoView(nextId);
+      } else {
+        const prevIdx = currentIdx > 0 ? currentIdx - 1 : items.length - 1;
+        const prevId = items[prevIdx].id;
+        setSelectedId(prevId);
+        scrollItemIntoView(prevId);
+      }
+    };
+    el.addEventListener("keydown", handler);
+    return () => el.removeEventListener("keydown", handler);
+  }, [mode, scrollItemIntoView]);
 
   useEffect(() => { setPage(1); }, [filterStatus, filterType, filterAssignee, search]);
 
@@ -698,6 +830,7 @@ export function ManufacturingEngineeringRequestsPage() {
   const renderDetail = () => {
     if (mode === "create" && !sel) return <div className="flex-1 flex flex-col min-h-0 overflow-hidden">{renderForm()}</div>;
     if (!sel) return <MERDashboardContent summary={summary} summaryLoading={summaryLoading} merList={mers} onNew={hNew} />;
+    if (showSkeleton && mode === "view") return <MERDetailSkeleton />;
     return (
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {mutationError && isForm && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}
@@ -896,43 +1029,51 @@ export function ManufacturingEngineeringRequestsPage() {
             subtitle="Manufacturing Engineering Requests — submit, track, and manage." />
         </div>
         <div className="print-ignore">
-          <Toolbar
-            left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search MERs..." />}
-            right={<>
-              <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
+          <SplitToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search MERs..."
+            filters={<>
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "", label: "All Statuses" }, ...Object.keys(STATUS_STYLES).map((s) => ({ value: s, label: statusLabel(s) }))]}
                 className="w-36" />
-              <ToolbarSelect value={filterType} onChange={setFilterType}
+
+              <ToolbarDropdown value={filterType} onChange={setFilterType}
                 options={[{ value: "", label: "All Types" }, ...REQUEST_TYPE_OPTIONS]}
                 className="w-44" />
-              <ToolbarSelect value={filterAssignee} onChange={setFilterAssignee}
+
+              <ToolbarDropdown value={filterAssignee} onChange={setFilterAssignee}
                 options={[
                   { value: "", label: "All Engineers" },
                   ...Array.from(new Set(mers.map((m) => m.assignedTo).filter(Boolean))).map((a) => ({ value: a, label: a })),
                 ]}
                 className="w-32" />
-              <div className="flex-1" />
-              <div className="flex items-center gap-2 shrink-0">
-                {isForm ? (
-                  <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
-                ) : (
-                  <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel || sel.status === "COMPLETED" || sel.status === "CANCELLED"} />
-                    <span className="h-5 w-px shrink-0 bg-border/25" />
-                    <ToolbarButton icon={Trash2} label="Delete" onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel} />
-                    <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                  </>
-                )}
-              </div>
+
+            </>}
+            actions={<>
+              {isForm ? (
+                <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
+              ) : (
+                <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel || sel.status === "COMPLETED" || sel.status === "CANCELLED"} />
+                  <span className="mx-0.5 h-5 w-px shrink-0 bg-border/25" />
+                  <ToolbarButton icon={Trash2} label="Delete" onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel} />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+                </>
+              )}
             </>} />
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           {/* ── Left Panel: List ── */}
           <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4">
+            <div className="shrink-0 h-10 border-b border-border flex items-center justify-between bg-muted px-3">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Requests</span>
-              <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{filteredMers.length}</span>
+              {loading && mers.length === 0 ? null : (
+                <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
+                  {filteredMers.length}
+                </span>
+              )}
             </div>
-            <div className={`flex-1 overflow-y-auto ${theme.surfaceBg}`}>
+            <div ref={scrollableRef} className={`flex-1 overflow-y-auto ${theme.surfaceBg}`}>
               {loading && mers.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                   <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />Loading...</div>
@@ -945,8 +1086,9 @@ export function ManufacturingEngineeringRequestsPage() {
                 </div>
               ) : (
                 <div>
+              <div ref={listContainerRef} tabIndex={0} className="outline-none">
                   {paginatedMers.map((m) => (
-                    <div key={m.id}
+                    <div key={m.id} data-mer-id={m.id}
                       onClick={() => {
                         if (isForm && isDirty && mode === "edit") { if (!confirm("Unsaved changes. Discard?")) return; }
                         setSelectedId(m.id);
@@ -959,9 +1101,9 @@ export function ManufacturingEngineeringRequestsPage() {
                           {m.priority && m.priority !== "MEDIUM" && (
                             <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${m.priority === "CRITICAL" ? "bg-red-500" : m.priority === "HIGH" ? "bg-orange-500" : "bg-gray-400"}`} />
                           )}
-                          <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`}>{m.title}</span>
+                          <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`} title={m.title}>{m.title}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                           <span>{requestTypeLabel(m.requestType)}</span>
                           <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
                           <span className="min-w-0 flex-1 truncate">{m.owner || m.submittedBy || "-"}</span>
@@ -971,20 +1113,70 @@ export function ManufacturingEngineeringRequestsPage() {
                     </div>
                   ))}
                 </div>
+                </div>
               )}
             </div>
-            <div className="shrink-0 h-8 flex items-center border-t border-border/50 bg-muted px-4 gap-2">
-              <span className={`text-xs ${theme.textMuted}`}>{filteredMers.length} request{filteredMers.length !== 1 ? "s" : ""}</span>
-              {pageCount > 1 && (
-                <>
-                  <span className="w-px h-3 bg-border/40" />
-                  <button type="button" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="inline-flex items-center justify-center h-5 w-5 text-[10px] font-medium text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">{"\u2039"}</button>
-                  <span className={`text-[10px] ${theme.textMuted} font-mono`}>{safePage}/{pageCount}</span>
-                  <button type="button" disabled={safePage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                    className="inline-flex items-center justify-center h-5 w-5 text-[10px] font-medium text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">{"\u203A"}</button>
-                </>
-              )}
+            <div className="shrink-0 border-t border-border bg-muted px-3 py-1.5 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+                  {filteredMers.length > 0
+                    ? `${(safePage - 1) * effectivePageSize + 1}–${Math.min(safePage * effectivePageSize, filteredMers.length)} of ${filteredMers.length}`
+                    : `0 requests`
+                  }
+                </span>
+                <div className="flex-1" />
+                {pageCount > 1 && (
+                  <div className="flex items-center gap-0.5">
+                    <button type="button" disabled={safePage <= 1} onClick={() => setPage(1)}
+                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="First page">
+                      {"\u00AB"}
+                    </button>
+                    <button type="button" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Previous page">
+                      {"\u2039"}
+                    </button>
+                    <div className="flex items-center gap-0.5 mx-1">
+                      {(() => {
+                        const pages: (number | "...")[] = [];
+                        const maxVisible = 5;
+                        if (pageCount <= maxVisible + 2) {
+                          for (let i = 1; i <= pageCount; i++) pages.push(i);
+                        } else {
+                          pages.push(1);
+                          const start = Math.max(2, safePage - 1);
+                          const end = Math.min(pageCount - 1, safePage + 1);
+                          if (start > 2) pages.push("...");
+                          for (let i = start; i <= end; i++) pages.push(i);
+                          if (end < pageCount - 1) pages.push("...");
+                          pages.push(pageCount);
+                        }
+                        return pages.map((p, i) =>
+                          p === "..." ? (
+                            <span key={`ellipsis-${i}`} className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-slate-400 select-none">{"\u2026"}</span>
+                          ) : (
+                            <button key={p} type="button" onClick={() => setPage(p)}
+                              className={`inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] px-1 text-xs font-semibold transition-all ${
+                                p === safePage
+                                  ? "bg-amber-50 border border-amber-300 text-amber-800"
+                                  : "text-slate-600 hover:bg-slate-100"
+                              }`}>
+                              {p}
+                            </button>
+                          )
+                        );
+                      })()}
+                    </div>
+                    <button type="button" disabled={safePage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Next page">
+                      {"\u203A"}
+                    </button>
+                    <button type="button" disabled={safePage >= pageCount} onClick={() => setPage(pageCount)}
+                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Last page">
+                      {"\u00BB"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div onMouseDown={handleSplitMouseDown}

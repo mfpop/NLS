@@ -6,7 +6,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -693,9 +693,10 @@ export function KaizenPage() {
         <div className="print-ignore">
           <Toolbar left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search kaizens..." />}
             right={<>
-              <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "", label: "All Statuses" }, { value: "PLANNED", label: "Planned" }, { value: "IN_PROGRESS", label: "In Progress" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }]}
                 className="w-40" />
+
               <div className="flex-1" />
               <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (

@@ -20,6 +20,7 @@ from docs_manager.schema import DocumentationQuery
 from api.types.auth import UserNode
 from check.schema import CheckQuery
 from maintenance.schema import MaintenanceQuery
+from workspace.schema import WorkspaceQuery
 
 @strawberry.type
 class Query(
@@ -39,6 +40,7 @@ class Query(
     DocumentQuery,
     CheckQuery,
     MaintenanceQuery,
+    WorkspaceQuery,
 ):
     """Root query — domain resolvers are added here as fields get implemented."""
 

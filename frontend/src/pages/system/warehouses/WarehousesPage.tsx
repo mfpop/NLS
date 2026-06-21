@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { CheckCircle, Warehouse, Factory, Plus, Pencil, Trash2, RefreshCw, X, GripVertical, Check, Box, Layers, Route, Map, Database, Shield, ExternalLink, Building2, LayoutGrid, LineChart, AlertTriangle, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
@@ -775,9 +775,12 @@ export function WarehousesPage() {
         <Toolbar
           left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search warehouses..." />}
           right={<>
-            <ToolbarSelect value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
-            <ToolbarSelect value={filters.warehouseType} onChange={(v) => setFilters((p) => ({ ...p, warehouseType: v }))} options={[{ value: "", label: "All Types" }, ...WAREHOUSE_TYPE_OPTIONS]} className="w-50" />
-            <ToolbarSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
+            <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
+
+            <ToolbarDropdown value={filters.warehouseType} onChange={(v) => setFilters((p) => ({ ...p, warehouseType: v }))} options={[{ value: "", label: "All Types" }, ...WAREHOUSE_TYPE_OPTIONS]} className="w-50" />
+
+            <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
+
             <div className="flex-1" />
             <div className="flex items-center gap-2 shrink-0">
               {isForm ? (

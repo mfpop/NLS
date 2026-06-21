@@ -72,15 +72,15 @@ export function LiveShopfloorPage() {
     }
   );
 
+  // Fall back to mock data when backend resolver is unavailable
+  const dashboard = dashboardData?.liveShopfloorDashboard ?? mockLiveShopfloorDashboard.liveShopfloorDashboard;
+  const events = eventsData?.liveShopfloorEvents ?? mockLiveShopfloorEvents.liveShopfloorEvents;
+
   // Selected event detail
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) ?? null : null;
 
   const [logDowntime, { loading: logDowntimeLoading }] = useMutation<{ logShopfloorDowntime: MutationResponse<never> }>(LOG_SHOPFLOOR_DOWNTIME_MUTATION);
   const [closeDowntime, { loading: closeDowntimeLoading }] = useMutation<{ closeShopfloorDowntime: MutationResponse<never> }>(CLOSE_SHOPFLOOR_DOWNTIME_MUTATION);
-
-  // Fall back to mock data when backend resolver is unavailable
-  const dashboard = dashboardData?.liveShopfloorDashboard ?? mockLiveShopfloorDashboard.liveShopfloorDashboard;
-  const events = eventsData?.liveShopfloorEvents ?? mockLiveShopfloorEvents.liveShopfloorEvents;
   const filters = filtersData?.liveShopfloorFilters ?? mockLiveShopfloorFilters.liveShopfloorFilters;
 
   const allowedActions = dashboard?.allowedActions ?? [];

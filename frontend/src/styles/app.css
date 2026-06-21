@@ -47,6 +47,7 @@
   --color-sidebar-standardize: hsl(var(--sidebar-standardize));
   --color-sidebar-system: hsl(var(--sidebar-system));
   --color-sidebar-manufacturing: hsl(var(--sidebar-manufacturing));
+  --color-sidebar-safety: hsl(var(--sidebar-safety));
   --color-sidebar-flow: hsl(var(--sidebar-flow));
   --color-sidebar-components: hsl(var(--sidebar-components));
   --color-sidebar-product: hsl(var(--sidebar-product));

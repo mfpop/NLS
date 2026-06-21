@@ -4,19 +4,18 @@ import { ActiveLineSelector } from "./ActiveLineSelector";
 import { SidebarNav } from "./SidebarNav";
 import { SidebarNavCollapsed } from "./SidebarNavCollapsed";
 import { SidebarFooterUser } from "./SidebarFooterUser";
-import { theme } from "@/styles/themeTokens";
 import { useSidebarStore } from "@/stores/sidebar";
 
 export function Sidebar() {
   const collapsed = useSidebarStore((s) => s.collapsed);
   const toggleCollapsed = useSidebarStore((s) => s.toggleCollapsed);
   const toggleSurface = collapsed
-    ? "bg-background border-r border-border"
+    ? "bg-card border-r border-border"
     : "bg-muted border-l border-border";
 
   return (
-    <aside className={`relative flex flex-col h-screen ${theme.page} border-r border-border ${collapsed ? "w-12" : "w-64"}`} aria-label="Application sidebar">
-      <div className={`relative flex items-center shrink-0 h-16 ${collapsed ? "justify-center" : "pl-4"} border-b border-border`}>
+    <aside className={`relative flex flex-col h-screen bg-sidebar text-sidebar-foreground border-r border-border ${collapsed ? "w-12" : "w-64"}`} aria-label="Application sidebar">
+      <div className={`relative flex items-center shrink-0 h-16 ${collapsed ? "justify-center" : "pl-4"} border-b border-border bg-card`}>
         <SidebarBrand collapsed={collapsed} />
         <button
           type="button"

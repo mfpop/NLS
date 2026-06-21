@@ -11,6 +11,7 @@ interface OverviewProps {
   actions: any[];
   auditTemplates?: any[];
   onInstallTemplates?: () => void;
+  navigateBase?: string;
 }
 
 const NOW = new Date();
@@ -96,15 +97,15 @@ function KpiCard({ card }: { card: KpiCard }) {
 }
 
 export function SafetyOverview(props: OverviewProps) {
-  const { audits, problems, actions, auditTemplates, onInstallTemplates } = props;
+  const { audits, problems, actions, auditTemplates, onInstallTemplates, navigateBase = "/check/safety-control" } = props;
   const navigate = useNavigate();
 
   const kpiClick = useCallback((target: NavTarget) => {
     const params = new URLSearchParams();
     params.set("tab", target.tab);
     if (target.status) params.set("status", target.status);
-    navigate(`/check/safety-control?${params.toString()}`, { replace: true });
-  }, [navigate]);
+    navigate(`${navigateBase}?${params.toString()}`, { replace: true });
+  }, [navigate, navigateBase]);
 
   // ── KPIs ──
   const kpis = useMemo(() => {

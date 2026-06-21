@@ -3,7 +3,7 @@ import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { Landmark, Factory, TrendingUpDown, Layers, Component, Dumbbell, Database, Info } from "lucide-react";
 import { ToolbarProvider, useToolbar, useToolbarActions } from "./ToolbarContext";
-import { Toolbar as SharedToolbar, ToolbarSearch, ToolbarSelect, ToolbarCrudActions } from "@/components/shared/Toolbar";
+import { Toolbar as SharedToolbar, ToolbarSearch, ToolbarDropdown, ToolbarCrudActions } from "@/components/shared/Toolbar";
 
 const BASE = "/system/production-structure/components";
 
@@ -62,7 +62,7 @@ function Toolbar() {
       right={
         <>
           {!isCompanyPage && (
-            <ToolbarSelect
+            <ToolbarDropdown
               value={statusFilter}
               onChange={(v) => filterChange(() => setStatusFilter(v))}
               options={[

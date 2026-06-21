@@ -1,13 +1,14 @@
 import { useState, useCallback, useRef, useMemo, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { PageHeader, type SystemMessage } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarButton, ToolbarDropdown } from "@/components/shared/Toolbar";
+import { SplitToolbar } from "@/components/shared/SplitToolbar";
 import { RefreshCw } from "lucide-react";
 
 
 export type ControlArea = "PRODUCTION" | "QUALITY" | "SAFETY" | "MATERIAL";
 
-export type RecordType = "AUDITS" | "ISSUES" | "ACTIONS" | "DMRS" | "RMAS";
+export type RecordType = "AUDITS" | "ISSUES" | "ACTIONS" | "EVENTS" | "DMRS" | "RMAS";
 
 export interface ControlTabConfig {
   id: string;
@@ -24,6 +25,7 @@ interface ControlPageShellProps {
   iconClass: string;
   tabs: ControlTabConfig[];
   defaultTab?: string;
+  filterMode?: "radio" | "dropdown";
   recordTypeLabels?: Partial<Record<RecordType, string>>;
   renderOverview: () => ReactNode;
   renderUnifiedList?: (onSelect: (recordType: RecordType, id: number | null) => void, filterRecordType?: RecordType | null, selectedId?: number | null, page?: number) => ReactNode;
@@ -37,15 +39,31 @@ interface ControlPageShellProps {
   headerChildren?: ReactNode;
   footerLeft?: ReactNode | ((selectedRecordType: RecordType | null, page: number, totalPages: number) => ReactNode);
   footerRight?: ReactNode | ((selectedRecordType: RecordType | null, page: number, totalPages: number) => ReactNode);
+  /** When set, uses SplitToolbar instead of Toolbar with built-in search */
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
 }
 
 const RECORD_TYPES: { id: RecordType; label: string }[] = [
   { id: "ISSUES", label: "Issues" },
   { id: "ACTIONS", label: "Actions" },
   { id: "AUDITS", label: "Audits" },
+  { id: "EVENTS", label: "Events" },
   { id: "DMRS", label: "DMR" },
   { id: "RMAS", label: "RMA" },
 ];
+
+const FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "", label: "All Records" },
+  { value: "ISSUES", label: "Issues" },
+  { value: "ACTIONS", label: "Corrective Actions" },
+  { value: "AUDITS", label: "Audits" },
+  { value: "DMRS", label: "DMR" },
+  { value: "RMAS", label: "RMA" },
+];
+
+
 
 function RadioButton({ selected, label, onClick }: { selected: boolean; label: string; onClick: () => void }) {
   return (
@@ -73,6 +91,7 @@ export function ControlPageShell({
   icon: Icon,
   iconClass,
   tabs,
+  filterMode = "radio",
   recordTypeLabels,
   renderOverview,
   renderUnifiedList,
@@ -86,6 +105,9 @@ export function ControlPageShell({
   headerChildren,
   footerLeft,
   footerRight,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Search...",
 }: ControlPageShellProps) {
   const [selectedRecordType, setSelectedRecordType] = useState<RecordType | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -126,6 +148,13 @@ export function ControlPageShell({
     onRecordTypeChange?.();
   };
 
+  const handleFilterDropdownChange = (val: string) => {
+    setSelectedRecordType(val ? (val as RecordType) : null);
+    setSelectedId(null);
+    setPage(0);
+    onRecordTypeChange?.();
+  };
+
   const tab = tabs.find((t) => t.id === activeTab);
   const filterNode = typeof toolbarFilters === "function" ? toolbarFilters(selectedRecordType) : toolbarFilters;
   const resetSelection = useCallback(() => { setSelectedId(null); }, []);
@@ -154,26 +183,90 @@ export function ControlPageShell({
         </PageHeader>
       </div>
       <div className="print-ignore">
-        <Toolbar
-          left={toolbarSearch || <div />}
-          right={
-            <div className="flex items-center gap-1 px-2 w-full">
-              {availableRecordTypes.map((rt) => (
-                <RadioButton key={rt.id} selected={selectedRecordType === rt.id} label={getRecordTypeLabel(rt.id)} onClick={() => handleRecordTypeClick(rt.id)} />
-              ))}
-              <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
-              {filterNode}
-              <div className="flex-1" />
-              {actionsNode}
-              {onRefresh && (
+        {searchValue !== undefined && onSearchChange ? (
+          <SplitToolbar
+            searchValue={searchValue}
+            onSearchChange={onSearchChange}
+            searchPlaceholder={searchPlaceholder}
+            filters={
+              filterMode === "dropdown" ? (
                 <>
+                  <ToolbarDropdown
+                    value={selectedRecordType || ""}
+                    onChange={handleFilterDropdownChange}
+                    options={FILTER_OPTIONS}
+                    placeholder="All Records"
+                    className="w-44"
+                  />
+
                   <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
-                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => { setSelectedRecordType(null); setSelectedId(null); onRefresh(); }} />
+                  {filterNode}
                 </>
-              )}
-            </div>
-          }
-        />
+              ) : (
+                <>
+                  {availableRecordTypes.map((rt) => (
+                    <RadioButton key={rt.id} selected={selectedRecordType === rt.id} label={getRecordTypeLabel(rt.id)} onClick={() => handleRecordTypeClick(rt.id)} />
+                  ))}
+                  <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
+                  {filterNode}
+                </>
+              )
+            }
+            actions={
+              <>
+                {actionsNode}
+                {onRefresh && (
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => { setSelectedRecordType(null); setSelectedId(null); onRefresh(); }} />
+                )}
+              </>
+            }
+          />
+        ) : (
+          <Toolbar
+            left={toolbarSearch || <div />}
+            right={
+              <div className="flex items-center gap-1 px-2 w-full">
+                {filterMode === "dropdown" ? (
+                  <>
+                    <ToolbarDropdown
+                      value={selectedRecordType || ""}
+                      onChange={handleFilterDropdownChange}
+                      options={FILTER_OPTIONS}
+                      placeholder="All Records"
+                      className="w-44"
+                    />
+                    <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
+                    {filterNode}
+                    <div className="flex-1" />
+                    {actionsNode}
+                    {onRefresh && (
+                      <>
+                        <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
+                        <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => { setSelectedRecordType(null); setSelectedId(null); onRefresh(); }} />
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {availableRecordTypes.map((rt) => (
+                      <RadioButton key={rt.id} selected={selectedRecordType === rt.id} label={getRecordTypeLabel(rt.id)} onClick={() => handleRecordTypeClick(rt.id)} />
+                    ))}
+                    <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
+                    {filterNode}
+                    <div className="flex-1" />
+                    {actionsNode}
+                    {onRefresh && (
+                      <>
+                        <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
+                        <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => { setSelectedRecordType(null); setSelectedId(null); onRefresh(); }} />
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+            }
+          />
+        )}
       </div>
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         <div className="print-ignore flex flex-col min-h-0 bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
@@ -190,9 +283,9 @@ export function ControlPageShell({
           </div>
           {selectedRecordType && (
             <div className="shrink-0 border-t border-border/30 bg-muted/20 flex h-8 items-center gap-2 px-3 text-[10px] text-muted-foreground">
-              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="font-medium hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed">◀ Prev</button>
+              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="font-medium hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed">Prev</button>
               <span className="font-mono">Page {page + 1}</span>
-              <button onClick={() => setPage(p => p + 1)} className="font-medium hover:text-foreground">Next ▶</button>
+              <button onClick={() => setPage(p => p + 1)} className="font-medium hover:text-foreground">Next </button>
             </div>
           )}
         </div>

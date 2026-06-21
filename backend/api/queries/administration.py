@@ -19,6 +19,7 @@ from api.types.administration import (
     RoleNode,
     PermissionNode,
     UserRoleAssignmentNode,
+    ProfileSkillNode,
 )
 
 
@@ -146,3 +147,9 @@ class AdministrationQuery:
     def user_permissions(self, user_profile_id: str) -> list[PermissionNode]:
         perms = UserAccessService.get_user_permissions(user_profile_id)
         return [PermissionNode.from_db(p) for p in perms]
+
+    @strawberry.field
+    def profile_skills(self, user_profile_id: str) -> list[ProfileSkillNode]:
+        from administration.services import ProfileSkillService
+        qs = ProfileSkillService.list(user_profile_id=user_profile_id)
+        return [ProfileSkillNode.from_db(s) for s in qs]

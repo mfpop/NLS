@@ -4,6 +4,7 @@ import type { LiveShopfloorAssignedResourceGroup, LiveShopfloorResourceStatus } 
 interface Props {
   group: LiveShopfloorAssignedResourceGroup;
   resources: LiveShopfloorResourceStatus[];
+  isFirst: boolean;
   isLast: boolean;
 }
 

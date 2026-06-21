@@ -10,7 +10,8 @@ system:
 routing:
   strategy: confidence_threshold
   threshold: 0.6
-  fallback_agent: "0.Nexus - General Chat"
+  default_entry_agent: "10.Nexus - Manager"
+  fallback_agent: "10.Nexus - Manager"
   require_governance_for_rules: true
   require_audit_for_verification: true
 

@@ -99,6 +99,15 @@ _action_roles = {
     # Audits
     "view_audits": SUPERVISOR_PLUS,
     "manage_audits": MANAGER_PLUS,
+    # Safety Compliance
+    "view_safety_compliance": SUPERVISOR_PLUS,
+    "manage_injury_claims": MANAGER_PLUS,
+    "view_injury_claims": SUPERVISOR_PLUS,
+    "view_medical_confidential": MANAGER_PLUS,
+    "manage_medical_cases": MANAGER_PLUS,
+    "view_medical_cases": SUPERVISOR_PLUS,
+    "manage_env_reports": SUPERVISOR_PLUS,
+    "manage_capas": SUPERVISOR_PLUS,
 }
 
 

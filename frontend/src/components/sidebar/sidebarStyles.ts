@@ -1,10 +1,11 @@
+// ── Structural tokens (layout, dimensions, typography) ──
 export const sidebarNavTokens = {
   nav: "flex-1 overflow-y-auto py-1.5 space-y-0.5 px-2",
-  row: "group flex h-8 w-full items-center gap-2.5 rounded-md pr-3 text-[13px] font-medium leading-5 tracking-normal outline-none focus-visible:ring-1 focus-visible:ring-border transition-colors duration-120",
+  row: "group flex h-8 w-full items-center gap-2.5 rounded-md pr-3 text-[13px] font-medium leading-5 tracking-normal outline-none focus-visible:ring-1 focus-visible:ring-sidebar-control transition-colors duration-120",
   label: "min-w-0 flex-1 truncate text-left text-[13px] leading-5 tracking-normal",
   labelActive: "min-w-0 flex-1 truncate text-left text-[13px] font-semibold leading-5 tracking-normal",
   icon: "h-4 w-4 shrink-0 stroke-current",
-  chevron: "h-4 w-4 shrink-0 -mt-px stroke-current transition-transform duration-120",
+  chevronActive: "h-4 w-4 shrink-0 -mt-px stroke-current transition-transform duration-120",
   active: "font-semibold",
   inactive: "font-medium",
   activeBranch: "font-medium",
@@ -12,230 +13,56 @@ export const sidebarNavTokens = {
   submenuInner: "space-y-0.5 py-0.5",
 };
 
-export const sectionColors: Record<string, {
-  activeBg: string;
-  hoverBg: string;
-  icon: string;
-  iconActive: string;
-  textActive: string;
-  chevron: string;
-}> = {
-  control: {
-    activeBg: "bg-sidebar-control/4",
-    hoverBg: "hover:bg-sidebar-control/8 hover:text-sidebar-control",
-    icon: "text-sidebar-control/85 group-hover:text-sidebar-control",
-    iconActive: "text-sidebar-control",
-    textActive: "text-sidebar-control",
-    chevron: "text-sidebar-control/75",
-  },
-  myworkspace: {
-    activeBg: "bg-sidebar-workspace/4",
-    hoverBg: "hover:bg-sidebar-workspace/8 hover:text-sidebar-workspace",
-    icon: "text-sidebar-workspace/85 group-hover:text-sidebar-workspace",
-    iconActive: "text-sidebar-workspace",
-    textActive: "text-sidebar-workspace",
-    chevron: "text-sidebar-workspace/75",
-  },
-  plan: {
-    activeBg: "bg-sidebar-plan/4",
-    hoverBg: "hover:bg-sidebar-plan/8 hover:text-sidebar-plan",
-    icon: "text-sidebar-plan/85 group-hover:text-sidebar-plan",
-    iconActive: "text-sidebar-plan",
-    textActive: "text-sidebar-plan",
-    chevron: "text-sidebar-plan/75",
-  },
-  execute: {
-    activeBg: "bg-sidebar-execute/4",
-    hoverBg: "hover:bg-sidebar-execute/8 hover:text-sidebar-execute",
-    icon: "text-sidebar-execute/85 group-hover:text-sidebar-execute",
-    iconActive: "text-sidebar-execute",
-    textActive: "text-sidebar-execute",
-    chevron: "text-sidebar-execute/75",
-  },
-  check: {
-    activeBg: "bg-sidebar-check/4",
-    hoverBg: "hover:bg-sidebar-check/8 hover:text-sidebar-check",
-    icon: "text-sidebar-check/85 group-hover:text-sidebar-check",
-    iconActive: "text-sidebar-check",
-    textActive: "text-sidebar-check",
-    chevron: "text-sidebar-check/75",
-  },
-  improve: {
-    activeBg: "bg-sidebar-improve/4",
-    hoverBg: "hover:bg-sidebar-improve/8 hover:text-sidebar-improve",
-    icon: "text-sidebar-improve/85 group-hover:text-sidebar-improve",
-    iconActive: "text-sidebar-improve",
-    textActive: "text-sidebar-improve",
-    chevron: "text-sidebar-improve/75",
-  },
-  standardize: {
-    activeBg: "bg-sidebar-standardize/4",
-    hoverBg: "hover:bg-sidebar-standardize/8 hover:text-sidebar-standardize",
-    icon: "text-sidebar-standardize/85 group-hover:text-sidebar-standardize",
-    iconActive: "text-sidebar-standardize",
-    textActive: "text-sidebar-standardize",
-    chevron: "text-sidebar-standardize/75",
-  },
-  system: {
-    activeBg: "bg-sidebar-system/4",
-    hoverBg: "hover:bg-sidebar-system/8 hover:text-sidebar-system",
-    icon: "text-sidebar-system/85 group-hover:text-sidebar-system",
-    iconActive: "text-sidebar-system",
-    textActive: "text-sidebar-system",
-    chevron: "text-sidebar-system/75",
-  },
-  erpData: {
-    activeBg: "bg-slate-500/6",
-    hoverBg: "hover:bg-slate-500/10 hover:text-slate-700",
-    icon: "text-slate-700/85 group-hover:text-slate-700",
-    iconActive: "text-slate-700",
-    textActive: "text-slate-700",
-    chevron: "text-slate-700/80",
-  },
-  importSources: {
-    activeBg: "bg-blue-500/4",
-    hoverBg: "hover:bg-blue-500/8 hover:text-blue-600",
-    icon: "text-blue-600/85 group-hover:text-blue-600",
-    iconActive: "text-blue-600",
-    textActive: "text-blue-600",
-    chevron: "text-blue-600/75",
-  },
-  importJobs: {
-    activeBg: "bg-indigo-500/6",
-    hoverBg: "hover:bg-indigo-500/10 hover:text-indigo-500",
-    icon: "text-indigo-500/80 group-hover:text-indigo-500",
-    iconActive: "text-indigo-500",
-    textActive: "text-indigo-500",
-    chevron: "text-indigo-500/75",
-  },
-  fileHistory: {
-    activeBg: "bg-slate-400/4",
-    hoverBg: "hover:bg-slate-400/8 hover:text-slate-500",
-    icon: "text-slate-500/80 group-hover:text-slate-500",
-    iconActive: "text-slate-500",
-    textActive: "text-slate-500",
-    chevron: "text-slate-500/75",
-  },
-  mappingRules: {
-    activeBg: "bg-teal-500/4",
-    hoverBg: "hover:bg-teal-500/8 hover:text-teal-600",
-    icon: "text-teal-600/85 group-hover:text-teal-600",
-    iconActive: "text-teal-600",
-    textActive: "text-teal-600",
-    chevron: "text-teal-600/75",
-  },
-  validationErrors: {
-    activeBg: "bg-amber-500/4",
-    hoverBg: "hover:bg-amber-500/8 hover:text-amber-600",
-    icon: "text-amber-600/85 group-hover:text-amber-600",
-    iconActive: "text-red-600",
-    textActive: "text-red-600",
-    chevron: "text-amber-600/75",
-  },
-  filePreview: {
-    activeBg: "bg-sky-500/4",
-    hoverBg: "hover:bg-sky-500/8 hover:text-sky-600",
-    icon: "text-sky-600/85 group-hover:text-sky-600",
-    iconActive: "text-sky-600",
-    textActive: "text-sky-600",
-    chevron: "text-sky-600/75",
-  },
-  compareResults: {
-    activeBg: "bg-indigo-500/4",
-    hoverBg: "hover:bg-indigo-500/8 hover:text-indigo-600",
-    icon: "text-indigo-600/85 group-hover:text-indigo-600",
-    iconActive: "text-indigo-600",
-    textActive: "text-indigo-600",
-    chevron: "text-indigo-600/75",
-  },
-  integrationStatus: {
-    activeBg: "bg-emerald-500/4",
-    hoverBg: "hover:bg-emerald-500/8 hover:text-emerald-600",
-    icon: "text-emerald-600/85 group-hover:text-emerald-600",
-    iconActive: "text-emerald-600",
-    textActive: "text-emerald-600",
-    chevron: "text-emerald-600/75",
-  },
-  manufacturing: {
-    activeBg: "bg-sidebar-manufacturing/4",
-    hoverBg: "hover:bg-sidebar-manufacturing/8 hover:text-sidebar-manufacturing",
-    icon: "text-sidebar-manufacturing/85 group-hover:text-sidebar-manufacturing",
-    iconActive: "text-sidebar-manufacturing",
-    textActive: "text-sidebar-manufacturing",
-    chevron: "text-sidebar-manufacturing/75",
-  },
-  materialBins: {
-    activeBg: "bg-sidebar-material-bins/6",
-    hoverBg: "hover:bg-sidebar-material-bins/10 hover:text-sidebar-material-bins",
-    icon: "text-sidebar-material-bins/85 group-hover:text-sidebar-material-bins",
-    iconActive: "text-sidebar-material-bins",
-    textActive: "text-sidebar-material-bins",
-    chevron: "text-sidebar-material-bins/75",
-  },
-  warehouses: {
-    activeBg: "bg-teal-500/6",
-    hoverBg: "hover:bg-teal-500/10 hover:text-teal-600",
-    icon: "text-teal-600/85 group-hover:text-teal-600",
-    iconActive: "text-teal-600",
-    textActive: "text-teal-600",
-    chevron: "text-teal-600/75",
-  },
-  flow: {
-    activeBg: "bg-sidebar-flow/6",
-    hoverBg: "hover:bg-sidebar-flow/10 hover:text-sidebar-flow",
-    icon: "text-sidebar-flow/85 group-hover:text-sidebar-flow",
-    iconActive: "text-sidebar-flow",
-    textActive: "text-sidebar-flow",
-    chevron: "text-sidebar-flow/75",
-  },
-  components: {
-    activeBg: "bg-sidebar-components/6",
-    hoverBg: "hover:bg-sidebar-components/8 hover:text-sidebar-components",
-    icon: "text-sidebar-components/85 group-hover:text-sidebar-components",
-    iconActive: "text-sidebar-components",
-    textActive: "text-sidebar-components",
-    chevron: "text-sidebar-components/75",
-  },
-  product: {
-    activeBg: "bg-sidebar-product/6",
-    hoverBg: "hover:bg-sidebar-product/8 hover:text-sidebar-product",
-    icon: "text-sidebar-product/85 group-hover:text-sidebar-product",
-    iconActive: "text-sidebar-product",
-    textActive: "text-sidebar-product",
-    chevron: "text-sidebar-product/75",
-  },
-  reference: {
-    activeBg: "bg-sidebar-reference/4",
-    hoverBg: "hover:bg-sidebar-reference/8 hover:text-sidebar-reference",
-    icon: "text-sidebar-reference/85 group-hover:text-sidebar-reference",
-    iconActive: "text-sidebar-reference",
-    textActive: "text-sidebar-reference",
-    chevron: "text-sidebar-reference/75",
-  },
-  settings: {
-    activeBg: "bg-sidebar-settings/8",
-    hoverBg: "hover:bg-sidebar-settings/8 hover:text-sidebar-settings",
-    icon: "text-sidebar-settings/85 group-hover:text-sidebar-settings",
-    iconActive: "text-sidebar-settings",
-    textActive: "text-sidebar-settings",
-    chevron: "text-sidebar-settings/75",
-  },
-  docs: {
-    activeBg: "bg-sidebar-docs/4",
-    hoverBg: "hover:bg-sidebar-docs/8 hover:text-sidebar-docs",
-    icon: "text-sidebar-docs/90 group-hover:text-sidebar-docs",
-    iconActive: "text-sidebar-docs",
-    textActive: "text-sidebar-docs",
-    chevron: "text-sidebar-docs/85",
-  },
-  erp: {
-    activeBg: "bg-sidebar-erp/4",
-    hoverBg: "hover:bg-sidebar-erp/8 hover:text-sidebar-erp",
-    icon: "text-sidebar-erp/85 group-hover:text-sidebar-erp",
-    iconActive: "text-sidebar-erp",
-    textActive: "text-sidebar-erp",
-    chevron: "text-sidebar-erp/75",
-  },
+// ── Color state tokens (shared across all modules) ──
+export const sidebarState = {
+  // Default menu item
+  item: "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-foreground",
+  // Active selected item (emerald branding)
+  itemActive: "bg-sidebar-active-bg text-sidebar-active-fg border-l-2 border-sidebar-control",
+  // Expanded parent item
+  expanded: "bg-sidebar-hover text-sidebar-foreground",
+  // Child item default
+  child: "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground",
+  // Child item active
+  childActive: "bg-sidebar-active-bg text-sidebar-active-fg border-l-2 border-sidebar-control",
+  // Chevron default
+  chevron: "text-sidebar-muted",
+  // Chevron active/expanded
+  chevronEm: "text-sidebar-control",
+};
+
+// ── Module icon colors (module identity via icon only) ──
+export const sectionColors: Record<string, string> = {
+  control: "text-blue-600",
+  myworkspace: "text-violet-600",
+  plan: "text-amber-700",
+  execute: "text-emerald-700",
+  maintenance: "text-blue-700",
+  check: "text-sky-700",
+  safety: "text-red-600",
+  improve: "text-green-700",
+  standardize: "text-slate-600",
+  system: "text-slate-600",
+  docs: "text-emerald-800",
+  // Sub-modules — neutral slate
+  manufacturing: "text-slate-600",
+  materialBins: "text-slate-600",
+  warehouses: "text-slate-600",
+  flow: "text-slate-600",
+  components: "text-slate-600",
+  product: "text-slate-600",
+  reference: "text-slate-600",
+  settings: "text-slate-600",
+  erpData: "text-slate-600",
+  erp: "text-slate-600",
+  importSources: "text-slate-600",
+  importJobs: "text-slate-600",
+  fileHistory: "text-slate-600",
+  mappingRules: "text-slate-600",
+  validationErrors: "text-slate-600",
+  filePreview: "text-slate-600",
+  compareResults: "text-slate-600",
+  integrationStatus: "text-slate-600",
 };
 
 export const masterListTokens = {
@@ -243,8 +70,8 @@ export const masterListTokens = {
   containerPad: "pl-2",
   rail: "border-l-[2px]",
   contentPad: "px-3",
-  selected: "border-l-selection-border bg-table-selected",
-  unselected: "border-l-transparent hover:bg-muted hover:bg-muted",
+  selected: "border-l-sidebar-control bg-sidebar-active-bg",
+  unselected: "border-l-transparent hover:bg-sidebar-hover",
 };
 
 export function sidebarIndent(depth: number): number {

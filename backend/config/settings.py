@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "docs_manager",
     "maintenance",
     "administration",
+    "workspace",
 ]
 
 MIDDLEWARE = [

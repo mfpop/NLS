@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import { prefetchRoute } from "@/routes/routePrefetch";
 import { isRouteItemActive } from "./navigationConfig";
-import { sidebarIndent, sidebarNavTokens, sectionColors } from "./sidebarStyles";
+import { sidebarIndent, sidebarNavTokens, sidebarState, sectionColors } from "./sidebarStyles";
 
 const HOVER_PREFETCH_DELAY_MS = 120;
 
@@ -49,9 +49,13 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, sectionId, on
     prefetchRoute(to);
   }, [clearHoverTimer, to]);
 
-  const colors = sectionColors[sectionId ?? "control"] ?? sectionColors.control;
+  const moduleColor = sectionColors[sectionId ?? "control"] ?? sectionColors.control;
   const isActive = isRouteItemActive(pathname, to);
-  const colorClass = isActive ? colors.textActive : colors.icon;
+  const stateClass = isActive ? sidebarState.itemActive : sidebarState.item;
+  const isChildItem = depth > 0;
+  const childStateClass = isActive ? sidebarState.childActive : sidebarState.child;
+  // Use child state for items with depth, item state for top-level
+  const finalState = isChildItem ? childStateClass : stateClass;
 
   return (
     <NavLink
@@ -63,13 +67,11 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, sectionId, on
       onBlur={clearHoverTimer}
       onFocus={handleFocusPrefetch}
       onTouchStart={handleTouchPrefetch}
-      className={`${sidebarNavTokens.row} ${isActive ? sidebarNavTokens.active : sidebarNavTokens.inactive} ${
-        isActive ? `${colors.activeBg} ${colors.textActive}` : `${colors.hoverBg} ${colors.icon}`
-      }`}
+      className={`${sidebarNavTokens.row} ${isActive ? sidebarNavTokens.active : sidebarNavTokens.inactive} ${finalState}`}
       style={{ paddingLeft: sidebarIndent(depth) }}
     >
-      <Icon className={`${sidebarNavTokens.icon} ${colorClass} ${isActive ? "stroke-[2.6]" : ""}`} />
-      <span className={`${sidebarNavTokens.label} ${colorClass}`}>{label}</span>
+      <Icon className={`${sidebarNavTokens.icon} ${moduleColor} ${isActive ? "stroke-[2.6]" : ""}`} />
+      <span className={`${sidebarNavTokens.label} ${isActive ? (isChildItem ? "text-sidebar-active-fg" : "text-sidebar-active-fg") : "text-sidebar-foreground"}`}>{label}</span>
     </NavLink>
   );
 }

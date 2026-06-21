@@ -18,7 +18,7 @@ from shared.types import (
     ExecutionResult,
 )
 from shared.interfaces import Agent, MemoryStore, Router, ContextProvider, ResultFormatter
-from shared.constants import CONTEXT_FILES
+from shared.constants import CONTEXT_FILES, AGENT_IDS
 from memory.memory_store import get_memory_store
 from execution.agent_routing import LeanSyncRouter
 from execution.task_runner import TaskRunner
@@ -119,6 +119,11 @@ class ExecutionLoop:
         task.context["routing_decision"] = routing_decision
         task.context["workspace_root"] = self.workspace_root
 
+        default_entry_id = self.cfg.get("routing", {}).get("default_entry_agent", "")
+        if default_entry_id and self.registry.get(default_entry_id):
+            logger.info("Default entry agent '%s' active — orchestrating through Manager", default_entry_id)
+            return self._run_manager_orchestration(task, context_docs, routing_decision)
+
         agent = self.registry.get(agent_id)
         if not agent:
             logger.error("Agent '%s' not found in registry", agent_id)
@@ -173,6 +178,96 @@ class ExecutionLoop:
         )
 
         return result
+
+    def _run_manager_orchestration(
+        self,
+        task: Task,
+        context_docs: list[ContextDocument],
+        routing_decision: RoutingDecision,
+    ) -> ExecutionResult:
+        user_input = task.input
+        intent = routing_decision.intent
+        context_files_used = [doc.path for doc in context_docs]
+
+        intent_to_specialist = {
+            Intent.GOVERNANCE: AGENT_IDS["governance"],
+            Intent.MANUFACTURING_STRUCTURE: AGENT_IDS["manufacturing_structure"],
+            Intent.ARCHITECTURE_AUDIT: AGENT_IDS["architecture_audit"],
+            Intent.BACKEND_GRAPHQL: AGENT_IDS["backend_graphql"],
+            Intent.FRONTEND_UI: AGENT_IDS["frontend_ui"],
+            Intent.GENERAL_CHAT: AGENT_IDS["general_chat"],
+        }
+
+        specialist_id = intent_to_specialist.get(intent, AGENT_IDS["general_chat"])
+        specialist = self.registry.get(specialist_id)
+        specialist_name = specialist_id.split(".", 1)[-1].strip() if specialist_id else "unknown"
+
+        handoff_lines = [
+            "## Response",
+            "",
+            f"Your request has been classified as **{intent.name.replace('_', ' ').title()}**.",
+            f"Routing to **{specialist_name}** for specialized handling.",
+            "",
+            "## Routing",
+            f"- Intent: `{intent.name}`",
+            f"- Specialist: `{specialist_id}`",
+            f"- Confidence: {routing_decision.confidence:.1f}",
+            f"- Fallback: {routing_decision.fallback_used}",
+            "",
+        ]
+
+        if specialist:
+            handoff_lines.extend([
+                "## Handoff",
+                "",
+                "```text",
+                "Task:",
+                f"  {user_input[:200]}",
+                "Target Agent:",
+                f"  {specialist_id}",
+                "Context:",
+                f"  {specialist_name} — {specialist.mission[:100] if specialist.mission else ''}",
+                "Rules:",
+                "  - Domain services own business logic",
+                "  - Resolvers thin, frontend has no business rules",
+                "  - No mock/hardcoded operational data",
+                "  - Files under 1000 lines",
+                "Validation:",
+                "  - Verify against ACTIVE_DECISIONS.md",
+                "  - Preserve Clean Architecture layering",
+                "```",
+            ])
+
+        result_text = "\n".join(handoff_lines)
+
+        if self.store_results:
+            self.memory.save(
+                "runtime",
+                task.id,
+                {
+                    "input": user_input,
+                    "agent": AGENT_IDS["manager"],
+                    "specialist": specialist_id,
+                    "intent": intent.name,
+                    "status": "SUCCESS",
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
+            )
+
+        logger.info(
+            "Manager orchestrated: intent=%s specialist=%s",
+            intent.name, specialist_id,
+        )
+
+        return ExecutionResult(
+            task_id=task.id,
+            agent_id=AGENT_IDS["manager"],
+            skill_name="manager_orchestrate",
+            status=SkillStatus.SUCCESS,
+            output=result_text,
+            context_files_used=context_files_used,
+            routing_decision=routing_decision,
+        )
 
 
 def create_default_loop(workspace_root: str = ".", context_base: str = "") -> ExecutionLoop:

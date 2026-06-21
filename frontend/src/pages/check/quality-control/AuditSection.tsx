@@ -4,13 +4,11 @@ import { Plus, MapPin, ClipboardList } from "lucide-react";
 import {
   AUDITS_QUERY, AUDIT_TEMPLATES_QUERY, AUDIT_EXECUTION_FORM_QUERY,
   CREATE_AUDIT_FROM_TEMPLATE_MUTATION, COMPLETE_AUDIT_MUTATION,
-  SAVE_AUDIT_ANSWERS_BULK_MUTATION,  CLOSE_FINDING_MUTATION,
+  SAVE_AUDIT_ANSWERS_BULK_MUTATION,
   CREATE_AUDIT_FINDING_FROM_ANSWER_MUTATION,
   CREATE_FINDINGS_FROM_AUDIT_MUTATION,
   UPDATE_AUDIT_MUTATION, DELETE_AUDIT_MUTATION,
   INSTALL_DEFAULT_QC_TEMPLATES_MUTATION,
-  INSTALL_DEFAULT_SAFETY_TEMPLATES_MUTATION,
-  INSTALL_DEFAULT_MATERIAL_TEMPLATES_MUTATION,
 } from "@/graphql/auditQueries";
 import type { DocumentNode } from "graphql";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -70,9 +68,9 @@ function FindingsTable({ findings, onClose }: { findings: AuditFindingData[]; on
   );
 }
 
-export function useAuditSection(search: string, filterStatus: string, activePlantId: string | null, productionLineId: string | null, onMessage: (msg: string, tone?: "success" | "error") => void, controlArea: string = "QUALITY", moduleScope: string = "QUALITY_CONTROL", installMutation?: DocumentNode) {
+export function useAuditSection(_search: string, filterStatus: string, activePlantId: string | null, productionLineId: string | null, onMessage: (msg: string, tone?: "success" | "error") => void, controlArea: string = "QUALITY", moduleScope: string = "QUALITY_CONTROL", installMutation?: DocumentNode) {
   // ── State ──
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [_selectedId, _setSelectedId] = useState<number | null>(null);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState(false);
   const [execId, setExecId] = useState<number | null>(null);
@@ -82,7 +80,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   const [editing, setEditing] = useState(false);
   const [archiveConfirmId, setArchiveConfirmId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [closeFindingId, setCloseFindingId] = useState<string | null>(null);
+  const [_closeFindingId, setCloseFindingId] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
 
   // Header form fields
@@ -138,7 +136,7 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
   const [bulkSave] = useMutation<any>(SAVE_AUDIT_ANSWERS_BULK_MUTATION);
   const [createFindingMut] = useMutation<any>(CREATE_AUDIT_FINDING_FROM_ANSWER_MUTATION);
   const [createFindingsFromAuditMut] = useMutation<any>(CREATE_FINDINGS_FROM_AUDIT_MUTATION);
-  const [closeFindingMut] = useMutation<any>(CLOSE_FINDING_MUTATION);
+
   const [updateAuditMut] = useMutation<any>(UPDATE_AUDIT_MUTATION);
   const [deleteAuditMut] = useMutation<any>(DELETE_AUDIT_MUTATION);
   const [installTpl] = useMutation<any>(installMutation || INSTALL_DEFAULT_QC_TEMPLATES_MUTATION);
@@ -421,11 +419,6 @@ export function useAuditSection(search: string, filterStatus: string, activePlan
       onMessage(e?.message || "Finding create failed", "error");
     }
   }, [findingForAnswer, findingDesc, findingSev, findingDd, findingOwner, createFindingMut, execQ, auditsQ, onMessage, bulkSave, localAns]);
-
-  const hCloseFinding = useCallback(async () => {
-    if (!closeFindingId) return;
-    await closeFindingMut({ variables: { id: closeFindingId } }); setCloseFindingId(null); onMessage("Finding closed");
-  }, [closeFindingId, closeFindingMut, onMessage]);
 
   const hCreateFindings = useCallback(async () => {
     if (!execId) return;

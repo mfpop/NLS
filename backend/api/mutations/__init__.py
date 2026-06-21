@@ -13,6 +13,7 @@ from api.mutations.mer import MERMutation
 from api.mutations.administration import AdministrationMutation
 from check.schema import CheckMutation
 from maintenance.schema import MaintenanceMutation
+from workspace.schema import WorkspaceMutation
 from api.mutations.manufacturing_structure import ManufacturingStructureMutation
 from api.mutations.manufacturing_schedule import ManufacturingScheduleMutation
 from api.mutations.manufacturing_reference import ManufacturingReferenceMutation
@@ -44,6 +45,7 @@ class Mutation(
     MERMutation,
     CheckMutation,
     MaintenanceMutation,
+    WorkspaceMutation,
 ):
     """Root mutation — domain mutations are added here as they get implemented."""
 

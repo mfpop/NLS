@@ -1,14 +1,14 @@
 import { useState, useCallback, type ReactNode } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
-  AlertTriangle, FileText, Target, User, Clock,
-  Wrench, ArrowRight, ArrowLeft, Save, XCircle,
-  CalendarClock, AlertCircle, Activity,
+  AlertTriangle, FileText, Target,
+  Wrench, ArrowRight, Save, XCircle,
+  AlertCircle, Activity,
 } from "lucide-react";
 import { BREAKDOWNS_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { mockBreakdowns } from "@/demo/maintenanceMockData";
 import {
-  START_BREAKDOWN_REPAIR_MUTATION, COMPLETE_BREAKDOWN_REPAIR_MUTATION,
+  COMPLETE_BREAKDOWN_REPAIR_MUTATION,
   CLOSE_BREAKDOWN_MUTATION, CANCEL_BREAKDOWN_MUTATION,
   CREATE_WO_FROM_BREAKDOWN_MUTATION, REPORT_BREAKDOWN_MUTATION,
   UPDATE_BREAKDOWN_MUTATION,
@@ -16,7 +16,7 @@ import {
 import {
   BREAKDOWN_STATUS_STYLES, SEVERITY_STYLES, SEVERITY_BG,
   WORKFLOW_STEPS, wfLabel, severityIcon,
-  SEVERITY_OPTIONS, PRIORITY_OPTIONS, PRIORITY_STYLES, statusDotColor,
+  SEVERITY_OPTIONS, PRIORITY_OPTIONS, PRIORITY_STYLES,
 } from "./BreakdownStatusStyles";
 import type { CascadeValue } from "./TargetCascade";
 import { resolveTarget } from "./TargetCascade";
@@ -152,7 +152,6 @@ export function useBreakdownSection(
   const [woAssignedTo, setWoAssignedTo] = useState("");
   const [woSubmitting, setWoSubmitting] = useState(false);
 
-  const [startRepairMut] = useMutation(START_BREAKDOWN_REPAIR_MUTATION);
   const [completeRepairMut] = useMutation(COMPLETE_BREAKDOWN_REPAIR_MUTATION);
   const [closeBDMut] = useMutation(CLOSE_BREAKDOWN_MUTATION);
   const [cancelBDMut] = useMutation(CANCEL_BREAKDOWN_MUTATION);

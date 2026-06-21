@@ -163,13 +163,6 @@ export function ApplicationSettingsPage() {
     setTheme(value);
   };
   useEffect(() => {
-    const themeValue = settingsByKey.get("appearance.theme_default")?.value;
-    if (themeValue === "system" || themeValue === "light" || themeValue === "dark") {
-      applyApplicationTheme(themeValue);
-    }
-  }, [settingsByKey]);
-
-  useEffect(() => {
     if (!statusMessage) return;
     const timer = setTimeout(() => setStatusMessage(null), 5000);
     return () => clearTimeout(timer);
@@ -198,11 +191,7 @@ export function ApplicationSettingsPage() {
     setDraft({});
     setStatusMessage(null);
     try {
-      const result = await refetch();
-      const themeValue = result.data?.applicationSettings?.find((setting) => setting.key === "appearance.theme_default")?.value;
-      if (themeValue === "system" || themeValue === "light" || themeValue === "dark") {
-        applyApplicationTheme(themeValue);
-      }
+      await refetch();
       setStatusMessage("Application settings refreshed.");
     } catch (refreshError) {
       setStatusMessage(refreshError instanceof Error ? refreshError.message : "Refresh failed.");

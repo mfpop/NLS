@@ -5,7 +5,7 @@ import {
   ShieldAlert, Ban, ClipboardX,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -448,10 +448,12 @@ export function ProblemsPage() {
         <div>
           <Toolbar left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search problems..." />}
             right={<>
-              <ToolbarSelect value={filterProblemType} onChange={setFilterProblemType}
+              <ToolbarDropdown value={filterProblemType} onChange={setFilterProblemType}
                 options={PROBLEM_TYPE_OPTIONS} className="w-36" />
-              <ToolbarSelect value={filterStatus} onChange={setFilterStatus}
+
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={PROBLEM_STATUS_OPTIONS} className="w-32" />
+
               <div className="flex-1" />
               <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../../styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { CheckCircle, Package, Factory, Layers, Warehouse, Box, RefreshCw, Plus, Pencil, Trash2, X, GripVertical, Check, Map, Route, Database, ArrowRight, ArrowLeft, AlertTriangle, Building2, Shield, LayoutGrid, LineChart, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
@@ -841,9 +841,9 @@ export function MaterialBinsPage() {
         <Toolbar
           left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search bins..." />}
           right={<>
-            <ToolbarSelect value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
-            <ToolbarSelect value={filters.binType} onChange={(v) => setFilters((p) => ({ ...p, binType: v }))} options={[{ value: "", label: "All Types" }, ...BIN_TYPE_OPTIONS]} className="w-50" />
-            <ToolbarSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
+            <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
+            <ToolbarDropdown value={filters.binType} onChange={(v) => setFilters((p) => ({ ...p, binType: v }))} options={[{ value: "", label: "All Types" }, ...BIN_TYPE_OPTIONS]} className="w-50" />
+            <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
             <div className="flex-1" />
             <div className="flex items-center gap-2 shrink-0">
               {isForm ? (

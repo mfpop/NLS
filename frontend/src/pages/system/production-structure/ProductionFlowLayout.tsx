@@ -4,7 +4,7 @@ import { useMutation } from "@apollo/client/react";
 import { Database, Factory, TrendingUpDown, Component, Dumbbell, GripVertical, RefreshCw, Plus, Pencil, Trash2, Check, X, Rocket } from "lucide-react";
 import { SEED_GPT_LINE_MUTATION, CLEANUP_GPT_LINE_MUTATION } from "@/graphql/productionLineMutations";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "../../../styles/themeTokens";
 import { useDataManagementOverview } from "@/hooks/useDataManagementOverview";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -275,7 +275,7 @@ export function ProductionFlowLayout() {
         left={<ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search tree" />}
         right={
           <>
-            <ToolbarSelect
+            <ToolbarDropdown
               value={statusFilter}
               onChange={setStatusFilter}
               options={[
@@ -284,6 +284,7 @@ export function ProductionFlowLayout() {
                 { value: "inactive", label: "Inactive" },
               ]}
             />
+
             <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
             <ToolbarButton icon={Trash2} label={cleaning ? "Cleaning..." : "Cleanup GPT"} disabled={cleaning} onClick={async () => {
               if (!window.confirm("This will delete ALL GPT line data (departments, RGs, resources, variant, PNs, BOM, line, bins). Continue?")) return;

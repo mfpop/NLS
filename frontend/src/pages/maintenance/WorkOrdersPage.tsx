@@ -9,7 +9,8 @@ import {
   Archive, Eye, AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarSelect, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { SplitToolbar } from "@/components/shared/SplitToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useActiveLine } from "@/hooks/useActiveLine";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -292,7 +293,7 @@ export function WorkOrdersPage() {
   }, []); // only on mount
 
   const splitRef = useRef<HTMLDivElement>(null);
-  const [leftPct, setLeftPct] = useState(24);
+  const [leftPct, setLeftPct] = useState(20);
 
   const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -1270,15 +1271,20 @@ export function WorkOrdersPage() {
         subtitle="Lean maintenance: plan → execute → complete with spare parts tracking"
       />
       <div className="print-ignore">
-        <Toolbar
-          left={selId && view !== "form" ? (
-            <div className="flex items-center gap-1">
-              <ToolbarSearch value={search} onChange={setSearch} placeholder="Search WOs..." />
-              <ToolbarSelect value={filterType} onChange={setFilterType} options={TYPE_OPTIONS} className="w-36" />
-              <ToolbarSelect value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-32" />
-            </div>
+        <SplitToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search WOs..."
+          filters={selId && view !== "form" ? (
+            <>
+              <ToolbarDropdown value={filterType} onChange={setFilterType} options={TYPE_OPTIONS} className="w-36" />
+
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-32" />
+
+            </>
           ) : undefined}
-          right={<div className="flex items-center gap-1 shrink-0">{renderToolbar()}</div>} />
+          actions={<div className="flex items-center gap-1 shrink-0">{renderToolbar()}</div>}
+        />
       </div>
       {renderMain()}
       {/* Page footer — state-specific metadata */}

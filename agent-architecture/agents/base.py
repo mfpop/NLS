@@ -51,6 +51,7 @@ class NexusAgent(Agent):
         ]
         self._response_rules = meta.get("response_rules", [])
         self._handoff_rules = meta.get("handoff_rules", [])
+        self._default_entry = meta.get("default_entry", False)
 
     @property
     def id(self) -> str:
@@ -92,9 +93,21 @@ class NexusAgent(Agent):
     def handoff_rules(self) -> list[str]:
         return list(self._handoff_rules)
 
+    @property
+    def default_entry(self) -> bool:
+        return self._default_entry
+
     def decide(self, task: Task) -> AgentDecision:
+        if not self._skills:
+            return AgentDecision(
+                agent_id=self._id,
+                skill_name="",
+                confidence=1.0,
+                routing_reason="manager orchestrator — delegates to specialists",
+            )
+
         best_score = 0.0
-        best_skill = self._skills[0].id if self._skills else ""
+        best_skill = self._skills[0].id
         routing_reason = "default fallback"
 
         for skill in self._skills:
@@ -153,4 +166,5 @@ def create_all_agents() -> list[NexusAgent]:
         create_agent(3, "Architecture Audit"),
         create_agent(4, "Backend-GraphQL"),
         create_agent(5, "Frontend-UI"),
+        create_agent(10, "Manager"),
     ]

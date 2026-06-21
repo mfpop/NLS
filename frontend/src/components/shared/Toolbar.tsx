@@ -195,12 +195,12 @@ interface ToolbarProps {
 
 export function Toolbar({ left, center, right, className = "", leftWidth = "w-[20%]" }: ToolbarProps) {
   return (
-    <div className={`flex h-10 shrink-0 items-center border-b border-border bg-white overflow-hidden select-none ${className}`}>
+    <div className={`flex h-10 shrink-0 items-center border-b border-border bg-white select-none ${className}`}>
       <div className={`${leftWidth} min-w-[240px] max-w-[360px] border-r border-border px-2 flex items-center h-full`}>
         {left && <div className="w-full">{left}</div>}
       </div>
       <div className="flex flex-1 min-w-0 items-center gap-2 px-2 h-full">
-        {center && <div className="flex items-center gap-2 shrink-0">{center}</div>}
+        {center && <div className="flex items-center gap-3 shrink-0">{center}</div>}
         {right && (
           <>
             <div className="flex-1 min-w-0" />

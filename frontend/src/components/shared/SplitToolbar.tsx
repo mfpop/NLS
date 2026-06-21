@@ -43,7 +43,7 @@ export function SplitToolbar({
       </div>
       <div className="flex flex-1 min-w-0 items-center gap-2 px-2 h-full">
         {filters && (
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             {filters}
           </div>
         )}

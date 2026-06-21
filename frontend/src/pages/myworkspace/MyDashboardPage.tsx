@@ -152,14 +152,9 @@ export function MyDashboardPage() {
       iconClass={theme.iconBoxBrand}
       toolbar={
         <Toolbar
-          right={
-            <div className="flex items-center gap-2 w-full">
-              <ToolbarDropdown value={filter} onChange={setFilter} options={FILTER_OPTIONS} className="w-28" />
-
-              <div className="flex-1" />
-              <ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />
-            </div>
-          }
+          left={<div />}
+          center={<ToolbarDropdown value={filter} onChange={setFilter} options={FILTER_OPTIONS} className="w-28" />}
+          right={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
         />
       }
       footer={

@@ -1,11 +1,10 @@
 import React from "react";
-import { Pencil, Check, X, Plus, Trash2, Briefcase, Loader2 } from "lucide-react";
+import { Trash2, Briefcase } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
 import type { WorkHistoryEntry } from "@/types/profile";
 import {
   FieldShell, MissingValue, EmptyBlock,
   inputClass, extractPeriodYear,
-  editIconButtonClass, saveIconButtonClass, dangerIconButtonClass,
 } from "./shared";
 
 interface WorkHistoryColumnProps {
@@ -13,9 +12,6 @@ interface WorkHistoryColumnProps {
   setWorkDraft: (draft: WorkHistoryEntry[] | ((prev: WorkHistoryEntry[]) => WorkHistoryEntry[])) => void;
   editingSection: string | null;
   startEditing: (section: string) => void;
-  cancelEditing: () => void;
-  handleSave: () => Promise<void>;
-  saving: boolean;
   fieldErrors: Record<string, string>;
   experienceRef: React.RefObject<HTMLDivElement | null>;
   normalized: {
@@ -23,9 +19,6 @@ interface WorkHistoryColumnProps {
     highlights: string[];
     score: { value: number; label: string };
     summary: string[];
-    tenure: string;
-    plants: number;
-    lines: number;
   };
 }
 
@@ -37,48 +30,21 @@ export function WorkHistoryColumn({
   setWorkDraft,
   editingSection,
   startEditing,
-  cancelEditing,
-  handleSave,
-  saving,
   fieldErrors,
   experienceRef,
   normalized,
 }: WorkHistoryColumnProps) {
   return (
-    <div ref={experienceRef} className={`flex flex-col min-h-0 overflow-hidden border-r border-border/70 ${theme.card}`}>
+    <div ref={experienceRef} className="flex flex-col min-h-0 overflow-hidden border-r border-border-major">
       {/* ── Header ──────────────────────────────────────────────────── */}
-      <header className={`flex h-12 items-center justify-between border-b border-border/70 px-4 shrink-0`}>
+      <header className={`flex h-12 items-center justify-between border-b border-border-major px-4 shrink-0`}>
         <div>
           <h2 className={`text-sm font-semibold ${theme.textPrimary}`}>Work history</h2>
           <p className={`text-[11px] ${theme.textMuted} leading-5`}>Roles, companies, and measurable impact</p>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {editingSection === "work" ? (
-            <>
-              <button type="button" onClick={handleSave} title="Save section" disabled={saving} className={saveIconButtonClass}>
-                {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setWorkDraft((prev) => [{ id: `w${Date.now()}`, role: "", company: "", period: "", description: "" }, ...prev])}
-                className={saveIconButtonClass}
-                title="Add entry"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-              <button type="button" onClick={cancelEditing} className={dangerIconButtonClass}>
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </>
-          ) : (
-            <button type="button" onClick={() => startEditing("work")} className={editIconButtonClass} title="Edit work history">
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
       </header>
 
-      <div className={`divide-y divide-border/70 overflow-y-auto`}>
+      <div className={`divide-y divide-slate-200 overflow-y-auto`}>
         {workDraft.length > 0 ? (
           [...workDraft].sort((a, b) => {
             const yearA = extractPeriodYear(a.period);
@@ -144,7 +110,7 @@ export function WorkHistoryColumn({
                       <textarea
                         value={job.description}
                         onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, description: e.target.value } : item)))}
-                        className={`w-full rounded border border-border/70 bg-muted/40 p-2.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground focus:border-success focus:outline-none`}
+                        className={`w-full rounded border border-slate-200 bg-muted/40 p-2.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground focus:border-success focus:outline-none`}
                         rows={4}
                         placeholder="Describe results, process improvements, or business impact."
                       />
@@ -168,7 +134,7 @@ export function WorkHistoryColumn({
                       <ul className="mt-1.5 space-y-1">
                         {normalized.roles[index].bullets.map((point, i) => (
                           <li key={i} className={`flex items-start gap-2 text-sm ${theme.textPrimary} leading-5`}>
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-border" />
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-200" />
                             <span>{point}</span>
                           </li>
                         ))}

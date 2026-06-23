@@ -427,7 +427,7 @@ export function PreventiveMaintenancePage() {
 
   const renderForm = () => (
     <div className="flex flex-1 min-h-0">
-      <div className="w-[25%] min-w-[200px] border-r border-border/20 bg-card/30 overflow-y-auto p-4 space-y-4">
+      <div className="w-[25%] min-w-[200px] border-r border-slate-200 bg-card/30 overflow-y-auto p-4 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <FileText className="h-3 w-3" /> Plan Info
         </p>
@@ -542,7 +542,7 @@ export function PreventiveMaintenancePage() {
 
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="sticky top-0 bg-card z-10 border-b border-border/30 px-5 py-3">
+        <div className="sticky top-0 bg-card z-10 border-b border-slate-200 px-5 py-3">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -646,7 +646,7 @@ export function PreventiveMaintenancePage() {
           </div>
 
           {/* Right 35%: Status, Target, Frequency, Technician, Linked WOs */}
-          <div className="border-l border-border/20 bg-card/20 p-5 space-y-5" style={{ flexBasis: "35%", minWidth: 240 }}>
+          <div className="border-l border-slate-200 bg-card/20 p-5 space-y-5" style={{ flexBasis: "35%", minWidth: 240 }}>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Details</h3>
               <div className="space-y-2.5">
@@ -785,8 +785,8 @@ export function PreventiveMaintenancePage() {
       {view === "dashboard" ? (
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left 20%: PM Plans Records Panel */}
-          <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-card/30" style={{ flexBasis: "20%", minWidth: 200 }}>
-            <div className="shrink-0 h-8 flex items-center border-b border-border/30 bg-muted/50 px-3">
+          <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-card/30" style={{ flexBasis: "20%", minWidth: 200 }}>
+            <div className="shrink-0 h-8 flex items-center border-b border-slate-200 bg-muted/50 px-3">
               <span className="text-xs font-medium text-muted-foreground">PM Plans</span>
               <span className="ml-auto text-[10px] font-mono text-muted-foreground">{plans.length}</span>
             </div>
@@ -878,7 +878,7 @@ export function PreventiveMaintenancePage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 h-7 flex items-center border-t border-border/30 bg-muted/50 px-3">
+            <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
               <span className="text-[10px] text-muted-foreground">{plans.length} plan{plans.length !== 1 ? "s" : ""}</span>
               {filterStatus && (
                 <span className="ml-auto text-[10px] text-muted-foreground">{statusLabel(filterStatus)}</span>
@@ -893,9 +893,9 @@ export function PreventiveMaintenancePage() {
       ) : (
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: List */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-card/30"
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-card/30"
           style={{ flexBasis: `${leftPct}%`, minWidth: 220 }}>
-          <div className="shrink-0 h-8 flex items-center border-b border-border/30 bg-muted/50 px-3">
+          <div className="shrink-0 h-8 flex items-center border-b border-slate-200 bg-muted/50 px-3">
             <span className="text-xs font-medium text-muted-foreground">PM Plans</span>
             <span className="ml-auto text-[10px] font-mono text-muted-foreground">{plans.length}</span>
           </div>
@@ -963,7 +963,7 @@ export function PreventiveMaintenancePage() {
               )}
             </div>
           )}
-          <div className="shrink-0 h-7 flex items-center border-t border-border/30 bg-muted/50 px-3">
+          <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
             <span className="text-[10px] text-muted-foreground">{plans.length} plan{plans.length !== 1 ? "s" : ""}</span>
             {duePlans.length > 0 && (
               <span className="ml-auto text-[10px] font-semibold text-red-500">{duePlans.length} due</span>
@@ -996,7 +996,7 @@ export function PreventiveMaintenancePage() {
       )}
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
+      <div className="shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
         <span className="font-semibold text-foreground">Preventive Maintenance</span>
         <span className="mx-1 h-3 w-px bg-border/30" />
         <span>{plans.length} plan{plans.length !== 1 ? "s" : ""}</span>

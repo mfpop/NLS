@@ -75,7 +75,8 @@ class AuditTemplateCreateInput:
     code: str
     name: str
     description: typing.Optional[str] = ""
-    module_scope: typing.Optional[str] = strawberry.field(name="moduleScope", default="")
+    module_scope: typing.Optional[str] = strawberry.field(name="moduleScope", default="PRODUCTION_CONTROL")
+    target_types: typing.Optional[list[str]] = strawberry.field(name="targetTypes", default=None)
     version: typing.Optional[str] = "1.0"
 
 
@@ -83,6 +84,8 @@ class AuditTemplateCreateInput:
 class AuditTemplateUpdateInput:
     name: typing.Optional[str] = None
     description: typing.Optional[str] = None
+    module_scope: typing.Optional[str] = strawberry.field(name="moduleScope", default=None)
+    target_types: typing.Optional[list[str]] = strawberry.field(name="targetTypes", default=None)
     status: typing.Optional[str] = None
     version: typing.Optional[str] = None
 
@@ -90,19 +93,24 @@ class AuditTemplateUpdateInput:
 @strawberry.input
 class AuditTemplateCategoryInput:
     template_id: int = strawberry.field(name="templateId")
+    code: str = ""
     name: str
     sequence: int = 0
+    is_required: bool = strawberry.field(name="isRequired", default=True)
 
 
 @strawberry.input
 class AuditTemplateCategoryUpdateInput:
+    code: typing.Optional[str] = None
     name: typing.Optional[str] = None
     sequence: typing.Optional[int] = None
+    is_required: typing.Optional[bool] = strawberry.field(name="isRequired", default=None)
 
 
 @strawberry.input
 class AuditTemplateQuestionInput:
     category_id: int = strawberry.field(name="categoryId")
+    code: str = ""
     question: str
     response_type: str = strawberry.field(name="responseType", default="PASS_FAIL_NA")
     is_required: bool = strawberry.field(name="isRequired", default=True)
@@ -113,6 +121,7 @@ class AuditTemplateQuestionInput:
 
 @strawberry.input
 class AuditTemplateQuestionUpdateInput:
+    code: typing.Optional[str] = None
     question: typing.Optional[str] = None
     response_type: typing.Optional[str] = strawberry.field(name="responseType", default=None)
     is_required: typing.Optional[bool] = strawberry.field(name="isRequired", default=None)

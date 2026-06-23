@@ -142,5 +142,6 @@ class AuthMutation:
                 role=role,
                 plant="",
                 department="",
+                display_name=user.get_full_name() or user.username,
             ),
         )

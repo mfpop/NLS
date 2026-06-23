@@ -2,6 +2,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
+  --font-windows: "Segoe UI Variable", "Segoe UI", "system-ui", -apple-system, sans-serif;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-app-shell: hsl(var(--app-shell));
@@ -13,6 +15,7 @@
   --color-muted-foreground: hsl(var(--muted-foreground));
   --color-border: hsl(var(--border));
   --color-border-strong: var(--border-strong);
+  --color-border-major: hsl(var(--border-major));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --color-primary: hsl(var(--primary));
@@ -393,6 +396,68 @@ textarea {
 .sidebar__line-list::-webkit-scrollbar-thumb {
   background: var(--border-soft, #d1d5db);
   border-radius: 999px;
+}
+
+/* Thin scrollbar: hidden by default, appears on hover/active */
+.scroll-thin::-webkit-scrollbar,
+.scroll-thin-y::-webkit-scrollbar {
+  width: 0;
+}
+.scroll-thin::-webkit-scrollbar,
+.scroll-thin-x::-webkit-scrollbar {
+  height: 0;
+}
+.scroll-thin:hover::-webkit-scrollbar,
+.scroll-thin-y:hover::-webkit-scrollbar {
+  width: 3px;
+}
+.scroll-thin:hover::-webkit-scrollbar,
+.scroll-thin-x:hover::-webkit-scrollbar {
+  height: 3px;
+}
+.scroll-thin::-webkit-scrollbar-thumb,
+.scroll-thin-y::-webkit-scrollbar-thumb,
+.scroll-thin-x::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+  transition: background 0.12s ease;
+}
+.scroll-thin:hover::-webkit-scrollbar-thumb,
+.scroll-thin-y:hover::-webkit-scrollbar-thumb,
+.scroll-thin-x:hover::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+}
+.scroll-thin::-webkit-scrollbar-track,
+.scroll-thin-y::-webkit-scrollbar-track,
+.scroll-thin-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-thin,
+.scroll-thin-y,
+.scroll-thin-x {
+  scrollbar-width: thin;
+}
+
+/* Show scroll-thin scrollbar when parent .scroll-section is hovered or focused */
+.scroll-section:hover .scroll-thin::-webkit-scrollbar,
+.scroll-section:focus-within .scroll-thin::-webkit-scrollbar,
+.scroll-section:hover .scroll-thin-y::-webkit-scrollbar,
+.scroll-section:focus-within .scroll-thin-y::-webkit-scrollbar {
+  width: 3px;
+}
+.scroll-section:hover .scroll-thin::-webkit-scrollbar,
+.scroll-section:focus-within .scroll-thin::-webkit-scrollbar,
+.scroll-section:hover .scroll-thin-x::-webkit-scrollbar,
+.scroll-section:focus-within .scroll-thin-x::-webkit-scrollbar {
+  height: 3px;
+}
+.scroll-section:hover .scroll-thin::-webkit-scrollbar-thumb,
+.scroll-section:focus-within .scroll-thin::-webkit-scrollbar-thumb,
+.scroll-section:hover .scroll-thin-y::-webkit-scrollbar-thumb,
+.scroll-section:focus-within .scroll-thin-y::-webkit-scrollbar-thumb,
+.scroll-section:hover .scroll-thin-x::-webkit-scrollbar-thumb,
+.scroll-section:focus-within .scroll-thin-x::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
 }
 
 .sidebar__nav {

@@ -86,11 +86,15 @@ export function DocumentControlPage() {
 
       <Toolbar
         left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search documents..." />}
-        right={
+        center={
           <>
             <ToolbarDropdown value={typeFilter} onChange={setTypeFilter} options={[{ value: "", label: "All Types" }, ...docTypes.map((dt) => ({ value: dt, label: typeLabels[dt] || dt }))]} />
             <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "", label: "All Statuses" }, { value: "DRAFT", label: "Draft" }, { value: "APPROVED", label: "Approved" }, { value: "ARCHIVED", label: "Archived" }]} />
             <ToolbarDropdown value={controlledFilter} onChange={setControlledFilter} options={[{ value: "", label: "All Copies" }, { value: "controlled", label: "Controlled" }, { value: "uncontrolled", label: "Uncontrolled" }]} />
+          </>
+        }
+        right={
+          <>
             <span className="mx-0.5 h-5 w-px bg-border/30" />
             <ToolbarButton icon={RefreshCw} label={loading ? "Refreshing..." : "Refresh"} onClick={() => refetch()} disabled={loading} />
           </>

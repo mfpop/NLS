@@ -385,7 +385,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                       {upcomingDeadlines.map((m) => {
                         const days = daysUntil(m.dueDate);
                         return (
-                          <div key={m.id} className="flex items-center gap-2 py-1 border-b border-slate-200 last:border-0">
+                          <div key={m.id} className="flex items-center gap-2 py-1 border-b border-border-major last:border-0">
                             <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
@@ -409,7 +409,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                   ) : (
                     <div className="space-y-1">
                       {recentMERs.map((m) => (
-                        <div key={m.id} className="flex items-center gap-2 py-1 border-b border-slate-200 last:border-0">
+                        <div key={m.id} className="flex items-center gap-2 py-1 border-b border-border-major last:border-0">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                               <StatusDot status={m.status} />
@@ -837,7 +837,7 @@ export function ManufacturingEngineeringRequestsPage() {
         {isForm ? renderForm() : (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {/* Header */}
-            <div className="shrink-0 border-b border-border/30 px-5 py-3 flex items-center gap-3">
+            <div className="shrink-0 border-b border-border-major px-5 py-3 flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <div className={`text-sm font-bold ${theme.textPrimary} truncate`}>{sel.title}</div>
@@ -895,7 +895,7 @@ export function ManufacturingEngineeringRequestsPage() {
               </div>
             </div>
             {/* Workflow Progress Bar */}
-            <div className="flex items-center border-b border-border/20 bg-muted/20 px-3 py-1.5">
+            <div className="flex items-center border-b border-border-major bg-muted/20 px-3 py-1.5">
               {WORKFLOW_PHASES.map((phase, idx) => {
                 const isActive = sel.status === phase;
                 const isPast = WORKFLOW_PHASES.indexOf(sel.status) >= idx && sel.status !== phase;
@@ -1021,7 +1021,7 @@ export function ManufacturingEngineeringRequestsPage() {
     <>
       <style>{`@media print { .print-ignore { display: none !important; } .print-area { display: block !important; max-width: 100% !important; border: none !important; } body { background: white !important; } }`}</style>
       <div className="flex h-full min-h-0 flex-col overflow-hidden p-0 m-0">
-        {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b print-ignore`}>{successMsg}</div>}
+        {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b border-border-major print-ignore`}>{successMsg}</div>}
         <div className="print-ignore">
           <PageHeader icon={<Wrench className="h-5 w-5 stroke-current" />}
             iconClass="bg-indigo-500/10 text-indigo-600"
@@ -1037,43 +1037,42 @@ export function ManufacturingEngineeringRequestsPage() {
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "", label: "All Statuses" }, ...Object.keys(STATUS_STYLES).map((s) => ({ value: s, label: statusLabel(s) }))]}
                 className="w-36" />
-
               <ToolbarDropdown value={filterType} onChange={setFilterType}
                 options={[{ value: "", label: "All Types" }, ...REQUEST_TYPE_OPTIONS]}
-                className="w-44" />
-
+                className="w-36" />
               <ToolbarDropdown value={filterAssignee} onChange={setFilterAssignee}
                 options={[
                   { value: "", label: "All Engineers" },
                   ...Array.from(new Set(mers.map((m) => m.assignedTo).filter(Boolean))).map((a) => ({ value: a, label: a })),
                 ]}
-                className="w-32" />
-
+                className="w-40" />
             </>}
             actions={<>
               {isForm ? (
-                <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
+                <div className="flex items-center gap-1.5"><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></div>
               ) : (
-                <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel || sel.status === "COMPLETED" || sel.status === "CANCELLED"} />
+                <div className="flex items-center gap-1.5">
+                  <ToolbarButton icon={Plus} label="New" onClick={hNew} />
+                  <ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel || sel.status === "COMPLETED" || sel.status === "CANCELLED"} />
                   <span className="mx-0.5 h-5 w-px shrink-0 bg-border/25" />
                   <ToolbarButton icon={Trash2} label="Delete" onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel} />
                   <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
-                </>
+                </div>
               )}
             </>} />
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           {/* ── Left Panel: List ── */}
-          <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-10 border-b border-border flex items-center justify-between bg-muted px-3">
+          <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
+            <div className="shrink-0 h-10 border-b border-border-major flex items-center justify-between px-3">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Requests</span>
               {loading && mers.length === 0 ? null : (
-                <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
+                <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-slate-200 bg-card text-muted-foreground whitespace-nowrap">
                   {filteredMers.length}
                 </span>
               )}
             </div>
-            <div ref={scrollableRef} className={`flex-1 overflow-y-auto ${theme.surfaceBg}`}>
+            <div ref={scrollableRef} className="flex-1 overflow-y-auto">
               {loading && mers.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                   <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />Loading...</div>
@@ -1116,7 +1115,7 @@ export function ManufacturingEngineeringRequestsPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 border-t border-border bg-muted px-3 py-1.5 space-y-1">
+            <div className="shrink-0 border-t border-slate-200 bg-muted px-3 py-1.5 space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
                   {filteredMers.length > 0
@@ -1184,7 +1183,7 @@ export function ManufacturingEngineeringRequestsPage() {
             style={{ width: 2 }} />
           <div className={`print-area flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
-        <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
+        <div className="print-ignore shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
           <div className="flex items-center gap-3">
             {Object.entries(STATUS_DOT).map(([status, dotClass]) => (
               <span key={status} className="flex items-center gap-1">

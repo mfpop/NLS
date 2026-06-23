@@ -21,6 +21,8 @@ from api.types.auth import UserNode
 from check.schema import CheckQuery
 from maintenance.schema import MaintenanceQuery
 from workspace.schema import WorkspaceQuery
+from workspace.chat_schema import ChatQuery
+from api.queries.system_health import SystemHealthQuery
 
 @strawberry.type
 class Query(
@@ -41,6 +43,8 @@ class Query(
     CheckQuery,
     MaintenanceQuery,
     WorkspaceQuery,
+    ChatQuery,
+    SystemHealthQuery,
 ):
     """Root query — domain resolvers are added here as fields get implemented."""
 

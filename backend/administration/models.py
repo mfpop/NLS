@@ -224,3 +224,42 @@ class ProfileSkill(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name} ({self.get_category_display()})"
+
+
+class SystemAuditLog(TimeStampedModel):
+    """System-wide audit log for tracking user activity, data changes, login events, and system events."""
+
+    class EventType(models.TextChoices):
+        USER_ACTIVITY = "USER_ACTIVITY", "User Activity"
+        DATA_CHANGE = "DATA_CHANGE", "Data Change"
+        LOGIN_EVENT = "LOGIN_EVENT", "Login / Access Event"
+        SYSTEM_EVENT = "SYSTEM_EVENT", "System Event"
+
+    event_type = models.CharField(max_length=30, choices=EventType.choices, db_index=True)
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="audit_logs",
+    )
+    username = models.CharField(max_length=200, blank=True, default="")
+    action = models.CharField(max_length=100, db_index=True)
+    description = models.TextField(blank=True, default="")
+    entity_type = models.CharField(max_length=100, blank=True, default="", db_index=True)
+    entity_id = models.CharField(max_length=50, blank=True, default="")
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    details = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        db_table = "administration_system_audit_log"
+        ordering = ["-created_at"]
+        verbose_name = "System Audit Log"
+        verbose_name_plural = "System Audit Logs"
+        indexes = [
+            models.Index(fields=["event_type"], name="admin_audit_event_type_idx"),
+            models.Index(fields=["action"], name="admin_audit_action_idx"),
+            models.Index(fields=["entity_type"], name="admin_audit_entity_type_idx"),
+            models.Index(fields=["event_type", "created_at"], name="admin_audit_type_created_idx"),
+            models.Index(fields=["user"], name="admin_audit_user_idx"),
+        ]
+
+    def __str__(self):
+        return f"[{self.get_event_type_display()}] {self.action} by {self.username}"

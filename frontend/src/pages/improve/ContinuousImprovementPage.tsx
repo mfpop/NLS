@@ -1,11 +1,12 @@
-import { useState, useCallback, type ReactNode } from "react";
+import { useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
+import { Toolbar, ToolbarSearch, ToolbarButton } from "@/components/shared/Toolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { CONTINUOUS_IMPROVEMENT_SUMMARY_QUERY } from "@/graphql/improvementQueries";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 /* ── TYPES ── */
 
@@ -116,13 +117,35 @@ function BarRow({ label, count, total, color }: { label: string; count: number; 
 export function ContinuousImprovementPage() {
   const navigate = useNavigate();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Ctrl+F / Cmd+F focuses the search input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   const { data, loading, refetch } = useQuery<{ continuousImprovementSummary: ImprovementSummary }>(CONTINUOUS_IMPROVEMENT_SUMMARY_QUERY, {
     fetchPolicy: "cache-and-network",
   });
 
   const summary = data?.continuousImprovementSummary || null;
+  const debouncedSearch = useDebouncedValue(search, 250);
 
+  const searchPredicate = (label: string) => {
+    if (!debouncedSearch) return true;
+    return label.toLowerCase().includes(debouncedSearch.toLowerCase());
+  };
+
+  const filteredTargets = (summary?.improvementsByTarget || []).filter((t) => searchPredicate(t.targetType));
+  const filteredStatuses = (summary?.improvementsByStatus || []).filter((s) => searchPredicate(s.status));
   const targetTotal = summary?.improvementsByTarget.reduce((a, b) => a + b.count, 0) || 0;
   const statusTotal = summary?.improvementsByStatus.reduce((a, b) => a + b.count, 0) || 0;
   const conversionRate = summary && summary.totalSuggestions > 0 ? Math.round((summary.convertedSuggestions / summary.totalSuggestions) * 100) : 0;
@@ -146,7 +169,7 @@ export function ContinuousImprovementPage() {
             title="Continuous Improvement" subtitle="Overview and tracking of the improvement system." />
         </div>
         <div className="print-ignore">
-          <Toolbar left={<div />} right={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />} />
+          <Toolbar left={<ToolbarSearch ref={searchRef} value={search} onChange={setSearch} placeholder="Search target areas or statuses..." debouncing={search !== debouncedSearch} />} right={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />} />
         </div>
 
         <div className="print-area flex-1 min-h-0 overflow-y-auto">
@@ -253,7 +276,7 @@ export function ContinuousImprovementPage() {
                       <div className={`flex items-center justify-center h-24 text-[11px] italic ${theme.textMuted}`}>No data by target area</div>
                     ) : (
                       <div className="space-y-2.5">
-                        {summary.improvementsByTarget.map((t) => (
+                        {filteredTargets.map((t) => (
                           <BarRow key={t.targetType} label={t.targetType} count={t.count} total={targetTotal} />
                         ))}
                       </div>
@@ -268,7 +291,7 @@ export function ContinuousImprovementPage() {
                       <div className={`flex items-center justify-center h-24 text-[11px] italic ${theme.textMuted}`}>No data by status</div>
                     ) : (
                       <div className="space-y-2.5">
-                        {summary.improvementsByStatus.map((s) => (
+                        {filteredStatuses.map((s) => (
                           <BarRow key={s.status} label={formatStatus(s.status)} count={s.count} total={statusTotal} />
                         ))}
                       </div>
@@ -281,7 +304,7 @@ export function ContinuousImprovementPage() {
         </div>
 
         {/* Footer */}
-        <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
+        <div className="print-ignore shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
           <span>Continuous Improvement</span>
           <span className="flex-1" />
           {summary && <span>Suggestions: {summary.totalSuggestions} · Kaizens: {totalKaizens} · A3/PDCA: {totalA3}</span>}

@@ -126,6 +126,8 @@ class WorkspaceQuery:
             priority_work=[_to_dashboard_item(i) for i in dashboard["priority_work"]],
             due_soon=[_to_dashboard_item(i) for i in dashboard["due_soon"]],
             recent_activity=[_to_dashboard_item(i) for i in dashboard["recent_activity"]],
+            alerts_approvals=[_to_dashboard_item(i) for i in dashboard["alerts_approvals"]],
+            source_breakdown=[SourceBreakdownNode(source_module=s["source_module"], count=s["count"]) for s in dashboard["source_breakdown"]],
         )
 
     @strawberry.field(name="taskSummary")
@@ -161,6 +163,13 @@ class DashboardItemNode:
     source_module: str = strawberry.field(name="sourceModule")
     due_date: Optional[str] = strawberry.field(name="dueDate", default=None)
     task_type: str = strawberry.field(name="taskType")  # "task", "approval", "finding", "action", "work_order", "mer"
+    created_at: str = strawberry.field(name="createdAt")
+
+
+@strawberry.type
+class SourceBreakdownNode:
+    source_module: str = strawberry.field(name="sourceModule")
+    count: int
 
 
 @strawberry.type
@@ -176,6 +185,8 @@ class DashboardSummaryNode:
     priority_work: list[DashboardItemNode] = strawberry.field(name="priorityWork")
     due_soon: list[DashboardItemNode] = strawberry.field(name="dueSoon")
     recent_activity: list[DashboardItemNode] = strawberry.field(name="recentActivity")
+    alerts_approvals: list[DashboardItemNode] = strawberry.field(name="alertsApprovals")
+    source_breakdown: list[SourceBreakdownNode] = strawberry.field(name="sourceBreakdown")
 
 
 def _to_dashboard_item(t: WorkspaceTask) -> DashboardItemNode:
@@ -191,6 +202,7 @@ def _to_dashboard_item(t: WorkspaceTask) -> DashboardItemNode:
         source_module=t.source_module,
         due_date=t.due_date.isoformat() if t.due_date else None,
         task_type="task",
+        created_at=t.created_at.isoformat() if t.created_at else "",
     )
 
 

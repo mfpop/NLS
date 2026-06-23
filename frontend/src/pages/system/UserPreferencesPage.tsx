@@ -8,7 +8,6 @@ import {
   Globe,
   Lock,
   LogOut,
-  Check,
   ChevronRight,
   SlidersHorizontal,
   Eye,
@@ -16,9 +15,9 @@ import {
   RefreshCw,
   CheckCheck,
 } from "lucide-react";
+import { ToolbarButton } from "@/components/shared/Toolbar";
 import { useThemeStore } from "@/stores/theme";
 import { usePreferencesStore, type DensityMode, type SidebarMode, type UnitsSystem, type TimeFormatPref } from "@/stores/preferencesStore";
-import { theme } from "@/styles/themeTokens";
 
 /* ── Category config ─────────────────────────────────────────────── */
 interface Category {
@@ -50,22 +49,22 @@ function ToggleRow({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 min-h-10">
+    <div className="flex items-center justify-between min-h-14 border-b border-slate-200 px-4">
       <div className="min-w-0 flex-1 mr-3">
-        <div className={`text-sm font-medium ${theme.textPrimary}`}>{label}</div>
-        {description && <div className={`text-xs ${theme.textMuted} mt-0.5`}>{description}</div>}
+        <div className="text-xs font-medium text-slate-900">{label}</div>
+        {description && <div className="text-[11px] text-slate-500 mt-0.5">{description}</div>}
       </div>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-success/30 ${
-          checked ? "bg-success" : "bg-muted"
+        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500/30 ${
+          checked ? "bg-sky-500" : "bg-slate-300"
         }`}
       >
         <span
-          className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-card shadow transform ring-0 transition duration-200 ease-in-out ${
+          className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 transition duration-200 ease-in-out ${
             checked ? "translate-x-4" : "translate-x-0"
           }`}
         />
@@ -88,15 +87,15 @@ function SelectRow({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 min-h-10">
+    <div className="flex items-center justify-between min-h-14 border-b border-slate-200 px-4">
       <div className="min-w-0 flex-1 mr-3">
-        <div className={`text-sm font-medium ${theme.textPrimary}`}>{label}</div>
-        {description && <div className={`text-xs ${theme.textMuted} mt-0.5`}>{description}</div>}
+        <div className="text-xs font-medium text-slate-900">{label}</div>
+        {description && <div className="text-[11px] text-slate-500 mt-0.5">{description}</div>}
       </div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`h-7 rounded-lg border border-border bg-card px-2.5 text-xs font-medium ${theme.textSecondary} outline-none transition hover:border-ring/40 focus:border-success focus:ring-2 focus:ring-success/20`}
+        className="h-8 min-w-[150px] rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-700 outline-none transition hover:border-slate-400 focus:border-sky-500"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -124,10 +123,10 @@ function NumberRow({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 min-h-10">
+    <div className="flex items-center justify-between min-h-14 border-b border-slate-200 px-4">
       <div className="min-w-0 flex-1 mr-3">
-        <div className={`text-sm font-medium ${theme.textPrimary}`}>{label}</div>
-        {description && <div className={`text-xs ${theme.textMuted} mt-0.5`}>{description}</div>}
+        <div className="text-xs font-medium text-slate-900">{label}</div>
+        {description && <div className="text-[11px] text-slate-500 mt-0.5">{description}</div>}
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         <input
@@ -136,9 +135,9 @@ function NumberRow({
           min={min}
           max={max}
           onChange={(e) => onChange(Number(e.target.value))}
-          className={`h-7 w-20 rounded-lg border border-border bg-card px-2 text-xs font-medium ${theme.textSecondary} outline-none transition hover:border-ring/40 focus:border-success focus:ring-2 focus:ring-success/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+          className="h-8 w-20 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-700 outline-none transition hover:border-slate-400 focus:border-sky-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
-        {suffix && <span className={`text-xs ${theme.textMuted}`}>{suffix}</span>}
+        {suffix && <span className="text-[11px] text-slate-500">{suffix}</span>}
       </div>
     </div>
   );
@@ -158,10 +157,12 @@ function RadioRow({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="px-4 py-2.5">
-      <div className={`text-sm font-medium ${theme.textPrimary} mb-2`}>{label}</div>
-      {description && <div className={`text-xs ${theme.textMuted} mb-2.5`}>{description}</div>}
-      <div className="flex flex-wrap gap-2">
+    <div className="min-h-14 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+      <div className="min-w-0 flex-1 mr-3">
+        <div className="text-xs font-medium text-slate-900">{label}</div>
+        {description && <div className="text-[11px] text-slate-500 mt-0.5">{description}</div>}
+      </div>
+      <div className="flex flex-wrap gap-1 shrink-0">
         {options.map((opt) => {
           const active = value === opt.value;
           const Icon = opt.icon;
@@ -170,15 +171,14 @@ function RadioRow({
               key={opt.value}
               type="button"
               onClick={() => onChange(opt.value)}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-[2px] border text-xs font-medium transition-all focus:outline-none ${
                 active
-                  ? "border-success bg-success/10 text-success shadow-sm"
-                  : `border-border bg-card ${theme.textSecondary} hover:border-ring/40 hover:bg-muted`
-              } focus:outline-none focus:ring-2 focus:ring-success/30`}
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                  : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              }`}
             >
               {Icon && <Icon className="h-3.5 w-3.5" />}
               {opt.label}
-              {active && <Check className="h-3 w-3" />}
             </button>
           );
         })}
@@ -189,13 +189,13 @@ function RadioRow({
 
 function SectionHeader({ icon: Icon, title, subtitle }: { icon: typeof Sun; title: string; subtitle: string }) {
   return (
-    <div className={`flex items-center gap-2.5 px-4 py-3 border-b border-border bg-card`}>
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-success/10 text-success">
-        <Icon className="h-4 w-4" />
+    <div className="flex items-center gap-2.5 h-14 shrink-0 border-b border-slate-200 px-4 bg-slate-50">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] bg-sky-50 text-sky-600">
+        <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0">
-        <h2 className={`text-sm font-semibold ${theme.textPrimary}`}>{title}</h2>
-        <p className={`text-xs ${theme.textMuted} leading-4`}>{subtitle}</p>
+        <h2 className="text-xs font-semibold text-slate-900">{title}</h2>
+        <p className="text-[11px] text-slate-500 leading-4">{subtitle}</p>
       </div>
     </div>
   );
@@ -230,7 +230,7 @@ function AppearancePanel() {
   const setSidebarDefault = usePreferencesStore((s) => s.setSidebarDefault);
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-slate-200">
       <SectionHeader icon={Eye} title="Appearance" subtitle="Theme, density, and sidebar behavior" />
 
       <RadioRow
@@ -279,7 +279,7 @@ function WorkspacePanel() {
   const setRememberLastLine = usePreferencesStore((s) => s.setRememberLastLine);
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-slate-200">
       <SectionHeader icon={Monitor} title="Workspace Defaults" subtitle="Default plant, line, and session memory" />
 
       <SelectRow
@@ -325,7 +325,7 @@ function NotificationsPanel() {
   const setApprovals = usePreferencesStore((s) => s.setNotifyApprovals);
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-slate-200">
       <SectionHeader icon={Bell} title="Notifications" subtitle="In-app, email, and alert preferences" />
 
       <ToggleRow
@@ -343,7 +343,7 @@ function NotificationsPanel() {
       />
 
       <div className="px-4 py-2">
-        <div className={`text-xs font-semibold uppercase tracking-[0.12em] ${theme.textMuted} mb-1`}>Assigned items</div>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 px-4 py-2">Assigned items</div>
       </div>
 
       <ToggleRow
@@ -381,7 +381,7 @@ function LanguagePanel() {
   const setTimeFormat = usePreferencesStore((s) => s.setTimeFormat);
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-slate-200">
       <SectionHeader icon={Globe} title="Language & Region" subtitle="Locale, timezone, and date formats" />
 
       <SelectRow
@@ -490,7 +490,7 @@ function PrivacyPanel() {
   const setAutoLockTimeout = usePreferencesStore((s) => s.setAutoLockTimeout);
 
   return (
-    <div className="divide-y divide-border">
+    <div className="divide-y divide-slate-200">
       <SectionHeader icon={Lock} title="Privacy & Session" subtitle="Auto-lock and session management" />
 
       <NumberRow
@@ -504,16 +504,7 @@ function PrivacyPanel() {
       />
 
       <div className="px-4 py-3">
-        <button
-          type="button"
-          disabled
-          className={`inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium ${theme.textMuted} transition opacity-60 cursor-not-allowed`}
-          title="Requires backend authentication service"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          Sign out from all sessions
-          <span className={`text-[10px] ${theme.textMuted} font-normal`}>(requires backend)</span>
-        </button>
+        <ToolbarButton icon={LogOut} label="Sign out from all sessions (requires backend)" disabled={true} title="Requires backend authentication service" />
       </div>
     </div>
   );
@@ -552,68 +543,62 @@ export function UserPreferencesPage() {
   }, []);
 
   return (
-    <div className={`flex h-full flex-col overflow-hidden ${theme.page}`}>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50">
       {/* ── HEADER ── */}
-      <header className={`flex items-center gap-3 border-b border-border bg-card h-16 shrink-0 px-5`}>
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10 text-success">
-          <SlidersHorizontal className="h-5 w-5" />
+      <header className="flex items-center gap-3 h-14 shrink-0 border-b border-slate-200 px-4 bg-slate-50">
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] bg-sky-50 text-sky-600">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0 leading-tight">
-          <h1 className={`text-base font-semibold ${theme.textPrimary} leading-tight`}>Preferences</h1>
-          <p className={`text-xs ${theme.textMuted} leading-tight mt-0.5`}>Personal workspace settings</p>
+          <h1 className="text-xs font-semibold text-slate-900 leading-tight">Preferences</h1>
+          <p className="text-[11px] text-slate-500 leading-tight mt-px">Personal workspace settings</p>
         </div>
       </header>
 
       {/* ── BODY: two-column layout ── */}
-      <div className="flex flex-1 min-h-0">
-        {/* Left column — Category nav (20%) */}
-        <nav className="w-[20%] shrink-0 border-r border-border bg-card overflow-y-auto">
-          <div className="py-2">
-            {CATEGORIES.map((cat) => {
-              const active = activeCategory === cat.id;
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors ${
-                    active
-                      ? "bg-success/10 border-l-2 border-success"
-                      : `${theme.interactiveRow} border-l-2 border-transparent`
-                  }`}
-                >
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
-                    active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                  }`}>
-                    <Icon className="h-4 w-4" />
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        {/* Left column — Category nav */}
+        <nav className="w-72 shrink-0 flex h-full min-h-0 flex-col border-r border-slate-300 bg-slate-50 overflow-y-auto">
+          {CATEGORIES.map((cat) => {
+            const active = activeCategory === cat.id;
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex w-full items-center gap-3 h-14 px-3 text-left transition-colors border-b border-slate-100 ${
+                  active
+                    ? "bg-emerald-50 border-l-2 border-emerald-600 text-emerald-950"
+                    : "bg-slate-50 border-l-2 border-transparent text-slate-700 hover:bg-white"
+                }`}
+              >
+                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] ${
+                  active ? "bg-emerald-100 text-emerald-700" : "bg-white text-slate-500"
+                }`}>
+                  <Icon className="h-3.5 w-3.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className={`text-xs font-medium leading-tight ${active ? "text-emerald-950" : "text-slate-800"}`}>
+                    {cat.label}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className={`text-sm font-medium leading-tight ${
-                      active ? "text-success" : `${theme.textSecondary}`
-                    }`}>
-                      {cat.label}
-                    </div>
-                    <div className={`text-[10px] ${theme.textMuted} leading-tight mt-px truncate`}>{cat.description}</div>
-                  </div>
-                  <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${
-                    active ? "text-success" : "text-muted-foreground/40"
-                  }`} />
-                </button>
-              );
-            })}
-          </div>
+                  <div className="text-[11px] text-slate-500 leading-tight truncate">{cat.description}</div>
+                </div>
+                <ChevronRight className={`h-3 w-3 shrink-0 ${active ? "text-emerald-600" : "text-slate-400"}`} />
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Right column — Settings panel (80%) */}
-        <div className="w-[80%] min-w-0 overflow-y-auto bg-card">
+        {/* Right column — Settings panel */}
+        <div className="flex h-full min-h-0 flex-1 flex-col overflow-y-auto bg-slate-50">
           {ActivePanel && <ActivePanel />}
         </div>
       </div>
 
       {/* ── FOOTER ── */}
-      <footer className="h-10 shrink-0 border-t border-border bg-card px-5 flex items-center justify-between">
-        <span className={`text-[11px] ${theme.textMuted}`}>Preferences are stored locally on this device.</span>
+      <footer className="h-10 shrink-0 border-t border-slate-300 bg-slate-50 px-3 flex items-center justify-between">
+        <span className="text-xs text-slate-600">Preferences are stored locally on this device.</span>
         <button
           type="button"
           onClick={() => {
@@ -622,9 +607,9 @@ export function UserPreferencesPage() {
               usePreferencesStore.getState().resetAll();
             }
           }}
-          className={`inline-flex items-center gap-1 text-[11px] font-medium ${theme.textMuted} transition hover:text-foreground`}
+          className="inline-flex h-7 items-center gap-1.5 px-2 text-xs font-medium rounded-[2px] text-slate-700 hover:bg-slate-100 active:bg-slate-200 transition-colors"
         >
-          <RefreshCw className="h-3 w-3" />
+          <RefreshCw className="h-3.5 w-3.5 stroke-current" />
           Reset defaults
         </button>
       </footer>

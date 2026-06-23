@@ -41,8 +41,8 @@ export const ADMINISTRATIVE_DEPARTMENT_QUERY = gql`
 `;
 
 export const USER_PROFILES_QUERY = gql`
-  query UserProfiles($companyId: String, $plantId: String, $administrativeDepartmentId: String, $isActive: Boolean, $search: String) {
-    userProfiles(companyId: $companyId, plantId: $plantId, administrativeDepartmentId: $administrativeDepartmentId, isActive: $isActive, search: $search) {
+  query UserProfiles($companyId: String, $plantId: String, $administrativeDepartmentId: String, $isActive: Boolean, $search: String, $userId: String) {
+    userProfiles(companyId: $companyId, plantId: $plantId, administrativeDepartmentId: $administrativeDepartmentId, isActive: $isActive, search: $search, userId: $userId) {
       id
       userId
       username
@@ -158,6 +158,7 @@ export const USER_ROLES_QUERY = gql`
       roleId
       roleCode
       roleName
+      accessLevel
       companyId
       companyName
       plantId
@@ -180,6 +181,7 @@ export const USER_ROLES_ALL_QUERY = gql`
       roleId
       roleCode
       roleName
+      accessLevel
       companyId
       companyName
       plantId

@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { AlertTriangle, Plus, Activity, TrendingUp, List, BarChart3, RefreshCw, Clock, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
+import { ExplorerToolbar, ExplorerToolbarButton } from "@/components/shared/ExplorerToolbar";
 import { SAFETY_DASHBOARD_SUMMARY_QUERY } from "@/graphql/checkQueries";
 
 const KPI_CARD = "flex flex-col gap-0.5 min-w-0 px-4 py-2.5 border-r border-slate-200 last:border-r-0 cursor-pointer transition-colors hover:bg-slate-50";
@@ -69,7 +69,7 @@ export function SafetyDashboardPage() {
   const navigateTo = (path: string) => navigate(path);
 
   const renderKpiStrip = () => (
-    <div className="shrink-0 flex items-stretch divide-x divide-slate-200 border-b border-slate-200 bg-white">
+    <div className="shrink-0 flex items-stretch divide-x divide-slate-200 border-b border-slate-200 bg-muted">
       <div className={KPI_CARD} onClick={() => navigateTo("/safety/incidents")}>
         <span className={`${KPI_VALUE} ${kpiColor("")}`}>{s?.totalEvents ?? 0}</span>
         <span className={KPI_LABEL}>Total Events</span>
@@ -319,7 +319,7 @@ export function SafetyDashboardPage() {
         </div>
       </div>
       {overdueEvents.length > 0 && (
-        <div className="shrink-0 border-t border-slate-200 bg-white">
+        <div className="shrink-0 border-t border-slate-200 bg-muted">
           <div className={PANEL_HEADER}>
             <Clock className="h-3.5 w-3.5 text-red-500 mr-1.5" />
             <span className="text-xs font-semibold text-red-700">Overdue Follow-ups</span>
@@ -338,9 +338,10 @@ export function SafetyDashboardPage() {
   );
 
   const toolbarContent = (
-    <Toolbar left={<ToolbarButton icon={Search} label="Search" onClick={() => navigate("/safety/incidents")} className="w-full justify-start" />} right={
-      <><div className="flex items-center gap-0.5" /><div className="ml-auto flex items-center gap-0.5"><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></div></>
-    } />
+    <ExplorerToolbar
+      children={<ExplorerToolbarButton icon={Search} label="Search" onClick={() => navigate("/safety/incidents")} className="w-full justify-start" />}
+      actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />}
+    />
   );
 
   const footerContent = hasData

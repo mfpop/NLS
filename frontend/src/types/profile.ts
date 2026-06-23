@@ -15,6 +15,7 @@ export interface EducationEntry {
 
 export interface Profile {
   id: string;
+  user: string;
   name: string;
   role: string;
   email: string;

@@ -62,6 +62,7 @@ export const theme = {
   errorBanner: "border border-danger/25 bg-danger/10 text-danger",
   dangerPanel: "border border-danger/20 bg-danger/5",
   warningChip: "border border-warning/25 bg-warning/10 text-warning",
+  majorBorder: "border-border-major",
   sectionDivider: "border-b border-border/70",
   typePlant: "bg-primary/15 text-primary",
   typeDepartment: "bg-accent/15 text-accent",

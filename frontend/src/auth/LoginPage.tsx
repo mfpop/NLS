@@ -157,7 +157,7 @@ export function LoginPage() {
               </div>
             </div>
             {view === "login" && (
-              <h1 className="text-sm font-medium text-foreground/80 mt-4 mb-1">Sign in to LeanSync</h1>
+              <h1 className="text-sm font-medium text-foreground/80 mt-4 mb-1">Sign in to LeanSynk</h1>
             )}
             {view === "register" && (
               <h1 className="text-sm font-medium text-foreground/80 mt-4 mb-1">Create an account</h1>

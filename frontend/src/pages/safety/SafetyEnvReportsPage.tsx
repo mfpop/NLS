@@ -2,9 +2,8 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { FileText, Plus, Save, Ban, Play, CheckCircle, RefreshCw, Pencil, ArrowLeft, Search } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
-import { SourceLocationSelector } from "@/components/shared/SourceLocationSelector";
+import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
+import { SourceLocationSelector, type LocationHierarchy } from "@/components/shared/SourceLocationSelector";
 import { SAFETY_ENV_REPORTS_QUERY, SAFETY_EVENTS_QUERY } from "@/graphql/checkQueries";
 import { PRODUCTION_STRUCTURE_TREE_QUERY } from "@/graphql/productionStructureQueries";
 import {
@@ -60,7 +59,7 @@ function nowISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-const initLoc = { plantId: "", lineId: "", departmentId: "", resourceGroupId: "", resourceId: "", targetType: "PLANT", targetId: null };
+const initLoc: LocationHierarchy = { plantId: "", lineId: "", departmentId: "", resourceGroupId: "", resourceId: "", targetType: "PLANT", targetId: null };
 
 export function SafetyEnvReportsPage() {
   const [filterStatus, setFilterStatus] = useState("");
@@ -529,39 +528,38 @@ ${cNotes}` : ""}`
   const isEditable = selStatus === "DRAFT";
 
   const toolbarContent = (
-    <SplitToolbar
+    <ExplorerToolbar
       searchValue={searchQuery}
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search reports..."
       filters={
-        <>
-          <ToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} />
-        </>
+        <ExplorerToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
       }
       actions={
         creating ? (
           <>
-            <ToolbarButton icon={Save} label="Save Draft" onClick={hNewDraft} disabled={!requiredOk} variant="success" />
-            <ToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); resetForm(); }} />
+            <ExplorerToolbarButton icon={Save} label="Save Draft" onClick={hNewDraft} disabled={!requiredOk} variant="success" />
+            <ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); resetForm(); }} />
           </>
         ) : editing ? (
           <>
-            <ToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredOk} variant="success" />
-            <ToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} />
+            <ExplorerToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredOk} variant="success" />
+            <ExplorerToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} />
           </>
         ) : !selItem ? (
           <>
-            <ToolbarButton icon={Plus} label="New Report" onClick={hNew} variant="primary" />
-            <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+            <ExplorerToolbarButton icon={Plus} label="New Report" onClick={hNew} variant="success" />
+            <ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
           </>
         ) : (
           <>
-            <ToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} />
-            <ToolbarButton icon={Play} label="Report" onClick={() => hTransition(reportMut, selItem.id, "Reported")} disabled={!canReport} />
-            <ToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "Closed")} disabled={!canClose} variant={canClose ? "success" : "default"} />
-            <ToolbarButton icon={Ban} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" />
-            <ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} />
-            <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+            <ExplorerToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} />
+            <ExplorerToolbarButton icon={Play} label="Report" onClick={() => hTransition(reportMut, selItem.id, "Reported")} disabled={!canReport} />
+            <ExplorerToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "Closed")} disabled={!canClose} variant={canClose ? "success" : "default"} />
+            <ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" />
+            <ExplorerToolbarSeparator />
+            <ExplorerToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} />
+            <ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
           </>
         )
       }

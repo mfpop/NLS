@@ -674,7 +674,7 @@ export function WorkOrdersPage() {
     return (
       <div className="flex flex-1 min-h-0">
         {/* Left column: Target → Metadata → Schedule — scrolls independently */}
-        <div className="w-[25%] min-w-55 max-w-70 border-r border-border/20 bg-card/30 overflow-y-auto">
+        <div className="w-[25%] min-w-55 max-w-70 border-r border-slate-200 bg-card/30 overflow-y-auto">
           <div className="p-3 space-y-2">
             {/* 1. Target */}
             <div>
@@ -1084,7 +1084,7 @@ export function WorkOrdersPage() {
           </div>
         </div>
         {/* Right 35%: Status → Priority → Type → Target → Requested By → Assigned To → Schedule → Linked */}
-        <div className="w-[35%] min-w-50 max-w-70 border-l border-border/20 bg-card/20 overflow-y-auto">
+        <div className="w-[35%] min-w-50 max-w-70 border-l border-slate-200 bg-card/20 overflow-y-auto">
           <div className="p-4 space-y-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Details</p>
             <div className="space-y-2.5">
@@ -1140,7 +1140,7 @@ export function WorkOrdersPage() {
               </div>
             </div>
             {(sel.linkedPmId || sel.linkedBreakdownId) && (
-              <div className="border-t border-border/20 pt-2">
+              <div className="border-t border-slate-200 pt-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Linked</p>
                 <div className="flex flex-wrap gap-1">
                   {sel.linkedPmId && <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">PM #{sel.linkedPmId}</span>}
@@ -1149,7 +1149,7 @@ export function WorkOrdersPage() {
                 </div>
               </div>
             )}
-            <div className="border-t border-border/20 pt-2">
+            <div className="border-t border-slate-200 pt-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Metadata</p>
               <div className="space-y-0.5 text-xs text-foreground">
                 <p>Record ID: {sel.id}</p>
@@ -1172,9 +1172,9 @@ export function WorkOrdersPage() {
     return (
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left 20%: Work Order Records List — always visible */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-card/30"
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-muted"
           style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-          <div className="shrink-0 h-8 flex items-center border-b border-border/30 bg-muted/50 px-3">
+          <div className="shrink-0 h-8 flex items-center border-b border-slate-200 px-3">
             <span className="text-xs font-medium text-muted-foreground">Work Orders</span>
             <span className="ml-auto text-[10px] font-mono text-muted-foreground">{workOrders.length}</span>
           </div>
@@ -1224,7 +1224,7 @@ export function WorkOrdersPage() {
             )}
           </div>
           {/* Footer inside left panel */}
-          <div className="shrink-0 h-7 flex items-center border-t border-border/30 bg-muted/50 px-3">
+          <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
             <span className="text-[10px] text-muted-foreground">{workOrders.length} WO{workOrders.length !== 1 ? "s" : ""}</span>
             <span className="ml-auto flex gap-2">
               <span className="text-[9px] text-blue-600">{workOrders.filter((w) => ["OPEN", "ASSIGNED"].includes(w.status)).length} open</span>
@@ -1288,7 +1288,7 @@ export function WorkOrdersPage() {
       </div>
       {renderMain()}
       {/* Page footer — state-specific metadata */}
-      <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
+      <div className="shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
         {view === "form" ? (
           <>
             <span className="font-semibold text-foreground">Work Orders</span>

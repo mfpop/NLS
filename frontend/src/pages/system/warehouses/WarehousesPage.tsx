@@ -774,15 +774,11 @@ export function WarehousesPage() {
 
         <Toolbar
           left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search warehouses..." />}
-          right={<>
+          center={<>
             <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
-
             <ToolbarDropdown value={filters.warehouseType} onChange={(v) => setFilters((p) => ({ ...p, warehouseType: v }))} options={[{ value: "", label: "All Types" }, ...WAREHOUSE_TYPE_OPTIONS]} className="w-50" />
-
             <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
-
-            <div className="flex-1" />
-            <div className="flex items-center gap-2 shrink-0">
+          </>}            right={<div className="flex items-center gap-2 shrink-0">
               {isForm ? (
                 <>
                   <ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" />
@@ -797,20 +793,19 @@ export function WarehousesPage() {
                   <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetchWarehouses()} />
                 </>
               )}
-            </div>
-          </>}
+            </div>}
         />
 
         {/* Content - resizable split */}
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left column - list with plant hierarchy */}
-          <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-card/40" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 border-b border-border/50 flex items-center p-3 bg-muted">
+          <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-muted" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
+            <div className="shrink-0 border-b border-border/50 flex items-center p-3">
               <Warehouse className={`h-3 w-3 ${theme.icon} stroke-current mr-2 shrink-0`} />
               <span className={`text-[11px] font-medium ${theme.textMuted}`}>Warehouses</span>
               <span className={`ml-auto text-[9px] ${theme.textMuted} font-mono`}>{filtered.length}</span>
             </div>
-            <div className={`flex-1 overflow-y-auto ${theme.surfaceBg} pl-2`}>
+            <div className="flex-1 overflow-y-auto pl-2">
               {loading && warehouses.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                   <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40 animate-pulse mr-2" />Loading...

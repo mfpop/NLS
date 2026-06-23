@@ -273,18 +273,19 @@ export function ProductionFlowLayout() {
 
       <Toolbar
         left={<ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search tree" />}
+        center={
+          <ToolbarDropdown
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: "all", label: "All" },
+              { value: "active", label: "Active" },
+              { value: "inactive", label: "Inactive" },
+            ]}
+          />
+        }
         right={
           <>
-            <ToolbarDropdown
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { value: "all", label: "All" },
-                { value: "active", label: "Active" },
-                { value: "inactive", label: "Inactive" },
-              ]}
-            />
-
             <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
             <ToolbarButton icon={Trash2} label={cleaning ? "Cleaning..." : "Cleanup GPT"} disabled={cleaning} onClick={async () => {
               if (!window.confirm("This will delete ALL GPT line data (departments, RGs, resources, variant, PNs, BOM, line, bins). Continue?")) return;
@@ -337,7 +338,7 @@ export function ProductionFlowLayout() {
       {/* Content - resizable split */}
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Tree column */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-card/40" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border/20 bg-muted" style={{ flexBasis: `${treePct}%`, minWidth: 200 }}>
           <div className="flex-1 min-h-0 overflow-auto">
             <TreeNavigation
               data={treeData || []} selectedKey={selectedNodeKey} expandedSet={expandedSet}

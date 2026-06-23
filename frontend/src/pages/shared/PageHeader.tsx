@@ -44,7 +44,7 @@ export function PageHeader({ icon, iconClass, title, subtitle, systemMessage, on
   const msgStyle = systemMessage ? SYSTEM_MESSAGE_STYLES[systemMessage.type] : null;
 
   return (
-    <header className={`h-16 border-b border-border flex items-center ${theme.header}`}>
+    <header className={`h-16 border-b border-border-major flex items-center ${theme.header}`}>
       <div className="flex items-center gap-3 min-w-0 pl-10 pr-4 w-full">
         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-sm ${iconClass || "text-muted-foreground"}`}>
           {icon}

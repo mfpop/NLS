@@ -4,6 +4,7 @@ export const PROFILE_QUERY = gql`
     query Profile {
     profile {
       id
+      user
       name
       role
       email
@@ -38,6 +39,7 @@ export const UPDATE_PROFILE_MUTATION = gql`
     updateProfile(input: $input) {
       profile {
         id
+        user
         name
         role
         email
@@ -161,6 +163,31 @@ export const ARCHIVE_PROFILE_SKILL_MUTATION = gql`
         field
         message
       }
+    }
+  }
+`;
+
+export const DELETE_PROFILE_SKILL_MUTATION = gql`
+  mutation DeleteProfileSkill($id: String!) {
+    deleteProfileSkill(id: $id) {
+      skill {
+        id
+      }
+      errors {
+        field
+        code
+        message
+      }
+    }
+  }
+`;
+
+export const PROFILE_SKILL_CAPABILITIES_QUERY = gql`
+  query ProfileSkillCapabilities($userProfileId: String!) {
+    profileSkillCapabilities(userProfileId: $userProfileId) {
+      canAddSkill
+      canEditSkill
+      canDeleteSkill
     }
   }
 `;

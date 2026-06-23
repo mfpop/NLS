@@ -573,7 +573,7 @@ export function ErpImportPatternPage() {
   return (
     <div className="flex flex-col h-full w-full max-w-full min-w-0 overflow-hidden">
       <PageHeader icon={<FileSpreadsheet className="h-5 w-5 stroke-current" />} iconClass={theme.iconBoxEmerald}
-        title="ERP Pattern" subtitle="Define reusable ERP import patterns — map source fields to LeanSync destinations" />
+        title="ERP Pattern" subtitle="Define reusable ERP import patterns — map source fields to LeanSynk destinations" />
 
       {/* Toolbar */}
       <div className="shrink-0 flex items-center min-w-0 border-b border-border/35 bg-muted px-3 select-none gap-3 h-10">
@@ -689,7 +689,7 @@ export function ErpImportPatternPage() {
               <div className="text-center max-w-sm">
                 <FileSpreadsheet className="h-8 w-8 mx-auto mb-2 text-muted-foreground/25 stroke-current" />
                 <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1`}>ERP Import Patterns</h3>
-                <p className={`text-xs ${theme.textSecondary} leading-relaxed`}>Define reusable patterns that map source file fields to LeanSync destination entities. Select a pattern from the list or create a new one.</p>
+                <p className={`text-xs ${theme.textSecondary} leading-relaxed`}>Define reusable patterns that map source file fields to LeanSynk destination entities. Select a pattern from the list or create a new one.</p>
               </div>
             </div>
           ) : (

@@ -18,6 +18,26 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/myworkspace/MyTasksPage"),
   },
   {
+    key: "myworkspace-chat",
+    matches: (path) => path.startsWith("/myworkspace/chat"),
+    load: () => import("@/pages/myworkspace/ChatPage"),
+  },
+  {
+    key: "myworkspace-activity-feed",
+    matches: (path) => path.startsWith("/myworkspace/activity-feed"),
+    load: () => import("@/pages/myworkspace/ActivityFeedPage"),
+  },
+  {
+    key: "myworkspace-profile",
+    matches: (path) => path.startsWith("/myworkspace/profile"),
+    load: () => import("@/pages/system/UserProfilePage"),
+  },
+  {
+    key: "myworkspace-preferences",
+    matches: (path) => path.startsWith("/myworkspace/preferences"),
+    load: () => import("@/pages/system/UserPreferencesPage"),
+  },
+  {
     key: "execution-line-performance",
     matches: (path) => path.startsWith("/execution/line-performance"),
     load: () => import("@/pages/execution/LinePerformancePage"),
@@ -169,6 +189,11 @@ const matchers: Matcher[] = [
     key: "system-erp-patterns",
     matches: (path) => path.startsWith("/system/erp-data/erp-patterns"),
     load: () => import("@/pages/system/erp-data/ErpImportPatternPage"),
+  },
+  {
+    key: "system-health",
+    matches: (path) => path.startsWith("/system/health"),
+    load: () => import("@/pages/system/SystemHealthPage"),
   },
 ];
 

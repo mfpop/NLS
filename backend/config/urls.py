@@ -11,6 +11,7 @@ from api.schema import schema, GraphQLContext, validate_query_complexity
 from api.upload_import_file import upload_import_file
 from api.upload_image import upload_image
 from api.upload_document import upload_document
+from api.upload_chat_attachment import upload_chat_attachment
 
 
 class ComplexityValidatingGraphQLView(GraphQLView):
@@ -64,6 +65,7 @@ urlpatterns = [
     path("api/import-jobs/<path:job_id>/upload/", csrf_exempt(upload_import_file)),
     path("api/upload-image/", csrf_exempt(upload_image)),
     path("api/upload-document/", csrf_exempt(upload_document)),
+    path("api/upload-chat-attachment/", csrf_exempt(upload_chat_attachment)),
 ]
 
 # Serve uploaded media files in development

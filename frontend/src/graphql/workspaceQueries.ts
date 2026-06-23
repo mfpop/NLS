@@ -225,6 +225,24 @@ export const MY_WORKSPACE_DASHBOARD_QUERY = gql`
         sourceModule
         dueDate
         taskType
+        createdAt
+      }
+      alertsApprovals {
+        id
+        title
+        description
+        status
+        priority
+        sourceType
+        sourceId
+        sourceTitle
+        sourceModule
+        dueDate
+        taskType
+      }
+      sourceBreakdown {
+        sourceModule
+        count
       }
     }
   }

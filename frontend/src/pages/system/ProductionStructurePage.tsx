@@ -30,7 +30,7 @@ function ContextMenu({ state, onClose, onAdd, onEdit }: {
   ];
   return (
     <div ref={ref} className="fixed z-50" style={{ left: Math.min(state.x, window.innerWidth - 180), top: Math.min(state.y, window.innerHeight - 160) }}>
-      <div className="min-w-40 rounded-lg border shadow-lg py-1 bg-card border-border">
+      <div className="min-w-40 rounded-lg border shadow-lg py-1 bg-card border-slate-200">
         {items.map((item, i) => (
           <button key={i} type="button" onClick={() => { item.action(); onClose(); }}
             className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-sm cursor-pointer transition-colors ${
@@ -160,9 +160,9 @@ export function ProductionFlow() {
       {/* 2-Column Explorer */}
       <div className="flex-1 min-h-0 grid grid-cols-[380px_1fr] gap-0">
         {/* Column 1: Hierarchy Tree */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border min-w-0">
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 min-w-0">
           {/* Tree Toolbar */}
-          <div className="shrink-0 border-b border-border bg-card bg-background h-10 px-2 flex items-center gap-1">
+          <div className="shrink-0 border-b border-slate-200 bg-card bg-background h-10 px-2 flex items-center gap-1">
             <div className="relative flex-1 min-w-0">
               <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground stroke-current pointer-events-none" />
               <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search"
@@ -194,7 +194,7 @@ export function ProductionFlow() {
           </div>
 
           {/* Footer Legend */}
-          <div className="shrink-0 border-t border-border bg-card flex items-center gap-5 px-5 text-xs text-muted-foreground font-medium" style={{ height: "60px" }}>
+          <div className="shrink-0 border-t border-slate-200 bg-card flex items-center gap-5 px-5 text-xs text-muted-foreground font-medium" style={{ height: "60px" }}>
             <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-primary stroke-current" /> Plant</span>
             <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-warning stroke-current" /> Line</span>
             <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-info stroke-current" /> Dept</span>
@@ -210,7 +210,7 @@ export function ProductionFlow() {
           ) : (
             <>
               {/* Entity Header + Actions */}
-              <div className="shrink-0 border-b border-border bg-muted bg-background">
+              <div className="shrink-0 border-b border-slate-200 bg-muted bg-background">
                 {selectedNode && !isCompany ? (() => {
                   const cfg = ENTITY_CONFIG[selectedNode.type] || ENTITY_CONFIG.resource;
                   const Icon = cfg.icon;

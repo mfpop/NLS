@@ -1,4 +1,4 @@
-import { useState, useCallback, type ReactNode } from "react";
+import { useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -6,9 +6,11 @@ import {
   Wrench, Settings, Lightbulb, Cog,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
+import { CompactPagination } from "@/components/shared/CompactPagination";
+import { ExplorerToolbar, ExplorerToolbarButton } from "@/components/shared/ExplorerToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { MER_SUMMARY_QUERY, MER_LIST_QUERY } from "@/graphql/merQueries";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 /* ── Types ── */
 
@@ -72,11 +74,9 @@ const PRIORITY_META: Record<string, { label: string; color: string; bg: string }
 function SectionCard({ title, badge, children }: { title: string; badge?: ReactNode; children: ReactNode }) {
   return (
     <section>
-      <div className="mb-2 flex min-h-6 items-center gap-2">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-indigo-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-indigo-600/70 dark:text-indigo-400/70">{title}</div>
-        </div>
+      <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-1.5">
+        <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">{title}</h3>
+        <div className="flex-1" />
         {badge}
       </div>
       {children}
@@ -99,14 +99,14 @@ function KpiCard({ label, value, onClick, badge, muted, icon }: KpiCardProps) {
       type="button"
       onClick={onClick}
       disabled={!onClick}
-      className={`group  border border-border/60 bg-card p-3 transition-all duration-200 text-left ${
-        onClick ? "hover:border-indigo-300/60 dark:hover:border-indigo-600/40 hover:shadow-sm cursor-pointer" : "cursor-default"
+      className={`flex flex-col gap-0.5 px-3 py-2 min-w-0 text-left hover:bg-slate-50 transition-colors ${
+        onClick ? "cursor-pointer" : "cursor-default"
       }`}
     >
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
-          <p className={`text-xs font-medium ${theme.textMuted} truncate`}>{label}</p>
-          <p className={`text-lg font-bold ${muted ? theme.textMuted : theme.textPrimary}`}>{value}</p>
+          <p className={`text-[10px] font-medium text-slate-500 uppercase tracking-wide truncate`}>{label}</p>
+          <p className={`text-lg font-bold tabular-nums leading-none ${muted ? "text-slate-400" : "text-slate-900"}`}>{value}</p>
         </div>
         {icon && <span className="ml-1 opacity-50 group-hover:opacity-80 transition-opacity">{icon}</span>}
         {badge && (
@@ -115,11 +115,6 @@ function KpiCard({ label, value, onClick, badge, muted, icon }: KpiCardProps) {
           </span>
         )}
       </div>
-      {onClick && (
-        <div className="mt-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
-          View details →
-        </div>
-      )}
     </button>
   );
 }
@@ -159,12 +154,93 @@ function formatDate(d: string | null): string {
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+/* ── MER Recent Activity (paginated) ── */
+
+function MERRecentActivity({ items }: { items: MERItem[] }) {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [pageSize, setPageSize] = useState(6);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const ITEM_HEIGHT = 52;
+    const calc = () => { setPageSize(Math.max(3, Math.floor(el.clientHeight / ITEM_HEIGHT))); };
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const paginatedItems = items.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  return (
+    <div className="flex flex-col min-h-0">
+      <div className="shrink-0 flex items-center gap-2 px-3 h-8 border-b border-slate-200">
+        <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">Recent Activity</h3>
+        {items.length > 0 && (
+          <span className="ml-auto text-[10px] font-mono text-slate-400 shrink-0">{items.length}</span>
+        )}
+      </div>
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
+        {items.length === 0 ? (
+          <div className="flex items-center justify-center h-12 text-xs text-slate-400 italic">No recent activity</div>
+        ) : (
+          paginatedItems.map((m) => (
+            <button key={m.id} type="button"
+              onClick={() => navigate("/plan/mer")}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors">
+              <StatusDot status={m.status} />
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-slate-900 truncate">{m.title}</div>
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                  <span>{m.merCode || `MER-${m.id}`}</span>
+                  <span>·</span>
+                  <span>{formatDate(m.createdAt)}</span>
+                </div>
+              </div>
+              <span className={`text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
+                {PRIORITY_META[m.priority]?.label || m.priority}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+      <div className="shrink-0 flex items-center h-8 px-3 border-t border-slate-200">
+        <CompactPagination
+          currentPage={safePage}
+          totalItems={items.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Component ── */
 
 export function MERDashboardPage() {
   const navigate = useNavigate();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const [chartView, setChartView] = useState<"type" | "priority">("type");
+
+  // Ctrl+F / Cmd+F focuses the search input
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   const { data: summaryData, loading: summaryLoading, refetch: refetchSummary } = useQuery<{ merSummary: MERSummaryData }>(MER_SUMMARY_QUERY, {
     fetchPolicy: "cache-and-network",
@@ -175,15 +251,25 @@ export function MERDashboardPage() {
   });
 
   const summary = summaryData?.merSummary || null;
-  const merList = listData?.manufacturingEngineeringRequests || [];
+  const debouncedSearch = useDebouncedValue(search, 250);
+  const merList = (listData?.manufacturingEngineeringRequests || []).filter((m) => {
+    if (!debouncedSearch) return true;
+    const q = debouncedSearch.toLowerCase();
+    return (
+      m.title.toLowerCase().includes(q) ||
+      m.merCode.toLowerCase().includes(q) ||
+      m.submittedBy.toLowerCase().includes(q) ||
+      m.requestType.toLowerCase().includes(q)
+    );
+  });
 
   // Derived metrics
   const pipelineTotal = summary ? summary.submitted + summary.underReview + summary.approved + summary.inProgress + summary.completed : 0;
   const completionRate = pipelineTotal > 0 ? Math.round((summary!.completed / pipelineTotal) * 100) : 0;
   const rejectionRate = summary && summary.total > 0 ? Math.round((summary.rejected / summary.total) * 100) : 0;
 
-  // Recent activity (last 5 by creation date)
-  const recentMERs = [...merList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+  // Recent activity (paginated by creation date)
+  const allRecentMERs = [...merList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   // Upcoming deadlines (due within 7 days, not overdue)
   const upcomingDeadlines = merList.filter((m) => {
@@ -216,7 +302,14 @@ export function MERDashboardPage() {
             title="MER Dashboard" subtitle="Manufacturing Engineering Requests — analytics and overview" />
         </div>
         <div className="print-ignore">
-          <Toolbar left={<div />} right={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />} />
+          <ExplorerToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search by title, code, or requester..."
+            searchDebouncing={search !== debouncedSearch}
+            searchRef={searchRef}
+            actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
+          />
         </div>
 
         <div className="print-area flex-1 min-h-0 overflow-y-auto">
@@ -226,10 +319,10 @@ export function MERDashboardPage() {
               <div className="flex flex-col items-center justify-center h-48 text-center px-4">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl mb-6">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className=" border border-border/40 bg-card p-3 animate-pulse">
+                    <div key={i} className="border border-slate-200 bg-white p-3 animate-pulse">
                       <div className="space-y-2">
-                        <div className="h-3 w-16 rounded bg-muted" />
-                        <div className="h-5 w-10 rounded bg-muted" />
+                        <div className="h-3 w-16 rounded bg-slate-100" />
+                        <div className="h-5 w-10 rounded bg-slate-100" />
                       </div>
                     </div>
                   ))}
@@ -252,7 +345,7 @@ export function MERDashboardPage() {
                       New MER
                     </button>
                     <button type="button" onClick={hRefresh}
-                      className="inline-flex h-8 items-center gap-1.5 border border-border bg-card px-3 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
+                      className="inline-flex h-8 items-center gap-1.5 border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                     <RefreshCw className="h-3 w-3 stroke-current" /> Refresh
                   </button>
                 </div>
@@ -280,11 +373,10 @@ export function MERDashboardPage() {
 
                 {/* ═══ ROW 3: BREAKDOWN + COST ═══ */}
                 <div>
-                  <div className="border border-border/60 bg-card p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <div className="h-4 w-0.5 bg-indigo-500/60 rounded-full" />
-                      <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>Breakdown</h3>
-                      <div className="ml-auto flex items-center gap-0.5 border border-border/40 bg-muted p-0.5">
+                  <div className="bg-white border border-slate-200 divide-y divide-slate-200">
+                    <div className="flex items-center gap-2 px-3 h-8">
+                    <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">Breakdown</h3>
+                      <div className="ml-auto flex items-center gap-0.5 bg-slate-100 p-0.5">
                         <button type="button" onClick={() => setChartView("type")}
                           className={`inline-flex h-6 items-center px-2 text-[10px] font-semibold transition-all ${chartView === "type" ? "bg-indigo-600 text-white" : "text-muted-foreground hover:text-foreground"}`}>
                           By Type
@@ -295,6 +387,7 @@ export function MERDashboardPage() {
                         </button>
                       </div>
                     </div>
+                    <div className="p-3">
                     {chartView === "type" ? (
                       summary.byType.length === 0 ? (
                         <div className={`flex items-center justify-center h-24 text-xs italic ${theme.textMuted}`}>No data by type</div>
@@ -339,84 +432,53 @@ export function MERDashboardPage() {
                               );
                             })}
                           </div>
-                      )
-                    )}
+                        )
+                      )}
+                    </div>
                   </div>
 
                 </div>
 
                 {/* ═══ ROW 4: UPCOMING + RECENT ACTIVITY ═══ */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 divide-x divide-slate-200 border border-slate-200 bg-white">
 
                   {/* Upcoming deadlines */}
-                  <div className=" border border-border/60 bg-card p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-                      <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>Due This Week</h3>
+                  <div className="flex flex-col min-h-0">
+                    <div className="shrink-0 flex items-center gap-2 px-3 h-8 border-b border-slate-200">
+                      <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">Due This Week</h3>
                       {upcomingDeadlines.length > 0 && (
-                        <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                        <span className="ml-auto text-[10px] font-mono text-amber-700 font-medium">
                           {upcomingDeadlines.length}
                         </span>
                       )}
                     </div>
+                    <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
                     {upcomingDeadlines.length === 0 ? (
-                      <div className={`flex items-center justify-center h-20 text-xs italic ${theme.textMuted}`}>No upcoming deadlines</div>
+                      <div className="flex items-center justify-center h-12 text-xs text-slate-400 italic">No upcoming deadlines</div>
                     ) : (
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                        {upcomingDeadlines.map((m) => {
+                      upcomingDeadlines.map((m) => {
                           const days = daysUntil(m.dueDate);
                           return (
                             <button key={m.id} type="button"
                               onClick={() => navigate("/plan/mer")}
-                              className="w-full flex items-center gap-2 border border-amber-100 dark:border-amber-900/40 bg-amber-50/50 dark:bg-amber-900/10 p-2 text-left hover:bg-amber-100/70 dark:hover:bg-amber-900/20 transition-colors ">
+                              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors">
                               <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
                               <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
-                                <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                <div className="text-xs font-medium text-slate-900 truncate">{m.title}</div>
+                                <div className="text-[10px] text-amber-600 font-medium">
                                   {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
                                 </div>
                               </div>
                               <StatusDot status={m.status} />
                             </button>
                           );
-                        })}
-                      </div>
+                        })
                     )}
+                    </div>
                   </div>
 
-                  {/* Recent Activity */}
-                  <div className=" border border-border/60 bg-card p-4">
-                    <div className="mb-3 flex items-center gap-2">
-                      <div className="h-4 w-0.5 bg-green-500/60 rounded-full" />
-                      <h3 className={`text-xs font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>Recent Activity</h3>
-                    </div>
-                    {recentMERs.length === 0 ? (
-                      <div className={`flex items-center justify-center h-20 text-xs italic ${theme.textMuted}`}>No recent activity</div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {recentMERs.map((m) => {
-                          return (
-                            <button key={m.id} type="button"
-                              onClick={() => navigate("/plan/mer")}
-                              className="w-full flex items-center gap-2 p-2 text-left hover:bg-muted/50 transition-colors ">
-                              <StatusDot status={m.status} />
-                              <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                  <span>{m.merCode || `MER-${m.id}`}</span>
-                                  <span>·</span>
-                                  <span>{formatDate(m.createdAt)}</span>
-                                </div>
-                              </div>
-                              <span className={`text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
-                                {PRIORITY_META[m.priority]?.label || m.priority}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  {/* Recent Activity (paginated) */}
+                  <MERRecentActivity items={allRecentMERs} />
                 </div>
               </>
             ) : null}

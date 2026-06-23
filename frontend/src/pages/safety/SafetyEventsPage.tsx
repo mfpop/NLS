@@ -4,8 +4,7 @@ import { gql } from "@apollo/client";
 import { AlertTriangle, Plus, Save, CheckCircle, Ban, Play, Pencil, Trash2, ArrowLeft, RefreshCw, Search, Eye } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
 import { SourceLocationSelector, type LocationHierarchy } from "@/components/shared/SourceLocationSelector";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
@@ -158,7 +157,7 @@ function resolveTargetLabel(targetType: string, targetId: number | null | undefi
 
 function resolveEditLoc(
   tt: string, tid: string,
-  resources: any[], rgs: any[], depts: any[], lines: any[], plants: any[],
+  resources: any[], rgs: any[], depts: any[], lines: any[],
 ): LocationHierarchy {
   const empty = { plantId: "", lineId: "", departmentId: "", resourceGroupId: "", resourceId: "", targetType: tt as any, targetId: tid ? parseInt(tid, 10) : null };
   if (!tid) return { ...empty, targetType: "PLANT", targetId: null };
@@ -297,7 +296,7 @@ export function SafetyEventsPage() {
     // Resolve full cascade hierarchy from saved target
     const tt = item.targetType || "PLANT";
     const tid = item.targetId ? String(item.targetId) : "";
-    const loc = resolveEditLoc(tt, tid, resources, rgs, depts, lines, plants);
+    const loc = resolveEditLoc(tt, tid, resources, rgs, depts, lines);
     setCLoc(loc);
     setCTitle(item.title || "");
     setCDesc(item.description || "");
@@ -535,21 +534,19 @@ export function SafetyEventsPage() {
   const canCancel = selStatus !== "CLOSED" && selStatus !== "CANCELLED";
 
   const toolbarContent = (
-    <SplitToolbar
+    <ExplorerToolbar
       searchValue={searchQuery}
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search events..."
       filters={
-        <>
-          <ToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} />
-        </>
+        <ExplorerToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
       }
       actions={
-        creating ? (<><ToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredFieldsOk} variant="success" title={requiredFieldsOk ? "Save as draft" : "Fill in all required fields"} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); setSelectedId(null); resetForm(); }} title="Cancel creation" /></>) :
-        editing ? (<><ToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredFieldsOk} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} title="Discard changes" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
-        !selItem ? (<><ToolbarButton icon={Plus} label="New Event" onClick={hNew} title="Create new safety event" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        creating ? (<><ExplorerToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredFieldsOk} variant="success" title={requiredFieldsOk ? "Save as draft" : "Fill in all required fields"} /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); setSelectedId(null); resetForm(); }} title="Cancel creation" /></>) :
+        editing ? (<><ExplorerToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredFieldsOk} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} title="Discard changes" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
+        !selItem ? (<><ExplorerToolbarButton icon={Plus} label="New Event" onClick={hNew} variant="success" title="Create new safety event" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
         :
-        (<><ToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ToolbarButton icon={Play} label="Report" onClick={() => hReport(selItem.id)} disabled={!canReport} /><ToolbarButton icon={Eye} label="Review" onClick={() => hReview(selItem.id)} disabled={!canReview} /><ToolbarButton icon={CheckCircle} label="Close" onClick={() => hClose(selItem.id)} disabled={!canClose} variant={canClose ? "success" : "default"} /><ToolbarButton icon={Trash2} label="Cancel" onClick={() => setDeleteConfirmId(selItem.id)} disabled={!canCancel} /><ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        (<><ExplorerToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ExplorerToolbarButton icon={Play} label="Report" onClick={() => hReport(selItem.id)} disabled={!canReport} /><ExplorerToolbarButton icon={Eye} label="Review" onClick={() => hReview(selItem.id)} disabled={!canReview} /><ExplorerToolbarButton icon={CheckCircle} label="Close" onClick={() => hClose(selItem.id)} disabled={!canClose} variant={canClose ? "success" : "default"} /><ExplorerToolbarButton icon={Trash2} label="Cancel" onClick={() => setDeleteConfirmId(selItem.id)} disabled={!canCancel} variant="destructive" /><ExplorerToolbarSeparator /><ExplorerToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
       }
     />
   );

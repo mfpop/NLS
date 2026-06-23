@@ -172,6 +172,9 @@ const WarehousesPage = lazy(() =>
 const AuditTemplateManagerPage = lazy(() =>
   import("@/pages/system/AuditTemplateManagerPage").then((module) => ({ default: module.AuditTemplateManagerPage }))
 );
+const AuditLogsPage = lazy(() =>
+  import("@/pages/system/AuditLogsPage").then((module) => ({ default: module.AuditLogsPage }))
+);
 const ApplicationSettingsPage = lazy(() =>
   import("@/pages/system/ApplicationSettingsPage").then((module) => ({ default: module.ApplicationSettingsPage }))
 );
@@ -190,6 +193,9 @@ const ERPImportPage = lazy(() =>
 const ErpImportPatternPage = lazy(() =>
   import("@/pages/system/erp-data/ErpImportPatternPage").then((module) => ({ default: module.ErpImportPatternPage }))
 );
+const SystemHealthPage = lazy(() =>
+  import("@/pages/system/SystemHealthPage").then((module) => ({ default: module.SystemHealthPage }))
+);
 const UserProfilePage = lazy(() =>
   import("@/pages/system/UserProfilePage").then((module) => ({ default: module.UserProfilePage }))
 );
@@ -204,6 +210,12 @@ const MyDashboardPage = lazy(() =>
 );
 const MyTasksPage = lazy(() =>
   import("@/pages/myworkspace/MyTasksPage").then((module) => ({ default: module.MyTasksPage }))
+);
+const ChatPage = lazy(() =>
+  import("@/pages/myworkspace/ChatPage").then((module) => ({ default: module.ChatPage }))
+);
+const ActivityFeedPage = lazy(() =>
+  import("@/pages/myworkspace/ActivityFeedPage").then((module) => ({ default: module.ActivityFeedPage }))
 );
 const AdminGuidePage = lazy(() =>
   import("@/pages/docs/AdminGuidePage").then((module) => ({ default: module.AdminGuidePage }))
@@ -249,6 +261,10 @@ export function AppRoutes() {
           <Route path="control-tower" element={<ControlTowerPage />} />
           <Route path="myworkspace/dashboard" element={<MyDashboardPage />} />
           <Route path="myworkspace/tasks" element={<MyTasksPage />} />
+          <Route path="myworkspace/chat" element={<ChatPage />} />
+          <Route path="myworkspace/activity-feed" element={<ActivityFeedPage />} />
+          <Route path="myworkspace/profile" element={<UserProfilePage />} />
+          <Route path="myworkspace/preferences" element={<UserPreferencesPage />} />
           <Route path="execution/line-performance" element={<LinePerformancePage />} />
           <Route path="execution/live-shopfloor" element={<LiveShopfloorPage />} />
           <Route path="execution/vsm" element={<VsmPage />} />
@@ -348,10 +364,25 @@ export function AppRoutes() {
           <Route path="system/application-settings" element={<ApplicationSettingsPage />} />
           <Route path="system/administrative-departments" element={<AdministrativeDepartmentsPage />} />
           <Route path="system/audit-templates" element={<AuditTemplateManagerPage />} />
+          <Route path="system/audit-templates/production-control" element={<AuditTemplateManagerPage />} />
+          <Route path="system/audit-templates/quality" element={<AuditTemplateManagerPage />} />
+          <Route path="system/audit-templates/safety" element={<AuditTemplateManagerPage />} />
+          <Route path="system/audit-templates/material" element={<AuditTemplateManagerPage />} />
+          {/* Audit Logs */}
+          <Route path="system/audit-logs" element={<AuditLogsPage />} />
+          <Route path="system/audit-logs/user-activity" element={<AuditLogsPage />} />
+          <Route path="system/audit-logs/data-changes" element={<AuditLogsPage />} />
+          <Route path="system/audit-logs/login-events" element={<AuditLogsPage />} />
+          <Route path="system/audit-logs/system-events" element={<AuditLogsPage />} />
           <Route path="system/users-and-roles" element={<UsersAndRolesPage />} />
           <Route path="system/erp-data" element={<ERPDataPage />} />
           <Route path="system/erp-data/import" element={<ERPImportPage />} />
           <Route path="system/erp-data/erp-patterns" element={<ErpImportPatternPage />} />
+          <Route path="system/health" element={<SystemHealthPage />} />
+          <Route path="system/health/services" element={<SystemHealthPage />} />
+          <Route path="system/health/database" element={<SystemHealthPage />} />
+          <Route path="system/health/deployment" element={<SystemHealthPage />} />
+          <Route path="system/health/errors" element={<SystemHealthPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />
           <Route path="system/sign-out" element={<SignOutPage />} />

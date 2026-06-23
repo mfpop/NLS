@@ -523,25 +523,21 @@ export function A3PdcaPage() {
         <div className="print-ignore">
           <Toolbar
             left={!isForm ? <ToolbarSearch value={search} onChange={setSearch} placeholder="Search A3/PDCA..." /> : <div />}
+            center={!isForm && (
+              <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
+                options={[
+                  { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
+                  { value: "PLAN", label: "Plan" }, { value: "DO", label: "Do" },
+                  { value: "CHECK", label: "Check" }, { value: "ACT", label: "Act" },
+                  { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
+                ]}
+                className="w-36" />
+            )}
             right={
-              <div className="flex items-center gap-2 w-full">
-                {!isForm && (
-                  <>
-                    <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
-                      options={[
-                        { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
-                        { value: "PLAN", label: "Plan" }, { value: "DO", label: "Do" },
-                        { value: "CHECK", label: "Check" }, { value: "ACT", label: "Act" },
-                        { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
-                      ]}
-                      className="w-36" />
-
-                  </>
-                )}
+              <div className="flex items-center gap-2">
                 {isForm && mode === "create" && (
                   <MethodToggle value={templateMethod} onChange={(m) => { setTemplateMethod(m); applyTemplate(m); }} />
                 )}
-                <div className="flex-1" />
                 {isForm ? (
                   <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
                 ) : (
@@ -560,13 +556,13 @@ export function A3PdcaPage() {
         )}
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left panel — list */}
-          <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-card/40 border-r border-border/20"
+          <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major"
             style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4">
+            <div className="shrink-0 h-8 border-b border-slate-200 flex items-center px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>A3 / PDCA</span>
               <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{records.length}</span>
             </div>
-            <div className={`flex-1 overflow-y-auto ${theme.surfaceBg}`}>
+            <div className="flex-1 overflow-y-auto">
               {loading && records.length === 0 ? (
                 <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                   <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />Loading...</div>
@@ -619,7 +615,7 @@ export function A3PdcaPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 flex h-8 items-center border-t border-border/50 bg-muted px-4">
+            <div className="shrink-0 flex h-8 items-center border-t border-slate-200 bg-muted px-4">
               <span className={`text-xs ${theme.textMuted}`}>{records.length} record{records.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
@@ -809,7 +805,7 @@ export function A3PdcaPage() {
           </div>
         </div>
         {/* Footer */}
-        <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
+        <div className="print-ignore shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
           <span className="flex items-center gap-1.5">A3 / PDCA</span>
           <span className="flex-1" />
           {sel && (

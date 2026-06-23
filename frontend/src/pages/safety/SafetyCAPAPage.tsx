@@ -2,8 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { CheckCircle, Plus, Save, Ban, Play, Search, Pencil, ArrowLeft, RefreshCw, Target, RotateCcw, XCircle } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
 import { SAFETY_CAPAS_QUERY, SAFETY_EVENTS_QUERY, SAFETY_INJURY_CLAIMS_QUERY, SAFETY_MEDICAL_CASES_QUERY, SAFETY_ENV_REPORTS_QUERY } from "@/graphql/checkQueries";
 import {
   CREATE_SAFETY_CAPA_MUTATION, UPDATE_SAFETY_CAPA_MUTATION,
@@ -374,20 +373,18 @@ export function SafetyCAPAPage() {
   const isEditable = selStatus === "DRAFT" || selStatus === "OPEN";
 
   const toolbarContent = (
-    <SplitToolbar
+    <ExplorerToolbar
       searchValue={searchQuery}
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search CAPAs..."
       filters={
-        <>
-          <ToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} />
-        </>
+        <ExplorerToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
       }
       actions={
-        creating ? (<><ToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredOk} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); resetForm(); }} /></>) :
-        editing ? (<><ToolbarButton icon={Save} label="Update" onClick={hSaveEdit} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} /></>) :
-        !selItem ? (<><ToolbarButton icon={Plus} label="New CAPA" onClick={hNew} variant="primary" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
-        (<><ToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ToolbarButton icon={Play} label="Open" onClick={() => hTransition(openMut, selItem.id, "CAPA opened")} disabled={!canOpen} /><ToolbarButton icon={Play} label="Start" onClick={() => hTransition(startMut, selItem.id, "CAPA started")} disabled={!canStart} /><ToolbarButton icon={Target} label="Pending Eff." onClick={() => hTransition(pendingEffMut, selItem.id, "Pending effectiveness")} disabled={!canPendingEff} /><ToolbarButton icon={RotateCcw} label="Complete Eff." onClick={() => setEffectivenessPopup({ id: selItem.id })} disabled={!canCompEff} /><ToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "CAPA closed")} disabled={!canClose} variant={canClose ? "success" : "default"} /><ToolbarButton icon={XCircle} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" /><ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        creating ? (<><ExplorerToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredOk} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); resetForm(); }} /></>) :
+        editing ? (<><ExplorerToolbarButton icon={Save} label="Update" onClick={hSaveEdit} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} /></>) :
+        !selItem ? (<><ExplorerToolbarButton icon={Plus} label="New CAPA" onClick={hNew} variant="success" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
+        (<><ExplorerToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ExplorerToolbarButton icon={Play} label="Open" onClick={() => hTransition(openMut, selItem.id, "CAPA opened")} disabled={!canOpen} /><ExplorerToolbarButton icon={Play} label="Start" onClick={() => hTransition(startMut, selItem.id, "CAPA started")} disabled={!canStart} /><ExplorerToolbarButton icon={Target} label="Pending Eff." onClick={() => hTransition(pendingEffMut, selItem.id, "Pending effectiveness")} disabled={!canPendingEff} /><ExplorerToolbarButton icon={RotateCcw} label="Complete Eff." onClick={() => setEffectivenessPopup({ id: selItem.id })} disabled={!canCompEff} /><ExplorerToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "CAPA closed")} disabled={!canClose} variant={canClose ? "success" : "default"} /><ExplorerToolbarButton icon={XCircle} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" /><ExplorerToolbarSeparator /><ExplorerToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
       }
     />
   );

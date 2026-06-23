@@ -40,8 +40,8 @@ export function RecordListPanel<T>({
   }, [records.length]);
 
   return (
-    <section className={`flex min-h-0 min-w-0 flex-col border-r border-border/60 bg-card ${className}`}>
-      <div className="border-b border-border/50 px-3 py-2">
+    <section className={`flex min-h-0 min-w-0 flex-col border-r border-border-major bg-card ${className}`}>
+      <div className="border-b border-slate-200 px-3 py-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
           <span className="text-xs text-muted-foreground">{records.length}</span>
@@ -73,7 +73,7 @@ export function RecordListPanel<T>({
           </ul>
         )}
       </div>
-      <div className="flex shrink-0 items-center justify-between border-t border-border/30 px-2 py-1.5 text-xs text-muted-foreground">
+      <div className="flex shrink-0 items-center justify-between border-t border-slate-200 px-2 py-1.5 text-xs text-muted-foreground">
         <span>{records.length} total</span>
         <div className="flex items-center gap-1">
           {footerRight}

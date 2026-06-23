@@ -1,3 +1,4 @@
+import json
 import typing
 import strawberry
 from datetime import datetime
@@ -278,6 +279,7 @@ class UserRoleAssignmentNode:
     administrative_department_name: typing.Optional[str] = strawberry.field(name="administrativeDepartmentName", default=None)
     is_active: bool = strawberry.field(name="isActive")
     assigned_at: str = strawberry.field(name="assignedAt")
+    access_level: str = strawberry.field(name="accessLevel")
 
     @classmethod
     def from_db(cls, obj: UserRoleAssignment) -> "UserRoleAssignmentNode":
@@ -289,6 +291,11 @@ class UserRoleAssignmentNode:
                 dept_name = obj.administrative_department.name
             except Exception:
                 dept_name = ""
+        # Compute access level from role properties
+        if obj.role.is_system_role:
+            access_level = "Admin"
+        else:
+            access_level = "Staff"
         return cls(
             id=strawberry.ID(str(obj.id)),
             user_profile_id=strawberry.ID(str(obj.user_profile_id)),
@@ -305,6 +312,7 @@ class UserRoleAssignmentNode:
             administrative_department_name=dept_name,
             is_active=obj.is_active,
             assigned_at=_iso(obj.assigned_at),
+            access_level=access_level,
         )
 
 
@@ -372,6 +380,52 @@ class UpdateProfileSkillInput:
 class ProfileSkillPayload:
     skill: typing.Optional[ProfileSkillNode] = None
     errors: typing.Optional[list[MutationError]] = None
+
+
+@strawberry.type
+class ProfileSkillCapabilitiesNode:
+    can_add_skill: bool = strawberry.field(name="canAddSkill")
+    can_edit_skill: bool = strawberry.field(name="canEditSkill")
+    can_delete_skill: bool = strawberry.field(name="canDeleteSkill")
+
+
+@strawberry.type
+class SystemAuditLogNode:
+    id: strawberry.ID
+    event_type: str = strawberry.field(name="eventType")
+    user_id: typing.Optional[strawberry.ID] = strawberry.field(name="userId", default=None)
+    username: str
+    action: str
+    description: str
+    entity_type: str = strawberry.field(name="entityType", default="")
+    entity_id: str = strawberry.field(name="entityId", default="")
+    ip_address: typing.Optional[str] = strawberry.field(name="ipAddress", default=None)
+    details: str
+    created_at: str = strawberry.field(name="createdAt")
+
+    @classmethod
+    def from_db(cls, obj) -> "SystemAuditLogNode":
+        from administration.models import SystemAuditLog
+        return cls(
+            id=strawberry.ID(str(obj.id)),
+            event_type=obj.event_type,
+            user_id=strawberry.ID(str(obj.user_id)) if obj.user_id else None,
+            username=obj.username or "",
+            action=obj.action,
+            description=obj.description or "",
+            entity_type=obj.entity_type or "",
+            entity_id=obj.entity_id or "",
+            ip_address=str(obj.ip_address) if obj.ip_address else None,
+            details=json.dumps(obj.details) if obj.details else "{}",
+            created_at=_iso(obj.created_at),
+        )
+
+
+@strawberry.type
+class PaginatedAuditLogsResponse:
+    items: list[SystemAuditLogNode] = strawberry.field(default_factory=list)
+    total: int = 0
+    has_more: bool = strawberry.field(name="hasMore", default=False)
 
 
 @strawberry.input

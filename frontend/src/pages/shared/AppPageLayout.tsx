@@ -35,7 +35,7 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
       <div className="flex-1 min-h-0 overflow-hidden">
         {hasLeftColumn ? (
           <div className="flex h-full min-h-0">
-            <div className={`shrink-0 border-r border-border bg-muted/30 overflow-y-auto px-2 ${leftColumnWidth}`}>
+            <div className={`shrink-0 border-r border-border-major bg-muted overflow-hidden px-2 ${leftColumnWidth}`}>
               {leftColumn}
             </div>
             <div className="flex-1 min-w-0 overflow-hidden">
@@ -47,7 +47,7 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
         )}
       </div>
       {footer && (
-        <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
+        <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border-major bg-muted px-4 text-xs font-medium text-muted-foreground">
           {footer}
         </div>
       )}

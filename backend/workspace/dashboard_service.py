@@ -1,6 +1,7 @@
 """Dashboard aggregation service for My Workspace."""
 
 from datetime import date, timedelta
+from django.db.models import Count
 
 from workspace.models import WorkspaceTask
 from workspace.models import (
@@ -8,6 +9,7 @@ from workspace.models import (
     TASK_STATUS_IN_PROGRESS,
     TASK_STATUS_WAITING,
     TASK_STATUS_COMPLETED,
+    TASK_STATUS_CANCELLED,
     TASK_PRIORITY_HIGH,
     TASK_PRIORITY_CRITICAL,
 )
@@ -15,6 +17,7 @@ from workspace.models import (
 MAX_PRIORITY_WORK = 8
 MAX_DUE_SOON = 6
 MAX_RECENT = 10
+MAX_ALERTS = 8
 
 
 class DashboardService:
@@ -70,6 +73,32 @@ class DashboardService:
             base.order_by("-updated_at")[:MAX_RECENT]
         )
 
+        # Alerts & Approvals: waiting items + overdue high-priority items
+        alerts = list(
+            base.filter(
+                status=TASK_STATUS_WAITING,
+            ).order_by("due_date")[:MAX_ALERTS]
+        )
+        alert_ids = {t.id for t in alerts}
+        overdue_alerts = list(
+            base.filter(
+                due_date__lt=today,
+                priority__in=[TASK_PRIORITY_HIGH, TASK_PRIORITY_CRITICAL],
+                status__in=[TASK_STATUS_OPEN, TASK_STATUS_IN_PROGRESS],
+            ).exclude(id__in=alert_ids).order_by("due_date")[:MAX_ALERTS - len(alerts)]
+        )
+        alerts_approvals = alerts + overdue_alerts
+
+        # Source breakdown: counts by source_module for non-cancelled tasks
+        source_breakdown = list(
+            base.filter(
+                status__in=[TASK_STATUS_OPEN, TASK_STATUS_IN_PROGRESS, TASK_STATUS_WAITING, TASK_STATUS_COMPLETED],
+                source_module__gt="",
+            ).values("source_module").annotate(
+                count=Count("id")
+            ).order_by("-count")
+        )
+
         return {
             "open_tasks": open_tasks,
             "overdue_tasks": overdue_tasks,
@@ -82,4 +111,6 @@ class DashboardService:
             "priority_work": priority_work,
             "due_soon": due_soon,
             "recent_activity": recent_activity,
+            "alerts_approvals": alerts_approvals,
+            "source_breakdown": list(source_breakdown),
         }

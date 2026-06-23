@@ -2,8 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { AlertTriangle, Plus, Save, CheckCircle, Ban, Play, Search, Pencil, ArrowLeft, RefreshCw, Eye, Clock } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
 import {
   SAFETY_INJURY_CLAIMS_QUERY, SAFETY_EVENTS_QUERY,
 } from "@/graphql/checkQueries";
@@ -324,20 +323,18 @@ export function SafetyInjuryClaimsPage() {
   const isEditable = selStatus === "DRAFT" || selStatus === "OPEN";
 
   const toolbarContent = (
-    <SplitToolbar
+    <ExplorerToolbar
       searchValue={searchQuery}
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search claims..."
       filters={
-        <>
-          <ToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} />
-        </>
+        <ExplorerToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
       }
       actions={
-        creating ? (<><ToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredOk} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); setSelectedId(null); resetForm(); }} /></>) :
-        editing ? (<><ToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredOk} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} /></>) :
-        !selItem ? (<><ToolbarButton icon={Plus} label="New Claim" onClick={hNew} variant="primary" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
-        (<><ToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ToolbarButton icon={Play} label="Open" onClick={() => hTransition(openMut, selItem.id, "Claim opened")} disabled={!canOpen} /><ToolbarButton icon={Eye} label="Review" onClick={() => hTransition(reviewMut, selItem.id, "Claim under review")} disabled={!canReview} /><ToolbarButton icon={Clock} label="Wait Info" onClick={() => hTransition(waitMut, selItem.id, "Set to waiting info")} disabled={!canWait} /><ToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "Claim closed")} disabled={!canClose} variant={canClose ? "success" : "default"} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" /><ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        creating ? (<><ExplorerToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredOk} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); setSelectedId(null); resetForm(); }} /></>) :
+        editing ? (<><ExplorerToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredOk} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} /></>) :
+        !selItem ? (<><ExplorerToolbarButton icon={Plus} label="New Claim" onClick={hNew} variant="success" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
+        (<><ExplorerToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ExplorerToolbarButton icon={Play} label="Open" onClick={() => hTransition(openMut, selItem.id, "Claim opened")} disabled={!canOpen} /><ExplorerToolbarButton icon={Eye} label="Review" onClick={() => hTransition(reviewMut, selItem.id, "Claim under review")} disabled={!canReview} /><ExplorerToolbarButton icon={Clock} label="Wait Info" onClick={() => hTransition(waitMut, selItem.id, "Set to waiting info")} disabled={!canWait} /><ExplorerToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "Claim closed")} disabled={!canClose} variant={canClose ? "success" : "default"} /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" /><ExplorerToolbarSeparator /><ExplorerToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
       }
     />
   );

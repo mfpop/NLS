@@ -1,0 +1,221 @@
+[96msrc/components/sidebar/navigationConfig.ts[0m:[93m9[0m:[93m149[0m - [91merror[0m[90m TS6133: [0m'ShieldAlert' is declared but its value is never read.
+
+[7m9[0m   Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench, ShieldAlert, CheckCircle,
+[7m [0m [91m                                                                                                                                                    ~~~~~~~~~~~[0m
+
+[96msrc/components/sidebar/navigationConfig.ts[0m:[93m9[0m:[93m162[0m - [91merror[0m[90m TS6133: [0m'CheckCircle' is declared but its value is never read.
+
+[7m9[0m   Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench, ShieldAlert, CheckCircle,
+[7m [0m [91m                                                                                                                                                                 ~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m4[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'RMA_STATUS_STYLES' is declared but its value is never read.
+
+[7m4[0m   RMA_STATUS_STYLES, DMR_STATUS_STYLES,
+[7m [0m [91m  ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m4[0m:[93m22[0m - [91merror[0m[90m TS6133: [0m'DMR_STATUS_STYLES' is declared but its value is never read.
+
+[7m4[0m   RMA_STATUS_STYLES, DMR_STATUS_STYLES,
+[7m [0m [91m                     ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m5[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'ISSUE_STATUS_STYLES' is declared but its value is never read.
+
+[7m5[0m   ISSUE_STATUS_STYLES, ACTION_STATUS_STYLES,
+[7m [0m [91m  ~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m5[0m:[93m24[0m - [91merror[0m[90m TS6133: [0m'ACTION_STATUS_STYLES' is declared but its value is never read.
+
+[7m5[0m   ISSUE_STATUS_STYLES, ACTION_STATUS_STYLES,
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m6[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'PRIORITY_STYLES' is declared but its value is never read.
+
+[7m6[0m   PRIORITY_STYLES,
+[7m [0m [91m  ~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m202[0m:[93m11[0m - [91merror[0m[90m TS6133: [0m'dmr7' is declared but its value is never read.
+
+[7m202[0m     const dmr7 = dmrs.filter((d) => d.createdAt && d.createdAt >= WEEK_START_STR);
+[7m   [0m [91m          ~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m204[0m:[93m11[0m - [91merror[0m[90m TS6133: [0m'prevDmr7' is declared but its value is never read.
+
+[7m204[0m     const prevDmr7 = dmrs.filter((d) => d.createdAt && d.createdAt >= `${new Date(NOW.getTime() - 14 * 86400000).toISOString().slice(0, 10)}` && d.createdAt < WEEK_START_STR);
+[7m   [0m [91m          ~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m211[0m:[93m11[0m - [91merror[0m[90m TS6133: [0m'defectQty30' is declared but its value is never read.
+
+[7m211[0m     const defectQty30 = dmr30.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
+[7m   [0m [91m          ~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m360[0m:[93m64[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void; }[]' is not assignable to parameter of type '{ id: string; priority: number; sortPriority: number; type: string; title: string; status: string; owner: string; date: string; onClick: () => void; }[]'.
+  Type '{ id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void; }' is missing the following properties from type '{ id: string; priority: number; sortPriority: number; type: string; title: string; status: string; owner: string; date: string; onClick: () => void; }': priority, sortPriority
+
+[7m360[0m             {workQueueTab === "recent" && renderWorkQueueItems(recentItems)}
+[7m   [0m [91m                                                               ~~~~~~~~~~~[0m
+
+[96msrc/pages/check/quality-control/QualityOverview.tsx[0m:[93m361[0m:[93m67[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void; }[]' is not assignable to parameter of type '{ id: string; priority: number; sortPriority: number; type: string; title: string; status: string; owner: string; date: string; onClick: () => void; }[]'.
+  Type '{ id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void; }' is missing the following properties from type '{ id: string; priority: number; sortPriority: number; type: string; title: string; status: string; owner: string; date: string; onClick: () => void; }': priority, sortPriority
+
+[7m361[0m             {workQueueTab === "completed" && renderWorkQueueItems(completedItems)}
+[7m   [0m [91m                                                                  ~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m5[0m:[93m42[0m - [91merror[0m[90m TS6133: [0m'ChevronRight' is declared but its value is never read.
+
+[7m5[0m   AlertTriangle, Calendar, ExternalLink, ChevronRight,
+[7m [0m [91m                                         ~~~~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m178[0m:[93m10[0m - [91merror[0m[90m TS6133: [0m'leftPct' is declared but its value is never read.
+
+[7m178[0m   const [leftPct, setLeftPct] = useState(20);
+[7m   [0m [91m         ~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m188[0m:[93m9[0m - [91merror[0m[90m TS6133: [0m'handleSplitMouseDown' is declared but its value is never read.
+
+[7m188[0m   const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
+[7m   [0m [91m        ~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m230[0m:[93m10[0m - [91merror[0m[90m TS6133: [0m'updateTask' is declared but its value is never read.
+
+[7m230[0m   const [updateTask] = useMutation(UPDATE_TASK_MUTATION);
+[7m   [0m [91m         ~~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m241[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'startTask' does not exist on type '{}'.
+
+[7m241[0m     if (res.data?.startTask?.errors?.length > 0) {
+[7m   [0m [91m                  ~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m242[0m:[93m24[0m - [91merror[0m[90m TS18046: [0m'res.data' is of type 'unknown'.
+
+[7m242[0m       setMutationError(res.data.startTask.errors[0].message);
+[7m   [0m [91m                       ~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m253[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'completeTask' does not exist on type '{}'.
+
+[7m253[0m     if (res.data?.completeTask?.errors?.length > 0) {
+[7m   [0m [91m                  ~~~~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m254[0m:[93m24[0m - [91merror[0m[90m TS18046: [0m'res.data' is of type 'unknown'.
+
+[7m254[0m       setMutationError(res.data.completeTask.errors[0].message);
+[7m   [0m [91m                       ~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m265[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'cancelTask' does not exist on type '{}'.
+
+[7m265[0m     if (res.data?.cancelTask?.errors?.length > 0) {
+[7m   [0m [91m                  ~~~~~~~~~~[0m
+
+[96msrc/pages/myworkspace/MyTasksPage.tsx[0m:[93m266[0m:[93m24[0m - [91merror[0m[90m TS18046: [0m'res.data' is of type 'unknown'.
+
+[7m266[0m       setMutationError(res.data.cancelTask.errors[0].message);
+[7m   [0m [91m                       ~~~~~~~~[0m
+
+[96msrc/pages/safety/SafetyEnvReportsPage.tsx[0m:[93m277[0m:[93m30[0m - [91merror[0m[90m TS2322: [0mType 'Dispatch<SetStateAction<{ plantId: string; lineId: string; departmentId: string; resourceGroupId: string; resourceId: string; targetType: string; targetId: null; }>>' is not assignable to type '(h: LocationHierarchy) => void'.
+  Types of parameters 'value' and 'h' are incompatible.
+    Type 'LocationHierarchy' is not assignable to type 'SetStateAction<{ plantId: string; lineId: string; departmentId: string; resourceGroupId: string; resourceId: string; targetType: string; targetId: null; }>'.
+      Type 'LocationHierarchy' is not assignable to type '{ plantId: string; lineId: string; departmentId: string; resourceGroupId: string; resourceId: string; targetType: string; targetId: null; }'.
+        Types of property 'targetId' are incompatible.
+          Type 'number | null' is not assignable to type 'null'.
+            Type 'number' is not assignable to type 'null'.
+
+[7m277[0m                 value={cLoc} onChange={setCLoc}
+[7m   [0m [91m                             ~~~~~~~~[0m
+
+  [96msrc/components/shared/SourceLocationSelector.tsx[0m:[93m21[0m:[93m3[0m
+    [7m21[0m   onChange: (h: LocationHierarchy) => void;
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'onChange' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/pages/safety/SafetyEventsPage.tsx[0m:[93m161[0m:[93m61[0m - [91merror[0m[90m TS6133: [0m'plants' is declared but its value is never read.
+
+[7m161[0m   resources: any[], rgs: any[], depts: any[], lines: any[], plants: any[],
+[7m   [0m [91m                                                            ~~~~~~[0m
+
+[96msrc/pages/system/profile/EducationColumn.tsx[0m:[93m51[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'profileId' is declared but its value is never read.
+
+[7m51[0m   profileId,
+[7m  [0m [91m  ~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/EducationColumn.tsx[0m:[93m57[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'cancelEditing' is declared but its value is never read.
+
+[7m57[0m   cancelEditing,
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/EducationColumn.tsx[0m:[93m58[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'handleSave' is declared but its value is never read.
+
+[7m58[0m   handleSave,
+[7m  [0m [91m  ~~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/EducationColumn.tsx[0m:[93m59[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'saving' is declared but its value is never read.
+
+[7m59[0m   saving,
+[7m  [0m [91m  ~~~~~~[0m
+
+[96msrc/pages/system/profile/EducationColumn.tsx[0m:[93m310[0m:[93m16[0m - [91merror[0m[90m TS2741: [0mProperty 'icon' is missing in type '{ label: string; onClick: () => void; variant: "default"; className: string; }' but required in type 'ActionButtonProps'.
+
+[7m310[0m               <ToolbarButton label="Cancel" onClick={() => { setShowSkillForm(false); setNewSkillName(""); }} variant="default" className="!h-7 !px-2.5 !text-xs" />
+[7m   [0m [91m               ~~~~~~~~~~~~~[0m
+
+  [96msrc/components/shared/Toolbar.tsx[0m:[93m126[0m:[93m3[0m
+    [7m126[0m   icon: LucideIcon;
+    [7m   [0m [96m  ~~~~[0m
+    'icon' is declared here.
+
+[96msrc/pages/system/profile/PersonalInfoColumn.tsx[0m:[93m63[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'cancelEditing' is declared but its value is never read.
+
+[7m63[0m   cancelEditing,
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/PersonalInfoColumn.tsx[0m:[93m64[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'handleSave' is declared but its value is never read.
+
+[7m64[0m   handleSave,
+[7m  [0m [91m  ~~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/PersonalInfoColumn.tsx[0m:[93m65[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'saving' is declared but its value is never read.
+
+[7m65[0m   saving,
+[7m  [0m [91m  ~~~~~~[0m
+
+[96msrc/pages/system/profile/WorkHistoryColumn.tsx[0m:[93m2[0m:[93m29[0m - [91merror[0m[90m TS6133: [0m'Loader2' is declared but its value is never read.
+
+[7m2[0m import { Trash2, Briefcase, Loader2 } from "lucide-react";
+[7m [0m [91m                            ~~~~~~~[0m
+
+[96msrc/pages/system/profile/WorkHistoryColumn.tsx[0m:[93m39[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'cancelEditing' is declared but its value is never read.
+
+[7m39[0m   cancelEditing,
+[7m  [0m [91m  ~~~~~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/WorkHistoryColumn.tsx[0m:[93m40[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'handleSave' is declared but its value is never read.
+
+[7m40[0m   handleSave,
+[7m  [0m [91m  ~~~~~~~~~~[0m
+
+[96msrc/pages/system/profile/WorkHistoryColumn.tsx[0m:[93m41[0m:[93m3[0m - [91merror[0m[90m TS6133: [0m'saving' is declared but its value is never read.
+
+[7m41[0m   saving,
+[7m  [0m [91m  ~~~~~~[0m
+
+[96msrc/pages/system/UserProfilePage.tsx[0m:[93m615[0m:[93m15[0m - [91merror[0m[90m TS2739: [0mType 'EnrichedProfile' is missing the following properties from type '{ roles: { bullets: string[]; }[]; highlights: string[]; score: { value: number; label: string; }; summary: string[]; tenure: string; plants: number; lines: number; }': tenure, plants, lines
+
+[7m615[0m               normalized={normalized}
+[7m   [0m [91m              ~~~~~~~~~~[0m
+
+  [96msrc/pages/system/profile/WorkHistoryColumn.tsx[0m:[93m20[0m:[93m3[0m
+    [7m20[0m   normalized: {
+    [7m  [0m [96m  ~~~~~~~~~~[0m
+    The expected type comes from property 'normalized' which is declared here on type 'IntrinsicAttributes & WorkHistoryColumnProps'
+
+
+Found 37 errors in 9 files.
+
+Errors  Files
+     2  src/components/sidebar/navigationConfig.ts[90m:9[0m
+    10  src/pages/check/quality-control/QualityOverview.tsx[90m:4[0m
+    10  src/pages/myworkspace/MyTasksPage.tsx[90m:5[0m
+     1  src/pages/safety/SafetyEnvReportsPage.tsx[90m:277[0m
+     1  src/pages/safety/SafetyEventsPage.tsx[90m:161[0m
+     5  src/pages/system/profile/EducationColumn.tsx[90m:51[0m
+     3  src/pages/system/profile/PersonalInfoColumn.tsx[90m:63[0m
+     4  src/pages/system/profile/WorkHistoryColumn.tsx[90m:2[0m
+     1  src/pages/system/UserProfilePage.tsx[90m:615[0m

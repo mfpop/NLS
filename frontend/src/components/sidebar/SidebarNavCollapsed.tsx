@@ -153,7 +153,7 @@ export function SidebarNavCollapsed() {
       </nav>
 
       {currentEntry && popupRect && currentEntry.type === "item" && (
-        <div className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-xl rounded-lg py-1.5 px-3 whitespace-nowrap text-xs font-medium"
+        <div className="fixed z-50 bg-popover text-popover-foreground border border-border-major shadow-xl rounded-lg py-1.5 px-3 whitespace-nowrap text-xs font-medium"
           style={{ top: popupRect.top, left: popupRect.left }}
           onMouseEnter={() => {
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -166,7 +166,7 @@ export function SidebarNavCollapsed() {
       )}
 
       {currentEntry && popupRect && currentEntry.type === "section" && (
-        <div className="fixed z-50 bg-popover text-popover-foreground border border-border shadow-xl rounded-lg min-w-[180px]"
+        <div className="fixed z-50 bg-popover text-popover-foreground border border-border-major shadow-xl rounded-lg min-w-[180px]"
           style={{ top: popupRect.top, left: popupRect.left }}
           onMouseEnter={() => {
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -174,7 +174,7 @@ export function SidebarNavCollapsed() {
           }}
           onMouseLeave={closePopup}
         >
-          <div className="px-3 py-1.5 text-xs font-semibold text-sidebar-foreground border-b border-border">
+          <div className="px-3 py-1.5 text-xs font-semibold text-sidebar-foreground border-b border-border-major">
             {currentEntry.label}
           </div>
           <PopupContent entry={currentEntry} pathname={pathname} onItemClick={closeImmediate} />

@@ -20,6 +20,9 @@ from api.types.administration import (
     PermissionNode,
     UserRoleAssignmentNode,
     ProfileSkillNode,
+    ProfileSkillCapabilitiesNode,
+    SystemAuditLogNode,
+    PaginatedAuditLogsResponse,
 )
 
 
@@ -101,6 +104,7 @@ class AdministrationQuery:
         administrative_department_id: Optional[str] = None,
         is_active: Optional[bool] = None,
         search: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> list[UserProfileNode]:
         qs = UserProfileService.list(
             company_id=company_id,
@@ -108,6 +112,7 @@ class AdministrationQuery:
             administrative_department_id=administrative_department_id,
             is_active=is_active,
             search=search,
+            user_id=user_id,
             user=_user(info),
         )
         return [UserProfileNode.from_db(p) for p in qs]
@@ -149,7 +154,69 @@ class AdministrationQuery:
         return [PermissionNode.from_db(p) for p in perms]
 
     @strawberry.field
-    def profile_skills(self, user_profile_id: str) -> list[ProfileSkillNode]:
+    def profile_skills(self, info: GraphQLInfo, user_profile_id: str) -> list[ProfileSkillNode]:
         from administration.services import ProfileSkillService
         qs = ProfileSkillService.list(user_profile_id=user_profile_id)
         return [ProfileSkillNode.from_db(s) for s in qs]
+
+    @strawberry.field
+    def profile_skill_capabilities(self, info: GraphQLInfo, user_profile_id: str) -> "ProfileSkillCapabilitiesNode":
+        from administration.services import ProfileSkillService
+        can_add, can_edit, can_delete = ProfileSkillService.check_can_manage(
+            user_profile_id, user=_user(info),
+        )
+        return ProfileSkillCapabilitiesNode(
+            can_add=can_add, can_edit=can_edit, can_delete=can_delete,
+        )
+
+    # ── Audit Logs ──
+
+    @strawberry.field(name="auditLogs")
+    def resolve_audit_logs(
+        self,
+        info: GraphQLInfo,
+        event_type: typing.Optional[str] = None,
+        search: typing.Optional[str] = None,
+        action: typing.Optional[str] = None,
+        username: typing.Optional[str] = None,
+        entity_type: typing.Optional[str] = None,
+        date_from: typing.Optional[str] = None,
+        date_to: typing.Optional[str] = None,
+        limit: typing.Optional[int] = 50,
+        offset: typing.Optional[int] = 0,
+    ) -> "PaginatedAuditLogsResponse":
+        from administration.models import SystemAuditLog
+        from django.db.models import Q
+
+        qs = SystemAuditLog.objects.all()
+
+        if event_type:
+            qs = qs.filter(event_type=event_type)
+        if action:
+            qs = qs.filter(action__icontains=action)
+        if username:
+            qs = qs.filter(username__icontains=username)
+        if entity_type:
+            qs = qs.filter(entity_type__icontains=entity_type)
+        if search:
+            qs = qs.filter(
+                Q(action__icontains=search) |
+                Q(description__icontains=search) |
+                Q(username__icontains=search) |
+                Q(entity_type__icontains=search)
+            )
+        if date_from:
+            from datetime import datetime as dt
+            qs = qs.filter(created_at__gte=dt.fromisoformat(date_from))
+        if date_to:
+            from datetime import datetime as dt
+            qs = qs.filter(created_at__lte=dt.fromisoformat(date_to))
+
+        total = qs.count()
+        items = qs.order_by("-created_at")[offset:offset + limit]
+
+        return PaginatedAuditLogsResponse(
+            items=[SystemAuditLogNode.from_db(obj) for obj in items],
+            total=total,
+            has_more=(offset + limit) < total,
+        )

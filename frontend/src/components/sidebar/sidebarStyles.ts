@@ -1,3 +1,15 @@
+// ── Layout background tokens (unified surface system) ──
+// Sidebar uses darker bg (--sidebar: 93% lightness) for contrast against page surface (bg-muted: 95% lightness).
+// Active line selector / list panels use bg-white for content readability.
+export const layoutBg = {
+  sidebar: "bg-sidebar",
+  panelSurface: "bg-white",
+  separator: "border-border-major",
+  horizontalSeparator: "border-border-major",
+  strongSeparator: "border-border-major",
+  depth: "shadow-[2px_0_6px_-3px_hsl(var(--shadow-color)/0.35)]",
+};
+
 // ── Structural tokens (layout, dimensions, typography) ──
 export const sidebarNavTokens = {
   nav: "flex-1 overflow-y-auto py-1.5 space-y-0.5 px-2",
@@ -63,10 +75,49 @@ export const sectionColors: Record<string, string> = {
   filePreview: "text-slate-600",
   compareResults: "text-slate-600",
   integrationStatus: "text-slate-600",
+  // New sub-modules
+  company: "text-slate-600",
+  plants: "text-slate-600",
+  productionLines: "text-slate-600",
+  departments: "text-slate-600",
+  resourceGroups: "text-slate-600",
+  resources: "text-slate-600",
+  statuses: "text-slate-600",
+  categories: "text-slate-600",
+  types: "text-slate-600",
+  priorities: "text-slate-600",
+  uom: "text-slate-600",
+  reasonCodes: "text-slate-600",
+  importPatterns: "text-slate-600",
+  sourceFiles: "text-slate-600",
+  validationResults: "text-slate-600",
+  importLogs: "text-slate-600",
+  erpReferenceData: "text-slate-600",
+  auditTemplates: "text-slate-600",
+  usersRoles: "text-slate-600",
+  appSettings: "text-slate-600",
+  notifications: "text-slate-600",
+  numberingCodes: "text-slate-600",
+  featureFlags: "text-slate-600",
+  themeDefaults: "text-slate-600",
+  healthSummary: "text-slate-600",
+  services: "text-slate-600",
+  database: "text-slate-600",
+  deploymentInfo: "text-slate-600",
+  recentErrors: "text-slate-600",
+  userActivity: "text-slate-600",
+  dataChanges: "text-slate-600",
+  loginEvents: "text-slate-600",
+  systemEvents: "text-slate-600",
+  erpConnections: "text-slate-600",
+  email: "text-slate-600",
+  apiKeys: "text-slate-600",
+  webhooks: "text-slate-600",
+  fileStorage: "text-slate-600",
 };
 
 export const masterListTokens = {
-  columnBorder: "border-r border-border",
+  columnBorder: "border-r border-border-major",
   containerPad: "pl-2",
   rail: "border-l-[2px]",
   contentPad: "px-3",

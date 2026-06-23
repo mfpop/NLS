@@ -1,6 +1,12 @@
 from django.db import models
 from shared.models.base import TimeStampedModel
 
+# Chat models (direct 1:1 messaging)
+from workspace.models_chat import ChatThread, ChatParticipant, ChatMessage  # noqa: F401
+
+# Chat models (direct 1:1 messaging)
+from workspace.models_chat import ChatThread, ChatParticipant, ChatMessage  # noqa: F401
+
 
 TASK_STATUS_OPEN = "OPEN"
 TASK_STATUS_IN_PROGRESS = "IN_PROGRESS"

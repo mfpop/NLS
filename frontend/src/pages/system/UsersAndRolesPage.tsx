@@ -598,7 +598,7 @@ export function UsersAndRolesPage() {
       iconClass={theme.iconBoxBrand}
       title="Users & Roles"
       subtitle="Manage profiles and scoped role assignments from a single record workspace."
-      toolbar={<Toolbar left={toolbarSearch} right={<div className="flex w-full items-center justify-between">{toolbarFilters}<div className="flex items-center gap-0.5">{toolbarActions}</div></div>} />}
+      toolbar={<Toolbar left={toolbarSearch} center={toolbarFilters} right={<div className="flex items-center gap-0.5">{toolbarActions}</div>} />}
       footer={footer}
       leftColumn={
         <RecordListPanel

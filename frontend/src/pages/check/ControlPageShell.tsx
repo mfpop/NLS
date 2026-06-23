@@ -269,7 +269,7 @@ export function ControlPageShell({
         )}
       </div>
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
-        <div className="print-ignore flex flex-col min-h-0 bg-card/40 border-r border-border/20" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
+        <div className="print-ignore flex flex-col min-h-0 bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
           <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
             {renderUnifiedList
               ? renderUnifiedList((rt, id) => { setSelectedRecordType(rt); setSelectedId(id); setPage(0); }, selectedRecordType, selectedId, page)
@@ -282,7 +282,7 @@ export function ControlPageShell({
                 )}
           </div>
           {selectedRecordType && (
-            <div className="shrink-0 border-t border-border/30 bg-muted/20 flex h-8 items-center gap-2 px-3 text-[10px] text-muted-foreground">
+            <div className="shrink-0 border-t border-slate-200 bg-muted/20 flex h-8 items-center gap-2 px-3 text-[10px] text-muted-foreground">
               <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="font-medium hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed">Prev</button>
               <span className="font-mono">Page {page + 1}</span>
               <button onClick={() => setPage(p => p + 1)} className="font-medium hover:text-foreground">Next </button>
@@ -298,7 +298,7 @@ export function ControlPageShell({
             : renderOverview()}
         </div>
       </div>
-      <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-2 px-4 text-xs text-muted-foreground font-medium">
+      <div className="print-ignore shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-2 px-4 text-xs text-muted-foreground font-medium">
         {typeof footerLeft === "function" ? footerLeft(selectedRecordType, page, 0) : footerLeft || (
           <div className="flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-[10px]">{getRecordTypeLabel("ISSUES")}</span></span>

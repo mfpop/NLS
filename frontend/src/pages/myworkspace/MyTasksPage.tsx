@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   ListChecks, RefreshCw, Play, CheckCircle, XCircle,
-  AlertTriangle, Calendar, ExternalLink, ChevronRight,
-  ArrowRight, X,
+  AlertTriangle, Calendar, ExternalLink,
+  ArrowRight, Clock, ArrowUpRight, Activity, AlertOctagon,
 } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
 import { theme } from "@/styles/themeTokens";
 import {
   MY_TASKS_QUERY,
@@ -72,6 +72,14 @@ const PRIORITY_DOTS: Record<string, string> = {
   CRITICAL: "bg-red-500",
 };
 
+const STATUS_DOT: Record<string, string> = {
+  OPEN: "bg-blue-500",
+  IN_PROGRESS: "bg-amber-500",
+  WAITING: "bg-slate-400",
+  COMPLETED: "bg-emerald-500",
+  CANCELLED: "bg-slate-300",
+};
+
 const STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
   { value: "OPEN", label: "Open" },
@@ -115,6 +123,45 @@ function sourceModuleLabel(s: string): string {
   return map[s] || s;
 }
 
+/* ── Shared UI Components ── */
+
+function MetricCell({ label, value, color, icon }: { label: string; value: number | string; color: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2.5 px-3 min-w-0">
+      <span className="shrink-0">{icon}</span>
+      <div className="min-w-0 text-left">
+        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide truncate">{label}</p>
+        <p className={`text-lg font-bold tabular-nums ${color} leading-tight`}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, count, icon, children }: { title: string; count?: number; icon?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col min-h-0 overflow-hidden">
+      <div className="shrink-0 h-8 flex items-center justify-between px-3 border-b border-slate-200 bg-muted">
+        <div className="flex items-center gap-2 min-w-0">
+          {icon && <span className="text-slate-500 shrink-0">{icon}</span>}
+          <span className="text-xs font-semibold text-slate-800 truncate">{title}</span>
+        </div>
+        {count !== undefined && <span className="text-[10px] font-mono text-slate-400 shrink-0">{count}</span>}
+      </div>
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SectionEmpty({ message }: { message: string }) {
+  return (
+    <div className="flex h-full items-center justify-center text-xs italic text-slate-500 px-3 text-center">
+      {message}
+    </div>
+  );
+}
+
 /* ── Main Component ── */
 
 export function MyTasksPage() {
@@ -126,9 +173,6 @@ export function MyTasksPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
 
-  const splitRef = useRef<HTMLDivElement>(null);
-  const [leftPct, setLeftPct] = useState(20);
-
   useEffect(() => {
     if (successMsg) {
       const t = setTimeout(() => setSuccessMsg(null), 5000);
@@ -136,27 +180,26 @@ export function MyTasksPage() {
     }
   }, [successMsg]);
 
-  /* ── Split pane resize ── */
-  const handleSplitMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const container = splitRef.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const onMove = (ev: MouseEvent) => {
-      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
-      setLeftPct(Math.min(Math.max(pct, 10), 50));
+  /* ── Pagination ── */
+  const [page, setPage] = useState(1);
+  const scrollableRef = useRef<HTMLDivElement>(null);
+  const [autoPageSize, setAutoPageSize] = useState(25);
+
+  /* Auto-calculate visible rows per page */
+  useEffect(() => {
+    const el = scrollableRef.current;
+    if (!el) return;
+    const ITEM_HEIGHT = 68;
+    const calc = () => {
+      setAutoPageSize(Math.max(3, Math.floor(el.clientHeight / ITEM_HEIGHT)));
     };
-    const onUp = () => {
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    document.addEventListener("mousemove", onMove);
-    document.addEventListener("mouseup", onUp);
+    calc();
+    const ro = new ResizeObserver(calc);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
+
+  useEffect(() => { setPage(1); }, [filterStatus, filterPriority, filterOverdue, search]);
 
   /* ── GraphQL ── */
   const { data: tasksData, loading, refetch } = useQuery<{ myTasks: WorkspaceTaskNode[] }>(
@@ -176,21 +219,28 @@ export function MyTasksPage() {
     fetchPolicy: "cache-and-network",
   });
 
-  const [startTask] = useMutation(START_TASK_MUTATION);
-  const [completeTask] = useMutation(COMPLETE_TASK_MUTATION);
-  const [cancelTask] = useMutation(CANCEL_TASK_MUTATION);
+  const [startTask] = useMutation<{ startTask: { errors?: { field: string; code: string; message: string }[] | null } }>(START_TASK_MUTATION);
+  const [completeTask] = useMutation<{ completeTask: { errors?: { field: string; code: string; message: string }[] | null } }>(COMPLETE_TASK_MUTATION);
+  const [cancelTask] = useMutation<{ cancelTask: { errors?: { field: string; code: string; message: string }[] | null } }>(CANCEL_TASK_MUTATION);
 
   const tasks: WorkspaceTaskNode[] = tasksData?.myTasks || [];
   const summary = summaryData?.taskSummary;
   const sel = selectedId ? tasks.find((t) => t.id === selectedId) ?? null : null;
+
+  /* ── Pagination derived values ── */
+  const effectivePageSize = autoPageSize;
+  const pageCount = Math.max(1, Math.ceil(tasks.length / effectivePageSize));
+  const safePage = Math.min(page, pageCount);
+  const paginatedTasks = tasks.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize);
 
   /* ── Mutations ── */
   const hStart = useCallback(async () => {
     if (!sel) return;
     setMutationError(null);
     const res = await startTask({ variables: { id: sel.id } });
-    if (res.data?.startTask?.errors?.length > 0) {
-      setMutationError(res.data.startTask.errors[0].message);
+    const startErrors = res.data?.startTask?.errors;
+    if (startErrors && startErrors.length > 0) {
+      setMutationError(startErrors[0].message);
       return;
     }
     setSuccessMsg("Task started");
@@ -201,8 +251,9 @@ export function MyTasksPage() {
     if (!sel) return;
     setMutationError(null);
     const res = await completeTask({ variables: { id: sel.id } });
-    if (res.data?.completeTask?.errors?.length > 0) {
-      setMutationError(res.data.completeTask.errors[0].message);
+    const completeErrors = res.data?.completeTask?.errors;
+    if (completeErrors && completeErrors.length > 0) {
+      setMutationError(completeErrors[0].message);
       return;
     }
     setSuccessMsg("Task completed");
@@ -213,8 +264,9 @@ export function MyTasksPage() {
     if (!sel) return;
     setMutationError(null);
     const res = await cancelTask({ variables: { id: sel.id } });
-    if (res.data?.cancelTask?.errors?.length > 0) {
-      setMutationError(res.data.cancelTask.errors[0].message);
+    const cancelErrors = res.data?.cancelTask?.errors;
+    if (cancelErrors && cancelErrors.length > 0) {
+      setMutationError(cancelErrors[0].message);
       return;
     }
     setSuccessMsg("Task cancelled");
@@ -231,111 +283,293 @@ export function MyTasksPage() {
 
   const toolbarActions = (
     <div className="flex items-center gap-1.5">
-      {sel && (
-        <>
-          <ToolbarButton icon={Play} label="Start" onClick={hStart} disabled={!canStart} title="Start task" />
-          <ToolbarButton icon={CheckCircle} label="Complete" onClick={hComplete} disabled={!canComplete} variant="success" title="Complete task" />
-          <ToolbarButton icon={XCircle} label="Cancel" onClick={hCancel} disabled={!canCancel} title="Cancel task" />
-          <span className="h-5 w-px shrink-0 bg-border/25" />
-        </>
-      )}
-      <ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />
+      <ExplorerToolbarButton icon={Play} label="Start" onClick={hStart} disabled={!sel || !canStart} title="Start task" />
+      <ExplorerToolbarButton icon={CheckCircle} label="Complete" onClick={hComplete} disabled={!sel || !canComplete} variant="success" title="Complete task" />
+      <ExplorerToolbarButton icon={XCircle} label="Cancel" onClick={hCancel} disabled={!sel || !canCancel} title="Cancel task" />
+      <ExplorerToolbarSeparator />
+      <ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />
     </div>
   );
 
   /* ── Task List ── */
 
   const taskList = (
-    <div className="flex flex-col min-h-0 overflow-hidden h-full">
-      <div className="shrink-0 h-8 border-b border-border/50 flex items-center bg-muted px-4">
-        <span className={`text-sm font-medium ${theme.textMuted}`}>Tasks</span>
-        <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{tasks.length}</span>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted border-r border-border-major">
+      <div className="shrink-0 h-9 border-b border-slate-200 bg-muted flex items-center justify-between px-3">
+        <span className="text-xs font-semibold text-slate-700">Tasks</span>
+        {loading && tasks.length === 0 ? null : (
+          <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-slate-200 bg-card text-muted-foreground whitespace-nowrap">
+            {tasks.length}
+          </span>
+        )}
       </div>
-      <div className={`flex-1 overflow-y-auto ${theme.surfaceBg}`}>
+      <div ref={scrollableRef} className="flex-1 min-h-0 overflow-y-auto bg-muted">
         {loading && tasks.length === 0 ? (
           <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
             <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />
             Loading...
           </div>
         ) : tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-40 text-center px-6">
-            <ListChecks className="h-8 w-8 text-muted-foreground/30 mb-2" />
-            <p className={`text-sm font-medium ${theme.textMuted}`}>No tasks assigned to you</p>
-            <p className={`text-xs ${theme.textMuted} mt-0.5`}>When tasks are assigned, they will appear here.</p>
+          <div className="flex flex-col items-center justify-center h-32 text-center px-4">
+            <p className="text-xs font-medium text-muted-foreground">No tasks assigned</p>
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5">Assigned tasks will appear here.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border/40">
-            {tasks.map((t) => (
+          <div>              {paginatedTasks.map((t) => (
               <div
                 key={t.id}
                 onClick={() => { setSelectedId(t.id); }}
-                className={`group flex items-start gap-2.5 px-4 py-2.5 cursor-pointer transition-all duration-150 min-h-0 ${
+                className={`group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${
                   selectedId === t.id
-                    ? "bg-emerald-50 border-l-2 border-emerald-500"
-                    : "border-l-2 border-l-transparent hover:bg-slate-50"
+                    ? "bg-table-selected border-l-2 border-l-amber-500"
+                    : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                 }`}
               >
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 shrink-0 rounded-full ${PRIORITY_DOTS[t.priority] || "bg-slate-400"}`} />
-                    <span className={`min-w-0 truncate text-sm font-medium ${theme.textPrimary} ${selectedId === t.id ? "text-emerald-900" : ""}`} title={t.title}>
-                      {t.title}
-                    </span>
+                  <div className="mb-0.5 flex items-center gap-1.5">
+                    {t.priority && t.priority !== "MEDIUM" && (
+                      <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${t.priority === "CRITICAL" ? "bg-red-500" : t.priority === "HIGH" ? "bg-orange-500" : "bg-slate-400"}`} />
+                    )}
+                    <span className={`min-w-0 truncate text-sm font-semibold text-slate-900`} title={t.title}>{t.title}</span>
                     {isOverdue(t.dueDate, t.status) && (
                       <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[t.status] || ""}`}>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[t.status] || ""}`}>
                       {statusLabel(t.status)}
                     </span>
-                    {t.priority && t.priority !== "MEDIUM" && (
-                      <span className={`text-[10px] font-medium ${t.priority === "HIGH" ? "text-orange-600" : t.priority === "CRITICAL" ? "text-red-600" : theme.textMuted}`}>
-                        {priorityLabel(t.priority)}
-                      </span>
-                    )}
-                    {t.sourceModule && (
-                      <span className={`text-[10px] ${theme.textMuted}`}>
-                        {sourceModuleLabel(t.sourceModule)}
-                      </span>
-                    )}
+                    <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                    <span className="min-w-0 flex-1 truncate">{sourceModuleLabel(t.sourceModule) || "General"}</span>
                     {t.dueDate && (
-                      <span className={`text-[10px] ${isOverdue(t.dueDate, t.status) ? "text-red-500 font-semibold" : theme.textMuted}`}>
-                        <Calendar className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />
-                        {t.dueDate}
-                      </span>
+                      <>
+                        <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
+                        <span className={`text-[10px] ${isOverdue(t.dueDate, t.status) ? "text-red-500 font-semibold" : "text-slate-500"}`}>
+                          <Calendar className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />
+                          {t.dueDate}
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>
-                <ChevronRight className={`h-4 w-4 shrink-0 ${selectedId === t.id ? "text-emerald-600" : "text-muted-foreground/30"}`} />
+                <span className={`shrink-0 inline-block h-2.5 w-2.5 rounded-full ${STATUS_DOT[t.status] || "bg-slate-400"}`} title={statusLabel(t.status)} />
               </div>
             ))}
           </div>
         )}
       </div>
-      <div className="shrink-0 flex h-8 items-center border-t border-border/50 bg-muted px-4">
-        <span className={`text-xs ${theme.textMuted}`}>
-          {summary ? `${summary.total} total · ${summary.open} open · ${summary.overdue} overdue · ${summary.completed} completed` : `${tasks.length} task${tasks.length !== 1 ? "s" : ""}`}
-        </span>
+      <div className="shrink-0 h-10 border-t border-slate-200 bg-muted px-3 flex items-center gap-2 text-xs text-slate-600">
+        {tasks.length === 0 ? (
+          <span className="font-medium">0 tasks</span>
+        ) : (
+          <>
+            <span className="font-medium whitespace-nowrap">
+              {(safePage - 1) * effectivePageSize + 1}–{Math.min(safePage * effectivePageSize, tasks.length)} of {tasks.length}
+            </span>
+            <div className="flex-1" />
+            {pageCount > 1 && (
+              <div className="flex items-center gap-0.5">
+                <button type="button" disabled={safePage <= 1} onClick={() => setPage(1)}
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="First page">
+                  {"\u00AB"}
+                </button>
+                <button type="button" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Previous page">
+                  {"\u2039"}
+                </button>
+                <div className="flex items-center gap-0.5 mx-1">
+                  {(() => {
+                    const pages: (number | "...")[] = [];
+                    const maxVisible = 5;
+                    if (pageCount <= maxVisible + 2) {
+                      for (let i = 1; i <= pageCount; i++) pages.push(i);
+                    } else {
+                      pages.push(1);
+                      const start = Math.max(2, safePage - 1);
+                      const end = Math.min(pageCount - 1, safePage + 1);
+                      if (start > 2) pages.push("...");
+                      for (let i = start; i <= end; i++) pages.push(i);
+                      if (end < pageCount - 1) pages.push("...");
+                      pages.push(pageCount);
+                    }
+                    return pages.map((p, i) =>
+                      p === "..." ? (
+                        <span key={`ellipsis-${i}`} className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-slate-400 select-none">{"\u2026"}</span>
+                      ) : (
+                        <button key={p} type="button" onClick={() => setPage(p)}
+                          className={`inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] px-1 text-xs font-semibold transition-all ${
+                            p === safePage
+                              ? "bg-amber-50 border border-amber-300 text-amber-800"
+                              : "text-slate-600 hover:bg-slate-100"
+                          }`}>
+                          {p}
+                        </button>
+                      )
+                    );
+                  })()}
+                </div>
+                <button type="button" disabled={safePage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Next page">
+                  {"\u203A"}
+                </button>
+                <button type="button" disabled={safePage >= pageCount} onClick={() => setPage(pageCount)}
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Last page">
+                  {"\u00BB"}
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 
+  /* ── Overview sections (no task selected) ── */
+
+  const overviewContent = useMemo(() => {
+    if (!loading && !summary && tasks.length === 0) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+          <ListChecks className="h-10 w-10 text-slate-200 mb-3" />
+          <p className="text-sm font-medium text-slate-500">No tasks assigned to you</p>
+          <p className="text-xs text-slate-400 mt-1">When tasks are assigned from any module, they will appear here.</p>
+        </div>
+      );
+    }
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
+    const isDueSoon = (t: WorkspaceTaskNode) => {
+      if (!t.dueDate || t.status === "COMPLETED" || t.status === "CANCELLED") return false;
+      const d = new Date(t.dueDate); d.setHours(0, 0, 0, 0);
+      return d >= today && d <= weekEnd;
+    };
+
+    const priorityWork = tasks.filter((t) =>
+      ["HIGH", "CRITICAL"].includes(t.priority) &&
+      ["OPEN", "IN_PROGRESS", "WAITING"].includes(t.status)
+    );
+    const dueSoon = tasks.filter(isDueSoon);
+    const waiting = tasks.filter((t) => t.status === "WAITING");
+    const recent = [...tasks].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    ).slice(0, 8);
+
+    return (
+      <div className="flex-1 min-h-0 grid grid-rows-[30%_30%_40%] divide-y divide-slate-200">
+        {/* Row 1: Priority Work */}
+        <Section title="Priority Work" count={priorityWork.length} icon={<ArrowUpRight className="h-3.5 w-3.5" />}>
+          {priorityWork.length === 0 ? (
+            <SectionEmpty message="No priority work" />
+          ) : (
+            priorityWork.slice(0, 6).map((t) => (
+              <div
+                key={t.id}
+                onClick={() => { setSelectedId(t.id); }}
+                className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointerborder-b border-slate-200"
+                >
+                  <span className={`h-2 w-2 shrink-0 rounded-full mt-1 ${PRIORITY_DOTS[t.priority] || "bg-slate-400"}`} />
+                <div className="min-w-0 flex-1">
+                  <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border rounded-sm ${STATUS_STYLES[t.status] || ""}`}>{statusLabel(t.status)}</span>
+                    <span className="text-[10px] text-slate-500">{sourceModuleLabel(t.sourceModule)}</span>
+                    {isOverdue(t.dueDate, t.status) && <span className="text-[10px] text-red-500 font-semibold">Overdue</span>}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </Section>
+
+        {/* Row 2: Due Today / This Week */}
+        <Section title="Due Today / This Week" count={dueSoon.length} icon={<Calendar className="h-3.5 w-3.5" />}>
+          {dueSoon.length === 0 ? (
+            <SectionEmpty message="No items due this week" />
+          ) : (
+            dueSoon.slice(0, 6).map((t) => {
+              const overdue = isOverdue(t.dueDate, t.status);
+              return (
+                <div
+                  key={t.id}
+                  onClick={() => { setSelectedId(t.id); }}
+                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                >
+                  <Calendar className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
+                  <div className="min-w-0 flex-1">
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] ${overdue ? "text-red-500 font-semibold" : "text-slate-500"}`}>{t.dueDate}</span>
+                      {overdue && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </Section>
+
+        {/* Row 3: Waiting / Blocked + Recent Activity (side-by-side) */}
+        <div className="min-h-0 grid grid-cols-[45%_55%] divide-x divide-slate-200">
+          <Section title="Waiting / Blocked" count={waiting.length} icon={<Clock className="h-3.5 w-3.5" />}>
+            {waiting.length === 0 ? (
+              <SectionEmpty message="No blocked or waiting tasks" />
+            ) : (
+              waiting.slice(0, 5).map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => { setSelectedId(t.id); }}
+                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                >
+                  <span className="h-2 w-2 shrink-0 rounded-full mt-1 bg-slate-400" />
+                  <div className="min-w-0 flex-1">
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
+                    <span className="text-[10px] text-slate-500">{sourceModuleLabel(t.sourceModule)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </Section>
+
+          <Section title="Recent Activity" count={recent.length} icon={<Activity className="h-3.5 w-3.5" />}>
+            {recent.length === 0 ? (
+              <SectionEmpty message="No recent activity" />
+            ) : (
+              recent.slice(0, 6).map((t) => (
+                <div
+                  key={t.id}
+                  onClick={() => { setSelectedId(t.id); }}
+                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                >
+                  <Activity className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
+                  <div className="min-w-0 flex-1">
+                    <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
+                    <span className="text-[10px] text-slate-400">{sourceModuleLabel(t.sourceModule)} · {statusLabel(t.status)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </Section>
+        </div>
+      </div>
+    );
+  }, [summary, tasks, loading]);
+
   /* ── Detail ── */
 
   const taskDetail = sel ? (
-    <div className="flex-1 min-h-0 overflow-y-auto">
+    <div className="flex-1 min-h-0 overflow-y-auto bg-muted">
       <div className="px-5 py-4 space-y-5">
         {/* Title + badges */}
         <div>
           <div className="flex items-start gap-3">
-            <h2 className={`text-base font-bold ${theme.textPrimary} flex-1`}>{sel.title}</h2>
+            <h2 className="text-base font-bold text-slate-900 flex-1">{sel.title}</h2>
             <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold border shrink-0 ${STATUS_STYLES[sel.status] || ""}`}>
               {statusLabel(sel.status)}
             </span>
           </div>
           {sel.sourceTitle && (
-            <p className={`text-xs ${theme.textMuted} mt-1 flex items-center gap-1.5`}>
+            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
               <ExternalLink className="h-3 w-3 stroke-current" />
               {sel.sourceTitle}
               {sel.sourceModule && <span className="text-[10px]">({sourceModuleLabel(sel.sourceModule)})</span>}
@@ -346,16 +580,16 @@ export function MyTasksPage() {
         {/* Metadata grid */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-3">
           <div>
-            <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide`}>Priority</p>
+            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Priority</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`h-2 w-2 rounded-full ${PRIORITY_DOTS[sel.priority] || "bg-slate-400"}`} />
-              <span className={`text-sm ${theme.textPrimary}`}>{priorityLabel(sel.priority)}</span>
+              <span className="text-sm text-slate-900">{priorityLabel(sel.priority)}</span>
             </div>
           </div>
           {sel.dueDate && (
             <div>
-              <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide`}>Due Date</p>
-              <p className={`text-sm flex items-center gap-1 mt-0.5 ${isOverdue(sel.dueDate, sel.status) ? "text-red-600 font-semibold" : theme.textPrimary}`}>
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Due Date</p>
+              <p className={`text-sm flex items-center gap-1 mt-0.5 ${isOverdue(sel.dueDate, sel.status) ? "text-red-600 font-semibold" : "text-slate-900"}`}>
                 <Calendar className="h-3.5 w-3.5 stroke-current" />
                 {sel.dueDate}
                 {isOverdue(sel.dueDate, sel.status) && <AlertTriangle className="h-3 w-3 stroke-current" />}
@@ -364,20 +598,20 @@ export function MyTasksPage() {
           )}
           {sel.assignedTo && (
             <div>
-              <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide`}>Assigned To</p>
-              <p className={`text-sm mt-0.5 ${theme.textPrimary}`}>{sel.assignedTo}</p>
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Assigned To</p>
+              <p className="text-sm mt-0.5 text-slate-900">{sel.assignedTo}</p>
             </div>
           )}
           {sel.sourceModule && (
             <div>
-              <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide`}>Source Module</p>
-              <p className={`text-sm mt-0.5 ${theme.textPrimary}`}>{sourceModuleLabel(sel.sourceModule)}</p>
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Source Module</p>
+              <p className="text-sm mt-0.5 text-slate-900">{sourceModuleLabel(sel.sourceModule)}</p>
             </div>
           )}
           {sel.completedAt && (
             <div>
-              <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide`}>Completed At</p>
-              <p className={`text-sm mt-0.5 ${theme.textPrimary}`}>
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Completed At</p>
+              <p className="text-sm mt-0.5 text-slate-900">
                 {new Date(sel.completedAt).toLocaleDateString()}
                 {sel.completedBy ? ` by ${sel.completedBy}` : ""}
               </p>
@@ -385,8 +619,8 @@ export function MyTasksPage() {
           )}
           {sel.createdBy && (
             <div>
-              <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide`}>Created By</p>
-              <p className={`text-sm mt-0.5 ${theme.textPrimary}`}>{sel.createdBy}</p>
+              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Created By</p>
+              <p className="text-sm mt-0.5 text-slate-900">{sel.createdBy}</p>
             </div>
           )}
         </div>
@@ -394,82 +628,34 @@ export function MyTasksPage() {
         {/* Description */}
         {sel.description && (
           <div>
-            <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide mb-1`}>Description</p>
-            <p className={`text-sm leading-relaxed ${theme.textSecondary}`}>{sel.description}</p>
+            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Description</p>
+            <p className="text-sm leading-relaxed text-slate-700">{sel.description}</p>
           </div>
         )}
 
         {/* Notes */}
         {sel.notes && (
           <div>
-            <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide mb-1`}>Notes</p>
-            <p className={`text-sm leading-relaxed ${theme.textSecondary}`}>{sel.notes}</p>
+            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Notes</p>
+            <p className="text-sm leading-relaxed text-slate-700">{sel.notes}</p>
           </div>
         )}
 
         {/* Source Reference */}
         {sel.sourceTitle && (
-          <div className={`border-t border-border/20 pt-4`}>
-            <p className={`text-[10px] font-medium ${theme.textMuted} uppercase tracking-wide mb-2`}>Source Reference</p>
-            <div className={`flex items-center gap-2 text-sm ${theme.textPrimary}`}>
-              {sel.sourceType && <span className="font-mono text-[11px] text-muted-foreground">{sel.sourceType}#{sel.sourceId}</span>}
-              <ArrowRight className="h-3 w-3 text-muted-foreground" />
+          <div className="border-t border-slate-200 pt-4">
+            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-2">Source Reference</p>
+            <div className="flex items-center gap-2 text-sm text-slate-900">
+              {sel.sourceType && <span className="font-mono text-[11px] text-slate-400">{sel.sourceType}#{sel.sourceId}</span>}
+              <ArrowRight className="h-3 w-3 text-slate-400" />
               <span>{sel.sourceTitle}</span>
-              <span className={`text-[10px] ${theme.textMuted} px-1.5 py-0.5 border`}>{sourceModuleLabel(sel.sourceModule || sel.sourceType)}</span>
+              <span className="text-[10px] text-slate-500 px-1.5 py-0.5 border border-slate-200">{sourceModuleLabel(sel.sourceModule || sel.sourceType)}</span>
             </div>
           </div>
         )}
       </div>
     </div>
-  ) : (
-    /* ── Dashboard / Summary ── */
-    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <div className="p-5 space-y-5">
-        <div>
-          <p className={`text-xs font-medium ${theme.textMuted} uppercase tracking-wide mb-3`}>Task Overview</p>
-          <div className="grid grid-cols-4 gap-3">
-            <div className="border border-border/60 bg-card p-3">
-              <p className={`text-[10px] font-medium ${theme.textMuted}`}>Open</p>
-              <p className="text-lg font-bold text-blue-600">{summary?.open ?? "—"}</p>
-            </div>
-            <div className="border border-border/60 bg-card p-3">
-              <p className={`text-[10px] font-medium ${theme.textMuted}`}>In Progress</p>
-              <p className="text-lg font-bold text-amber-600">{summary?.inProgress ?? "—"}</p>
-            </div>
-            <div className="border border-border/60 bg-card p-3">
-              <p className={`text-[10px] font-medium ${theme.textMuted}`}>Due Today</p>
-              <p className="text-lg font-bold text-orange-600">{summary?.dueToday ?? "—"}</p>
-            </div>
-            <div className="border border-border/60 bg-card p-3">
-              <p className={`text-[10px] font-medium ${theme.textMuted}`}>Overdue</p>
-              <p className={`text-lg font-bold ${(summary?.overdue ?? 0) > 0 ? "text-red-600" : "text-foreground"}`}>{summary?.overdue ?? "—"}</p>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="border border-border/60 bg-card p-3">
-            <p className={`text-[10px] font-medium ${theme.textMuted}`}>Completed This Week</p>
-            <p className="text-lg font-bold text-green-600">{summary?.completedThisWeek ?? "—"}</p>
-          </div>
-          <div className="border border-border/60 bg-card p-3">
-            <p className={`text-[10px] font-medium ${theme.textMuted}`}>High Priority</p>
-            <p className={`text-lg font-bold ${(summary?.highPriority ?? 0) > 0 ? "text-red-600" : "text-foreground"}`}>{summary?.highPriority ?? "—"}</p>
-          </div>
-          <div className="border border-border/60 bg-card p-3">
-            <p className={`text-[10px] font-medium ${theme.textMuted}`}>Total Tasks</p>
-            <p className="text-lg font-bold text-foreground">{summary?.total ?? "—"}</p>
-          </div>
-        </div>
-        {tasks.length === 0 && !loading && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <ListChecks className="h-12 w-12 text-muted-foreground/20 mb-3" />
-            <p className={`text-sm font-medium ${theme.textMuted}`}>No tasks assigned to you</p>
-            <p className={`text-xs ${theme.textMuted} mt-1`}>When tasks are assigned from any module, they will appear here.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  ) : null;
 
   return (
     <AppPageLayout
@@ -478,40 +664,69 @@ export function MyTasksPage() {
       icon={<ListChecks />}
       iconClass={theme.iconBoxSky}
       toolbar={
-        <Toolbar
-          left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search tasks..." />}
-          center={<>
-            <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-32" />
-            <ToolbarDropdown value={filterPriority} onChange={setFilterPriority} options={PRIORITY_OPTIONS} className="w-28" />
-            <ToolbarDropdown value={filterOverdue} onChange={setFilterOverdue} options={OVERDUE_OPTIONS} className="w-24" />
+        <ExplorerToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search tasks..."
+          filters={<>
+            <ExplorerToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} placeholder="Status" width="w-36" />
+            <ExplorerToolbarDropdown value={filterPriority} onChange={setFilterPriority} options={PRIORITY_OPTIONS} placeholder="Priority" width="w-36" />
+            <ExplorerToolbarDropdown value={filterOverdue} onChange={setFilterOverdue} options={OVERDUE_OPTIONS} placeholder="Overdue" width="w-28" />
           </>}
-          right={toolbarActions}
+          actions={toolbarActions}
         />
       }
       leftColumn={taskList}
       leftColumnWidth="w-[20%]"
       footer={
-        <span className={`flex items-center gap-4 text-xs ${theme.textMuted}`}>
+        <span className="flex w-full items-center justify-between text-xs text-slate-600">
           <span className="font-medium">My Tasks</span>
-          <span>{summary ? `${summary.total} total` : `${tasks.length} records`}</span>
-          <span>{summary ? `${summary.open} open` : ""}</span>
-          <span className={summary?.overdue && summary.overdue > 0 ? "text-red-500 font-semibold" : ""}>{summary ? `${summary.overdue} overdue` : ""}</span>
-          <span className="flex-1" />
-          {sel && <span className="font-mono text-[10px]">ID: {sel.id}</span>}
+          <span>
+            {summary
+              ? `Total: ${summary.total} | Open: ${summary.open} | Overdue: ${summary.overdue}`
+              : `${tasks.length} task${tasks.length !== 1 ? "s" : ""}`}
+          </span>
+          <span className="text-slate-400">
+            {tasks.length > 0
+              ? `Last updated: ${new Date(Math.max(...tasks.map((t) => new Date(t.updatedAt).getTime()))).toLocaleDateString()}`
+              : ""}
+          </span>
         </span>
       }
     >
-      {mutationError && (
-        <div className="shrink-0 px-4 pt-2">
-          <p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p>
+      <div className="h-full flex flex-col min-h-0 bg-muted">
+        {/* Integrated Metrics Strip */}
+        <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200">
+          <MetricCell label="Open" value={summary?.open ?? "—"} color="text-blue-600" icon={<ListChecks className="h-4 w-4 stroke-current text-blue-600 shrink-0" />} />
+          <MetricCell label="In Progress" value={summary?.inProgress ?? "—"} color="text-amber-600" icon={<Clock className="h-4 w-4 stroke-current text-amber-600 shrink-0" />} />
+          <MetricCell label="Due Today" value={summary?.dueToday ?? "—"} color={summary?.dueToday ? "text-orange-600" : "text-slate-700"} icon={<Calendar className="h-4 w-4 stroke-current shrink-0" />} />
+          <MetricCell label="Overdue" value={summary?.overdue ?? "—"} color={(summary?.overdue ?? 0) > 0 ? "text-red-600" : "text-slate-700"} icon={<AlertOctagon className="h-4 w-4 stroke-current shrink-0" />} />
+          <MetricCell label="Completed This Week" value={summary?.completedThisWeek ?? "—"} color="text-emerald-600" icon={<CheckCircle className="h-4 w-4 stroke-current text-emerald-600 shrink-0" />} />
+          <MetricCell label="Total Tasks" value={summary?.total ?? "—"} color="text-slate-700" icon={<ListChecks className="h-4 w-4 stroke-current text-slate-600 shrink-0" />} />
         </div>
-      )}
-      {successMsg && (
-        <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b`}>
-          {successMsg}
-        </div>
-      )}
-      {taskDetail}
+
+        {mutationError && (
+          <div className="shrink-0 px-4 py-1.5">
+            <p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p>
+          </div>
+        )}
+        {successMsg && (
+          <div className="shrink-0 h-8 flex items-center justify-center bg-emerald-50 border-b border-emerald-200 text-sm font-semibold text-emerald-700">
+            {successMsg}
+          </div>
+        )}
+
+        {loading && !summary && !sel ? (
+          <div className="flex-1 flex items-center justify-center text-sm text-slate-500">
+            <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2 rounded-full" />
+            Loading...
+          </div>
+        ) : sel ? (
+          taskDetail
+        ) : (
+          overviewContent
+        )}
+      </div>
     </AppPageLayout>
   );
 }

@@ -13,6 +13,7 @@ class UserNode:
     role: str
     plant: str
     department: str
+    display_name: str = strawberry.field(name="displayName")
 
     @classmethod
     def from_user(cls, user: User) -> "UserNode":
@@ -25,11 +26,13 @@ class UserNode:
             role = "guest"
             plant = ""
             department = ""
+        display_name = user.get_full_name() or user.username
         return cls(
             id=strawberry.ID(str(user.id)),
-            name=user.get_full_name() or user.username,
+            name=display_name,
             username=user.username,
             email=user.email,
+            display_name=display_name,
             role=role,
             plant=plant,
             department=department,

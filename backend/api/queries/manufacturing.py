@@ -262,6 +262,7 @@ class ManufacturingQuery:
             return None
         return ProfileNode(
             id=strawberry.ID(str(obj.id)),
+            user=str(obj.user_id) if obj.user_id else None,
             name=obj.name,
             role=obj.role,
             email=obj.email,

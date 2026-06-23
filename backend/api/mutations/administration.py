@@ -330,6 +330,17 @@ class AdministrationMutation:
                 errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)],
             )
 
+    @strawberry.mutation
+    def delete_profile_skill(self, info: Info, id: str) -> ProfileSkillPayload:
+        """Permanently delete a profile skill."""
+        try:
+            ProfileSkillService.delete(id, user=_user(info))
+            return ProfileSkillPayload(skill=None)
+        except ProfileSkillServiceError as exc:
+            return ProfileSkillPayload(
+                errors=[MutationError(field=exc.field, code=exc.code, message=exc.message)],
+            )
+
     # ── User Role Assignment ──
 
     @strawberry.mutation

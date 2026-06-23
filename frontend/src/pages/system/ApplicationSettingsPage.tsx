@@ -322,7 +322,7 @@ export function ApplicationSettingsPage() {
 
 function SettingsCard({ sectionId, title, description, icon, children, themeValue, auditEnabled, diagnosticsLevel, diagnosticsMessage, onRunDiagnostics }: { sectionId: string; title: string; description: string; icon: React.ReactNode; children: React.ReactNode; themeValue?: string; auditEnabled?: boolean; diagnosticsLevel?: string; diagnosticsMessage?: string | null; onRunDiagnostics?: () => void }) {
   return (
-    <section className="flex flex-col rounded-lg border border-border/10 bg-card p-2 shadow-md shadow-foreground/5">
+    <section className="flex flex-col rounded-lg border border-slate-200 bg-card p-2 shadow-md shadow-foreground/5">
       <div className="mb-1.5 flex items-center gap-2">
         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${theme.iconBoxEmerald}`}>{icon}</span>
         <div className="min-w-0">
@@ -356,7 +356,7 @@ function ThemePreview({ value }: { value: string }) {
 
 function DiagnosticsSummaryCard({ auditEnabled, settingsLoaded, lastCheckLabel, onOpenDiagnostics }: { auditEnabled: boolean; settingsLoaded: boolean; lastCheckLabel: string; onOpenDiagnostics: () => void }) {
   return (
-    <button type="button" onClick={onOpenDiagnostics} className="flex flex-col rounded-lg border border-border/10 bg-card p-2 text-left shadow-md shadow-foreground/5 transition-colors hover:bg-muted/45 focus:outline-none focus:ring-2 focus:ring-ring/20">
+    <button type="button" onClick={onOpenDiagnostics} className="flex flex-col rounded-lg border border-slate-200 bg-card p-2 text-left shadow-md shadow-foreground/5 transition-colors hover:bg-muted/45 focus:outline-none focus:ring-2 focus:ring-ring/20">
       <div className="mb-1.5 flex items-center gap-2">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-sidebar-settings/15 text-sidebar-settings">
           <ShieldCheck className="h-4 w-4 stroke-current" />

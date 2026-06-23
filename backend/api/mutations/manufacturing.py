@@ -108,6 +108,7 @@ class ManufacturingMutation:
                 id=str(user.id), name=user.get_full_name() or user.username, username=user.username, email=user.email or "",
                 role=role, plant=plant,
                 department=department,
+                display_name=user.get_full_name() or user.username,
             ),
         )
 

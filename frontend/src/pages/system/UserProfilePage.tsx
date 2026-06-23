@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client/react";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { DEPARTMENTS_QUERY } from "@/graphql/manufacturingQueries";
+import { ROLES_QUERY, USER_PROFILES_QUERY } from "@/graphql/administrationQueries";
 import {
   Check,
   X,
@@ -12,7 +13,10 @@ import {
   Camera,
   Loader2,
   Save,
+  RefreshCw,
+  Pencil,
 } from "lucide-react";
+import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
 import { theme } from "@/styles/themeTokens";
 import { useProfile } from "@/hooks/useProfile";
 import type { WorkHistoryEntry, EducationEntry } from "@/types/profile";
@@ -57,7 +61,7 @@ function cloneEducation(items: EducationEntry[]): EducationEntry[] {
 
 const COMPLETION_FIELD_DEFS = [
   { key: "name", label: "First & last name", check: (d: ProfileDraft) => d.firstName.trim() && d.lastName.trim() },
-  { key: "role", label: "Role", check: (d: ProfileDraft) => d.role.trim() },
+  { key: "role", label: "Position", check: (d: ProfileDraft) => d.role.trim() },
   { key: "email", label: "Email", check: (d: ProfileDraft) => d.email.trim() },
   { key: "phone", label: "Phone", check: (d: ProfileDraft) => d.phone.trim() },
   { key: "location", label: "Location", check: (d: ProfileDraft) => d.location.trim() },
@@ -114,8 +118,20 @@ export function UserProfilePage() {
 
   const { data: plantsData } = useQuery<{ plants: { id: string; name: string }[] }>(PLANTS_QUERY, { fetchPolicy: "cache-and-network" });
   const { data: deptsData } = useQuery<{ departments: { id: string; name: string }[] }>(DEPARTMENTS_QUERY, { fetchPolicy: "cache-and-network" });
+  const { data: rolesData } = useQuery<{ roles: { id: string; code: string; name: string }[] }>(ROLES_QUERY, {
+    variables: { isActive: true },
+    fetchPolicy: "cache-and-network",
+  });
+  const profileUserId = profile?.user;
+  const { data: adminProfilesData } = useQuery<{ userProfiles: { id: string }[] }>(USER_PROFILES_QUERY, {
+    variables: { userId: profileUserId, isActive: true },
+    skip: !profileUserId,
+    fetchPolicy: "cache-and-network",
+  });
+  const adminProfileId = adminProfilesData?.userProfiles?.[0]?.id ?? null;
   const plants = plantsData?.plants ?? [];
   const departments = deptsData?.departments ?? [];
+  const roles = rolesData?.roles ?? [];
   const [workDraft, setWorkDraft] = useState<WorkHistoryEntry[]>([]);
   const [eduDraft, setEduDraft] = useState<EducationEntry[]>([]);
 
@@ -403,7 +419,7 @@ export function UserProfilePage() {
   if (loading) {
     return (
       <div className={`flex h-full items-center justify-center ${theme.page}`}>
-        <div className={`flex items-center gap-2 rounded-md border border-border/70 bg-card px-5 py-3 text-sm ${theme.textSecondary} shadow-sm`}>
+        <div className={`flex items-center gap-2 rounded-md border border-slate-200 bg-card px-5 py-3 text-sm ${theme.textSecondary} shadow-sm`}>
           <Loader2 className={`h-4 w-4 animate-spin ${theme.textSuccess}`} />
           Loading profile...
         </div>
@@ -424,13 +440,11 @@ export function UserProfilePage() {
               <p className={`mt-1 text-xs ${theme.textCritical} opacity-80`}>{error.message}</p>
             </div>
           </div>
-          <button
-            type="button"
+          <ToolbarButton
+            icon={RefreshCw}
+            label="Retry"
             onClick={() => window.location.reload()}
-            className={`rounded-md border border-border/70 bg-card px-4 py-2 text-sm font-medium ${theme.textSecondary} transition ${theme.interactiveRow}`}
-          >
-            Retry
-          </button>
+          />
         </div>
       </div>
     );
@@ -468,7 +482,7 @@ export function UserProfilePage() {
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`}>
       {/* ── HEADER ────────────────────────────────────────────────── */}
-      <header className={`relative flex items-center gap-4 border-b border-border/70 ${theme.header} h-16 shrink-0 px-5`}>
+      <header className={`relative flex items-center gap-4 border-b border-border-major ${theme.header} h-16 shrink-0 px-5`}>
         {/* Avatar */}
         <div className="relative group cursor-pointer shrink-0" onClick={handleAvatarClick}>
           {avatarPreview ? (
@@ -493,54 +507,25 @@ export function UserProfilePage() {
 
         {/* Name + role */}
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className={`text-lg font-semibold ${theme.textPrimary} leading-tight`}>{fullName || "Complete your profile"}</div>
-            {editingSection && (
-              <span className={`inline-flex items-center gap-1 rounded bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning`}>
-                Editing
-              </span>
-            )}
-          </div>
-          <div className={`text-sm ${theme.textMuted} leading-tight`}>{draft.role || "Add your role and details"}</div>
+          <div className={`text-lg font-semibold ${theme.textPrimary} leading-tight`}>{fullName || "Complete your profile"}</div>
+          <div className={`text-sm ${theme.textMuted} leading-tight`}>{draft.role || "Add your position and details"}</div>
         </div>
 
-        {/* Global save bar (when editing) */}
-        {editingSection && (
-          <div className="flex items-center gap-2 shrink-0">
-            {hasErrorCount > 0 && (
-              <span className={`text-xs ${theme.textCritical} font-medium`}>{hasErrorCount} error{hasErrorCount > 1 ? "s" : ""}</span>
-            )}
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 rounded-md bg-success px-3 py-1.5 text-xs font-semibold text-success-foreground transition hover:bg-success/90 disabled:opacity-50"
-            >
-              {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-              {saving ? "Saving..." : "Save"}
-            </button>
-            <button
-              type="button"
-              onClick={cancelEditing}
-              className={`inline-flex items-center gap-1.5 rounded-md border border-border/70 bg-card px-3 py-1.5 text-xs font-medium ${theme.textSecondary} transition ${theme.interactiveRow}`}
-            >
-              Cancel
-            </button>
-            <span className={`text-[10px] ${theme.textMuted} hidden sm:inline`}>Ctrl+S</span>
-          </div>
-        )}
-
-        {/* Close */}
-        {!editingSection && (
-          <button
-            type="button"
-            onClick={() => handleNavigate("/control-tower")}
-            className={`shrink-0 rounded-md border border-border/70 bg-card p-2 ${theme.textMuted} transition hover:bg-muted hover:text-foreground`}
-            aria-label="Close profile"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
+        {/* Badges — highlights, score, rating */}
+        <div className="flex items-center gap-1.5 overflow-hidden shrink-0 ml-auto">
+          {highlights.map((h, i) => (
+            <span key={i} title={getHighlightTitle(h)} className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-slate-200 bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
+              {h}
+            </span>
+          ))}
+          {highlights.length > 0 && <div className={`h-5 w-px shrink-0 ${theme.dividerDot}`} />}
+          <span title="Profile quality score" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-slate-200 bg-muted/40 px-2 text-[11px] font-semibold ${theme.textPrimary}`}>
+            {score.value}/100
+          </span>
+          <span title="Profile completeness rating" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-slate-200 bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
+            {score.label}
+          </span>
+        </div>
 
         {/* Save error banner */}
         {saveError && !saveSuccess && (
@@ -554,23 +539,39 @@ export function UserProfilePage() {
         )}
       </header>
 
-      {/* ── TOOLBAR: Highlights + Score ───────────────────────────── */}
-      <div className={`shrink-0 flex h-9 items-center border-b border-border/70 ${theme.header} px-4 select-none`}>
-        <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-          {highlights.map((h, i) => (
-            <span key={i} title={getHighlightTitle(h)} className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border/70 bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
-              {h}
-            </span>
-          ))}
-          {highlights.length > 0 && <div className={`h-5 w-px shrink-0 ${theme.dividerDot}`} />}
-          <span title="Profile quality score" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border/70 bg-muted/40 px-2 text-[11px] font-semibold ${theme.textPrimary}`}>
-            {score.value}/100
-          </span>
-          <span title="Profile completeness rating" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border/70 bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
-            {score.label}
-          </span>
-        </div>
-      </div>
+      {/* ── TOOLBAR ────────────────────────────────────────────────── */}
+      <Toolbar
+        leftWidth="w-[20%]"
+        left={
+          !editingSection ? undefined : (
+            <div className="flex items-center gap-2 px-1">
+              <span className={`inline-flex items-center gap-1.5 rounded bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning`}>Editing</span>
+              <span className={`text-xs font-medium ${theme.textPrimary}`}>
+                {editingSection === "profile" ? "Personal Information" : editingSection === "work" ? "Work History" : "Education"}
+              </span>
+            </div>
+          )
+        }
+        right={
+          editingSection ? (
+            <div className="flex items-center gap-1.5">
+              {hasErrorCount > 0 && (
+                <span className={`text-xs ${theme.textCritical} font-medium`}>{hasErrorCount} error{hasErrorCount > 1 ? "s" : ""}</span>
+              )}
+              <ToolbarButton icon={Save} label={saving ? "Saving..." : "Save"} onClick={handleSave} disabled={saving} variant="success" />
+              <ToolbarButton icon={X} label="Cancel" onClick={cancelEditing} />
+              <span className={`text-[10px] ${theme.textMuted} hidden sm:inline`}>Ctrl+S</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <ToolbarButton icon={Pencil} label="Personal Info" onClick={() => startEditing("profile")} />
+              <ToolbarButton icon={Pencil} label="Work History" onClick={() => startEditing("work")} />
+              <ToolbarButton icon={Pencil} label="Education" onClick={() => startEditing("edu")} />
+              <ToolbarButton icon={X} label="Close" onClick={() => handleNavigate("/control-tower")} />
+            </div>
+          )
+        }
+      />
 
       {/* ── MAIN CONTENT: 3-column workspace layout ───────────────── */}
       <div className="flex-1 overflow-hidden">
@@ -579,18 +580,15 @@ export function UserProfilePage() {
 
             {/* ═══ Column 1 — Personal Information ════════════════════ */}
             <PersonalInfoColumn
-              profileId={profile?.id ?? null}
               draft={draft}
               setDraft={setDraft}
               editingSection={editingSection}
               startEditing={startEditing}
-              cancelEditing={cancelEditing}
-              handleSave={handleSave}
-              saving={saving}
               fieldErrors={fieldErrors}
               setFieldErrors={setFieldErrors}
               plants={plants}
               departments={departments}
+              roles={roles}
               setDeptTouched={setDeptTouched}
               identityRef={identityRef}
               contactRef={contactRef}
@@ -606,9 +604,6 @@ export function UserProfilePage() {
               setWorkDraft={setWorkDraft}
               editingSection={editingSection}
               startEditing={startEditing}
-              cancelEditing={cancelEditing}
-              handleSave={handleSave}
-              saving={saving}
               fieldErrors={fieldErrors}
               experienceRef={experienceRef}
               normalized={normalized}
@@ -616,13 +611,11 @@ export function UserProfilePage() {
 
             {/* ═══ Column 3 — Education ══════════════════════════════ */}
             <EducationColumn
+              adminProfileId={adminProfileId}
               eduDraft={eduDraft}
               setEduDraft={setEduDraft}
               editingSection={editingSection}
               startEditing={startEditing}
-              cancelEditing={cancelEditing}
-              handleSave={handleSave}
-              saving={saving}
               fieldErrors={fieldErrors}
               educationRef={educationRef}
             />
@@ -632,7 +625,7 @@ export function UserProfilePage() {
       </div>
 
       {/* ── FOOTER ────────────────────────────────────────────────── */}
-      <footer className={`h-10 shrink-0 border-t border-border/70 ${theme.header} px-4 py-1`}>
+      <footer className={`h-10 shrink-0 border-t border-border-major ${theme.header} px-4 py-1`}>
         <div className="flex items-center justify-between gap-4 h-full">
           <div className="flex items-center gap-2" ref={completionBarRef}>
             <span className={`text-xs ${theme.textMuted}`}>Completion</span>
@@ -660,7 +653,7 @@ export function UserProfilePage() {
 
       {/* ── Completion popover ─────────────────────────────────────── */}
       {showCompletionPopover && (
-        <div ref={completionPopoverRef} className={`fixed bottom-16 right-8 z-50 w-64 rounded-lg border border-border/70 ${theme.dropdown} p-3 shadow-lg`}>
+        <div ref={completionPopoverRef} className={`fixed bottom-16 right-8 z-50 w-64 rounded-lg border border-slate-200 ${theme.dropdown} p-3 shadow-lg`}>
           <div className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${theme.textMuted}`}>Missing fields</div>
           {missingFields.length > 0 ? (
             <div className="space-y-1">
@@ -689,18 +682,24 @@ export function UserProfilePage() {
             <h3 className={`text-sm font-bold ${theme.textPrimary} mb-1`}>Unsaved changes</h3>
             <p className={`text-xs ${theme.textMuted} mb-4`}>You have unsaved edits. What would you like to do?</p>
             <div className="flex items-center justify-end gap-2">
-              <button type="button" onClick={confirmSave} disabled={saving}
-                className="rounded-md bg-success px-3 py-1.5 text-xs font-medium text-success-foreground hover:bg-success/90 transition-colors disabled:opacity-50">
-                {saving ? "Saving..." : "Save & continue"}
-              </button>
-              <button type="button" onClick={confirmDiscard}
-                className="rounded-md border border-danger/20 bg-card px-3 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger/10">
-                Discard
-              </button>
-              <button type="button" onClick={confirmCancel}
-                className={`rounded-md bg-card px-3 py-1.5 text-xs font-medium ${theme.textMuted} transition-colors hover:text-foreground`}>
-                Cancel
-              </button>
+              <ToolbarButton
+                icon={Check}
+                label={saving ? "Saving..." : "Save & continue"}
+                onClick={confirmSave}
+                disabled={saving}
+                variant="success"
+              />
+              <ToolbarButton
+                icon={X}
+                label="Discard"
+                onClick={confirmDiscard}
+                variant="destructive"
+              />
+              <ToolbarButton
+                icon={X}
+                label="Cancel"
+                onClick={confirmCancel}
+              />
             </div>
           </div>
         </div>

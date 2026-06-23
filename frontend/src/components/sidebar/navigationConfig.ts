@@ -6,8 +6,9 @@ import {
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, FileSpreadsheet,
   Package, Clock, CalendarClock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench, ShieldAlert, CheckCircle,
+  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench,
   Siren, Radar, TriangleAlert, BriefcaseMedical, HeartPulse, Leaf, CircleCheckBig,
+  MessageSquare, User, Tag, Hash, Ruler, Shield, KeyRound, Bell, Palette, Server, Terminal, History, Mail, Webhook, HardDrive, Flag, Book,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -42,10 +43,15 @@ export const sidebarNav: TopLevelEntry[] = [
   {
     type: "section", id: "myworkspace", label: "My Workspace", icon: LayoutDashboard,
     items: [
-      { type: "item", label: "Personal Dashboard", to: "/myworkspace/dashboard", icon: LayoutDashboard },
+      { type: "item", label: "Dashboard", to: "/myworkspace/dashboard", icon: LayoutDashboard },
       { type: "item", label: "My Tasks", to: "/myworkspace/tasks", icon: ListChecks },
+      { type: "item", label: "Activity Feed", to: "/myworkspace/activity-feed", icon: Activity },
+      { type: "item", label: "Chat", to: "/myworkspace/chat", icon: MessageSquare },
+      { type: "item", label: "Profile", to: "/myworkspace/profile", icon: User },
+      { type: "item", label: "Preferences", to: "/myworkspace/preferences", icon: Settings },
     ],
   },
+
 
   {
     type: "section", id: "plan", label: "Plan", icon: ClipboardList,
@@ -147,21 +153,82 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "Product Master", to: "/system/product-master", icon: Database },
         ],
       },
-      { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
+      {
+        type: "group", label: "Reference Tables", icon: FileSpreadsheet,
+        items: [
+          { type: "item", label: "Statuses", to: "/system/reference-tables/statuses", icon: CircleCheckBig },
+          { type: "item", label: "Categories", to: "/system/reference-tables/categories", icon: Book },
+          { type: "item", label: "Types", to: "/system/reference-tables/types", icon: Tag },
+          { type: "item", label: "Priorities", to: "/system/reference-tables/priorities", icon: Hash },
+          { type: "item", label: "Units of Measure", to: "/system/reference-tables/uom", icon: Ruler },
+          { type: "item", label: "Reason Codes", to: "/system/reference-tables/reason-codes", icon: FileSpreadsheet },
+        ],
+      },
       {
         type: "group", label: "ERP Data", icon: Database,
         items: [
-          { type: "item", label: "ERP Patterns", to: "/system/erp-data/erp-patterns", icon: Briefcase },
-          { type: "item", label: "ERP Import", to: "/system/erp-data/import", icon: Upload },
+          { type: "item", label: "Import Patterns", to: "/system/erp-data/erp-patterns", icon: Briefcase },
+          { type: "item", label: "Source Files", to: "/system/erp-data/import", icon: Upload },
+          { type: "item", label: "Validation Results", to: "/system/erp-data", icon: FileCheck },
+          { type: "item", label: "Import Logs", to: "/system/erp-data", icon: ClipboardList },
+          { type: "item", label: "ERP Reference Data", to: "/system/erp-data", icon: Database },
         ],
       },
-      { type: "item", label: "Audit Templates", to: "/system/audit-templates", icon: ClipboardCheck },
-      { type: "item", label: "Users & Roles", to: "/system/users-and-roles", icon: Users },
+      {
+        type: "group", label: "Audit Templates", icon: ClipboardCheck,
+        items: [
+          { type: "item", label: "Production Control Templates", to: "/system/audit-templates/production-control", icon: Activity },
+          { type: "item", label: "Quality Management Templates", to: "/system/audit-templates/quality", icon: ShieldCheck },
+          { type: "item", label: "Safety Templates", to: "/system/audit-templates/safety", icon: Shield },
+          { type: "item", label: "Material Control Templates", to: "/system/audit-templates/material", icon: Package },
+        ],
+      },
+      {
+        type: "group", label: "Users & Roles", icon: Users,
+        items: [
+          { type: "item", label: "Users", to: "/system/users-and-roles", icon: Users },
+          { type: "item", label: "Roles", to: "/system/users-and-roles/roles", icon: ShieldCheck },
+          { type: "item", label: "Permissions", to: "/system/users-and-roles/permissions", icon: KeyRound },
+          { type: "item", label: "Access Groups", to: "/system/users-and-roles/access-groups", icon: Users },
+        ],
+      },
       {
         type: "group", label: "Application", icon: SlidersHorizontal,
         items: [
-          { type: "item", label: "Diagnostics", to: "/system/application/diagnostics", icon: Activity },
-          { type: "item", label: "Settings", to: "/system/application/settings", icon: Cog },
+          { type: "item", label: "App Settings", to: "/system/application-settings", icon: Cog },
+          { type: "item", label: "Notifications", to: "/system/notifications", icon: Bell },
+          { type: "item", label: "Numbering / Codes", to: "/system/numbering-codes", icon: Hash },
+          { type: "item", label: "Feature Flags", to: "/system/feature-flags", icon: Flag },
+          { type: "item", label: "Theme Defaults", to: "/system/theme-defaults", icon: Palette },
+        ],
+      },
+      {
+        type: "group", label: "System Health", icon: Monitor,
+        items: [
+          { type: "item", label: "Health Summary", to: "/system/health", icon: Monitor },
+          { type: "item", label: "Services", to: "/system/health/services", icon: Server },
+          { type: "item", label: "Database", to: "/system/health/database", icon: Database },
+          { type: "item", label: "Deployment Info", to: "/system/health/deployment", icon: Terminal },
+          { type: "item", label: "Recent Errors", to: "/system/health/errors", icon: AlertTriangle },
+        ],
+      },
+      {
+        type: "group", label: "Audit Logs", icon: History,
+        items: [
+          { type: "item", label: "User Activity", to: "/system/audit-logs/user-activity", icon: Activity },
+          { type: "item", label: "Data Changes", to: "/system/audit-logs/data-changes", icon: FileText },
+          { type: "item", label: "Login / Access Events", to: "/system/audit-logs/login-events", icon: KeyRound },
+          { type: "item", label: "System Events", to: "/system/audit-logs/system-events", icon: History },
+        ],
+      },
+      {
+        type: "group", label: "Integrations", icon: Webhook,
+        items: [
+          { type: "item", label: "ERP Connections", to: "/system/integrations/erp", icon: Database },
+          { type: "item", label: "Email / SMTP", to: "/system/integrations/email", icon: Mail },
+          { type: "item", label: "API Keys", to: "/system/integrations/api-keys", icon: KeyRound },
+          { type: "item", label: "Webhooks", to: "/system/integrations/webhooks", icon: Webhook },
+          { type: "item", label: "File Storage", to: "/system/integrations/file-storage", icon: HardDrive },
         ],
       },
     ],
@@ -210,13 +277,22 @@ export function isPathActive(path: string, target: string): boolean {
 
 export function isRouteItemActive(path: string, target: string): boolean {
   if (target === "/") return path === "/";
-  if (target === "/system/production-structure/flow") {
-    return path === target || path.startsWith(target + "/");
-  }
-  if (target === "/system/production-structure/components") {
-    return path === target || path.startsWith(target + "/");
-  }
-  if (target === "/system/erp-data") {
+  // Prefix matching for routes with sub-pages
+  if (
+    target === "/system/production-structure/components/company" ||
+    target === "/system/production-structure/plants" ||
+    target === "/system/production-structure/components/line" ||
+    target === "/system/production-structure/departments" ||
+    target === "/system/production-structure/resource-groups" ||
+    target === "/system/production-structure/resources" ||
+    target === "/system/reference-tables" ||
+    target === "/system/erp-data" ||
+    target === "/system/audit-templates" ||
+    target === "/system/users-and-roles" ||
+    target === "/system/health" ||
+    target === "/system/audit-logs" ||
+    target === "/system/integrations"
+  ) {
     return path === target || path.startsWith(target + "/");
   }
   return path === target;

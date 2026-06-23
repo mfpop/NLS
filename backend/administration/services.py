@@ -307,7 +307,7 @@ class UserProfileService:
         return profile
 
     @staticmethod
-    def list(company_id=None, plant_id=None, administrative_department_id=None, is_active=None, search=None, user=None):
+    def list(company_id=None, plant_id=None, administrative_department_id=None, is_active=None, search=None, user_id=None, user=None):
         qs = UserProfile.objects.select_related(
             "user", "company", "plant", "administrative_department",
         ).all()
@@ -319,6 +319,8 @@ class UserProfileService:
             qs = qs.filter(administrative_department_id=administrative_department_id)
         if is_active is not None:
             qs = qs.filter(is_active=is_active)
+        if user_id is not None:
+            qs = qs.filter(user_id=user_id)
         if search:
             qs = qs.filter(
                 models.Q(user__username__icontains=search) |
@@ -639,9 +641,29 @@ class UserAccessService:
 class ProfileSkillService:
 
     @staticmethod
+    def _check_owner_or_admin(user_profile_id, user=None):
+        """Check that the given user owns the profile or has admin permission."""
+        if user and user.is_authenticated:
+            try:
+                caller_profile = UserProfile.objects.get(user=user)
+                if str(caller_profile.id) == str(user_profile_id):
+                    return
+                if UserAccessService.user_has_permission(
+                    caller_profile.id, "admin_profile_skill",
+                ):
+                    return
+            except UserProfile.DoesNotExist:
+                pass
+            raise ProfileSkillServiceError(
+                "_auth", "ACCESS_DENIED",
+                "You do not have permission to manage skills for this profile.",
+            )
+
+    @staticmethod
     @transaction.atomic
     def create(user_profile_id, name, category="SKILL", level="", issuer="",
-               issued_date=None, expires_date=None, notes=""):
+               issued_date=None, expires_date=None, notes="", user=None):
+        ProfileSkillService._check_owner_or_admin(user_profile_id, user=user)
         try:
             profile = UserProfile.objects.get(id=user_profile_id)
         except UserProfile.DoesNotExist:
@@ -674,13 +696,14 @@ class ProfileSkillService:
 
     @staticmethod
     @transaction.atomic
-    def update(skill_id, **kwargs):
+    def update(skill_id, user=None, **kwargs):
         try:
             skill = ProfileSkill.objects.get(id=skill_id)
         except ProfileSkill.DoesNotExist:
             raise ProfileSkillServiceError(
                 "id", "NOT_FOUND", "Profile skill not found.",
             )
+        ProfileSkillService._check_owner_or_admin(skill.user_profile_id, user=user)
         if "name" in kwargs:
             name = kwargs["name"]
             if not name or not name.strip():
@@ -707,16 +730,31 @@ class ProfileSkillService:
 
     @staticmethod
     @transaction.atomic
-    def archive(skill_id):
+    def archive(skill_id, user=None):
         try:
             skill = ProfileSkill.objects.get(id=skill_id)
         except ProfileSkill.DoesNotExist:
             raise ProfileSkillServiceError(
                 "id", "NOT_FOUND", "Profile skill not found.",
             )
+        ProfileSkillService._check_owner_or_admin(skill.user_profile_id, user=user)
         skill.is_active = False
         skill.save()
         return skill
+
+    @staticmethod
+    @transaction.atomic
+    def delete(skill_id, user=None):
+        """Permanently delete a profile skill record."""
+        try:
+            skill = ProfileSkill.objects.get(id=skill_id)
+        except ProfileSkill.DoesNotExist:
+            raise ProfileSkillServiceError(
+                "id", "NOT_FOUND", "Profile skill not found.",
+            )
+        ProfileSkillService._check_owner_or_admin(skill.user_profile_id, user=user)
+        skill.delete()
+        return True
 
     @staticmethod
     def list(user_profile_id=None, category=None, is_active=None):
@@ -737,5 +775,23 @@ class ProfileSkillService:
             raise ProfileSkillServiceError(
                 "id", "NOT_FOUND", "Profile skill not found.",
             )
+
+    @staticmethod
+    def check_can_manage(admin_profile_id, user=None):
+        """Return whether the user can manage skills for the given profile.
+        Returns (can_add: bool, can_edit: bool, can_delete: bool).
+        """
+        if not admin_profile_id or not user or not user.is_authenticated:
+            return (False, False, False)
+        try:
+            caller_profile = UserProfile.objects.get(user=user)
+            is_owner = str(caller_profile.id) == str(admin_profile_id)
+            is_admin = UserAccessService.user_has_permission(
+                caller_profile.id, "admin_profile_skill",
+            )
+            can = is_owner or is_admin
+            return (can, can, can)
+        except UserProfile.DoesNotExist:
+            return (False, False, False)
 
 

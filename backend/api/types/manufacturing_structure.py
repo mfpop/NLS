@@ -58,6 +58,7 @@ class EducationEntry:
 @strawberry.type
 class ProfileNode:
     id: strawberry.ID
+    user: typing.Optional[str] = None
     name: str
     role: str
     email: str

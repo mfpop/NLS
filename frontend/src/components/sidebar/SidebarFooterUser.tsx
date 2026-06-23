@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { BookOpen, User, Settings, LogOut, MoreVertical } from "lucide-react";
 import { useAuth } from "@/auth/AuthContext";
 import { useSidebarStore } from "@/stores/sidebar";
+import { layoutBg } from "./sidebarStyles";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -34,9 +35,8 @@ export function SidebarFooterUser() {
   }, []);
 
   return (
-    <div ref={ref} className="relative shrink-0 border-t border-border bg-card text-sidebar-foreground">
-      <div className={`absolute bottom-full left-0 right-0 overflow-hidden transition-all duration-120 ease-out ${isOpen ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="bg-card border-b border-border px-0 pt-0.5 pb-0">
+    <div ref={ref} className={`relative shrink-0 border-t ${layoutBg.horizontalSeparator} ${layoutBg.sidebar} text-sidebar-foreground`}>
+      <div className={`absolute bottom-full left-0 right-0 overflow-hidden transition-all duration-120 ease-out ${isOpen ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0"}`}>          <div className="bg-card border-b border-border-major px-0 pt-0.5 pb-0">
           <NavLink to="/system/profile" onClick={closeDropdownAndMenus}
             className="flex items-center gap-2.5 h-[22px] px-3 text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-hover transition-colors"
           >

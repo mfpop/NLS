@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
+import { useLocation } from "react-router-dom";
 import {
   ClipboardCheck, Plus, RefreshCw, Archive, Copy, Eye, Search,
   X, Check, Loader2, Info, TriangleAlert, Pencil, Trash2,
@@ -7,7 +8,7 @@ import {
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { theme } from "@/styles/themeTokens";
 import {
-  AUDIT_TEMPLATES_QUERY, AUDIT_TEMPLATE_QUERY,
+  AUDIT_TEMPLATES_QUERY,
   CREATE_AUDIT_TEMPLATE_MUTATION, UPDATE_AUDIT_TEMPLATE_MUTATION,
   ACTIVATE_AUDIT_TEMPLATE_MUTATION, ARCHIVE_AUDIT_TEMPLATE_MUTATION,
   CLONE_AUDIT_TEMPLATE_MUTATION,
@@ -108,16 +109,33 @@ export function AuditTemplateManagerPage() {
   const [confirmAction, setConfirmAction] = useState<{ type: string; id: string; label: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const location = useLocation();
+
+  // Determine module scope filter from URL path
+  const moduleFilter = (() => {
+    const path = location.pathname;
+    if (path.includes("/production-control")) return "PRODUCTION_CONTROL";
+    if (path.includes("/quality")) return "QUALITY_CONTROL";
+    if (path.includes("/safety")) return "SAFETY_CONTROL";
+    if (path.includes("/material")) return "MATERIAL_CONTROL";
+    return null;
+  })();
+
+  const pageTitle = moduleFilter
+    ? `${MODULE_SCOPE_OPTIONS.find((o) => o.value === moduleFilter)?.label || ""} Audit Templates`
+    : "Audit Templates";
+  const pageSubtitle = moduleFilter
+    ? `Managing templates for ${MODULE_SCOPE_OPTIONS.find((o) => o.value === moduleFilter)?.label || ""}.`
+    : "Create, edit, and manage audit templates used across Control modules.";
+
   const { data: templatesData, loading: templatesLoading, refetch: refetchTemplates } = useQuery<{ auditTemplates: AuditTemplate[] }>(AUDIT_TEMPLATES_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
-  const { data: detailData } = useQuery<{ auditTemplate?: AuditTemplate }>(AUDIT_TEMPLATE_QUERY, {
-    variables: { id: selectedId || "" },
-    skip: !selectedId,
-    fetchPolicy: "cache-and-network",
-  });
 
   const templates = templatesData?.auditTemplates ?? [];
-  const selectedTemplate = detailData?.auditTemplate ?? templates.find((t) => t.id === selectedId);
-  const filteredTemplates = templates.filter((t) => !search || t.name.toLowerCase().includes(search.toLowerCase()) || t.code.toLowerCase().includes(search.toLowerCase()));
+  const selectedTemplate = templates.find((t) => t.id === selectedId);
+  const filteredTemplates = (moduleFilter
+    ? templates.filter((t) => t.moduleScope === moduleFilter)
+    : templates
+  ).filter((t) => !search || t.name.toLowerCase().includes(search.toLowerCase()) || t.code.toLowerCase().includes(search.toLowerCase()));
 
   const [createTemplate] = useMutation<any>(CREATE_AUDIT_TEMPLATE_MUTATION, { refetchQueries: [AUDIT_TEMPLATES_QUERY] });
   const [updateTemplate] = useMutation<any>(UPDATE_AUDIT_TEMPLATE_MUTATION, { refetchQueries: [AUDIT_TEMPLATES_QUERY] });
@@ -279,8 +297,8 @@ export function AuditTemplateManagerPage() {
     <AppPageLayout
       icon={<ClipboardCheck />}
       iconClass={theme.iconBoxBrand}
-      title="Audit Templates"
-      subtitle="Create, edit, and manage audit templates used across Control modules."
+      title={pageTitle}
+      subtitle={pageSubtitle}
     >
       <div className="flex h-full gap-2 p-2 overflow-hidden">
         {/* Left: Template list */}

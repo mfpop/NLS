@@ -1,9 +1,6 @@
 import { useMemo, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  RMA_STATUS_STYLES, DMR_STATUS_STYLES,
-  ISSUE_STATUS_STYLES, ACTION_STATUS_STYLES,
-  PRIORITY_STYLES,
   STATUS_STYLES, statusLabel,
 } from "./QualityStatusStyles";
 
@@ -163,24 +160,26 @@ export function QualityOverview(props: OverviewProps) {
 
   // ── Recent items ──
   const recentItems = useMemo(() => {
-    const mapped: { id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void }[] = [
-      ...actions.filter((a) => a.status !== "CANCELLED").map((a: any) => ({ id: `action-${a.id}`, date: a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", onClick: () => kpiClick({ tab: "actions" }) })),
-      ...problems.filter((p) => p.status !== "CANCELLED").map((p: any) => ({ id: `issue-${p.id}`, date: p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", onClick: () => kpiClick({ tab: "issues" }) })),
-      ...audits.map((a: any) => ({ id: `audit-${a.id}`, date: a.createdAt || "0", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", onClick: () => kpiClick({ tab: "audits" }) })),
-      ...dmrs.filter((d) => d.status !== "CANCELLED").map((d: any) => ({ id: `dmr-${d.id}`, date: d.createdAt || "0", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", onClick: () => kpiClick({ tab: "dmrs" }) })),
-      ...rmas.filter((r) => r.status !== "CANCELLED").map((r: any) => ({ id: `rma-${r.id}`, date: r.createdAt || "0", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", onClick: () => kpiClick({ tab: "rmas" }) })),
+    const priorityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+    const mapped: { id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void; priority: number; sortPriority: number }[] = [
+      ...actions.filter((a) => a.status !== "CANCELLED").map((a: any) => ({ id: `action-${a.id}`, date: a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", priority: priorityRank[a.priority] ?? 3, sortPriority: 1, onClick: () => kpiClick({ tab: "actions" }) })),
+      ...problems.filter((p) => p.status !== "CANCELLED").map((p: any) => ({ id: `issue-${p.id}`, date: p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", priority: priorityRank[p.severity] ?? 3, sortPriority: 0, onClick: () => kpiClick({ tab: "issues" }) })),
+      ...audits.map((a: any) => ({ id: `audit-${a.id}`, date: a.createdAt || "0", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", priority: 2, sortPriority: 2, onClick: () => kpiClick({ tab: "audits" }) })),
+      ...dmrs.filter((d) => d.status !== "CANCELLED").map((d: any) => ({ id: `dmr-${d.id}`, date: d.createdAt || "0", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", priority: priorityRank[d.severity] ?? 3, sortPriority: 3, onClick: () => kpiClick({ tab: "dmrs" }) })),
+      ...rmas.filter((r) => r.status !== "CANCELLED").map((r: any) => ({ id: `rma-${r.id}`, date: r.createdAt || "0", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", priority: priorityRank[r.severity] ?? 3, sortPriority: 4, onClick: () => kpiClick({ tab: "rmas" }) })),
     ];
     return mapped.sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
   }, [actions, problems, audits, dmrs, rmas, kpiClick]);
 
   // ── Completed items ──
   const completedItems = useMemo(() => {
-    const mapped: { id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void }[] = [
-      ...actions.filter((a) => a.status === "COMPLETED").map((a: any) => ({ id: `action-${a.id}`, date: a.updatedAt || a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", onClick: () => kpiClick({ tab: "actions" }) })),
-      ...problems.filter((p) => p.status === "CLOSED").map((p: any) => ({ id: `issue-${p.id}`, date: p.updatedAt || p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", onClick: () => kpiClick({ tab: "issues" }) })),
-      ...audits.filter((a) => a.status === "COMPLETED" || a.status === "ARCHIVED").map((a: any) => ({ id: `audit-${a.id}`, date: a.updatedAt || a.createdAt || "", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", onClick: () => kpiClick({ tab: "audits" }) })),
-      ...dmrs.filter((d) => d.status === "CLOSED").map((d: any) => ({ id: `dmr-${d.id}`, date: d.closedAt || d.updatedAt || d.createdAt || "", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", onClick: () => kpiClick({ tab: "dmrs" }) })),
-      ...rmas.filter((r) => r.status === "CLOSED").map((r: any) => ({ id: `rma-${r.id}`, date: r.updatedAt || r.createdAt || "", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", onClick: () => kpiClick({ tab: "rmas" }) })),
+    const priorityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+    const mapped: { id: string; date: string; type: string; title: string; status: string; owner: string; onClick: () => void; priority: number; sortPriority: number }[] = [
+      ...actions.filter((a) => a.status === "COMPLETED").map((a: any) => ({ id: `action-${a.id}`, date: a.updatedAt || a.createdAt || "", type: "Action", title: a.title, status: a.status, owner: a.owner || "", priority: priorityRank[a.priority] ?? 3, sortPriority: 1, onClick: () => kpiClick({ tab: "actions" }) })),
+      ...problems.filter((p) => p.status === "CLOSED").map((p: any) => ({ id: `issue-${p.id}`, date: p.updatedAt || p.createdAt || "", type: "Issue", title: p.title || "Issue", status: p.status, owner: p.reportedBy || p.owner || "", priority: priorityRank[p.severity] ?? 3, sortPriority: 0, onClick: () => kpiClick({ tab: "issues" }) })),
+      ...audits.filter((a) => a.status === "COMPLETED" || a.status === "ARCHIVED").map((a: any) => ({ id: `audit-${a.id}`, date: a.updatedAt || a.createdAt || "", type: "Audit", title: a.title || `Audit #${a.id}`, status: a.status, owner: a.auditor || "", priority: 2, sortPriority: 2, onClick: () => kpiClick({ tab: "audits" }) })),
+      ...dmrs.filter((d) => d.status === "CLOSED").map((d: any) => ({ id: `dmr-${d.id}`, date: d.closedAt || d.updatedAt || d.createdAt || "", type: "DMR", title: `${d.dmrNumber || "DMR"} ${d.title || ""}`.trim(), status: d.status, owner: d.owner || "", priority: priorityRank[d.severity] ?? 3, sortPriority: 3, onClick: () => kpiClick({ tab: "dmrs" }) })),
+      ...rmas.filter((r) => r.status === "CLOSED").map((r: any) => ({ id: `rma-${r.id}`, date: r.updatedAt || r.createdAt || "", type: "RMA", title: `${r.rmaNumber || "RMA"} ${r.customerName || ""}`.trim(), status: r.status, owner: r.owner || "", priority: priorityRank[r.severity] ?? 3, sortPriority: 4, onClick: () => kpiClick({ tab: "rmas" }) })),
     ];
     return mapped.sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
   }, [actions, problems, audits, dmrs, rmas, kpiClick]);
@@ -199,16 +198,13 @@ export function QualityOverview(props: OverviewProps) {
   // ── Quality Performance ──
   const qualityPerformance = useMemo(() => {
     const dmr30 = dmrs.filter((d) => d.createdAt && d.createdAt >= MONTH_START_STR);
-    const dmr7 = dmrs.filter((d) => d.createdAt && d.createdAt >= WEEK_START_STR);
     const prevDmr30 = dmrs.filter((d) => d.createdAt && d.createdAt >= `${NOW.getFullYear() - (NOW.getMonth() === 0 ? 1 : 0)}-${String(NOW.getMonth() === 0 ? 12 : NOW.getMonth()).padStart(2, "0")}-01` && d.createdAt < MONTH_START_STR);
-    const prevDmr7 = dmrs.filter((d) => d.createdAt && d.createdAt >= `${new Date(NOW.getTime() - 14 * 86400000).toISOString().slice(0, 10)}` && d.createdAt < WEEK_START_STR);
 
     const completedAudits = audits.filter((a) => a.status === "COMPLETED");
     const recentCompletedAudits = audits.filter((a) => a.status === "COMPLETED" && a.updatedAt && a.updatedAt >= MONTH_START_STR);
     const prevCompletedAudits = audits.filter((a) => a.status === "COMPLETED" && a.updatedAt && a.updatedAt >= MONTH_START_STR && a.updatedAt < WEEK_START_STR);
 
     const totalQty = dmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
-    const defectQty30 = dmr30.reduce((sum: number, d) => sum + (d.quantity || 0), 0);
     const totalQtyAll = Math.max(dmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0), 1);
     const scrapDmrs = dmrs.filter((d) => d.disposition === "SCRAP");
     const scrapQty = scrapDmrs.reduce((sum: number, d) => sum + (d.quantity || 0), 0);

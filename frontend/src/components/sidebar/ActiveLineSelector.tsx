@@ -79,9 +79,9 @@ export function ActiveLineSelector() {
   }, [setSelectedPlantId, setActiveLineId, dbLines]);
 
   return (
-      <div ref={ref} className="relative shrink-0 p-0 bg-card border-b border-border">
+      <div ref={ref} className="relative shrink-0 p-0 bg-white border-b border-border-major">
       <button type="button" onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between w-full h-10 rounded-none px-3 text-[13px] font-medium bg-card text-sidebar-foreground hover:bg-sidebar-hover transition-colors`}
+        className={`flex items-center justify-between w-full h-10 rounded-none px-3 text-[13px] font-medium bg-white text-sidebar-foreground hover:bg-sidebar-hover transition-colors`}
       >
         <span className="truncate">{label}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 stroke-current transition-transform duration-150 ${isOpen ? "rotate-180" : ""}`} />
@@ -119,7 +119,7 @@ export function ActiveLineSelector() {
           {plants.length === 0 && (
             <div className={`px-3 py-2 text-[11px] text-slate-500`}>No production lines</div>
           )}
-          <div className={`border-t border-slate-200 my-1`} />
+          <div className={`border-t border-border-major my-1`} />
           <button type="button" onClick={() => { setSelectedPlantId(null); setActiveLineId(null); setIsOpen(false); }}
             className={`flex items-center gap-2 w-full px-3 h-8 text-xs transition-colors ${!activeLineId ? "bg-emerald-50 text-emerald-950 border-l-2 border-emerald-600 font-semibold" : "text-slate-800 bg-slate-50 hover:bg-emerald-50 hover:text-emerald-900"}`}
           >

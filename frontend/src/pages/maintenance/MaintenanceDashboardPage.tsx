@@ -107,7 +107,7 @@ function KpiTile({
     <button type="button" onClick={onClick} disabled={!onClick}
       className={cls(
         "flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 text-left transition-all",
-        onClick ? "cursor-pointer hover:border-slate-300 hover:shadow-sm" : "cursor-default",
+        onClick ? "cursor-pointer hover:border-border-major hover:shadow-sm" : "cursor-default",
       )}
     >
       {icon && <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100">{icon}</div>}

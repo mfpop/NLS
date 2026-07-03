@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { BarChart3, CheckCircle2, ExternalLink, Pencil, Plus, RotateCw, Save, X, RefreshCw } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { usePlants } from "@/hooks/usePlants";
 import { useProductionLines } from "@/hooks/useProductionLines";
 import { useRoutings } from "@/hooks/useRouting";
@@ -468,15 +468,15 @@ export function CapacityPage() {
   };
 
   const toolbar = (
-    <Toolbar
-      right={
+    <PageToolbar
+      rightActions={
         <>
-          <ToolbarButton icon={Plus} label="New Plan" onClick={() => { setSelectedPlanId(null); setEditing(true); setDirty(true); }} />
-          <ToolbarButton icon={Pencil} label="Edit" onClick={() => setEditing(true)} disabled={!selectedPlan || planReadOnly} />
-          <ToolbarButton icon={Save} label={calculating ? "Saving..." : "Save"} onClick={handleSave} disabled={!saveEnabled} variant="success" />
+          <ToolbarButton icon={Plus} label="New Plan" onClick={() => { setSelectedPlanId(null); setEditing(true); setDirty(true); }} variant="create" />
+          <ToolbarButton icon={Pencil} label="Edit" onClick={() => setEditing(true)} disabled={!selectedPlan || planReadOnly} variant="edit" />
+          <ToolbarButton icon={Save} label={calculating ? "Saving..." : "Save"} onClick={handleSave} disabled={!saveEnabled} variant="edit" />
           <ToolbarButton icon={RotateCw} label={calculating ? "Calculating..." : "Calculate"} onClick={handleCalculate} disabled={!selectedPlan || calculating || dirty} />
-          <ToolbarButton icon={CheckCircle2} label="Approve" onClick={handleApprove} disabled={!selectedPlan?.result || selectedPlan.status === "APPROVED" || selectedPlan.constraints.some((c) => c.severity === "CRITICAL")} />
-          <span className="mx-0.5 h-5 w-px bg-border/30" />
+          <ToolbarButton icon={CheckCircle2} label="Approve" onClick={handleApprove} disabled={!selectedPlan?.result || selectedPlan.status === "APPROVED" || selectedPlan.constraints.some((c) => c.severity === "CRITICAL")} variant="warning" />
+          <ToolbarSeparator />
           <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
           <ToolbarButton icon={X} label="Close" onClick={() => navigate("/plan/production-plan")} />
         </>

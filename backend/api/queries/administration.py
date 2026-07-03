@@ -156,14 +156,25 @@ class AdministrationQuery:
     @strawberry.field
     def profile_skills(self, info: GraphQLInfo, user_profile_id: str) -> list[ProfileSkillNode]:
         from administration.services import ProfileSkillService
-        qs = ProfileSkillService.list(user_profile_id=user_profile_id)
+        # Resolve "auto" to the current user's actual profile
+        pid = user_profile_id
+        if pid == "auto" and _user(info) and _user(info).is_authenticated:
+            profile = ProfileSkillService._resolve_or_create_profile(_user(info))
+            if profile:
+                pid = str(profile.id)
+        qs = ProfileSkillService.list(user_profile_id=pid)
         return [ProfileSkillNode.from_db(s) for s in qs]
 
     @strawberry.field
     def profile_skill_capabilities(self, info: GraphQLInfo, user_profile_id: str) -> "ProfileSkillCapabilitiesNode":
         from administration.services import ProfileSkillService
+        pid = user_profile_id
+        if pid == "auto" and _user(info) and _user(info).is_authenticated:
+            profile = ProfileSkillService._resolve_or_create_profile(_user(info))
+            if profile:
+                pid = str(profile.id)
         can_add, can_edit, can_delete = ProfileSkillService.check_can_manage(
-            user_profile_id, user=_user(info),
+            pid, user=_user(info),
         )
         return ProfileSkillCapabilitiesNode(
             can_add=can_add, can_edit=can_edit, can_delete=can_delete,

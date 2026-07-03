@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import strawberry
 from typing import Optional
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from django.utils import timezone
 
 from workspace.models import WorkspaceTask
 from workspace.services import WorkspaceTaskService, WorkspaceTaskServiceError
@@ -123,10 +124,24 @@ class WorkspaceQuery:
             waiting=dashboard["waiting"],
             high_priority=dashboard["high_priority"],
             total=dashboard["total"],
+            last_updated=dashboard["last_updated"],
             priority_work=[_to_dashboard_item(i) for i in dashboard["priority_work"]],
             due_soon=[_to_dashboard_item(i) for i in dashboard["due_soon"]],
             recent_activity=[_to_dashboard_item(i) for i in dashboard["recent_activity"]],
-            alerts_approvals=[_to_dashboard_item(i) for i in dashboard["alerts_approvals"]],
+            alerts=[_to_dashboard_item(i) for i in dashboard["alerts"]],
+            approvals=[_to_dashboard_item(i) for i in dashboard["approvals"]],
+            analytics=AnalyticsNode(
+                workload_trend=[
+                    WorkloadTrendNode(day=w["day"], count=w["count"])
+                    for w in dashboard["workload_trend"]
+                ],
+                risk_mix=RiskMixNode(
+                    open=dashboard["risk_mix"]["open"],
+                    in_progress=dashboard["risk_mix"]["in_progress"],
+                    overdue=dashboard["risk_mix"]["overdue"],
+                    completed=dashboard["risk_mix"]["completed"],
+                ),
+            ),
             source_breakdown=[SourceBreakdownNode(source_module=s["source_module"], count=s["count"]) for s in dashboard["source_breakdown"]],
         )
 
@@ -157,6 +172,7 @@ class DashboardItemNode:
     description: str
     status: str
     priority: str
+    severity: str
     source_type: str = strawberry.field(name="sourceType")
     source_id: Optional[int] = strawberry.field(name="sourceId", default=None)
     source_title: str = strawberry.field(name="sourceTitle")
@@ -164,12 +180,33 @@ class DashboardItemNode:
     due_date: Optional[str] = strawberry.field(name="dueDate", default=None)
     task_type: str = strawberry.field(name="taskType")  # "task", "approval", "finding", "action", "work_order", "mer"
     created_at: str = strawberry.field(name="createdAt")
+    is_overdue: bool = strawberry.field(name="isOverdue")
 
 
 @strawberry.type
 class SourceBreakdownNode:
     source_module: str = strawberry.field(name="sourceModule")
     count: int
+
+
+@strawberry.type
+class WorkloadTrendNode:
+    day: str
+    count: int
+
+
+@strawberry.type
+class RiskMixNode:
+    open: int
+    in_progress: int = strawberry.field(name="inProgress")
+    overdue: int
+    completed: int
+
+
+@strawberry.type
+class AnalyticsNode:
+    workload_trend: list[WorkloadTrendNode] = strawberry.field(name="workloadTrend")
+    risk_mix: RiskMixNode = strawberry.field(name="riskMix")
 
 
 @strawberry.type
@@ -182,27 +219,32 @@ class DashboardSummaryNode:
     waiting: int
     high_priority: int = strawberry.field(name="highPriority")
     total: int
+    last_updated: str = strawberry.field(name="lastUpdated")
     priority_work: list[DashboardItemNode] = strawberry.field(name="priorityWork")
     due_soon: list[DashboardItemNode] = strawberry.field(name="dueSoon")
     recent_activity: list[DashboardItemNode] = strawberry.field(name="recentActivity")
-    alerts_approvals: list[DashboardItemNode] = strawberry.field(name="alertsApprovals")
+    alerts: list[DashboardItemNode] = strawberry.field(name="alerts")
+    approvals: list[DashboardItemNode] = strawberry.field(name="approvals")
+    analytics: AnalyticsNode
     source_breakdown: list[SourceBreakdownNode] = strawberry.field(name="sourceBreakdown")
 
 
-def _to_dashboard_item(t: WorkspaceTask) -> DashboardItemNode:
+def _to_dashboard_item(item: dict) -> DashboardItemNode:
     return DashboardItemNode(
-        id=t.id,
-        title=t.title,
-        description=t.description,
-        status=t.status,
-        priority=t.priority,
-        source_type=t.source_type,
-        source_id=t.source_id,
-        source_title=t.source_title,
-        source_module=t.source_module,
-        due_date=t.due_date.isoformat() if t.due_date else None,
-        task_type="task",
-        created_at=t.created_at.isoformat() if t.created_at else "",
+        id=item["id"],
+        title=item["title"],
+        description=item["description"],
+        status=item["status"],
+        priority=item["priority"],
+        severity=item["severity"],
+        source_type=item["source_type"],
+        source_id=item["source_id"],
+        source_title=item["source_title"],
+        source_module=item["source_module"],
+        due_date=item["due_date"].isoformat() if item["due_date"] else None,
+        task_type=item["task_type"],
+        created_at=item["created_at"].isoformat() if item["created_at"] else "",
+        is_overdue=item["is_overdue"],
     )
 
 

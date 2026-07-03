@@ -2,7 +2,7 @@ import { useQuery } from "@apollo/client/react";
 import { AlertTriangle, Plus, Activity, TrendingUp, List, BarChart3, RefreshCw, Clock, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarButton } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarButton } from "@/components/layout/PageToolbar";
 import { SAFETY_DASHBOARD_SUMMARY_QUERY } from "@/graphql/checkQueries";
 
 const KPI_CARD = "flex flex-col gap-0.5 min-w-0 px-4 py-2.5 border-r border-slate-200 last:border-r-0 cursor-pointer transition-colors hover:bg-slate-50";
@@ -338,9 +338,9 @@ export function SafetyDashboardPage() {
   );
 
   const toolbarContent = (
-    <ExplorerToolbar
-      children={<ExplorerToolbarButton icon={Search} label="Search" onClick={() => navigate("/safety/incidents")} className="w-full justify-start" />}
-      actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />}
+    <PageToolbar
+      leftSlot={<ToolbarButton icon={Search} label="Search" onClick={() => navigate("/safety/incidents")} className="w-full justify-start" />}
+      actions={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />}
     />
   );
 

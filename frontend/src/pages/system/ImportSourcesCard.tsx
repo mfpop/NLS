@@ -18,6 +18,7 @@ import {
 import { IMPORT_SOURCE_CONFIGS_QUERY } from "@/graphql/importSourceQueries";
 import type { ImportDomain, ImportSourceConfig, ImportSourceConfigInput, ImportSourceType } from "@/types/importSource";
 import { theme } from "@/styles/themeTokens";
+import { formatDateFull } from "@/utils/dateFormat";
 
 const SOURCE_TYPES: Array<{ value: ImportSourceType; label: string }> = [
   { value: "EXCEL", label: "Excel" },
@@ -65,11 +66,7 @@ const EMPTY_FORM: ImportSourceConfigInput = {
 
 function formatLastChecked(value?: string | null) {
   if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
+  return formatDateFull(value);
 }
 
 export function ImportSourcesCard() {

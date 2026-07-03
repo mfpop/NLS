@@ -1,0 +1,117 @@
+// ── Frontend-only VSM test chart with demand & takt data ──
+
+import type { VsmChart } from "@/types/vsm";
+
+export function createTestChart(): VsmChart {
+  const now = new Date().toISOString();
+
+  const processes = [
+    { id: "P-001", sequence: 1, name: "Cutting", dept: "Sub-Assembly", ct: 28, co: 600, uptime: 97, wip: 80, bottleneck: false, pacemaker: true },
+    { id: "P-002", sequence: 2, name: "Welding", dept: "Sub-Assembly", ct: 32, co: 900, uptime: 72, wip: 120, bottleneck: false, pacemaker: false },
+    { id: "P-003", sequence: 3, name: "Machining", dept: "Machining", ct: 42, co: 1200, uptime: 85, wip: 60, bottleneck: true, pacemaker: false },
+    { id: "P-004", sequence: 4, name: "Assembly", dept: "Final Assembly", ct: 38, co: 300, uptime: 91, wip: 90, bottleneck: false, pacemaker: false },
+    { id: "P-005", sequence: 5, name: "Testing", dept: "Quality", ct: 22, co: 150, uptime: 95, wip: 40, bottleneck: false, pacemaker: false },
+    { id: "P-006", sequence: 6, name: "Packaging", dept: "Logistics", ct: 18, co: 60, uptime: 99, wip: 30, bottleneck: false, pacemaker: false, ptype: "PACKAGING" },
+  ];
+
+  const invNames = ["Raw Materials", "Cut WIP", "Weld WIP", "Mach WIP", "Assy WIP", "FG Stock"];
+
+  return {
+    id: "test-chart-001",
+    name: "Test VSM — Cylinder Assembly",
+    chartType: "CURRENT_STATE",
+    sourceMode: "MANUAL",
+    plantId: "plant-001",
+    productionLineId: "line-001",
+    departmentId: null,
+    supplierName: "Tokyo Steel Co.",
+    customerName: "Detroit Auto Inc.",
+    productionControlTitle: "Production Control",
+    controlMethod: "Kanban / Pull",
+    scheduleFrequency: "Daily",
+    customerDemandRate: 500,
+    customerDemandPeriod: "day",
+    customerDemandUnit: "units",
+    availableMinutesPerShift: 450,
+    chartShiftsPerDay: 2,
+    breakTimePerShift: 0,
+    plannedDowntimePerShift: 0,
+    workingDaysPerWeek: 5,
+    taktTimeSeconds: 108,  // computed: (450 * 60 * 2) / 500 = 108
+    status: "DRAFT",
+    processes: processes.map((p) => ({
+      id: p.id,
+      sequence: p.sequence,
+      name: p.name,
+      departmentName: p.dept,
+      resourceGroupName: p.dept,
+      linkedDepartmentId: null,
+      linkedResourceGroupId: null,
+      linkedResourceId: null,
+      operatorCount: 2,
+      cycleTimeValue: p.ct,
+      cycleTimeUnit: "SECONDS",
+      changeoverTimeValue: p.co,
+      changeoverTimeUnit: "SECONDS",
+      uptimePercent: p.uptime,
+      yieldPercent: 98,
+      wip: p.wip,
+      shiftsPerDay: 2,
+      isBottleneck: p.bottleneck,
+      isPacemaker: p.pacemaker,
+      processType: (p as any).ptype || "MANUFACTURING",
+      valueAddType: "VALUE_ADD",
+      cycleTimeVsTakt: p.ct > 36 ? "above" : p.ct < 36 ? "below" : "at",
+      targetWip: null,
+      targetCycleTimeValue: null,
+      notes: "",
+    })),
+    inventories: invNames.map((name, i) => ({
+      id: `INV-00${i + 1}`,
+      sequence: i + 1,
+      label: name,
+      quantity: i === 0 ? 500 : [80, 120, 60, 90, 200][i - 1] || 100,
+      waitTimeValue: i === 0 ? 1440 : [120, 240, 180, 90, 60][i - 1] || 60,
+      waitTimeUnit: "MINUTES",
+      severity: i === 2 ? "WARNING" : i === 4 ? "CRITICAL" : "NORMAL",
+    })),
+    materialFlows: [
+      { id: "MF-01", fromType: "SUPPLIER", fromId: "SUPPLIER", toType: "INVENTORY", toId: "INV-001", label: "", flowType: "PUSH", deliveryFrequency: "Weekly", equipmentType: "TRUCK", isInternalTransport: false },
+      { id: "MF-02", fromType: "INVENTORY", fromId: "INV-001", toType: "PROCESS", toId: "P-001", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "FORKLIFT", isInternalTransport: true },
+      { id: "MF-03", fromType: "PROCESS", fromId: "P-001", toType: "INVENTORY", toId: "INV-002", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "CONVEYOR", isInternalTransport: true },
+      { id: "MF-04", fromType: "INVENTORY", fromId: "INV-002", toType: "PROCESS", toId: "P-002", label: "", flowType: "FIFO", deliveryFrequency: "", equipmentType: "FORKLIFT", isInternalTransport: true },
+      { id: "MF-05", fromType: "PROCESS", fromId: "P-002", toType: "INVENTORY", toId: "INV-003", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "CONVEYOR", isInternalTransport: true },
+      { id: "MF-06", fromType: "INVENTORY", fromId: "INV-003", toType: "PROCESS", toId: "P-003", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "FORKLIFT", isInternalTransport: true },
+      { id: "MF-07", fromType: "PROCESS", fromId: "P-003", toType: "INVENTORY", toId: "INV-004", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "CONVEYOR", isInternalTransport: true },
+      { id: "MF-08", fromType: "INVENTORY", fromId: "INV-004", toType: "PROCESS", toId: "P-004", label: "", flowType: "KANBAN", deliveryFrequency: "", equipmentType: "TUGGER", isInternalTransport: true },
+      { id: "MF-09", fromType: "PROCESS", fromId: "P-004", toType: "INVENTORY", toId: "INV-005", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "CONVEYOR", isInternalTransport: true },
+      { id: "MF-10", fromType: "INVENTORY", fromId: "INV-005", toType: "PROCESS", toId: "P-005", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "HAND_CART", isInternalTransport: true },
+      { id: "MF-11", fromType: "PROCESS", fromId: "P-005", toType: "INVENTORY", toId: "INV-006", label: "", flowType: "PUSH", deliveryFrequency: "", equipmentType: "CONVEYOR", isInternalTransport: true },
+      { id: "MF-12", fromType: "INVENTORY", fromId: "INV-006", toType: "CUSTOMER", toId: "CUSTOMER", label: "", flowType: "PULL", deliveryFrequency: "Daily", equipmentType: "TRUCK", isInternalTransport: false },
+    ],
+    informationFlows: [
+      { id: "IF-01", fromType: "CUSTOMER", fromId: "CUSTOMER", toType: "PC", toId: "PC", label: "Customer demand", frequency: "Daily", flowStyle: "ELECTRONIC", method: "EDI", transmissionType: "ELECTRONIC", triggerType: "CUSTOMER_ORDER", controlledProcessId: "", notes: "" },
+      { id: "IF-02", fromType: "PC", fromId: "PC", toType: "SUPPLIER", toId: "SUPPLIER", label: "Release schedule", frequency: "Weekly", flowStyle: "ELECTRONIC", method: "ERP email", transmissionType: "ELECTRONIC", triggerType: "RELEASE_SCHEDULE", controlledProcessId: "", notes: "" },
+      { id: "IF-03", fromType: "PC", fromId: "PC", toType: "PROCESS", toId: "P-001", label: "Production schedule", frequency: "Daily", flowStyle: "MANUAL", method: "Dispatch list", transmissionType: "MANUAL", triggerType: "PRODUCTION_SCHEDULE", controlledProcessId: "P-001", notes: "" },
+      { id: "IF-04", fromType: "PC", fromId: "PC", toType: "PROCESS", toId: "P-002", label: "Schedule signal", frequency: "Daily", flowStyle: "ELECTRONIC", method: "Kanban / Pull", transmissionType: "ELECTRONIC", triggerType: "PRODUCTION_SCHEDULE", controlledProcessId: "P-002", notes: "" },
+      { id: "IF-05", fromType: "PC", fromId: "PC", toType: "PROCESS", toId: "P-003", label: "Schedule signal", frequency: "Daily", flowStyle: "ELECTRONIC", method: "Kanban / Pull", transmissionType: "ELECTRONIC", triggerType: "PRODUCTION_SCHEDULE", controlledProcessId: "P-003", notes: "" },
+      { id: "IF-06", fromType: "PC", fromId: "PC", toType: "PROCESS", toId: "P-004", label: "Pull signal", frequency: "Daily", flowStyle: "KANBAN", method: "Kanban card", transmissionType: "MANUAL", triggerType: "KANBAN", controlledProcessId: "P-004", notes: "" },
+      { id: "IF-07", fromType: "PC", fromId: "PC", toType: "PROCESS", toId: "P-005", label: "Schedule signal", frequency: "Daily", flowStyle: "ELECTRONIC", method: "ERP", transmissionType: "ELECTRONIC", triggerType: "PRODUCTION_SCHEDULE", controlledProcessId: "P-005", notes: "" },
+    ],
+    timelineSegments: [
+      { id: "TL-01", sequence: 1, processId: "P-001", waitTimeValue: 80, waitTimeUnit: "MINUTES", processTimeValue: 28, processTimeUnit: "SECONDS", label: "" },
+      { id: "TL-02", sequence: 2, processId: "P-002", waitTimeValue: 120, waitTimeUnit: "MINUTES", processTimeValue: 32, processTimeUnit: "SECONDS", label: "" },
+      { id: "TL-03", sequence: 3, processId: "P-003", waitTimeValue: 60, waitTimeUnit: "MINUTES", processTimeValue: 42, processTimeUnit: "SECONDS", label: "" },
+      { id: "TL-04", sequence: 4, processId: "P-004", waitTimeValue: 90, waitTimeUnit: "MINUTES", processTimeValue: 38, processTimeUnit: "SECONDS", label: "" },
+      { id: "TL-05", sequence: 5, processId: "P-005", waitTimeValue: 40, waitTimeUnit: "MINUTES", processTimeValue: 22, processTimeUnit: "SECONDS", label: "" },
+      { id: "TL-06", sequence: 6, processId: "P-006", waitTimeValue: 30, waitTimeUnit: "MINUTES", processTimeValue: 18, processTimeUnit: "SECONDS", label: "" },
+    ],
+    improvementOpportunities: [
+      { id: "OP-001", processId: "P-002", inventoryId: null, opportunityType: "LOW_UPTIME", severity: "critical", label: "Welding uptime 72%", message: "Welding has 72% uptime — below 80% target. Investigate causes.", acknowledged: false },
+      { id: "OP-002", processId: "P-003", inventoryId: null, opportunityType: "CT_ABOVE_TAKT", severity: "critical", label: "Machining C/T exceeds takt", message: "Machining cycle time (42s) exceeds takt time (36s). Reduce or add capacity.", acknowledged: false },
+      { id: "OP-003", processId: "P-002", inventoryId: null, opportunityType: "HIGH_WIP", severity: "major", label: "High WIP after Welding", message: "120 units WIP after Welding — above target. Review batch sizing.", acknowledged: false },
+    ],
+    createdAt: now,
+    updatedAt: now,
+  };
+}

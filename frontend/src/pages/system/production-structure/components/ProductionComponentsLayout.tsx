@@ -134,6 +134,7 @@ function ProductionComponentsShell() {
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [focusedKey, setFocusedKey] = useState<string | null>(null);
   const { systemMessage, clearSystemMessage } = useToolbar();
+  const isCompanyPage = tab === "company";
   const messageClass = systemMessage?.type === "success"
     ? "border-success/25 bg-success/10 text-foreground"
     : systemMessage?.type === "error"
@@ -235,7 +236,7 @@ function ProductionComponentsShell() {
           </div>
           <div className="shrink-0 bg-muted" style={{ width: 1 }} />
           <div className="flex flex-col overflow-hidden flex-1 min-w-0">
-            <Toolbar />
+            {isCompanyPage && <Toolbar />}
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <Outlet />
             </div>

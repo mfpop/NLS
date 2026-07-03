@@ -1,14 +1,19 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { LayoutDashboard, RefreshCw, AlertTriangle, Calendar,
   ListChecks, Clock, ArrowUpRight, CheckCircle2,
-  Bell, Activity, PieChart, AlertOctagon,
+  Bell, Activity, PieChart, AlertOctagon, ArrowRight,
 } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { MY_WORKSPACE_DASHBOARD_QUERY } from "@/graphql/workspaceQueries";
 import { useNavigate } from "react-router-dom";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { formatDateShort } from "@/utils/dateFormat";
+
+function cn(...classes: (string | false | null | undefined)[]): string {
+  return classes.filter(Boolean).join(" ");
+}
 
 /* ── Types ── */
 
@@ -18,6 +23,8 @@ interface DashboardItem {
   description: string;
   status: string;
   priority: string;
+  severity: string;
+  isOverdue: boolean;
   sourceType: string;
   sourceId: number | null;
   sourceTitle: string;
@@ -27,42 +34,35 @@ interface DashboardItem {
   createdAt: string;
 }
 
-interface SourceBreakdownItem {
-  sourceModule: string;
-  count: number;
-}
+interface SourceBreakdownItem { sourceModule: string; count: number; }
+interface WorkloadTrendItem { day: string; count: number; }
+interface RiskMixData { open: number; inProgress: number; overdue: number; completed: number; }
+interface AnalyticsData { workloadTrend: WorkloadTrendItem[]; riskMix: RiskMixData; }
 
 interface DashboardSummary {
-  openTasks: number;
-  overdueTasks: number;
-  dueToday: number;
-  inProgress: number;
-  completedToday: number;
-  waiting: number;
-  highPriority: number;
-  total: number;
-  priorityWork: DashboardItem[];
-  dueSoon: DashboardItem[];
-  recentActivity: DashboardItem[];
-  alertsApprovals: DashboardItem[];
-  sourceBreakdown: SourceBreakdownItem[];
+  openTasks: number; overdueTasks: number; dueToday: number; inProgress: number;
+  completedToday: number; waiting: number; highPriority: number; total: number;
+  lastUpdated: string; priorityWork: DashboardItem[]; dueSoon: DashboardItem[];
+  recentActivity: DashboardItem[]; alerts: DashboardItem[]; approvals: DashboardItem[];
+  analytics: AnalyticsData; sourceBreakdown: SourceBreakdownItem[];
 }
 
-/* ── Helpers ── */
+/* ── Constants ── */
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: "bg-blue-50 text-blue-700 border-blue-200",
-  IN_PROGRESS: "bg-amber-50 text-amber-700 border-amber-200",
-  WAITING: "bg-slate-100 text-slate-600 border-slate-200",
-  COMPLETED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  OPEN: "bg-primary/10 text-primary border-primary/20",
+  IN_PROGRESS: "bg-warning/10 text-warning border-warning/20",
+  WAITING: "bg-muted text-muted-foreground border-border",
+  COMPLETED: "bg-success/10 text-success border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
-const PRIORITY_DOTS: Record<string, string> = {
-  LOW: "bg-slate-400",
-  MEDIUM: "bg-amber-400",
-  HIGH: "bg-orange-500",
-  CRITICAL: "bg-red-500",
+const SEVERITY_DOTS: Record<string, string> = {
+  LOW: "bg-muted-foreground/50", MEDIUM: "bg-warning", HIGH: "bg-orange-500", CRITICAL: "bg-danger",
+};
+
+const SEVERITY_PULSE: Record<string, string> = {
+  CRITICAL: "animate-pulse ring-2 ring-red-500/30",
 };
 
 const MODULE_LABELS: Record<string, string> = {
@@ -71,119 +71,111 @@ const MODULE_LABELS: Record<string, string> = {
   DOCUMENT_CONTROL: "Documents", MANUAL: "Manual", DOCUMENTS: "Documents",
 };
 
-function isOverdue(dueDate: string | null, status: string): boolean {
-  if (!dueDate || status === "COMPLETED" || status === "CANCELLED") return false;
-  return new Date(dueDate) < new Date(new Date().toDateString());
-}
-
-function statusLabel(s: string): string {
-  const m: Record<string, string> = { OPEN: "Open", IN_PROGRESS: "In Progress", WAITING: "Waiting", COMPLETED: "Completed", CANCELLED: "Cancelled" };
-  return m[s] || s;
-}
-
-function moduleLabel(s: string): string {
-  return MODULE_LABELS[s] || s || "General";
-}
-
 const MODULE_COLORS: Record<string, string> = {
-  SAFETY: "text-red-600 bg-red-50 border-red-200",
-  QUALITY: "text-blue-600 bg-blue-50 border-blue-200",
-  MAINTENANCE: "text-amber-600 bg-amber-50 border-amber-200",
-  IMPROVE: "text-emerald-600 bg-emerald-50 border-emerald-200",
-  CHECK: "text-violet-600 bg-violet-50 border-violet-200",
-  MER: "text-cyan-600 bg-cyan-50 border-cyan-200",
-  DOCUMENTS: "text-slate-600 bg-slate-100 border-slate-200",
-  DOCUMENT_CONTROL: "text-slate-600 bg-slate-100 border-slate-200",
-  MANUAL: "text-slate-600 bg-slate-100 border-slate-200",
+  SAFETY: "text-danger bg-danger/10 border-danger/20",
+  QUALITY: "text-primary bg-primary/10 border-primary/20",
+  MAINTENANCE: "text-warning bg-warning/10 border-warning/20",
+  IMPROVE: "text-success bg-success/10 border-success/20",
+  CHECK: "text-accent bg-accent/10 border-accent/20",
+  MER: "text-info bg-info/10 border-info/20",
+  DOCUMENTS: "text-muted-foreground bg-muted border-border",
+  DOCUMENT_CONTROL: "text-muted-foreground bg-muted border-border",
+  MANUAL: "text-muted-foreground bg-muted border-border",
 };
 
-function moduleBadge(s: string) {
-  const cls = MODULE_COLORS[s] || "text-slate-600 bg-slate-100 border-slate-200";
-  return `inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm ${cls}`;
-}
+const MODULE_BAR_COLORS: Record<string, string> = {
+  SAFETY: "bg-red-400", QUALITY: "bg-blue-400", MAINTENANCE: "bg-amber-400",
+  IMPROVE: "bg-emerald-400", CHECK: "bg-violet-400", MER: "bg-cyan-400",
+};
 
 const FILTER_OPTIONS = [
-  { value: "", label: "All" },
-  { value: "task", label: "Tasks" },
-  { value: "approval", label: "Approvals" },
-  { value: "alert", label: "Alerts" },
-  { value: "safety", label: "Safety" },
-  { value: "quality", label: "Quality" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "mer", label: "MER" },
+  { value: "", label: "All" }, { value: "task", label: "Tasks" },
+  { value: "approval", label: "Approvals" }, { value: "alert", label: "Alerts" },
+  { value: "safety", label: "Safety" }, { value: "quality", label: "Quality" },
+  { value: "maintenance", label: "Maintenance" }, { value: "mer", label: "MER" },
   { value: "documents", label: "Documents" },
 ];
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "";
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
-    return dateStr;
+const statusLabel = (s: string) => ({ OPEN: "Open", IN_PROGRESS: "In Progress", WAITING: "Waiting", COMPLETED: "Completed", CANCELLED: "Cancelled" }[s] || s);
+const moduleLabel = (s: string) => MODULE_LABELS[s] || s || "General";
+const moduleBadge = (s: string) => `inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm ${MODULE_COLORS[s] || "text-slate-600 bg-slate-100 border-slate-200"}`;
+
+const formatDate = (s: string | null) => s ? (formatDateShort(s) || s) : "";
+
+const getSourceRoute = (sourceType: string, sourceId: number): string | null => ({
+  WORK_ORDER: `/maintenance/work-orders/${sourceId}`,
+  AUDIT: `/check/production-control`,
+  SAFETY_EVENT: `/safety/incidents`,
+  SAFETY_AUDIT: `/check/safety-audits`,
+  KAIZEN: `/improve/kaizen`,
+  A3: `/improve/a3-pdca`,
+  SUGGESTION: `/improve/suggestions`,
+  DOCUMENT: `/standardize/document-control`,
+  MER: `/plan/mer-dashboard`,
+  QUALITY: `/check/quality-control`,
+}[sourceType] || null);
+
+/* ── SVG helpers ── */
+
+const buildSmoothTrend = (data: { count: number }[], w: number, h: number) => {
+  const max = Math.max(...data.map(d => d.count), 1);
+  const pts = data.map((d, i) => ({
+    x: (i / Math.max(data.length - 1, 1)) * (w - 24) + 12,
+    y: h - 8 - ((d.count / max) * (h - 18)),
+  }));
+  if (pts.length === 0) return "";
+  if (pts.length === 1) return `M${pts[0].x},${pts[0].y}`;
+  let d = `M${pts[0].x},${pts[0].y}`;
+  for (let i = 1; i < pts.length; i++) {
+    const cx = (pts[i - 1].x + pts[i].x) / 2;
+    d += ` C${cx},${pts[i - 1].y} ${cx},${pts[i].y} ${pts[i].x},${pts[i].y}`;
   }
+  return d;
+};
+
+/* ── Animated Counter ── */
+
+function AnimatedValue({ value, className }: { value: number; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    const el = ref.current;
+    el.style.transform = "scale(1.08)";
+    const timer = setTimeout(() => { el.style.transform = "scale(1)"; }, 150);
+    return () => clearTimeout(timer);
+  }, [value]);
+  return <span ref={ref} className={cn("inline-block transition-transform duration-200", className)}>{value}</span>;
 }
 
-/* ── Helpers ── */
+/* ── KPI Metric Cell ── */
 
-function computeDailyCounts(items: DashboardItem[]): { day: string; count: number }[] {
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-  const days: { day: string; count: number }[] = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const key = d.toLocaleDateString("en-US", { weekday: "short" });
-    const start = new Date(d); start.setHours(0, 0, 0, 0);
-    const end = new Date(d); end.setHours(23, 59, 59, 999);
-    const count = items.filter((item) => {
-      const ts = item.createdAt ? new Date(item.createdAt) : null;
-      return ts && ts >= start && ts <= end;
-    }).length;
-    days.push({ day: key, count });
-  }
-  return days;
-}
-
-function buildTrendPath(data: { count: number }[], w: number, h: number): string {
-  const max = Math.max(...data.map((d) => d.count), 1);
-  const pts = data.map((d, i) => {
-    const x = (i / (data.length - 1)) * (w - 20) + 10;
-    const y = h - 10 - ((d.count / max) * (h - 20));
-    return `${x},${y}`;
-  });
-  return "M" + pts.join(" L");
-}
-
-/* ── Metrics Strip Cell ── */
-
-function MetricCell({ label, value, color, icon, subtext, onClick }: { label: string; value: number | string; color: string; icon: React.ReactNode; subtext?: string; onClick?: () => void }) {
-  const isClickable = !!onClick;
+function MetricCell({ label, value, color, icon, urgent, onClick }: {
+  label: string; value: number; color: string; icon: React.ReactNode; urgent?: boolean; onClick?: () => void;
+}) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!isClickable}
-      className={`flex items-center gap-2.5 px-3 h-full min-w-0 ${isClickable ? "cursor-pointer hover:bg-slate-50 transition-colors" : "cursor-default"}`}
+    <button type="button" onClick={onClick} disabled={!onClick}
+      className={cn(
+        "relative flex items-center gap-2.5 px-3 h-full min-w-0 transition-all duration-150 group",
+        onClick ? "cursor-pointer hover:bg-white/60" : "cursor-default",
+        urgent ? "bg-red-50/40" : "",
+      )}
     >
-      <span className="shrink-0">{icon}</span>
+      {urgent && <div className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-red-400" />}
+      <span className={cn("shrink-0 transition-transform duration-150 group-hover:scale-110", urgent ? "drop-shadow-sm ring-2 ring-red-400/20" : "")}>{icon}</span>
       <div className="min-w-0 text-left">
-        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide truncate">{label}</p>
-        <p className={`text-lg font-bold tabular-nums ${color} leading-tight`}>{value}</p>
-        {subtext !== undefined && (
-          <p className="text-[10px] text-slate-400 leading-tight truncate">{subtext}</p>
-        )}
+        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">{label}</p>
+        <p className={cn("text-xl font-bold tabular-nums leading-tight transition-colors", color)}>
+          <AnimatedValue value={value} />
+        </p>
       </div>
     </button>
   );
 }
 
-/* ── Item Row ── */
+/* ── Dashboard Item Row ── */
 
-function ItemRow({ item, alertStyle }: { item: DashboardItem; alertStyle?: boolean }) {
+function DashboardItemRow({ item, compact }: { item: DashboardItem; compact?: boolean }) {
   const navigate = useNavigate();
-  const overdue = isOverdue(item.dueDate, item.status);
-
   const handleClick = () => {
     if (item.sourceType && item.sourceId) {
       const route = getSourceRoute(item.sourceType, item.sourceId);
@@ -192,118 +184,273 @@ function ItemRow({ item, alertStyle }: { item: DashboardItem; alertStyle?: boole
   };
 
   return (
-    <div
-      onClick={handleClick}
-      className={`flex items-start gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer min-h-0 border-b border-slate-100 transition-colors ${alertStyle ? "border-l-2 border-amber-400/50 bg-amber-50/15" : ""}`}
+    <div onClick={handleClick}
+      className={cn(
+        "relative flex items-start gap-2.5 px-3 cursor-pointer min-h-0 border-b border-slate-100 transition-all duration-150 group hover:bg-slate-50 hover:border-l-2 hover:border-l-blue-400 hover:pl-[10px]",
+        compact ? "py-1" : "py-1.5",
+      )}
     >
-      <span className={`h-2 w-2 shrink-0 rounded-full mt-1.5 ${PRIORITY_DOTS[item.priority] || "bg-slate-400"}`} />
+      <span className={cn(
+        "h-2.5 w-2.5 shrink-0 rounded-full mt-1.5 transition-transform duration-150 group-hover:scale-125",
+        SEVERITY_DOTS[item.severity] || SEVERITY_DOTS[item.priority] || "bg-slate-400",
+        SEVERITY_PULSE[item.severity] || "",
+      )} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="min-w-0 truncate text-sm font-medium text-slate-900" title={item.title}>{item.title}</span>
-          {overdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />}
+          <span className="min-w-0 truncate text-sm font-medium text-slate-900 group-hover:text-slate-800 transition-colors" title={item.title}>{item.title}</span>
+          {item.isOverdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500 animate-pulse" />}
         </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm ${STATUS_STYLES[item.status] || "bg-slate-50 text-slate-600"}`}>
+          <span className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm", STATUS_STYLES[item.status] || "bg-slate-50 text-slate-600")}>
             {statusLabel(item.status)}
           </span>
           <span className={moduleBadge(item.sourceModule)}>{moduleLabel(item.sourceModule)}</span>
           {item.dueDate && (
-            <span className={`text-[10px] flex items-center gap-0.5 ${overdue ? "text-red-500 font-semibold" : "text-slate-500"}`}>
+            <span className={cn("text-[10px] flex items-center gap-0.5", item.isOverdue ? "text-red-500 font-semibold" : "text-slate-500")}>
               <Calendar className="h-2.5 w-2.5 stroke-current" />
               {formatDate(item.dueDate)}
             </span>
           )}
         </div>
       </div>
-      <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 mt-1" />
+      <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 mt-1 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150" />
     </div>
   );
 }
 
-function getSourceRoute(sourceType: string, sourceId: number): string | null {
-  const routes: Record<string, string> = {
-    WORK_ORDER: `/maintenance/work-orders/${sourceId}`,
-    AUDIT: `/check/production-control`,
-    SAFETY_EVENT: `/safety/incidents`,
-    SAFETY_AUDIT: `/check/safety-audits`,
-    KAIZEN: `/improve/kaizen`,
-    A3: `/improve/a3-pdca`,
-    SUGGESTION: `/improve/suggestions`,
-    DOCUMENT: `/standardize/document-control`,
-    MER: `/plan/mer-dashboard`,
-    QUALITY: `/check/quality-control`,
-  };
-  return routes[sourceType] || null;
+/* ── Panel Components ── */
+
+function PanelHeader({ title, count, icon, iconColor }: { title: string; count?: number; icon?: React.ReactNode; iconColor?: string }) {
+  return (
+    <div className="shrink-0 h-9 flex items-center gap-2 px-3 border-b border-slate-200 bg-slate-50/80">
+      {icon && <span className={cn("shrink-0", iconColor || "text-slate-500")}>{icon}</span>}
+      <span className="text-xs font-semibold text-slate-800 truncate tracking-wide">{title}</span>
+      {count !== undefined && <span className="ml-auto text-[10px] font-mono text-slate-400 shrink-0 tabular-nums">{count} total</span>}
+    </div>
+  );
 }
 
-/* ── Flat Section Shell ── */
+function PanelScroller({ children }: { children: React.ReactNode }) {
+  return <div className="flex-1 overflow-y-auto min-h-0 scroll-thin">{children}</div>;
+}
 
-function Section({ title, count, icon, children }: { title: string; count?: number; icon?: React.ReactNode; children: React.ReactNode }) {
+function PanelEmpty({ icon, title, message }: { icon?: React.ReactNode; title?: string; message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full min-h-[60px] px-4 text-center">
+      {icon && <div className="text-slate-200 mb-1.5">{icon}</div>}
+      {title && <p className="text-xs font-medium text-slate-400 mb-0.5">{title}</p>}
+      <p className="text-[11px] text-slate-400 italic leading-relaxed">{message}</p>
+    </div>
+  );
+}
+
+/* ── Priority Work Panel ── */
+
+function PriorityWorkPanel({ items }: { items: DashboardItem[] }) {
+  const visible = items.slice(0, 5);
   return (
     <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
-      <div className="shrink-0 h-8 flex items-center gap-2 px-3 border-b border-slate-200 bg-muted">
-        {icon && <span className="text-slate-500 shrink-0">{icon}</span>}
-        <span className="text-xs font-semibold text-slate-800 truncate">{title}</span>
-        {count !== undefined && <span className="ml-auto text-[10px] font-mono text-slate-400 shrink-0">{count}</span>}
-      </div>
-      <div className="flex-1 overflow-y-auto min-h-0 scroll-thin">
-        {children}
-      </div>
+      <PanelHeader title="Priority Work" count={items.length} icon={<ArrowUpRight className="h-3.5 w-3.5" />} iconColor="text-orange-500" />
+      <PanelScroller>
+        {visible.length === 0 ? (
+          <PanelEmpty icon={<ListChecks className="h-5 w-5" />} message="No priority items right now" />
+        ) : (
+          visible.map((item) => <DashboardItemRow key={item.id} item={item} />)
+        )}
+      </PanelScroller>
     </div>
   );
 }
 
-function SectionEmpty({ message }: { message: string }) {
+/* ── Upcoming Panel ── */
+
+function UpcomingPanel({ items }: { items: DashboardItem[] }) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
+  const toDate = (s: string | null) => { if (!s) return null; const d = new Date(s); d.setHours(0, 0, 0, 0); return d; };
+  const bands: { label: string; items: DashboardItem[] }[] = [
+    { label: "Today", items: [] }, { label: "This Week", items: [] }, { label: "Later", items: [] },
+  ];
+  items.forEach((item) => {
+    const d = toDate(item.dueDate);
+    if (!d) { bands[2].items.push(item); return; }
+    if (d.getTime() === today.getTime()) bands[0].items.push(item);
+    else if (d > today && d <= weekEnd) bands[1].items.push(item);
+    else bands[2].items.push(item);
+  });
+  const hasAny = bands.some((b) => b.items.length > 0);
+
   return (
-    <div className="flex items-center justify-center h-full text-xs text-slate-400 italic px-3 text-center">
-      {message}
+    <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
+      <PanelHeader title="Upcoming" count={items.length} icon={<Calendar className="h-3.5 w-3.5" />} iconColor="text-blue-500" />
+      <PanelScroller>
+        {!hasAny ? (
+          <PanelEmpty icon={<Calendar className="h-5 w-5" />} message="No upcoming items" />
+        ) : bands.map((band) =>
+          band.items.length > 0 ? (
+            <div key={band.label}>
+              <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-50/70 border-b border-slate-100">
+                <span className={band.label === "Today" ? "text-blue-600" : band.label === "This Week" ? "text-slate-600" : "text-slate-400"}>
+                  {band.label}
+                </span>
+                <span className="text-slate-400 font-normal">({band.items.length})</span>
+              </div>
+              {band.items.slice(0, 2).map((item) => <DashboardItemRow key={item.id} item={item} compact />)}
+            </div>
+          ) : null
+        )}
+      </PanelScroller>
     </div>
   );
 }
 
-/* ── Workspace Analytics Section (composed grid) ── */
+/* ── Alerts & Approvals Panel ── */
 
-function WorkspaceAnalyticsSection({
-  sourceData,
-  riskMix,
-  activityItems,
-}: {
-  sourceData: SourceBreakdownItem[];
-  riskMix: { open: number; inProgress: number; overdue: number; completed: number };
-  activityItems: DashboardItem[];
-}) {
+function AlertsApprovalsPanel({ alerts, approvals }: { alerts: DashboardItem[]; approvals: DashboardItem[] }) {
+  const visibleAlerts = alerts.slice(0, 4);
+  const visibleApprovals = approvals.slice(0, 4);
+  const total = alerts.length + approvals.length;
+
+  return (
+    <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
+      <PanelHeader title="Alerts & Approvals" count={total} icon={<Bell className="h-3.5 w-3.5" />} iconColor="text-amber-500" />
+      <PanelScroller>
+        {total === 0 ? (
+          <PanelEmpty icon={<Bell className="h-5 w-5" />} message="No alerts or pending approvals" />
+        ) : (
+          <>
+            {visibleAlerts.length > 0 && (
+              <div>
+                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-amber-50/40 border-b border-amber-200/50">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                  <span className="text-amber-700">Alerts</span>
+                  {alerts.length > 4 && <span className="text-amber-400 font-normal">({alerts.length})</span>}
+                </div>
+                {visibleAlerts.map((item) => <DashboardItemRow key={item.id} item={item} />)}
+              </div>
+            )}
+            {visibleApprovals.length > 0 && (
+              <div>
+                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-slate-50/70 border-b border-slate-100">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                  <span className="text-slate-600">Approvals</span>
+                  {approvals.length > 4 && <span className="text-slate-400 font-normal">({approvals.length})</span>}
+                </div>
+                {visibleApprovals.map((item) => <DashboardItemRow key={item.id} item={item} />)}
+              </div>
+            )}
+          </>
+        )}
+      </PanelScroller>
+    </div>
+  );
+}
+
+/* ── Recent Activity Section ── */
+
+function RecentActivitySection({ items }: { items: DashboardItem[] }) {
+  const navigate = useNavigate();
+  const display = items.slice(0, 10);
+
+  return (
+    <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
+      <PanelHeader title="Recent Activity" count={items.length} icon={<Activity className="h-3.5 w-3.5" />} iconColor="text-violet-500" />
+      <div className="flex-1 overflow-y-auto min-h-0 scroll-thin">
+        {display.length === 0 ? (
+          <PanelEmpty icon={<Activity className="h-5 w-5" />} message="No recent activity" />
+        ) : (
+          <div className="relative px-3">
+            <div className="absolute left-[75px] top-3 bottom-3 w-px bg-gradient-to-b from-slate-200 via-slate-200 to-transparent" />
+            {display.map((item, idx) => (
+              <div key={item.id} onClick={() => {
+                if (item.sourceType && item.sourceId) { const r = getSourceRoute(item.sourceType, item.sourceId); if (r) navigate(r); }
+              }} className="relative flex items-start hover:bg-slate-50 cursor-pointer min-h-0 border-b border-slate-100 transition-all duration-150 group">
+                <div className="w-[64px] shrink-0 pt-2.5 text-center">
+                  <span className="text-[9px] leading-tight block text-slate-400 font-medium tabular-nums">{formatDate(item.createdAt)}</span>
+                </div>
+                <div className="shrink-0 relative z-10 pt-2.5 flex items-center justify-center">
+                  <div className={cn(
+                    "h-2.5 w-2.5 rounded-full ring-2 ring-white transition-transform duration-150 group-hover:scale-125",
+                    item.isOverdue ? "bg-red-400" : SEVERITY_DOTS[item.severity] || "bg-slate-400",
+                    item.isOverdue ? "animate-pulse" : "",
+                  )} />
+                  {idx < display.length - 1 && <div className="absolute top-4 left-1/2 -translate-x-1/2 w-px h-[calc(100%+4px)] bg-slate-100 -z-10" />}
+                </div>
+                <div className="min-w-0 flex-1 px-2.5 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="min-w-0 truncate text-xs font-medium text-slate-900 group-hover:text-slate-700 transition-colors" title={item.title}>{item.title}</span>
+                    {item.isOverdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm", STATUS_STYLES[item.status] || "bg-slate-50 text-slate-600")}>
+                      {statusLabel(item.status)}
+                    </span>
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1">{moduleLabel(item.sourceModule)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="shrink-0 h-8 border-t border-slate-200 bg-muted px-3 flex items-center justify-end">
+        <button onClick={() => navigate("/myworkspace/tasks")}
+          className="text-[10px] font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1 group/btn">
+          View All Activity
+          <ArrowRight className="h-3 w-3 stroke-current transition-transform duration-150 group-hover/btn:translate-x-0.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Workspace Analytics Section ── */
+
+function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: SourceBreakdownItem[]; analyticsData: AnalyticsData }) {
   const totalSource = sourceData.reduce((s, d) => s + d.count, 0);
-  const riskTotal = riskMix.open + riskMix.inProgress + riskMix.overdue + riskMix.completed;
-  const dailyCounts = computeDailyCounts(activityItems);
-  const hasTrend = activityItems.length > 0 && dailyCounts.some((d) => d.count > 0);
-  const svgW = 180, svgH = 56;
-  const trendPath = hasTrend ? buildTrendPath(dailyCounts, svgW, svgH) : "";
+  const dailyCounts = analyticsData.workloadTrend;
+  const hasTrend = dailyCounts.some((d) => d.count > 0);
+  const svgW = 200, svgH = 52;
+  const trendPath = useMemo(() => hasTrend ? buildSmoothTrend(dailyCounts, svgW, svgH) : "", [dailyCounts, hasTrend]);
+  const trendAreaPath = useMemo(() => {
+    if (!trendPath) return "";
+    const lastPt = dailyCounts.length > 0 ? ((i: number) => ({ x: (i / Math.max(dailyCounts.length - 1, 1)) * (svgW - 24) + 12, y: svgH - 8 }))(dailyCounts.length - 1) : { x: svgW - 12, y: svgH - 8 };
+    return `${trendPath} L${lastPt.x} ${svgH - 8} L12 ${svgH - 8} Z`;
+  }, [trendPath, dailyCounts.length]);
+
+  const riskMix = analyticsData.riskMix;
+  const riskTotal = riskMix.open + riskMix.inProgress + riskMix.overdue;
+  const chartCx = 28, chartCy = 28, chartR = 24, chartInnerR = 14;
+
+  const riskSlices = useMemo(() => {
+    const slices: { value: number; color: string }[] = [];
+    if (riskMix.open > 0) slices.push({ value: riskMix.open, color: "var(--color-primary)" });
+    if (riskMix.inProgress > 0) slices.push({ value: riskMix.inProgress, color: "var(--color-warning)" });
+    if (riskMix.overdue > 0) slices.push({ value: riskMix.overdue, color: "var(--color-danger)" });
+    return slices;
+  }, [riskMix]);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden scroll-section">
-      <div className="h-8 shrink-0 border-b border-slate-200 bg-muted px-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <PieChart className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-          <span className="text-xs font-semibold text-slate-800">Workspace Analytics</span>
-        </div>
-      </div>
+      <PanelHeader title="Workspace Analytics" icon={<PieChart className="h-3.5 w-3.5" />} iconColor="text-emerald-500" />
       <div className="grid flex-1 min-h-0 grid-cols-[42%_58%] divide-x divide-slate-200 overflow-hidden">
-        {/* Left: Module Distribution */}
+        {/* Module Distribution */}
         <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2 shrink-0">Module Distribution</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2.5 shrink-0">Module Distribution</p>
           {sourceData.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center text-xs text-slate-400 italic">No analytics available yet</div>
+            <PanelEmpty icon={<PieChart className="h-5 w-5" />} message="No data yet" />
           ) : (
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 scroll-thin">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-1 scroll-thin">
               {sourceData.map((s) => {
                 const pct = totalSource > 0 ? Math.round((s.count / totalSource) * 100) : 0;
+                const barColor = MODULE_BAR_COLORS[s.sourceModule] || "bg-emerald-400";
                 return (
-                  <div key={s.sourceModule} className="flex items-center gap-2 h-7">
-                    <span className="w-[68px] shrink-0 text-xs text-slate-600 truncate" title={moduleLabel(s.sourceModule)}>{moduleLabel(s.sourceModule)}</span>
-                    <div className="flex-1 h-3 bg-slate-200/70 rounded-sm overflow-hidden">
-                      <div className="h-full bg-emerald-400/80 rounded-sm transition-all duration-500" style={{ width: `${pct}%` }} />
+                  <div key={s.sourceModule} className="flex items-center gap-2 h-6 group/bar">
+                    <span className="w-[70px] shrink-0 text-[11px] text-slate-600 truncate font-medium" title={moduleLabel(s.sourceModule)}>{moduleLabel(s.sourceModule)}</span>
+                    <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full transition-all duration-700 ease-out group-hover/bar:opacity-80", barColor)} style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs font-semibold text-slate-900 w-7 text-right tabular-nums">{s.count}</span>
+                    <span className="text-xs font-semibold text-slate-800 w-7 text-right tabular-nums">{s.count}</span>
                     <span className="text-[10px] text-slate-400 w-8 text-right tabular-nums">{pct}%</span>
                   </div>
                 );
@@ -313,79 +460,112 @@ function WorkspaceAnalyticsSection({
         </div>
 
         {/* Right: Workload Trend + Risk Mix */}
-        <div className="grid grid-rows-[60%_40%] divide-y divide-slate-200 min-h-0 overflow-hidden">
+        <div className="grid grid-rows-[auto_1fr] divide-y divide-slate-200 min-h-0 overflow-hidden">
           {/* Workload Trend */}
-          <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1 shrink-0">Workload Trend</p>
-            <div className="flex-1 flex items-center justify-center min-h-0">
-              {!hasTrend ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Activity className="h-5 w-5 text-slate-300 shrink-0" />
-                  <p className="text-[10px] text-slate-400 italic text-center leading-tight">Trend available after more activity is recorded.</p>
+          <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2 shrink-0">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 shrink-0">Workload Trend</p>
+            {!hasTrend ? (
+              <div className="flex items-center gap-2 py-1">
+                <Activity className="h-4 w-4 text-slate-300 shrink-0" />
+                <p className="text-[10px] text-slate-400 italic">Trend data pending</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-0.5">
+                <svg className="w-full max-w-[200px] h-[52px]" viewBox={`0 0 ${svgW} ${svgH}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <defs>
+                    <linearGradient id="trend-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" style={{ stopColor: 'var(--color-emerald-500)' }} stopOpacity="0.25" />
+                      <stop offset="100%" style={{ stopColor: 'var(--color-emerald-500)' }} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  {/* Grid lines */}
+                  <line x1="12" y1="14" x2={svgW - 12} y2="14" className="stroke-slate-200" strokeWidth="0.5" />
+                  <line x1="12" y1="30" x2={svgW - 12} y2="30" className="stroke-slate-200" strokeWidth="0.5" />
+                  {/* Fill area */}
+                  {trendAreaPath && <path d={trendAreaPath} fill="url(#trend-grad)" />}
+                  {/* Trend line */}
+                  {trendPath && <path d={trendPath} className="stroke-emerald-500" strokeOpacity="0.9" />}
+                  {/* End dot */}
+                  {trendPath && (() => {
+                    const pts = dailyCounts;
+                    const lastI = pts.length - 1;
+                    const lx = (lastI / Math.max(pts.length - 1, 1)) * (svgW - 24) + 12;
+                    const max = Math.max(...pts.map(d => d.count), 1);
+                    const ly = svgH - 8 - ((pts[lastI].count / max) * (svgH - 18));
+                    return <circle cx={lx} cy={ly} r="3" className="fill-emerald-500 stroke-white" strokeWidth="2" />;
+                  })()}
+                </svg>
+                <div className="flex gap-1.5 text-[9px] text-slate-400 tabular-nums w-full justify-between px-1 max-w-[200px]">
+                  {dailyCounts.map((d) => (<span key={d.day} className="text-center">{d.day}</span>))}
                 </div>
-              ) : (
-                <div className="w-full flex flex-col items-center gap-1">
-                  <svg className="w-full max-w-[180px] h-14 text-emerald-500" viewBox={`0 0 ${svgW} ${svgH}`} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <defs>
-                      <linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
-                        <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={`${trendPath}`} fill="none" stroke="currentColor" strokeOpacity="0.8" />
-                    <path d={`${trendPath} L${svgW - 10} ${svgH - 10} L10 ${svgH - 10} Z`} fill="url(#trend-fill)" />
-                    <circle cx={trendPath.split(" ").filter(p => p.includes(",")).pop()?.split(",")[0] || "170"} cy={trendPath.split(" ").filter(p => p.includes(",")).pop()?.split(",")[1] || "14"} r="2" fill="currentColor" />
-                  </svg>
-                  <div className="flex gap-1.5 text-[9px] text-slate-400 tabular-nums w-full justify-between px-1 max-w-[180px]">
-                    {dailyCounts.map((d) => (
-                      <span key={d.day} className="text-center" title={`${d.day}: ${d.count}`}>{d.day}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Risk Mix */}
+          {/* Risk Mix Donut */}
           <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5 shrink-0">Risk Mix</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 shrink-0">Risk Mix</p>
             {riskTotal === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-xs text-slate-400 italic">No risk data</div>
+              <div className="flex items-center gap-2 py-1">
+                <AlertTriangle className="h-4 w-4 text-slate-300 shrink-0" />
+                <p className="text-[10px] text-slate-400 italic">No risk data</p>
+              </div>
             ) : (
-              <div className="flex flex-col justify-center flex-1 gap-1.5">
-                <div className="flex h-3.5 rounded-sm overflow-hidden">
-                  {riskMix.open > 0 && <div className="bg-blue-500" style={{ width: `${(riskMix.open / riskTotal) * 100}%` }} />}
-                  {riskMix.inProgress > 0 && <div className="bg-amber-500" style={{ width: `${(riskMix.inProgress / riskTotal) * 100}%` }} />}
-                  {riskMix.overdue > 0 && <div className="bg-red-500" style={{ width: `${(riskMix.overdue / riskTotal) * 100}%` }} />}
-                  {riskMix.completed > 0 && <div className="bg-emerald-500" style={{ width: `${(riskMix.completed / riskTotal) * 100}%` }} />}
-                </div>
-                <div className="flex flex-wrap gap-x-2.5 gap-y-0.5">
+              <div className="flex items-center gap-4 flex-1 min-h-0">
+                {/* Donut chart */}
+                <svg className="shrink-0" width="56" height="56" viewBox="0 0 56 56">
+                  {(() => {
+                    const total = riskSlices.reduce((s, v) => s + v.value, 0);
+                    if (riskSlices.length === 1) {
+                      return (
+                        <>
+                          <circle cx={chartCx} cy={chartCy} r={chartR} fill={riskSlices[0].color} />
+                          <circle cx={chartCx} cy={chartCy} r={chartInnerR} className="fill-white" />
+                          <text x={chartCx} y={chartCy} textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="700" className="fill-slate-800">{total}</text>
+                        </>
+                      );
+                    }
+                    let currentAngle = 0;
+                    const sliceEls = riskSlices.map((s) => {
+                      const angle = (s.value / total) * 360;
+                      const startRad = ((currentAngle - 90) * Math.PI) / 180;
+                      const endRad = ((currentAngle + angle - 90) * Math.PI) / 180;
+                      const x1 = chartCx + chartR * Math.cos(startRad);
+                      const y1 = chartCy + chartR * Math.sin(startRad);
+                      const x2 = chartCx + chartR * Math.cos(endRad);
+                      const y2 = chartCy + chartR * Math.sin(endRad);
+                      const largeArc = angle > 180 ? 1 : 0;
+                      const d = `M ${chartCx} ${chartCy} L ${x1} ${y1} A ${chartR} ${chartR} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                      currentAngle += angle;
+                      return <path key={s.color} d={d} fill={s.color} stroke="white" strokeWidth="1" />;
+                    });
+                    return <>{sliceEls}<circle cx={chartCx} cy={chartCy} r={chartInnerR} className="fill-white" /><text x={chartCx} y={chartCy} textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="800" className="fill-slate-800" fontFamily="ui-monospace,monospace">{total}</text></>;
+                  })()}
+                </svg>
+                {/* Legend */}
+                <div className="flex flex-col gap-1 min-w-0">
                   {riskMix.open > 0 && (
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1 whitespace-nowrap">
-                      <span className="h-2 w-2 rounded-full bg-blue-500 inline-block shrink-0" />
-                      Open {riskMix.open}
+                    <span className="text-[10px] text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 ring-1 ring-blue-200" />
+                      <span className="font-medium">Open</span>
+                      <span className="font-semibold tabular-nums text-slate-800">{riskMix.open}</span>
                       <span className="text-slate-400">({Math.round((riskMix.open / riskTotal) * 100)}%)</span>
                     </span>
                   )}
                   {riskMix.inProgress > 0 && (
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1 whitespace-nowrap">
-                      <span className="h-2 w-2 rounded-full bg-amber-500 inline-block shrink-0" />
-                      In Progress {riskMix.inProgress}
+                    <span className="text-[10px] text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500 ring-1 ring-amber-200" />
+                      <span className="font-medium">In Prog</span>
+                      <span className="font-semibold tabular-nums text-slate-800">{riskMix.inProgress}</span>
                       <span className="text-slate-400">({Math.round((riskMix.inProgress / riskTotal) * 100)}%)</span>
                     </span>
                   )}
                   {riskMix.overdue > 0 && (
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1 whitespace-nowrap">
-                      <span className="h-2 w-2 rounded-full bg-red-500 inline-block shrink-0" />
-                      Overdue {riskMix.overdue}
+                    <span className="text-[10px] text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 ring-1 ring-red-200 animate-pulse" />
+                      <span className="font-medium">Overdue</span>
+                      <span className="font-semibold tabular-nums text-slate-800">{riskMix.overdue}</span>
                       <span className="text-slate-400">({Math.round((riskMix.overdue / riskTotal) * 100)}%)</span>
-                    </span>
-                  )}
-                  {riskMix.completed > 0 && (
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1 whitespace-nowrap">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block shrink-0" />
-                      Completed {riskMix.completed}
-                      <span className="text-slate-400">({Math.round((riskMix.completed / riskTotal) * 100)}%)</span>
                     </span>
                   )}
                 </div>
@@ -398,76 +578,71 @@ function WorkspaceAnalyticsSection({
   );
 }
 
-/* ── Recent Activity Section (timeline, scrollable) ── */
+/* ── Skeleton Loading ── */
 
-function RecentActivitySection({ items, filter }: { items: DashboardItem[]; filter: string }) {
-  const navigate = useNavigate();
-
-  const filtered = filter ? items.filter((i) => i.taskType === filter) : items;
-  const display = filtered.slice(0, 10);
-
+function DashboardSkeleton() {
   return (
-    <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
-      <div className="shrink-0 h-8 flex items-center gap-2 px-3 border-b border-slate-200 bg-muted">
-        <Activity className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-        <span className="text-xs font-semibold text-slate-800 truncate">Recent Activity</span>
-        {filtered.length > 0 && <span className="ml-auto text-[10px] font-mono text-slate-400 shrink-0">{filtered.length}</span>}
-      </div>
-      <div className="flex-1 overflow-y-auto min-h-0 scroll-thin">
-        {filtered.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-xs text-slate-400 italic px-3 text-center">
-            {filter ? "No recent activity for this filter" : "No recent activity"}
+    <div className="h-full flex flex-col animate-pulse">
+      {/* KPI skeleton */}
+      <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-2.5 px-3">
+            <div className="h-4 w-4 rounded bg-slate-200" />
+            <div className="space-y-1.5">
+              <div className="h-2.5 bg-slate-200 rounded w-16" />
+              <div className="h-4 bg-slate-200 rounded w-8" />
+            </div>
           </div>
-        ) : (
-          <div className="relative">
-            <div className="absolute left-[87px] top-2 bottom-2 w-px bg-slate-100" />
-            {display.map((item) => {
-              const overdue = isOverdue(item.dueDate, item.status);
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => {
-                    if (item.sourceType && item.sourceId) {
-                      const route = getSourceRoute(item.sourceType, item.sourceId);
-                      if (route) navigate(route);
-                    }
-                  }}
-                  className="relative flex items-start hover:bg-slate-50 cursor-pointer min-h-0 border-b border-slate-100 transition-colors"
-                >
-                  <div className="w-[72px] shrink-0 pt-2.5 text-center">
-                    <span className={`text-[10px] leading-tight block ${overdue ? "text-red-500 font-semibold" : "text-slate-400"}`}>{formatDate(item.dueDate)}</span>
-                  </div>
-                  <div className="shrink-0 relative z-10 pt-2.5">
-                    <div className={`h-2 w-2 rounded-full ${overdue ? "bg-red-400" : PRIORITY_DOTS[item.priority] || "bg-slate-400"}`} />
-                  </div>
-                  <div className="min-w-0 flex-1 px-2.5 py-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="min-w-0 truncate text-xs font-medium text-slate-900" title={item.title}>{item.title}</span>
-                      {overdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />}
+        ))}
+      </div>
+      {/* Grid skeleton */}
+      <div className="flex-1 grid grid-rows-[42%_58%] divide-y divide-slate-200">
+        <div className="grid grid-cols-[36%_28%_36%] divide-x divide-slate-200">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex flex-col">
+              <div className="h-9 border-b border-slate-200 bg-slate-50/80 px-3 flex items-center">
+                <div className="h-3 bg-slate-200 rounded w-24" />
+              </div>
+              <div className="flex-1 space-y-2 p-3">
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <div key={j} className="flex items-start gap-2">
+                    <div className="h-2 w-2 rounded-full bg-slate-200 mt-1" />
+                    <div className="flex-1 space-y-1">
+                      <div className="h-3 bg-slate-200 rounded w-3/4" />
+                      <div className="h-3 bg-slate-200 rounded w-1/2" />
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm ${STATUS_STYLES[item.status] || "bg-slate-50 text-slate-600"}`}>
-                        {statusLabel(item.status)}
-                      </span>
-                      <span className="text-[10px] text-slate-500 flex items-center gap-1">
-                        {moduleLabel(item.sourceModule)}
-                      </span>
-                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-[42%_58%] divide-x divide-slate-200">
+          <div className="flex flex-col">
+            <div className="h-9 border-b border-slate-200 bg-slate-50/80 px-3 flex items-center">
+              <div className="h-3 bg-slate-200 rounded w-20" />
+            </div>
+            <div className="flex-1 space-y-2 p-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <div className="h-2 w-2 rounded-full bg-slate-200 mt-1" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-slate-200 rounded w-2/3" />
+                    <div className="h-3 bg-slate-200 rounded w-1/3" />
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        )}
-      </div>
-      <div className="shrink-0 h-8 border-t border-slate-200 bg-muted px-3 flex items-center justify-end">
-        <button
-          onClick={() => navigate("/myworkspace/tasks")}
-          className="text-[10px] font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1"
-        >
-          View All Activity
-          <ArrowUpRight className="h-3 w-3 stroke-current" />
-        </button>
+          <div className="flex flex-col">
+            <div className="h-9 border-b border-slate-200 bg-slate-50/80 px-3 flex items-center">
+              <div className="h-3 bg-slate-200 rounded w-28" />
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <div className="h-12 w-12 rounded-full bg-slate-100" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -478,87 +653,43 @@ function RecentActivitySection({ items, filter }: { items: DashboardItem[]; filt
 export function MyDashboardPage() {
   const [filter, setFilter] = useState("");
   const [search, setSearch] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<string>("");
-  const initialized = useRef(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  // Ctrl+F / Cmd+F focuses the search input
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-        e.preventDefault();
-        searchRef.current?.focus();
-      }
+      if ((e.ctrlKey || e.metaKey) && e.key === "f") { e.preventDefault(); searchRef.current?.focus(); }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
   const { data, loading, refetch } = useQuery<{ myWorkspaceDashboard: DashboardSummary }>(
-    MY_WORKSPACE_DASHBOARD_QUERY,
-    { fetchPolicy: "cache-and-network" },
+    MY_WORKSPACE_DASHBOARD_QUERY, { fetchPolicy: "cache-and-network" },
   );
 
-  useEffect(() => {
-    if (data && !initialized.current) {
-      initialized.current = true;
-      setLastUpdated(new Date().toLocaleTimeString());
-    }
-  }, [data]);
-
-  const hRefresh = useCallback(() => {
-    refetch().then(() => setLastUpdated(new Date().toLocaleTimeString()));
-  }, [refetch]);
-
+  const hRefresh = useCallback(() => { refetch(); }, [refetch]);
   const dashboard = data?.myWorkspaceDashboard;
   const debouncedSearch = useDebouncedValue(search, 250);
 
   const filterPredicate = (item: DashboardItem) => !filter || item.taskType === filter;
-
   const searchPredicate = (item: DashboardItem) => {
     if (!debouncedSearch) return true;
     const q = debouncedSearch.toLowerCase();
-    return (
-      item.title.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.sourceTitle.toLowerCase().includes(q)
-    );
+    return item.title.toLowerCase().includes(q) || item.description.toLowerCase().includes(q) || item.sourceTitle.toLowerCase().includes(q);
   };
-
   const combine = (items: DashboardItem[]) => items.filter(filterPredicate).filter(searchPredicate);
 
   const priorityItems = combine(dashboard?.priorityWork || []);
   const dueItems = combine(dashboard?.dueSoon || []);
-  const alertItems = combine(dashboard?.alertsApprovals || []);
-  const activityItems = combine(dashboard?.recentActivity || []).sort((a, b) => {
-    if (!a.dueDate && !b.dueDate) return 0;
-    if (!a.dueDate) return 1;
-    if (!b.dueDate) return -1;
-    return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
-  });
+  const alertItems = combine(dashboard?.alerts || []);
+  const approvalItems = combine(dashboard?.approvals || []);
+  const activityItems = combine(dashboard?.recentActivity || []);
+  const analyticsData = dashboard?.analytics || { workloadTrend: [], riskMix: { open: 0, inProgress: 0, overdue: 0, completed: 0 } };
   const sourceData = dashboard?.sourceBreakdown || [];
 
-  // Compute risk mix from all items
-  const allItems = [
-    ...priorityItems,
-    ...dueItems,
-    ...alertItems,
-    ...activityItems,
-  ];
-  const totalVisible = allItems.length;
-  const openVisible = allItems.filter((i) => i.status === "OPEN").length;
-  const overdueVisible = allItems.filter((i) => isOverdue(i.dueDate, i.status)).length;
-  const riskMix = {
-    open: allItems.filter((i) => i.status === "OPEN").length,
-    inProgress: allItems.filter((i) => i.status === "IN_PROGRESS").length,
-    overdue: allItems.filter((i) => isOverdue(i.dueDate, i.status)).length,
-    completed: allItems.filter((i) => i.status === "COMPLETED").length,
-  };
-
-  const hKpiNavigate = (label: string) => {
-    navigate(`/myworkspace/tasks?status=${encodeURIComponent(label)}`);
-  };
+  const hKpiNavigate = (label: string) => navigate(`/myworkspace/tasks?status=${encodeURIComponent(label)}`);
+  const footerText = dashboard ? `${dashboard.total} items \u00B7 ${dashboard.openTasks} open \u00B7 ${dashboard.overdueTasks} overdue` : "";
 
   return (
     <AppPageLayout
@@ -567,131 +698,60 @@ export function MyDashboardPage() {
       icon={<LayoutDashboard />}
       iconClass="bg-primary/10 text-primary"
       toolbar={
-        <ExplorerToolbar
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search tasks, modules..."
-          searchDebouncing={search !== debouncedSearch}
-          searchRef={searchRef}
-          filters={<ExplorerToolbarDropdown value={filter} onChange={setFilter} options={FILTER_OPTIONS} placeholder="Filter" width="w-28" />}
-          actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
+        <PageToolbar
+          searchValue={search} onSearchChange={setSearch} searchPlaceholder="Search tasks, modules..."
+          filters={<ToolbarDropdown value={filter} onChange={setFilter} options={FILTER_OPTIONS} placeholder="Filter" width="w-28" />}
+          actions={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
         />
       }
       footer={
         <span className="flex items-center gap-4 text-xs text-slate-500">
           <span className="font-medium">Personal Dashboard</span>
-          {lastUpdated && <span>Updated: {lastUpdated}</span>}
+          {dashboard?.lastUpdated && <span>Updated: {new Date(dashboard.lastUpdated).toLocaleTimeString()}</span>}
           <span className="flex-1" />
-          {totalVisible > 0 ? `${totalVisible} items · ${openVisible} open · ${overdueVisible} overdue` : ""}
+          {footerText}
         </span>
       }
     >
-      {loading && !dashboard ? (
-        <div className="h-full flex items-center justify-center text-sm text-slate-500">
-          <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2 rounded-full" />
-          Loading dashboard...
-        </div>
-      ) : !dashboard ? (
-        <div className="h-full flex flex-col items-center justify-center text-center px-8">
-          <LayoutDashboard className="h-12 w-12 text-slate-200 mb-3" />
-          <p className="text-sm font-medium text-slate-500">No assigned work right now.</p>
-          <p className="text-xs text-slate-400 mt-1">When tasks are assigned from any module, they will appear here.</p>
-        </div>
-      ) : (          <div className="h-full min-h-0 overflow-hidden flex flex-col">
-          {/* Integrated KPI Metrics Strip */}
-          <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200">
-            <MetricCell label="Open Tasks" value={dashboard.openTasks} color="text-blue-600" icon={<ListChecks className="h-4 w-4 stroke-current text-blue-600 shrink-0" />} onClick={() => hKpiNavigate("OPEN")} />
-            <MetricCell label="In Progress" value={dashboard.inProgress} color="text-amber-600" icon={<Clock className="h-4 w-4 stroke-current text-amber-600 shrink-0" />} onClick={() => hKpiNavigate("IN_PROGRESS")} />
-            <MetricCell label="Overdue" value={dashboard.overdueTasks} color={dashboard.overdueTasks > 0 ? "text-red-600" : "text-slate-700"} icon={<AlertOctagon className={`h-4 w-4 stroke-current shrink-0 ${dashboard.overdueTasks > 0 ? "text-red-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("OVERDUE")} />
-            <MetricCell label="Due Today" value={dashboard.dueToday} color={dashboard.dueToday > 0 ? "text-orange-600" : "text-slate-700"} icon={<Calendar className={`h-4 w-4 stroke-current shrink-0 ${dashboard.dueToday > 0 ? "text-orange-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("DUE_TODAY")} />
-            <MetricCell label="High Priority" value={dashboard.highPriority} color={dashboard.highPriority > 0 ? "text-red-600" : "text-slate-700"} icon={<ArrowUpRight className={`h-4 w-4 stroke-current shrink-0 ${dashboard.highPriority > 0 ? "text-red-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("HIGH_PRIORITY")} />
-            <MetricCell label="Completed Today" value={dashboard.completedToday} color="text-emerald-600" icon={<CheckCircle2 className="h-4 w-4 stroke-current text-emerald-600 shrink-0" />} onClick={() => hKpiNavigate("COMPLETED")} />
+      <div className="h-full min-h-0 overflow-hidden flex flex-col bg-slate-50">
+        {loading && !dashboard ? (
+          <DashboardSkeleton />
+        ) : !dashboard ? (
+          <div className="h-full flex flex-col items-center justify-center text-center px-8 animate-[fadeIn_0.3s_ease-out]">
+            <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}`}</style>
+            <LayoutDashboard className="h-14 w-14 text-slate-200 mb-4" />
+            <p className="text-base font-semibold text-slate-500">No assigned work right now</p>
+            <p className="text-sm text-slate-400 mt-1 max-w-sm">When tasks are assigned from any module within LeanSynk, they will appear here for quick access.</p>
           </div>
-
-          {/* Integrated Dashboard Grid */}
-          <div className="flex-1 min-h-0 grid grid-rows-[43%_57%] divide-y divide-slate-200">
-            {/* Top row: 3 sections */}
-            <div className="min-h-0 grid grid-cols-[42%_28%_30%] divide-x divide-slate-200">
-              {/* Priority Work */}
-              <Section title="Priority Work" count={priorityItems.length} icon={<ArrowUpRight className="h-3.5 w-3.5" />}>
-                {priorityItems.length === 0 ? (
-                  <SectionEmpty message={filter ? "No priority items for this filter" : "No priority work"} />
-                ) : (
-                  priorityItems.map((item) => <ItemRow key={item.id} item={item} />)
-                )}
-              </Section>
-
-              {/* Upcoming — grouped by date band */}
-              <Section title="Upcoming" count={dueItems.length} icon={<Calendar className="h-3.5 w-3.5" />}>
-                {dueItems.length === 0 ? (
-                  <SectionEmpty message={filter ? "No due items for this filter" : "No items due this week"} />
-                ) : (
-                  (() => {
-                    const today = new Date(); today.setHours(0, 0, 0, 0);
-                    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-                    const weekEnd = new Date(today); weekEnd.setDate(weekEnd.getDate() + 7);
-                    const toDate = (s: string | null) => { if (!s) return null; const d = new Date(s); d.setHours(0, 0, 0, 0); return d; };
-                    const bands: { label: string; items: DashboardItem[] }[] = [
-                      { label: "Today", items: [] },
-                      { label: "Tomorrow", items: [] },
-                      { label: "This Week", items: [] },
-                    ];
-                    dueItems.forEach((item) => {
-                      const d = toDate(item.dueDate);
-                      if (!d) { bands[2].items.push(item); return; }
-                      if (d.getTime() === today.getTime()) { bands[0].items.push(item); }
-                      else if (d.getTime() === tomorrow.getTime()) { bands[1].items.push(item); }
-                      else if (d >= tomorrow && d <= weekEnd) { bands[2].items.push(item); }
-                    });
-                    return bands.map((band) =>
-                      band.items.length > 0 ? (
-                        <div key={band.label}>
-                          <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide bg-slate-50/50 border-b border-slate-100">{band.label}</div>
-                          {band.items.map((item) => <ItemRow key={item.id} item={item} />)}
-                        </div>
-                      ) : null
-                    );
-                  })()
-                )}
-              </Section>
-
-              {/* Alerts & Approvals — split into two internal sub-sections */}
-              <Section title="Alerts & Approvals" count={alertItems.length} icon={<Bell className="h-3.5 w-3.5" />}>
-                {alertItems.length === 0 ? (
-                  <SectionEmpty message={filter ? "No alerts for this filter" : "No alerts or pending approvals"} />
-                ) : (
-                  (() => {
-                    const approvals = alertItems.filter((i) => i.taskType === "approval");
-                    const alerts = alertItems.filter((i) => i.taskType !== "approval");
-                    return (
-                      <>
-                        {approvals.length > 0 && (
-                          <div>
-                            <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide bg-slate-50/50 border-b border-slate-100">Approvals</div>
-                            {approvals.map((item) => <ItemRow key={item.id} item={item} />)}
-                          </div>
-                        )}
-                        {alerts.length > 0 && (
-                          <div>
-                            <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold text-amber-700 uppercase tracking-wide bg-amber-50/30 border-b border-amber-200/50">Alerts</div>
-                            {alerts.map((item) => <ItemRow key={item.id} item={item} alertStyle />)}
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()
-                )}
-              </Section>
+        ) : (
+          <>
+            {/* KPI Strip */}
+            <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200 bg-white/50">
+              <MetricCell label="Open Tasks" value={dashboard.openTasks} color="text-blue-600" icon={<ListChecks className="h-4 w-4 stroke-current text-blue-600 shrink-0" />} onClick={() => hKpiNavigate("OPEN")} />
+              <MetricCell label="In Progress" value={dashboard.inProgress} color="text-amber-600" icon={<Clock className="h-4 w-4 stroke-current text-amber-600 shrink-0" />} onClick={() => hKpiNavigate("IN_PROGRESS")} />
+              <MetricCell label="Overdue" value={dashboard.overdueTasks} color={dashboard.overdueTasks > 0 ? "text-red-600" : "text-slate-700"} icon={<AlertOctagon className={`h-4 w-4 stroke-current shrink-0 ${dashboard.overdueTasks > 0 ? "text-red-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("OVERDUE")} urgent={dashboard.overdueTasks > 0} />
+              <MetricCell label="Due Today" value={dashboard.dueToday} color={dashboard.dueToday > 0 ? "text-orange-600" : "text-slate-700"} icon={<Calendar className={`h-4 w-4 stroke-current shrink-0 ${dashboard.dueToday > 0 ? "text-orange-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("DUE_TODAY")} />
+              <MetricCell label="High Priority" value={dashboard.highPriority} color={dashboard.highPriority > 0 ? "text-red-600" : "text-slate-700"} icon={<ArrowUpRight className={`h-4 w-4 stroke-current shrink-0 ${dashboard.highPriority > 0 ? "text-red-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("HIGH_PRIORITY")} />
+              <MetricCell label="Completed Today" value={dashboard.completedToday} color="text-emerald-600" icon={<CheckCircle2 className="h-4 w-4 stroke-current text-emerald-600 shrink-0" />} onClick={() => hKpiNavigate("COMPLETED")} />
             </div>
 
-            {/* Bottom row: 2 sections */}
-            <div className="min-h-0 grid grid-cols-[40%_60%] divide-x divide-slate-200">
-              <RecentActivitySection items={activityItems} filter={filter} />
-              <WorkspaceAnalyticsSection sourceData={sourceData} riskMix={riskMix} activityItems={activityItems} />
+            {/* Dashboard Grid */}
+            <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[42%_58%] divide-y divide-slate-200">
+              {/* Top row */}
+              <div className="min-h-0 overflow-hidden grid grid-cols-[36%_28%_36%] divide-x divide-slate-200">
+                <PriorityWorkPanel items={priorityItems} />
+                <UpcomingPanel items={dueItems} />
+                <AlertsApprovalsPanel alerts={alertItems} approvals={approvalItems} />
+              </div>
+              {/* Bottom row */}
+              <div className="min-h-0 overflow-hidden grid grid-cols-[42%_58%] divide-x divide-slate-200">
+                <RecentActivitySection items={activityItems} />
+                <WorkspaceAnalyticsSection sourceData={sourceData} analyticsData={analyticsData} />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </AppPageLayout>
   );
 }

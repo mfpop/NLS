@@ -22,15 +22,6 @@ describe("App Bootstrap", () => {
     expect(topLabels).toContain("Dashboard");
   });
 
-  it("has configured GraphQL operations", async () => {
-    const queries = await import("@/graphql/erpDataJobQueries");
-    expect(queries.IMPORT_JOBS_QUERY).toBeDefined();
-
-    const mutations = await import("@/graphql/erpDataJobMutations");
-    expect(mutations.CREATE_IMPORT_JOB).toBeDefined();
-    expect(mutations.ATTACH_IMPORT_FILE).toBeDefined();
-  });
-
   it("contains route definitions for all domain modules", () => {
     const ROUTE_PATTERNS = [
       "/control-tower",

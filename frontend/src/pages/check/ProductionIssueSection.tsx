@@ -157,11 +157,11 @@ export function useProductionIssueSection(
   const renderCreateForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
-        <div><label className={labelCls}>Type *</label><select value={iType} onChange={(e) => setIType(e.target.value)} className={SEL_INPUT}>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
-        <div><label className={labelCls}>Severity *</label><select value={iSeverity} onChange={(e) => setISeverity(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
-        <div><label className={labelCls}>Owner</label><input type="text" value={iOwner} onChange={(e) => setIOwner(e.target.value)} className={SEL_INPUT} placeholder="Owner..." /></div>
+        <div><label className={labelCls}>Type *</label><select value={iType} onChange={(e) => setIType(e.target.value)} aria-label="Issue type" className={SEL_INPUT}>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+        <div><label className={labelCls}>Severity *</label><select value={iSeverity} onChange={(e) => setISeverity(e.target.value)} aria-label="Severity" className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
+        <div><label className={labelCls}>Owner</label><input type="text" value={iOwner} onChange={(e) => setIOwner(e.target.value)} className={SEL_INPUT} placeholder="Owner..." aria-label="Issue owner" /></div>
         <div><label className={labelCls}>Due Date</label><input type="date" value={iDueDate} onChange={(e) => setIDueDate(e.target.value)} className={SEL_INPUT} /></div>
-        <div><label className={labelCls}>Source</label><select value={iSourceType} onChange={(e) => setISourceType(e.target.value)} className={SEL_INPUT}>{iSourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+        <div><label className={labelCls}>Source</label><select value={iSourceType} onChange={(e) => setISourceType(e.target.value)} aria-label="Source" className={SEL_INPUT}>{iSourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {iSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={iSourceId ?? ""} onChange={(e) => setISourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} /></div>}
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">

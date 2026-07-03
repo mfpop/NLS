@@ -6,7 +6,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -521,9 +521,11 @@ export function A3PdcaPage() {
             title="A3 / PDCA" subtitle="Advanced problem-solving and root-cause improvement cycles." />
         </div>
         <div className="print-ignore">
-          <Toolbar
-            left={!isForm ? <ToolbarSearch value={search} onChange={setSearch} placeholder="Search A3/PDCA..." /> : <div />}
-            center={!isForm && (
+          <PageToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search A3/PDCA..."
+            filters={!isForm ? (
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={[
                   { value: "", label: "All Phases" }, { value: "DRAFT", label: "Draft" },
@@ -532,22 +534,22 @@ export function A3PdcaPage() {
                   { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" },
                 ]}
                 className="w-36" />
-            )}
-            right={
-              <div className="flex items-center gap-2">
+            ) : undefined}
+            actions={
+              <>
                 {isForm && mode === "create" && (
                   <MethodToggle value={templateMethod} onChange={(m) => { setTemplateMethod(m); applyTemplate(m); }} />
                 )}
                 {isForm ? (
-                  <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
+                  <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="edit" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} variant="danger" /></>
                 ) : (
-                  <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} />
+                  <><ToolbarButton icon={Plus} label="New" onClick={hNew} variant="create" /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} variant="edit" />
                     <span className="h-5 w-px shrink-0 bg-border/25" />
                     <ToolbarButton icon={Printer} label="Print" onClick={hPrint} disabled={!sel} />
                     <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
                   </>
                 )}
-              </div>
+              </>
             }
           />
         </div>

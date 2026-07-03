@@ -2,6 +2,8 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ApolloClient, HttpLink, InMemoryCache, from } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
+import { ErrorLink } from "@apollo/client/link/error";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloProvider } from "@apollo/client/react";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -21,22 +23,37 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
+const errorLink = new ErrorLink(({ error }) => {
+  if (CombinedGraphQLErrors.is(error)) {
+    for (const err of error.errors) {
+      const msg = (err.message || "").toLowerCase();
+      if (
+        msg.includes("not authenticated") ||
+        msg.includes("unauthorized") ||
+        msg.includes("invalid token") ||
+        msg.includes("token expired") ||
+        msg.includes("signature has expired")
+      ) {
+        localStorage.removeItem("auth_token");
+        window.location.href = "/login";
+        return;
+      }
+    }
+  }
+});
+
 const httpLink = new HttpLink({ uri: GRAPHQL_HTTP_URL });
 
 const client = new ApolloClient({
-  link: from([authLink, httpLink]),
+  link: from([errorLink, authLink, httpLink]),
   cache: new InMemoryCache({
     typePolicies: {
-      // DataManagementTreeChild nodes share numeric IDs across types
-      // (e.g. Line id=1 and Department id=1). Namespace the cache key
-      // by combining type + id so they don't overwrite each other.
       DataManagementTreeChild: {
         keyFields: ["type", "id"],
       },
       DataManagementTreeRoot: {
         keyFields: ["type", "id"],
       },
-      // The overview query result is ephemeral — don't normalize it
       DataManagementOverview: {
         keyFields: false,
       },

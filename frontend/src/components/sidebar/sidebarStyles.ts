@@ -29,14 +29,14 @@ export const sidebarNavTokens = {
 export const sidebarState = {
   // Default menu item
   item: "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-foreground",
-  // Active selected item (emerald branding)
-  itemActive: "bg-sidebar-active-bg text-sidebar-active-fg border-l-2 border-sidebar-control",
+  // Active selected item — left border accent only, no heavy background
+  itemActive: "text-sidebar-active-fg border-l-2 border-sidebar-control rounded-none hover:bg-sidebar-hover",
   // Expanded parent item
   expanded: "bg-sidebar-hover text-sidebar-foreground",
   // Child item default
   child: "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground",
-  // Child item active
-  childActive: "bg-sidebar-active-bg text-sidebar-active-fg border-l-2 border-sidebar-control",
+  // Child item active — left border accent only, no heavy background
+  childActive: "text-sidebar-active-fg border-l-2 border-sidebar-control rounded-none hover:bg-sidebar-hover",
   // Chevron default
   chevron: "text-sidebar-muted",
   // Chevron active/expanded

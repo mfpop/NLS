@@ -152,7 +152,7 @@ const matchers: Matcher[] = [
   },
   {
     key: "system-references",
-    matches: (path) => path.startsWith("/system/reference-tables") || path.startsWith("/system/production-structure/references"),
+    matches: (path) => path.startsWith("/system/reference-tables"),
     load: () => import("@/pages/system/production-structure/ReferencesPage"),
   },
   {
@@ -176,11 +176,6 @@ const matchers: Matcher[] = [
     load: () => import("@/pages/DocumentationCenter/DocumentationCenter"),
   },
   {
-    key: "system-erp-data",
-    matches: (path) => path === "/system/erp-data" || path.startsWith("/system/erp-data/"),
-    load: () => import("@/pages/system/erp-data/ERPDataPage"),
-  },
-  {
     key: "system-erp-import",
     matches: (path) => path.startsWith("/system/erp-data/import"),
     load: () => import("@/pages/system/erp-data/erp-import/ErpImportPage"),
@@ -194,6 +189,13 @@ const matchers: Matcher[] = [
     key: "system-health",
     matches: (path) => path.startsWith("/system/health"),
     load: () => import("@/pages/system/SystemHealthPage"),
+  },
+  {
+    key: "system-users-and-roles",
+    matches: (path) =>
+      path === "/system/users-and-roles"
+      || path.startsWith("/system/users-and-roles/"),
+    load: () => import("@/pages/system/UsersAndRolesPage"),
   },
 ];
 

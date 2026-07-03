@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Component } from "lucide-react";
-import { Pagination, EntityListItem, ResourceGroupDetailView } from "./components";
+import { Component, Plus, RefreshCw, Save, X, Trash2 } from "lucide-react";
+import { ResourceGroupDetailView } from "./components";
 import type { ResourceGroupDetailViewHandle } from "./components/ResourceGroupDetailView";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { DEPARTMENTS_QUERY, RESOURCE_GROUPS_QUERY, RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
@@ -9,6 +9,12 @@ import { useSearchParams } from "react-router-dom";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
 import { ConfirmDialog } from "./shared";
+import { PageToolbar, ToolbarSearch, ToolbarButton } from "@/components/layout/PageToolbar";
+import { LEFT_COLUMN_WIDTH_CLASS } from "@/components/layout/layoutWidths";
+import { RecordListPanel } from "@/components/shared/RecordListPanel";
+import { ENTITY_COLORS } from "./config/entityColors";
+
+const col = ENTITY_COLORS.resourceGroup;
 
 const PER_PAGE = 10;
 
@@ -57,7 +63,7 @@ function listItems<T>(value: ListResult<T> | null | undefined): T[] {
 }
 
 export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
-  const { search, statusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
+  const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const [searchParams] = useSearchParams();
   const departmentFilterId = searchParams.get("departmentId") || "";
@@ -65,14 +71,13 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
 
   const [mode, setMode] = useState<FormMode>("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [editState, setEditState] = useState({ dirty: false, valid: true, saving: false });
 
   const detailRef = useRef<ResourceGroupDetailViewHandle>(null);
 
-  const { data, loading, refetch: refetchRG } = useQuery<{ resourceGroups: ListResult<ResourceGroup> }>(RESOURCE_GROUPS_QUERY);
+  const { data, refetch: refetchRG } = useQuery<{ resourceGroups: ListResult<ResourceGroup> }>(RESOURCE_GROUPS_QUERY);
   const { data: departmentsData } = useQuery<{ departments: ListResult<Department> }>(DEPARTMENTS_QUERY, { fetchPolicy: "cache-and-network", errorPolicy: "all" });
   const { data: resourcesData } = useQuery<{ resources: ListResult<Resource> }>(RESOURCES_QUERY, {
     variables: { resourceGroupId: selectedId || undefined },
@@ -86,8 +91,6 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
   const departments = listItems(departmentsData?.departments);
   const assignedResources = listItems(resourcesData?.resources);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
-
   useEffect(() => {
     if (!embeddedInFlow || !urlResourceGroupId || groups.length === 0) return;
     const exists = groups.some((group) => group.id === urlResourceGroupId);
@@ -99,15 +102,14 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
   const filtered = groups.filter((g) => !departmentFilterId || g.departmentId === departmentFilterId)
     .filter((g) => statusFilter === "all" || g.status === statusFilter)
     .filter((g) => !search || (g.name ?? "").toLowerCase().includes(search.toLowerCase()));
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? groups.find((g) => g.id === selectedId) ?? null : null;
 
   useEffect(() => {
     if (mode !== "view") return;
-    if (paginated.length === 0) return;
-    if (selectedId && paginated.some((g) => g.id === selectedId)) return;
-    setSelectedId(paginated[0].id);
-  }, [paginated, selectedId, mode]);
+    if (filtered.length === 0) return;
+    if (selectedId && filtered.some((g) => g.id === selectedId)) return;
+    setSelectedId(filtered[0].id);
+  }, [filtered, selectedId, mode]);
 
   const hNew = useCallback(() => { setSelectedId(null); setMode("create"); setEditState({ dirty: false, valid: true, saving: false }); }, []);
   const hEdit = useCallback(() => { if (sel) setMode("edit"); }, [sel]);
@@ -222,49 +224,92 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
       )}
       <EntityWorkspacePage
         hideList={embeddedInFlow}
-        toolbar={null}
-        list={
-          <>
-            <div className="shrink-0 border-b border-border/50 flex items-center p-3 bg-muted">
-              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-muted-foreground">Resource Groups</span>
-              <span className="ml-auto text-[9px] text-muted-foreground font-mono">{filtered.length}</span>
-            </div>
-            <div className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
-              {loading && groups.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-info animate-bounce mr-2" />Loading...</div>
-              ) : paginated.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <Component className="h-4 w-4 text-muted-foreground mb-1.5 stroke-current" />
-                  <p className="text-xs text-muted-foreground">No resource groups</p>
-                </div>
+        toolbar={
+          <PageToolbar
+            leftWidthClass={LEFT_COLUMN_WIDTH_CLASS}
+            leftSlot={
+              <ToolbarSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search RGs..."
+              />
+            }
+            filters={
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            }
+            actions={
+              isForm ? (
+                <>
+                  <ToolbarButton variant="edit" icon={<Save className="h-4 w-4" />} onClick={hSave} disabled={editState.saving}>
+                    Save
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<X className="h-4 w-4" />} onClick={hCancel}>
+                    Cancel
+                  </ToolbarButton>
+                </>
               ) : (
-                <div>
-                  {paginated.map((g) => (
-                    <EntityListItem key={g.id}
-                      name={g.name || ""} code={g.code}
-                      meta={g.departmentName || "Department required"}
-                      icon={<Component className="h-3.5 w-3.5 stroke-current" />}
-                      selected={selectedId === g.id}
-                      status={g.status}
-                      onClick={() => {
-                        if (editState.dirty) {
-                          if (!window.confirm("You have unsaved changes. Discard them?")) return;
-                          discardChanges();
-                        }
-                        setSelectedId(g.id);
-                        if (mode === "create") { setMode("view"); setEditState({ dirty: false, valid: true, saving: false }); }
-                      }}
-                      entityType="resourceGroup"
-                    />
-                  ))}
+                <>
+                  <ToolbarButton variant="create" icon={<Plus className="h-4 w-4" />} onClick={hNew}>
+                    New
+                  </ToolbarButton>
+                  <ToolbarButton variant="edit" icon={<Plus className="h-4 w-4" />} onClick={hEdit} disabled={!sel}>
+                    Edit
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel}>
+                    Archive
+                  </ToolbarButton>
+                  <ToolbarButton variant="neutral" icon={<RefreshCw className="h-4 w-4" />} onClick={() => refetchRG()}>
+                    Refresh
+                  </ToolbarButton>
+                </>
+              )
+            }
+          />
+        }
+        list={
+          <RecordListPanel
+            title="Resource Groups"
+            records={filtered}
+            selectedId={selectedId}
+            onSelect={(id) => {
+              if (editState.dirty) {
+                if (!window.confirm("You have unsaved changes. Discard them?")) return;
+                discardChanges();
+              }
+              setSelectedId(id);
+              if (mode === "create") { setMode("view"); setEditState({ dirty: false, valid: true, saving: false }); }
+            }}
+            getId={(g) => g.id}
+            pageSize={PER_PAGE}
+            emptyMessage="No resource groups"
+            selectedBorderClass={col.selectedBorder}
+            selectedBgClass={col.selectedBg}
+            renderRecord={(g) => {
+              const isActive = (g.status || "").toLowerCase() === "active";
+              return (
+                <div className="flex items-center gap-2.5">
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${col.iconBg}`}>
+                    <Component className={`h-3.5 w-3.5 ${col.iconFg} stroke-current`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                      <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{g.name || ""}</span>
+                      <span className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={g.status || "unknown"} />
+                    </div>
+                    <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{g.departmentName || "Department required"}</div>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="shrink-0 flex h-7 items-center border-t border-border/50 bg-muted px-3">
-              <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
-            </div>
-          </>
+              );
+            }}
+          />
         }
         detail={
           <ResourceGroupDetailView

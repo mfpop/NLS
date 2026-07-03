@@ -7,8 +7,7 @@ import {
   Save, XCircle, ClipboardList, Wrench, Pencil,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PM_PLANS_QUERY, DUE_PM_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { PmDashboard } from "./pm/PmDashboard";
@@ -466,11 +465,9 @@ export function PreventiveMaintenancePage() {
         </p>
         <TargetSelector
           targetType={form.targetType} setTargetType={(v) => setForm({ ...form, targetType: v, targetId: null })}
-          targetId={form.targetId} setTargetId={(v) => setForm({ ...form, targetId: v })}
-          disabled={editMode}
-        />
-      </div>
-
+          targetId={form.targetId} setTargetId={(v) => setForm({ ...form, targetId: v })}          disabled={editMode}        />
+        </div>
+        
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <FileText className="h-3 w-3" /> Task Details & Safety
@@ -736,18 +733,15 @@ export function PreventiveMaintenancePage() {
         )}
       </PageHeader>
       <div className="print-ignore">
-        <SplitToolbar
+        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search PM plans..."
           filters={view !== "dashboard" && view !== "form" ? (
             <>
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-28" />
-
               <ToolbarDropdown value={filterFreq} onChange={setFilterFreq} options={FREQ_OPTIONS} className="w-32" />
-
               <ToolbarDropdown value={filterPriority} onChange={setFilterPriority} options={PRIORITY_FILTER_OPTIONS} className="w-28" />
-
             </>
           ) : undefined}
           actions={
@@ -778,9 +772,8 @@ export function PreventiveMaintenancePage() {
                 </>
               )}
             </div>
-          }
-        />
-      </div>
+          }        />
+        </div>
 
       {view === "dashboard" ? (
         <div className="flex flex-1 min-h-0 overflow-hidden">

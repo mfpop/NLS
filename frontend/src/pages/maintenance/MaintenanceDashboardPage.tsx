@@ -6,8 +6,7 @@ import {
   Clock, Package, RefreshCw, Target, AlertOctagon, ChevronDown,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { ToolbarButton } from "@/components/shared/Toolbar";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
+import { PageToolbar, ToolbarButton } from "@/components/layout/PageToolbar";
 import {
   MAINTENANCE_SUMMARY_QUERY, WORK_ORDERS_QUERY, BREAKDOWNS_QUERY,
   DUE_PM_QUERY, LOW_STOCK_SPARE_PARTS_QUERY,
@@ -107,7 +106,7 @@ function KpiTile({
     <button type="button" onClick={onClick} disabled={!onClick}
       className={cls(
         "flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 text-left transition-all",
-        onClick ? "cursor-pointer hover:border-border-major hover:shadow-sm" : "cursor-default",
+        onClick ? "cursor-pointer hover:border-slate-400 hover:shadow-sm" : "cursor-default",
       )}
     >
       {icon && <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100">{icon}</div>}
@@ -313,7 +312,7 @@ export function MaintenanceDashboardPage() {
         subtitle="TPM & maintenance performance command center"
       />
       <div className="print-ignore">
-        <SplitToolbar
+        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search maintenance dashboard..."

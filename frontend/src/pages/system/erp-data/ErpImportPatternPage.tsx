@@ -23,6 +23,7 @@ import {
 } from "@/graphql/erpImportPatternMutations";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatDateShort } from "@/utils/dateFormat";
 
 interface Pattern {
   id: string; name: string; description: string; scope: string;
@@ -72,8 +73,7 @@ const inputCls = `h-7 w-full rounded ${theme.input} px-2 text-[11px] outline-non
 const labelCls = "block text-[9px] font-medium text-muted-foreground uppercase tracking-wide mb-0.5";
 
 function formatDate(d: string | undefined | null): string {
-  if (!d) return "";
-  try { const dt = new Date(d); if (isNaN(dt.getTime())) return ""; const s = dt.toLocaleDateString(); return s === "Invalid Date" ? "" : s; } catch { return ""; }
+  return formatDateShort(d) ?? "";
 }
 
 function SourceFilePicker({ value, files, onChange, onUpload }: {

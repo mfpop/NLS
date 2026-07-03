@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Factory } from "lucide-react";
+import { Factory, Plus, RefreshCw, Save, X, Trash2 } from "lucide-react";
 import { usePlants, EMPTY_FORM } from "@/hooks/usePlants";
 import type { Plant, PlantInput } from "@/types/plant";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
 import { PlantDetailView } from "./components/PlantDetailView";
 import { ConfirmDialog } from "./shared";
-import { EntityListItem } from "./components/EntityListItem";
+import { RecordListPanel } from "@/components/shared/RecordListPanel";
+import { PageToolbar, ToolbarSearch, ToolbarButton } from "@/components/layout/PageToolbar";
+import { LEFT_COLUMN_WIDTH_CLASS } from "@/components/layout/layoutWidths";
+import { ENTITY_COLORS } from "./config/entityColors";
+
+const col = ENTITY_COLORS.plant;
 
 const PER_PAGE = 10;
 
@@ -25,13 +30,12 @@ function getPlantStatus(plant?: Plant | null): { value: string; label: string; i
 }
 
 export function PlantsPage() {
-  const { search, statusFilter, setFooterContent, setToolbarVariant } = useToolbar();
+  const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setToolbarVariant } = useToolbar();
   const registerActions = useRegisterActions();
-  const { plants, loading, savePlant, archivePlant, refetch } = usePlants();
+  const { plants, savePlant, archivePlant, refetch } = usePlants();
 
   const [mode, setMode] = useState<FormMode>("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [pendingPlantId, setPendingPlantId] = useState<string | null>(null);
@@ -39,11 +43,8 @@ export function PlantsPage() {
   const [editState, setEditState] = useState({ dirty: false, valid: true, saving: false });
   const plantDetailRef = useRef<{ save: () => Promise<boolean>; cancel: () => void; isDirty: () => boolean }>(null);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
-
   const filtered = plants.filter((p) => statusFilter === "all" || getPlantStatus(p).value === normalizeStatus(statusFilter))
     .filter((p) => !search || p.name.toLowerCase().includes(search.toLowerCase()));
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? plants.find((p) => p.id === selectedId) ?? null : null;
 
   const handleCreatePlant = useCallback(async (input: PlantInput): Promise<{ ok: boolean; plant?: Plant; errors?: Record<string, string> }> => {
@@ -118,26 +119,26 @@ export function PlantsPage() {
     setPendingLineId(null);
   }, [pendingLineId]);
 
-  const selectedIndex = useMemo(() => paginated.findIndex((p) => p.id === selectedId), [paginated, selectedId]);
+  const selectedIndex = useMemo(() => filtered.findIndex((p) => p.id === selectedId), [filtered, selectedId]);
 
   useEffect(() => {
     if (mode !== "view") return;
-    if (paginated.length === 0) return;
-    if (selectedId && paginated.some((p) => p.id === selectedId)) return;
-    setSelectedId(paginated[0].id);
-  }, [paginated, selectedId, mode]);
+    if (filtered.length === 0) return;
+    if (selectedId && filtered.some((p) => p.id === selectedId)) return;
+    setSelectedId(filtered[0].id);
+  }, [filtered, selectedId, mode]);
   useEffect(() => {
     if (mode !== "view") return;
     const h = (e: KeyboardEvent) => {
-      const plantCount = paginated.length;
-      if (e.key === "ArrowDown") { e.preventDefault(); setSelectedId(paginated[Math.min(selectedIndex + 1, plantCount - 1)]?.id ?? null); }
-      if (e.key === "ArrowUp") { e.preventDefault(); setSelectedId(paginated[Math.max(selectedIndex - 1, 0)]?.id ?? null); }
+      const plantCount = filtered.length;
+      if (e.key === "ArrowDown") { e.preventDefault(); setSelectedId(filtered[Math.min(selectedIndex + 1, plantCount - 1)]?.id ?? null); }
+      if (e.key === "ArrowUp") { e.preventDefault(); setSelectedId(filtered[Math.max(selectedIndex - 1, 0)]?.id ?? null); }
       if (e.key === "Enter" && selectedId) { e.preventDefault(); hEdit(); }
       if (e.key === "Delete" && selectedId) { e.preventDefault(); setConfirmDelete(selectedId); }
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [mode, paginated, selectedIndex, selectedId, hEdit]);
+  }, [mode, filtered, selectedIndex, selectedId, hEdit]);
 
   useEffect(() => {
     setToolbarVariant("splitListDetail");
@@ -195,40 +196,93 @@ export function PlantsPage() {
       <ConfirmDialog open={!!pendingPlantId} onClose={() => setPendingPlantId(null)} title="Discard changes?" message="You have unsaved plant changes. Discard them and open the selected plant?" onConfirm={confirmPlantSwitch} />
       <ConfirmDialog open={!!pendingLineId} onClose={() => setPendingLineId(null)} title="Discard changes?" message="You have unsaved plant changes. Discard them before opening the selected production line?" onConfirm={confirmLineNavigation} />
       <EntityWorkspacePage
-        toolbar={null}
+        toolbar={
+          <PageToolbar
+            leftWidthClass={LEFT_COLUMN_WIDTH_CLASS}
+            leftSlot={
+              <ToolbarSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search plants..."
+              />
+            }
+            filters={
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="archived">Archived</option>
+              </select>
+            }
+            actions={
+              mode === "edit" || mode === "create" ? (
+                <>
+                  <ToolbarButton variant="edit" icon={<Save className="h-4 w-4" />} onClick={hSave} disabled={editState.saving}>
+                    Save
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<X className="h-4 w-4" />} onClick={hCancel}>
+                    Cancel
+                  </ToolbarButton>
+                </>
+              ) : (
+                <>
+                  <ToolbarButton variant="create" icon={<Plus className="h-4 w-4" />} onClick={hNew}>
+                    New
+                  </ToolbarButton>
+                  <ToolbarButton variant="edit" icon={<Plus className="h-4 w-4" />} onClick={hEdit} disabled={!sel}>
+                    Edit
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel}>
+                    Delete
+                  </ToolbarButton>
+                  <ToolbarButton variant="neutral" icon={<RefreshCw className="h-4 w-4" />} onClick={() => refetch()}>
+                    Refresh
+                  </ToolbarButton>
+                </>
+              )
+            }
+          />
+        }
         list={
           <>
             {mutationError && mode === "view" && (
-              <div className="border-b border-danger/30 bg-danger/10 px-3 py-2 text-[11px] font-semibold text-danger">
+              <div className="border-b border-red-300 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
                 {mutationError}
               </div>
             )}
-            <div className="flex-1 overflow-y-auto bg-muted/50 pl-2">
-              {loading && plants.length === 0 ? (
-                <div className="flex items-center justify-center h-32 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-success animate-bounce" />Loading...</div>
-                </div>
-              ) : paginated.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-center px-4">
-                  <Factory className="h-5 w-5 text-muted-foreground mb-2 stroke-current" />
-                  <p className="text-xs text-muted-foreground">No plants</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Create one to get started</p>
-                </div>
-              ) : (
-                <div>
-                  {paginated.map((plant) => (
-                    <EntityListItem key={plant.id}
-                      name={plant.name} code={plant.code}
-                      meta={[plant.city, plant.state].filter(Boolean).join(", ") || plant.building || "No location"}
-                      icon={<Factory className="h-3.5 w-3.5 stroke-current" />}
-                      selected={selectedId === plant.id}
-                      status={plant.status}
-                      onClick={() => selectPlant(plant.id)}
-                      entityType="plant" />
-                  ))}
-                </div>
-              )}
-            </div>
+            <RecordListPanel
+              title="Plants"
+              records={filtered}
+              selectedId={selectedId}
+              onSelect={selectPlant}
+              getId={(p: Plant) => p.id}
+              pageSize={PER_PAGE}
+              emptyMessage="No plants"
+              selectedBorderClass={col.selectedBorder}
+              selectedBgClass={col.selectedBg}
+              renderRecord={(plant: Plant) => {
+                const ps = getPlantStatus(plant);
+                const meta = [plant.city, plant.state].filter(Boolean).join(", ") || plant.building || "No location";
+                return (
+                  <div className="flex items-center gap-2.5">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${col.iconBg}`}>
+                      <Factory className={`h-3.5 w-3.5 ${col.iconFg} stroke-current`} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                        <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{plant.name}</span>
+                        <span className={`h-2 w-2 rounded-full ${ps.isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={plant.status || "unknown"} />
+                      </div>
+                      <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{meta}</div>
+                    </div>
+                  </div>
+                );
+              }}
+            />
           </>
         }
         detail={renderDetail()}

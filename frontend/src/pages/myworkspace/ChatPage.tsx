@@ -4,7 +4,7 @@ import { gql } from "@apollo/client";
 import { MessageSquare, RefreshCw, Send, Loader2, Users, Plus, X, Check, Paperclip, FileText, Image, Download, Star } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarButton, ExplorerToolbarDropdown } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarButton, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { useAuth } from "@/auth/AuthContext";
 import {
   CHAT_CONTACTS_QUERY,
@@ -987,14 +987,14 @@ export function ChatPage() {
       icon={<MessageSquare />}
       iconClass="bg-primary/10 text-primary"
       toolbar={
-        <ExplorerToolbar
+        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search people or chats..."
-          filters={<ExplorerToolbarDropdown value={filter} onChange={setFilter} options={FILTER_OPTIONS} placeholder="Filter" width="w-28" />}
+          filters={<ToolbarDropdown value={filter} onChange={setFilter} options={FILTER_OPTIONS} placeholder="Filter" width="w-28" />}
           actions={<>
-            <ExplorerToolbarButton icon={Users} label="New Group" onClick={hNewGroup} />
-            <ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />
+            <ToolbarButton icon={Users} label="New Group" onClick={hNewGroup} variant="create" />
+            <ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} variant="neutral" />
           </>}
         />
       }

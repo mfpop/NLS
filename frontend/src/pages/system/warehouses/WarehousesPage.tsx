@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { theme } from "../../../styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { CheckCircle, Warehouse, Factory, Plus, Pencil, Trash2, RefreshCw, X, GripVertical, Check, Box, Layers, Route, Map, Database, Shield, ExternalLink, Building2, LayoutGrid, LineChart, AlertTriangle, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
@@ -408,11 +408,11 @@ export function WarehousesPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
-                      <select value={g("warehouseType")} onChange={(e) => s("warehouseType", e.target.value)} className={sCls}>
+                      <select value={g("warehouseType")} onChange={(e) => s("warehouseType", e.target.value)} className={sCls} aria-label="Warehouse type">
                         <option value="">Select Type</option>
                         {WAREHOUSE_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
-                      <select value={g("plantId")} onChange={(e) => s("plantId", e.target.value)} className={sCls}>
+                      <select value={g("plantId")} onChange={(e) => s("plantId", e.target.value)} className={sCls} aria-label="Plant">
                         <option value="">Select Plant *</option>
                         {plants.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
                       </select>
@@ -772,13 +772,16 @@ export function WarehousesPage() {
           subtitle="Manage warehouse locations across plants"
         />
 
-        <Toolbar
-          left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search warehouses..." />}
-          center={<>
-            <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
-            <ToolbarDropdown value={filters.warehouseType} onChange={(v) => setFilters((p) => ({ ...p, warehouseType: v }))} options={[{ value: "", label: "All Types" }, ...WAREHOUSE_TYPE_OPTIONS]} className="w-50" />
-            <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
-          </>}            right={<div className="flex items-center gap-2 shrink-0">
+        <PageToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search warehouses..."
+          filters={<>
+            <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-52" />
+            <ToolbarDropdown value={filters.warehouseType} onChange={(v) => setFilters((p) => ({ ...p, warehouseType: v }))} options={[{ value: "", label: "All Types" }, ...WAREHOUSE_TYPE_OPTIONS]} className="w-44" />
+            <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-36" />
+          </>}
+          actions={<div className="flex items-center gap-2 shrink-0">
               {isForm ? (
                 <>
                   <ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" />

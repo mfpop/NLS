@@ -22,6 +22,7 @@ export const ToolbarSearch = forwardRef(function ToolbarSearch({ value, onChange
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
+        aria-label={placeholder || "Search"}
         className="h-full w-full bg-transparent pl-3 pr-11 text-sm text-slate-800 placeholder:text-slate-500 outline-none disabled:pointer-events-none"
       />
       {value && !disabled && (
@@ -51,10 +52,12 @@ interface FilterSelectProps {
 }
 
 export function ToolbarSelect({ value, onChange, options, className = "" }: FilterSelectProps) {
+  const selectedLabel = options.find((o) => o.value === value)?.label;
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      aria-label={selectedLabel || options[0]?.label || "Filter"}
       className={`h-8 shrink-0 cursor-pointer border-0 bg-transparent rounded-sm px-2 text-sm text-slate-800 outline-none transition-colors disabled:pointer-events-none disabled:opacity-50 ${className}`}
     >
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -109,7 +112,7 @@ export function ToolbarDropdown({ value, onChange, options, placeholder = "All",
                 key={o.value}
                 type="button"
                 onClick={() => { onChange(o.value); setOpen(false); }}
-                className={`flex h-8 w-full items-center gap-2 px-3 text-sm text-left hover:bg-muted ${o.value === value ? "font-medium text-slate-950" : "text-slate-800"}`}
+                className={`flex h-8 w-full items-center gap-2 px-3 text-sm text-left hover:bg-slate-100 ${o.value === value ? "font-medium text-slate-950" : "text-slate-800"}`}
               >
                 {o.value === value ? <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" /> : <span className="w-3.5 shrink-0" />}
                 <span className="truncate">{o.label}</span>
@@ -135,7 +138,7 @@ interface ActionButtonProps {
 
 export function ToolbarButton({ icon: Icon, label, onClick, disabled = false, title, variant = "default", active = false, className = "" }: ActionButtonProps) {
   const base = "inline-flex h-8 items-center gap-1.5 px-3 text-sm font-medium rounded-[2px] whitespace-nowrap transition-colors disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent";
-  const activeToken = active ? "bg-muted" : "";
+  const activeToken = active ? "bg-slate-100" : "";
   if (variant === "success") {
     return (
       <button
@@ -203,7 +206,7 @@ interface ToolbarProps {
 
 export function Toolbar({ left, center, right, className = "", leftWidth = "w-[20%]" }: ToolbarProps) {
   return (
-    <div className={`flex h-10 shrink-0 items-center border-b border-border-major bg-muted select-none ${className}`}>
+    <div className={`flex h-10 shrink-0 items-center border-b border-border-major bg-slate-50 select-none ${className}`}>
       <div className={`${leftWidth} min-w-[240px] max-w-[360px] border-r border-border-major dark:border-slate-700 px-2 flex items-center h-full`}>
         {left && <div className="w-full">{left}</div>}
       </div>

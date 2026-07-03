@@ -34,7 +34,7 @@ const EVENT_COLORS: Record<string, string> = {
 export function LinePerformanceTimeline({ events }: Props) {
   if (events.length === 0) {
     return (
-      <div className="rounded-md border border-border/50 bg-card p-4">
+      <div className="p-4">
         <div className="flex items-center gap-2 mb-3">
           <Clock className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Timeline</h3>
@@ -45,7 +45,7 @@ export function LinePerformanceTimeline({ events }: Props) {
   }
 
   return (
-    <div className="rounded-md border border-border/50 bg-card">
+    <div>
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/20">
         <Clock className="h-4 w-4 text-muted-foreground" />
         <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Timeline</h3>

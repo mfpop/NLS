@@ -641,19 +641,35 @@ class UserAccessService:
 class ProfileSkillService:
 
     @staticmethod
+    def _resolve_or_create_profile(user):
+        """Get or create an administration UserProfile for the given user."""
+        if not user or not user.is_authenticated:
+            return None
+        try:
+            return user.administration_profile
+        except UserProfile.DoesNotExist:
+            profile = UserProfile.objects.create(
+                user=user,
+                job_title="",
+                phone="",
+            )
+            _assign_default_viewer_role(profile)
+            return profile
+
+    @staticmethod
     def _check_owner_or_admin(user_profile_id, user=None):
-        """Check that the given user owns the profile or has admin permission."""
+        """Check that the given user owns the profile or has admin permission.
+        Auto-creates an admin profile if the user doesn't have one.
+        """
         if user and user.is_authenticated:
-            try:
-                caller_profile = UserProfile.objects.get(user=user)
+            caller_profile = ProfileSkillService._resolve_or_create_profile(user)
+            if caller_profile:
                 if str(caller_profile.id) == str(user_profile_id):
                     return
                 if UserAccessService.user_has_permission(
                     caller_profile.id, "admin_profile_skill",
                 ):
                     return
-            except UserProfile.DoesNotExist:
-                pass
             raise ProfileSkillServiceError(
                 "_auth", "ACCESS_DENIED",
                 "You do not have permission to manage skills for this profile.",
@@ -663,6 +679,15 @@ class ProfileSkillService:
     @transaction.atomic
     def create(user_profile_id, name, category="SKILL", level="", issuer="",
                issued_date=None, expires_date=None, notes="", user=None):
+        # Auto-resolve profile ID if "auto"
+        if user_profile_id == "auto" and user and user.is_authenticated:
+            profile = ProfileSkillService._resolve_or_create_profile(user)
+            if profile:
+                user_profile_id = str(profile.id)
+            else:
+                raise ProfileSkillServiceError(
+                    "userProfileId", "NOT_FOUND", "Could not determine user profile.",
+                )
         ProfileSkillService._check_owner_or_admin(user_profile_id, user=user)
         try:
             profile = UserProfile.objects.get(id=user_profile_id)
@@ -691,6 +716,8 @@ class ProfileSkillService:
             issuer=issuer.strip(),
             issued_date=issued_date,
             expires_date=expires_date,
+            evaluation_score=evaluation_score,
+            is_certification=is_certification,
             notes=notes.strip(),
         )
 
@@ -722,7 +749,7 @@ class ProfileSkillService:
             raise ProfileSkillServiceError(
                 "expiresDate", "INVALID", "Expiration date cannot be before issue date.",
             )
-        for field in ("name", "category", "level", "issuer", "issued_date", "expires_date", "notes", "is_active"):
+        for field in ("name", "category", "level", "issuer", "issued_date", "expires_date", "evaluation_score", "is_certification", "notes", "is_active"):
             if field in kwargs:
                 setattr(skill, field, kwargs[field])
         skill.save()

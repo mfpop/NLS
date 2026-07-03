@@ -9,66 +9,72 @@ interface Props {
   issueCount: number;
   actionCount: number;
   outputCount: number | null;
+  lastUpdatedAt: string | null;
 }
 
-function mapLineStatus(status: string): "running" | "stopped" | "blocked" | "starved" | "maintenance" | "changeover" | "unknown" {
-  if (status === "running") return "running";
-  if (status === "stopped") return "stopped";
-  if (status === "blocked") return "blocked";
-  if (status === "starved") return "starved";
-  if (status === "maintenance") return "maintenance";
-  if (status === "changeover") return "changeover";
-  return "unknown";
-}
-
-export function LiveStatusStrip({ liveStatus, activeDowntime, bottleneckSignal, issueCount, actionCount, outputCount }: Props) {
+export function LiveStatusStrip({ liveStatus, activeDowntime, bottleneckSignal, issueCount, actionCount, outputCount, lastUpdatedAt }: Props) {
   if (!liveStatus) {
     return (
-      <div className="flex gap-3 px-4 pt-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="flex-1 h-20 rounded-md bg-muted animate-pulse" />
+      <div className="grid grid-cols-7 divide-x divide-slate-200 border-b border-slate-200 bg-slate-50 h-16">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div key={i} className="flex items-center px-3 animate-pulse">
+            <div className="h-8 w-full rounded bg-slate-200" />
+          </div>
         ))}
       </div>
     );
   }
 
+  const lineCritical = activeDowntime ? "critical" :
+    liveStatus.lineStatus === "running" ? "good" :
+    liveStatus.lineStatus === "stopped" || liveStatus.lineStatus === "blocked" ? "critical" :
+    liveStatus.lineStatus === "starved" || liveStatus.lineStatus === "maintenance" ? "warning" : "neutral";
+
   return (
-    <div className="flex gap-3 px-4 pt-3">
+    <div className="grid grid-cols-7 divide-x divide-slate-300 border-b border-slate-300 bg-slate-50">
       <LiveStatusCard
         title="Line Status"
         value={liveStatus.displayStatus || liveStatus.lineStatus}
-        status={mapLineStatus(liveStatus.lineStatus)}
+        critical={lineCritical}
         icon={<Activity className="h-4 w-4" />}
       />
       <LiveStatusCard
         title={activeDowntime ? "Active Downtime" : "Run State"}
         value={activeDowntime ? activeDowntime.reason : liveStatus.runState || "No active event"}
-        status={activeDowntime ? "critical" : mapLineStatus(liveStatus.lineStatus)}
+        critical={activeDowntime ? "critical" : lineCritical}
         icon={<Clock className="h-4 w-4" />}
       />
       <LiveStatusCard
         title="Current Output"
         value={outputCount !== null ? String(outputCount) : "—"}
-        status={mapLineStatus(liveStatus.lineStatus)}
+        critical={outputCount !== null && outputCount > 0 ? "good" : "neutral"}
         icon={<Package className="h-4 w-4" />}
       />
       <LiveStatusCard
         title="Issues"
         value={String(issueCount)}
-        status={issueCount > 0 ? "warning" : "good"}
+        critical={issueCount > 0 ? "warning" : "good"}
         icon={<AlertTriangle className="h-4 w-4" />}
       />
       <LiveStatusCard
         title="Actions"
         value={String(actionCount)}
-        status={actionCount > 0 ? "active" : "good"}
+        critical={actionCount > 0 ? "warning" : "good"}
         icon={<ListChecks className="h-4 w-4" />}
       />
       <LiveStatusCard
         title={bottleneckSignal?.isConstrained ? "Bottleneck" : "Constraint"}
-        value={bottleneckSignal?.resourceName || "No constraint"}
-        status={bottleneckSignal?.isConstrained ? "warning" : "good"}
+        value={bottleneckSignal?.resourceName ? "Active" : "No constraint"}
+        critical={bottleneckSignal?.isConstrained ? "warning" : "good"}
         icon={<GitBranch className="h-4 w-4" />}
+      />
+      <LiveStatusCard
+        title="Last Updated"
+        value={lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+        critical="neutral"
+        icon={<Clock className="h-4 w-4" />}
+        className="text-right justify-self-end"
+        valueClassName="text-right"
       />
     </div>
   );

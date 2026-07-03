@@ -5,7 +5,7 @@ import {
   ShieldAlert, Ban, ClipboardX,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -281,11 +281,11 @@ export function ProblemsPage() {
           <SectionCard title="Classification">
             <div className="space-y-1.5">
               <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Problem Type</p>
-                <select value={g("problemType")} onChange={(e) => sf("problemType", e.target.value)} className={sCls}>
+                <select value={g("problemType")} onChange={(e) => sf("problemType", e.target.value)} aria-label="Problem type" className={sCls}>
                   {PROBLEM_TYPE_OPTIONS.filter((o) => o.value).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select></div>
               <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Severity</p>
-                <select value={g("severity")} onChange={(e) => sf("severity", e.target.value)} className={sCls}>
+                <select value={g("severity")} onChange={(e) => sf("severity", e.target.value)} aria-label="Severity" className={sCls}>
                   {SEVERITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select></div>
             </div>
@@ -293,26 +293,26 @@ export function ProblemsPage() {
           <SectionCard title="Target">
             <div className="space-y-1.5">
               <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Type</p>
-                <select value={g("targetType")} onChange={(e) => { sf("targetType", e.target.value); sf("targetId", ""); }} className={sCls}>
+                <select value={g("targetType")} onChange={(e) => { sf("targetType", e.target.value); sf("targetId", ""); }} aria-label="Target type" className={sCls}>
                   {TARGET_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select></div>
               <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Target ID</p>
-                <input type="number" value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} placeholder="Enter ID..." className={iCls} />
+                <input type="number" value={g("targetId")} onChange={(e) => sf("targetId", e.target.value)} placeholder="Enter ID..." aria-label="Target ID" className={iCls} />
                 {errors.targetId && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.targetId}</p>}
               </div>
             </div>
           </SectionCard>
           <SectionCard title="Details">
             <div className="space-y-1.5">
-              <input type="text" value={g("reportedBy")} onChange={(e) => sf("reportedBy", e.target.value)} placeholder="Reported by" className={iCls} />
-              <input type="text" value={g("sourceType")} onChange={(e) => sf("sourceType", e.target.value)} placeholder="Source type" className={iCls} />
-              <input type="number" value={g("sourceId")} onChange={(e) => sf("sourceId", e.target.value)} placeholder="Source ID" className={iCls} />
+              <input type="text" value={g("reportedBy")} onChange={(e) => sf("reportedBy", e.target.value)} placeholder="Reported by" aria-label="Reported by" className={iCls} />
+              <input type="text" value={g("sourceType")} onChange={(e) => sf("sourceType", e.target.value)} placeholder="Source type" aria-label="Source type" className={iCls} />
+              <input type="number" value={g("sourceId")} onChange={(e) => sf("sourceId", e.target.value)} placeholder="Source ID" aria-label="Source ID" className={iCls} />
             </div>
           </SectionCard>
         </div>
         <div className="min-w-0 min-h-0 h-full flex flex-col overflow-hidden mr-6 pb-6">
           <SectionCard title="Title">
-            <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Problem title *" className={`${iCls} w-full min-w-0`} />
+            <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Problem title *" aria-label="Problem title" className={`${iCls} w-full min-w-0`} />
             {errors.title && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.title}</p>}
           </SectionCard>
           <div className="flex-1 min-h-0 overflow-y-auto mt-2 space-y-3">
@@ -446,14 +446,18 @@ export function ProblemsPage() {
             title="Problems" subtitle="Surface abnormalities, blockers, and deviations that require immediate production attention." />
         </div>
         <div>
-          <Toolbar left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search problems..." />}
-            center={<>
+          <PageToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search problems..."
+            filters={<>
               <ToolbarDropdown value={filterProblemType} onChange={setFilterProblemType}
                 options={PROBLEM_TYPE_OPTIONS} className="w-36" />
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={PROBLEM_STATUS_OPTIONS} className="w-32" />
             </>}
-            right={<div className="flex items-center gap-2 shrink-0">
+            actions={
+              <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (
                   <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
                 ) : (
@@ -461,7 +465,8 @@ export function ProblemsPage() {
                     <span className="h-5 w-px shrink-0 bg-border/25" />
                     <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>
                 )}
-              </div>}
+              </div>
+            }
           />
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">

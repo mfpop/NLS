@@ -289,7 +289,10 @@ class AdministrationMutation:
                 issuer=input.issuer or "",
                 issued_date=input.issued_date,
                 expires_date=input.expires_date,
+                evaluation_score=input.evaluation_score,
+                is_certification=input.is_certification or False,
                 notes=input.notes or "",
+                user=_user(info),
             )
             return ProfileSkillPayload(
                 skill=ProfileSkillNode.from_db(skill),
@@ -305,7 +308,7 @@ class AdministrationMutation:
     ) -> ProfileSkillPayload:
         try:
             kwargs = {}
-            for field in ("name", "category", "level", "issuer", "issued_date", "expires_date", "notes", "is_active"):
+            for field in ("name", "category", "level", "issuer", "issued_date", "expires_date", "evaluation_score", "is_certification", "notes", "is_active"):
                 v = getattr(input, field, None)
                 if v is not None:
                     kwargs[field] = v

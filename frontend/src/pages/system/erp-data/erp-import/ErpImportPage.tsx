@@ -244,7 +244,7 @@ export function ErpImportPage() {
             <Database className="h-8 w-8 text-muted-foreground/25 mb-2 stroke-current" />
             <p className="text-sm font-medium text-muted-foreground">No ERP Patterns found</p>
             <p className="text-[11px] text-muted-foreground/70 mt-1">Create an ERP Pattern to start importing.</p>
-            <button onClick={() => navigate("/data-management/erp-pattern")} className="mt-3 inline-flex h-7 items-center gap-1 rounded px-2.5 text-[10px] font-medium text-primary hover:bg-primary/10 border border-primary/30 transition-colors">
+            <button onClick={() => navigate("/system/erp-data/erp-patterns")} className="mt-3 inline-flex h-7 items-center gap-1 rounded px-2.5 text-[10px] font-medium text-primary hover:bg-primary/10 border border-primary/30 transition-colors">
               <Plus className="h-3 w-3 stroke-current" /> Create Pattern
             </button>
           </div>
@@ -306,7 +306,7 @@ export function ErpImportPage() {
                         title={r.validationStatus === "READY" ? "Import data" : "Validate before import"} className={toolBtnCls}>
                         <ArrowUpFromLine className="h-3 w-3 stroke-current" />
                       </button>
-                      <button onClick={() => navigate("/data-management/erp-pattern")} title="Open ERP Pattern" className={toolBtnCls}>
+                      <button onClick={() => navigate("/system/erp-data/erp-patterns")} title="Open ERP Pattern" className={toolBtnCls}>
                         <FileSpreadsheet className="h-3 w-3 stroke-current" />
                       </button>
                     </div>
@@ -336,7 +336,7 @@ export function ErpImportPage() {
                 <div className="flex justify-between"><span>Source File Pattern</span><span className="text-foreground font-medium">{pp.sourceFilePattern || `*.${pp.sourceFileType}`}</span></div>
                 <div className="flex justify-between"><span>Active</span><span className="text-foreground font-medium">{pp.isActive ? "Yes" : "No"}</span></div>
               </div>
-              <button onClick={() => navigate("/data-management/erp-pattern")} className="mt-2 text-[9px] text-primary hover:underline font-medium inline-block">Open in ERP Pattern →</button>
+              <button onClick={() => navigate("/system/erp-data/erp-patterns")} className="mt-2 text-[9px] text-primary hover:underline font-medium inline-block">Open in ERP Pattern →</button>
             </div>
           </div>
         );

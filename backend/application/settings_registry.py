@@ -32,6 +32,12 @@ SETTING_DEFINITIONS: dict[str, SettingDefinition] = {
     "audit.audit_log_enabled": SettingDefinition("audit.audit_log_enabled", "audit", "BOOLEAN", True, "Enable application audit logging."),
     "security.password_reset_token_expiry_minutes": SettingDefinition("security.password_reset_token_expiry_minutes", "security", "INTEGER", 60, "Password reset token expiration in minutes."),
     "audit.diagnostics_level": SettingDefinition("audit.diagnostics_level", "audit", "STRING", "standard", "Application diagnostics verbosity."),
+    "numbering.document_prefix": SettingDefinition("numbering.document_prefix", "numbering", "STRING", "DOC-", "Default document numbering prefix."),
+    "numbering.task_prefix": SettingDefinition("numbering.task_prefix", "numbering", "STRING", "TASK-", "Default task numbering prefix."),
+    "numbering.mer_prefix": SettingDefinition("numbering.mer_prefix", "numbering", "STRING", "MER-", "Default MER numbering prefix."),
+    "numbering.audit_prefix": SettingDefinition("numbering.audit_prefix", "numbering", "STRING", "AUD-", "Default audit numbering prefix."),
+    "numbering.safety_prefix": SettingDefinition("numbering.safety_prefix", "numbering", "STRING", "SAF-", "Default safety event numbering prefix."),
+    "numbering.sequence_reset": SettingDefinition("numbering.sequence_reset", "numbering", "STRING", "never", "Numbering sequence reset rule."),
 }
 
 

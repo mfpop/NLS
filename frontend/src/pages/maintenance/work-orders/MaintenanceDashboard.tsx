@@ -97,8 +97,8 @@ function SecH({ label, count, color = "bg-indigo-500" }: { label: string; count?
   return (
     <div className="flex items-center gap-2 mb-2">
       <span className={cls("w-1 h-3.5 shrink-0 rounded-sm", color)} />
-      <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">{label}</span>
-      {count !== undefined && <span className="text-[10px] font-mono text-muted-foreground ml-auto">{count}</span>}
+      <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{label}</span>
+      {count !== undefined &&      <span className="text-[10px] font-mono text-slate-500 ml-auto">{count}</span>}
     </div>
   );
 }

@@ -36,8 +36,8 @@ class ApplicationSettingsQuery:
         settings = ApplicationSettingsService.list_settings(category=category)
         return [ApplicationSettingNode.from_model(setting) for setting in settings]
 
-    @strawberry.field
-    def system_health(self) -> SystemHealth:
+    @strawberry.field(name="appSystemHealth")
+    def app_system_health(self) -> SystemHealth:
         try:
             connection.ensure_connection()
             database_status = "OK"

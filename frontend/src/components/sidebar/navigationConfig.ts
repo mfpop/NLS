@@ -6,9 +6,9 @@ import {
   FileText, BarChart3, Workflow, ScrollText, Search, ClipboardCheck,
   Lightbulb, FileSpreadsheet,
   Package, Clock, CalendarClock, GanttChartSquare, FileCheck,
-  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, SlidersHorizontal, LibraryBig, Wrench,
+  Users, Scale, AlertTriangle, PieChart, BookText, Upload, Warehouse, Database, Briefcase, Grid3x3, Factory, LibraryBig, Wrench,
   Siren, Radar, TriangleAlert, BriefcaseMedical, HeartPulse, Leaf, CircleCheckBig,
-  MessageSquare, User, Tag, Hash, Ruler, Shield, KeyRound, Bell, Palette, Server, Terminal, History, Mail, Webhook, HardDrive, Flag, Book,
+  MessageSquare, User, Shield, KeyRound, History, Mail, Webhook, HardDrive,
 } from "lucide-react";
 
 export interface NavLeafItem {
@@ -153,25 +153,12 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "Product Master", to: "/system/product-master", icon: Database },
         ],
       },
-      {
-        type: "group", label: "Reference Tables", icon: FileSpreadsheet,
-        items: [
-          { type: "item", label: "Statuses", to: "/system/reference-tables/statuses", icon: CircleCheckBig },
-          { type: "item", label: "Categories", to: "/system/reference-tables/categories", icon: Book },
-          { type: "item", label: "Types", to: "/system/reference-tables/types", icon: Tag },
-          { type: "item", label: "Priorities", to: "/system/reference-tables/priorities", icon: Hash },
-          { type: "item", label: "Units of Measure", to: "/system/reference-tables/uom", icon: Ruler },
-          { type: "item", label: "Reason Codes", to: "/system/reference-tables/reason-codes", icon: FileSpreadsheet },
-        ],
-      },
+      { type: "item", label: "Reference Tables", to: "/system/reference-tables", icon: FileSpreadsheet },
       {
         type: "group", label: "ERP Data", icon: Database,
         items: [
           { type: "item", label: "Import Patterns", to: "/system/erp-data/erp-patterns", icon: Briefcase },
           { type: "item", label: "Source Files", to: "/system/erp-data/import", icon: Upload },
-          { type: "item", label: "Validation Results", to: "/system/erp-data", icon: FileCheck },
-          { type: "item", label: "Import Logs", to: "/system/erp-data", icon: ClipboardList },
-          { type: "item", label: "ERP Reference Data", to: "/system/erp-data", icon: Database },
         ],
       },
       {
@@ -184,43 +171,14 @@ export const sidebarNav: TopLevelEntry[] = [
         ],
       },
       {
-        type: "group", label: "Users & Roles", icon: Users,
+        type: "group", label: "Users & Access", icon: Users,
         items: [
           { type: "item", label: "Users", to: "/system/users-and-roles", icon: Users },
-          { type: "item", label: "Roles", to: "/system/users-and-roles/roles", icon: ShieldCheck },
-          { type: "item", label: "Permissions", to: "/system/users-and-roles/permissions", icon: KeyRound },
+          { type: "item", label: "Roles & Permissions", to: "/system/users-and-roles/roles", icon: ShieldCheck },
           { type: "item", label: "Access Groups", to: "/system/users-and-roles/access-groups", icon: Users },
         ],
       },
-      {
-        type: "group", label: "Application", icon: SlidersHorizontal,
-        items: [
-          { type: "item", label: "App Settings", to: "/system/application-settings", icon: Cog },
-          { type: "item", label: "Notifications", to: "/system/notifications", icon: Bell },
-          { type: "item", label: "Numbering / Codes", to: "/system/numbering-codes", icon: Hash },
-          { type: "item", label: "Feature Flags", to: "/system/feature-flags", icon: Flag },
-          { type: "item", label: "Theme Defaults", to: "/system/theme-defaults", icon: Palette },
-        ],
-      },
-      {
-        type: "group", label: "System Health", icon: Monitor,
-        items: [
-          { type: "item", label: "Health Summary", to: "/system/health", icon: Monitor },
-          { type: "item", label: "Services", to: "/system/health/services", icon: Server },
-          { type: "item", label: "Database", to: "/system/health/database", icon: Database },
-          { type: "item", label: "Deployment Info", to: "/system/health/deployment", icon: Terminal },
-          { type: "item", label: "Recent Errors", to: "/system/health/errors", icon: AlertTriangle },
-        ],
-      },
-      {
-        type: "group", label: "Audit Logs", icon: History,
-        items: [
-          { type: "item", label: "User Activity", to: "/system/audit-logs/user-activity", icon: Activity },
-          { type: "item", label: "Data Changes", to: "/system/audit-logs/data-changes", icon: FileText },
-          { type: "item", label: "Login / Access Events", to: "/system/audit-logs/login-events", icon: KeyRound },
-          { type: "item", label: "System Events", to: "/system/audit-logs/system-events", icon: History },
-        ],
-      },
+      { type: "item", label: "App Settings", to: "/system/application-settings", icon: Cog },
       {
         type: "group", label: "Integrations", icon: Webhook,
         items: [
@@ -231,6 +189,8 @@ export const sidebarNav: TopLevelEntry[] = [
           { type: "item", label: "File Storage", to: "/system/integrations/file-storage", icon: HardDrive },
         ],
       },
+      { type: "item", label: "System Health", to: "/system/health", icon: Monitor },
+      { type: "item", label: "Audit Logs", to: "/system/audit-logs", icon: History },
     ],
   },
   {
@@ -288,7 +248,7 @@ export function isRouteItemActive(path: string, target: string): boolean {
     target === "/system/reference-tables" ||
     target === "/system/erp-data" ||
     target === "/system/audit-templates" ||
-    target === "/system/users-and-roles" ||
+
     target === "/system/health" ||
     target === "/system/audit-logs" ||
     target === "/system/integrations"

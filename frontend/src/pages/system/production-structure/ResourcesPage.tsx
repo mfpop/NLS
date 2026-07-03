@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { Dumbbell, Search } from "lucide-react";
-import { Pagination, EntityListItem, ResourceDetailView, type ResourceForm } from "./components";
+import { Dumbbell, Plus, RefreshCw, Save, X } from "lucide-react";
+import { ResourceDetailView, type ResourceForm } from "./components";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { useSearchParams } from "react-router-dom";
 import { RESOURCES_QUERY } from "@/graphql/manufacturingQueries";
 import { UPDATE_RESOURCE } from "@/graphql/dataManagementMutations";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage } from "./components/EntityWorkspacePage";
+import { PageToolbar, ToolbarSearch, ToolbarButton } from "@/components/layout/PageToolbar";
+import { LEFT_COLUMN_WIDTH_CLASS } from "@/components/layout/layoutWidths";
+import { RecordListPanel } from "@/components/shared/RecordListPanel";
+import { ENTITY_COLORS } from "./config/entityColors";
+
+const col = ENTITY_COLORS.resource;
 
 const PER_PAGE = 10;
 
@@ -51,20 +57,17 @@ function listItems<T>(value: ListResult<T> | null | undefined): T[] {
 export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
   const [searchParams] = useSearchParams();
   const urlResourceId = searchParams.get("resourceId");
-  const { search, statusFilter, setFooterContent, setToolbarVariant } = useToolbar();
+  const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setToolbarVariant } = useToolbar();
   const registerActions = useRegisterActions();
-  const { data, loading, refetch: refetchRes } = useQuery<{ resources: ListResult<Resource> }>(RESOURCES_QUERY);
+  const { data, refetch: refetchRes } = useQuery<{ resources: ListResult<Resource> }>(RESOURCES_QUERY);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<ResourceForm | null>(null);
 
   const [updateResource] = useMutation(UPDATE_RESOURCE);
 
   const resources = listItems(data?.resources);
-
-  useEffect(() => { setPage(1); }, [search, statusFilter]);
 
   useEffect(() => {
     if (!embeddedInFlow || !urlResourceId || resources.length === 0) return;
@@ -75,14 +78,13 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
 
   const filtered = resources.filter((r) => statusFilter === "all" || r.status === statusFilter)
     .filter((r) => !search || (r.name ?? "").toLowerCase().includes(search.toLowerCase()));
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? resources.find((r) => r.id === selectedId) ?? null : null;
 
   useEffect(() => {
-    if (paginated.length === 0) return;
-    if (selectedId && paginated.some((r) => r.id === selectedId)) return;
-    setSelectedId(paginated[0].id);
-  }, [paginated, selectedId]);
+    if (filtered.length === 0) return;
+    if (selectedId && filtered.some((r) => r.id === selectedId)) return;
+    setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
 
   const hEdit = useCallback(() => { if (sel) { setFormData(null); setIsEditing(true); } }, [sel]);
   const hCancel = useCallback(() => { setIsEditing(false); setFormData(null); }, []);
@@ -127,42 +129,79 @@ export function ResourcesPage({ embeddedInFlow = false }: { embeddedInFlow?: boo
   return (
     <EntityWorkspacePage
         hideList={embeddedInFlow}
-        toolbar={null}
-        list={
-          <>
-            <div className="flex shrink-0 items-center border-b border-border bg-muted p-3">
-              <Search className="h-3 w-3 text-muted-foreground stroke-current mr-2 shrink-0" />
-              <span className="text-[11px] font-medium text-muted-foreground">Resources</span>
-              <span className="ml-auto font-mono text-[9px] text-muted-foreground">{filtered.length}</span>
-            </div>
-            <div className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
-              {loading && resources.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-info animate-bounce mr-2" />Loading...</div>
-              ) : paginated.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <Dumbbell className="h-4 w-4 text-muted-foreground mb-1.5 stroke-current" />
-                  <p className="text-xs text-muted-foreground">No resources</p>
-                </div>
+        toolbar={
+          <PageToolbar
+            leftWidthClass={LEFT_COLUMN_WIDTH_CLASS}
+            leftSlot={
+              <ToolbarSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search resources..."
+              />
+            }
+            filters={
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            }
+            actions={
+              isEditing ? (
+                <>
+                  <ToolbarButton variant="edit" icon={<Save className="h-4 w-4" />} onClick={hSave}>
+                    Save
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<X className="h-4 w-4" />} onClick={hCancel}>
+                    Cancel
+                  </ToolbarButton>
+                </>
               ) : (
-                <div>
-                  {paginated.map((res) => (
-                    <EntityListItem key={res.id}
-                      name={res.name || ""} code={res.code}
-                      meta={res.resourceGroupName || "Resource group required"}
-                      icon={<Dumbbell className="h-3.5 w-3.5 stroke-current" />}
-                      selected={selectedId === res.id}
-                      status={res.status}
-                      onClick={() => selectResource(res.id)}
-                      entityType="resource"
-                    />
-                  ))}
+                <>
+                  <ToolbarButton variant="edit" icon={<Plus className="h-4 w-4" />} onClick={hEdit} disabled={!sel}>
+                    Edit
+                  </ToolbarButton>
+                  <ToolbarButton variant="neutral" icon={<RefreshCw className="h-4 w-4" />} onClick={() => refetchRes()}>
+                    Refresh
+                  </ToolbarButton>
+                </>
+              )
+            }
+          />
+        }
+        list={
+          <RecordListPanel
+            title="Resources"
+            records={filtered}
+            selectedId={selectedId}
+            onSelect={selectResource}
+            getId={(r) => r.id}
+            pageSize={PER_PAGE}
+            emptyMessage="No resources"
+            selectedBorderClass={col.selectedBorder}
+            selectedBgClass={col.selectedBg}
+            renderRecord={(r) => {
+              const isActive = (r.status || "").toLowerCase() === "active";
+              return (
+                <div className="flex items-center gap-2.5">
+                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${col.iconBg}`}>
+                    <Dumbbell className={`h-3.5 w-3.5 ${col.iconFg} stroke-current`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                      <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{r.name || ""}</span>
+                      <span className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={r.status || "unknown"} />
+                    </div>
+                    <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{r.resourceGroupName || "Resource group required"}</div>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="shrink-0 flex h-7 items-center border-t border-border bg-muted px-3">
-              <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
-            </div>
-          </>
+              );
+            }}
+          />
         }
         detail={<ResourceDetailView resource={sel} editing={isEditing} onSave={setFormData} />}
         footer={null}

@@ -14,7 +14,8 @@ import {
   Package,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarCrudActions } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
+import { Plus, Pencil, Archive, RefreshCw, Check, X } from "lucide-react";
 import { EntityWorkspacePage } from "@/pages/system/production-structure/components/EntityWorkspacePage";
 import { theme } from "@/styles/themeTokens";
 import {
@@ -597,46 +598,48 @@ function ProductMasterContentHeader({
   canSave: boolean;
 }) {
   const isForm = mode === "create" || mode === "edit";
+  const canEdit = hasSelected && canMutate;
+  const canDelete = hasSelected && canMutate;
 
   return (
-    <Toolbar
-      left={
+    <PageToolbar
+      searchValue={searchText}
+      onSearchChange={onSearchTextChange}
+      searchPlaceholder="Search product master data"
+      filters={
+        <ToolbarDropdown
+          value={statusFilter}
+          onChange={(v) => onStatusFilterChange(v as "all" | "active" | "archived")}
+          options={[
+            { value: "all", label: "All records" },
+            { value: "active", label: "Active" },
+            { value: "archived", label: "Archived" },
+          ]}
+        />
+      }
+      actions={
+        isForm ? (
+          <>
+            <ToolbarButton icon={Check} label={refreshing ? "Saving..." : "Save"} onClick={onSave} disabled={!canSave} variant="success" />
+            <ToolbarButton icon={X} label="Cancel" onClick={onCancel} />
+          </>
+        ) : (
+          <>
+            <ToolbarButton icon={Plus} label="New" onClick={onNew} disabled={!canMutate} />
+            <ToolbarButton icon={Pencil} label="Edit" onClick={onEdit} disabled={!canEdit} />
+            <ToolbarButton icon={Archive} label="Archive" onClick={onDelete} disabled={!canDelete} />
+            <ToolbarSeparator />
+            <ToolbarButton icon={RefreshCw} label="Refresh" onClick={onRefresh} disabled={refreshing} />
+          </>
+        )
+      }
+      leftSlot={
         <ToolbarDropdown
           value={activeTab}
           onChange={(v) => onTabChange(v as Tab)}
           options={tabs.map((tab) => ({ value: tab.id, label: tab.label }))}
-          className="w-full flex-1 shrink mx-2 !px-3 rounded"
+          className="w-full"
         />
-      }
-      right={
-        <>
-          <ToolbarSearch value={searchText} onChange={onSearchTextChange} placeholder="Search product master data" />
-          <ToolbarDropdown
-            value={statusFilter}
-            onChange={(v) => onStatusFilterChange(v as "all" | "active" | "archived")}
-            options={[
-              { value: "all", label: "All records" },
-              { value: "active", label: "Active" },
-              { value: "archived", label: "Archived" },
-            ]}
-          />
-          <div className="flex-1" />
-          <ToolbarCrudActions
-            onNew={onNew}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onRefresh={onRefresh}
-            onSave={onSave}
-            onCancel={onCancel}
-            isEditMode={isForm}
-            isSaving={refreshing}
-            saveDisabled={!canSave}
-            canNew={canMutate}
-            canEdit={canMutate && hasSelected}
-            canDelete={canMutate && hasSelected}
-            canRefresh={!refreshing}
-          />
-        </>
       }
     />
   );

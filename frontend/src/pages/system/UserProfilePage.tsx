@@ -16,7 +16,7 @@ import {
   RefreshCw,
   Pencil,
 } from "lucide-react";
-import { Toolbar, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarButton } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
 import { useProfile } from "@/hooks/useProfile";
 import type { WorkHistoryEntry, EducationEntry } from "@/types/profile";
@@ -540,9 +540,9 @@ export function UserProfilePage() {
       </header>
 
       {/* ── TOOLBAR ────────────────────────────────────────────────── */}
-      <Toolbar
-        leftWidth="w-[20%]"
-        left={
+      <PageToolbar
+        leftWidthClass="w-[20%]"
+        leftSlot={
           !editingSection ? undefined : (
             <div className="flex items-center gap-2 px-1">
               <span className={`inline-flex items-center gap-1.5 rounded bg-warning/15 px-2 py-0.5 text-[10px] font-semibold text-warning`}>Editing</span>
@@ -552,21 +552,21 @@ export function UserProfilePage() {
             </div>
           )
         }
-        right={
+        actions={
           editingSection ? (
             <div className="flex items-center gap-1.5">
               {hasErrorCount > 0 && (
                 <span className={`text-xs ${theme.textCritical} font-medium`}>{hasErrorCount} error{hasErrorCount > 1 ? "s" : ""}</span>
               )}
-              <ToolbarButton icon={Save} label={saving ? "Saving..." : "Save"} onClick={handleSave} disabled={saving} variant="success" />
-              <ToolbarButton icon={X} label="Cancel" onClick={cancelEditing} />
+              <ToolbarButton icon={Save} label={saving ? "Saving..." : "Save"} onClick={handleSave} disabled={saving} variant="edit" />
+              <ToolbarButton icon={X} label="Cancel" onClick={cancelEditing} variant="danger" />
               <span className={`text-[10px] ${theme.textMuted} hidden sm:inline`}>Ctrl+S</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <ToolbarButton icon={Pencil} label="Personal Info" onClick={() => startEditing("profile")} />
-              <ToolbarButton icon={Pencil} label="Work History" onClick={() => startEditing("work")} />
-              <ToolbarButton icon={Pencil} label="Education" onClick={() => startEditing("edu")} />
+              <ToolbarButton icon={Pencil} label="Personal Info" onClick={() => startEditing("profile")} variant="edit" />
+              <ToolbarButton icon={Pencil} label="Work History" onClick={() => startEditing("work")} variant="edit" />
+              <ToolbarButton icon={Pencil} label="Education" onClick={() => startEditing("edu")} variant="edit" />
               <ToolbarButton icon={X} label="Close" onClick={() => handleNavigate("/control-tower")} />
             </div>
           )
@@ -596,6 +596,7 @@ export function UserProfilePage() {
               aboutCharCount={aboutCharCount}
               aboutCharColor={aboutCharColor}
               deptError={deptTouched && !draft.department.trim() ? "Department is required." : undefined}
+              adminProfileId={adminProfileId}
             />
 
             {/* ═══ Column 2 — Work History ═══════════════════════════ */}

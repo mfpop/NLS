@@ -147,10 +147,10 @@ export function useProductionActionSection(
   const renderCreateForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
-        <div><label className={labelCls}>Source</label><select value={aSourceType} onChange={(e) => setASourceType(e.target.value)} className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
-        {aSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={aSourceId ?? ""} onChange={(e) => setASourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} placeholder="ID..." /></div>}
-        <div><label className={labelCls}>Priority *</label><select value={aPriority} onChange={(e) => setAPriority(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
-        <div><label className={labelCls}>Owner</label><input type="text" value={aOwner} onChange={(e) => setAOwner(e.target.value)} className={SEL_INPUT} placeholder="Owner..." /></div>
+        <div><label className={labelCls}>Source</label><select value={aSourceType} onChange={(e) => setASourceType(e.target.value)} aria-label="Source" className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+        {aSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={aSourceId ?? ""} onChange={(e) => setASourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} placeholder="ID..." aria-label="Source ID" /></div>}
+        <div><label className={labelCls}>Priority *</label><select value={aPriority} onChange={(e) => setAPriority(e.target.value)} aria-label="Priority" className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
+        <div><label className={labelCls}>Owner</label><input type="text" value={aOwner} onChange={(e) => setAOwner(e.target.value)} className={SEL_INPUT} placeholder="Owner..." aria-label="Action owner" /></div>
         <div><label className={labelCls}>Due Date</label><input type="date" value={aDueDate} onChange={(e) => setADueDate(e.target.value)} className={SEL_INPUT} /></div>
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">
@@ -164,11 +164,11 @@ export function useProductionActionSection(
   const renderEditForm = (item: any) => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
-        <div><label className={labelCls}>Source</label><select value={eSourceType} onChange={(e) => setESourceType(e.target.value)} className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
-        {eSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={eSourceId ?? ""} onChange={(e) => setESourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} /></div>}
-        <div><label className={labelCls}>Priority *</label><select value={ePriority} onChange={(e) => setEPriority(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
-        <div><label className={labelCls}>Status</label><select value={item.status} className={SEL_INPUT + " opacity-60 cursor-not-allowed"} disabled><option value="OPEN">Open</option><option value="IN_PROGRESS">In Progress</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select></div>
-        <div><label className={labelCls}>Owner</label><input type="text" value={eOwner} onChange={(e) => setEOwner(e.target.value)} className={SEL_INPUT} /></div>
+        <div><label className={labelCls}>Source</label><select value={eSourceType} onChange={(e) => setESourceType(e.target.value)} aria-label="Source" className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+        {eSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={eSourceId ?? ""} onChange={(e) => setESourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} aria-label="Source ID" /></div>}
+        <div><label className={labelCls}>Priority *</label><select value={ePriority} onChange={(e) => setEPriority(e.target.value)} aria-label="Priority" className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
+        <div><label className={labelCls}>Status</label><select value={item.status} aria-label="Status" className={SEL_INPUT + " opacity-60 cursor-not-allowed"} disabled><option value="OPEN">Open</option><option value="IN_PROGRESS">In Progress</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option></select></div>
+        <div><label className={labelCls}>Owner</label><input type="text" value={eOwner} onChange={(e) => setEOwner(e.target.value)} className={SEL_INPUT} aria-label="Owner" /></div>
         <div><label className={labelCls}>Due Date</label><input type="date" value={eDueDate} onChange={(e) => setEDueDate(e.target.value)} className={SEL_INPUT} /></div>
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">

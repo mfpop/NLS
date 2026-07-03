@@ -46,6 +46,7 @@ from api.types.manufacturing import (
 from manufacturing.models import (
     Plant, Department, ProductionLine, ResourceGroup, Resource, Company,
     Schedule, Shift, ScheduleAssignment,
+    ProductFamily, ProductModel, ProductVariant, BOM, Routing,
 )
 from api.services.tree_builder import build_plant_tree, build_org_tree, build_flow_tree
 from manufacturing.domain.structure_service import get_structure_counts, get_system_health
@@ -467,6 +468,82 @@ class ManufacturingQuery:
             groups=ResourceGroup.objects.count(),
             resources=Resource.objects.count(),
         )
+
+    # ── Product Master ──
+    @strawberry.field
+    def product_families(
+        self,
+        status: typing.Optional[str] = None,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+    ) -> PaginatedProductFamilyResponse:
+        qs = ProductFamily.objects.all()
+        if status and status != "all":
+            qs = qs.filter(status=status)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [ProductFamilyNode.from_db(f) for f in qs[offset:offset + limit]]
+        return PaginatedProductFamilyResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def product_models(
+        self,
+        family_id: typing.Optional[str] = None,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+    ) -> PaginatedProductModelResponse:
+        qs = ProductModel.objects.select_related("family").all()
+        if family_id:
+            qs = qs.filter(family_id=family_id)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [ProductModelNode.from_db(m) for m in qs[offset:offset + limit]]
+        return PaginatedProductModelResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def product_variants(
+        self,
+        model_id: typing.Optional[str] = None,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+    ) -> PaginatedProductVariantResponse:
+        qs = ProductVariant.objects.select_related("model", "model__family").all()
+        if model_id:
+            qs = qs.filter(model_id=model_id)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [ProductVariantNode.from_db(v) for v in qs[offset:offset + limit]]
+        return PaginatedProductVariantResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def boms(
+        self,
+        part_number_id: typing.Optional[str] = None,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+    ) -> PaginatedBOMResponse:
+        qs = BOM.objects.select_related("part_number").all()
+        if part_number_id:
+            qs = qs.filter(part_number_id=part_number_id)
+        total = qs.count()
+        limit, offset = _validate_pagination(limit, offset)
+        items = [BOMNode.from_db(b) for b in qs[offset:offset + limit]]
+        return PaginatedBOMResponse(items=items, total=total, has_more=(offset + limit) < total)
+
+    @strawberry.field
+    def routings(
+        self,
+        part_number_id: typing.Optional[str] = None,
+        limit: typing.Optional[int] = None,
+        offset: typing.Optional[int] = None,
+    ) -> typing.List[RoutingNode]:
+        qs = Routing.objects.select_related(
+            "production_line", "product_family", "product_model", "part_number",
+        ).all()
+        if part_number_id:
+            qs = qs.filter(part_number_id=part_number_id)
+        limit, offset = _validate_pagination(limit, offset)
+        return [RoutingNode.from_db(r) for r in qs[offset:offset + limit]]
 
     # ── Audit Templates ──
     @strawberry.field

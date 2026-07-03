@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { PageHeader, type SystemMessage } from "@/pages/shared/PageHeader";
+import { ResizableSplitPane } from "@/components/layout/ResizableSplitPane";
 
 interface AppPageLayoutProps {
   icon: ReactNode;
@@ -17,9 +18,8 @@ interface AppPageLayoutProps {
 }
 
 const DEFAULT_ICON_CLASS = "bg-muted text-muted-foreground";
-const DEFAULT_LEFT_WIDTH = "w-72";
 
-export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, headerChildren, toolbar, leftColumn, leftColumnWidth = DEFAULT_LEFT_WIDTH, footer, children }: AppPageLayoutProps) {
+export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, headerChildren, toolbar, leftColumn, footer, children }: AppPageLayoutProps) {
   const hasLeftColumn = !!leftColumn;
 
   return (
@@ -34,14 +34,10 @@ export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, sub
       )}
       <div className="flex-1 min-h-0 overflow-hidden">
         {hasLeftColumn ? (
-          <div className="flex h-full min-h-0">
-            <div className={`shrink-0 border-r border-border-major bg-muted overflow-hidden px-2 ${leftColumnWidth}`}>
-              {leftColumn}
-            </div>
-            <div className="flex-1 min-w-0 overflow-hidden">
-              {children}
-            </div>
-          </div>
+          <ResizableSplitPane
+            left={<div className="h-full overflow-y-auto px-2 scroll-thin">{leftColumn}</div>}
+            right={<>{children}</>}
+          />
         ) : (
           children
         )}

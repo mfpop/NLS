@@ -4,7 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useDocumentTitle } from "@/hooks";
 import { useDocumentation } from "@/hooks/useDocumentation";
 import { APP_NAME } from "@/config";
-import { ToolbarSearch, ToolbarDropdown } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { MarkdownReader } from "./MarkdownReader";
 import type { DocumentationFile } from "./documentationTypes";
 import { useReadingPreferences, READING_THEME_STYLES } from "@/stores/readingPreferences";
@@ -127,8 +127,8 @@ export function DocumentationCenter() {
   const progressPercent = Math.round(readProgress * 100);
 
   // Progress bar colors per theme
-  const progressBg = readingTheme === "dark" ? "bg-[#2a2c38]" : readingTheme === "sepia" ? "bg-[#e8d5a8]" : "bg-gray-200";
-  const progressFill = readingTheme === "sepia" ? "bg-[#8b6914]" : readingTheme === "dark" ? "bg-[#5ea6f0]" : "bg-primary";
+  const progressBg = readingTheme === "dark" ? "bg-muted" : readingTheme === "sepia" ? "bg-warning/20" : "bg-muted-foreground/20";
+  const progressFill = readingTheme === "sepia" ? "bg-warning" : readingTheme === "dark" ? "bg-primary" : "bg-primary";
 
   // Find currently selected file metadata
   const selectedFileMeta = useMemo(() => {

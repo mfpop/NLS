@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { AlertTriangle, Plus, CheckCircle, XCircle, Wrench, Pencil } from "lucide-react";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarButton, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ControlPageShell, type RecordType } from "@/pages/check/ControlPageShell";
 import type { SystemMessage } from "@/pages/shared/PageHeader";
@@ -148,7 +148,7 @@ export function BreakdownsPage() {
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Verification / Test Result *</label>
             <input type="text" placeholder="e.g. Part runs at 95% efficiency — within spec"
               value={section.resolveForm.verificationResult}
-              onChange={(e) => section.setResolveForm({ ...section.resolveForm, verificationResult: e.target.value })}
+              onChange={(e) => section.setResolveForm({ ...section.resolveForm, verificationResult: e.target.value })} aria-label="Verification result"
               className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-orange-400 transition-colors" />
           </div>
           {section.selBreakdown?.downtimeStart && (
@@ -156,7 +156,7 @@ export function BreakdownsPage() {
               <label className="block text-xs font-semibold text-muted-foreground mb-1">Downtime End *</label>
               <input type="datetime-local"
                 value={section.resolveForm.downtimeEnd}
-                onChange={(e) => section.setResolveForm({ ...section.resolveForm, downtimeEnd: e.target.value })}
+                onChange={(e) => section.setResolveForm({ ...section.resolveForm, downtimeEnd: e.target.value })} aria-label="Downtime end"
                 className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-orange-400 transition-colors" />
             </div>
           )}
@@ -240,7 +240,7 @@ export function BreakdownsPage() {
               <label className="block text-xs font-semibold text-muted-foreground mb-1">Assigned To</label>
               <input type="text" placeholder="Technician name"
                 value={section.woAssignedTo}
-                onChange={(e) => section.setWoAssignedTo(e.target.value)}
+                onChange={(e) => section.setWoAssignedTo(e.target.value)} aria-label="Assigned technician"
                 className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-orange-400 transition-colors" />
             </div>
             <div>

@@ -3,7 +3,7 @@ import { Trash2, Briefcase } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
 import type { WorkHistoryEntry } from "@/types/profile";
 import {
-  FieldShell, MissingValue, EmptyBlock,
+  FieldShell, MissingValue, EmptyBlock, ProfileSectionHeader,
   inputClass, extractPeriodYear,
 } from "./shared";
 
@@ -36,13 +36,12 @@ export function WorkHistoryColumn({
 }: WorkHistoryColumnProps) {
   return (
     <div ref={experienceRef} className="flex flex-col min-h-0 overflow-hidden border-r border-border-major">
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <header className={`flex h-12 items-center justify-between border-b border-border-major px-4 shrink-0`}>
-        <div>
-          <h2 className={`text-sm font-semibold ${theme.textPrimary}`}>Work history</h2>
-          <p className={`text-[11px] ${theme.textMuted} leading-5`}>Roles, companies, and measurable impact</p>
-        </div>
-      </header>
+      <ProfileSectionHeader
+        icon={Briefcase}
+        iconColor="text-amber-500"
+        title="Work history"
+        subtitle="Roles, companies, and measurable impact"
+      />
 
       <div className={`divide-y divide-slate-200 overflow-y-auto`}>
         {workDraft.length > 0 ? (
@@ -119,17 +118,29 @@ export function WorkHistoryColumn({
                 </div>
               ) : (
                 <div className="flex items-start gap-3 group/row">
-                  <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded ${theme.entityIconBg}`}>
-                    <Briefcase className={`h-3.5 w-3.5 ${theme.icon}`} />
+                  {/* ── Icon column (40px fixed) ── */}
+                  <div className="flex w-10 shrink-0 items-center justify-center">
+                    <div className={`flex h-7 w-7 items-center justify-center rounded ${theme.entityIconBg}`}>
+                      <Briefcase className={`h-3.5 w-3.5 ${theme.icon}`} />
+                    </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className={`text-sm font-semibold ${theme.textPrimary} leading-5`}>
-                      {job.role || <MissingValue label="Untitled role" />}
+                    {/* Title + date row */}
+                    <div className="flex items-baseline gap-2 leading-5">
+                      <span className={`text-sm font-semibold ${theme.textPrimary} truncate`}>
+                        {job.role || <MissingValue label="Untitled role" />}
+                      </span>
+                      {job.period && (
+                        <span className={`shrink-0 text-xs text-slate-500`}>{job.period}</span>
+                      )}
                     </div>
-                    <div className={`text-xs ${theme.textMuted} leading-5`}>
-                      {job.company}
-                      {job.period ? <span className="ml-1.5">({job.period})</span> : null}
-                    </div>
+                    {/* Company row */}
+                    {job.company && (
+                      <div className={`text-xs ${theme.textMuted} leading-5`}>
+                        {job.company}
+                      </div>
+                    )}
+                    {/* Impact bullets */}
                     {normalized.roles[index]?.bullets?.length ? (
                       <ul className="mt-1.5 space-y-1">
                         {normalized.roles[index].bullets.map((point, i) => (

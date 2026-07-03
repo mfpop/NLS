@@ -5,7 +5,7 @@ import {
   Play, CheckCircle, Ban, AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ACTIONS_QUERY } from "@/graphql/checkQueries";
@@ -239,27 +239,27 @@ export function ActionsPage() {
           <SectionCard title="Classification">
             <div className="space-y-1.5">
               <div><p className={`text-[10px] font-medium ${theme.textMuted} mb-0.5`}>Priority</p>
-                <select value={g("priority")} onChange={(e) => sf("priority", e.target.value)} className={sCls}>
+                <select value={g("priority")} onChange={(e) => sf("priority", e.target.value)} aria-label="Priority" className={sCls}>
                   {PRIORITY_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select></div>
             </div>
           </SectionCard>
           <SectionCard title="Owner & Dates">
             <div className="space-y-1.5">
-              <input type="text" value={g("owner")} onChange={(e) => sf("owner", e.target.value)} placeholder="Owner" className={iCls} />
-              <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} className={iCls} />
+              <input type="text" value={g("owner")} onChange={(e) => sf("owner", e.target.value)} placeholder="Owner" aria-label="Owner" className={iCls} />
+              <input type="date" value={g("dueDate")} onChange={(e) => sf("dueDate", e.target.value)} aria-label="Due date" className={iCls} />
             </div>
           </SectionCard>
           <SectionCard title="Source">
             <div className="space-y-1.5">
-              <input type="text" value={g("sourceType")} onChange={(e) => sf("sourceType", e.target.value)} placeholder="Source type" className={iCls} />
-              <input type="number" value={g("sourceId")} onChange={(e) => sf("sourceId", e.target.value)} placeholder="Source ID" className={iCls} />
+              <input type="text" value={g("sourceType")} onChange={(e) => sf("sourceType", e.target.value)} placeholder="Source type" aria-label="Source type" className={iCls} />
+              <input type="number" value={g("sourceId")} onChange={(e) => sf("sourceId", e.target.value)} placeholder="Source ID" aria-label="Source ID" className={iCls} />
             </div>
           </SectionCard>
         </div>
         <div className="min-w-0 min-h-0 h-full flex flex-col overflow-hidden mr-6 pb-6">
           <SectionCard title="Title">
-            <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Action title *" className={`${iCls} w-full min-w-0`} />
+            <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Action title *" aria-label="Action title" className={`${iCls} w-full min-w-0`} />
             {errors.title && <p className={`text-[10px] ${theme.textCritical} mt-0.5`}>{errors.title}</p>}
           </SectionCard>
           <div className="flex-1 min-h-0 overflow-y-auto mt-2 space-y-3">
@@ -377,15 +377,17 @@ export function ActionsPage() {
             title="Actions" subtitle="Review active actions, assign owners, and follow through on response plans." />
         </div>
         <div>
-          <Toolbar left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search actions..." />}
-            right={<>
+          <PageToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search actions..."
+            filters={<>
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={ACTION_STATUS_OPTIONS} className="w-32" />
-
               <ToolbarDropdown value={filterOwner} onChange={setFilterOwner}
                 options={[{ value: "", label: "All Owners" }, { value: "filter", label: "Show Filtered" }]} className="w-32" />
-
-              <div className="flex-1" />
+            </>}
+            actions={
               <div className="flex items-center gap-2 shrink-0">
                 {isForm ? (
                   <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
@@ -395,7 +397,8 @@ export function ActionsPage() {
                     <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>
                 )}
               </div>
-            </>} />
+            }
+          />
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           <div className="flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>

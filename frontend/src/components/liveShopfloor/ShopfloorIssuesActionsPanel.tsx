@@ -1,4 +1,5 @@
-import { AlertCircle, ArrowRight, Plus } from "lucide-react";
+import { useState } from "react";
+import { ListChecks, AlertCircle, ArrowRight, Plus, User, Calendar } from "lucide-react";
 import type { LiveShopfloorLinkedIssue, LiveShopfloorLinkedAction } from "@/types/liveShopfloor";
 
 interface Props {
@@ -8,100 +9,152 @@ interface Props {
   onNewAction: () => void;
 }
 
+const MAX_ROWS = 5;
+
 function isOverdue(dueDate: string | null): boolean {
   if (!dueDate) return false;
   return new Date(dueDate) < new Date();
 }
 
+function priorityScore(item: { type: "issue"; item: LiveShopfloorLinkedIssue } | { type: "action"; item: LiveShopfloorLinkedAction }): number {
+  if (item.type === "issue") {
+    if (item.item.severity === "critical") return 0;
+    if (item.item.severity === "high") return 1;
+    if (item.item.severity === "medium") return 2;
+    return 3;
+  }
+  if (item.item.priority === "urgent") return 0;
+  if (item.item.priority === "high") return 1;
+  if (item.item.priority === "medium") return 2;
+  return 3;
+}
+
 export function ShopfloorIssuesActionsPanel({ issues, actions, onNewIssue, onNewAction }: Props) {
-  const hasOverdueActions = actions.some((a) => isOverdue(a.dueDate));
+  const [showAll, setShowAll] = useState(false);
+
+  const allItems = [
+    ...issues.map((i) => ({ type: "issue" as const, item: i })),
+    ...actions.map((a) => ({ type: "action" as const, item: a })),
+  ].sort((a, b) => priorityScore(a) - priorityScore(b));
+
+  const visibleItems = showAll ? allItems : allItems.slice(0, MAX_ROWS);
+  const hasMore = allItems.length > MAX_ROWS;
+  const hasOverdue = actions.some((a) => isOverdue(a.dueDate));
 
   return (
-    <div className="rounded-md border border-border/50 bg-card">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/20">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Issues & Actions</h3>
-          {hasOverdueActions && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-medium text-danger">Overdue</span>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden border-b border-slate-200">
+      {/* Header */}
+      <div className="h-8 shrink-0 border-b border-slate-200 px-3 flex items-center justify-between bg-slate-50">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <ListChecks className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+          <h3 className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide truncate">Issues & Actions</h3>
+          {hasOverdue && (
+            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-medium text-red-700 border border-red-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+              Overdue
+            </span>
           )}
+          <span className="text-[10px] text-slate-400 tabular-nums shrink-0">({allItems.length})</span>
         </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onNewIssue}
-            className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-medium text-foreground hover:bg-muted transition-colors"
-            title="New Issue"
-          >
-            <Plus className="h-3.5 w-3.5" />Issue
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button type="button" onClick={onNewIssue}
+            className="inline-flex h-6 items-center gap-0.5 rounded px-1.5 text-[10px] font-medium text-sky-700 hover:bg-sky-50 transition-colors">
+            <Plus className="h-3 w-3" />Issue
           </button>
-          <button
-            type="button"
-            onClick={onNewAction}
-            className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-medium text-foreground hover:bg-muted transition-colors"
-            title="New Action"
-          >
-            <Plus className="h-3.5 w-3.5" />Action
+          <button type="button" onClick={onNewAction}
+            className="inline-flex h-6 items-center gap-0.5 rounded px-1.5 text-[10px] font-medium text-sky-700 hover:bg-sky-50 transition-colors">
+            <Plus className="h-3 w-3" />Action
           </button>
         </div>
       </div>
 
-      <div className="max-h-60 overflow-y-auto">
-        {issues.length === 0 && actions.length === 0 && (
-          <div className="px-4 py-6 text-center text-[10px] text-muted-foreground">No open issues or actions</div>
+      {/* Body */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {allItems.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-xs text-slate-500">No open issues or actions</p>
+          </div>
+        ) : (
+          <>
+            {visibleItems.map((entry) => {
+              if (entry.type === "issue") {
+                const issue = entry.item;
+                const sevColor = issue.severity === "critical" ? "border-red-200 bg-red-50 text-red-700"
+                  : issue.severity === "high" ? "border-amber-200 bg-amber-50 text-amber-700"
+                    : issue.severity === "medium" ? "border-sky-200 bg-sky-50 text-sky-700"
+                      : "border-slate-200 bg-slate-100 text-slate-600";
+                return (
+                  <div key={issue.id} className="group flex items-start gap-2 px-3 py-1.5 border-b border-slate-100 last:border-b-0 hover:bg-white transition-colors">
+                    <AlertCircle className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${
+                      issue.severity === "critical" ? "text-red-500"
+                        : issue.severity === "high" ? "text-amber-500"
+                          : issue.severity === "medium" ? "text-sky-500" : "text-slate-400"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-1">
+                        <span className="text-xs font-medium text-slate-800 truncate leading-tight">{issue.title}</span>
+                        <span className={`shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium border leading-tight ${sevColor}`}>
+                          {issue.severity}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 flex-wrap">
+                        <span>{issue.status === "open" ? "Open" : issue.status === "in_progress" ? "In Progress" : "Overdue"}</span>
+                        {issue.owner && <><span className="text-slate-300">·</span><User className="h-2.5 w-2.5 shrink-0" /><span className="truncate max-w-[90px]">{issue.owner}</span></>}
+                        {issue.dueDate && <><span className="text-slate-300">·</span><Calendar className="h-2.5 w-2.5 shrink-0" /><span className={isOverdue(issue.dueDate) ? "text-red-600 font-medium" : ""}>{issue.dueDate}</span></>}
+                        {issue.linkedResourceName && <><span className="text-slate-300">·</span><span className="truncate max-w-[70px]">{issue.linkedResourceName}</span></>}
+                      </div>
+                      <div className="hidden group-hover:flex items-center gap-1 mt-1">
+                        <button type="button" className="text-[9px] text-sky-700 hover:bg-sky-50 rounded px-1.5 py-0.5 font-medium transition-colors">Assign</button>
+                        <button type="button" className="text-[9px] text-amber-700 hover:bg-amber-50 rounded px-1.5 py-0.5 font-medium transition-colors">Escalate</button>
+                        <button type="button" className="text-[9px] text-slate-600 hover:bg-slate-100 rounded px-1.5 py-0.5 font-medium transition-colors">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+              const action = entry.item;
+              const overdue = isOverdue(action.dueDate);
+              const priColor = overdue || action.priority === "urgent" ? "border-red-200 bg-red-50 text-red-700"
+                : action.priority === "high" ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : action.priority === "medium" ? "border-sky-200 bg-sky-50 text-sky-700"
+                    : "border-slate-200 bg-slate-100 text-slate-600";
+              return (
+                <div key={action.id} className="group flex items-start gap-2 px-3 py-1.5 border-b border-slate-100 last:border-b-0 hover:bg-white transition-colors">
+                  <ArrowRight className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${
+                    overdue ? "text-red-500" : action.priority === "urgent" ? "text-red-500"
+                      : action.priority === "high" ? "text-amber-500"
+                        : action.priority === "medium" ? "text-sky-500" : "text-slate-400"
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-xs font-medium text-slate-800 truncate leading-tight">{action.title}</span>
+                      <span className={`shrink-0 inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium border leading-tight ${priColor}`}>
+                        {overdue ? "OVERDUE" : action.priority}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 flex-wrap">
+                      <span>{action.status === "open" ? "Open" : action.status === "in_progress" ? "In Progress" : "Completed"}</span>
+                      {action.assignedTo && <><span className="text-slate-300">·</span><User className="h-2.5 w-2.5 shrink-0" /><span className="truncate max-w-[90px]">{action.assignedTo}</span></>}
+                      {action.dueDate && <><span className="text-slate-300">·</span><Calendar className="h-2.5 w-2.5 shrink-0" /><span className={overdue ? "text-red-600 font-medium" : ""}>{action.dueDate}</span></>}
+                      {action.linkedResourceName && <><span className="text-slate-300">·</span><span className="truncate max-w-[70px]">{action.linkedResourceName}</span></>}
+                    </div>
+                    <div className="hidden group-hover:flex items-center gap-1 mt-1">
+                      <button type="button" className="text-[9px] text-sky-700 hover:bg-sky-50 rounded px-1.5 py-0.5 font-medium transition-colors">Assign</button>
+                      <button type="button" className="text-[9px] text-amber-700 hover:bg-amber-50 rounded px-1.5 py-0.5 font-medium transition-colors">Escalate</button>
+                      <button type="button" className="text-[9px] text-slate-600 hover:bg-slate-100 rounded px-1.5 py-0.5 font-medium transition-colors">Close</button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {hasMore && !showAll && (
+              <button type="button" onClick={() => setShowAll(true)}
+                className="w-full py-1.5 text-[10px] font-medium text-sky-700 hover:bg-sky-50 transition-colors text-center">
+                View all {allItems.length} items →
+              </button>
+            )}
+          </>
         )}
-
-        {issues.slice(0, 5).map((issue) => (
-          <div key={issue.id} className="flex items-start gap-3 px-4 py-2 border-b border-border/10 hover:bg-muted/30 transition-colors">
-            <AlertCircle className={`h-4 w-4 shrink-0 mt-0.5 ${
-              issue.severity === "critical" ? "text-danger" : issue.severity === "high" ? "text-warning" : "text-muted-foreground"
-            }`} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-foreground truncate">{issue.title}</span>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium border ${
-                  issue.severity === "critical" ? "bg-danger/10 text-danger border-danger/20"
-                    : issue.severity === "high" ? "bg-warning/10 text-warning border-warning/20"
-                      : issue.severity === "medium" ? "bg-accent/10 text-accent border-accent/20"
-                        : "bg-muted text-muted-foreground border-border/50"
-                }`}>{issue.displaySeverity || issue.severity}</span>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                <span>{issue.displayStatus || issue.status}</span>
-                {issue.owner && <><span className="w-1 h-1 rounded-full bg-border" /><span>{issue.owner}</span></>}
-                {issue.linkedResourceName && <><span className="w-1 h-1 rounded-full bg-border" /><span>{issue.linkedResourceName}</span></>}
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {actions.slice(0, 5).map((action) => (
-          <div key={action.id} className="flex items-start gap-3 px-4 py-2 border-b border-border/10 hover:bg-muted/30 transition-colors">
-            <ArrowRight className={`h-4 w-4 shrink-0 mt-0.5 ${
-              isOverdue(action.dueDate) ? "text-danger" : action.priority === "urgent" ? "text-danger"
-                : action.priority === "high" ? "text-warning" : "text-muted-foreground"
-            }`} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-foreground truncate">{action.title}</span>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium border ${
-                  action.priority === "urgent" ? "bg-danger/10 text-danger border-danger/20"
-                    : action.priority === "high" ? "bg-warning/10 text-warning border-warning/20"
-                      : action.priority === "medium" ? "bg-accent/10 text-accent border-accent/20"
-                        : "bg-muted text-muted-foreground border-border/50"
-                }`}>{action.displayPriority || action.priority}</span>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                <span>{action.displayStatus || action.status}</span>
-                {action.assignedTo && <><span className="w-1 h-1 rounded-full bg-border" /><span>{action.assignedTo}</span></>}
-                {action.linkedResourceName && <><span className="w-1 h-1 rounded-full bg-border" /><span>{action.linkedResourceName}</span></>}
-                {action.dueDate && isOverdue(action.dueDate) && (
-                  <span className="text-danger font-medium">Overdue</span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

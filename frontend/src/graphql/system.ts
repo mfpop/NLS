@@ -35,7 +35,7 @@ export const DASHBOARD_QUERY = gql`
 
 export const SYSTEM_HEALTH_QUERY = gql`
   query SystemHealth {
-    systemHealth {
+    appSystemHealth {
       graphqlStatus
       databaseStatus
       serverTime

@@ -60,6 +60,8 @@ export interface ProfileSkill {
   issuer: string;
   issuedDate: string | null;
   expiresDate: string | null;
+  evaluationScore: number | null;
+  isCertification: boolean;
   notes: string;
   isActive: boolean;
   createdAt: string;
@@ -74,6 +76,8 @@ export interface ProfileSkillInput {
   issuer?: string;
   issuedDate?: string | null;
   expiresDate?: string | null;
+  evaluationScore?: number | null;
+  isCertification?: boolean;
   notes?: string;
 }
 

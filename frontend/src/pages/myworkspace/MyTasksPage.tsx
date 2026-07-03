@@ -6,7 +6,7 @@ import {
   ArrowRight, Clock, ArrowUpRight, Activity, AlertOctagon,
 } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
 import {
   MY_TASKS_QUERY,
@@ -143,7 +143,7 @@ function Section({ title, count, icon, children }: { title: string; count?: numb
       <div className="shrink-0 h-8 flex items-center justify-between px-3 border-b border-slate-200 bg-muted">
         <div className="flex items-center gap-2 min-w-0">
           {icon && <span className="text-slate-500 shrink-0">{icon}</span>}
-          <span className="text-xs font-semibold text-slate-800 truncate">{title}</span>
+          <span className="text-sm font-semibold text-slate-800 truncate">{title}</span>
         </div>
         {count !== undefined && <span className="text-[10px] font-mono text-slate-400 shrink-0">{count}</span>}
       </div>
@@ -283,11 +283,11 @@ export function MyTasksPage() {
 
   const toolbarActions = (
     <div className="flex items-center gap-1.5">
-      <ExplorerToolbarButton icon={Play} label="Start" onClick={hStart} disabled={!sel || !canStart} title="Start task" />
-      <ExplorerToolbarButton icon={CheckCircle} label="Complete" onClick={hComplete} disabled={!sel || !canComplete} variant="success" title="Complete task" />
-      <ExplorerToolbarButton icon={XCircle} label="Cancel" onClick={hCancel} disabled={!sel || !canCancel} title="Cancel task" />
-      <ExplorerToolbarSeparator />
-      <ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />
+      <ToolbarButton icon={Play} label="Start" onClick={hStart} disabled={!sel || !canStart} title="Start task" variant="warning" />
+      <ToolbarButton icon={CheckCircle} label="Complete" onClick={hComplete} disabled={!sel || !canComplete} variant="edit" title="Complete task" />
+      <ToolbarButton icon={XCircle} label="Cancel" onClick={hCancel} disabled={!sel || !canCancel} title="Cancel task" variant="danger" />
+      <ToolbarSeparator />
+      <ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} variant="neutral" />
     </div>
   );
 
@@ -296,7 +296,7 @@ export function MyTasksPage() {
   const taskList = (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted border-r border-border-major">
       <div className="shrink-0 h-9 border-b border-slate-200 bg-muted flex items-center justify-between px-3">
-        <span className="text-xs font-semibold text-slate-700">Tasks</span>
+        <span className="text-sm font-semibold text-slate-800">Tasks</span>
         {loading && tasks.length === 0 ? null : (
           <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-slate-200 bg-card text-muted-foreground whitespace-nowrap">
             {tasks.length}
@@ -664,14 +664,14 @@ export function MyTasksPage() {
       icon={<ListChecks />}
       iconClass={theme.iconBoxSky}
       toolbar={
-        <ExplorerToolbar
+        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search tasks..."
           filters={<>
-            <ExplorerToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} placeholder="Status" width="w-36" />
-            <ExplorerToolbarDropdown value={filterPriority} onChange={setFilterPriority} options={PRIORITY_OPTIONS} placeholder="Priority" width="w-36" />
-            <ExplorerToolbarDropdown value={filterOverdue} onChange={setFilterOverdue} options={OVERDUE_OPTIONS} placeholder="Overdue" width="w-28" />
+            <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} placeholder="Status" width="w-36" />
+            <ToolbarDropdown value={filterPriority} onChange={setFilterPriority} options={PRIORITY_OPTIONS} placeholder="Priority" width="w-36" />
+            <ToolbarDropdown value={filterOverdue} onChange={setFilterOverdue} options={OVERDUE_OPTIONS} placeholder="Overdue" width="w-28" />
           </>}
           actions={toolbarActions}
         />

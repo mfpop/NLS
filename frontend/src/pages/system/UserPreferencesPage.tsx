@@ -15,7 +15,7 @@ import {
   RefreshCw,
   CheckCheck,
 } from "lucide-react";
-import { ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarButton } from "@/components/layout/PageToolbar";
 import { useThemeStore } from "@/stores/theme";
 import { usePreferencesStore, type DensityMode, type SidebarMode, type UnitsSystem, type TimeFormatPref } from "@/stores/preferencesStore";
 

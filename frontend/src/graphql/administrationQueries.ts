@@ -57,6 +57,7 @@ export const USER_PROFILES_QUERY = gql`
       jobTitle
       phone
       isActive
+      lastLogin
       createdAt
       updatedAt
     }
@@ -80,6 +81,7 @@ export const USER_PROFILE_QUERY = gql`
       jobTitle
       phone
       isActive
+      lastLogin
       createdAt
       updatedAt
     }

@@ -9,8 +9,7 @@ import {
   Archive, Eye, AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useActiveLine } from "@/hooks/useActiveLine";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
@@ -255,7 +254,7 @@ function TargetSelector({
       </Fld>
       <Fld label="Resource / Asset">
         <input type="number" value={resourceId ?? ""} onChange={(e) => setResourceId(e.target.value ? Number(e.target.value) : null)}
-          disabled={disabled || !rgId} className={baseCls} placeholder="Resource ID..." />
+          disabled={disabled || !rgId} className={baseCls} placeholder="Resource ID..." aria-label="Resource ID" />
       </Fld>
       {effectiveTarget && (
         <p className="text-[9px] font-medium text-indigo-600 dark:text-indigo-400">
@@ -711,10 +710,10 @@ export function WorkOrdersPage() {
                   </select>
                 </Fld>
                 <Fld label="Requested By" required error={formErrors.requestedBy}>
-                  <input type="text" value={form.requestedBy} onChange={(e) => setForm({ ...form, requestedBy: e.target.value })} className={inpCls} placeholder="Requester name" />
+                  <input type="text" value={form.requestedBy} onChange={(e) => setForm({ ...form, requestedBy: e.target.value })} className={inpCls} placeholder="Requester name" aria-label="Requested by" />
                 </Fld>
                 <Fld label="Assigned Technician" required error={formErrors.assignedTo}>
-                  <input type="text" value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} className={inpCls} placeholder="Technician name" />
+                  <input type="text" value={form.assignedTo} onChange={(e) => setForm({ ...form, assignedTo: e.target.value })} className={inpCls} placeholder="Technician name" aria-label="Assigned to" />
                 </Fld>
               </div>
             </div>
@@ -729,13 +728,13 @@ export function WorkOrdersPage() {
                   <p className="text-sm text-foreground">{todayStr}</p>
                 </Fld>
                 <Fld label="Due Date" required error={formErrors.dueDate}>
-                  <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className={inpCls} />
+                  <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className={inpCls} aria-label="Due date" />
                 </Fld>
                 <Fld label="Planned Start">
-                  <input type="date" value={form.plannedStartDate} onChange={(e) => setForm({ ...form, plannedStartDate: e.target.value })} className={inpCls} />
+                  <input type="date" value={form.plannedStartDate} onChange={(e) => setForm({ ...form, plannedStartDate: e.target.value })} className={inpCls} aria-label="Planned start date" />
                 </Fld>
                 <Fld label="Planned End">
-                  <input type="date" value={form.plannedEndDate} onChange={(e) => setForm({ ...form, plannedEndDate: e.target.value })} className={inpCls} />
+                  <input type="date" value={form.plannedEndDate} onChange={(e) => setForm({ ...form, plannedEndDate: e.target.value })} className={inpCls} aria-label="Planned end date" />
                 </Fld>
               </div>
             </div>
@@ -752,7 +751,7 @@ export function WorkOrdersPage() {
               </p>
               <div className="space-y-2">
                 <Fld label="Title" required error={formErrors.title}>
-                  <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inpCls} placeholder="e.g. Lubricate press brake #3" />
+                  <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inpCls} placeholder="e.g. Lubricate press brake #3" aria-label="Work order title" />
                 </Fld>
                 <Fld label="Problem / Request Description" required error={formErrors.description}>
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -785,7 +784,7 @@ export function WorkOrdersPage() {
                 </Fld>
                 <Fld label="Required Tools">
                   <input type="text" value={form.requiredTools} onChange={(e) => setForm({ ...form, requiredTools: e.target.value })}
-                    className={inpCls} placeholder="Tool list, special equipment..." />
+                    className={inpCls} placeholder="Tool list, special equipment..." aria-label="Required tools" />
                 </Fld>
               </div>
             </div>
@@ -830,7 +829,7 @@ export function WorkOrdersPage() {
                   {selId && sparePartId && (
                     <div className="flex items-center gap-2 mt-1 p-2 rounded border border-indigo-200/30 bg-indigo-50/30 dark:bg-indigo-950/20">
                       <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)}
-                        className="h-7 w-16 bg-white/50 dark:bg-slate-800/50 border border-white/30 px-2 text-xs outline-none" min="1" />
+                        className="h-7 w-16 bg-white/50 dark:bg-slate-800/50 border border-white/30 px-2 text-xs outline-none" min="1" aria-label="Spare part quantity" />
                       <button onClick={hRecordSpare}
                         className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2.5 text-[10px] font-semibold text-white hover:bg-teal-700 transition-colors">
                         <Plus className="h-3 w-3" /> Record
@@ -851,7 +850,7 @@ export function WorkOrdersPage() {
               <div className="grid grid-cols-2 gap-3">
                 <Fld label="Labor / Time Estimate (hrs)">
                   <input type="number" value={form.laborEstimate} onChange={(e) => setForm({ ...form, laborEstimate: e.target.value })}
-                    className={inpCls} placeholder="e.g. 4" min="0" step="0.5" />
+                    className={inpCls} placeholder="e.g. 4" min="0" step="0.5" aria-label="Labor estimate" />
                 </Fld>
                 <Fld label="Downtime Impact">
                   <p className="text-sm text-muted-foreground pt-1">Calculated at completion</p>
@@ -894,15 +893,15 @@ export function WorkOrdersPage() {
                   <div className="grid grid-cols-3 gap-3">
                     <Fld label="Actual Finish Date" required>
                       <input type="date" value={completeForm.actualEndDate} onChange={(e) => setCompleteForm({ ...completeForm, actualEndDate: e.target.value })}
-                        className={inpCls} />
+                        className={inpCls} aria-label="Actual end date" />
                     </Fld>
                     <Fld label="Actual Labor Hours">
                       <input type="number" value={completeForm.actualLaborHours} onChange={(e) => setCompleteForm({ ...completeForm, actualLaborHours: e.target.value })}
-                        className={inpCls} placeholder="e.g. 3.5" min="0" step="0.5" />
+                        className={inpCls} placeholder="e.g. 3.5" min="0" step="0.5" aria-label="Actual labor hours" />
                     </Fld>
                     <Fld label="Downtime (min)">
                       <input type="number" value={completeForm.downtimeMinutes} onChange={(e) => setCompleteForm({ ...completeForm, downtimeMinutes: e.target.value })}
-                        className={inpCls} placeholder="e.g. 45" />
+                        className={inpCls} placeholder="e.g. 45" aria-label="Downtime minutes" />
                     </Fld>
                   </div>
                   <Fld label="Parts Used">
@@ -1271,16 +1270,14 @@ export function WorkOrdersPage() {
         subtitle="Lean maintenance: plan → execute → complete with spare parts tracking"
       />
       <div className="print-ignore">
-        <SplitToolbar
+        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search WOs..."
           filters={selId && view !== "form" ? (
             <>
               <ToolbarDropdown value={filterType} onChange={setFilterType} options={TYPE_OPTIONS} className="w-36" />
-
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-32" />
-
             </>
           ) : undefined}
           actions={<div className="flex items-center gap-1 shrink-0">{renderToolbar()}</div>}
@@ -1364,19 +1361,18 @@ export function WorkOrdersPage() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Actual Finish Date</label>
-              <input type="date" value={completeForm.actualEndDate} onChange={(e) => setCompleteForm({ ...completeForm, actualEndDate: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" />
+              <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Actual Finish Date</label>                    <input type="date" value={completeForm.actualEndDate} onChange={(e) => setCompleteForm({ ...completeForm, actualEndDate: e.target.value })}
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" aria-label="Actual end date" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Actual Labor Hours</label>
               <input type="number" placeholder="e.g. 3.5" value={completeForm.actualLaborHours} onChange={(e) => setCompleteForm({ ...completeForm, actualLaborHours: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" min="0" step="0.5" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" min="0" step="0.5" aria-label="Actual labor hours" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Downtime (minutes)</label>
               <input type="number" placeholder="e.g. 45" value={completeForm.downtimeMinutes} onChange={(e) => setCompleteForm({ ...completeForm, downtimeMinutes: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" aria-label="Downtime minutes" />
             </div>
           </div>
           <div>

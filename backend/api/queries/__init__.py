@@ -23,6 +23,8 @@ from maintenance.schema import MaintenanceQuery
 from workspace.schema import WorkspaceQuery
 from workspace.chat_schema import ChatQuery
 from api.queries.system_health import SystemHealthQuery
+from api.queries.vsm import VsmQuery
+from execution.schema import GembaQuery
 
 @strawberry.type
 class Query(
@@ -45,6 +47,8 @@ class Query(
     WorkspaceQuery,
     ChatQuery,
     SystemHealthQuery,
+    VsmQuery,
+    GembaQuery,
 ):
     """Root query — domain resolvers are added here as fields get implemented."""
 

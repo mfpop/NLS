@@ -1,9 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@apollo/client/react";
-import { useLocation } from "react-router-dom";
 import { Activity, RefreshCw, Server, GitCommit, ShieldCheck, Database, AlertTriangle } from "lucide-react";
-import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarButton } from "@/components/shared/ExplorerToolbar";
+import { TwoColumnPageTemplate } from "@/components/layout/TwoColumnPageTemplate";
+import { ToolbarButton } from "@/components/layout/PageToolbar";
 import { SYSTEM_HEALTH_QUERY } from "@/graphql/systemHealthQueries";
+import { formatDateFull } from "@/utils/dateFormat";
 
 /* ── Types ── */
 
@@ -59,35 +60,18 @@ interface SystemHealthData {
 interface SectionConfig {
   key: string;
   label: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 const SECTIONS: SectionConfig[] = [
-  { key: "", label: "Health Summary", icon: <Activity className="h-3.5 w-3.5" /> },
-  { key: "services", label: "Services", icon: <Server className="h-3.5 w-3.5" /> },
-  { key: "database", label: "Database", icon: <Database className="h-3.5 w-3.5" /> },
-  { key: "deployment", label: "Deployment Info", icon: <GitCommit className="h-3.5 w-3.5" /> },
-  { key: "errors", label: "Recent Errors", icon: <AlertTriangle className="h-3.5 w-3.5" /> },
+  { key: "summary", label: "Health Summary", icon: Activity },
+  { key: "services", label: "Services", icon: Server },
+  { key: "database", label: "Database", icon: Database },
+  { key: "deployment", label: "Deployment Info", icon: GitCommit },
+  { key: "errors", label: "Recent Errors", icon: AlertTriangle },
 ];
 
-function sectionFromPath(path: string): string {
-  if (path.endsWith("/services")) return "services";
-  if (path.endsWith("/database")) return "database";
-  if (path.endsWith("/deployment")) return "deployment";
-  if (path.endsWith("/errors")) return "errors";
-  return "";
-}
-
 /* ── Helpers ── */
-
-function statusDot(status: HealthStatus): string {
-  switch (status) {
-    case "healthy": return "bg-emerald-500";
-    case "warning": return "bg-amber-500";
-    case "critical": return "bg-red-500";
-    default: return "bg-slate-400";
-  }
-}
 
 function statusLabel(status: HealthStatus): string {
   switch (status) {
@@ -103,27 +87,36 @@ function statusBadge(status: HealthStatus): string {
     case "healthy": return "bg-emerald-100 text-emerald-700 border-emerald-200";
     case "warning": return "bg-amber-100 text-amber-700 border-amber-200";
     case "critical": return "bg-red-100 text-red-700 border-red-200";
-    default: return "bg-slate-100 text-slate-600 border-slate-200";
+    default: return "bg-slate-100 text-slate-500 border-slate-200";
   }
 }
 
-function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <div className="flex h-8 items-center gap-2 border-b border-slate-200 bg-slate-50 px-3">
-      <span className="text-slate-500">{icon}</span>
-      <span className="text-xs font-semibold text-slate-700">{title}</span>
-    </div>
-  );
+function statusDot(status: HealthStatus): string {
+  switch (status) {
+    case "healthy": return "bg-emerald-500";
+    case "warning": return "bg-amber-500";
+    case "critical": return "bg-red-500";
+    default: return "bg-slate-400";
+  }
 }
 
-function StatusRow({ label, value, status }: { label: string; value: string; status?: HealthStatus }) {
+function formatTime(iso: string): string {
+  return formatDateFull(iso);
+}
+
+/* ── Compact Row ── */
+
+function Row({ label, value, status }: { label: string; value: string; status?: HealthStatus }) {
   return (
-    <div className="flex h-12 items-center gap-3 border-b border-slate-100 px-3 last:border-b-0 transition-colors">
-      {status && <span className={`h-2 w-2 shrink-0 rounded-full ${statusDot(status)}`} />}
-      <span className="min-w-0 flex-1 truncate text-xs text-slate-600">{label}</span>
+    <div className="h-8 px-3 border-b border-slate-100 flex items-center justify-between">
+      <span className="min-w-0 truncate text-xs text-slate-600">{label}</span>
       <div className="flex items-center gap-2 shrink-0">
-        {status && <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-sm border whitespace-nowrap ${statusBadge(status)}`}>{statusLabel(status)}</span>}
-        <span className="text-xs text-slate-700 font-medium">{value}</span>
+        {status && (
+          <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-sm border whitespace-nowrap ${statusBadge(status)}`}>
+            {statusLabel(status)}
+          </span>
+        )}
+        <span className="text-xs text-slate-700 font-medium truncate max-w-[180px]">{value}</span>
       </div>
     </div>
   );
@@ -131,60 +124,153 @@ function StatusRow({ label, value, status }: { label: string; value: string; sta
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex h-10 items-center gap-3 border-b border-slate-100 px-3 last:border-b-0 transition-colors">
-      <span className="min-w-0 flex-1 truncate text-xs text-slate-600">{label}</span>
-      <span className="text-xs text-slate-800 font-mono truncate">{value}</span>
+    <div className="h-8 px-3 border-b border-slate-100 flex items-center justify-between">
+      <span className="min-w-0 truncate text-xs text-slate-600">{label}</span>
+      <span className="text-xs text-slate-700 font-mono truncate max-w-[180px]">{value}</span>
     </div>
   );
 }
 
-function EmptyRow({ message }: { message: string }) {
+/* ── Panel Header ── */
+
+function PanelHeader({ icon: Icon, title }: { icon: React.ComponentType<{ className?: string }>; title: string }) {
   return (
-    <div className="flex items-center justify-center h-12 text-xs text-slate-400">{message}</div>
+    <div className="h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center gap-2 shrink-0">
+      <Icon className="h-3.5 w-3.5 text-slate-500" />
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">{title}</span>
+    </div>
   );
 }
 
-/* ── Sub-page components ── */
+/* ── Status Strip (top of Health Summary) ── */
 
-function HealthSummarySection({ health }: { health: SystemHealthData["systemHealth"] }) {
+function StatusStrip({ health }: { health: SystemHealthData["systemHealth"] }) {
+  const items = [
+    { label: "Overall", status: health.overallStatus },
+    { label: "API", status: health.apiStatus },
+    { label: "Database", status: health.databaseStatus },
+    { label: "Services", status: health.services.length > 0 ? (health.services.every(s => s.status === "healthy") ? "healthy" as HealthStatus : health.services.some(s => s.status === "critical") ? "critical" as HealthStatus : "warning" as HealthStatus) : "unknown" as HealthStatus },
+    { label: "Storage", status: health.diskUsage.startsWith("N/A") ? "unknown" as HealthStatus : "healthy" as HealthStatus },
+    { label: "Last Checked", status: undefined, value: health.deploymentInfo.serverTime ? formatTime(health.deploymentInfo.serverTime) : "—" },
+  ];
   return (
-    <div>
-      <SectionHeader icon={<Activity className="h-3.5 w-3.5" />} title="Health Summary" />
-      <div className="bg-white">
-        <StatusRow label="Application" value="Running" status={health.appStatus} />
-        <StatusRow label="API / GraphQL" value="Responding" status={health.apiStatus} />
-        <StatusRow label="Database" value={health.databaseStatus === "healthy" ? "Connected" : health.databaseStatus} status={health.databaseStatus} />
-        <StatusRow label="Frontend Build" value="Built" status="healthy" />
-        <StatusRow label="Disk Usage" value={health.diskUsage} status={health.diskUsage.startsWith("N/A") ? "unknown" : "healthy"} />
-        <StatusRow label="Memory Usage" value={health.memoryUsage} status={health.memoryUsage.startsWith("N/A") ? "unknown" : "healthy"} />
-      </div>
-      {/* System Checks */}
-      <div className="mt-4">
-        <SectionHeader icon={<ShieldCheck className="h-3.5 w-3.5" />} title="System Checks" />
-        <div className="bg-white">
-          {health.checks.length === 0 ? (
-            <EmptyRow message="No checks available." />
+    <div className="grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200 h-16 shrink-0">
+      {items.map((item) => (
+        <div key={item.label} className="flex flex-col items-center justify-center gap-1 px-2">
+          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">{item.label}</span>
+          {item.status ? (
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-sm border ${statusBadge(item.status)}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${statusDot(item.status)}`} />
+              {statusLabel(item.status)}
+            </span>
           ) : (
-            health.checks.map((chk) => (
-              <StatusRow key={chk.name} label={chk.name} value={chk.detail} status={chk.status} />
-            ))
+            <span className="text-xs text-slate-600 font-medium truncate max-w-[120px]">{item.value}</span>
           )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Section Views ── */
+
+function HealthSummaryView({ health }: { health: SystemHealthData["systemHealth"] }) {
+  return (
+    <div className="flex flex-col min-h-0">
+      <StatusStrip health={health} />
+      <div className="flex-1 min-h-0 grid grid-cols-2 grid-rows-2 divide-x divide-y divide-slate-200" style={{ gridTemplateRows: "1fr 1fr" }}>
+        {/* Application & API */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          <PanelHeader icon={Activity} title="Application & API" />
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <Row label="Application" value="Running" status={health.appStatus} />
+            <Row label="API / GraphQL" value="Responding" status={health.apiStatus} />
+            <Row label="Frontend Build" value="Built" status="healthy" />
+            <Row label="Memory Usage" value={health.memoryUsage} status={health.memoryUsage.startsWith("N/A") ? "unknown" : undefined} />
+          </div>
+        </div>
+        {/* Database & Storage */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          <PanelHeader icon={Database} title="Database & Storage" />
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <Row label="Database" value={health.databaseStatus === "healthy" ? "Connected" : statusLabel(health.databaseStatus)} status={health.databaseStatus} />
+            <Row label="Connection" value={health.databaseStatus === "healthy" ? "OK" : statusLabel(health.databaseStatus)} status={health.databaseStatus} />
+            <InfoRow label="Disk Usage" value={health.diskUsage} />
+            <InfoRow label="Media Files" value={health.deploymentInfo.debugEnabled ? "Debug" : "Production"} />
+          </div>
+        </div>
+        {/* Services */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          <PanelHeader icon={Server} title="Services" />
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {health.services.length === 0 ? (
+              <div className="flex items-center justify-center h-16 text-xs text-slate-400">No services reported.</div>
+            ) : (
+              health.services.slice(0, 5).map((svc) => (
+                <Row key={svc.name} label={svc.name} value={svc.detail} status={svc.status} />
+              ))
+            )}
+          </div>
+        </div>
+        {/* System Checks */}
+        <div className="flex flex-col min-h-0 overflow-hidden">
+          <PanelHeader icon={ShieldCheck} title="System Checks" />
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {health.checks.length === 0 ? (
+              <div className="flex items-center justify-center h-16 text-xs text-slate-400">No checks available.</div>
+            ) : (
+              health.checks.slice(0, 4).map((chk) => (
+                <Row key={chk.name} label={chk.name} value={chk.detail} status={chk.status} />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function ServicesSection({ health }: { health: SystemHealthData["systemHealth"] }) {
+function ServicesView({ health }: { health: SystemHealthData["systemHealth"] }) {
+  const stripItems = [
+    { label: "Backend", status: health.services.find(s => s.name.toLowerCase().includes("backend") || s.name.toLowerCase().includes("django"))?.status || "unknown" as HealthStatus },
+    { label: "GraphQL", status: health.services.find(s => s.name.toLowerCase().includes("graphql") || s.name.toLowerCase().includes("api"))?.status || "unknown" as HealthStatus },
+    { label: "Database", status: health.databaseStatus },
+    { label: "Nginx", status: health.services.find(s => s.name.toLowerCase().includes("nginx"))?.status || "unknown" as HealthStatus },
+    { label: "Gunicorn", status: health.services.find(s => s.name.toLowerCase().includes("gunicorn"))?.status || "unknown" as HealthStatus },
+    { label: "Last Checked", status: undefined, value: health.deploymentInfo.serverTime ? formatTime(health.deploymentInfo.serverTime) : "—" },
+  ];
+
   return (
-    <div>
-      <SectionHeader icon={<Server className="h-3.5 w-3.5" />} title="Services" />
-      <div className="bg-white">
+    <div className="flex flex-col min-h-0">
+      <div className="grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200 h-16 shrink-0">
+        {stripItems.map((item) => (
+          <div key={item.label} className="flex flex-col items-center justify-center gap-1 px-2">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">{item.label}</span>
+            {item.status ? (
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-sm border ${statusBadge(item.status)}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${statusDot(item.status)}`} />
+                {statusLabel(item.status)}
+              </span>
+            ) : (
+              <span className="text-xs text-slate-600 font-medium truncate max-w-[120px]">{item.value}</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {health.services.length === 0 ? (
-          <EmptyRow message="No services reported." />
+          <div className="flex items-center justify-center h-24 text-xs text-slate-400">No services reported.</div>
         ) : (
           health.services.map((svc) => (
-            <StatusRow key={svc.name} label={svc.name} value={svc.detail} status={svc.status} />
+            <div key={svc.name} className="h-9 px-3 border-b border-slate-100 flex items-center justify-between">
+              <span className="min-w-0 truncate text-xs text-slate-600">{svc.name}</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-sm border whitespace-nowrap ${statusBadge(svc.status)}`}>
+                  {statusLabel(svc.status)}
+                </span>
+                <span className="text-xs text-slate-700 font-medium truncate max-w-[180px]">{svc.detail}</span>
+              </div>
+            </div>
           ))
         )}
       </div>
@@ -192,37 +278,52 @@ function ServicesSection({ health }: { health: SystemHealthData["systemHealth"] 
   );
 }
 
-function DatabaseSection({ health }: { health: SystemHealthData["systemHealth"] }) {
+function DatabaseView({ health }: { health: SystemHealthData["systemHealth"] }) {
+  const stripItems = [
+    { label: "DB Status", status: health.databaseStatus },
+    { label: "Connection", status: health.databaseStatus },
+    { label: "Disk Usage", status: health.diskUsage.startsWith("N/A") ? "unknown" as HealthStatus : "healthy" as HealthStatus },
+    { label: "Media Files", status: "healthy" as HealthStatus },
+    { label: "Static Files", status: "healthy" as HealthStatus },
+    { label: "Last Checked", status: undefined, value: health.deploymentInfo.serverTime ? formatTime(health.deploymentInfo.serverTime) : "—" },
+  ];
+
   return (
-    <div>
-      <SectionHeader icon={<Database className="h-3.5 w-3.5" />} title="Database" />
-      <div className="bg-white">
-        <StatusRow label="Connection" value={health.databaseStatus === "healthy" ? "Connected" : health.databaseStatus} status={health.databaseStatus} />
-        <InfoRow label="Disk Usage" value={health.diskUsage} />
-        <InfoRow label="Memory Usage" value={health.memoryUsage} />
+    <div className="flex flex-col min-h-0">
+      <div className="grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200 h-16 shrink-0">
+        {stripItems.map((item) => (
+          <div key={item.label} className="flex flex-col items-center justify-center gap-1 px-2">
+            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">{item.label}</span>
+            {item.status ? (
+              <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-sm border ${statusBadge(item.status)}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${statusDot(item.status)}`} />
+                {statusLabel(item.status)}
+              </span>
+            ) : (
+              <span className="text-xs text-slate-600 font-medium truncate max-w-[120px]">{item.value}</span>
+            )}
+          </div>
+        ))}
       </div>
-      {/* System Checks */}
-      <div className="mt-4">
-        <SectionHeader icon={<ShieldCheck className="h-3.5 w-3.5" />} title="System Checks" />
-        <div className="bg-white">
-          {health.checks.length === 0 ? (
-            <EmptyRow message="No checks available." />
-          ) : (
-            health.checks.map((chk) => (
-              <StatusRow key={chk.name} label={chk.name} value={chk.detail} status={chk.status} />
-            ))
-          )}
-        </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <Row label="Database" value={health.databaseStatus === "healthy" ? "Connected" : statusLabel(health.databaseStatus)} status={health.databaseStatus} />
+        <Row label="Connection" value={health.databaseStatus === "healthy" ? "OK" : statusLabel(health.databaseStatus)} status={health.databaseStatus} />
+        <InfoRow label="Disk Usage" value={health.diskUsage} />
+        <InfoRow label="Media Files" value={health.deploymentInfo.debugEnabled ? "Debug" : "Production"} />
+        <InfoRow label="Static Files" value={health.deploymentInfo.debugEnabled ? "Debug" : "Production"} />
+
       </div>
     </div>
   );
 }
 
-function DeploymentSection({ health }: { health: SystemHealthData["systemHealth"] }) {
+function DeploymentView({ health }: { health: SystemHealthData["systemHealth"] }) {
   return (
-    <div>
-      <SectionHeader icon={<GitCommit className="h-3.5 w-3.5" />} title="Deployment Info" />
-      <div className="bg-white">
+    <div className="flex flex-col min-h-0">
+      <div className="h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center shrink-0">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Deployment Info</span>
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">
         <InfoRow label="App Version" value={health.deploymentInfo.appVersion} />
         <InfoRow label="Commit" value={health.deploymentInfo.commit || "N/A"} />
         <InfoRow label="Environment" value={health.deploymentInfo.environment} />
@@ -236,101 +337,143 @@ function DeploymentSection({ health }: { health: SystemHealthData["systemHealth"
   );
 }
 
-function ErrorsSection({ health }: { health: SystemHealthData["systemHealth"] }) {
+function ErrorsView({ health }: { health: SystemHealthData["systemHealth"] }) {
   return (
-    <div>
-      <SectionHeader icon={<AlertTriangle className="h-3.5 w-3.5" />} title="Recent Errors" />
-      <div className="bg-white">
+    <div className="flex flex-col min-h-0">
+      <div className="h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center shrink-0">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-700">Recent Errors</span>
+      </div>
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {health.recentErrors.length === 0 ? (
-          <EmptyRow message="No recent errors." />
+          <div className="flex items-center justify-center h-24 text-xs text-slate-400">No recent errors reported.</div>
         ) : (
-          health.recentErrors.map((err, idx) => (
-            <StatusRow
-              key={idx}
-              label={err.source}
-              value={`${err.message.slice(0, 80)} · ${formatTime(err.timestamp)}`}
-              status={err.severity === "error" ? "critical" : err.severity === "warning" ? "warning" : "unknown"}
-            />
-          ))
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left text-[10px] font-medium text-slate-500 uppercase tracking-wide">
+                  <th className="px-3 py-1.5">Time</th>
+                  <th className="px-3 py-1.5">Severity</th>
+                  <th className="px-3 py-1.5">Source</th>
+                  <th className="px-3 py-1.5">Message</th>
+                </tr>
+              </thead>
+              <tbody>
+                {health.recentErrors.map((err, idx) => (
+                  <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50">
+                    <td className="px-3 py-1.5 text-slate-500 whitespace-nowrap">{formatTime(err.timestamp)}</td>
+                    <td className="px-3 py-1.5">
+                      <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded-sm border whitespace-nowrap ${err.severity === "error" ? "bg-red-100 text-red-700 border-red-200" : err.severity === "warning" ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
+                        {err.severity}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 truncate max-w-[120px]">{err.source}</td>
+                    <td className="px-3 py-1.5 text-slate-700 truncate max-w-[300px]">{err.message}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function formatTime(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
-}
-
 /* ── Main Component ── */
 
 export function SystemHealthPage() {
-  const location = useLocation();
-  const activeSection = sectionFromPath(location.pathname);
+  const [activeSection, setActiveSection] = useState("summary");
 
-  const sectionConfig = SECTIONS.find((s) => s.key === activeSection);
-  const pageTitle = sectionConfig ? `${sectionConfig.label} - System Health` : "System Health";
-  const pageSubtitle = sectionConfig
-    ? `Detailed view of ${sectionConfig.label.toLowerCase()}.`
-    : "Monitor application services, database, API, background jobs, and deployment status.";
-
-  const { data, loading, refetch } = useQuery<SystemHealthData>(SYSTEM_HEALTH_QUERY, {
+  const { data, loading, error, refetch } = useQuery<SystemHealthData>(SYSTEM_HEALTH_QUERY, {
     fetchPolicy: "cache-and-network",
-    pollInterval: activeSection ? 5000 : 30000,
+    pollInterval: 30000,
   });
 
   const health = data?.systemHealth;
 
   return (
-    <AppPageLayout
+    <TwoColumnPageTemplate
       icon={<Activity />}
       iconClass="bg-emerald-100 text-emerald-600"
-      title={pageTitle}
-      subtitle={pageSubtitle}
-      toolbar={
-        <ExplorerToolbar
-          searchValue=""
-          onSearchChange={() => {}}
-          searchPlaceholder=""
-          actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />}
-        />
-      }
-      footer={
-        <span className="flex items-center gap-4 text-xs text-slate-500">
-          <span className="font-medium">System Health</span>
-          <span className="flex-1" />
-          {health ? (
-            <span>
-              Overall: <span className={health.overallStatus === "healthy" ? "text-emerald-600" : health.overallStatus === "warning" ? "text-amber-600" : health.overallStatus === "critical" ? "text-red-600" : "text-slate-500"}>{statusLabel(health.overallStatus)}</span>
-              {" · "}
-              {health.deploymentInfo.serverTime ? `Updated: ${formatTime(health.deploymentInfo.serverTime)}` : ""}
-            </span>
-          ) : "Checking health..."}
-        </span>
+      title="System Health"
+      subtitle="Monitor application services, database, runtime checks, deployment status, and recent errors."
+      toolbarProps={{
+        searchValue: "",
+        onSearchChange: () => {},
+        searchPlaceholder: "",
+
+        actions: <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} disabled={loading} />,
+      }}
+      leftPanelProps={{
+        title: "Sections",
+        records: SECTIONS,
+        selectedId: activeSection,
+        onSelect: (key) => setActiveSection(key),
+        getId: (s) => s.key,
+        renderRecord: (s, _selected) => {
+          const Icon = s.icon;
+          return (
+            <div className="flex items-center gap-2 py-0.5">
+              <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+              <span className="flex-1 text-xs text-slate-700 truncate">{s.label}</span>
+            </div>
+          );
+        },
+        emptyMessage: "No sections",
+        pageSize: 100,
+        selectedBorderClass: "border-l-emerald-600",
+        selectedBgClass: "bg-emerald-50/40",
+      }}
+      footerLeft="System Health"
+      footerCenter={
+        health ? (
+          <span className="flex items-center gap-4">
+            <span>Overall: <span className={health.overallStatus === "healthy" ? "text-emerald-600" : health.overallStatus === "warning" ? "text-amber-600" : health.overallStatus === "critical" ? "text-red-600" : "text-slate-500"}>{statusLabel(health.overallStatus)}</span></span>
+            {health.deploymentInfo.serverTime && (
+              <><span className="h-4 w-px bg-slate-200" /><span>Updated: {formatTime(health.deploymentInfo.serverTime)}</span></>
+            )}
+          </span>
+        ) : "Checking health..."
       }
     >
-      <div className="h-full overflow-y-auto bg-slate-50">
+      <div className="h-full bg-slate-50">
         {loading && !health ? (
-          <div className="flex items-center justify-center h-24 text-xs text-slate-400">
-            <span className="inline-block h-2 w-2 bg-slate-300 animate-pulse rounded-full mr-2" />
-            Loading health data...
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-xs text-slate-400">
+            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center animate-pulse">
+              <Activity className="h-4 w-4 text-slate-400" />
+            </div>
+            <span className="text-sm font-medium text-slate-600">Loading health data...</span>
+          </div>
+        ) : error && !health ? (
+          <div className="flex flex-col items-center justify-center h-full gap-3 text-xs text-slate-400">
+            <div className="rounded-full bg-red-50 p-3">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <span className="text-sm font-medium text-slate-600">Unable to load health data</span>
+            <span className="text-slate-400 max-w-xs text-center">{error.message}</span>
+            <button type="button" onClick={() => refetch()} className="mt-1 inline-flex items-center gap-1.5 rounded-sm bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors">
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </button>
           </div>
         ) : !health ? (
-          <div className="flex items-center justify-center h-32 text-xs text-slate-400">Unable to load health data.</div>
+          <div className="flex flex-col items-center justify-center h-full gap-2 text-xs text-slate-400">
+            <span>Unable to load health data.</span>
+            <button type="button" onClick={() => refetch()} className="inline-flex items-center gap-1.5 rounded-sm bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 transition-colors">
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </button>
+          </div>
         ) : (
-          <div className="divide-y divide-slate-200">
-            {(!activeSection || activeSection === "") && <HealthSummarySection health={health} />}
-            {(activeSection === "" || activeSection === "services") && <ServicesSection health={health} />}
-            {(activeSection === "" || activeSection === "database") && <DatabaseSection health={health} />}
-            {(activeSection === "" || activeSection === "deployment") && <DeploymentSection health={health} />}
-            {(activeSection === "" || activeSection === "errors") && <ErrorsSection health={health} />}
+          <div className="h-full">
+            {activeSection === "summary" && <HealthSummaryView health={health} />}
+            {activeSection === "services" && <ServicesView health={health} />}
+            {activeSection === "database" && <DatabaseView health={health} />}
+            {activeSection === "deployment" && <DeploymentView health={health} />}
+            {activeSection === "errors" && <ErrorsView health={health} />}
           </div>
         )}
       </div>
-    </AppPageLayout>
+    </TwoColumnPageTemplate>
   );
 }

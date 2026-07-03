@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { AlertTriangle, Plus, Save, CheckCircle, Ban, Play, Archive, Trash2, Pencil, ArrowLeft } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
-import { ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import type { SystemMessage } from "@/pages/shared/PageHeader";

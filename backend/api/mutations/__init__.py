@@ -22,6 +22,8 @@ from api.mutations.manufacturing_resources import ManufacturingResourcesMutation
 from api.mutations.manufacturing_product_master import ManufacturingProductMasterMutation
 from api.mutations.manufacturing_capacity import ManufacturingCapacityMutation
 from api.mutations.manufacturing_audit import ManufacturingAuditMutation
+from api.mutations.vsm import VsmMutation
+from execution.schema import GembaMutation
 
 
 @strawberry.type
@@ -48,6 +50,8 @@ class Mutation(
     MaintenanceMutation,
     WorkspaceMutation,
     ChatMutation,
+    GembaMutation,
+    VsmMutation,
 ):
     """Root mutation — domain mutations are added here as they get implemented."""
 

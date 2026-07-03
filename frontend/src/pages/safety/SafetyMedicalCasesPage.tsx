@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Activity, Plus, Save, Ban, Play, Search, Pencil, ArrowLeft, RefreshCw, CheckCircle, Monitor, Briefcase } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarButton, ToolbarDropdown, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { SAFETY_MEDICAL_CASES_QUERY, SAFETY_EVENTS_QUERY, SAFETY_INJURY_CLAIMS_QUERY } from "@/graphql/checkQueries";
 import { USER_PROFILES_QUERY } from "@/graphql/administrationQueries";
 import {
@@ -11,6 +11,7 @@ import {
   RETURN_TO_WORK_SAFETY_MEDICAL_CASE_MUTATION, CLOSE_SAFETY_MEDICAL_CASE_MUTATION,
   CANCEL_SAFETY_MEDICAL_CASE_MUTATION,
 } from "@/graphql/checkMutations";
+import { formatDateFull } from "@/utils/dateFormat";
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
@@ -296,11 +297,11 @@ export function SafetyMedicalCasesPage() {
               {selItem.affectedPersonId && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Affected Person</p><p className="text-xs text-slate-900">{profiles.find((p: any) => p.id === selItem.affectedPersonId)?.fullName || `Person #${selItem.affectedPersonId}`}</p></div>}
               {selEvent && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Linked Event</p><p className="text-xs text-slate-900">{selEvent.title} ({selEvent.eventType})</p></div>}
               {selClaim && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Linked Claim</p><p className="text-xs text-slate-900">{selClaim.claimantName} ({selClaim.claimType})</p></div>}
-              {selItem.visitRequired && selItem.visitDate && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Visit Date</p><p className="text-xs text-slate-900">{new Date(selItem.visitDate).toLocaleString()}</p></div>}
+              {selItem.visitRequired && selItem.visitDate && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Visit Date</p><p className="text-xs text-slate-900">{formatDateFull(selItem.visitDate)}</p></div>}
               {selItem.workRestriction && selItem.restrictionSummary && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Restriction</p><p className="text-xs text-slate-900">{selItem.restrictionSummary}</p></div>}
             </div>
             <div className="space-y-3">
-              {selItem.returnToWorkDate && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Return to Work</p><p className="text-xs text-slate-900">{new Date(selItem.returnToWorkDate).toLocaleString()}</p></div>}
+              {selItem.returnToWorkDate && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Return to Work</p><p className="text-xs text-slate-900">{formatDateFull(selItem.returnToWorkDate)}</p></div>}
               {selItem.owner && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Owner</p><p className="text-xs text-slate-900">{selItem.owner}</p></div>}
               {selItem.confidentialNotes && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Confidential Notes</p><p className="text-xs text-slate-500/70 italic">{selItem.confidentialNotes}</p></div>}
               {selItem.notes && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Notes</p><p className="text-xs text-slate-900">{selItem.notes}</p></div>}
@@ -317,24 +318,24 @@ export function SafetyMedicalCasesPage() {
   const isEditable = selStatus === "DRAFT" || selStatus === "OPEN";
 
   const toolbarContent = (
-    <ExplorerToolbar
+    <PageToolbar
       searchValue={searchQuery}
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search cases..."
       filters={
-        <ExplorerToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
+        <ToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
       }
       actions={
-        creating ? (<><ExplorerToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredOk} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); resetForm(); }} /></>) :
-        editing ? (<><ExplorerToolbarButton icon={Save} label="Update" onClick={hSaveEdit} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} /></>) :
-        !selItem ? (<><ExplorerToolbarButton icon={Plus} label="New Case" onClick={hNew} variant="success" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
-        (<><ExplorerToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ExplorerToolbarButton icon={Play} label="Open" onClick={() => hTransition(openMut, selItem.id, "Case opened")} disabled={!canOpen} /><ExplorerToolbarButton icon={Monitor} label="Monitor" onClick={() => hTransition(monitorMut, selItem.id, "Monitoring started")} disabled={!canMonitor} /><ExplorerToolbarButton icon={Briefcase} label="RTW" onClick={() => hTransition(rtwMut, selItem.id, "Returned to work")} disabled={!canRTW} /><ExplorerToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "Case closed")} disabled={!canClose} variant={canClose ? "success" : "default"} /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" /><ExplorerToolbarSeparator /><ExplorerToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        creating ? (<><ToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredOk} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); resetForm(); }} /></>) :
+        editing ? (<><ToolbarButton icon={Save} label="Update" onClick={hSaveEdit} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} /></>) :
+        !selItem ? (<><ToolbarButton icon={Plus} label="New Case" onClick={hNew} variant="success" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
+        (<><ToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ToolbarButton icon={Play} label="Open" onClick={() => hTransition(openMut, selItem.id, "Case opened")} disabled={!canOpen} /><ToolbarButton icon={Monitor} label="Monitor" onClick={() => hTransition(monitorMut, selItem.id, "Monitoring started")} disabled={!canMonitor} /><ToolbarButton icon={Briefcase} label="RTW" onClick={() => hTransition(rtwMut, selItem.id, "Returned to work")} disabled={!canRTW} /><ToolbarButton icon={CheckCircle} label="Close" onClick={() => hTransition(closeMut, selItem.id, "Case closed")} disabled={!canClose} variant={canClose ? "success" : "default"} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => setCancelId(selItem.id)} disabled={!canCancel} variant="destructive" /><ToolbarSeparator /><ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
       }
     />
   );
 
   const leftColumnContent = (<><div className="shrink-0 h-8 border-b border-slate-200 flex items-center bg-slate-50 px-4"><span className="text-sm font-medium text-slate-700">Cases</span><span className="ml-auto text-[10px] text-slate-500 font-mono">{items.length}</span></div>      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No cases match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">{filteredItems.length === 0 ? (<div className="flex flex-col items-center justify-center px-4 py-6 text-center"><Search className="h-5 w-5 text-slate-300 mb-2" /><p className="text-xs text-slate-500 font-medium mb-2">No medical cases recorded.</p>{!filterStatus && <button onClick={hNew} className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"><Plus className="h-3.5 w-3.5" /> New Case</button>}</div>) : filteredItems.map((e: any) => (<div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }} className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{CARE_TYPE_OPTS.find((o: any) => o.value === e.careType)?.label || e.careType}</span></div><div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500"><span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>{e.owner && <span>· {e.owner}</span>}</div></div></div>))}</div></>);
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">{filteredItems.length === 0 ? (<div className="flex flex-col items-center justify-center px-4 py-6 text-center"><Search className="h-5 w-5 text-slate-300 mb-2" /><p className="text-xs text-slate-500 font-medium mb-2">No medical cases recorded.</p>{!filterStatus && <button onClick={hNew} className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"><Plus className="h-3.5 w-3.5" /> New Case</button>}</div>) : filteredItems.map((e: any) => (<div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }} className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{CARE_TYPE_OPTS.find((o: any) => o.value === e.careType)?.label || e.careType}</span></div>              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>{e.owner && <span>· {e.owner}</span>}</div></div></div>))}</div></>);
 
   const footerContent = <>{items.length} case{items.length !== 1 ? "s" : ""}{!creating && !selItem && <span className="ml-auto">Select a case to view details</span>}</>;
 

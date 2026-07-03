@@ -41,7 +41,7 @@ class ManufacturingProductMasterMutation:
                 code=input.code, name=input.name, description=input.description or "",
                 is_active=True,
             )
-            return ProductFamilyPayload(ok=True, product_family=ProductFamilyNode.from_db(family))
+            return ProductFamilyPayload(ok=True, family=ProductFamilyNode.from_db(family))
         except Exception as exc:
             return ProductFamilyPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
@@ -56,7 +56,7 @@ class ManufacturingProductMasterMutation:
             if input.name is not None: family.name = input.name
             if input.description is not None: family.description = input.description
             family.save()
-            return ProductFamilyPayload(ok=True, product_family=ProductFamilyNode.from_db(family))
+            return ProductFamilyPayload(ok=True, family=ProductFamilyNode.from_db(family))
         except ProductFamily.DoesNotExist:
             return ProductFamilyPayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Family not found")])
         except Exception as exc:
@@ -71,7 +71,7 @@ class ManufacturingProductMasterMutation:
             family = ProductFamily.objects.get(id=id)
             family.is_active = False
             family.save()
-            return ProductFamilyPayload(ok=True, product_family=ProductFamilyNode.from_db(family))
+            return ProductFamilyPayload(ok=True, family=ProductFamilyNode.from_db(family))
         except ProductFamily.DoesNotExist:
             return ProductFamilyPayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Family not found")])
 
@@ -89,7 +89,7 @@ class ManufacturingProductMasterMutation:
                 description=input.description or "",
                 is_active=True,
             )
-            return ProductModelPayload(ok=True, product_model=ProductModelNode.from_db(model))
+            return ProductModelPayload(ok=True, model=ProductModelNode.from_db(model))
         except Exception as exc:
             return ProductModelPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
@@ -105,7 +105,7 @@ class ManufacturingProductMasterMutation:
             if input.family_id is not None: model.family_id = input.family_id
             if input.description is not None: model.description = input.description
             model.save()
-            return ProductModelPayload(ok=True, product_model=ProductModelNode.from_db(model))
+            return ProductModelPayload(ok=True, model=ProductModelNode.from_db(model))
         except ProductModel.DoesNotExist:
             return ProductModelPayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Model not found")])
         except Exception as exc:
@@ -120,7 +120,7 @@ class ManufacturingProductMasterMutation:
             model = ProductModel.objects.get(id=id)
             model.is_active = False
             model.save()
-            return ProductModelPayload(ok=True, product_model=ProductModelNode.from_db(model))
+            return ProductModelPayload(ok=True, model=ProductModelNode.from_db(model))
         except ProductModel.DoesNotExist:
             return ProductModelPayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Model not found")])
 
@@ -137,7 +137,7 @@ class ManufacturingProductMasterMutation:
                 part_number=input.part_number or "",
                 is_active=True,
             )
-            return ProductVariantPayload(ok=True, product_variant=ProductVariantNode.from_db(variant))
+            return ProductVariantPayload(ok=True, variant=ProductVariantNode.from_db(variant))
         except Exception as exc:
             return ProductVariantPayload(ok=False, errors=[MutationError(field="_form", code="ERROR", message=str(exc))])
 
@@ -153,7 +153,7 @@ class ManufacturingProductMasterMutation:
             if input.name is not None: variant.name = input.name
             if input.part_number is not None: variant.part_number = input.part_number
             variant.save()
-            return ProductVariantPayload(ok=True, product_variant=ProductVariantNode.from_db(variant))
+            return ProductVariantPayload(ok=True, variant=ProductVariantNode.from_db(variant))
         except ProductVariant.DoesNotExist:
             return ProductVariantPayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Variant not found")])
         except Exception as exc:
@@ -168,7 +168,7 @@ class ManufacturingProductMasterMutation:
             variant = ProductVariant.objects.get(id=id)
             variant.is_active = False
             variant.save()
-            return ProductVariantPayload(ok=True, product_variant=ProductVariantNode.from_db(variant))
+            return ProductVariantPayload(ok=True, variant=ProductVariantNode.from_db(variant))
         except ProductVariant.DoesNotExist:
             return ProductVariantPayload(ok=False, errors=[MutationError(field="id", code="NOT_FOUND", message="Variant not found")])
 

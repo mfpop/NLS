@@ -1,0 +1,16 @@
+# vsm
+- VSM Fit mode: calculate scale dynamically from actual rendered content bounding box (not any static viewBox/canvas size), targeting 80-90% of usable width and 65-80% of usable height with no clipping, no scrollbar, and readable labels. Confidence: 0.80
+- Backend owns information-flow semantics: transmissionType (MANUAL/ELECTRONIC/EDI/SYSTEM/KANBAN), triggerType (CUSTOMER_ORDER/FORECAST/PRODUCTION_SCHEDULE/etc.), method, frequency — frontend must not infer these. Confidence: 0.80
+- Information-flow GraphQL shape: fromNodeId, fromNodeType, toNodeId, toNodeType, label, frequency, method, transmissionType, triggerType, controlledProcessId, notes. Confidence: 0.75
+- Use classical VSM information-flow notation with distinct visuals: manual (solid line), electronic (dashed/lightning line with visible zigzag/icon), Kanban/pull (dashed loop from consumer back to supplier). All styles explained in a canvas legend. Confidence: 0.80
+- Information-flow labels must include method + frequency (e.g. "Daily orders · EDI", not just "Daily orders"). Confidence: 0.75
+- Kaizen burst must have hover tooltip showing: title, reason, linked process/inventory, recommendation. Confidence: 0.75
+- Always show all parameter rows in process cards — no compact/expand Metrics toggle. Confidence: 0.65
+- VSM canvas must have a compact legend (bg-slate-50/90, text-xs, line samples + labels) explaining manual, electronic, Kanban, production schedule, and kaizen symbols. Confidence: 0.75
+- Route information flows using smooth cubic bezier curves ("octopus arms") instead of elbow paths or straight lines, especially for schedule and EDI lines. Confidence: 0.75
+- VSM footer legend must contain legend items only — no breadcrumb metadata (view mode, chart count, or line name) in the footer. Confidence: 0.75
+- Ask before making schema/data-model changes that affect other consumers of VSM data. Confidence: 0.85
+- Clearance Zone / zones button is not needed for VSM chart — removes clutter without adding value. Confidence: 0.70
+- WIP toggle button is not needed for VSM toolbar — removes clutter without adding value. Confidence: 0.70
+- VSM process card layout: C/T label + value on the same row, each secondary parameter on its own individual row (no 2-column grid). Confidence: 0.70
+- Keep the VsmFooterLegend rendered on the VSM page — do not remove it as it provides important legend information. Confidence: 0.75

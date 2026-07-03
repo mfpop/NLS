@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Plus, Play, Save, Archive, Trash2, ArrowLeft, CircleAlert } from "lucide-react";
-import { ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarButton } from "@/components/layout/PageToolbar";
 import { useActiveLine } from "@/hooks/useActiveLine";
 import {
   AUDIT_TEMPLATES_QUERY, AUDIT_EXECUTION_FORM_QUERY,
@@ -70,7 +70,7 @@ function SegCtl({ rt, val, onChange }: { rt: string; val: string; onChange: (v: 
   if (rt === "YES_NO_NA") return <Seg opts={["YES", "NO", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "SCORE_1_5") return <Seg opts={["1", "2", "3", "4", "5"]} val={val} onChange={onChange} />;
   if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-blue-500" />;
-  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-blue-500" />;
+  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} aria-label="Response" className="h-7 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-blue-500" />;
   return null;
 }
 
@@ -401,26 +401,25 @@ export function AuditExecutionView({
         <div className="grid grid-cols-4 gap-2 mt-2">
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Audit Type *</label>
             {isNew ? (
-              <select value={selectedTemplateId ?? ""} onChange={(e) => { setSelectedTemplateId(e.target.value || null); setDraftAns({}); setErrors([]); }} className={SEL_INPUT}>
+              <select value={selectedTemplateId ?? ""} onChange={(e) => { setSelectedTemplateId(e.target.value || null); setDraftAns({}); setErrors([]); }} aria-label="Audit template" className={SEL_INPUT}>
                 <option value="">Select type...</option>
                 {templates.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             ) : <div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{headerTpl?.name ?? "-"} v{headerTpl?.version ?? ""}</div>}
           </div>
-          <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Plant *</label>
-            <select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} className={SEL_INPUT}>
+          <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Plant *</label>              <select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Plant" className={SEL_INPUT}>
               <option value="">Select...</option>
               {plants.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Production Line</label>
-            <select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fPlant}>
+            <select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Production line" className={SEL_INPUT} disabled={!fPlant}>
               <option value="">{fPlant ? "Optional..." : "Select Plant first"}</option>
               {lines.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
           </div>
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Department</label>
-            <select value={fDept} onChange={(e) => { setFDept(e.target.value); setFRg(""); setFRes(""); }} className={SEL_INPUT} disabled={!fLine}>
+            <select value={fDept} onChange={(e) => { setFDept(e.target.value); setFRg(""); setFRes(""); }} aria-label="Department" className={SEL_INPUT} disabled={!fLine}>
               <option value="">{fLine ? "Optional..." : "Select Production Line first"}</option>
               {depts.map((d: any) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
@@ -428,29 +427,29 @@ export function AuditExecutionView({
         </div>
         <div className="grid grid-cols-4 gap-2 mt-1.5">
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Resource Group</label>
-            <select value={fRg} onChange={(e) => { setFRg(e.target.value); setFRes(""); }} className={SEL_INPUT} disabled={!fDept}>
+            <select value={fRg} onChange={(e) => { setFRg(e.target.value); setFRes(""); }} aria-label="Resource group" className={SEL_INPUT} disabled={!fDept}>
               <option value="">{fDept ? "Optional..." : "Select Department first"}</option>
               {rgs.map((g: any) => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
           </div>
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Resource</label>
-            <select value={fRes} onChange={(e) => setFRes(e.target.value)} className={SEL_INPUT} disabled={!fRg}>
+            <select value={fRes} onChange={(e) => setFRes(e.target.value)} aria-label="Resource" className={SEL_INPUT} disabled={!fRg}>
               <option value="">{fRg ? "Optional..." : "Select Resource Group first"}</option>
               {ress.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           </div>
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Auditor *</label>
-            <select value={fAuditor} onChange={(e) => setFAuditor(e.target.value)} className={SEL_INPUT}>
+            <select value={fAuditor} onChange={(e) => setFAuditor(e.target.value)} aria-label="Auditor" className={SEL_INPUT}>
               <option value="">Select auditor...</option>
               {userProfiles.map((u: any) => <option key={u.id} value={u.fullName}>{u.fullName} ({u.username})</option>)}
             </select>
           </div>
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Audit Date *</label>
-            <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} className={SEL_INPUT} />
+            <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} aria-label="Audit date" className={SEL_INPUT} />
           </div>
         </div>
         <div className="mt-1.5"><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Notes</label>
-          <input type="text" value={fNotes} onChange={(e) => setFNotes(e.target.value)} placeholder="Optional..." className={SEL_INPUT + " placeholder:text-muted-foreground/30"} />
+          <input type="text" value={fNotes} onChange={(e) => setFNotes(e.target.value)} placeholder="Optional..." aria-label="Notes" className={SEL_INPUT + " placeholder:text-muted-foreground/30"} />
         </div>
         {errors.length > 0 && <div className="flex flex-wrap gap-2 mt-1">{errors.map((e, i) => <span key={i} className={`text-[10px] font-medium ${WARN}`}>⚠ {e}</span>)}</div>}
       </div>
@@ -606,8 +605,8 @@ export function AuditExecutionView({
             <div className="space-y-2.5">
               <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Description *</label><textarea value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} rows={2} className="w-full rounded border border-border/40 bg-card px-2 py-1 text-xs text-foreground outline-none focus:border-info/60 resize-none" placeholder="Describe the non-conformance..." /></div>
               <div className="grid grid-cols-2 gap-2">
-                <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Severity</label><select value={findingSev} onChange={(e) => setFindingSev(e.target.value)} className="h-7 w-full rounded border border-border/40 bg-card px-1 text-xs text-foreground outline-none"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select></div>
-                <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} placeholder="Owner name..." className="h-7 w-full rounded border border-border/40 bg-card px-2 text-xs text-foreground outline-none focus:border-info/60" /></div>
+                <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Severity</label><select value={findingSev} onChange={(e) => setFindingSev(e.target.value)} aria-label="Finding severity" className="h-7 w-full rounded border border-border/40 bg-card px-1 text-xs text-foreground outline-none"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select></div>
+                <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} placeholder="Owner name..." aria-label="Finding owner" className="h-7 w-full rounded border border-border/40 bg-card px-2 text-xs text-foreground outline-none focus:border-info/60" /></div>
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={hCreateFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-40">Create Finding</button>

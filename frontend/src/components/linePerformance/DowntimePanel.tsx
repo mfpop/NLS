@@ -16,7 +16,7 @@ export function DowntimePanel({ summary, events, onLogDowntime, onOpenDetail, on
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="rounded-md border border-border/50 bg-card">
+    <div>
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/20">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />

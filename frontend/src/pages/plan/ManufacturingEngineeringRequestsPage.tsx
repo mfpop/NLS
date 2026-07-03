@@ -7,12 +7,14 @@ import {
   AlertTriangle, Ban, Settings, Lightbulb, Cog, Clock3,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
+import { LEFT_COLUMN_WIDTH_CLASS } from "@/components/layout/layoutWidths";
+import { RecordListPanel, RecordListItem } from "@/components/layout/RecordListPanel";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
 import { useTargetEntities } from "@/hooks/useTargetEntities";
+import { formatDateShort } from "@/utils/dateFormat";
 import { MER_LIST_QUERY, MER_SUMMARY_QUERY } from "@/graphql/merQueries";
 import {
   CREATE_MER_MUTATION, UPDATE_MER_MUTATION,
@@ -184,11 +186,12 @@ function MERDetailSkeleton() {
 function FlatSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <div className="flex items-center gap-2 mb-3">
-        <div className="h-4 w-0.5 bg-amber-500/60" />
-        <span className="text-xs font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</span>
+      <div className="h-8 border-b border-slate-200 px-3 flex items-center">
+        <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">{title}</span>
       </div>
-      {children}
+      <div className="px-3 py-2">
+        {children}
+      </div>
     </section>
   );
 }
@@ -196,14 +199,11 @@ function FlatSection({ title, children }: { title: string; children: ReactNode }
 function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children?: ReactNode }) {
   return (
     <section>
-      <div className="mb-2 flex min-h-6 items-center gap-2">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</div>
-        </div>
+      <div className="h-8 border-b border-slate-200 px-0 flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">{title}</span>
         {action}
       </div>
-      {children}
+      {children && <div className="pt-2">{children}</div>}
     </section>
   );
 }
@@ -243,16 +243,14 @@ const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: s
   EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-purple-200 dark:border-purple-800" },
 };
 
-function KpiCard({ label, value, muted, dotClass, icon }: { label: string; value: ReactNode; muted?: boolean; dotClass?: string; icon?: ReactNode }) {
+function KpiCell({ label, value, muted, dotClass, icon }: { label: string; value: ReactNode; muted?: boolean; dotClass?: string; icon?: ReactNode }) {
   return (
-    <div className="border border-border/30 bg-card px-2.5 py-2 text-left">
-      <div className="min-w-0 flex-1">
-        <p className={`text-[11px] font-medium ${theme.textMuted} truncate flex items-center gap-1.5`}>
-          {icon ? icon : dotClass ? <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${dotClass}`} /> : null}
-          {label}
-        </p>
-        <p className={`text-lg font-bold ${muted ? theme.textMuted : theme.textPrimary}`}>{value}</p>
-      </div>
+    <div className="px-3 py-2 text-left min-w-0">
+      <p className="text-[11px] font-medium text-slate-500 truncate flex items-center gap-1.5">
+        {icon ? icon : dotClass ? <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${dotClass}`} /> : null}
+        {label}
+      </p>
+      <p className={`text-lg font-bold ${muted ? "text-slate-500" : "text-slate-950"}`}>{value}</p>
     </div>
   );
 }
@@ -263,10 +261,10 @@ function BarRow({ label, count, total, color }: { label: string; count: number; 
   return (
     <div className="space-y-0.5">
       <div className="flex items-center justify-between">
-        <span className={`text-[11px] ${theme.textPrimary}`}>{label}</span>
-        <span className={`text-[11px] font-semibold ${theme.textPrimary}`}>{count} <span className={`${theme.textMuted} font-normal`}>({pct}%)</span></span>
+        <span className="text-[11px] text-slate-950">{label}</span>
+        <span className="text-[11px] font-semibold text-slate-950">{count} <span className="text-slate-500 font-normal">({pct}%)</span></span>
       </div>
-      <div className="h-1 w-full rounded-full bg-muted overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-slate-200 overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${Math.max(pct, 3)}%` }} />
       </div>
     </div>
@@ -287,14 +285,12 @@ function daysUntil(dateStr: string | null): number | null {
 
 function formatDate(d: string | null): string {
   if (!d) return "\u2014";
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return formatDateShort(d) || "";
 }
 
 function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
   summary: any; summaryLoading: boolean; merList: any[]; onNew: () => void;
 }) {
-
-  const totalEstimated = merList.reduce((sum, m) => sum + (m.estimatedCost || 0), 0);
 
   const recentMERs = [...merList].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
   const upcomingDeadlines = merList.filter((m) => {
@@ -313,15 +309,15 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
           <div className="flex flex-col items-center justify-center h-48 text-center px-4">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl mb-6">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="border border-border/40 bg-card p-3 animate-pulse">
+                <div key={i} className="border border-slate-200 bg-slate-100 p-3 animate-pulse">
                   <div className="space-y-2">
-                    <div className="h-3 w-16 bg-muted" />
-                    <div className="h-5 w-10 bg-muted" />
+                    <div className="h-3 w-16 bg-slate-200" />
+                    <div className="h-5 w-10 bg-slate-200" />
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
               Loading MER data...
             </div>
           </div>
@@ -340,22 +336,27 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
           </div>
         ) : (
           <>
-            <SectionCard title="Key Metrics">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9 gap-1.5">
-                <KpiCard label="Submitted" value={summary.submitted} dotClass={STATUS_DOT.SUBMITTED} />
-                <KpiCard label="Under Review" value={summary.underReview} dotClass={STATUS_DOT.UNDER_REVIEW} />
-                <KpiCard label="Approved" value={summary.approved} dotClass={STATUS_DOT.APPROVED} />
-                <KpiCard label="In Progress" value={summary.inProgress} dotClass={STATUS_DOT.IN_PROGRESS} />
-                <KpiCard label="Completed" value={summary.completed} dotClass={STATUS_DOT.COMPLETED} />
-                <KpiCard label="Rejected" value={summary.rejected} muted={summary.rejected === 0} dotClass={STATUS_DOT.REJECTED} />
-                <KpiCard label="Cancelled" value={summary.cancelled} muted={summary.cancelled === 0} dotClass={STATUS_DOT.CANCELLED} />
-                <KpiCard label="Overdue" value={summary.overdue} muted={summary.overdue === 0} icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-500 stroke-current shrink-0" />} />
-                <KpiCard label="Est. Cost" value={`$${totalEstimated.toLocaleString()}`} muted={totalEstimated === 0} />
+            <div className="border-b border-slate-200 bg-slate-50">
+              <div className="px-3 h-8 flex items-center border-b border-slate-200">
+                <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Key Metrics</span>
               </div>
-            </SectionCard>
+              <div className="grid grid-cols-8 divide-x divide-slate-200">
+                <KpiCell label="Submitted" value={summary.submitted} dotClass={STATUS_DOT.SUBMITTED} />
+                <KpiCell label="Under Review" value={summary.underReview} dotClass={STATUS_DOT.UNDER_REVIEW} />
+                <KpiCell label="Approved" value={summary.approved} dotClass={STATUS_DOT.APPROVED} />
+                <KpiCell label="In Progress" value={summary.inProgress} dotClass={STATUS_DOT.IN_PROGRESS} />
+                <KpiCell label="Completed" value={summary.completed} dotClass={STATUS_DOT.COMPLETED} />
+                <KpiCell label="Rejected" value={summary.rejected} muted={summary.rejected === 0} dotClass={STATUS_DOT.REJECTED} />
+                <KpiCell label="Cancelled" value={summary.cancelled} muted={summary.cancelled === 0} dotClass={STATUS_DOT.CANCELLED} />
+                <KpiCell label="Overdue" value={summary.overdue} muted={summary.overdue === 0} icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-500 stroke-current shrink-0" />} />
+              </div>
+            </div>
 
-              <FlatSection title="Breakdown">
-                <div className="space-y-1.5">
+              <div className="border-b border-slate-200">
+                <div className="h-8 border-b border-slate-200 px-3 flex items-center">
+                  <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Breakdown by Type</span>
+                </div>
+                <div className="px-3 py-2 space-y-2">
                   {summary.byType.map((t: { requestType: string; count: number }) => {
                     const meta = TYPE_META[t.requestType];
                     const barColors: Record<string, string> = {
@@ -373,60 +374,67 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                     );
                   })}
                 </div>
-              </FlatSection>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="flex flex-col">
-                <FlatSection title="Due This Week">
-                  {upcomingDeadlines.length === 0 ? (
-                    <p className={`text-xs italic ${theme.textMuted}`}>No upcoming deadlines</p>
-                  ) : (
-                    <div className="space-y-1">
-                      {upcomingDeadlines.map((m) => {
-                        const days = daysUntil(m.dueDate);
-                        return (
-                          <div key={m.id} className="flex items-center gap-2 py-1 border-b border-border-major last:border-0">
-                            <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
-                            <div className="min-w-0 flex-1">
-                              <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
-                              <div className="text-xs text-amber-600 dark:text-amber-400">
-                                {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
-                              </div>
-                            </div>
-                            <StatusDot status={m.status} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </FlatSection>
               </div>
 
-              <div className="flex flex-col">
-                <FlatSection title="Recent Activity">
-                  {recentMERs.length === 0 ? (
-                    <p className={`text-xs italic ${theme.textMuted}`}>No recent activity</p>
-                  ) : (
-                    <div className="space-y-1">
-                      {recentMERs.map((m) => (
-                        <div key={m.id} className="flex items-center gap-2 py-1 border-b border-border-major last:border-0">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
+            <div className="border-t border-slate-200">
+              <div className="flex divide-x divide-slate-200">
+                <div className="w-[40%] min-w-0">
+                  <div className="h-8 border-b border-slate-200 px-3 flex items-center">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Due This Week</span>
+                  </div>
+                  <div className="px-3 py-2">
+                    {upcomingDeadlines.length === 0 ? (
+                      <p className="text-xs italic text-slate-500">No upcoming deadlines</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {upcomingDeadlines.map((m) => {
+                          const days = daysUntil(m.dueDate);
+                          return (
+                            <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
+                              <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs font-semibold text-slate-950 truncate">{m.title}</div>
+                                <div className="text-xs text-amber-600">
+                                  {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
+                                </div>
+                              </div>
                               <StatusDot status={m.status} />
-                              <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
                             </div>
-                            <div className="text-xs text-slate-500 ml-4">
-                              {m.merCode || `MER-${m.id}`} {"\u00B7"} {formatDate(m.createdAt)}
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="h-8 border-b border-slate-200 px-3 flex items-center">
+                    <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Recent Activity</span>
+                  </div>
+                  <div className="px-3 py-2">
+                    {recentMERs.length === 0 ? (
+                      <p className="text-xs italic text-slate-500">No recent activity</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {recentMERs.map((m) => (
+                          <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <StatusDot status={m.status} />
+                                <div className="text-xs font-semibold text-slate-950 truncate">{m.title}</div>
+                              </div>
+                              <div className="text-xs text-slate-500 ml-4">
+                                {m.merCode || `MER-${m.id}`} {"\u00B7"} {formatDate(m.createdAt)}
+                              </div>
                             </div>
+                            <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-slate-500"}`}>
+                              {PRIORITY_META[m.priority]?.label || m.priority}
+                            </span>
                           </div>
-                          <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
-                            {PRIORITY_META[m.priority]?.label || m.priority}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </FlatSection>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </>
@@ -488,7 +496,6 @@ export function ManufacturingEngineeringRequestsPage() {
   }, []);
 
   const listContainerRef = useRef<HTMLDivElement>(null);
-  const scrollableRef = useRef<HTMLDivElement>(null);
   const paginatedMersRef = useRef<MERNode[]>([]);
   const selectedIdRef = useRef(selectedId);
   selectedIdRef.current = selectedId;
@@ -506,18 +513,9 @@ export function ManufacturingEngineeringRequestsPage() {
     prevSelIdRef.current = selectedId;
   }, [selectedId]);
 
-  /* ── Auto-calculate visible rows per page ── */
-  useEffect(() => {
-    const el = scrollableRef.current;
-    if (!el) return;
-    const ITEM_HEIGHT = 68; // h-16 (64px) + my-0.5 (4px vertical margin)
-    const calc = () => {
-      setAutoPageSize(Math.max(3, Math.floor(el.clientHeight / ITEM_HEIGHT)));
-    };
-    calc();
-    const ro = new ResizeObserver(calc);
-    ro.observe(el);
-    return () => ro.disconnect();
+  /* ── Auto-page-size derived from RecordListPanel's body height ── */
+  const handlePageSizeChange = useCallback((size: number) => {
+    setAutoPageSize(Math.max(3, size));
   }, []);
 
   const effectivePageSize = autoPageSize;
@@ -1029,7 +1027,8 @@ export function ManufacturingEngineeringRequestsPage() {
             subtitle="Manufacturing Engineering Requests — submit, track, and manage." />
         </div>
         <div className="print-ignore">
-          <SplitToolbar
+          <PageToolbar
+            leftWidthClass={LEFT_COLUMN_WIDTH_CLASS}
             searchValue={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search MERs..."
@@ -1045,145 +1044,93 @@ export function ManufacturingEngineeringRequestsPage() {
                   { value: "", label: "All Engineers" },
                   ...Array.from(new Set(mers.map((m) => m.assignedTo).filter(Boolean))).map((a) => ({ value: a, label: a })),
                 ]}
-                className="w-40" />
+                className="w-36" />
             </>}
             actions={<>
               {isForm ? (
-                <div className="flex items-center gap-1.5"><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></div>
+                <div className="flex items-center gap-1.5"><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="edit" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} variant="danger" /></div>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <ToolbarButton icon={Plus} label="New" onClick={hNew} />
-                  <ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel || sel.status === "COMPLETED" || sel.status === "CANCELLED"} />
-                  <span className="mx-0.5 h-5 w-px shrink-0 bg-border/25" />
-                  <ToolbarButton icon={Trash2} label="Delete" onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel} />
-                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} />
+                  <ToolbarButton icon={Plus} label="New" onClick={hNew} variant="create" />
+                  <ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel || sel.status === "COMPLETED" || sel.status === "CANCELLED"} variant="edit" />
+                  <ToolbarSeparator />
+                  <ToolbarButton icon={Trash2} label="Delete" onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel} variant="danger" />
+                  <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} variant="neutral" />
                 </div>
               )}
             </>} />
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           {/* ── Left Panel: List ── */}
-          <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-10 border-b border-border-major flex items-center justify-between px-3">
-              <span className={`text-sm font-medium ${theme.textMuted}`}>Requests</span>
-              {loading && mers.length === 0 ? null : (
-                <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-slate-200 bg-card text-muted-foreground whitespace-nowrap">
-                  {filteredMers.length}
-                </span>
-              )}
-            </div>
-            <div ref={scrollableRef} className="flex-1 overflow-y-auto">
-              {loading && mers.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
-                  <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />Loading...</div>
-              ) : filteredMers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <p className="text-xs font-medium text-muted-foreground">{filterAssignee ? "No requests match filter" : "No engineering requests"}</p>
-                  <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 dark:text-amber-400 transition-colors">
-                    <Plus className="h-3 w-3 stroke-current" /> Create MER</button>
+          <div className="print-ignore" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
+            {loading && mers.length === 0 ? (
+              <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 border-r border-slate-300">
+                <div className="flex items-center justify-center h-full text-xs text-slate-500">
+                  <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2" />Loading...
                 </div>
-              ) : (
-                <div>
-              <div ref={listContainerRef} tabIndex={0} className="outline-none">
+              </div>
+            ) : (
+              <RecordListPanel title="Requests" count={filteredMers.length}
+                autoPageSize={true}
+                rowHeight={56}
+                onPageSizeChange={handlePageSizeChange}
+                pagination={filteredMers.length > 0 ? {
+                  start: (safePage - 1) * effectivePageSize + 1,
+                  end: Math.min(safePage * effectivePageSize, filteredMers.length),
+                  total: filteredMers.length,
+                  page: safePage,
+                  totalPages: pageCount,
+                  onPageChange: (p: number) => setPage(p),
+                } : undefined}
+                emptyState={
+                  <div className="flex flex-col items-center justify-center h-32 text-center px-4">
+                    <p className="text-xs font-medium text-slate-500">{filterAssignee ? "No requests match filter" : "No engineering requests"}</p>
+                    <button type="button" onClick={hNew}
+                      className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 transition-colors">
+                      <Plus className="h-3 w-3 stroke-current" /> Create MER</button>
+                  </div>
+                }
+              >
+                <div ref={listContainerRef} tabIndex={0} className="outline-none">
                   {paginatedMers.map((m) => (
-                    <div key={m.id} data-mer-id={m.id}
+                    <RecordListItem
+                      key={m.id}
+                      active={m.id === selectedId}
                       onClick={() => {
                         if (isForm && isDirty && mode === "edit") { if (!confirm("Unsaved changes. Discard?")) return; }
                         setSelectedId(m.id);
                         if (mode === "create") { clearForm(); }
                         if (isForm) { setIsDirty(false); setMode("view"); }
                       }}
-                      className={`group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${selectedId === m.id ? "bg-table-selected border-l-2 border-l-amber-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"}`}>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-0.5 flex items-center gap-1.5">
+                      title={
+                        <span className="flex items-center gap-1.5">
                           {m.priority && m.priority !== "MEDIUM" && (
                             <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${m.priority === "CRITICAL" ? "bg-red-500" : m.priority === "HIGH" ? "bg-orange-500" : "bg-gray-400"}`} />
                           )}
-                          <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`} title={m.title}>{m.title}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="truncate" title={m.title}>{m.title}</span>
+                        </span>
+                      }
+                      subtitle={
+                        <>
                           <span>{requestTypeLabel(m.requestType)}</span>
-                          <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
-                          <span className="min-w-0 flex-1 truncate">{m.owner || m.submittedBy || "-"}</span>
-                        </div>
-                      </div>
-                      <span className={`shrink-0 inline-block h-2.5 w-2.5 ${STATUS_DOT[m.status] || "bg-gray-400"}`} title={statusLabel(m.status)} />
-                    </div>
+                          <span>{m.owner || m.submittedBy || "-"}</span>
+                        </>
+                      }
+                      trailing={
+                        <span className={`inline-block h-2.5 w-2.5 ${STATUS_DOT[m.status] || "bg-gray-400"}`} title={statusLabel(m.status)} />
+                      }
+                    />
                   ))}
                 </div>
-                </div>
-              )}
-            </div>
-            <div className="shrink-0 border-t border-slate-200 bg-muted px-3 py-1.5 space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-                  {filteredMers.length > 0
-                    ? `${(safePage - 1) * effectivePageSize + 1}–${Math.min(safePage * effectivePageSize, filteredMers.length)} of ${filteredMers.length}`
-                    : `0 requests`
-                  }
-                </span>
-                <div className="flex-1" />
-                {pageCount > 1 && (
-                  <div className="flex items-center gap-0.5">
-                    <button type="button" disabled={safePage <= 1} onClick={() => setPage(1)}
-                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="First page">
-                      {"\u00AB"}
-                    </button>
-                    <button type="button" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Previous page">
-                      {"\u2039"}
-                    </button>
-                    <div className="flex items-center gap-0.5 mx-1">
-                      {(() => {
-                        const pages: (number | "...")[] = [];
-                        const maxVisible = 5;
-                        if (pageCount <= maxVisible + 2) {
-                          for (let i = 1; i <= pageCount; i++) pages.push(i);
-                        } else {
-                          pages.push(1);
-                          const start = Math.max(2, safePage - 1);
-                          const end = Math.min(pageCount - 1, safePage + 1);
-                          if (start > 2) pages.push("...");
-                          for (let i = start; i <= end; i++) pages.push(i);
-                          if (end < pageCount - 1) pages.push("...");
-                          pages.push(pageCount);
-                        }
-                        return pages.map((p, i) =>
-                          p === "..." ? (
-                            <span key={`ellipsis-${i}`} className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-slate-400 select-none">{"\u2026"}</span>
-                          ) : (
-                            <button key={p} type="button" onClick={() => setPage(p)}
-                              className={`inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] px-1 text-xs font-semibold transition-all ${
-                                p === safePage
-                                  ? "bg-amber-50 border border-amber-300 text-amber-800"
-                                  : "text-slate-600 hover:bg-slate-100"
-                              }`}>
-                              {p}
-                            </button>
-                          )
-                        );
-                      })()}
-                    </div>
-                    <button type="button" disabled={safePage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Next page">
-                      {"\u203A"}
-                    </button>
-                    <button type="button" disabled={safePage >= pageCount} onClick={() => setPage(pageCount)}
-                      className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Last page">
-                      {"\u00BB"}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+              </RecordListPanel>
+            )}
           </div>
           <div onMouseDown={handleSplitMouseDown}
             className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10"
             style={{ width: 2 }} />
           <div className={`print-area flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
-        <div className="print-ignore shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
+        <div className="print-ignore shrink-0 border-t border-slate-200 bg-slate-50 flex h-10 items-center gap-5 px-4 text-xs text-slate-500 font-medium">
           <div className="flex items-center gap-3">
             {Object.entries(STATUS_DOT).map(([status, dotClass]) => (
               <span key={status} className="flex items-center gap-1">

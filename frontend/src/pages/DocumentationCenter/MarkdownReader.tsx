@@ -482,14 +482,14 @@ export const MarkdownReader = forwardRef<MarkdownReaderHandle, MarkdownReaderPro
   const fontFamily = fontFamilyForTheme(readingTheme);
 
   // Sepia/dark theme heading/link colours applied via inline style
-  const sepiaHeadingStyle = readingTheme === "sepia" ? { color: "#5f4b32" } as React.CSSProperties : undefined;
-  const sepiaLinkStyle = readingTheme === "sepia" ? { color: "#8b6914" } as React.CSSProperties : undefined;
-  const sepiaBlockquoteStyle = readingTheme === "sepia" ? { color: "#8b7d6b" } as React.CSSProperties : undefined;
-  const darkLinkStyle = readingTheme === "dark" ? { color: "#5ea6f0" } as React.CSSProperties : undefined;
+  const sepiaHeadingStyle = readingTheme === "sepia" ? { color: "var(--color-foreground)" } as React.CSSProperties : undefined;
+  const sepiaLinkStyle = readingTheme === "sepia" ? { color: "var(--color-warning)" } as React.CSSProperties : undefined;
+  const sepiaBlockquoteStyle = readingTheme === "sepia" ? { color: "var(--color-muted-foreground)" } as React.CSSProperties : undefined;
+  const darkLinkStyle = readingTheme === "dark" ? { color: "var(--color-primary)" } as React.CSSProperties : undefined;
 
   // Progress bar colors per theme
-  const progressBg = readingTheme === "dark" ? "bg-[#363848]" : readingTheme === "sepia" ? "bg-[#d4c090]" : "bg-gray-200/70";
-  const progressFill = readingTheme === "sepia" ? "bg-[#6b4c0e]" : readingTheme === "dark" ? "bg-[#60a5fa]" : "bg-primary/90";
+  const progressBg = readingTheme === "dark" ? "bg-muted" : readingTheme === "sepia" ? "bg-warning/20" : "bg-muted-foreground/20";
+  const progressFill = readingTheme === "sepia" ? "bg-warning" : readingTheme === "dark" ? "bg-primary" : "bg-primary/90";
 
   return (
     <div className={`flex flex-col h-full overflow-hidden ${themeStyle.bg} ${themeStyle.text}`}
@@ -604,18 +604,18 @@ export const MarkdownReader = forwardRef<MarkdownReaderHandle, MarkdownReaderPro
                     }
                     if (CORE_CONCEPT_PATTERN.test(raw)) {
                       CORE_CONCEPT_PATTERN.lastIndex = 0;
-                      return <p className={`${bodyClass} mb-5`} style={readingTheme === "dark" ? { color: "#d0d0d0" } : undefined} {...props}>{renderWithCoreConceptPills(raw)}</p>;
+                      return <p className={`${bodyClass} mb-5 ${readingTheme === "dark" ? "text-foreground/85" : ""}`} {...props}>{renderWithCoreConceptPills(raw)}</p>;
                     }
-                    return <p className={`${bodyClass} mb-5`} style={readingTheme === "dark" ? { color: "#d0d0d0" } : undefined} {...props}>{children}</p>;
+                    return <p className={`${bodyClass} mb-5 ${readingTheme === "dark" ? "text-foreground/85" : ""}`} {...props}>{children}</p>;
                   },
                   li(params: any) {
                     const { children, ...props } = params;
                     const raw = extractTextContent(children).trim();
                     if (CORE_CONCEPT_PATTERN.test(raw)) {
                       CORE_CONCEPT_PATTERN.lastIndex = 0;
-                      return <li className={bodyClass} style={readingTheme === "dark" ? { color: "#d0d0d0" } : undefined} {...props}>{renderWithCoreConceptPills(raw)}</li>;
+                      return <li className={`${bodyClass} ${readingTheme === "dark" ? "text-foreground/85" : ""}`} {...props}>{renderWithCoreConceptPills(raw)}</li>;
                     }
-                    return <li className={bodyClass} style={readingTheme === "dark" ? { color: "#d0d0d0" } : undefined} {...props}>{children}</li>;
+                    return <li className={`${bodyClass} ${readingTheme === "dark" ? "text-foreground/85" : ""}`} {...props}>{children}</li>;
                   },
                 }}
               >

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { FileText, Plus } from "lucide-react";
-import { ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarButton } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
 import type { Profile, WorkHistoryEntry, EducationEntry } from "@/types/profile";
 
@@ -144,6 +144,32 @@ export function validateProfile(
 
 /* ── UI Components ──────────────────────────────────────────────── */
 
+/* ── Profile Section Header ───────────────────────────────────── */
+
+export function ProfileSectionHeader({
+  icon: Icon,
+  iconColor,
+  title,
+  subtitle,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <header className="flex items-start gap-3 border-b border-slate-200 px-4 py-3">
+      <div className="w-5 shrink-0 flex justify-center pt-0.5">
+        <Icon className={`h-4 w-4 ${iconColor}`} />
+      </div>
+      <div className="min-w-0 flex-1 text-left">
+        <h2 className="text-sm font-semibold leading-5 text-left">{title}</h2>
+        <p className="text-xs leading-4 text-slate-500 text-left">{subtitle}</p>
+      </div>
+    </header>
+  );
+}
+
 export function EmptyBlock({
   icon: Icon,
   title,
@@ -184,7 +210,7 @@ export function FieldShell({
 }) {
   return (
     <label className={className || "block"}>
-      <div className={`mb-1 text-[10px] font-semibold uppercase tracking-widest ${theme.textMuted}`}>
+      <div className={`mb-1 text-[11px] font-medium uppercase tracking-wide ${theme.textMuted}`}>
         {label}
         {required ? <span className="ml-0.5 text-danger">*</span> : null}
       </div>
@@ -200,6 +226,90 @@ export function ReadOnlyField({ children }: { children: ReactNode }) {
 
 export function MissingValue({ label = "Not provided" }: { label?: string }) {
   return <span className={`text-sm ${theme.textMuted} italic`}>{label}</span>;
+}
+
+/* ── Read-Only Access Rows ──────────────────────────────────────── */
+
+export function ProfileReadOnlyAccessRows({
+  roles,
+  accessLevel,
+  status,
+  loading,
+  canEditAccess,
+}: {
+  roles: { id: string; roleName: string; roleCode: string; accessLevel: string; isActive: boolean }[];
+  accessLevel: string;
+  status: string;
+  loading: boolean;
+  canEditAccess: boolean;
+}) {
+  const activeRoles = roles.filter((r) => r.isActive);
+
+  if (loading) {
+    return (
+      <div className="space-y-3 px-4 py-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 px-4 py-3">
+      {/* Roles */}
+      <div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Roles</div>
+        {activeRoles.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {activeRoles.map((r) => (
+              <span
+                key={r.id}
+                className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-700 shadow-sm"
+              >
+                {r.roleName}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-sm text-slate-400 italic">No roles assigned</span>
+        )}
+      </div>
+
+      {/* Access Level */}
+      <div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Access Level</div>
+        {accessLevel ? (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-700">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-500" />
+            {accessLevel}
+          </span>
+        ) : (
+          <span className="text-sm text-slate-400 italic">—</span>
+        )}
+      </div>
+
+      {/* Status */}
+      <div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Status</div>
+        {status ? (
+          <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${status === "Active" ? "text-emerald-700" : "text-slate-400"}`}>
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${status === "Active" ? "bg-emerald-500" : "bg-slate-300"}`} />
+            {status}
+          </span>
+        ) : (
+          <span className="text-sm text-slate-400 italic">—</span>
+        )}
+      </div>
+
+      {/* Read-only helper text */}
+      <p className="text-[10px] text-slate-400 italic pt-1 leading-relaxed">
+        {canEditAccess
+          ? "Role assignments and access levels can be changed in System &gt; Users &amp; Access."
+          : "Requires admin rights to view or modify detailed permissions."}
+      </p>
+    </div>
+  );
 }
 
 /* ── CSS Classes ────────────────────────────────────────────────── */

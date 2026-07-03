@@ -2,7 +2,7 @@ import { X, RefreshCw, FilePlus, Pencil, CheckCircle2, Archive, Save, Printer, C
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
 import { StructureDocumentTree } from "./StructureDocumentTree";
 import { StructureDocumentDetailsPanel } from "./StructureDocumentDetailsPanel";
@@ -289,22 +289,24 @@ export function StructureDocumentPage({
           </div>
         </div>
       ) : (
-        <Toolbar
-          left={<ToolbarSearch value={searchQuery} onChange={setSearchQuery} placeholder="Search structure..." />}
-          right={
+        <PageToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search structure..."
+          actions={
             editing ? (
               <>
-                <ToolbarButton icon={X} label="Cancel" onClick={() => setEditing(false)} />
-                <ToolbarButton icon={Save} label="Save" onClick={() => (globalThis.document.getElementById('doc-editor-form') as HTMLFormElement | null)?.requestSubmit()} variant="success" />
+                <ToolbarButton icon={X} label="Cancel" onClick={() => setEditing(false)} variant="danger" />
+                <ToolbarButton icon={Save} label="Save" onClick={() => (globalThis.document.getElementById('doc-editor-form') as HTMLFormElement | null)?.requestSubmit()} variant="edit" />
               </>
             ) : (
               <>
-                <ToolbarButton icon={FilePlus} label="Create" disabled={hasDocument && !isMissing} onClick={() => handleAction("create")} />
-                <ToolbarButton icon={Pencil} label="Edit" disabled={!hasDocument || isArchived} onClick={() => handleAction("edit")} />
-                <ToolbarButton icon={CheckCircle2} label="Approve" disabled={!hasDocument || isApproved || isArchived} onClick={() => handleAction("approve")} />
-                <ToolbarButton icon={Archive} label="Archive" disabled={!hasDocument || isArchived} onClick={() => handleAction("archive")} />
+                <ToolbarButton icon={FilePlus} label="Create" disabled={hasDocument && !isMissing} onClick={() => handleAction("create")} variant="create" />
+                <ToolbarButton icon={Pencil} label="Edit" disabled={!hasDocument || isArchived} onClick={() => handleAction("edit")} variant="edit" />
+                <ToolbarButton icon={CheckCircle2} label="Approve" disabled={!hasDocument || isApproved || isArchived} onClick={() => handleAction("approve")} variant="warning" />
+                <ToolbarButton icon={Archive} label="Archive" disabled={!hasDocument || isArchived} onClick={() => handleAction("archive")} variant="danger" />
                 <ToolbarButton icon={Printer} label="Print" disabled={!hasDocument || editing} onClick={handlePrint} />
-                <span className="mx-0.5 h-5 w-px bg-border/30" />
+                <ToolbarSeparator />
                 <ToolbarButton icon={treeCollapsed ? ChevronRight : ChevronLeft} label="" onClick={() => setTreeCollapsed(prev => !prev)} />
                 <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => { refetchTree(); refetchDoc(); }} />
               </>

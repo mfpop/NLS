@@ -6,8 +6,7 @@ import {
   MapPin, Hash, Archive, Save, FileText, CheckCircle, Clock, ClipboardList,
 } from "lucide-react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
-import { SplitToolbar } from "@/components/shared/SplitToolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SPARE_PARTS_QUERY, SPARE_PART_USAGES_QUERY, WORK_ORDERS_QUERY } from "@/graphql/maintenanceQueries";
 import { SparePartsDashboard } from "./spare-parts/SparePartsDashboard";
@@ -332,10 +331,10 @@ export function SparePartsPage() {
         </p>
         {editMode && sel && <Fld label="Part Number"><p className="text-sm font-mono text-foreground">{sel.partNumber}</p></Fld>}
         {!editMode && <Fld label="Part Number" required error={formErrors.partNumber}>
-          <input type="text" value={form.partNumber} onChange={(e) => setForm({ ...form, partNumber: e.target.value })} className={inpCls} placeholder="e.g. HYD-SEAL-001" />
+          <input type="text" value={form.partNumber} onChange={(e) => setForm({ ...form, partNumber: e.target.value })} className={inpCls} placeholder="e.g. HYD-SEAL-001" aria-label="Part number" />
         </Fld>}
         <Fld label="Name" required error={formErrors.name}>
-          <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inpCls} placeholder="Part name" />
+          <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inpCls} placeholder="Part name" aria-label="Part name" />
         </Fld>
         <Fld label="Category">
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={selCls}>
@@ -345,20 +344,20 @@ export function SparePartsPage() {
         </Fld>
         <div className="grid grid-cols-2 gap-3">
           <Fld label="UOM">
-            <input type="text" value={form.uom} onChange={(e) => setForm({ ...form, uom: e.target.value })} className={inpCls} placeholder="EA" />
+            <input type="text" value={form.uom} onChange={(e) => setForm({ ...form, uom: e.target.value })} className={inpCls} placeholder="EA" aria-label="Unit of measure" />
           </Fld>
           <Fld label="Status">
             <p className="text-sm font-semibold text-foreground pt-1">{editMode && sel ? sel.status : "New"}</p>
           </Fld>
         </div>
         <Fld label="Manufacturer">
-          <input type="text" value={form.manufacturer} onChange={(e) => setForm({ ...form, manufacturer: e.target.value })} className={inpCls} placeholder="Manufacturer name" />
+          <input type="text" value={form.manufacturer} onChange={(e) => setForm({ ...form, manufacturer: e.target.value })} className={inpCls} placeholder="Manufacturer name" aria-label="Manufacturer" />
         </Fld>
         <Fld label="Supplier">
-          <input type="text" value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} className={inpCls} placeholder="Supplier name" />
+          <input type="text" value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} className={inpCls} placeholder="Supplier name" aria-label="Supplier" />
         </Fld>
         <Fld label="Storage Location">
-          <input type="text" value={form.storageLocation} onChange={(e) => setForm({ ...form, storageLocation: e.target.value })} className={inpCls} placeholder="Aisle, bin, shelf..." />
+          <input type="text" value={form.storageLocation} onChange={(e) => setForm({ ...form, storageLocation: e.target.value })} className={inpCls} placeholder="Aisle, bin, shelf..." aria-label="Storage location" />
         </Fld>
         <div className="grid grid-cols-2 gap-3">
           <Fld label="Min Quantity">
@@ -562,23 +561,18 @@ export function SparePartsPage() {
         title="Spare Parts"
         subtitle="Manage spare parts inventory — kanban min/max levels"
       />
-      <div className="print-ignore">
-        <SplitToolbar
+      <div className="print-ignore">        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search parts by name or number..."
           filters={view !== "dashboard" && view !== "form" ? (
             <>
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus} options={STATUS_OPTIONS} className="w-28" />
-
               <ToolbarDropdown value={filterCategory} onChange={setFilterCategory} options={CATEGORY_OPTIONS} className="w-36" />
-
               <ToolbarDropdown value={filterStock} onChange={setFilterStock} options={LOW_STOCK_FILTER_OPTIONS} className="w-36" />
-
             </>
           ) : undefined}
-          actions={
-            <div className="flex items-center gap-1 shrink-0">
+          actions={<div className="flex items-center gap-1 shrink-0">
               {view === "form" ? (
                 <>
                   <ToolbarButton icon={Save} label={editMode ? "Update" : "Save"} onClick={hSave} variant="success" />
@@ -606,7 +600,7 @@ export function SparePartsPage() {
             </div>
           }
         />
-      </div>
+        </div>
 
       {view === "dashboard" ? (
         <div className="flex flex-1 min-h-0 overflow-hidden">

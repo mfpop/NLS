@@ -2,7 +2,7 @@
 
 Use project-defined agents automatically when relevant.
 
-## General / Manager Agent
+## Manager Agent
 Use for:
 - task routing
 - planning
@@ -15,6 +15,17 @@ Must not:
 - implement final code unless explicitly requested
 - approve governance decisions
 - perform final audit
+
+## General Chat Agent
+Use for:
+- general project questions
+- status summaries
+- redirecting to specialist agents
+
+Must not:
+- implement code
+- approve decisions
+- answer specialist-domain questions without redirecting
 
 ## Governance Agent
 Use for:

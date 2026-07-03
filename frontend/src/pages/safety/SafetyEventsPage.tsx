@@ -4,7 +4,7 @@ import { gql } from "@apollo/client";
 import { AlertTriangle, Plus, Save, CheckCircle, Ban, Play, Pencil, Trash2, ArrowLeft, RefreshCw, Search, Eye } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarDropdown, ExplorerToolbarButton, ExplorerToolbarSeparator } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarButton, ToolbarDropdown, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { SourceLocationSelector, type LocationHierarchy } from "@/components/shared/SourceLocationSelector";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { PRODUCTION_LINES_QUERY } from "@/graphql/productionLineQueries";
@@ -534,19 +534,19 @@ export function SafetyEventsPage() {
   const canCancel = selStatus !== "CLOSED" && selStatus !== "CANCELLED";
 
   const toolbarContent = (
-    <ExplorerToolbar
+    <PageToolbar
       searchValue={searchQuery}
       onSearchChange={setSearchQuery}
       searchPlaceholder="Search events..."
       filters={
-        <ExplorerToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
+        <ToolbarDropdown value={filterStatus} onChange={(v) => { setFilterStatus(v); setSelectedId(null); }} options={STATUS_FILTERS} placeholder="Status" width="w-36" />
       }
       actions={
-        creating ? (<><ExplorerToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredFieldsOk} variant="success" title={requiredFieldsOk ? "Save as draft" : "Fill in all required fields"} /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); setSelectedId(null); resetForm(); }} title="Cancel creation" /></>) :
-        editing ? (<><ExplorerToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredFieldsOk} variant="success" /><ExplorerToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} title="Discard changes" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
-        !selItem ? (<><ExplorerToolbarButton icon={Plus} label="New Event" onClick={hNew} variant="success" title="Create new safety event" /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        creating ? (<><ToolbarButton icon={Save} label="Save Draft" onClick={hCreate} disabled={!requiredFieldsOk} variant="success" title={requiredFieldsOk ? "Save as draft" : "Fill in all required fields"} /><ToolbarButton icon={Ban} label="Cancel" onClick={() => { setCreating(false); setSelectedId(null); resetForm(); }} title="Cancel creation" /></>) :
+        editing ? (<><ToolbarButton icon={Save} label="Update" onClick={hSaveEdit} disabled={!requiredFieldsOk} variant="success" /><ToolbarButton icon={Ban} label="Cancel" onClick={hCancelEdit} title="Discard changes" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>) :
+        !selItem ? (<><ToolbarButton icon={Plus} label="New Event" onClick={hNew} variant="success" title="Create new safety event" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
         :
-        (<><ExplorerToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ExplorerToolbarButton icon={Play} label="Report" onClick={() => hReport(selItem.id)} disabled={!canReport} /><ExplorerToolbarButton icon={Eye} label="Review" onClick={() => hReview(selItem.id)} disabled={!canReview} /><ExplorerToolbarButton icon={CheckCircle} label="Close" onClick={() => hClose(selItem.id)} disabled={!canClose} variant={canClose ? "success" : "default"} /><ExplorerToolbarButton icon={Trash2} label="Cancel" onClick={() => setDeleteConfirmId(selItem.id)} disabled={!canCancel} variant="destructive" /><ExplorerToolbarSeparator /><ExplorerToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
+        (<><ToolbarButton icon={Pencil} label="Edit" onClick={() => hEdit(selItem)} disabled={!isEditable} /><ToolbarButton icon={Play} label="Report" onClick={() => hReport(selItem.id)} disabled={!canReport} /><ToolbarButton icon={Eye} label="Review" onClick={() => hReview(selItem.id)} disabled={!canReview} /><ToolbarButton icon={CheckCircle} label="Close" onClick={() => hClose(selItem.id)} disabled={!canClose} variant={canClose ? "success" : "default"} /><ToolbarButton icon={Trash2} label="Cancel" onClick={() => setDeleteConfirmId(selItem.id)} disabled={!canCancel} variant="destructive" /><ToolbarSeparator /><ToolbarButton icon={ArrowLeft} label="Back" onClick={() => { setSelectedId(null); setCreating(false); setEditing(false); }} /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>)
       }
     />
   );
@@ -555,7 +555,7 @@ export function SafetyEventsPage() {
     <>
       <div className="shrink-0 h-8 border-b border-slate-200 flex items-center bg-slate-50 px-4"><span className="text-sm font-medium text-slate-700">Events</span><span className="ml-auto text-[10px] text-slate-500 font-mono">{items.length}</span></div>
       {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No events match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
             {loading ? <p className="text-xs text-slate-400">Loading events...</p> : (
@@ -568,9 +568,9 @@ export function SafetyEventsPage() {
             <span className={`inline-block h-2 w-2 rounded-full shrink-0 mt-1 ${SEVERITY_DOT[e.severity] || "bg-slate-400"}`} />
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{e.title || "Event"}</span></div>
-              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
+              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
                 <span>{EVENT_TYPE_OPTS.find((o: any) => o.value === e.eventType)?.label || e.eventType}</span>
-                <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>
+                <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>
                 {e.occurredAt && <span>· {e.occurredAt.slice(0, 10)}</span>}
               </div>
             </div>

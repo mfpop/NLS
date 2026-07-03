@@ -1,117 +1,107 @@
-import { useState } from "react";
-import { Clock, Plus, XCircle, AlertTriangle, CheckCircle2 } from "lucide-react";
-import type { LiveShopfloorActiveDowntime, LiveShopfloorRecentDowntimeEvent } from "@/types/liveShopfloor";
+import { Clock, XCircle, AlertTriangle, User, Wrench, Plus } from "lucide-react";
+import type { LiveShopfloorActiveDowntime } from "@/types/liveShopfloor";
 
 interface Props {
   activeDowntime: LiveShopfloorActiveDowntime | null;
-  recentEvents: LiveShopfloorRecentDowntimeEvent[];
-  onLogDowntime: () => void;
-  onCloseDowntime?: (id: string) => void;
-  onCreateIssue?: (id: string) => void;
-  onCreateAction?: (id: string) => void;
+  onResolveDowntime: (id: string) => void;
+  onCreateIssue: () => void;
 }
 
-export function ActiveDowntimePanel({ activeDowntime, recentEvents, onLogDowntime, onCloseDowntime, onCreateIssue, onCreateAction }: Props) {
-  const [showRecent, setShowRecent] = useState(false);
+export function ActiveDowntimePanel({ activeDowntime, onResolveDowntime, onCreateIssue }: Props) {
+  if (!activeDowntime) {
+    return (
+      <div className="flex flex-col h-full min-h-[140px] overflow-hidden bg-slate-50 border-b border-slate-200">
+        <div className="h-8 shrink-0 border-b border-slate-200 px-3 flex items-center justify-between bg-slate-50">
+          <div className="flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-slate-400" />
+            <h3 className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">Active Downtime</h3>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            No active downtime
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-md border border-border/50 bg-card">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border/20">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Downtime</h3>
-          {activeDowntime && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-medium text-danger animate-pulse">
-              <XCircle className="h-3 w-3" />
-              Active
-            </span>
-          )}
+    <div className="flex flex-col h-full min-h-[140px] overflow-hidden border-b border-slate-200">
+      {/* Subtle red tint only when active downtime exists */}
+      <div className="h-8 shrink-0 border-b border-red-200 px-3 flex items-center justify-between bg-red-50">
+        <div className="flex items-center gap-1.5">
+          <XCircle className="h-3.5 w-3.5 text-red-600" />
+          <h3 className="text-[11px] font-semibold text-red-800 uppercase tracking-wide">Active Downtime</h3>
+          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-medium text-red-800 border border-red-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+            {activeDowntime.durationMinutes}m
+          </span>
         </div>
-        <button
-          type="button"
-          onClick={onLogDowntime}
-          className="inline-flex h-7 items-center gap-1 rounded px-2 text-[10px] font-medium text-foreground hover:bg-muted transition-colors"
-          title="Log Downtime"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Log
-        </button>
       </div>
 
-      {/* Active Downtime Alert */}
-      {activeDowntime ? (
-        <div className="mx-3 my-2 rounded-md border border-danger/20 bg-danger/5 p-3">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-danger" />
-              <span className="text-xs font-semibold text-danger">Active Downtime</span>
-            </div>
-            <span className="text-[10px] tabular-nums font-bold text-danger">{activeDowntime.durationMinutes}m</span>
-          </div>
-          <p className="text-xs font-medium text-foreground">{activeDowntime.reason}</p>
-          <div className="text-[10px] text-muted-foreground mt-0.5">
-            Started: {activeDowntime.startTime}
-            {activeDowntime.affectedResourceName && <> · {activeDowntime.affectedResourceName}</>}
-            {activeDowntime.affectedResourceGroupName && <> · {activeDowntime.affectedResourceGroupName}</>}
-            {activeDowntime.owner && <> · Owner: {activeDowntime.owner}</>}
-          </div>
-          <div className="flex items-center gap-2 mt-1.5">
-            {onCloseDowntime && (
-              <button type="button" onClick={() => onCloseDowntime(activeDowntime.id)}
-                className="inline-flex h-6 items-center gap-1 rounded px-2 text-[10px] font-medium text-danger hover:bg-danger/10 transition-colors">
-                <CheckCircle2 className="h-3 w-3" />
-                Resolve
-              </button>
-            )}
-            {onCreateIssue && !activeDowntime.linkedIssueId && (
-              <button type="button" onClick={() => onCreateIssue(activeDowntime.id)} className="text-[10px] text-accent hover:underline">Create Issue</button>
-            )}
-            {onCreateAction && !activeDowntime.linkedActionId && (
-              <button type="button" onClick={() => onCreateAction(activeDowntime.id)} className="text-[10px] text-accent hover:underline">Create Action</button>
-            )}
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2 bg-red-50/30">
+        {/* Reason */}
+        <div className="flex items-start gap-1.5 mb-1.5">
+          <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-900 leading-tight">{activeDowntime.reason}</p>
           </div>
         </div>
-      ) : (
-        <div className="px-4 py-3 text-center text-[10px] text-muted-foreground">
-          No active downtime
-        </div>
-      )}
 
-      {/* Recent Events */}
-      {recentEvents.length > 0 && (
-        <>
-          <button
-            type="button"
-            onClick={() => setShowRecent(!showRecent)}
-            className="w-full px-4 py-1.5 text-[10px] font-medium text-accent hover:bg-muted/30 transition-colors border-b border-border/10"
-          >
-            {showRecent ? "Hide recent" : `Recent (${recentEvents.length})`}
-          </button>
-          {showRecent && (
-            <div className="max-h-40 overflow-y-auto">
-              {recentEvents.map((event) => (
-                <div key={event.id} className="flex items-start gap-2 px-4 py-2 border-b border-border/10 hover:bg-muted/30 transition-colors">
-                  <div className="shrink-0 mt-0.5">
-                    <Clock className={`h-3.5 w-3.5 ${
-                      event.status === "active" ? "text-danger" : "text-muted-foreground"
-                    }`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] font-medium text-foreground truncate">{event.reason}</span>
-                      <span className="text-[10px] text-muted-foreground">{event.durationMinutes}m</span>
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      {event.startTime}{event.endTime ? ` → ${event.endTime}` : ""}
-                      {event.affectedResourceName && <> · {event.affectedResourceName}</>}
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {/* Resource info */}
+        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] mb-2">
+          {activeDowntime.affectedResourceName && (
+            <div>
+              <span className="text-slate-500">Resource</span>
+              <p className="font-medium text-slate-800 truncate">{activeDowntime.affectedResourceName}</p>
             </div>
           )}
-        </>
-      )}
+          {activeDowntime.affectedResourceGroupName && (
+            <div>
+              <span className="text-slate-500">Group</span>
+              <p className="font-medium text-slate-800 truncate">{activeDowntime.affectedResourceGroupName}</p>
+            </div>
+          )}
+          <div>
+            <span className="text-slate-500">Started</span>
+            <p className="font-medium text-slate-800">{activeDowntime.startTime}</p>
+          </div>
+          <div>
+            <span className="text-slate-500">Duration</span>
+            <p className="font-medium text-slate-800">{activeDowntime.durationMinutes} min</p>
+          </div>
+        </div>
+
+        {/* Owner */}
+        {activeDowntime.owner && (
+          <div className="flex items-center gap-1 text-[10px] text-slate-600 mb-2">
+            <User className="h-3 w-3 text-slate-400" />
+            <span className="font-medium text-slate-700 truncate">{activeDowntime.owner}</span>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onResolveDowntime(activeDowntime.id)}
+            className="inline-flex h-7 items-center gap-1 rounded-[2px] bg-emerald-600 px-2 text-[10px] font-medium text-white hover:bg-emerald-700 transition-colors"
+          >
+            <Wrench className="h-3 w-3" />
+            Resolve
+          </button>
+          <button
+            type="button"
+            onClick={onCreateIssue}
+            className="inline-flex h-7 items-center gap-1 rounded-[2px] border border-red-200 bg-white px-2 text-[10px] font-medium text-red-700 hover:bg-red-50 transition-colors"
+          >
+            <Plus className="h-3 w-3" />
+            Create Issue
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

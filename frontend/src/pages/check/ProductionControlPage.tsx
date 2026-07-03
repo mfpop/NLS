@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Activity, Plus, Save, ArrowLeft, Pencil, X, Archive, Trash2, Play, Ban, AlertTriangle } from "lucide-react";
-import { ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { ControlPageShell, type RecordType } from "./ControlPageShell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useActiveLine } from "@/hooks/useActiveLine";

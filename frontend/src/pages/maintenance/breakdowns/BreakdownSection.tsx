@@ -21,6 +21,7 @@ import {
 import type { CascadeValue } from "./TargetCascade";
 import { resolveTarget } from "./TargetCascade";
 import { TargetCascade } from "./TargetCascade";
+import { formatDateFull } from "@/utils/dateFormat";
 
 // ── Types ──
 
@@ -419,7 +420,7 @@ export function useBreakdownSection(
           )}
         </Field>
         <Field label="Reported Date/Time">
-          <p className="text-sm text-foreground">{isEdit && sel ? (sel.reportedAt?.slice(0, 16) || "—") : new Date().toLocaleString()}</p>
+          <p className="text-sm text-foreground">{isEdit && sel ? (sel.reportedAt?.slice(0, 16) || "—") : formatDateFull(new Date().toISOString())}</p>
         </Field>
         <Field label="Is Equipment Down?">
           {isEdit ? (

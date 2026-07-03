@@ -1,14 +1,20 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { AlertTriangle, Check, TrendingUpDown, Factory, ExternalLink } from "lucide-react";
-import { Pagination, ProductionLineProductScopeSummary, EntityListItem, Badge, InlineRow } from "./components";
+import { AlertTriangle, Check, TrendingUpDown, Factory, ExternalLink, Plus, RefreshCw, Save, X, Trash2 } from "lucide-react";
+import { ProductionLineProductScopeSummary, Badge, InlineRow } from "./components";
 import { useProductionLineFlowContext, useProductionLines, EMPTY_LINE_FORM } from "@/hooks/useProductionLines";
 import { useRoutingSummary } from "@/hooks/useRouting";
 import type { ProductionLine, AssignedResourceGroup } from "@/types/productionLine";
 
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
+import { PageToolbar, ToolbarSearch, ToolbarButton } from "@/components/layout/PageToolbar";
+import { LEFT_COLUMN_WIDTH_CLASS } from "@/components/layout/layoutWidths";
+import { RecordListPanel } from "@/components/shared/RecordListPanel";
+import { ENTITY_COLORS } from "./config/entityColors";
+
+const col = ENTITY_COLORS.line;
 import { useReferenceCategory, type ReferenceValueNode } from "@/hooks/useReferenceTables";
 import { ConfirmDialog } from "./shared";
 import { formatAppDate } from "@/utils/dateFormat";
@@ -1052,7 +1058,7 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   const urlProductionLineId = searchParams.get("productionLineId");
   const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setEntityContext, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
-  const { lines, loading, saveLine, archiveLine, deleteLine, refetch, plants } = useProductionLines(500);
+  const { lines, saveLine, archiveLine, deleteLine, refetch, plants } = useProductionLines(500);
   const { values: statusValues } = useReferenceCategory("status");
   const { values: shiftValues } = useReferenceCategory("shift_model");
   const { values: familyValues } = useReferenceCategory("production_family");
@@ -1060,7 +1066,6 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   const [mode, setMode] = useState<FormMode>("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [preCreateSelectedId, setPreCreateSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [plantFilter, setPlantFilter] = useState<string>("all");
   const [form, setForm] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1070,8 +1075,6 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
   const [editState, setEditState] = useState({ dirty: false, saving: false });
 
   useEffect(() => { setEntityContext("Line"); }, [setEntityContext]);
-
-  useEffect(() => { setPage(1); }, [search, statusFilter, plantFilter]);
 
   useEffect(() => {
     if (!embeddedInFlow || !urlProductionLineId || lines.length === 0) return;
@@ -1112,15 +1115,14 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
       if (!needle) return true;
       return [l.name, l.code, l.plantName].some((value) => value?.toLowerCase().includes(needle));
     });
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? lines.find((l: ProductionLine) => l.id === selectedId) ?? null : null;
 
   useEffect(() => {
     if (mode !== "view") return;
-    if (paginated.length === 0) return;
-    if (selectedId && paginated.some((p: ProductionLine) => p.id === selectedId)) return;
-    setSelectedId(paginated[0].id);
-  }, [paginated, selectedId, mode]);
+    if (filtered.length === 0) return;
+    if (selectedId && filtered.some((p: ProductionLine) => p.id === selectedId)) return;
+    setSelectedId(filtered[0].id);
+  }, [filtered, selectedId, mode]);
 
   const selectedRoutingSummary = useRoutingSummary(sel?.id ?? null).summary;
   const activeFamilyId = (form.productFamilyId || sel?.productFamilyId || sel?.productFamily?.id || "") as string;
@@ -1517,44 +1519,98 @@ export function ProductionLinesPage({ embeddedInFlow = false }: { embeddedInFlow
       )}
       <EntityWorkspacePage
         hideList={embeddedInFlow}
-        toolbar={null}
+        toolbar={
+          <PageToolbar
+            leftWidthClass={LEFT_COLUMN_WIDTH_CLASS}
+            leftSlot={
+              <ToolbarSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search lines..."
+              />
+            }
+            filters={
+              <>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </>
+            }
+            actions={
+              mode === "edit" || mode === "create" ? (
+                <>
+                  <ToolbarButton variant="edit" icon={<Save className="h-4 w-4" />} onClick={hSave} disabled={editState.saving}>
+                    Save
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<X className="h-4 w-4" />} onClick={hCancel}>
+                    Cancel
+                  </ToolbarButton>
+                </>
+              ) : (
+                <>
+                  <ToolbarButton variant="create" icon={<Plus className="h-4 w-4" />} onClick={hNew}>
+                    New
+                  </ToolbarButton>
+                  <ToolbarButton variant="edit" icon={<Plus className="h-4 w-4" />} onClick={hEdit} disabled={!sel}>
+                    Edit
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel}>
+                    Archive
+                  </ToolbarButton>
+                  <ToolbarButton variant="neutral" icon={<RefreshCw className="h-4 w-4" />} onClick={() => refetch()}>
+                    Refresh
+                  </ToolbarButton>
+                </>
+              )
+            }
+          />
+        }
         list={
-          <>
-            <div className="shrink-0 border-b border-border/35 flex h-9 items-center px-3 bg-muted">
+          <div className="flex flex-col h-full min-h-0 overflow-hidden">
+            <div className="shrink-0 border-b border-slate-200 flex h-9 items-center px-3 bg-slate-50">
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
-                className="h-6 w-full min-w-0 rounded border border-border/35 bg-transparent px-2 text-[11px] text-muted-foreground outline-none transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
+                className="h-6 w-full min-w-0 rounded-[2px] border border-slate-300 bg-white px-2 text-[11px] text-slate-900 outline-none focus:border-blue-500">
                 <option value="all">All Plants</option>
                 {plants.map((plant: any) => <option key={plant.id} value={plant.id}>{plant.code} - {plant.name}</option>)}
               </select>
             </div>
-            <div data-production-lines-list className="flex-1 overflow-y-auto bg-muted pl-2">
-              {loading && lines.length === 0 ? (
-                <div className="flex min-h-full items-center justify-center text-xs text-muted-foreground"><span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40 animate-pulse mr-2" />Loading...</div>
-              ) : paginated.length === 0 ? (
-                <div className="flex min-h-full flex-col items-center justify-center text-center px-4">
-                  <TrendingUpDown className="h-5 w-5 text-muted-foreground/40 mb-2 stroke-current" />
-                  <p className="text-xs font-medium text-muted-foreground">No production lines</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">Create one to get started</p>
-                </div>
-              ) : (
-                <div className="py-1">
-                  {paginated.map((ln: ProductionLine) => (
-                    <EntityListItem key={ln.id}
-                      name={ln.name} code={ln.code}
-                      meta={ln.plantName || "Plant required"}
-                      icon={<TrendingUpDown className="h-3.5 w-3.5 stroke-current" />}
-                      selected={selectedId === ln.id}
-                      status={ln.status}
-                      onClick={() => selectLine(ln.id)}
-                      entityType="line" />
-                  ))}
-                </div>
-              )}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <RecordListPanel
+                title="Production Lines"
+                records={filtered}
+                selectedId={selectedId}
+                onSelect={selectLine}
+                getId={(ln: ProductionLine) => ln.id}
+                pageSize={PER_PAGE}
+                emptyMessage="No production lines"
+                selectedBorderClass={col.selectedBorder}
+                selectedBgClass={col.selectedBg}
+                renderRecord={(ln: ProductionLine) => {
+                  const isActive = (ln.status || "").toLowerCase() === "active";
+                  return (
+                    <div className="flex items-center gap-2.5">
+                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${col.iconBg}`}>
+                        <TrendingUpDown className={`h-3.5 w-3.5 ${col.iconFg} stroke-current`} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                          <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{ln.name}</span>
+                          <span className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={ln.status || "unknown"} />
+                        </div>
+                        <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{ln.plantName || "Plant required"}</div>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
             </div>
-            <div className="shrink-0 flex h-7 items-center border-t border-border bg-muted px-3">
-              <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
-            </div>
-          </>
+          </div>
         }
         detail={renderDetail()}
         footer={null}

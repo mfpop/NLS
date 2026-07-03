@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { theme } from "../../../styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { CheckCircle, Package, Factory, Layers, Warehouse, Box, RefreshCw, Plus, Pencil, Trash2, X, GripVertical, Check, Map, Route, Database, ArrowRight, ArrowLeft, AlertTriangle, Building2, Shield, LayoutGrid, LineChart, CheckSquare, XSquare } from "lucide-react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { PageHeader } from "@/pages/shared/PageHeader";
@@ -838,14 +838,16 @@ export function MaterialBinsPage() {
         <PageHeader icon={<Package className="h-5 w-5 stroke-current" />} iconClass={theme.iconBoxEmerald} title="Material Bins" subtitle="Manage material bin configurations across plants" />
 
         {/* Toolbar */}
-        <Toolbar
-          left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search bins..." />}
-          center={<>
-            <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-50" />
-            <ToolbarDropdown value={filters.binType} onChange={(v) => setFilters((p) => ({ ...p, binType: v }))} options={[{ value: "", label: "All Types" }, ...BIN_TYPE_OPTIONS]} className="w-50" />
-            <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-50" />
+        <PageToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search bins..."
+          filters={<>
+            <ToolbarDropdown value={filters.plantId} onChange={(v) => setFilters((p) => ({ ...p, plantId: v }))} options={[{ value: "", label: "All Plants" }, ...plants.map((p) => ({ value: p.id, label: `${p.code} - ${p.name}` }))]} className="w-52" />
+            <ToolbarDropdown value={filters.binType} onChange={(v) => setFilters((p) => ({ ...p, binType: v }))} options={[{ value: "", label: "All Types" }, ...BIN_TYPE_OPTIONS]} className="w-44" />
+            <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "All" }, { value: "active", label: "Active" }, { value: "inactive", label: "Inactive" }]} className="w-36" />
           </>}
-          right={<div className="flex items-center gap-2 shrink-0">
+          actions={<div className="flex items-center gap-2 shrink-0">
               {isForm ? (
                 <>
                   <ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" />

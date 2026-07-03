@@ -88,8 +88,8 @@ export function LinePerformanceRecordList({ records, selectedId, onSelect, loadi
             key={record.id}
             type="button"
             onClick={() => onSelect(record.id)}
-            className={`w-full text-left px-3 py-2.5 border-b border-border/10 transition-colors hover:bg-muted/40 ${
-              selectedId === record.id ? "bg-accent/10 border-l-2 border-l-accent" : ""
+            className={`w-full text-left px-3 py-2.5 border-b border-slate-100 transition-colors border-l-2 ${
+              selectedId === record.id ? "bg-blue-50/30 border-l-blue-600" : "border-l-transparent hover:bg-white"
             }`}
           >
             <div className="flex items-center justify-between gap-2 mb-1">

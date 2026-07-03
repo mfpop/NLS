@@ -1,15 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useLazyQuery } from "@apollo/client/react";
+import { useLazyQuery, useQuery } from "@apollo/client/react";
 import { gql } from "@apollo/client";
 import {
   User, X, FileText, Mail, Phone, MapPin,
-  Globe, Factory, Layers,  Search, Loader2, Pencil,
+  Globe, Factory, Layers, Search, Loader2, Pencil, Shield,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
+import { USER_ROLES_QUERY } from "@/graphql/administrationQueries";
 import type { ProfileDraft } from "./shared";
-import { ToolbarButton } from "@/components/shared/Toolbar";
+import { ToolbarButton } from "@/components/layout/PageToolbar";
 import {
   FieldShell, ReadOnlyField, MissingValue, initials,
+  ProfileReadOnlyAccessRows,
+  ProfileSectionHeader,
   inputClass, inputErrorClass,
   validateField, removeFieldError,
 } from "./shared";
@@ -47,6 +50,7 @@ interface PersonalInfoColumnProps {
   aboutCharCount: number;
   aboutCharColor: string;
   deptError: string | undefined;
+  adminProfileId: string | null;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -69,6 +73,7 @@ export function PersonalInfoColumn({
   aboutCharCount,
   aboutCharColor,
   deptError,
+  adminProfileId,
 }: PersonalInfoColumnProps) {
 
   /* ── User search (Reports to) ─────────────────────────────────── */
@@ -138,13 +143,12 @@ export function PersonalInfoColumn({
 
   return (
     <div className="flex flex-col min-h-0 overflow-hidden border-r border-border-major">
-      {/* ── Header ──────────────────────────────────────────────────── */}
-      <header className={`flex h-12 items-center justify-between border-b border-border-major px-4 shrink-0`}>
-        <div>
-          <h2 className={`text-sm font-semibold ${theme.textPrimary}`}>Personal information</h2>
-          <p className={`text-[11px] ${theme.textMuted} leading-5`}>Core identity and contact details</p>
-        </div>
-      </header>
+      <ProfileSectionHeader
+        icon={User}
+        iconColor="text-sky-600"
+        title="Personal information"
+        subtitle="Core identity and contact details"
+      />
 
       <div className={`divide-y divide-slate-200 overflow-y-auto`}>
         {/* ── Identity fields ──────────────────────────────────────── */}
@@ -418,11 +422,13 @@ export function PersonalInfoColumn({
         </div>
 
         {/* ── About / Summary ────────────────────────────────────────── */}
-        <div ref={summaryRef} className="px-4 py-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <FileText className={`h-3.5 w-3.5 ${theme.icon}`} />
-            <span className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${theme.textMuted}`}>About</span>
-          </div>
+        <div ref={summaryRef} className="border-t border-slate-200">
+          <ProfileSectionHeader
+            icon={FileText}
+            iconColor="text-indigo-500"
+            title="About"
+            subtitle="Professional summary and expertise"
+          />
           {editingSection === "profile" ? (
             <div className="relative flex flex-col">
               <textarea
@@ -457,7 +463,64 @@ export function PersonalInfoColumn({
           {fieldErrors.about && <div className={`mt-1 text-xs ${theme.textCritical}`}>{fieldErrors.about}</div>}
         </div>
 
+        {/* ── Account & Access ─────────────────────────────────────── */}
+        <AccountAccessBlock adminProfileId={adminProfileId} />
+
       </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ACCOUNT & ACCESS
+   ═══════════════════════════════════════════════════════════════════ */
+function AccountAccessBlock({ adminProfileId }: { adminProfileId: string | null }) {
+  const { data, loading } = useQuery<{
+    userRoles: { id: string; roleName: string; roleCode: string; accessLevel: string; isActive: boolean }[];
+  }>(USER_ROLES_QUERY, {
+    variables: { userProfileId: adminProfileId || "" },
+    skip: !adminProfileId,
+    fetchPolicy: "cache-and-network",
+  });
+
+  const roles = data?.userRoles ?? [];
+  const activeRoles = roles.filter((r) => r.isActive);
+  const accessLevel = activeRoles.some((r) => r.accessLevel === "Admin")
+    ? "Admin"
+    : activeRoles.length > 0
+      ? "Staff"
+      : roles.some((r) => r.accessLevel === "Admin")
+        ? "Admin (inactive)"
+        : roles.length > 0
+          ? "Staff (inactive)"
+          : "";
+  const status = roles.length > 0 ? (activeRoles.length > 0 ? "Active" : "Inactive") : "";
+
+  return (
+    <div className="border-t border-slate-200">
+      <div className="relative">
+        <ProfileSectionHeader
+          icon={Shield}
+          iconColor="text-violet-500"
+          title="Account &amp; Access"
+          subtitle="Roles, permissions, and account status"
+        />
+        {loading && <Loader2 className="absolute right-4 top-4 h-3 w-3 animate-spin text-muted-foreground" />}
+      </div>
+
+      {!adminProfileId ? (
+        <div className="px-4 py-3">
+          <span className="text-sm text-slate-400 italic">Profile not linked to a system user account.</span>
+        </div>
+      ) : (
+        <ProfileReadOnlyAccessRows
+          roles={roles}
+          accessLevel={accessLevel}
+          status={status}
+          loading={loading}
+          canEditAccess={false}
+        />
+      )}
     </div>
   );
 }

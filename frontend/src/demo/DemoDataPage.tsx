@@ -71,22 +71,13 @@ export function DemoDataPage() {
     setDowntimeIssuePrefill(null);
   }, []);
 
-  const handleCreateIssueFromDowntime = useCallback((_id: string) => {
+  const handleCreateIssueFromDowntime = useCallback(() => {
     if (!liveData.activeDowntime) return;
     setDowntimeIssuePrefill({
       title: `Downtime: ${liveData.activeDowntime.reason}`,
       description: `Created from active downtime on ${liveData.activeDowntime.affectedResourceName ?? "the line"} (${liveData.activeDowntime.durationMinutes} min so far).`,
     });
     setNewIssueOpen(true);
-  }, [liveData.activeDowntime]);
-
-  const handleCreateActionFromDowntime = useCallback((_id: string) => {
-    if (!liveData.activeDowntime) return;
-    setDowntimeActionPrefill({
-      title: `Follow-up: ${liveData.activeDowntime.reason}`,
-      description: `Action item from active downtime on ${liveData.activeDowntime.affectedResourceName ?? "the line"} (${liveData.activeDowntime.durationMinutes} min so far).`,
-    });
-    setNewActionOpen(true);
   }, [liveData.activeDowntime]);
 
   const handleCloseNewIssue = useCallback(() => {
@@ -140,13 +131,13 @@ export function DemoDataPage() {
       <div className="px-4 py-3 border-b border-border/20">
         <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Performance Snapshots</span>
         <div className="flex items-center gap-2 mt-1">
-          <select className="h-7 rounded border border-border/50 bg-card px-2 text-[10px] text-foreground outline-none focus:border-accent">
+          <select aria-label="Shift filter" className="h-7 rounded border border-border/50 bg-card px-2 text-[10px] text-foreground outline-none focus:border-accent">
             <option>All shifts</option>
             <option>Morning</option>
             <option>Afternoon</option>
             <option>Night</option>
           </select>
-          <select className="h-7 rounded border border-border/50 bg-card px-2 text-[10px] text-foreground outline-none focus:border-accent">
+          <select aria-label="Status filter" className="h-7 rounded border border-border/50 bg-card px-2 text-[10px] text-foreground outline-none focus:border-accent">
             <option>All status</option>
             <option>Active</option>
             <option>Completed</option>
@@ -273,12 +264,13 @@ export function DemoDataPage() {
               liveStatus={liveData.liveStatus} activeDowntime={liveData.activeDowntime}
               bottleneckSignal={liveData.bottleneckSignal} issueCount={liveData.openIssues.length}
               actionCount={liveData.openActions.length} outputCount={liveData.currentProduction?.actualQuantity ?? null}
+              lastUpdatedAt={liveData.lastUpdatedAt}
             />
             <ResourceGroupStatusSummary summary={liveData.resourceGroupStatusSummary} />
             <div className="grid grid-cols-2 gap-3">
               <LineFlowBoard assignedResourceGroups={liveData.assignedResourceGroups} resourceStatuses={liveData.resourceStatuses} />
               <div className="flex flex-col gap-3">
-                <ActiveDowntimePanel activeDowntime={liveData.activeDowntime} recentEvents={liveData.recentDowntimeEvents} onLogDowntime={() => setLogDowntimeOpen(true)} onCloseDowntime={(id) => setCloseDowntimeId(id)} onCreateIssue={handleCreateIssueFromDowntime} onCreateAction={handleCreateActionFromDowntime} />
+                <ActiveDowntimePanel activeDowntime={liveData.activeDowntime} onResolveDowntime={(id) => setCloseDowntimeId(id)} onCreateIssue={() => handleCreateIssueFromDowntime()} />
                 <ShopfloorTimeline events={liveData.timelineEvents} />
               </div>
             </div>

@@ -26,9 +26,9 @@ interface ListColumnHeaderProps {
 export function ListColumnHeader({ title, count, children }: ListColumnHeaderProps) {
   return (
     <div className="shrink-0 flex h-9 items-center gap-2 border-b border-slate-200 px-3">
-      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{title}</span>
+      <span className="text-sm font-semibold text-slate-800 dark:text-slate-300 truncate">{title}</span>
       {count !== undefined && (
-        <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[10px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
+        <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
           {count}
         </span>
       )}

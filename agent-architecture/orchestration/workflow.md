@@ -3,12 +3,12 @@
 For every task:
 
 1. Classify task
+- general coordination
 - governance
 - backend
 - frontend
 - audit
 - deployment
-- general coordination
 
 2. Select correct agent
 Use routing.md.

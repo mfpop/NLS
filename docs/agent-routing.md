@@ -1,8 +1,8 @@
 # Agent Routing Guide
 
-## How the Global Manager Routes Work
+## How the Manager Routes Work
 
-The Global Manager receives all incoming requests and determines:
+The Manager (10.Nexus - Manager) receives all incoming requests and determines:
 
 1. **Which agent** should handle the request
 2. **What workflow order** to follow
@@ -11,7 +11,7 @@ The Global Manager receives all incoming requests and determines:
 ## Decision Tree
 
 ```
-Request → Global Manager
+Request → Nexus Manager
 ├── Is this a rule/naming/architecture decision?
 │   └── Yes → Governance Agent
 ├── Does this change the data model or API?
@@ -41,8 +41,8 @@ Request → Global Manager
 
 | Rule | Enforcement |
 |------|------------|
-| Frontend must not contain business logic | Global Manager / Audit |
-| Backend must not contain UI code | Global Manager / Audit |
+| Frontend must not contain business logic | Manager / Audit |
+| Backend must not contain UI code | Manager / Audit |
 | No duplicate models per domain | Governance / Audit |
 | No hardcoded operational data | Governance / Audit |
 | Tailwind only, no custom CSS | Governance / Audit |

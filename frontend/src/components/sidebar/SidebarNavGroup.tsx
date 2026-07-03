@@ -38,15 +38,14 @@ function NavEntryRow({ entry, depth = 0, pathname, openNestedGroup, onNestedTogg
   openNestedGroup: string | null; onNestedToggle: (label: string | null) => void; onNavigate?: () => void;
 }) {
   const isProductionGroup = entry.type === "group" && entry.label === "Production Structure";
-  const isApplicationGroup = entry.type === "group" && entry.label === "Application";
   const isErpGroup = entry.type === "group" && entry.label === "ERP Data";
   const isReferenceGroup = entry.type === "group" && entry.label === "Reference Tables";
   const isAuditTemplatesGroup = entry.type === "group" && entry.label === "Audit Templates";
-  const isUsersRolesGroup = entry.type === "group" && entry.label === "Users & Roles";
+  const isUsersRolesGroup = entry.type === "group" && entry.label === "Users & Access";
   const isSystemHealthGroup = entry.type === "group" && entry.label === "System Health";
   const isAuditLogsGroup = entry.type === "group" && entry.label === "Audit Logs";
   const isIntegrationsGroup = entry.type === "group" && entry.label === "Integrations";
-  const groupId = isProductionGroup ? "production" : isApplicationGroup ? "settings" : isErpGroup ? "erpData" : isReferenceGroup ? "reference" : isAuditTemplatesGroup ? "auditTemplates" : isUsersRolesGroup ? "usersRoles" : isSystemHealthGroup ? "systemHealth" : isAuditLogsGroup ? "auditLogs" : isIntegrationsGroup ? "integrations" : undefined;
+  const groupId = isProductionGroup ? "production" : isErpGroup ? "erpData" : isReferenceGroup ? "reference" : isAuditTemplatesGroup ? "auditTemplates" : isUsersRolesGroup ? "usersRoles" : isSystemHealthGroup ? "systemHealth" : isAuditLogsGroup ? "auditLogs" : isIntegrationsGroup ? "integrations" : undefined;
   const moduleColor = sectionColors[groupId ?? "control"] ?? sectionColors.control;
 
   if (entry.type === "item") {
@@ -121,20 +120,11 @@ function sidebarItemCategory(label: string): string | undefined {
     case "Material Control Templates":
       return "auditTemplates";
     case "Users":
-    case "Roles":
-    case "Permissions":
+    case "Roles & Permissions":
     case "Access Groups":
       return "usersRoles";
     case "App Settings":
       return "appSettings";
-    case "Notifications":
-      return "notifications";
-    case "Numbering / Codes":
-      return "numberingCodes";
-    case "Feature Flags":
-      return "featureFlags";
-    case "Theme Defaults":
-      return "themeDefaults";
     case "Health Summary":
       return "healthSummary";
     case "Services":

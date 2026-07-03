@@ -7,10 +7,11 @@ import {
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
 import { CompactPagination } from "@/components/shared/CompactPagination";
-import { ExplorerToolbar, ExplorerToolbarButton } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarButton } from "@/components/layout/PageToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { MER_SUMMARY_QUERY, MER_LIST_QUERY } from "@/graphql/merQueries";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { formatDateShort } from "@/utils/dateFormat";
 
 /* ── Types ── */
 
@@ -151,7 +152,7 @@ function daysUntil(dateStr: string | null): number | null {
 
 function formatDate(d: string | null): string {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return formatDateShort(d) || "";
 }
 
 /* ── MER Recent Activity (paginated) ── */
@@ -302,13 +303,11 @@ export function MERDashboardPage() {
             title="MER Dashboard" subtitle="Manufacturing Engineering Requests — analytics and overview" />
         </div>
         <div className="print-ignore">
-          <ExplorerToolbar
+          <PageToolbar
             searchValue={search}
             onSearchChange={setSearch}
             searchPlaceholder="Search by title, code, or requester..."
-            searchDebouncing={search !== debouncedSearch}
-            searchRef={searchRef}
-            actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
+            actions={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
           />
         </div>
 

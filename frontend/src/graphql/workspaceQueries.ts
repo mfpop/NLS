@@ -187,38 +187,15 @@ export const MY_WORKSPACE_DASHBOARD_QUERY = gql`
       waiting
       highPriority
       total
+      lastUpdated
       priorityWork {
         id
         title
         description
         status
         priority
-        sourceType
-        sourceId
-        sourceTitle
-        sourceModule
-        dueDate
-        taskType
-      }
-      dueSoon {
-        id
-        title
-        description
-        status
-        priority
-        sourceType
-        sourceId
-        sourceTitle
-        sourceModule
-        dueDate
-        taskType
-      }
-      recentActivity {
-        id
-        title
-        description
-        status
-        priority
+        severity
+        isOverdue
         sourceType
         sourceId
         sourceTitle
@@ -227,18 +204,81 @@ export const MY_WORKSPACE_DASHBOARD_QUERY = gql`
         taskType
         createdAt
       }
-      alertsApprovals {
+      dueSoon {
         id
         title
         description
         status
         priority
+        severity
+        isOverdue
         sourceType
         sourceId
         sourceTitle
         sourceModule
         dueDate
         taskType
+        createdAt
+      }
+      recentActivity {
+        id
+        title
+        description
+        status
+        priority
+        severity
+        isOverdue
+        sourceType
+        sourceId
+        sourceTitle
+        sourceModule
+        dueDate
+        taskType
+        createdAt
+      }
+      alerts {
+        id
+        title
+        description
+        status
+        priority
+        severity
+        isOverdue
+        sourceType
+        sourceId
+        sourceTitle
+        sourceModule
+        dueDate
+        taskType
+        createdAt
+      }
+      approvals {
+        id
+        title
+        description
+        status
+        priority
+        severity
+        isOverdue
+        sourceType
+        sourceId
+        sourceTitle
+        sourceModule
+        dueDate
+        taskType
+        createdAt
+      }
+      analytics {
+        workloadTrend {
+          day
+          count
+        }
+        riskMix {
+          open
+          inProgress
+          overdue
+          completed
+        }
       }
       sourceBreakdown {
         sourceModule

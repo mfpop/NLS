@@ -78,7 +78,7 @@ export function ResourceGroupStatusSummary({ summary }: Props) {
 
   return (
     <div className="px-4">
-      <div className="rounded-md border border-border/40 bg-card p-2.5">
+      <div className="p-2.5">
         <div className="flex items-center gap-2 mb-2">
           <Gauge className="h-3.5 w-3.5 text-muted-foreground" />
           <h3 className="text-[10px] font-semibold text-foreground uppercase tracking-wide">

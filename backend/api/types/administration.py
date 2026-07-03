@@ -109,6 +109,7 @@ class UserProfileNode:
     job_title: str = strawberry.field(name="jobTitle")
     phone: str
     is_active: bool = strawberry.field(name="isActive")
+    last_login: typing.Optional[str] = strawberry.field(name="lastLogin", default=None)
     created_at: str = strawberry.field(name="createdAt")
     updated_at: str = strawberry.field(name="updatedAt")
 
@@ -120,6 +121,11 @@ class UserProfileNode:
                 dept_name = obj.administrative_department.name
             except Exception:
                 dept_name = ""
+        last_login = None
+        try:
+            last_login = obj.user.last_login.isoformat() if obj.user.last_login else None
+        except Exception:
+            last_login = None
         return cls(
             id=strawberry.ID(str(obj.id)),
             user_id=strawberry.ID(str(obj.user_id)),
@@ -135,6 +141,7 @@ class UserProfileNode:
             job_title=obj.job_title or "",
             phone=obj.phone or "",
             is_active=obj.is_active,
+            last_login=last_login,
             created_at=_iso(obj.created_at),
             updated_at=_iso(obj.updated_at),
         )
@@ -328,6 +335,8 @@ class ProfileSkillNode:
     issuer: str = ""
     issued_date: typing.Optional[str] = strawberry.field(name="issuedDate", default=None)
     expires_date: typing.Optional[str] = strawberry.field(name="expiresDate", default=None)
+    evaluation_score: typing.Optional[float] = strawberry.field(name="evaluationScore", default=None)
+    is_certification: bool = strawberry.field(name="isCertification")
     notes: str = ""
     is_active: bool = strawberry.field(name="isActive")
     created_at: str = strawberry.field(name="createdAt")
@@ -345,6 +354,8 @@ class ProfileSkillNode:
             issuer=obj.issuer or "",
             issued_date=obj.issued_date.isoformat() if obj.issued_date else None,
             expires_date=obj.expires_date.isoformat() if obj.expires_date else None,
+            evaluation_score=float(obj.evaluation_score) if obj.evaluation_score is not None else None,
+            is_certification=obj.is_certification,
             notes=obj.notes or "",
             is_active=obj.is_active,
             created_at=_iso(obj.created_at),
@@ -360,6 +371,8 @@ class CreateProfileSkillInput:
     level: typing.Optional[str] = ""
     issuer: typing.Optional[str] = ""
     issued_date: typing.Optional[str] = strawberry.field(name="issuedDate", default=None)
+    evaluation_score: typing.Optional[float] = strawberry.field(name="evaluationScore", default=None)
+    is_certification: typing.Optional[bool] = strawberry.field(name="isCertification", default=False)
     expires_date: typing.Optional[str] = strawberry.field(name="expiresDate", default=None)
     notes: typing.Optional[str] = ""
 
@@ -371,6 +384,8 @@ class UpdateProfileSkillInput:
     level: typing.Optional[str] = None
     issuer: typing.Optional[str] = None
     issued_date: typing.Optional[str] = strawberry.field(name="issuedDate", default=None)
+    evaluation_score: typing.Optional[float] = strawberry.field(name="evaluationScore", default=None)
+    is_certification: typing.Optional[bool] = strawberry.field(name="isCertification", default=None)
     expires_date: typing.Optional[str] = strawberry.field(name="expiresDate", default=None)
     notes: typing.Optional[str] = None
     is_active: typing.Optional[bool] = strawberry.field(name="isActive", default=None)

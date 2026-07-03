@@ -6,8 +6,9 @@ import {
   ClipboardCheck, Settings, BarChart3, Clock, Users, CheckCircle2,
 } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { ExplorerToolbar, ExplorerToolbarButton, ExplorerToolbarDropdown } from "@/components/shared/ExplorerToolbar";
+import { PageToolbar, ToolbarButton, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { MY_TASKS_QUERY } from "@/graphql/workspaceQueries";
+import { formatDateShort } from "@/utils/dateFormat";
 
 /* ── Types ── */
 
@@ -78,7 +79,7 @@ function formatDateTime(dateStr: string): string {
     const diffDays = Math.floor(diffHours / 24);
     if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays}d ago`;
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return formatDateShort(dateStr);
   } catch {
     return "";
   }
@@ -280,15 +281,15 @@ export function ActivityFeedPage() {
       icon={<Activity />}
       iconClass="bg-primary/10 text-primary"
       toolbar={
-        <ExplorerToolbar
+        <PageToolbar
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search activities, users, modules..."
           filters={<>
-            <ExplorerToolbarDropdown value={filterActivity} onChange={setFilterActivity} options={ACTIVITY_OPTIONS} placeholder="All Activities" width="w-36" />
-            <ExplorerToolbarDropdown value={filterModule} onChange={setFilterModule} options={MODULE_OPTIONS} placeholder="All Modules" width="w-36" />
+            <ToolbarDropdown value={filterActivity} onChange={setFilterActivity} options={ACTIVITY_OPTIONS} placeholder="All Activities" width="w-36" />
+            <ToolbarDropdown value={filterModule} onChange={setFilterModule} options={MODULE_OPTIONS} placeholder="All Modules" width="w-36" />
           </>}
-          actions={<ExplorerToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
+          actions={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
         />
       }
       footer={
@@ -302,7 +303,7 @@ export function ActivityFeedPage() {
     >
       <div className="flex h-full min-h-0 bg-muted">
         {/* ── Main Feed ── */}
-        <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden" style={{ flexBasis: "68%" }}>
+        <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
           {/* Tabs */}
           <div className="shrink-0 flex items-center border-b border-slate-200 bg-muted">
             {TABS.map((tab) => (

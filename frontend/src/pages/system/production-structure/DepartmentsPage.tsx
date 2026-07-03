@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { Layers } from "lucide-react";
+import { Layers, Plus, RefreshCw, Save, X, Trash2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Pagination, EntityListItem, DepartmentDetailView } from "./components";
+import { DepartmentDetailView } from "./components";
 import type { DepartmentDetailViewHandle } from "./components/DepartmentDetailView";
 import { useDepartments } from "@/hooks/useDepartments";
 import type { DepartmentNode } from "@/hooks/useDepartments";
@@ -12,6 +12,12 @@ import { useReferenceCategory } from "@/hooks/useReferenceTables";
 import { useToolbar, useRegisterActions } from "./components/ToolbarContext";
 import { EntityWorkspacePage, type FormMode } from "./components/EntityWorkspacePage";
 import { ConfirmDialog } from "./shared";
+import { PageToolbar, ToolbarSearch, ToolbarButton } from "@/components/layout/PageToolbar";
+import { LEFT_COLUMN_WIDTH_CLASS } from "@/components/layout/layoutWidths";
+import { RecordListPanel } from "@/components/shared/RecordListPanel";
+import { ENTITY_COLORS } from "./config/entityColors";
+
+const col = ENTITY_COLORS.department;
 
 const PER_PAGE = 10;
 
@@ -53,12 +59,12 @@ type DepartmentForm = {
 };
 
 export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: boolean } = {}) {
-  const { search, statusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
+  const { search, setSearch, statusFilter, setStatusFilter, setFooterContent, setToolbarVariant, showSystemMessage } = useToolbar();
   const registerActions = useRegisterActions();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const lineIdFilter = searchParams.get("lineId");
-  const { departments, loading, saveDepartment, assignDepartmentToLines, deleteDepartment, refetch } = useDepartments(lineIdFilter);
+  const { departments, saveDepartment, assignDepartmentToLines, deleteDepartment, refetch } = useDepartments(lineIdFilter);
   const { lines: productionLines, refetch: refetchLines } = useProductionLines(500);
   const { values: statusValues } = useReferenceCategory("status");
   const { data: staffData } = useQuery<{ users: StaffOption[] }>(USERS_QUERY, { variables: { search: "" }, fetchPolicy: "cache-and-network" });
@@ -68,7 +74,6 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
 
   const [mode, setMode] = useState<FormMode>("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
   const [plantFilter, setPlantFilter] = useState<string>("all");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
@@ -76,13 +81,10 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
 
   const detailRef = useRef<DepartmentDetailViewHandle>(null);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter, plantFilter]);
-
   const filtered = departments
     .filter((d: DepartmentNode) => statusFilter === "all" || d.status === statusFilter)
     .filter((d) => plantFilter === "all" || d.plantId === plantFilter)
     .filter((d) => !search || `${d.name} ${d.code} ${d.plant?.name || ""} ${d.plant?.code || ""} ${d.managerRef?.name || d.manager || ""}`.toLowerCase().includes(search.toLowerCase()));
-  const paginated = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
   const sel = selectedId ? departments.find((d: DepartmentNode) => d.id === selectedId) ?? null : null;
   const isForm = mode === "edit" || mode === "create";
 
@@ -92,10 +94,10 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
       setSelectedId(departmentId);
       return;
     }
-    if (paginated.length === 0) return;
-    if (selectedId && paginated.some((d: DepartmentNode) => d.id === selectedId)) return;
-    setSelectedId(paginated[0].id);
-  }, [paginated, searchParams, selectedId]);
+    if (filtered.length === 0) return;
+    if (selectedId && filtered.some((d: DepartmentNode) => d.id === selectedId)) return;
+    setSelectedId(filtered[0].id);
+  }, [filtered, searchParams, selectedId]);
 
   const hNew = useCallback(() => {
     setSelectedId(null);
@@ -204,48 +206,98 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
       )}
       <EntityWorkspacePage
         hideList={embeddedInFlow}
-        toolbar={null}
+        toolbar={
+          <PageToolbar
+            leftWidthClass={LEFT_COLUMN_WIDTH_CLASS}
+            leftSlot={
+              <ToolbarSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search departments..."
+              />
+            }
+            filters={
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            }
+            actions={
+              isForm ? (
+                <>
+                  <ToolbarButton variant="edit" icon={<Save className="h-4 w-4" />} onClick={hSave} disabled={editState.saving}>
+                    Save
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<X className="h-4 w-4" />} onClick={hCancel}>
+                    Cancel
+                  </ToolbarButton>
+                </>
+              ) : (
+                <>
+                  <ToolbarButton variant="create" icon={<Plus className="h-4 w-4" />} onClick={hNew}>
+                    New
+                  </ToolbarButton>
+                  <ToolbarButton variant="edit" icon={<Plus className="h-4 w-4" />} onClick={hEdit} disabled={!sel}>
+                    Edit
+                  </ToolbarButton>
+                  <ToolbarButton variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => sel && setConfirmDelete(sel.id)} disabled={!sel}>
+                    Delete
+                  </ToolbarButton>
+                  <ToolbarButton variant="neutral" icon={<RefreshCw className="h-4 w-4" />} onClick={() => { refetch(); refetchLines(); }}>
+                    Refresh
+                  </ToolbarButton>
+                </>
+              )
+            }
+          />
+        }
         list={
-          <>
-            <div className="shrink-0 border-b border-border/35 flex h-9 items-center px-3 bg-muted">
+          <div className="flex flex-col h-full min-h-0 overflow-hidden">
+            <div className="shrink-0 border-b border-slate-200 flex h-9 items-center px-3 bg-slate-50">
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
-                className="h-6 w-full min-w-0 rounded border border-border/35 bg-transparent px-2 text-[11px] text-muted-foreground outline-none transition-colors focus:border-border/50 focus:bg-card focus:ring-1 focus:ring-border/20">
+                className="h-6 w-full min-w-0 rounded-[2px] border border-slate-300 bg-white px-2 text-[11px] text-slate-900 outline-none focus:border-blue-500">
                 <option value="all">All Plants</option>
                 {plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.code} - {plant.name}</option>)}
               </select>
             </div>
-            <div className="flex-1 overflow-y-auto bg-card pl-2 bg-muted">
-              {loading && departments.length === 0 ? (
-                <div className="flex items-center justify-center h-24 text-xs text-muted-foreground"><div className="h-2 w-2 rounded-full bg-info animate-bounce mr-2" />Loading...</div>
-              ) : paginated.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                  <Layers className="h-4 w-4 text-muted-foreground mb-1.5 stroke-current" />
-                  <p className="text-xs text-muted-foreground">No departments</p>
-                </div>
-              ) : (
-                <div>
-                  {paginated.map((d: DepartmentNode) => {
-                    const deptPlantOk = !!d.plantId && !!d.plant?.name;
-                    const plantName = d.plant?.name || "";
-                    return (
-                      <EntityListItem key={d.id}
-                        name={d.name} code={d.code}
-                        meta={deptPlantOk ? plantName : "Plant required"}
-                        icon={<Layers className="h-3.5 w-3.5 stroke-current" />}
-                        selected={selectedId === d.id}
-                        status={d.status}
-                        onClick={() => selectDepartment(d.id)}
-                        entityType="department"
-                      />
-                    );
-                  })}
-                </div>
-              )}
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <RecordListPanel
+                title="Departments"
+                records={filtered}
+                selectedId={selectedId}
+                onSelect={selectDepartment}
+                getId={(d: DepartmentNode) => d.id}
+                pageSize={PER_PAGE}
+                emptyMessage="No departments"
+                selectedBorderClass={col.selectedBorder}
+                selectedBgClass={col.selectedBg}
+                renderRecord={(d: DepartmentNode) => {
+                  const isActive = (d.status || "").toLowerCase() === "active";
+                  const plantName = d.plant?.name || "";
+                  const deptPlantOk = !!d.plantId && !!plantName;
+                  return (
+                    <div className="flex items-center gap-2.5">
+                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${col.iconBg}`}>
+                        <Layers className={`h-3.5 w-3.5 ${col.iconFg} stroke-current`} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
+                          <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{d.name}</span>
+                          <span className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={d.status || "unknown"} />
+                        </div>
+                        <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{deptPlantOk ? plantName : "Plant required"}</div>
+                      </div>
+                    </div>
+                  );
+                }}
+              />
             </div>
-            <div className="shrink-0 flex h-7 items-center border-t border-border bg-muted px-3">
-              <Pagination page={page} total={filtered.length} perPage={PER_PAGE} onChange={setPage} />
-            </div>
-          </>
+          </div>
         }
         detail={
           <DepartmentDetailView

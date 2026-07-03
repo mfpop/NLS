@@ -2,7 +2,7 @@ import { RefreshCw, CheckCircle2, Archive, History, Shield, FileText, X } from "
 import { useQuery, useMutation } from "@apollo/client/react";
 import { useState, useCallback } from "react";
 import { PageHeader } from "@/pages/shared/PageHeader";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
 import { DocumentHistoryPanel } from "./components/DocumentHistoryPanel";
 import { StructureDocumentMetadata } from "./components/StructureDocumentMetadata";
@@ -84,18 +84,20 @@ export function DocumentControlPage() {
         subtitle="Lifecycle governance across all document types"
       />
 
-      <Toolbar
-        left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search documents..." />}
-        center={
+      <PageToolbar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search documents..."
+        filters={
           <>
             <ToolbarDropdown value={typeFilter} onChange={setTypeFilter} options={[{ value: "", label: "All Types" }, ...docTypes.map((dt) => ({ value: dt, label: typeLabels[dt] || dt }))]} />
             <ToolbarDropdown value={statusFilter} onChange={setStatusFilter} options={[{ value: "", label: "All Statuses" }, { value: "DRAFT", label: "Draft" }, { value: "APPROVED", label: "Approved" }, { value: "ARCHIVED", label: "Archived" }]} />
             <ToolbarDropdown value={controlledFilter} onChange={setControlledFilter} options={[{ value: "", label: "All Copies" }, { value: "controlled", label: "Controlled" }, { value: "uncontrolled", label: "Uncontrolled" }]} />
           </>
         }
-        right={
+        actions={
           <>
-            <span className="mx-0.5 h-5 w-px bg-border/30" />
+            <ToolbarSeparator />
             <ToolbarButton icon={RefreshCw} label={loading ? "Refreshing..." : "Refresh"} onClick={() => refetch()} disabled={loading} />
           </>
         }

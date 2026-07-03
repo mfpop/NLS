@@ -60,7 +60,7 @@ export function SidebarNavItem({ to, icon: Icon, label, depth = 0, sectionId, on
   return (
     <NavLink
       to={to}
-      end={to === "/"}
+      end={true}
       onClick={onNavigate}
       onMouseEnter={handleHoverPrefetch}
       onMouseLeave={clearHoverTimer}

@@ -77,7 +77,7 @@ export function dedupeBullets(bullets: string[]): string[] {
   });
 }
 
-export function formatDate(start: string, end: string): string {
+export function formatExperienceDate(start: string, end: string): string {
   if (!start && !end) return "";
   const s = start ? start.slice(0, 4) : "";
   const e = !end || end.toLowerCase() === "present" ? "Present" : end.slice(0, 4);

@@ -3,7 +3,7 @@ import { useQuery } from "@apollo/client/react";
 import { useNavigate } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarButton } from "@/components/layout/PageToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { CONTINUOUS_IMPROVEMENT_SUMMARY_QUERY } from "@/graphql/improvementQueries";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -169,7 +169,12 @@ export function ContinuousImprovementPage() {
             title="Continuous Improvement" subtitle="Overview and tracking of the improvement system." />
         </div>
         <div className="print-ignore">
-          <Toolbar left={<ToolbarSearch ref={searchRef} value={search} onChange={setSearch} placeholder="Search target areas or statuses..." debouncing={search !== debouncedSearch} />} right={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />} />
+          <PageToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search target areas or statuses..."
+            actions={<ToolbarButton icon={RefreshCw} label="Refresh" onClick={hRefresh} />}
+          />
         </div>
 
         <div className="print-area flex-1 min-h-0 overflow-y-auto">

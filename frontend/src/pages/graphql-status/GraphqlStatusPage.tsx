@@ -24,9 +24,10 @@ import {
   Wifi,
   XCircle,
 } from "lucide-react";
+import { formatDateFull } from "@/utils/dateFormat";
 
 interface SystemHealthData {
-  systemHealth: {
+  appSystemHealth: {
     graphqlStatus: string;
     databaseStatus: string;
     serverTime: string;
@@ -80,7 +81,7 @@ const isUnknownMetric = (metric: HealthMetric) => metric.value === "Not reported
 const formatTimestamp = (value?: string | null) => {
   if (!value) return "Not reported";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  return Number.isNaN(date.getTime()) ? value : formatDateFull(value);
 };
 
 export function GraphqlStatusPage() {
@@ -100,7 +101,7 @@ export function GraphqlStatusPage() {
     }
   }, [data, error, lastLatencyMs, loading]);
 
-  const health = data?.systemHealth;
+  const health = data?.appSystemHealth;
   const graphqlState = error ? "error" : okState(health?.graphqlStatus);
   const databaseState = error ? "error" : okState(health?.databaseStatus);
   const version = health?.version || import.meta.env.VITE_APP_VERSION || "Not reported";
@@ -226,7 +227,7 @@ export function GraphqlStatusPage() {
     const safePayload = {
       exportedAt: new Date().toISOString(),
       overallState,
-      systemHealth: health ?? null,
+      appSystemHealth: health ?? null,
       runtime: {
         mode: runtimeMode,
         timezone,

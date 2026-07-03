@@ -6,7 +6,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { theme } from "@/styles/themeTokens";
-import { Toolbar, ToolbarSearch, ToolbarDropdown, ToolbarButton } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarDropdown, ToolbarButton } from "@/components/layout/PageToolbar";
 import { PageHeader } from "@/pages/shared/PageHeader";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { RichTextEditor } from "@/components/shared/RichTextEditor";
@@ -691,23 +691,28 @@ export function KaizenPage() {
             title="Kaizen" subtitle="Manage structured improvement actions and events." />
         </div>
         <div className="print-ignore">
-          <Toolbar left={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search kaizens..." />}
-            center={
+          <PageToolbar
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search kaizens..."
+            filters={
               <ToolbarDropdown value={filterStatus} onChange={setFilterStatus}
                 options={[{ value: "", label: "All Statuses" }, { value: "PLANNED", label: "Planned" }, { value: "IN_PROGRESS", label: "In Progress" }, { value: "COMPLETED", label: "Completed" }, { value: "CANCELLED", label: "Cancelled" }]}
                 className="w-40" />
             }
-            right={<div className="flex items-center gap-2 shrink-0">
+            actions={
+              <>
                 {isForm ? (
-                  <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="success" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} /></>
+                  <><ToolbarButton icon={Check} label="Save" onClick={hSave} variant="edit" /><ToolbarButton icon={X} label="Cancel" onClick={hCancel} variant="danger" /></>
                 ) : (
-                  <><ToolbarButton icon={Plus} label="New" onClick={hNew} /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} />
+                  <><ToolbarButton icon={Plus} label="New" onClick={hNew} variant="create" /><ToolbarButton icon={Pencil} label="Edit" onClick={hEdit} disabled={!sel} variant="edit" />
                     <span className="h-5 w-px shrink-0 bg-border/25" />
                     <ToolbarButton icon={Printer} label="Print" onClick={() => window.print()} disabled={!sel} />
                     <ToolbarButton icon={RefreshCw} label="Refresh" onClick={() => refetch()} /></>
                 )}
-              </div>
-            } />
+              </>
+            }
+          />
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>

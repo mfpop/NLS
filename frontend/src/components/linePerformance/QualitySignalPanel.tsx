@@ -9,7 +9,7 @@ interface Props {
 export function QualitySignalPanel({ data, onCreateIssue }: Props) {
   if (!data) {
     return (
-      <div className="rounded-md border border-border/50 bg-card p-4">
+      <div className="p-4">
         <p className="text-xs text-muted-foreground">Quality data unavailable</p>
       </div>
     );
@@ -30,7 +30,7 @@ export function QualitySignalPanel({ data, onCreateIssue }: Props) {
         : "text-muted-foreground";
 
   return (
-    <div className="rounded-md border border-border/50 bg-card p-4">
+    <div className="p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Quality</h3>
         <ShieldCheck className="h-4 w-4 text-muted-foreground" />

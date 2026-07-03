@@ -35,7 +35,7 @@ export function ResourceStatusCard({ resource, onOpenDetail, onCreateIssue, onLo
   const cardBg = STATUS_BG[resource.status] || STATUS_BG.unknown;
 
   return (
-    <div className={`rounded border border-border/50 border-l-4 p-3 ${cardBg} hover:bg-muted/20 transition-colors`}>
+    <div className={`border-l-4 p-2 ${cardBg}`}>
       <div className="flex items-center justify-between gap-2 mb-1">
         <div className="flex items-center gap-2 min-w-0">
           <Circle className={`h-3 w-3 fill-current ${dotColor}`} />

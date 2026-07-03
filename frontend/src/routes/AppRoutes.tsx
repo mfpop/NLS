@@ -184,9 +184,6 @@ const AdministrativeDepartmentsPage = lazy(() =>
   const UsersAndRolesPage = lazy(() =>
   import("@/pages/system/UsersAndRolesPage").then((module) => ({ default: module.UsersAndRolesPage }))
 );
-const ERPDataPage = lazy(() =>
-  import("@/pages/system/erp-data/ERPDataPage").then((module) => ({ default: module.ERPDataPage }))
-);
 const ERPImportPage = lazy(() =>
   import("@/pages/system/erp-data/erp-import/ErpImportPage").then((module) => ({ default: module.ErpImportPage }))
 );
@@ -344,8 +341,6 @@ export function AppRoutes() {
           <Route path="system/production-structure/departments" element={<DepartmentsPage />} />
           <Route path="system/production-structure/resource-groups" element={<ResourceGroupsPage />} />
           <Route path="system/production-structure/resources" element={<ResourcesPage />} />
-          <Route path="system/production-structure/references" element={<ReferencesPage />} />
-          <Route path="system/production-structure/references/:tableId" element={<ReferencesPage />} />
           <Route path="system/production-structure/flow/routing/:productionLineId" element={<RoutingEditorPage />} />
           <Route path="system/production-structure/flow/routing/:productionLineId/:routingId" element={<RoutingEditorPage />} />
           <Route path="system/production-structure/components/routing/:productionLineId" element={<RoutingEditorPage />} />
@@ -355,7 +350,6 @@ export function AppRoutes() {
           <Route path="system/material-bins" element={<MaterialBinsPage />} />
           <Route path="system/product-master" element={<ProductMasterDataPage />} />
           <Route path="system/product-master-data" element={<Navigate to="/system/product-master" replace />} />
-          {/* REVIEW_ONLY: /system/reference-tables is preferred sidebar route; /system/production-structure/references is retained as compatibility route */}
           <Route path="system/reference-tables" element={<ReferencesPage />} />
           <Route path="system/reference-tables/:tableId" element={<ReferencesPage />} />
           {/* REVIEW_ONLY: /system/diagnostics + /status share GraphqlStatusPage — intentional technical page reuse, page name does not match route */}
@@ -368,21 +362,14 @@ export function AppRoutes() {
           <Route path="system/audit-templates/quality" element={<AuditTemplateManagerPage />} />
           <Route path="system/audit-templates/safety" element={<AuditTemplateManagerPage />} />
           <Route path="system/audit-templates/material" element={<AuditTemplateManagerPage />} />
-          {/* Audit Logs */}
           <Route path="system/audit-logs" element={<AuditLogsPage />} />
-          <Route path="system/audit-logs/user-activity" element={<AuditLogsPage />} />
-          <Route path="system/audit-logs/data-changes" element={<AuditLogsPage />} />
-          <Route path="system/audit-logs/login-events" element={<AuditLogsPage />} />
-          <Route path="system/audit-logs/system-events" element={<AuditLogsPage />} />
           <Route path="system/users-and-roles" element={<UsersAndRolesPage />} />
-          <Route path="system/erp-data" element={<ERPDataPage />} />
+          <Route path="system/users-and-roles/roles" element={<UsersAndRolesPage />} />
+          <Route path="system/users-and-roles/access-groups" element={<UsersAndRolesPage />} />
+          <Route path="system/erp-data" element={<Navigate to="/system/erp-data/erp-patterns" replace />} />
           <Route path="system/erp-data/import" element={<ERPImportPage />} />
           <Route path="system/erp-data/erp-patterns" element={<ErpImportPatternPage />} />
           <Route path="system/health" element={<SystemHealthPage />} />
-          <Route path="system/health/services" element={<SystemHealthPage />} />
-          <Route path="system/health/database" element={<SystemHealthPage />} />
-          <Route path="system/health/deployment" element={<SystemHealthPage />} />
-          <Route path="system/health/errors" element={<SystemHealthPage />} />
           <Route path="system/profile" element={<UserProfilePage />} />
           <Route path="system/preferences" element={<UserPreferencesPage />} />
           <Route path="system/sign-out" element={<SignOutPage />} />

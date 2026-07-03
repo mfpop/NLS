@@ -2,11 +2,12 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Building2, Plus, RefreshCw, Archive, Pencil, Info, Check, X, Loader2, TriangleAlert } from "lucide-react";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
-import { Toolbar, ToolbarButton, ToolbarSearch, ToolbarDropdown } from "@/components/shared/Toolbar";
+import { PageToolbar, ToolbarButton, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { ADMINISTRATIVE_DEPARTMENTS_QUERY, COMPANIES_LIST_QUERY, USERS_LIST_QUERY } from "@/graphql/administrationQueries";
 import { CREATE_ADMINISTRATIVE_DEPARTMENT, UPDATE_ADMINISTRATIVE_DEPARTMENT, ARCHIVE_ADMINISTRATIVE_DEPARTMENT } from "@/graphql/administrationMutations";
 import { PLANTS_QUERY } from "@/graphql/plantQueries";
 import { theme } from "@/styles/themeTokens";
+import { formatDateShort } from "@/utils/dateFormat";
 
 interface AdministrativeDepartment {
   id: string; companyId: string; companyName: string;
@@ -128,10 +129,9 @@ export function AdministrativeDepartmentsPage() {
     }
   };
 
-  const formatDate = (iso: string) => {
+  const fmtDate = (iso: string) => {
     if (!iso) return "-";
-    try { return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
-    catch { return iso; }
+    return formatDateShort(iso) || iso;
   };
 
   return (
@@ -141,15 +141,14 @@ export function AdministrativeDepartmentsPage() {
       title="Administrative Departments"
       subtitle="Manage departments for user organization, responsibility, and access scoping."
       toolbar={
-        <Toolbar
-          left={
-            <>
-              <ToolbarSearch value={search} onChange={setSearch} placeholder="Search departments..." />
-              <ToolbarDropdown value={selectedCompany} onChange={setSelectedCompany} options={[{ value: "", label: "All Companies" }, ...companies.map((c) => ({ value: c.id, label: c.name }))]} />
-
-            </>
+        <PageToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search departments..."
+          filters={
+            <ToolbarDropdown value={selectedCompany} onChange={setSelectedCompany} options={[{ value: "", label: "All Companies" }, ...companies.map((c) => ({ value: c.id, label: c.name }))]} />
           }
-          right={
+          actions={
             <>
               <ToolbarButton icon={RefreshCw} label={loading ? "Refreshing..." : "Refresh"} onClick={() => refetch()} disabled={loading} />
               <ToolbarButton icon={Plus} label="New Department" onClick={() => { resetForm(); setShowForm(true); }} />
@@ -265,7 +264,7 @@ export function AdministrativeDepartmentsPage() {
                         {dept.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-[10px] text-muted-foreground">{formatDate(dept.updatedAt)}</td>
+                    <td className="px-3 py-2 text-[10px] text-muted-foreground">{fmtDate(dept.updatedAt)}</td>
                     <td className="px-3 py-2 text-right">
                       <div className="inline-flex gap-0.5">
                         <button type="button" onClick={() => handleEdit(dept)} className="rounded p-1 text-muted-foreground hover:bg-muted" title="Edit"><Pencil className="h-3.5 w-3.5" /></button>

@@ -84,6 +84,8 @@ export const PROFILE_SKILLS_QUERY = gql`
       issuer
       issuedDate
       expiresDate
+      evaluationScore
+      isCertification
       notes
       isActive
       createdAt
@@ -104,6 +106,8 @@ export const CREATE_PROFILE_SKILL_MUTATION = gql`
         issuer
         issuedDate
         expiresDate
+        evaluationScore
+        isCertification
         notes
         isActive
         createdAt
@@ -129,6 +133,8 @@ export const UPDATE_PROFILE_SKILL_MUTATION = gql`
         issuer
         issuedDate
         expiresDate
+        evaluationScore
+        isCertification
         notes
         isActive
         createdAt
@@ -154,6 +160,8 @@ export const ARCHIVE_PROFILE_SKILL_MUTATION = gql`
         issuer
         issuedDate
         expiresDate
+        evaluationScore
+        isCertification
         notes
         isActive
         createdAt

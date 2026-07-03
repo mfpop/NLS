@@ -208,6 +208,8 @@ class ProfileSkill(TimeStampedModel):
     issuer = models.CharField(max_length=200, blank=True, default="")
     issued_date = models.DateField(null=True, blank=True)
     expires_date = models.DateField(null=True, blank=True)
+    evaluation_score = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    is_certification = models.BooleanField(default=False)
     notes = models.TextField(blank=True, default="")
     is_active = models.BooleanField(default=True)
 

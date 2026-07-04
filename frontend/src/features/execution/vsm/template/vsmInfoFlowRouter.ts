@@ -147,23 +147,28 @@ export function computeInfoFlowPath(
     };
   }
 
-  // ── Route: PC → Process (elbow down to staggered schedule lanes, then process top) ──
+  // ── Route: PC → Process (smooth octopus-arm bezier from PC bottom to process top) ──
   if (normFrom === "PC" && normTo !== "CUSTOMER" && normTo !== "SUPPLIER") {
     const src = anchors.pc.bottom;
     const processAnchor = anchors.processes[normTo];
     if (processAnchor) {
       const tgt = processAnchor.top;
+      const dy = tgt.y - src.y;
       const laneOffset = flowIndex != null ? flowIndex * SCHEDULE_LANE_STRIDE : 0;
-      const laneY = SCHEDULE_LANE_BASE_Y + laneOffset;
+      // Stagger the curve depth so multiple schedule arms don't overlap
+      const dip = dy * (0.45 + laneOffset * 0.008);
+      const cp1 = { x: src.x + (tgt.x - src.x) * 0.3, y: src.y + dip };
+      const cp2 = { x: tgt.x - (tgt.x - src.x) * 0.3, y: tgt.y - dy * 0.15 };
+      const bottomY = Math.max(cp1.y, cp2.y);
       return {
-        pathD: `M${src.x},${src.y} V${laneY} H${tgt.x} V${tgt.y}`,
+        pathD: `M${src.x},${src.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${tgt.x},${tgt.y}`,
         labelX: (src.x + tgt.x) / 2,
-        labelY: laneY - INFO_LABEL_OFFSET,
+        labelY: bottomY - INFO_LABEL_OFFSET,
       };
     }
   }
 
-  // ── Generic fallback: smart orthogonal routing ──
+  // ── Generic fallback: smooth octopus-arm bezier ──
   const srcSide = normFrom === "PC" ? "bottom" : normTo === "PC" ? "right" : normTo === "CUSTOMER" ? "left" : "top";
   const tgtSide = normTo === "PC" ? "left" : normFrom === "CUSTOMER" ? "right" : "top";
   const anchor = (entity: string, side: "top" | "right" | "bottom" | "left" | "center") =>
@@ -172,19 +177,29 @@ export function computeInfoFlowPath(
   const tgtAnchor = anchor(normTo, tgtSide);
   if (srcAnchor && tgtAnchor) {
     const midX = (srcAnchor.x + tgtAnchor.x) / 2;
-    const midY = Math.min(srcAnchor.y, tgtAnchor.y) - 20;
-    if (srcAnchor.y < 55 + 90 + 80) {  // FAC_Y + FAC_H + 80
-      const laneY = srcAnchor.x > tgtAnchor.x ? INFO_SUPPLIER_Y : INFO_CUSTOMER_Y;
+    const dx = tgtAnchor.x - srcAnchor.x;
+    const dy = tgtAnchor.y - srcAnchor.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    // For near-vertical routes dip horizontally; for near-horizontal routes dip vertically
+    const isVertical = Math.abs(dy) > Math.abs(dx);
+    if (isVertical) {
+      const cp1 = { x: srcAnchor.x + dx * 0.15, y: srcAnchor.y + dy * 0.45 };
+      const cp2 = { x: tgtAnchor.x - dx * 0.15, y: tgtAnchor.y - dy * 0.15 };
       return {
-        pathD: `M${srcAnchor.x},${srcAnchor.y} V${laneY} H${tgtAnchor.x} V${tgtAnchor.y}`,
+        pathD: `M${srcAnchor.x},${srcAnchor.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${tgtAnchor.x},${tgtAnchor.y}`,
         labelX: midX,
-        labelY: laneY - INFO_LABEL_OFFSET,
+        labelY: Math.max(cp1.y, cp2.y) - INFO_LABEL_OFFSET,
       };
     }
+    // Horizontal routes: gentle S-curve
+    const midY = (srcAnchor.y + tgtAnchor.y) / 2;
+    const cp1 = { x: srcAnchor.x + dx * 0.35, y: srcAnchor.y + (midY - srcAnchor.y) * 0.6 };
+    const cp2 = { x: tgtAnchor.x - dx * 0.35, y: tgtAnchor.y + (midY - tgtAnchor.y) * 0.6 };
+    const pathY = Math.max(cp1.y, cp2.y);
     return {
-      pathD: `M${srcAnchor.x},${srcAnchor.y} V${midY} H${tgtAnchor.x} V${tgtAnchor.y}`,
+      pathD: `M${srcAnchor.x},${srcAnchor.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${tgtAnchor.x},${tgtAnchor.y}`,
       labelX: midX,
-      labelY: midY - INFO_LABEL_OFFSET,
+      labelY: pathY - INFO_LABEL_OFFSET,
     };
   }
 

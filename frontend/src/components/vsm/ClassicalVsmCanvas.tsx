@@ -134,18 +134,22 @@ export function ClassicalVsmCanvas({
   const handleMU = useCallback(() => { dragRef.current.active = false; }, []);
 
   return (
-    <div ref={containerRef} className="h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background cursor-grab active:cursor-grabbing select-none"
+    <div ref={containerRef} className="relative h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background cursor-grab active:cursor-grabbing select-none"
       onWheel={handleWheel} onMouseDown={handleMD} onMouseMove={handleMM} onMouseUp={handleMU} onMouseLeave={handleMU}
     >
-      <StandardVsmTemplate
-        model={modelWithSelection}
-        onSelectNode={onSelectNode}
-        showKaizen={showKaizen}
-        showFlowLogic={showFlowLogic}
-        showAllFlows={showAllFlows}
-        viewBox={viewBoxValue}
-        contentTransform={contentTransform}
-      />
+      {/* absolute inset-0 wrapper forces the SVG to have explicit dimensions
+          regardless of SVG's special replaced-element height:100% rules */}
+      <div className="absolute inset-0">
+        <StandardVsmTemplate
+          model={modelWithSelection}
+          onSelectNode={onSelectNode}
+          showKaizen={showKaizen}
+          showFlowLogic={showFlowLogic}
+          showAllFlows={showAllFlows}
+          viewBox={viewBoxValue}
+          contentTransform={contentTransform}
+        />
+      </div>
     </div>
   );
 }

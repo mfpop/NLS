@@ -359,8 +359,8 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
           from={model.supplier?.label}
         />
 
-        {/* Material flow → Customer (SHIPMENT) — drops from FG triangle tip to Customer */}
-        <line x1={CUST_CX} y1={MAT_Y + INV_HALF} x2={CUST_CX} y2={CUST_BOTTOM}
+        {/* Material flow → Customer (SHIPMENT) — drops from FG triangle top to Customer */}
+        <line x1={CUST_CX} y1={MAT_Y - INV_HALF} x2={CUST_CX} y2={CUST_BOTTOM}
           stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker

@@ -210,7 +210,7 @@ export function PlantsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+                className="h-8 w-36 rounded-[2px] border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -250,7 +250,7 @@ export function PlantsPage() {
         list={
           <>
             {mutationError && mode === "view" && (
-              <div className="border-b border-red-300 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-700">
+              <div className="border-b border-danger/30 bg-danger/10 px-3 py-2 text-[11px] font-semibold text-danger">
                 {mutationError}
               </div>
             )}
@@ -274,10 +274,10 @@ export function PlantsPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
-                        <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{plant.name}</span>
-                        <span className={`h-2 w-2 rounded-full ${ps.isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={plant.status || "unknown"} />
+                        <span className="min-w-0 truncate text-[14px] font-semibold text-foreground">{plant.name}</span>
+                        <span className={`h-2 w-2 rounded-full ${ps.isActive ? "bg-success" : "bg-muted-foreground/40"}`} title={plant.status || "unknown"} />
                       </div>
-                      <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{meta}</div>
+                      <div className="mt-0.5 truncate text-[12px] font-medium text-muted-foreground">{meta}</div>
                     </div>
                   </div>
                 );

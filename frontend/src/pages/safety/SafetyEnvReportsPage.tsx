@@ -12,12 +12,12 @@ import { PRODUCTION_STRUCTURE_TREE_QUERY } from "@/graphql/productionStructureQu
 import { formatDateFull } from "@/utils/dateFormat";
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  REPORTED: "bg-blue-100 text-blue-700 border-blue-200",
-  UNDER_REVIEW: "bg-amber-100 text-amber-700 border-amber-200",
-  ACTION_REQUIRED: "bg-orange-100 text-orange-700 border-orange-200",
-  CLOSED: "bg-green-100 text-green-700 border-green-200",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  REPORTED: "bg-primary/15 text-primary border-primary/20",
+  UNDER_REVIEW: "bg-warning/15 text-warning border-warning/20",
+  ACTION_REQUIRED: "bg-warning/15 text-warning border-warning/20",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 const REPORT_TYPE_OPTS = [
@@ -48,7 +48,7 @@ const STATUS_FILTERS = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const SEL_INPUT = "h-8 w-full bg-white border border-slate-200 px-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30";
+const SEL_INPUT = "h-8 w-full bg-background border border-border px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30";
 
 function statusLabel(s: string) {
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -475,10 +475,10 @@ ${cNotes}` : ""}`
               )}
               <div className="flex gap-2 text-xs flex-wrap">
                 {selItem.cleanupRequired && (
-                  <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 border border-emerald-200">Cleanup Required</span>
+                  <span className="bg-success/10 text-success px-1.5 py-0.5 border border-success/20">Cleanup Required</span>
                 )}
                 {selItem.reportedExternally && (
-                  <span className="bg-orange-50 text-orange-700 px-1.5 py-0.5 border border-orange-200">Reported Externally</span>
+                  <span className="bg-warning/10 text-warning px-1.5 py-0.5 border border-warning/20">Reported Externally</span>
                 )}
               </div>
             </div>
@@ -644,7 +644,7 @@ ${cNotes}` : ""}`
     <>
       <AppPageLayout
         icon={<FileText className="h-5 w-5 stroke-current" />}
-        iconClass="bg-emerald-100 text-emerald-600"
+        iconClass="bg-success/15 text-success"
         title="Environmental Reports"
         subtitle="Document environmental events including spills, releases, emissions, and waste incidents."
         systemMessage={msg ? { text: msg.text, type: msg.tone } : null}

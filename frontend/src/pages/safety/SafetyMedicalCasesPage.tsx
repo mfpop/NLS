@@ -14,12 +14,12 @@ import {
 import { formatDateFull } from "@/utils/dateFormat";
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  OPEN: "bg-blue-100 text-blue-700 border-blue-200",
-  MONITORING: "bg-amber-100 text-amber-700 border-amber-200",
-  RETURNED_TO_WORK: "bg-green-100 text-green-700 border-green-200",
-  CLOSED: "bg-green-100 text-green-700 border-green-200",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  OPEN: "bg-primary/15 text-primary border-primary/20",
+  MONITORING: "bg-warning/15 text-warning border-warning/20",
+  RETURNED_TO_WORK: "bg-success/15 text-success border-success/20",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 const CARE_TYPE_OPTS = [
@@ -38,15 +38,15 @@ const STATUS_FILTERS = [
   { value: "CLOSED", label: "Closed" }, { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const SEL = "h-8 w-full bg-white border border-slate-200 px-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30";
-const LABEL = "block text-xs font-medium text-slate-500 mb-1";
-const SECTION_TITLE = "text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2";
+const SEL = "h-8 w-full bg-background border border-border px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30";
+const LABEL = "block text-xs font-medium text-muted-foreground mb-1";
+const SECTION_TITLE = "text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-2";
 
 function statusLabel(s: string) { return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); }
 function nowISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; }
 
 const FormSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div className="border-b border-slate-100 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
+  <div className="border-b border-border/50 pb-3 mb-3 last:border-b-0 last:pb-0 last:mb-0">
     <div className={SECTION_TITLE}>{title}</div>
     <div className="space-y-3">{children}</div>
   </div>
@@ -195,14 +195,14 @@ export function SafetyMedicalCasesPage() {
             </FormSection>
             <FormSection title="Linked Events">
               <div>
-                <label className={LABEL}>Safety Event <span className="text-slate-400 font-normal">(optional)</span></label>
+                <label className={LABEL}>Safety Event <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
                 <select value={cEventId} onChange={(e) => setCEI(e.target.value)} className={SEL}>
                   <option value="">None</option>
                   {events.map((ev: any) => <option key={ev.id} value={ev.id}>{ev.title} ({ev.eventType})</option>)}
                 </select>
               </div>
               <div>
-                <label className={LABEL}>Injury Claim <span className="text-slate-400 font-normal">(optional)</span></label>
+                <label className={LABEL}>Injury Claim <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
                 <select value={cClaimId} onChange={(e) => setCCId(e.target.value)} className={SEL}>
                   <option value="">None</option>
                   {openClaims.map((cl: any) => <option key={cl.id} value={cl.id}>{cl.claimantName} ({cl.claimType})</option>)}
@@ -210,14 +210,14 @@ export function SafetyMedicalCasesPage() {
               </div>
             </FormSection>
             <FormSection title="Work Restrictions">
-              <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-secondary-foreground cursor-pointer">
                 <input type="checkbox" checked={cWorkRestriction} onChange={(e) => setCWR(e.target.checked)} className="h-3.5 w-3.5" />
                 Work restriction applies
               </label>
               {cWorkRestriction && (
                 <div className="mt-2">
                   <textarea value={cRestrictionSummary} onChange={(e) => setCRS(e.target.value)} rows={2}
-                    className="w-full border border-slate-200 bg-white px-2 py-1 text-xs outline-none resize-none" placeholder="Describe restriction..." />
+                    className="w-full border border-border bg-background px-2 py-1 text-xs outline-none resize-none" placeholder="Describe restriction..." />
                 </div>
               )}
             </FormSection>
@@ -226,7 +226,7 @@ export function SafetyMedicalCasesPage() {
           <div className="flex h-full min-h-0 flex-col gap-3">
             <FormSection title="Visit">
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-secondary-foreground cursor-pointer">
                   <input type="checkbox" checked={cVisitRequired} onChange={(e) => setCVR(e.target.checked)} className="h-3.5 w-3.5" />
                   Visit required
                 </label>
@@ -240,25 +240,25 @@ export function SafetyMedicalCasesPage() {
                 <input type="datetime-local" value={cReturnToWork} onChange={(e) => setCRTW(e.target.value)} className={SEL} />
               </div>
             </FormSection>
-            <div className="flex-[1.2] min-h-0 flex flex-col border-b border-slate-100 pb-3">
-              <div className={SECTION_TITLE}>Confidential Notes <span className="text-orange-500 font-normal">(restricted)</span></div>
+            <div className="flex-[1.2] min-h-0 flex flex-col border-b border-border/50 pb-3">
+              <div className={SECTION_TITLE}>Confidential Notes <span className="text-warning font-normal">(restricted)</span></div>
               <div className="flex-1 min-h-0 flex flex-col">
                 <textarea value={cConfidential} onChange={(e) => setCConf(e.target.value)}
-                  className="h-full min-h-0 w-full resize-none overflow-auto border border-slate-200 bg-white px-2 py-1 text-xs outline-none" placeholder="Medical confidentiality applies..." />
+                  className="h-full min-h-0 w-full resize-none overflow-auto border border-border bg-background px-2 py-1 text-xs outline-none" placeholder="Medical confidentiality applies..." />
               </div>
             </div>
             <FormSection title="Ownership">
               <input type="text" value={cOwner} onChange={(e) => setCO(e.target.value)} className={SEL} placeholder="Assigned owner..." />
             </FormSection>
-            <div className="flex-1 min-h-0 flex flex-col border-b border-slate-100 pb-3">
+            <div className="flex-1 min-h-0 flex flex-col border-b border-border/50 pb-3">
               <div className={SECTION_TITLE}>Notes</div>
               <div className="flex-1 min-h-0 flex flex-col">
                 <textarea value={cNotes} onChange={(e) => setCN(e.target.value)}
-                  className="h-full min-h-0 w-full resize-none overflow-auto border border-slate-200 bg-white px-2 py-1 text-xs outline-none" placeholder="Additional notes..." />
+                  className="h-full min-h-0 w-full resize-none overflow-auto border border-border bg-background px-2 py-1 text-xs outline-none" placeholder="Additional notes..." />
               </div>
             </div>
             {!requiredOk && (
-              <div className="shrink-0 p-2 bg-amber-50 border border-amber-200 text-[10px] text-amber-700">
+              <div className="shrink-0 p-2 bg-warning/10 border border-warning/20 text-[10px] text-warning">
                 Required: {[!cAffectedId ? "Affected Person" : "", !cOwner.trim() ? "Owner" : "", !cCareType ? "Care Type" : ""].filter(Boolean).join(", ")}
               </div>
             )}
@@ -275,9 +275,9 @@ export function SafetyMedicalCasesPage() {
     if (!selItem) return (
       <div className="flex flex-1 items-center justify-center h-full">
         <div className="text-center max-w-sm px-6">
-          <Activity className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-          <h3 className="text-sm font-semibold text-slate-900 mb-1">Medical Cases</h3>
-          <p className="text-xs text-slate-500 mb-3">Select a case to view details or create a new record.</p>
+          <Activity className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+          <h3 className="text-sm font-semibold text-foreground mb-1">Medical Cases</h3>
+          <p className="text-xs text-muted-foreground mb-3">Select a case to view details or create a new record.</p>
         </div>
       </div>
     );
@@ -285,8 +285,8 @@ export function SafetyMedicalCasesPage() {
     const careLabel = CARE_TYPE_OPTS.find((o: any) => o.value === selItem.careType)?.label || selItem.careType;
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-sm font-bold text-slate-900">{careLabel}</h2>
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="text-sm font-bold text-foreground">{careLabel}</h2>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${stCls}`}>{statusLabel(selItem.status)}</span>
           </div>
@@ -294,17 +294,17 @@ export function SafetyMedicalCasesPage() {
         <div className="p-5">
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             <div className="space-y-3">
-              {selItem.affectedPersonId && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Affected Person</p><p className="text-xs text-slate-900">{profiles.find((p: any) => p.id === selItem.affectedPersonId)?.fullName || `Person #${selItem.affectedPersonId}`}</p></div>}
-              {selEvent && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Linked Event</p><p className="text-xs text-slate-900">{selEvent.title} ({selEvent.eventType})</p></div>}
-              {selClaim && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Linked Claim</p><p className="text-xs text-slate-900">{selClaim.claimantName} ({selClaim.claimType})</p></div>}
-              {selItem.visitRequired && selItem.visitDate && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Visit Date</p><p className="text-xs text-slate-900">{formatDateFull(selItem.visitDate)}</p></div>}
-              {selItem.workRestriction && selItem.restrictionSummary && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Restriction</p><p className="text-xs text-slate-900">{selItem.restrictionSummary}</p></div>}
+              {selItem.affectedPersonId && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Affected Person</p><p className="text-xs text-foreground">{profiles.find((p: any) => p.id === selItem.affectedPersonId)?.fullName || `Person #${selItem.affectedPersonId}`}</p></div>}
+              {selEvent && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Linked Event</p><p className="text-xs text-foreground">{selEvent.title} ({selEvent.eventType})</p></div>}
+              {selClaim && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Linked Claim</p><p className="text-xs text-foreground">{selClaim.claimantName} ({selClaim.claimType})</p></div>}
+              {selItem.visitRequired && selItem.visitDate && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Visit Date</p><p className="text-xs text-foreground">{formatDateFull(selItem.visitDate)}</p></div>}
+              {selItem.workRestriction && selItem.restrictionSummary && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Restriction</p><p className="text-xs text-foreground">{selItem.restrictionSummary}</p></div>}
             </div>
             <div className="space-y-3">
-              {selItem.returnToWorkDate && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Return to Work</p><p className="text-xs text-slate-900">{formatDateFull(selItem.returnToWorkDate)}</p></div>}
-              {selItem.owner && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Owner</p><p className="text-xs text-slate-900">{selItem.owner}</p></div>}
-              {selItem.confidentialNotes && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Confidential Notes</p><p className="text-xs text-slate-500/70 italic">{selItem.confidentialNotes}</p></div>}
-              {selItem.notes && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Notes</p><p className="text-xs text-slate-900">{selItem.notes}</p></div>}
+              {selItem.returnToWorkDate && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Return to Work</p><p className="text-xs text-foreground">{formatDateFull(selItem.returnToWorkDate)}</p></div>}
+              {selItem.owner && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Owner</p><p className="text-xs text-foreground">{selItem.owner}</p></div>}
+              {selItem.confidentialNotes && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Confidential Notes</p><p className="text-xs text-muted-foreground/70 italic">{selItem.confidentialNotes}</p></div>}
+              {selItem.notes && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Notes</p><p className="text-xs text-foreground">{selItem.notes}</p></div>}
             </div>
           </div>
         </div>
@@ -334,19 +334,19 @@ export function SafetyMedicalCasesPage() {
     />
   );
 
-  const leftColumnContent = (<><div className="shrink-0 h-8 border-b border-slate-200 flex items-center bg-slate-50 px-4"><span className="text-sm font-medium text-slate-700">Cases</span><span className="ml-auto text-[10px] text-slate-500 font-mono">{items.length}</span></div>      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No cases match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">{filteredItems.length === 0 ? (<div className="flex flex-col items-center justify-center px-4 py-6 text-center"><Search className="h-5 w-5 text-slate-300 mb-2" /><p className="text-xs text-slate-500 font-medium mb-2">No medical cases recorded.</p>{!filterStatus && <button onClick={hNew} className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"><Plus className="h-3.5 w-3.5" /> New Case</button>}</div>) : filteredItems.map((e: any) => (<div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }} className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{CARE_TYPE_OPTS.find((o: any) => o.value === e.careType)?.label || e.careType}</span></div>              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>{e.owner && <span>· {e.owner}</span>}</div></div></div>))}</div></>);
+  const leftColumnContent = (<><div className="shrink-0 h-8 border-b border-border flex items-center bg-muted px-4"><span className="text-sm font-medium text-secondary-foreground">Cases</span><span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span></div>      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-muted-foreground/60 italic">No cases match &quot;{searchQuery}&quot;</div>}
+      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">{filteredItems.length === 0 ? (<div className="flex flex-col items-center justify-center px-4 py-6 text-center"><Search className="h-5 w-5 text-muted-foreground/30 mb-2" /><p className="text-xs text-muted-foreground font-medium mb-2">No medical cases recorded.</p>{!filterStatus && <button onClick={hNew} className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary"><Plus className="h-3.5 w-3.5" /> New Case</button>}</div>) : filteredItems.map((e: any) => (<div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }} className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{CARE_TYPE_OPTS.find((o: any) => o.value === e.careType)?.label || e.careType}</span></div>              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>{e.owner && <span>· {e.owner}</span>}</div></div></div>))}</div></>);
 
   const footerContent = <>{items.length} case{items.length !== 1 ? "s" : ""}{!creating && !selItem && <span className="ml-auto">Select a case to view details</span>}</>;
 
   const confirmDialog = cancelId && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setCancelId(null)}>
-      <div className="bg-white border border-slate-200 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-slate-900">Cancel Case</h3><p className="text-xs text-slate-600">Cancel this medical case?</p><div className="flex justify-end gap-2"><button onClick={() => setCancelId(null)} className="h-8 px-3 text-xs font-medium text-slate-700 border border-slate-200 bg-white hover:bg-slate-50">No</button><button onClick={() => { hTransition(cancelMut, cancelId, "Case cancelled"); setCancelId(null); }} className="h-8 px-3 text-xs font-semibold text-white bg-red-600 hover:bg-red-700">Yes</button></div></div></div></div>
+      <div className="bg-popover border border-border shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-foreground">Cancel Case</h3><p className="text-xs text-muted-foreground">Cancel this medical case?</p><div className="flex justify-end gap-2"><button onClick={() => setCancelId(null)} className="h-8 px-3 text-xs font-medium text-secondary-foreground border border-border bg-background hover:bg-muted">No</button><button onClick={() => { hTransition(cancelMut, cancelId, "Case cancelled"); setCancelId(null); }} className="h-8 px-3 text-xs font-semibold text-danger-foreground bg-danger hover:bg-danger/80">Yes</button></div></div></div></div>
   );
 
   return (
-    <><AppPageLayout icon={<Activity className="h-5 w-5 stroke-current" />} iconClass="bg-blue-100 text-blue-600"
+    <><AppPageLayout icon={<Activity className="h-5 w-5 stroke-current" />} iconClass="bg-primary/15 text-primary"
       title="Medical Cases" subtitle="Track medical cases including on-site care, clinic visits, hospitalizations, and return-to-work status."
       systemMessage={msg ? { text: msg.text, type: msg.tone } : null} onDismissSystemMessage={() => setMsg(null)}
       toolbar={toolbarContent} leftColumn={leftColumnContent} leftColumnWidth="w-[20%]" footer={footerContent}>{renderDetail()}</AppPageLayout>{confirmDialog}</>

@@ -37,16 +37,16 @@ const UPDATE_EVENT = gql`
 `;
 
 const SEVERITY_DOT: Record<string, string> = {
-  LOW: "bg-slate-400", MEDIUM: "bg-amber-500", HIGH: "bg-orange-500", CRITICAL: "bg-red-500",
+  LOW: "bg-muted-foreground/40", MEDIUM: "bg-warning", HIGH: "bg-warning", CRITICAL: "bg-danger",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  REPORTED: "bg-blue-100 text-blue-700 border-blue-200",
-  UNDER_REVIEW: "bg-amber-100 text-amber-700 border-amber-200",
-  ACTION_REQUIRED: "bg-orange-100 text-orange-700 border-orange-200",
-  CLOSED: "bg-green-100 text-green-700 border-green-200",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  REPORTED: "bg-primary/15 text-primary border-primary/20",
+  UNDER_REVIEW: "bg-warning/15 text-warning border-warning/20",
+  ACTION_REQUIRED: "bg-warning/15 text-warning border-warning/20",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 const EVENT_TYPE_OPTS = [
@@ -67,7 +67,7 @@ const STATUS_FILTERS = [
   { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const SEL_INPUT = "h-8 w-full bg-white border border-slate-200 px-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30";
+const SEL_INPUT = "h-8 w-full bg-background border border-border px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30";
 
 interface RouteConfig {
   title: string; subtitle: string; purpose: string;
@@ -510,12 +510,12 @@ export function SafetyEventsPage() {
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${stCls}`}>{statusLabel(selItem.status)}</span>
               <span className="inline-flex items-center px-1 py-0.5 text-[10px] font-medium border bg-slate-100 text-slate-700 border-slate-200">{EVENT_TYPE_OPTS.find((o: any) => o.value === selItem.eventType)?.label || selItem.eventType}</span>
-              <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${selItem.severity === "CRITICAL" ? "bg-red-100 text-red-700 border-red-200" : selItem.severity === "HIGH" ? "bg-orange-100 text-orange-700 border-orange-200" : selItem.severity === "MEDIUM" ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{selItem.severity}</span>
+              <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${selItem.severity === "CRITICAL" ? "bg-danger/15 text-danger border-danger/20" : selItem.severity === "HIGH" ? "bg-warning/15 text-warning border-warning/20" : selItem.severity === "MEDIUM" ? "bg-warning/15 text-warning border-warning/20" : "bg-muted text-muted-foreground border-border"}`}>{selItem.severity}</span>
             </div>
           </div>
           {selItem.description && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Description</p><p className="text-sm text-slate-900">{selItem.description}</p></div>}
           {selItem.immediateAction && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Immediate Action</p><p className="text-sm text-slate-900">{selItem.immediateAction}</p></div>}
-          <div><p className="text-[10px] font-medium text-slate-500 mb-1">Flags</p><div className="flex gap-2 text-xs flex-wrap">{selItem.injuryInvolved && <span className="bg-red-50 text-red-700 px-1.5 py-0.5 border border-red-200">Injury</span>}{selItem.propertyDamage && <span className="bg-orange-50 text-orange-700 px-1.5 py-0.5 border border-orange-200">Property Damage</span>}{selItem.environmentalImpact && <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 border border-emerald-200">Environmental</span>}{!selItem.injuryInvolved && !selItem.propertyDamage && !selItem.environmentalImpact && <span className="text-slate-400 italic">None reported</span>}</div></div>
+          <div><p className="text-[10px] font-medium text-slate-500 mb-1">Flags</p><div className="flex gap-2 text-xs flex-wrap">{selItem.injuryInvolved && <span className="bg-danger/10 text-danger px-1.5 py-0.5 border border-danger/20">Injury</span>}{selItem.propertyDamage && <span className="bg-warning/10 text-warning px-1.5 py-0.5 border border-warning/20">Property Damage</span>}{selItem.environmentalImpact && <span className="bg-success/10 text-success px-1.5 py-0.5 border border-success/20">Environmental</span>}{!selItem.injuryInvolved && !selItem.propertyDamage && !selItem.environmentalImpact && <span className="text-muted-foreground/60 italic">None reported</span>}</div></div>
         </div>
         <div className="w-[30%] shrink-0 border-l border-slate-200 bg-slate-50/40 p-5 space-y-4 overflow-y-auto">
           <div><p className="text-[10px] font-medium text-slate-500 mb-2">Details</p><div className="space-y-2 text-xs"><div className="flex justify-between"><span className="text-slate-500">Event Type</span><span className="text-slate-900 font-medium">{EVENT_TYPE_OPTS.find((o: any) => o.value === selItem.eventType)?.label || selItem.eventType}</span></div><div className="flex justify-between"><span className="text-slate-500">Severity</span><span className="text-slate-900 font-medium">{selItem.severity}</span></div><div className="flex justify-between"><span className="text-slate-500">Status</span><span className="text-slate-900 font-medium">{statusLabel(selItem.status)}</span></div><div className="flex justify-between"><span className="text-slate-500">Target</span><span className="text-slate-900 font-medium">{targetLabel || selItem.targetType}</span></div></div></div>
@@ -553,8 +553,8 @@ export function SafetyEventsPage() {
 
   const leftColumnContent = (
     <>
-      <div className="shrink-0 h-8 border-b border-slate-200 flex items-center bg-slate-50 px-4"><span className="text-sm font-medium text-slate-700">Events</span><span className="ml-auto text-[10px] text-slate-500 font-mono">{items.length}</span></div>
-      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No events match &quot;{searchQuery}&quot;</div>}
+      <div className="shrink-0 h-8 border-b border-border flex items-center bg-muted px-4"><span className="text-sm font-medium text-secondary-foreground">Events</span><span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span></div>
+      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-muted-foreground/60 italic">No events match &quot;{searchQuery}&quot;</div>}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
@@ -584,13 +584,13 @@ export function SafetyEventsPage() {
 
   const confirmDialog = deleteConfirmId && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setDeleteConfirmId(null)}>
-      <div className="bg-white border border-slate-200 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-slate-900">Cancel Event</h3><p className="text-xs text-slate-600">Cancel this safety event? This cannot be undone.</p><div className="flex justify-end gap-2"><button onClick={() => setDeleteConfirmId(null)} className="h-8 px-3 text-xs font-medium text-slate-700 border border-slate-200 bg-white hover:bg-slate-50">No</button><button onClick={hDelete} className="h-8 px-3 text-xs font-semibold text-white bg-red-600 hover:bg-red-700">Yes, Cancel</button></div></div></div></div>
+      <div className="bg-popover border border-border shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-foreground">Cancel Event</h3><p className="text-xs text-muted-foreground">Cancel this safety event? This cannot be undone.</p><div className="flex justify-end gap-2"><button onClick={() => setDeleteConfirmId(null)} className="h-8 px-3 text-xs font-medium text-secondary-foreground border border-border bg-background hover:bg-muted">No</button><button onClick={hDelete} className="h-8 px-3 text-xs font-semibold text-danger-foreground bg-danger hover:bg-danger/80">Yes, Cancel</button></div></div></div></div>
   );
 
   return (
     <>
-      <AppPageLayout icon={<cfg.icon className="h-5 w-5 stroke-current" />} iconClass="bg-red-100 text-red-600"
+      <AppPageLayout icon={<cfg.icon className="h-5 w-5 stroke-current" />} iconClass="bg-danger/15 text-danger"
         title={cfg.title} subtitle={cfg.subtitle}
         systemMessage={msg ? { text: msg.text, type: msg.tone } : null} onDismissSystemMessage={() => setMsg(null)}
         toolbar={toolbarContent} leftColumn={leftColumnContent} leftColumnWidth="w-[20%]" footer={footerContent}>

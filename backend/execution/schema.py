@@ -414,6 +414,7 @@ class GembaQuery:
             plant_id=plant_id,
             walk_date=parsed_date,
             shift_name=shift_name or "",
+            user=info.context.user,
         )
         return DailyGembaBoardNode(
             active_session=_session_to_node(result["active_session"]) if result.get("active_session") else None,

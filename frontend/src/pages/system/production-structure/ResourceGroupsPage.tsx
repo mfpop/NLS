@@ -238,7 +238,7 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+                className="h-8 w-36 rounded-[2px] border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -301,10 +301,10 @@ export function ResourceGroupsPage({ embeddedInFlow = false }: { embeddedInFlow?
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
-                      <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{g.name || ""}</span>
-                      <span className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={g.status || "unknown"} />
+                      <span className="min-w-0 truncate text-[14px] font-semibold text-foreground">{g.name || ""}</span>
+                      <span className={`h-2 w-2 rounded-full ${isActive ? "bg-success" : "bg-muted-foreground/40"}`} title={g.status || "unknown"} />
                     </div>
-                    <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{g.departmentName || "Department required"}</div>
+                    <div className="mt-0.5 truncate text-[12px] font-medium text-muted-foreground">{g.departmentName || "Department required"}</div>
                   </div>
                 </div>
               );

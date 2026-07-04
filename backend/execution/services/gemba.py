@@ -710,11 +710,27 @@ class GembaWalkService:
                                session_id: int | None = None,
                                user=None) -> dict:
         """Return the full daily Gemba board data."""
-        filters = Q()
+        # Auto-create a planned session if none exists for today
+        if walk_date is None:
+            walk_date = date.today()
+        if not shift_name:
+            shift_name = "DAY"
 
-        if session_id:
-            filters &= Q(id=session_id)
+        # Get or create the daily session so the toolbar always shows Start Walk
+        if line_id is not None and not session_id:
+            try:
+                session = self.get_or_create_daily_session(
+                    line_id=line_id,
+                    shift_name=shift_name,
+                    walk_date=walk_date,
+                    user=user,
+                )
+            except Exception:
+                session = None
         else:
+            filters = Q()
+            if session_id:
+                filters &= Q(id=session_id)
             if line_id:
                 filters &= Q(line_id=line_id)
             if plant_id:
@@ -724,27 +740,26 @@ class GembaWalkService:
             if shift_name:
                 filters &= Q(shift_name=shift_name)
 
-        sessions = GembaWalkSession.objects.filter(filters).order_by("-walk_date", "-created_at")
-        active_session = sessions.filter(
-            status__in=[GEMBA_SESSION_PLANNED, GEMBA_SESSION_IN_PROGRESS]
-        ).first()
-        latest_session = sessions.first()
+            sessions = GembaWalkSession.objects.filter(filters).order_by("-walk_date", "-created_at")
+            active_session = sessions.filter(
+                status__in=[GEMBA_SESSION_PLANNED, GEMBA_SESSION_IN_PROGRESS]
+            ).first()
+            latest_session = sessions.first()
+            session = active_session or latest_session
 
-        if not active_session and not latest_session:
+        if not session:
             return {
                 "active_session": None,
                 "observations": [],
                 "metrics": self._empty_metrics(),
-                "activities": [],
             }
 
-        target_session = active_session or latest_session
         observations = list(GembaObservation.objects.filter(
-            session=target_session
+            session=session
         ).select_related("owner", "created_issue", "created_action", "created_by").order_by("-created_at"))
 
         return {
-            "active_session": target_session,
+            "active_session": session,
             "observations": observations,
             "metrics": self._compute_metrics(observations),
         }

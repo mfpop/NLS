@@ -220,7 +220,7 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+                className="h-8 w-36 rounded-[2px] border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -258,9 +258,9 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
         }
         list={
           <div className="flex flex-col h-full min-h-0 overflow-hidden">
-            <div className="shrink-0 border-b border-slate-200 flex h-9 items-center px-3 bg-slate-50">
+            <div className="shrink-0 border-b border-border flex h-9 items-center px-3 bg-muted">
               <select value={plantFilter} onChange={(event) => setPlantFilter(event.target.value)}
-                className="h-6 w-full min-w-0 rounded-[2px] border border-slate-300 bg-white px-2 text-[11px] text-slate-900 outline-none focus:border-blue-500">
+                className="h-6 w-full min-w-0 rounded-[2px] border border-border bg-background px-2 text-[11px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary">
                 <option value="all">All Plants</option>
                 {plants.map((plant) => <option key={plant.id} value={plant.id}>{plant.code} - {plant.name}</option>)}
               </select>
@@ -287,10 +287,10 @@ export function DepartmentsPage({ embeddedInFlow = false }: { embeddedInFlow?: b
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="grid min-w-0 items-center gap-2" style={{ gridTemplateColumns: "minmax(0,1fr) auto" }}>
-                          <span className="min-w-0 truncate text-[14px] font-semibold text-slate-900">{d.name}</span>
-                          <span className={`h-2 w-2 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} title={d.status || "unknown"} />
+                          <span className="min-w-0 truncate text-[14px] font-semibold text-foreground">{d.name}</span>
+                          <span className={`h-2 w-2 rounded-full ${isActive ? "bg-success" : "bg-muted-foreground/40"}`} title={d.status || "unknown"} />
                         </div>
-                        <div className="mt-0.5 truncate text-[12px] font-medium text-slate-500">{deptPlantOk ? plantName : "Plant required"}</div>
+                        <div className="mt-0.5 truncate text-[12px] font-medium text-muted-foreground">{deptPlantOk ? plantName : "Plant required"}</div>
                       </div>
                     </div>
                   );

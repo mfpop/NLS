@@ -16,7 +16,7 @@ export const VSM_VIEW_W = 2396;
 //   PC_TO_PROCESS_GAP === PROCESS_TO_TIMELINE_GAP
 export const TOP_OUTER_GAP = 25;
 export const PC_TO_PROCESS_GAP = 221;   // +70% (was 130)
-export const PROCESS_TO_TIMELINE_GAP = 280;  // +100% (was 140)
+export const PROCESS_TO_TIMELINE_GAP = 210;  // +100%→0% over previous 140, then −25% = 210
 export const TIMELINE_TO_FOOTER_GAP = 25;
 
 // Supplier / Customer

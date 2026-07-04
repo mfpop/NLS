@@ -103,8 +103,8 @@ function ArrowDefs() {
       <marker id="arr-info-KANBAN" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
         <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--accent))" />
       </marker>
-      <marker id="arr-info-SCHEDULE" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--secondary-foreground))" />
+      <marker id="arr-info-SCHEDULE" markerWidth={8} markerHeight={6} refX={8} refY={3} orient="auto">
+        <polygon points="0,0 8,3 0,6" fill="hsl(var(--secondary-foreground))" />
       </marker>
     </defs>
   );

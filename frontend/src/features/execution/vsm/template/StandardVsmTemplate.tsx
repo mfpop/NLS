@@ -350,7 +350,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
           stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
-          cx={SUP_CX - 32}
+          cx={SUP_CX - 44}
           y={(SUP_BOTTOM + MAT_Y - INV_HALF) / 2 - 38}
           label="Shipment"
           frequency={supplierShipFlow?.deliveryFrequency || null}
@@ -364,7 +364,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
           stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
-          cx={CUST_CX + 32}
+          cx={CUST_CX + 48}
           y={(MAT_Y + INV_HALF + CUST_BOTTOM) / 2 - 28}
           label="Shipment"
           frequency={customerShipFlow?.deliveryFrequency || null}

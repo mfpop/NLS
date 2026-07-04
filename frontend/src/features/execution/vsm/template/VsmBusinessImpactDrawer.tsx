@@ -1,6 +1,6 @@
 // ── Business Impact Drawer — slide-in panel for VSM business impact data ──
 
-import { X } from "lucide-react";
+import { X, BarChart3 } from "lucide-react";
 import type { BusinessImpactModel } from "./vsmTemplateTypes";
 
 interface Props {
@@ -42,10 +42,13 @@ export function VsmBusinessImpactDrawer({ impact, onClose }: Props) {
   return (
     <div className="w-[340px] h-full shrink-0 bg-background border-l border-border shadow-2xl flex flex-col overflow-hidden animate-slide-left">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-muted">
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
-            Business Impact
-          </h3>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-gradient-to-r from-muted/40 to-background">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+              <BarChart3 className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <h2 className="text-sm font-bold text-foreground">Business Impact</h2>
+          </div>
           <button onClick={onClose}
             className="p-1 rounded hover:bg-muted/80 text-muted-foreground/60 hover:text-muted-foreground transition-colors">
             <X className="h-4 w-4" />

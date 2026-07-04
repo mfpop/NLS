@@ -52,7 +52,7 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
         </div>
 
         {/* Status badges */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/50 bg-muted/50">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/50 bg-muted/50">
           <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold border ${
             node.isBottleneck
               ? "border-warning/20 bg-warning/10 text-warning"
@@ -129,7 +129,7 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 items-stretch">
                 <MC icon={<Clock className="h-3.5 w-3.5" />} label="Cycle Time" value={`${node.cycleTimeSeconds}s`} />
                 <MC icon={<Gauge className="h-3.5 w-3.5" />} label="Takt Time" value={`${taktTime}s`}
                   color={ctVsTakt === "above" ? "text-danger" : "text-foreground"} />
@@ -344,4 +344,11 @@ function OpportunityCard({
       </div>
     </div>
   );
+}
+}
+Name="h-4 w-4 text-muted-foreground/30 shrink-0 mt-0.5" />
+      </div>
+    </div>
+  );
+}
 }

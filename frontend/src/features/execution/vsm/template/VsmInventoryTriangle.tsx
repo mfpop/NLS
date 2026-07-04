@@ -19,9 +19,9 @@ function severityColor(sev: string): string {
 }
 
 function severityBg(sev: string): string {
-  if (sev === "critical") return "hsl(var(--danger) / 0.06)";
-  if (sev === "warning") return "hsl(var(--warning) / 0.08)";
-  return "hsl(var(--primary) / 0.06)";
+  if (sev === "critical") return "hsl(var(--danger) / 0.05)";
+  if (sev === "warning") return "hsl(var(--warning) / 0.06)";
+  return "hsl(var(--primary) / 0.05)";
 }
 
 function daysColor(sev: string): string {
@@ -75,7 +75,7 @@ export const VsmInventoryTriangle = memo(function VsmInventoryTriangle({ model, 
       {/* ── Triangle ── */}
       <polygon
         points={`${x},${y - INV_HALF} ${x - INV_HALF},${baseY} ${x + INV_HALF},${baseY}`}
-        fill={bg} stroke={c} strokeWidth={2.5} strokeLinejoin="miter" />
+        fill={bg} stroke={c} strokeWidth={2} strokeLinejoin="miter" />
 
       {/* ── Quantity inside triangle ── */}
       <text x={x} y={baseY + INV_QTY_INSET} textAnchor="middle" className="text-[18px] font-extrabold" fill={c}>

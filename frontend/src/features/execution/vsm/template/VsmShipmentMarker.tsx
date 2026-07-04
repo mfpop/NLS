@@ -13,13 +13,13 @@ interface Props {
   to?: string | null;
 }
 
-const ICON_SIZE = 69;
+const ICON_SIZE = 88;
 
 export function VsmShipmentMarker({ cx, y, label, frequency, equipmentType, from, to }: Props) {
   // Vertical layout — fixed offsets from group top
-  const labelY = 0;         // "Shipment" baseline (11px text, occupies y≈-8 to y≈3)
-  const iconY = 0;          // icon top: icon content starts at y+13, 10px gap from text bottom
-  const freqY = 59;         // frequency baseline: below larger 69px icon
+  const labelY = -8;        // "Shipment" baseline (11px text, occupies y≈-8 to y≈3)
+  const iconY = 0;          // icon top: icon content starts here
+  const freqY = 78;         // frequency baseline: below larger 88px icon
 
   // Tooltip
   const tooltipParts: string[] = [];

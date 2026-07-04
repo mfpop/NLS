@@ -344,7 +344,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
           cx={SUP_CX - 32}
-          y={(SUP_BOTTOM + MAT_Y - INV_HALF) / 2 - 28}
+          y={(SUP_BOTTOM + MAT_Y - INV_HALF) / 2 - 38}
           label="Shipment"
           frequency={supplierShipFlow?.deliveryFrequency || null}
           equipmentType={supplierShipFlow?.equipmentType || "TRUCK"}

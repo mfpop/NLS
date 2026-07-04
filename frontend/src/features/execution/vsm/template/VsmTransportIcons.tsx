@@ -220,11 +220,11 @@ export function VsmTruckIconSmall({ x, y, size = 18, severity, color }: IconProp
     <g transform={`translate(${x},${y})`}>
       <title>Truck</title>
       {/* Cab */}
-      <path d={`M${s*0.05},${s*0.5} L${s*0.05},${s*0.3} Q${s*0.05},${s*0.25} ${s*0.15},${s*0.25} L${s*0.3},${s*0.25} L${s*0.35},${s*0.4} L${s*0.35},${s*0.5} Z`} fill="none" stroke={c} strokeWidth={1.5} />
+      <path d={`M${s*0.05},${s*0.5} L${s*0.05},${s*0.3} Q${s*0.05},${s*0.25} ${s*0.15},${s*0.25} L${s*0.3},${s*0.25} L${s*0.35},${s*0.4} L${s*0.35},${s*0.5} Z`} fill="none" stroke={c} strokeWidth={2.0} />
       {/* Windshield */}
-      <line x1={s * 0.15} y1={s * 0.28} x2={s * 0.25} y2={s * 0.28} stroke={c} strokeWidth={1} />
+      <line x1={s * 0.15} y1={s * 0.28} x2={s * 0.25} y2={s * 0.28} stroke={c} strokeWidth={1.2} />
       {/* Bed */}
-      <rect x={s * 0.35} y={s * 0.3} width={s * 0.55} height={s * 0.2} rx={s * 0.03} fill="none" stroke={c} strokeWidth={1.5} />
+      <rect x={s * 0.35} y={s * 0.3} width={s * 0.55} height={s * 0.2} rx={s * 0.03} fill="none" stroke={c} strokeWidth={2.0} />
       {/* Wheels */}
       <circle cx={s * 0.2} cy={s * 0.55} r={s * 0.08} fill={c} />
       <circle cx={s * 0.55} cy={s * 0.55} r={s * 0.08} fill={c} />

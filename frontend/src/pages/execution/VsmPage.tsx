@@ -28,7 +28,7 @@ import { VsmKpiStrip } from "@/features/execution/vsm/template/VsmKpiStrip";
 import { VsmFooterLegend } from "@/features/execution/vsm/template/VsmFooterLegend";
 import { VsmBusinessImpactDrawer } from "@/features/execution/vsm/template/VsmBusinessImpactDrawer";
 import { mapVsmChartToTemplateModel } from "@/features/execution/vsm/template/mapVsmChartToTemplateModel";
-import { VSM_VIEW_W, VSM_VIEW_H } from "@/features/execution/vsm/template/vsmTemplateGeometry";
+/* Fit handled by ClassicalVsmCanvas ResizeObserver + refitKey */
 import { mapVsmApiToTemplateModel } from "@/features/execution/vsm/template/mapVsmApiToTemplateModel";
 import { theme } from "@/styles/themeTokens";
 import { createTestChart } from "@/demo/vsmTestChart";
@@ -132,6 +132,7 @@ export function VsmPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("derived");
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [refitKey, setRefitKey] = useState(0);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [editChartId, setEditChartId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -342,22 +343,7 @@ export function VsmPage() {
   const handleZoomIn = useCallback(() => setZoom((z) => Math.min(3, z + 0.15)), []);
   const handleZoomOut = useCallback(() => setZoom((z) => Math.max(0.25, z - 0.15)), []);
   const handleFit = useCallback(() => {
-    const el = canvasRef.current;
-    if (!el) return;
-    const cw = el.clientWidth;
-    const ch = el.clientHeight;
-    if (cw <= 0 || ch <= 0) return;
-    const FIT_PAD_X = 32;
-    const FIT_PAD_Y = 24;
-    const scale = Math.min(
-      (cw - FIT_PAD_X * 2) / VSM_VIEW_W,
-      (ch - FIT_PAD_Y * 2) / VSM_VIEW_H
-    );
-    setZoom(Math.max(0.1, Math.min(2, scale)));
-    setPan({
-      x: Math.round((cw - VSM_VIEW_W * scale) / 2),
-      y: Math.round((ch - VSM_VIEW_H * scale) / 2),
-    });
+    setRefitKey((k) => k + 1);
   }, []);
   const handleCreateTestChart = useCallback(() => {
     const chart = createTestChart();
@@ -758,6 +744,7 @@ export function VsmPage() {
               showFlowLogic={showFlowLogic} showAllFlows={showAllFlows}
               zoom={zoom} pan={pan}
               onZoomChange={setZoom} onPanChange={setPan}
+              refitKey={refitKey}
             />
           </div>
         )}

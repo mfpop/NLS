@@ -15,10 +15,12 @@ interface Props {
   pan: { x: number; y: number };
   onZoomChange: (z: number) => void;
   onPanChange: (p: { x: number; y: number }) => void;
+  /** Increment refitKey to trigger a re-fit from this component's own container */
+  refitKey?: number;
 }
 
-const FIT_PAD_X = 32;
-const FIT_PAD_Y = 24;
+const FIT_PAD_X = 16;
+const FIT_PAD_Y = 12;
 
 function computeFit(cw: number, ch: number): { zoom: number; pan: { x: number; y: number } } {
   const scale = Math.min(
@@ -37,10 +39,31 @@ function computeFit(cw: number, ch: number): { zoom: number; pan: { x: number; y
 export function ClassicalVsmCanvas({
   diagram, selectedNodeId, onSelectNode,
   showKaizen, showFlowLogic, showAllFlows, zoom, pan,
-  onZoomChange, onPanChange,
+  onZoomChange, onPanChange, refitKey,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const wheelTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const doFitRef = useRef<(() => void) | null>(null);
+
+  // Expose fit function so it can be called from resize or refitKey change
+  const doFit = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const cw = el.clientWidth;
+    const ch = el.clientHeight;
+    if (cw <= 0 || ch <= 0) return;
+    const scale = Math.min(
+      (cw - FIT_PAD_X * 2) / VSM_VIEW_W,
+      (ch - FIT_PAD_Y * 2) / VSM_VIEW_H
+    );
+    onZoomChange(Math.max(0.1, Math.min(2, scale)));
+    onPanChange({
+      x: Math.round((cw - VSM_VIEW_W * scale) / 2),
+      y: Math.round((ch - VSM_VIEW_H * scale) / 2),
+    });
+  }, [onZoomChange, onPanChange]);
+
+  useEffect(() => { doFitRef.current = doFit; }, [doFit]);
 
   // Auto-fit on mount & resize
   useEffect(() => {
@@ -54,16 +77,19 @@ export function ClassicalVsmCanvas({
         if (cw > 0 && ch > 0) {
           cancelAnimationFrame(frame);
           frame = requestAnimationFrame(() => {
-            const { zoom: z, pan: p } = computeFit(cw, ch);
-            onZoomChange(z);
-            onPanChange(p);
+            doFit();
           });
         }
       }
     });
     obs.observe(el);
     return () => { obs.disconnect(); cancelAnimationFrame(frame); };
-  }, []);
+  }, [doFit]);
+
+  // Re-fit on refitKey change (triggered by panel open/close, sidebar toggle, etc.)
+  useEffect(() => {
+    if (refitKey != null) doFit();
+  }, [refitKey, doFit]);
 
   // Map API data → template model (one-time per diagram change)
   const templateModel = useMemo(() => mapVsmApiToTemplateModel(diagram), [diagram]);

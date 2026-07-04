@@ -316,8 +316,8 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
              ═══════════════════════════════════════ */}
         {model.timelineSegments.length > 0 && (
           <>
-          {/* Timeline background band — visual separation from process-flow area */}
-        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 12} width={VSM_VIEW_W} height={TIMELINE_DROP + 28}
+          {/* Timeline ladder container — continuous background band spanning full width */}
+        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 20} width={VSM_VIEW_W} height={TIMELINE_DROP + 68}
           fill="#ffffff" fillOpacity={0.03} rx={4} />
 
         <g transform={`translate(0,${TIMELINE_Y})`}>

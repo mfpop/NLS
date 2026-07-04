@@ -66,8 +66,8 @@ const TYPE_COLORS: Record<string, string> = {
   FG: "bg-success/100/10 text-success border-green-500/20",
   SCRAP: "bg-danger/100/10 text-danger border-red-500/20",
   QUARANTINE: "bg-warning/10 text-warning border-yellow-500/20",
-  SPARES: "bg-purple-500/10 text-accent-foreground border-purple-500/20",
-  LINE_SIDE: "bg-muted0/10 text-muted-foreground border-slate-500/20",
+  SPARES: "bg-accent/10 text-accent-foreground border-accent/20",
+  LINE_SIDE: "bg-muted0/10 text-muted-foreground border-border/40",
 };
 
 const ET: Record<string, string> = {
@@ -126,7 +126,7 @@ function ValidationPill({ ok, label, warning }: { ok: boolean; label: string; wa
 
 function TypeBadge({ type }: { type: string }) {
   const opt = BIN_TYPE_OPTIONS.find((o) => o.value === type);
-  const colors = TYPE_COLORS[type] || "bg-muted0/10 text-muted-foreground border-slate-500/20";
+  const colors = TYPE_COLORS[type] || "bg-muted0/10 text-muted-foreground border-border/40";
   return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${colors}`}>{opt?.label || type}</span>;
 }
 

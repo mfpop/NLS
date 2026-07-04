@@ -126,7 +126,7 @@ function Toggle({ checked, onChange, id }: { checked: boolean; onChange: (v: boo
       id={id}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 ${
-        checked ? "bg-primary" : "bg-slate-300"
+        checked ? "bg-primary" : "bg-muted-foreground/30"
       }`}
     >
       <span

@@ -108,7 +108,7 @@ function Fld({ label, children, required, error }: { label: string; children: Re
   );
 }
 
-const inpCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-purple-500 transition-colors placeholder:text-muted-foreground/40";
+const inpCls = "h-8 w-full bg-background/50 dark:bg-muted/50 backdrop-blur-sm border border-white/30 dark:border-muted/30 px-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/40";
 const selCls = inpCls + " appearance-none";
 
 function TargetSelector({
@@ -129,7 +129,7 @@ function TargetSelector({
     errorPolicy: "all",
   });
   const lineList: { id: string; name: string }[] = (lines as any)?.productionLines || [];
-  const baseCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-purple-500 transition-colors disabled:opacity-40";
+  const baseCls = "h-8 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 text-xs text-foreground outline-none focus:border-primary transition-colors disabled:opacity-40";
 
   return (
     <div className="space-y-2">
@@ -383,8 +383,8 @@ export function PreventiveMaintenancePage() {
   }, []);
 
   const statusColors: Record<string, string> = {
-    ACTIVE: "bg-success/15 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
-    PAUSED: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
+    ACTIVE: "bg-success/15 text-success border-success/20 dark:bg-success/15 dark:text-success dark:border-success/20",
+    PAUSED: "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning dark:border-warning/20",
     ARCHIVED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
   };
 
@@ -478,12 +478,12 @@ export function PreventiveMaintenancePage() {
         </Fld>
         <Fld label="Description">
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-purple-500 placeholder:text-muted-foreground/40"
+            className="h-20 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary placeholder:text-muted-foreground/40"
             placeholder="Describe the maintenance plan..." />
         </Fld>
         <Fld label="Notes">
           <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-purple-500"
+            className="h-20 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary"
             placeholder="Additional notes, safety precautions, references..." />
         </Fld>
 
@@ -492,7 +492,7 @@ export function PreventiveMaintenancePage() {
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Checklist Items</p>
             <button type="button" onClick={addChecklistItem}
-              className="inline-flex h-6 items-center gap-1 bg-purple-600/10 px-2 text-[10px] font-semibold text-accent-foreground hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
+              className="inline-flex h-6 items-center gap-1 bg-accent/10 px-2 text-[10px] font-semibold text-accent-foreground hover:bg-accent/20 dark:text-accent-foreground transition-colors">
               <Plus className="h-3 w-3" /> Add Item
             </button>
           </div>
@@ -505,10 +505,10 @@ export function PreventiveMaintenancePage() {
                   <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <input type="text" value={item.task} onChange={(e) => updateChecklistItem(item.id, "task", e.target.value)}
-                        className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-purple-500"
+                        className="h-7 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 text-xs outline-none focus:border-primary"
                         placeholder="Task description..." />
                       <input type="text" value={item.instructions} onChange={(e) => updateChecklistItem(item.id, "instructions", e.target.value)}
-                        className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-purple-500"
+                        className="h-7 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 text-xs outline-none focus:border-primary"
                         placeholder="Instructions / notes..." />
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 pt-1">
@@ -577,7 +577,7 @@ export function PreventiveMaintenancePage() {
                 <Calendar className="h-3.5 w-3.5 stroke-current" /> Schedule
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                <div className={cls("border p-3", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "border-danger/20 bg-danger/10 dark:border-red-900/30 dark:bg-red-950/20" : "border-border/30 bg-card/50")}>
+                <div className={cls("border p-3", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "border-danger/20 bg-danger/10 dark:border-danger/20 dark:bg-danger/10" : "border-border/30 bg-card/50")}>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Next Due</p>
                   <p className={cls("mt-1 text-lg font-bold", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "text-danger" : "text-foreground")}>
                     {sel.nextDueDate?.slice(0, 10) || "—"}
@@ -712,7 +712,7 @@ export function PreventiveMaintenancePage() {
         <div className={cls(
           "shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b",
           errorMsg
-            ? "bg-danger/10 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300"
+            ? "bg-danger/10 text-danger border-danger/20 dark:bg-danger/15 dark:text-danger"
             : "bg-success/10 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300",
         )}>
           {errorMsg ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
@@ -721,7 +721,7 @@ export function PreventiveMaintenancePage() {
       )}
       <PageHeader
         icon={<CalendarClock className="h-5 w-5 stroke-current" />}
-        iconClass="bg-accent/15 text-accent-foreground dark:bg-purple-900/40 dark:text-purple-400"
+        iconClass="bg-accent/15 text-accent-foreground dark:bg-accent/15 dark:text-accent-foreground"
         title="Preventive Maintenance"
         subtitle="Schedule and manage preventive maintenance plans — TPM framework"
       >
@@ -788,7 +788,7 @@ export function PreventiveMaintenancePage() {
               <div className="relative">
                 <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search PM plans..."
-                  className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-purple-500 transition-colors placeholder:text-muted-foreground/40" />
+                  className="h-7 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/40" />
                 {search && (
                   <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <XCircle className="h-3 w-3 stroke-current" />
@@ -798,14 +798,14 @@ export function PreventiveMaintenancePage() {
               {/* Filters */}
               <div className="flex gap-1">
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-purple-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-primary transition-colors appearance-none">
                   <option value="">All Status</option>
                   <option value="ACTIVE">Active</option>
                   <option value="PAUSED">Paused</option>
                   <option value="ARCHIVED">Archived</option>
                 </select>
                 <select value={filterFreq} onChange={(e) => setFilterFreq(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-purple-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-primary transition-colors appearance-none">
                   <option value="">All Freq</option>
                   <option value="DAILY">Daily</option>
                   <option value="WEEKLY">Weekly</option>
@@ -825,7 +825,7 @@ export function PreventiveMaintenancePage() {
                   <p className="text-xs font-medium text-muted-foreground">No PM plans created</p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground/60">Create the first PM plan to start preventive maintenance.</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-purple-600/10 px-3 text-xs font-semibold text-accent-foreground hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-accent/10 px-3 text-xs font-semibold text-accent-foreground hover:bg-accent/20 dark:text-accent-foreground transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> New PM Plan
                   </button>
                 </div>
@@ -836,7 +836,7 @@ export function PreventiveMaintenancePage() {
                       onClick={() => { setSelId(pm.id); setView("detail"); }}
                       className={cls(
                         "group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150",
-                        selId === pm.id ? "bg-table-selected border-l-2 border-l-purple-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
+                        selId === pm.id ? "bg-table-selected border-l-2 border-l-accent" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
                       )}>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
@@ -909,7 +909,7 @@ export function PreventiveMaintenancePage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No PM plans found</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-purple-600/10 px-3 text-xs font-semibold text-accent-foreground hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-accent/10 px-3 text-xs font-semibold text-accent-foreground hover:bg-accent/20 dark:text-accent-foreground transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> New PM Plan
                   </button>
                 </div>
@@ -920,7 +920,7 @@ export function PreventiveMaintenancePage() {
                       onClick={() => { setSelId(pm.id); setView("detail"); }}
                       className={cls(
                         "group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150",
-                        selId === pm.id ? "bg-table-selected border-l-2 border-l-purple-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
+                        selId === pm.id ? "bg-table-selected border-l-2 border-l-accent" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
                       )}>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">

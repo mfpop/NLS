@@ -18,10 +18,10 @@ interface EntityListItemProps {
 function statusBulletClass(status?: string) {
   const normalized = (status || "").toLowerCase();
   if (normalized === "active" || normalized === "running" || normalized === "online") return "bg-success/100";
-  if (normalized === "inactive" || normalized === "idle") return "bg-slate-400";
+  if (normalized === "inactive" || normalized === "idle") return "bg-muted-foreground/40";
   if (normalized === "down" || normalized === "blocked" || normalized === "error") return "bg-danger/100";
   if (normalized === "maintenance" || normalized === "warning") return "bg-warning/100";
-  return "bg-slate-300";
+  return "bg-muted-foreground/30";
 }
 
 export function EntityListItem({ name, meta, icon, selected, status, onClick, entityType = "resource" }: EntityListItemProps) {

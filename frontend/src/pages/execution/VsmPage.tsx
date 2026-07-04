@@ -733,7 +733,7 @@ export function VsmPage() {
 
       {/* Canvas row — drawers are flex siblings that push the canvas */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-      <div ref={canvasRef} className="flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+      <div ref={canvasRef} className="flex flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
         {viewMode === "derived" && diagram && (
           <div className="flex-1 min-h-0 animate-fade-in">
             <ClassicalVsmCanvas diagram={diagram} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId}

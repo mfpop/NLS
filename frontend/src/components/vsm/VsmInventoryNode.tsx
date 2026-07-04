@@ -39,7 +39,7 @@ export function VsmInventoryTriangle({ node, x, y, size, onSelect }: Props) {
     <g onClick={() => onSelect(node.id)} className="cursor-pointer">
       <polygon
         points={`${x},${tipY} ${x - half},${botY} ${x + half},${botY}`}
-        fill="white"
+        fill="hsl(var(--background))"
         stroke={color}
         strokeWidth={2.5}
       />
@@ -48,14 +48,14 @@ export function VsmInventoryTriangle({ node, x, y, size, onSelect }: Props) {
         {TYPE_LABELS[node.type]}
       </text>
 
-      <text x={x} y={botY + 14} textAnchor="middle" className="text-[10px] font-bold" fill="#1e293b">
+      <text x={x} y={botY + 14} textAnchor="middle" className="text-[10px] font-bold" fill="hsl(var(--foreground))">
         {node.quantity}
       </text>
-      <text x={x} y={botY + 25} textAnchor="middle" className="text-[8px]" fill="#94a3b8">
+      <text x={x} y={botY + 25} textAnchor="middle" className="text-[8px]" fill="hsl(var(--muted-foreground))">
         {node.daysOfInventory}d
       </text>
 
-      <text x={x} y={botY + 37} textAnchor="middle" className="text-[8px]" fill="#64748b">
+      <text x={x} y={botY + 37} textAnchor="middle" className="text-[8px]" fill="hsl(var(--muted-foreground))">
         {node.label}
       </text>
     </g>

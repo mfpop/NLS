@@ -32,15 +32,15 @@ export function VsmTimelineBand({
 
   return (
     <g>
-      <rect x={0} y={bandY} width={canvasWidth} height={bandHeight} fill="#f8fafc" stroke="#e2e8f0" strokeWidth={1} />
-      <text x={10} y={titleY} className="text-[7px] font-semibold uppercase tracking-wider" fill="#94a3b8">
+      <rect x={0} y={bandY} width={canvasWidth} height={bandHeight} fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth={1} />
+      <text x={10} y={titleY} className="text-[7px] font-semibold uppercase tracking-wider" fill="hsl(var(--muted-foreground))">
         VA/NVA TIMELINE
       </text>
 
-      <text x={startX} y={vaRowY - 3} className="text-[7px]" fill="#16a34a">VA</text>
-      <text x={startX + 16} y={vaRowY - 3} className="text-[6px]" fill="#94a3b8">value-add</text>
-      <text x={startX} y={nvaRowY - 3} className="text-[7px]" fill="#94a3b8">NVA</text>
-      <text x={startX + 18} y={nvaRowY - 3} className="text-[6px]" fill="#94a3b8">wait</text>
+      <text x={startX} y={vaRowY - 3} className="text-[7px]" fill="hsl(var(--success))">VA</text>
+      <text x={startX + 16} y={vaRowY - 3} className="text-[6px]" fill="hsl(var(--muted-foreground))">value-add</text>
+      <text x={startX} y={nvaRowY - 3} className="text-[7px]" fill="hsl(var(--muted-foreground))">NVA</text>
+      <text x={startX + 18} y={nvaRowY - 3} className="text-[6px]" fill="hsl(var(--muted-foreground))">wait</text>
 
       {events.map((event, i) => {
         const cx = startX + i * processSpacing + processWidth / 2;
@@ -48,10 +48,10 @@ export function VsmTimelineBand({
         const ph = Math.max(4, (event.processTimeMinutes / maxTime) * barH);
         return (
           <g key={`va-${i}`}>
-            <rect x={cx - pw / 2} y={vaRowY + barH - ph} width={pw} height={ph} rx={1} fill="#22c55e" opacity={0.85} />
+            <rect x={cx - pw / 2} y={vaRowY + barH - ph} width={pw} height={ph} rx={1} fill="hsl(var(--success))" opacity={0.85} />
             {event.isBottleneck && (
               <rect x={cx - pw / 2 - 1} y={vaRowY + barH - ph - 1} width={pw + 2} height={ph + 2} rx={2}
-                fill="none" stroke="#f59e0b" strokeWidth={1} strokeDasharray="2,2" />
+                fill="none" stroke="hsl(var(--warning))" strokeWidth={1} strokeDasharray="2,2" />
             )}
           </g>
         );
@@ -63,7 +63,7 @@ export function VsmTimelineBand({
         const ph = Math.max(4, (event.waitTimeMinutes / maxTime) * barH);
         return (
           <rect key={`nva-${i}`} x={cx - pw / 2} y={nvaRowY + barH - ph} width={pw} height={ph} rx={1}
-            fill="#cbd5e1" opacity={0.7} />
+            fill="hsl(var(--border))" opacity={0.7} />
         );
       })}
 
@@ -73,7 +73,7 @@ export function VsmTimelineBand({
         const toLeft = fromRight + processSpacing;
         return (
           <line key={`step-${i}`} x1={fromRight} y1={nvaRowY + barH} x2={toLeft} y2={nvaRowY + barH}
-            stroke="#94a3b8" strokeWidth={0.8} strokeDasharray="2,2" />
+            stroke="hsl(var(--muted-foreground))" strokeWidth={0.8} strokeDasharray="2,2" />
         );
       })}
 
@@ -81,19 +81,19 @@ export function VsmTimelineBand({
         const cx = startX + i * processSpacing + processWidth / 2;
         return (
           <text key={`step-label-${i}`} x={cx} y={nvaRowY + barH + 12}
-            textAnchor="middle" className="text-[6px]" fill="#64748b">
+            textAnchor="middle" className="text-[6px]" fill="hsl(var(--muted-foreground))">
             {event.stepName}
           </text>
         );
       })}
 
       <rect x={totalBoxX} y={bandY + 4} width={130} height={bandHeight - 8} rx={3}
-        fill="#f1f5f9" stroke="#e2e8f0" strokeWidth={1} />
-      <text x={totalBoxX + 8} y={bandY + 18} className="text-[8px] font-semibold uppercase tracking-wider" fill="#1e293b">Totals</text>
-      <text x={totalBoxX + 8} y={bandY + 32} className="text-[9px]" fill="#475569">
+        fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth={1} />
+      <text x={totalBoxX + 8} y={bandY + 18} className="text-[8px] font-semibold uppercase tracking-wider" fill="hsl(var(--foreground))">Totals</text>
+      <text x={totalBoxX + 8} y={bandY + 32} className="text-[9px]" fill="hsl(var(--secondary-foreground))">
         Lead: {formatTime(totalLeadTimeMinutes)}
       </text>
-      <text x={totalBoxX + 8} y={bandY + 44} className="text-[9px]" fill="#16a34a">
+      <text x={totalBoxX + 8} y={bandY + 44} className="text-[9px]" fill="hsl(var(--success))">
         VA: {formatTime(totalValueAddMinutes)}
       </text>
       <text x={totalBoxX + 8} y={bandY + 58}

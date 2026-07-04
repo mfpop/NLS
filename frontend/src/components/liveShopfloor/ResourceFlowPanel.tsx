@@ -17,7 +17,7 @@ function StatusColorBar({ status }: { status: string }) {
     : status === "stopped" ? "bg-danger/100"
       : status === "idle" || status === "starved" ? "bg-warning/100"
         : status === "changeover" ? "bg-accent/100"
-          : "bg-slate-300";
+          : "bg-muted-foreground/30";
   return <div className={`w-1 shrink-0 rounded-full ${color}`} />;
 }
 

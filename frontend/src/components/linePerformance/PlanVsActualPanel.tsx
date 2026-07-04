@@ -16,7 +16,7 @@ export function PlanVsActualPanel({ data }: Props) {
 
   const behind = data.status === "behind" || data.status === "critical";
   const barColor = data.status === "ahead" || data.status === "on_plan" ? "bg-success/100"
-    : behind ? "bg-warning/100" : "bg-slate-400";
+    : behind ? "bg-warning/100" : "bg-muted-foreground/40";
   const statusTextColor = data.status === "ahead" || data.status === "on_plan" ? "text-success"
     : behind ? "text-warning" : "text-muted-foreground";
 

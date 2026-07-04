@@ -82,7 +82,7 @@ export function VsmMaterialArrow({ x1, x2, y, label, flowType, transport, hideLa
       {/* Custom label above arrow */}
       {label && label.length < 20 && (
         <text x={cx} y={y + 14}
-          textAnchor="middle" className="text-[10px] font-medium" fill="#64748b">
+          textAnchor="middle" className="text-[10px] font-medium" fill="hsl(var(--muted-foreground))">
           {label}
         </text>
       )}
@@ -90,7 +90,7 @@ export function VsmMaterialArrow({ x1, x2, y, label, flowType, transport, hideLa
       {/* Transport annotation below arrow (frequency · distance) */}
       {annotation && (
         <text x={cx} y={y + 26}
-          textAnchor="middle" className="text-[9px] font-medium" fill="#94a3b8">
+          textAnchor="middle" className="text-[9px] font-medium" fill="hsl(var(--muted-foreground))">
           {annotation}
         </text>
       )}

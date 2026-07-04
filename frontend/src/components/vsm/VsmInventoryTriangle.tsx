@@ -47,12 +47,12 @@ export function VsmInventoryTriangle({ node, x, y, size, onSelect }: Props) {
       </text>
 
       {/* Days of inventory below triangle tip */}
-      <text x={x} y={y + half + 14} textAnchor="middle" className="text-[10px] font-medium" fill="#64748b">
+      <text x={x} y={y + half + 14} textAnchor="middle" className="text-[10px] font-medium" fill="hsl(var(--muted-foreground))">
         {node.daysOfInventory}d
       </text>
 
       {/* Label */}
-      <text x={x} y={y + half + 28} textAnchor="middle" className="text-[11px] font-semibold" fill="#475569">
+      <text x={x} y={y + half + 28} textAnchor="middle" className="text-[11px] font-semibold" fill="hsl(var(--secondary-foreground))">
         {node.label.length > 16 ? node.label.slice(0, 14) + "\u2026" : node.label}
       </text>
 

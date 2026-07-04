@@ -24,7 +24,7 @@ export function SplitToolbar({
 }: SplitToolbarProps) {
   return (
     <div className={`flex h-10 shrink-0 items-center border-b border-border-major bg-muted select-none ${className}`}>
-      <div className={`${leftWidth} min-w-[240px] max-w-[360px] border-r border-border-major dark:border-slate-700 px-2 flex items-center h-full`}>
+      <div className={`${leftWidth} min-w-[240px] max-w-[360px] border-r border-border-major dark:border-muted/30 px-2 flex items-center h-full`}>
         <div className="w-full">
           <ToolbarSearch
             value={searchValue}

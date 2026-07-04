@@ -44,7 +44,7 @@ export function VsmInsightStrip({ diagram, className = "" }: Props) {
         </span>
       </div>
 
-      <span className="text-slate-200 shrink-0">|</span>
+      <span className="text-muted-foreground/20 shrink-0">|</span>
 
       {bottleneck && (
         <span className="flex items-center gap-1 text-warning shrink-0">
@@ -59,7 +59,7 @@ export function VsmInsightStrip({ diagram, className = "" }: Props) {
         </span>
       )}
 
-      <span className="text-slate-200 shrink-0">|</span>
+      <span className="text-muted-foreground/20 shrink-0">|</span>
 
       <span className="flex items-center gap-1 text-muted-foreground truncate min-w-0">
         <Lightbulb className="h-3 w-3 text-accent-foreground shrink-0" />

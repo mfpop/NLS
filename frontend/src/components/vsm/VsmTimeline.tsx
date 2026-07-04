@@ -20,7 +20,7 @@ export function VsmTimelineBar({ events, totalLeadTimeMinutes, totalValueAddMinu
   return (
     <g>
       {/* Background */}
-      <rect x={0} y={0} width={canvasWidth} height={80} fill="#f8fafc" rx={2} />
+      <rect x={0} y={0} width={canvasWidth} height={80} fill="hsl(var(--muted))" rx={2} />
 
       {/* VA bars (green, top) */}
       {events.map((event, i) => {
@@ -29,10 +29,10 @@ export function VsmTimelineBar({ events, totalLeadTimeMinutes, totalValueAddMinu
         const ph = Math.max(3, (event.processTimeMinutes / maxTime) * barHeight);
         return (
           <g key={`va-${i}`}>
-            <rect x={cx - pw / 2} y={20 + barHeight - ph} width={pw} height={ph} rx={1} fill="#22c55e" opacity={0.85} />
+            <rect x={cx - pw / 2} y={20 + barHeight - ph} width={pw} height={ph} rx={1} fill="hsl(var(--success))" opacity={0.85} />
             {event.isBottleneck && (
               <rect x={cx - pw / 2 - 1} y={18 + barHeight - ph - 1} width={pw + 2} height={ph + 2} rx={2}
-                fill="none" stroke="#f59e0b" strokeWidth={1} strokeDasharray="2,2" />
+                fill="none" stroke="hsl(var(--warning))" strokeWidth={1} strokeDasharray="2,2" />
             )}
           </g>
         );
@@ -45,21 +45,21 @@ export function VsmTimelineBar({ events, totalLeadTimeMinutes, totalValueAddMinu
         const ph = Math.max(3, (event.waitTimeMinutes / maxTime) * barHeight);
         return (
           <rect key={`nva-${i}`} x={cx - pw / 2} y={42 + barHeight - ph} width={pw} height={ph} rx={1}
-            fill="#cbd5e1" opacity={0.7} />
+            fill="hsl(var(--border))" opacity={0.7} />
         );
       })}
 
       {/* Labels */}
-      <text x={startX} y={16} className="text-[8px]" fill="#16a34a">VA</text>
-      <text x={startX} y={60} className="text-[8px]" fill="#94a3b8">NVA</text>
+      <text x={startX} y={16} className="text-[8px]" fill="hsl(var(--success))">VA</text>
+      <text x={startX} y={60} className="text-[8px]" fill="hsl(var(--muted-foreground))">NVA</text>
 
       {/* Totals box */}
-      <rect x={totalBoxX} y={8} width={135} height={64} rx={4} fill="#f1f5f9" stroke="#e2e8f0" strokeWidth={1} />
-      <text x={totalBoxX + 8} y={24} className="text-[9px] font-semibold" fill="#1e293b">Timeline</text>
-      <text x={totalBoxX + 8} y={38} className="text-[9px]" fill="#475569">
+      <rect x={totalBoxX} y={8} width={135} height={64} rx={4} fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth={1} />
+      <text x={totalBoxX + 8} y={24} className="text-[9px] font-semibold" fill="hsl(var(--foreground))">Timeline</text>
+      <text x={totalBoxX + 8} y={38} className="text-[9px]" fill="hsl(var(--secondary-foreground))">
         Lead: {totalLeadTimeMinutes >= 1440 ? `${(totalLeadTimeMinutes / 1440).toFixed(1)}d` : `${totalLeadTimeMinutes}min`}
       </text>
-      <text x={totalBoxX + 8} y={50} className="text-[9px]" fill="#16a34a">
+      <text x={totalBoxX + 8} y={50} className="text-[9px]" fill="hsl(var(--success))">
         VA: {totalValueAddMinutes >= 1440 ? `${(totalValueAddMinutes / 1440).toFixed(1)}d` : `${totalValueAddMinutes}min`}
       </text>
       <text x={totalBoxX + 8} y={65} className={`text-[9px] font-semibold ${vaPct < 10 ? "fill-red-500" : vaPct < 30 ? "fill-amber-500" : "fill-emerald-600"}`}>

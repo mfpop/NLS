@@ -270,7 +270,7 @@ export function useDmrSection(
 
   // ── Create Form (25/75 layout) ──
   const renderCreateForm = () => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       {/* ── Left 25%: Source Location + Metadata ── */}
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">Source Location</h3>

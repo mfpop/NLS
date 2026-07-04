@@ -19,7 +19,7 @@ const STATUS_DOT: Record<string, string> = {
   GOOD: "bg-success/100",
   WARNING: "bg-warning/100",
   CRITICAL: "bg-danger/100",
-  UNKNOWN: "bg-slate-300",
+  UNKNOWN: "bg-muted-foreground/30",
 };
 
 interface RowDef {

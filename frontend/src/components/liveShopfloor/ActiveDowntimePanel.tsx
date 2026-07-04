@@ -33,8 +33,8 @@ export function ActiveDowntimePanel({ activeDowntime, onResolveDowntime, onCreat
       <div className="h-8 shrink-0 border-b border-danger/20 px-3 flex items-center justify-between bg-danger/10">
         <div className="flex items-center gap-1.5">
           <XCircle className="h-3.5 w-3.5 text-danger" />
-          <h3 className="text-[11px] font-semibold text-red-800 uppercase tracking-wide">Active Downtime</h3>
-          <span className="inline-flex items-center gap-1 rounded-full bg-danger/15 px-1.5 py-0.5 text-[9px] font-medium text-red-800 border border-danger/20">
+          <h3 className="text-[11px] font-semibold text-danger uppercase tracking-wide">Active Downtime</h3>
+          <span className="inline-flex items-center gap-1 rounded-full bg-danger/15 px-1.5 py-0.5 text-[9px] font-medium text-danger border border-danger/20">
             <span className="h-1.5 w-1.5 rounded-full bg-danger/100 animate-pulse" />
             {activeDowntime.durationMinutes}m
           </span>

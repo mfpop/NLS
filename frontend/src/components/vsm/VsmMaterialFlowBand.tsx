@@ -82,17 +82,17 @@ export function VsmMaterialFlowBand({
 
   return (
     <g>
-      <rect x={0} y={bandY} width={canvasWidth} height={bandHeight} fill="#ffffff" stroke="#e2e8f0" strokeWidth={1} />
+      <rect x={0} y={bandY} width={canvasWidth} height={bandHeight} fill="hsl(var(--background))" stroke="hsl(var(--border))" strokeWidth={1} />
 
       <rect x={supplierX} y={matCenterY - 22} width={70} height={44} rx={4}
-        fill="#f8fafc" stroke="#94a3b8" strokeWidth={1.5} />
-      <text x={supplierX + 35} y={matCenterY + 18} textAnchor="middle" className="text-[8px]" fill="#94a3b8">
+        fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} />
+      <text x={supplierX + 35} y={matCenterY + 18} textAnchor="middle" className="text-[8px]" fill="hsl(var(--muted-foreground))">
         Supplier
       </text>
 
       <rect x={customerX} y={matCenterY - 22} width={70} height={44} rx={4}
-        fill="#f8fafc" stroke="#94a3b8" strokeWidth={1.5} />
-      <text x={customerX + 35} y={matCenterY + 18} textAnchor="middle" className="text-[8px]" fill="#94a3b8">
+        fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} />
+      <text x={customerX + 35} y={matCenterY + 18} textAnchor="middle" className="text-[8px]" fill="hsl(var(--muted-foreground))">
         Customer
       </text>
 
@@ -105,7 +105,7 @@ export function VsmMaterialFlowBand({
             markerEnd={`url(#arrow-${arrow.type})`} />
           {arrow.label && (
             <text x={(arrow.x1 + arrow.x2) / 2} y={matCenterY - 10}
-              textAnchor="middle" className="text-[7px]" fill="#64748b">{arrow.label}</text>
+              textAnchor="middle" className="text-[7px]" fill="hsl(var(--muted-foreground))">{arrow.label}</text>
           )}
           {(arrow.type === "PUSH" || arrow.type === "PULL" || arrow.type === "KANBAN" || arrow.type === "FIFO") && (
             <text x={(arrow.x1 + arrow.x2) / 2} y={matCenterY + 16}

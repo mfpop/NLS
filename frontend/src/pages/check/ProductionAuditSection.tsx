@@ -435,7 +435,7 @@ export function useProductionAuditSection(
     const checklistLocked = isNew && !selTpl;
 
     return (
-      <div className="flex flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex flex-1 min-h-0 overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
         {isNew ? (
           <>
             {/* Left column - 35% - Setup */}

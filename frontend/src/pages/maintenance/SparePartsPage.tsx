@@ -82,7 +82,7 @@ function Fld({ label, children, required, error }: { label: string; children: Re
   );
 }
 
-const inpCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-teal-500 transition-colors placeholder:text-muted-foreground/40";
+const inpCls = "h-8 w-full bg-background/50 dark:bg-muted/50 backdrop-blur-sm border border-white/30 dark:border-muted/30 px-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/40";
 const selCls = inpCls + " appearance-none";
 
 function cls(...args: (string | false | null | undefined)[]): string {
@@ -283,8 +283,8 @@ export function SparePartsPage() {
   }, [parts, filterStock]);
 
   const statusColors: Record<string, string> = {
-    ACTIVE: "bg-success/15 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
-    INACTIVE: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
+    ACTIVE: "bg-success/15 text-success border-success/20 dark:bg-success/15 dark:text-success dark:border-success/20",
+    INACTIVE: "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning dark:border-warning/20",
     OBSOLETE: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
   };
 
@@ -375,12 +375,12 @@ export function SparePartsPage() {
         </p>
         <Fld label="Description">
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-500"
+            className="h-20 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary"
             placeholder="Part description, specifications..." />
         </Fld>
         <Fld label="Notes">
           <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-500"
+            className="h-20 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary"
             placeholder="Additional notes, cross-references..." />
         </Fld>
       </div>
@@ -445,7 +445,7 @@ export function SparePartsPage() {
               {adjustingId === sel.id && (
                 <div className="mt-2 flex items-center gap-2 border border-border/30 bg-card/50 p-2">
                   <input type="number" value={adjustQty} onChange={(e) => setAdjustQty(parseInt(e.target.value) || 0)}
-                    className="h-7 w-20 border border-input bg-background px-2 text-xs outline-none focus:border-teal-400"
+                    className="h-7 w-20 border border-input bg-background px-2 text-xs outline-none focus:border-primary"
                     placeholder="+/- qty" />
                   <button onClick={() => doAction("adjust", sel.id, { amount: adjustQty })}
                     disabled={adjustQty === 0}
@@ -548,7 +548,7 @@ export function SparePartsPage() {
         <div className={cls(
           "shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b",
           errorMsg
-            ? "bg-danger/10 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300"
+            ? "bg-danger/10 text-danger border-danger/20 dark:bg-danger/15 dark:text-danger"
             : "bg-success/10 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300",
         )}>
           {errorMsg ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
@@ -557,7 +557,7 @@ export function SparePartsPage() {
       )}
       <PageHeader
         icon={<Package className="h-5 w-5 stroke-current" />}
-        iconClass="bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400"
+        iconClass="bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary"
         title="Spare Parts"
         subtitle="Manage spare parts inventory — kanban min/max levels"
       />
@@ -615,7 +615,7 @@ export function SparePartsPage() {
               <div className="relative">
                 <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search parts..."
-                  className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-teal-500 transition-colors placeholder:text-muted-foreground/40" />
+                  className="h-7 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/40" />
                 {search && (
                   <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <XCircle className="h-3 w-3 stroke-current" />
@@ -625,14 +625,14 @@ export function SparePartsPage() {
               {/* Filters */}
               <div className="flex gap-1">
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-teal-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-primary transition-colors appearance-none">
                   <option value="">All Status</option>
                   <option value="ACTIVE">Active</option>
                   <option value="INACTIVE">Inactive</option>
                   <option value="OBSOLETE">Obsolete</option>
                 </select>
                 <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-teal-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-primary transition-colors appearance-none">
                   <option value="">All Cat</option>
                   <option value="Seals">Seals</option>
                   <option value="Bearings">Bearings</option>
@@ -654,7 +654,7 @@ export function SparePartsPage() {
                   <p className="text-xs font-medium text-muted-foreground">No spare parts registered</p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground/60">Add spare parts to start tracking inventory.</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-teal-600/10 px-3 text-xs font-semibold text-teal-700 hover:bg-teal-600/20 dark:text-teal-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-teal-600/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 dark:text-primary transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> New Part
                   </button>
                 </div>
@@ -667,12 +667,12 @@ export function SparePartsPage() {
                         onClick={() => { setSelId(sp.id); setView("detail"); }}
                         className={cls(
                           "group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-3 px-3 transition-all duration-150",
-                          selId === sp.id ? "bg-table-selected border-l-2 border-l-teal-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
+                          selId === sp.id ? "bg-table-selected border-l-2 border-l-primary" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
                         )}>
                         <div className={cls("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                          level === "critical" ? "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-danger/80" :
-                          level === "low" ? "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-400" :
-                          level === "full" ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-success/80" :
+                          level === "critical" ? "bg-danger/15 text-danger dark:bg-danger/15 dark:text-danger" :
+                          level === "low" ? "bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning" :
+                          level === "full" ? "bg-success/15 text-success dark:bg-success/15 dark:text-success" :
                           "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400")}>
                           {sp.quantityOnHand}
                         </div>
@@ -734,7 +734,7 @@ export function SparePartsPage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No spare parts found</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-teal-600/10 px-3 text-xs font-semibold text-teal-700 hover:bg-teal-600/20 dark:text-teal-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-teal-600/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 dark:text-primary transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> New Part
                   </button>
                 </div>
@@ -747,12 +747,12 @@ export function SparePartsPage() {
                         onClick={() => { setSelId(sp.id); setView("detail"); }}
                         className={cls(
                           "group mx-1 my-0.5 flex h-16 cursor-pointer items-center gap-3 px-3 transition-all duration-150",
-                          selId === sp.id ? "bg-table-selected border-l-2 border-l-teal-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
+                          selId === sp.id ? "bg-table-selected border-l-2 border-l-primary" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
                         )}>
                         <div className={cls("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                          level === "critical" ? "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-danger/80" :
-                          level === "low" ? "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-400" :
-                          level === "full" ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-success/80" :
+                          level === "critical" ? "bg-danger/15 text-danger dark:bg-danger/15 dark:text-danger" :
+                          level === "low" ? "bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning" :
+                          level === "full" ? "bg-success/15 text-success dark:bg-success/15 dark:text-success" :
                           "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400")}>
                           {sp.quantityOnHand}
                         </div>
@@ -863,7 +863,7 @@ export function SparePartsPage() {
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Work Order *</label>
             <select value={usageForm.workOrderId} onChange={(e) => setUsageForm({ ...usageForm, workOrderId: e.target.value })}
-              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-teal-400 transition-colors">
+              className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-primary transition-colors">
               <option value="">Select work order...</option>
               {workOrderOptions.map((wo) => (
                 <option key={wo.id} value={wo.id}>{wo.number} - {wo.title} ({wo.status})</option>
@@ -874,18 +874,18 @@ export function SparePartsPage() {
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Quantity</label>
               <input type="number" min="1" value={usageForm.quantity} onChange={(e) => setUsageForm({ ...usageForm, quantity: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-teal-400 transition-colors" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-primary transition-colors" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Used By</label>
               <input type="text" placeholder="Technician" value={usageForm.usedBy} onChange={(e) => setUsageForm({ ...usageForm, usedBy: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-teal-400 transition-colors" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-primary transition-colors" />
             </div>
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Notes</label>
             <textarea placeholder="Reason, location, reference..." value={usageForm.notes} onChange={(e) => setUsageForm({ ...usageForm, notes: e.target.value })}
-              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-400 transition-colors" />
+              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
         </div>
       </ConfirmDialog>

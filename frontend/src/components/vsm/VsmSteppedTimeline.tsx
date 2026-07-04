@@ -80,14 +80,14 @@ export function VsmSteppedTimeline({
       {/* Stepped polyline — classical VA/NVA ladder */}
       <polyline
         points={pts.join(" ")}
-        fill="none" stroke="#334155" strokeWidth={2} strokeLinejoin="miter" strokeLinecap="square"
+        fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeLinejoin="miter" strokeLinecap="square"
       />
 
       {/* Wait / NVA labels — above upper segments */}
       {waits.map((w, i) =>
         w.label ? (
           <text key={`wt-${i}`} x={w.x} y={TOP_Y - 8}
-            textAnchor="middle" className="text-[10px] font-semibold" fill="#64748b">
+            textAnchor="middle" className="text-[10px] font-semibold" fill="hsl(var(--muted-foreground))">
             {w.label}
           </text>
         ) : null
@@ -97,7 +97,7 @@ export function VsmSteppedTimeline({
       {vas.map((v, i) =>
         v.label ? (
           <text key={`va-${i}`} x={v.x} y={BTM_Y + 14}
-            textAnchor="middle" className="text-[10px] font-semibold" fill="#15803d">
+            textAnchor="middle" className="text-[10px] font-semibold" fill="hsl(var(--success))">
             {v.label}
           </text>
         ) : null
@@ -106,7 +106,7 @@ export function VsmSteppedTimeline({
       {/* Process names — below VA labels, aligned to process center */}
       {events.map((ev, i) => (
         <text key={`pn-${i}`} x={processCentersX[i]} y={BTM_Y + 32}
-          textAnchor="middle" className="text-[9px] font-medium" fill="#94a3b8">
+          textAnchor="middle" className="text-[9px] font-medium" fill="hsl(var(--muted-foreground))">
           {ev.stepName.length > 18 ? ev.stepName.slice(0, 16) + "\u2026" : ev.stepName}
         </text>
       ))}
@@ -114,23 +114,23 @@ export function VsmSteppedTimeline({
       {/* ── Totals Box ── */}
       <g>
         <rect x={totBoxX} y={TOP_Y - 6} width={totBoxW} height={totBoxH}
-          fill="#f8fafc" stroke="#94a3b8" strokeWidth={1} />
+          fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={1} />
 
         {/* Lead Time */}
         <text x={totBoxX + 10} y={TOP_Y + 14}
-          className="text-[10px]" fill="#475569">
-          Lead Time: <tspan className="font-semibold" fill="#1e293b">{fmtMinutes(totalLeadTimeMinutes)}</tspan>
+          className="text-[10px]" fill="hsl(var(--secondary-foreground))">
+          Lead Time: <tspan className="font-semibold" fill="hsl(var(--foreground))">{fmtMinutes(totalLeadTimeMinutes)}</tspan>
         </text>
 
         {/* VA Time */}
         <text x={totBoxX + 10} y={TOP_Y + 32}
-          className="text-[10px]" fill="#15803d">
+          className="text-[10px]" fill="hsl(var(--success))">
           VA Time: <tspan className="font-semibold">{fmtMinutes(totalValueAddMinutes)}</tspan>
         </text>
 
         {/* Separator */}
         <line x1={totBoxX + 8} y1={TOP_Y + 38} x2={totBoxX + totBoxW - 8} y2={TOP_Y + 38}
-          stroke="#e2e8f0" strokeWidth={0.5} />
+          stroke="hsl(var(--border))" strokeWidth={0.5} />
 
         {/* VA % */}
         <text x={totBoxX + totBoxW / 2} y={TOP_Y + 52}

@@ -15,7 +15,7 @@ function StatusDot({ status }: { status: string }) {
   const color = status === "running" || status === "active" ? "bg-success/100"
     : status === "stopped" ? "bg-danger/100"
       : status === "idle" || status === "starved" ? "bg-warning/100"
-        : "bg-slate-400";
+        : "bg-muted-foreground/40";
   return <span className={`h-2 w-2 rounded-full shrink-0 ${color}`} />;
 }
 

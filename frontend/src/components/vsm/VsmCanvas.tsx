@@ -198,19 +198,19 @@ export function VsmCanvas({ diagram, selectedNodeId, onSelectNode, showWip, show
 
           <defs>
             <marker id="arrow-PUSH" markerWidth={8} markerHeight={6} refX={8} refY={3} orient="auto">
-              <polygon points="0,0 8,3 0,6" fill="#64748b" />
+              <polygon points="0,0 8,3 0,6" fill="hsl(var(--muted-foreground))" />
             </marker>
             <marker id="arrow-PULL" markerWidth={8} markerHeight={6} refX={8} refY={3} orient="auto">
-              <polygon points="0,0 8,3 0,6" fill="#3b82f6" />
+              <polygon points="0,0 8,3 0,6" fill="hsl(var(--primary))" />
             </marker>
             <marker id="arrow-KANBAN" markerWidth={8} markerHeight={6} refX={8} refY={3} orient="auto">
-              <polygon points="0,0 8,3 0,6" fill="#f59e0b" />
+              <polygon points="0,0 8,3 0,6" fill="hsl(var(--warning))" />
             </marker>
             <marker id="arrow-FIFO" markerWidth={8} markerHeight={6} refX={8} refY={3} orient="auto">
-              <polygon points="0,0 8,3 0,6" fill="#22c55e" />
+              <polygon points="0,0 8,3 0,6" fill="hsl(var(--success))" />
             </marker>
             <marker id="arrow-info" markerWidth={6} markerHeight={5} refX={6} refY={2.5} orient="auto">
-              <polygon points="0,0 6,2.5 0,5" fill="#64748b" />
+              <polygon points="0,0 6,2.5 0,5" fill="hsl(var(--muted-foreground))" />
             </marker>
           </defs>
         </svg>

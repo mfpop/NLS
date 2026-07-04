@@ -27,7 +27,7 @@ export function VsmProcessDataBox({ rows, x, y, width, isAboveTakt }: Props) {
   return (
     <g>
       <rect x={x} y={y} width={width} height={totalH}
-        fill="#ffffff" stroke="#cbd5e1" strokeWidth={0.8} rx={3} />
+        fill="hsl(var(--background))" stroke="hsl(var(--border))" strokeWidth={0.8} rx={3} />
 
       {rows.map((row, i) => {
         const rh = rowH(row);
@@ -39,7 +39,7 @@ export function VsmProcessDataBox({ rows, x, y, width, isAboveTakt }: Props) {
           <g key={i}>
             <text x={x + 12} y={fy}
               className={isCt ? "text-[13px] font-bold" : "text-[11px] font-semibold"}
-              fill="#64748b">
+              fill="hsl(var(--muted-foreground))">
               {row.label}
             </text>
             {showTakt ? (
@@ -60,7 +60,7 @@ export function VsmProcessDataBox({ rows, x, y, width, isAboveTakt }: Props) {
             {/* Separator line between rows */}
             {i < rows.length - 1 && (
               <line x1={x + 8} y1={curY + rh} x2={x + width - 8} y2={curY + rh}
-                stroke="#f1f5f9" strokeWidth={0.5} />
+                stroke="hsl(var(--muted))" strokeWidth={0.5} />
             )}
           </g>
         );

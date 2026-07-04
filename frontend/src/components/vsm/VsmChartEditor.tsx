@@ -282,7 +282,7 @@ export function VsmChartEditor({
                 {taktPreview && (
                   <div className="flex items-center gap-1.5 mt-1 px-2 py-1.5 bg-primary/10 rounded-sm border border-primary/20">
                     <span className="text-[10px] text-primary font-bold uppercase">Takt:</span>
-                    <span className="text-[12px] text-blue-800 font-extrabold tabular-nums">{taktPreview}</span>
+                    <span className="text-[12px] text-primary font-extrabold tabular-nums">{taktPreview}</span>
                   </div>
                 )}
               </div>
@@ -297,7 +297,7 @@ export function VsmChartEditor({
                 <div className="px-4 py-3 text-[11px] text-muted-foreground/60 text-center">No processes yet</div>
               )}
               {chart.processes.map((p) => (
-                <div key={p.id} className="px-4 py-2.5 border-b border-slate-50 hover:bg-muted">
+                <div key={p.id} className="px-4 py-2.5 border-b border-border/30 hover:bg-muted">
                   {editingProc === p.id ? (
                     <div className="space-y-1.5">
                       <input value={editProcVals[`name-${p.id}`] ?? p.name}
@@ -327,7 +327,7 @@ export function VsmChartEditor({
                       </div>
                       <div className="flex gap-1.5 pt-1">
                         <button type="button" onClick={() => handleUpdateProcess(p.id)}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-sky-100">Save</button>
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-primary/15">Save</button>
                         <button type="button" onClick={() => setEditingProc(null)}
                           className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-muted">Cancel</button>
                       </div>
@@ -465,7 +465,7 @@ export function VsmChartEditor({
                 const styleColor = styleColors[f.flowStyle] || '#94a3b8';
                 const styleLabel = styleLabels[f.flowStyle] || f.flowStyle;
                 return (
-                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-muted">
+                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-border/30 hover:bg-muted">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full shrink-0`} style={{ backgroundColor: styleColor }} />
@@ -550,7 +550,7 @@ export function VsmChartEditor({
               )}
               {chart.materialFlows.map((f) => (
                 editingMatFlow === f.id ? (
-                  <div key={f.id} className="px-4 py-2.5 border-b border-slate-50 hover:bg-muted">
+                  <div key={f.id} className="px-4 py-2.5 border-b border-border/30 hover:bg-muted">
                     <div className="space-y-1.5">
                       <div className="flex gap-2">
                         <select value={editMatVals[`fromType-${f.id}`] ?? f.fromType}
@@ -604,14 +604,14 @@ export function VsmChartEditor({
                       )}
                       <div className="flex gap-1.5 pt-1">
                         <button type="button" onClick={() => handleUpdateMaterialFlow(f.id)}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-sky-100">Save</button>
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-primary/15">Save</button>
                         <button type="button" onClick={() => setEditingMatFlow(null)}
                           className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-muted">Cancel</button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-muted">
+                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-border/30 hover:bg-muted">
                     <div className="min-w-0 flex-1">
                       <p className="text-[12px] font-medium text-foreground truncate">{f.fromType} → {f.toType}</p>
                       <p className="text-[10px] text-muted-foreground truncate">
@@ -769,7 +769,7 @@ function ListItem({ label, meta, onDelete }: {
   label: string; meta: string; onDelete: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-muted">
+    <div className="flex items-center justify-between px-4 py-2 border-b border-border/30 hover:bg-muted">
       <div className="min-w-0 flex-1">
         <p className="text-[12px] font-medium text-foreground truncate">{label}</p>
         <p className="text-[10px] text-muted-foreground truncate">{meta}</p>
@@ -799,7 +799,7 @@ function AddForm({ onAdd, onCancel, fields }: {
       {fields}
       <div className="flex gap-1.5 pt-0.5">
         <button type="button" onClick={onAdd}
-          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-sky-100">Add</button>
+          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-primary/15">Add</button>
         <button type="button" onClick={onCancel}
           className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-muted">Cancel</button>
       </div>

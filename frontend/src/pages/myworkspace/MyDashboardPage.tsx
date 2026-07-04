@@ -360,7 +360,7 @@ function RecentActivitySection({ items }: { items: DashboardItem[] }) {
           <PanelEmpty icon={<Activity className="h-5 w-5" />} message="No recent activity" />
         ) : (
           <div className="relative px-3">
-            <div className="absolute left-[75px] top-3 bottom-3 w-px bg-gradient-to-b from-slate-200 via-slate-200 to-transparent" />
+            <div className="absolute left-[75px] top-3 bottom-3 w-px bg-gradient-to-b from-border via-border to-transparent" />
             {display.map((item, idx) => (
               <div key={item.id} onClick={() => {
                 if (item.sourceType && item.sourceId) { const r = getSourceRoute(item.sourceType, item.sourceId); if (r) navigate(r); }

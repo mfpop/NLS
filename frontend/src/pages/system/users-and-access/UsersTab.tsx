@@ -448,7 +448,7 @@ export function UsersTab() {
                     title={
                       <span className="flex items-center justify-between gap-1.5">
                         <span className={`truncate ${sel ? "font-semibold" : "font-medium"}`}>{user.fullName || user.username}</span>
-                        <span className={`h-2 w-2 shrink-0 rounded-full ${user.isActive ? "bg-success/100" : "bg-slate-300"}`} />
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${user.isActive ? "bg-success" : "bg-muted-foreground/30"}`} />
                       </span>
                     }
                     subtitle={
@@ -488,7 +488,7 @@ export function UsersTab() {
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-semibold text-foreground">{safeText(selectedProfile?.fullName || "New Profile")}</span>
                         <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${selectedProfile?.isActive !== false ? "border-emerald-400/60 text-success bg-success/10" : "border-border/60 text-muted-foreground bg-muted"}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-success/100" : "bg-slate-400"}`} />
+                          <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-success" : "bg-muted-foreground/40"}`} />
                           {selectedProfile?.isActive !== false ? "Active" : "Inactive"}
                         </span>
                         <span className="inline-flex rounded border border-blue-400/50 px-1.5 py-0.5 text-[10px] font-medium text-primary bg-primary/10">{safeText(selectedPrimaryRoleLabel)}</span>
@@ -506,7 +506,7 @@ export function UsersTab() {
                         <div className="flex items-center gap-2">
                           <h2 className="truncate text-sm font-semibold text-foreground">{safeText(selectedProfile?.fullName || "")}</h2>
                           <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] ${selectedProfile?.isActive !== false ? "border-emerald-400/60 text-success bg-success/10" : "border-border/60 text-muted-foreground bg-muted"}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-success/100" : "bg-slate-400"}`} />
+                            <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-success" : "bg-muted-foreground/40"}`} />
                             {selectedProfile?.isActive !== false ? "Active" : "Inactive"}
                           </span>
                           <span className="inline-flex rounded border border-blue-400/50 px-1.5 py-0.5 text-[11px] font-medium text-primary bg-primary/10">{safeText(selectedPrimaryRoleLabel)}</span>

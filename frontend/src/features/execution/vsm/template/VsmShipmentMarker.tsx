@@ -36,7 +36,7 @@ export function VsmShipmentMarker({ cx, y, label, frequency, equipmentType, from
 
       {/* Shipment label */}
       <text x={cx} y={y + labelY}
-        textAnchor="middle" className="text-[11px] font-bold" fill="#334155">
+        textAnchor="middle" className="text-[11px] font-bold" fill="hsl(var(--muted-foreground))">
         {label || "Shipment"}
       </text>
 
@@ -46,7 +46,7 @@ export function VsmShipmentMarker({ cx, y, label, frequency, equipmentType, from
       {/* Frequency */}
       {frequency && (
         <text x={cx} y={y + freqY}
-          textAnchor="middle" className="text-[11px] font-bold" fill="#0f172a">
+          textAnchor="middle" className="text-[11px] font-bold" fill="hsl(var(--foreground))">
           {frequency}
         </text>
       )}

@@ -60,7 +60,7 @@ function ToggleRow({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500/30 ${
-          checked ? "bg-accent/100" : "bg-slate-300"
+          checked ? "bg-accent" : "bg-muted-foreground/30"
         }`}
       >
         <span
@@ -95,7 +95,7 @@ function SelectRow({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 min-w-[150px] rounded-[2px] border border-border bg-background px-2 text-xs text-muted-foreground outline-none transition hover:border-slate-400 focus:border-sky-500"
+        className="h-8 min-w-[150px] rounded-[2px] border border-border bg-background px-2 text-xs text-muted-foreground outline-none transition hover:border-muted-foreground/40 focus:border-primary"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -135,7 +135,7 @@ function NumberRow({
           min={min}
           max={max}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="h-8 w-20 rounded-[2px] border border-border bg-background px-2 text-xs text-muted-foreground outline-none transition hover:border-slate-400 focus:border-sky-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="h-8 w-20 rounded-[2px] border border-border bg-background px-2 text-xs text-muted-foreground outline-none transition hover:border-muted-foreground/40 focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         />
         {suffix && <span className="text-[11px] text-muted-foreground">{suffix}</span>}
       </div>
@@ -569,7 +569,7 @@ export function UserPreferencesPage() {
                 onClick={() => setActiveCategory(cat.id)}
                 className={`flex w-full items-center gap-3 h-14 px-3 text-left transition-colors border-b border-border/50 ${
                   active
-                    ? "bg-success/10 border-l-2 border-emerald-600 text-emerald-950"
+                    ? "bg-success/10 border-l-2 border-success text-success"
                     : "bg-muted border-l-2 border-transparent text-muted-foreground hover:bg-background"
                 }`}
               >
@@ -579,7 +579,7 @@ export function UserPreferencesPage() {
                   <Icon className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className={`text-xs font-medium leading-tight ${active ? "text-emerald-950" : "text-foreground"}`}>
+                  <div className={`text-xs font-medium leading-tight ${active ? "text-success" : "text-foreground"}`}>
                     {cat.label}
                   </div>
                   <div className="text-[11px] text-muted-foreground leading-tight truncate">{cat.description}</div>

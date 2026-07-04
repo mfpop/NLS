@@ -10,9 +10,9 @@ interface Props {
 
 const STATUS_COLORS: Record<string, string> = {
   active: "bg-success/100",
-  completed: "bg-slate-400",
+  completed: "bg-muted-foreground/40",
   upcoming: "bg-sky-400",
-  cancelled: "bg-red-400",
+  cancelled: "bg-danger/60",
 };
 
 function fmtGap(gap: number): string {
@@ -40,7 +40,7 @@ export function ShiftRecordList({ records, selectedId, onSelect }: Props) {
         <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_COLORS[record.status] ?? "bg-slate-300"}`} />
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_COLORS[record.status] ?? "bg-muted-foreground/30"}`} />
               <span className="text-xs font-semibold text-foreground truncate">{record.shiftName}</span>
             </div>
             <span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[9px] font-semibold border rounded ${

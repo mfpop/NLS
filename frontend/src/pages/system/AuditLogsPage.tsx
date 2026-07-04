@@ -204,7 +204,7 @@ function DetailPanel({ entry, search }: { entry: AuditLogEntry; search: string }
       {detailEntries.length > 0 && (
         <div className="mt-2">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Details</span>
-          <pre className="mt-0.5 rounded bg-slate-900/5 p-2 text-[10px] font-mono text-muted-foreground overflow-x-auto max-h-28">
+          <pre className="mt-0.5 rounded bg-muted/30 p-2 text-[10px] font-mono text-muted-foreground overflow-x-auto max-h-28">
             {JSON.stringify(details, null, 2)}
           </pre>
         </div>

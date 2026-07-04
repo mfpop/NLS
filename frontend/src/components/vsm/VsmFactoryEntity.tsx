@@ -32,16 +32,16 @@ export function VsmFactoryEntity({ x, y, w, h, name, type }: Props) {
       {/* Full outline — sawtooth roof + body walls */}
       <polygon
         points={pts}
-        fill="#f8fafc" stroke="#334155" strokeWidth={2} strokeLinejoin="miter"
+        fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeLinejoin="miter"
       />
       {/* Main label */}
       <text x={cx} y={bodyTop + bodyH / 2 + 1}
-        textAnchor="middle" className="text-base font-bold" fill="#1e293b">
+        textAnchor="middle" className="text-base font-bold" fill="hsl(var(--foreground))">
         {name}
       </text>
       {/* Sub label */}
       <text x={cx} y={bodyTop + bodyH - 7}
-        textAnchor="middle" className="text-[10px] font-medium" fill="#64748b">
+        textAnchor="middle" className="text-[10px] font-medium" fill="hsl(var(--muted-foreground))">
         {type}
       </text>
     </g>

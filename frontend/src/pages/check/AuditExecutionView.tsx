@@ -382,7 +382,7 @@ export function AuditExecutionView({
   const findings = isNew ? [] : (execForm?.findings ?? []);
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       {/* Header */}
       <div className="shrink-0 bg-background/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-700/20 px-4 py-2">
         <div className="flex items-start justify-between gap-4">

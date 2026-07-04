@@ -42,16 +42,16 @@ export function VsmProductionControlSymbol({ model, x, y }: Props) {
   return (
     <g>
       <rect x={x} y={y} width={PC_W} height={boxH}
-        fill="#ffffff" stroke="#334155" strokeWidth={2} rx={4} />
+        fill="hsl(var(--background))" stroke="hsl(var(--muted-foreground))" strokeWidth={2} rx={4} />
 
       {/* Header — dark bar, title centered both axes */}
       <rect x={x} y={y} width={PC_W} height={HEADER}
-        fill="#1e293b" rx={4} />
+        fill="hsl(var(--foreground))" rx={4} />
       <rect x={x} y={y + HEADER - 14} width={PC_W} height={14}
-        fill="#1e293b" />
+        fill="hsl(var(--foreground))" />
       <text x={cx} y={y + HEADER / 2}
         textAnchor="middle" dominantBaseline="middle"
-        className="text-[21px] font-bold" fill="#ffffff"
+        className="text-[21px] font-bold" fill="hsl(var(--background))"
         style={{ letterSpacing: "0.5px" }}>
         Production Control
       </text>
@@ -61,33 +61,33 @@ export function VsmProductionControlSymbol({ model, x, y }: Props) {
         textAnchor="middle" dominantBaseline="middle"
         className="text-[15px]"
         fontWeight={600}
-        fill="#0f172a">
+        fill="hsl(var(--foreground))">
         {method}
       </text>
 
       {/* Row 1: Schedule (label / value) — 14px (+15% from 12px) */}
       <text x={x + 14} y={rowY[1]}
         dominantBaseline="middle"
-        className="text-[14px]" fill="#64748b" fontWeight={500}>
+        className="text-[14px]" fill="hsl(var(--muted-foreground))" fontWeight={500}>
         Schedule
       </text>
       <text x={x + PC_W - 14} y={rowY[1]}
         textAnchor="end" dominantBaseline="middle"
         className="text-[14px] tabular-nums"
-        fill="#475569" fontWeight={600}>
+        fill="hsl(var(--secondary-foreground))" fontWeight={600}>
         {schedule}
       </text>
 
       {/* Row 2: Pacemaker (label / value) — 14px */}
       <text x={x + 14} y={rowY[2]}
         dominantBaseline="middle"
-        className="text-[14px]" fill="#64748b" fontWeight={500}>
+        className="text-[14px]" fill="hsl(var(--muted-foreground))" fontWeight={500}>
         Pacemaker
       </text>
       <text x={x + PC_W - 14} y={rowY[2]}
         textAnchor="end" dominantBaseline="middle"
         className="text-[14px] tabular-nums"
-        fill="#6d28d9" fontWeight={600}>
+        fill="hsl(var(--accent))" fontWeight={600}>
         {pacemaker}
       </text>
     </g>

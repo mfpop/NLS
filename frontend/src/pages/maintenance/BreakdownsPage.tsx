@@ -135,21 +135,21 @@ export function BreakdownsPage() {
             <textarea placeholder="Identify the root cause — 5 Whys analysis..."
               value={section.resolveForm.confirmedRootCause}
               onChange={(e) => section.setResolveForm({ ...section.resolveForm, confirmedRootCause: e.target.value })}
-              className="h-20 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none resize-none focus:border-orange-400 transition-colors" />
+              className="h-20 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Corrective Action *</label>
             <textarea placeholder="What was done to fix the root cause?"
               value={section.resolveForm.correctiveAction}
               onChange={(e) => section.setResolveForm({ ...section.resolveForm, correctiveAction: e.target.value })}
-              className="h-16 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none resize-none focus:border-orange-400 transition-colors" />
+              className="h-16 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Verification / Test Result *</label>
             <input type="text" placeholder="e.g. Part runs at 95% efficiency — within spec"
               value={section.resolveForm.verificationResult}
               onChange={(e) => section.setResolveForm({ ...section.resolveForm, verificationResult: e.target.value })} aria-label="Verification result"
-              className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-orange-400 transition-colors" />
+              className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors" />
           </div>
           {section.selBreakdown?.downtimeStart && (
             <div>
@@ -157,7 +157,7 @@ export function BreakdownsPage() {
               <input type="datetime-local"
                 value={section.resolveForm.downtimeEnd}
                 onChange={(e) => section.setResolveForm({ ...section.resolveForm, downtimeEnd: e.target.value })} aria-label="Downtime end"
-                className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-orange-400 transition-colors" />
+                className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors" />
             </div>
           )}
           <div>
@@ -165,7 +165,7 @@ export function BreakdownsPage() {
             <textarea placeholder="Any additional notes about the repair completion..."
               value={section.resolveForm.completionNotes}
               onChange={(e) => section.setResolveForm({ ...section.resolveForm, completionNotes: e.target.value })}
-              className="h-12 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none resize-none focus:border-orange-400 transition-colors" />
+              className="h-12 w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none resize-none focus:border-primary transition-colors" />
           </div>
         </div>
       </ConfirmDialog>
@@ -241,7 +241,7 @@ export function BreakdownsPage() {
               <input type="text" placeholder="Technician name"
                 value={section.woAssignedTo}
                 onChange={(e) => section.setWoAssignedTo(e.target.value)} aria-label="Assigned technician"
-                className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-orange-400 transition-colors" />
+                className="h-8 w-full rounded-md border border-border bg-background px-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">Due Date</label>

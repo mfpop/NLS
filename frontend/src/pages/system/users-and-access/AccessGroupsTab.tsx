@@ -26,7 +26,7 @@ const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-muted-f
 const scopeBadgeMap: Record<ScopeLevel, string> = {
   global: "border-blue-400/60 text-primary bg-primary/10",
   company: "border-indigo-400/60 text-primary bg-indigo-50",
-  plant: "border-purple-400/60 text-accent-foreground bg-purple-50",
+  plant: "border-accent/60 text-accent-foreground bg-accent/10",
   department: "border-cyan-400/60 text-cyan-600 bg-cyan-50",
 };
 const scopeLabelMap: Record<ScopeLevel, string> = { global: "Global", company: "Company", plant: "Plant", department: "Department" };
@@ -544,7 +544,7 @@ export function AccessGroupsTab() {
                               <div className="flex flex-wrap gap-1">
                                 {roles.map((r) => (
                                   <span key={r.roleName} className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
-                                    <ShieldCheck className="h-3 w-3 text-blue-400" />
+                                    <ShieldCheck className="h-3 w-3 text-primary" />
                                     <span>{r.roleName}</span>
                                     <span className="text-muted-foreground/60 ml-0.5">({r.count})</span>
                                   </span>
@@ -580,7 +580,7 @@ export function AccessGroupsTab() {
                             <div key={u.id}
                               onClick={() => navigate("/system/users-and-roles", { state: { selectedUserId: u.id } })}
                               className="flex cursor-pointer items-center gap-3 px-4 py-1.5 hover:bg-muted/60 transition-colors min-h-9">
-                              <span className={`h-2 w-2 shrink-0 rounded-full ${u.isActive ? "bg-success/100" : "bg-slate-300"}`} />
+                              <span className={`h-2 w-2 shrink-0 rounded-full ${u.isActive ? "bg-success" : "bg-muted-foreground/30"}`} />
                               <div className="min-w-0 flex-1 flex items-center gap-2">
                                 <span className="truncate text-[13px] font-medium text-foreground">{u.fullName || u.username}</span>
                                 <span className="truncate text-[11px] text-muted-foreground/60">{u.email || u.username}</span>

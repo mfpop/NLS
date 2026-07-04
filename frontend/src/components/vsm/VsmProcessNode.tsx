@@ -62,7 +62,7 @@ export function VsmProcessNodeBox({ node, x, y, width, height, dataBoxHeight, se
       {/* Bottleneck glow (subtle) */}
       {isBn && (
         <rect x={x - 2} y={y - 2} width={width + 4} height={height + 4} rx={5}
-          fill="none" stroke="#f59e0b" strokeWidth={1} strokeOpacity={0.3} />
+          fill="none" stroke="hsl(var(--warning))" strokeWidth={1} strokeOpacity={0.3} />
       )}
 
       {/* Process box */}
@@ -74,20 +74,20 @@ export function VsmProcessNodeBox({ node, x, y, width, height, dataBoxHeight, se
         fill={isBn ? "#f59e0b" : isConstrained ? "#f97316" : "#22c55e"} />
 
       {/* Process name */}
-      <text x={x + width / 2} y={y + 20} textAnchor="middle" className="text-xs font-semibold" fill="#1e293b">
+      <text x={x + width / 2} y={y + 20} textAnchor="middle" className="text-xs font-semibold" fill="hsl(var(--foreground))">
         {node.label}
       </text>
 
       {/* Department */}
-      <text x={x + width / 2} y={y + 33} textAnchor="middle" className="text-[8px]" fill="#64748b">
+      <text x={x + width / 2} y={y + 33} textAnchor="middle" className="text-[8px]" fill="hsl(var(--muted-foreground))">
         {node.resourceGroupName}
       </text>
 
       {/* Bottleneck label */}
       {isBn && (
         <g>
-          <rect x={x + 4} y={y + height - 15} width={width - 8} height={12} rx={2} fill="#f59e0b" opacity={0.9} />
-          <text x={x + width / 2} y={y + height - 6} textAnchor="middle" className="text-[7px] font-bold" fill="#ffffff">
+          <rect x={x + 4} y={y + height - 15} width={width - 8} height={12} rx={2} fill="hsl(var(--warning))" opacity={0.9} />
+          <text x={x + width / 2} y={y + height - 6} textAnchor="middle" className="text-[7px] font-bold" fill="hsl(var(--background))">
             ⚠ BOTTLENECK
           </text>
         </g>
@@ -100,22 +100,22 @@ export function VsmProcessNodeBox({ node, x, y, width, height, dataBoxHeight, se
         </text>
       )}
       {isStarved && (
-        <text x={x + width - 4} y={y + height - 2} textAnchor="end" className="text-[6px] italic" fill="#f97316">starved</text>
+        <text x={x + width - 4} y={y + height - 2} textAnchor="end" className="text-[6px] italic" fill="hsl(var(--warning))">starved</text>
       )}
       {isOverproduced && (
-        <text x={x + width - 4} y={y + height - 2} textAnchor="end" className="text-[6px] italic" fill="#ef4444">overprod</text>
+        <text x={x + width - 4} y={y + height - 2} textAnchor="end" className="text-[6px] italic" fill="hsl(var(--danger))">overprod</text>
       )}
 
       {/* Data box directly below process box */}
       <rect x={x + 2} y={dbY + 1} width={width - 4} height={dataBoxHeight - 1} rx={2}
-        fill="#f8fafc" stroke="#e2e8f0" strokeWidth={1} />
+        fill="hsl(var(--muted))" stroke="hsl(var(--border))" strokeWidth={1} />
 
       {/* Row 1: CT + C/O */}
-      <text x={x + 6} y={dbY + 13} className="text-[9px]" fill="#475569">CT={node.cycleTimeSeconds}s</text>
-      <text x={x + width - 6} y={dbY + 13} textAnchor="end" className="text-[9px]" fill="#475569">C/O={fmtCO(node.changeoverSeconds)}</text>
+      <text x={x + 6} y={dbY + 13} className="text-[9px]" fill="hsl(var(--secondary-foreground))">CT={node.cycleTimeSeconds}s</text>
+      <text x={x + width - 6} y={dbY + 13} textAnchor="end" className="text-[9px]" fill="hsl(var(--secondary-foreground))">C/O={fmtCO(node.changeoverSeconds)}</text>
 
       {/* Row 2: Uptime + WIP */}
-      <text x={x + 6} y={dbY + 25} className="text-[9px]" fill="#475569">Up={node.uptimePercent}%</text>
+      <text x={x + 6} y={dbY + 25} className="text-[9px]" fill="hsl(var(--secondary-foreground))">Up={node.uptimePercent}%</text>
       <text x={x + width - 6} y={dbY + 25} textAnchor="end" className="text-[9px]" fill={node.wipAfter > 80 ? "#ef4444" : "#475569"}>
         WIP={node.wipAfter}
       </text>
@@ -123,7 +123,7 @@ export function VsmProcessNodeBox({ node, x, y, width, height, dataBoxHeight, se
       {/* Row 3: WIP indicator bar */}
       {dataBoxHeight > 30 && (
         <svg x={x + 6} y={dbY + 27} width={width - 12} height={3} overflow="visible">
-          <rect x={0} y={0} width={width - 12} height={3} rx={1.5} fill="#e2e8f0" />
+          <rect x={0} y={0} width={width - 12} height={3} rx={1.5} fill="hsl(var(--border))" />
           <WipIndicator value={node.wipAfter} max={wipMax} />
         </svg>
       )}

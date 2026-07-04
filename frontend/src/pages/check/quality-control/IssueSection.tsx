@@ -109,7 +109,7 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   const renderCreateForm = () => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Type *</label><select value={iType} onChange={(e) => setIType(e.target.value)} className={SEL_INPUT}>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         <div><label className={labelCls}>Severity *</label><select value={iSeverity} onChange={(e) => setISeverity(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
@@ -127,7 +127,7 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
   );
 
   const renderEditForm = (item: any) => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Type</label><select value={item.problemType} className={SEL_INPUT + " opacity-60 cursor-not-allowed"} disabled>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         <div><label className={labelCls}>Severity *</label><select value={eSeverity} onChange={(e) => setESeverity(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
@@ -163,7 +163,7 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
       onMessage("Updated"); setTimeout(() => refetch(), 200);
     };
     return (
-      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
         <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4">
           <div>
             <InlineEditField value={item.title || ""} onSave={(v) => hUpdateIssue("title", v)} label="title" />

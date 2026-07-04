@@ -44,14 +44,14 @@ export function VsmSteppedTimeline({ segments, segmentCentersX, startX, totBoxLe
       {/* Stepped line */}
       <polyline
         points={pts.join(" ")}
-        fill="none" stroke="#334155" strokeWidth={2} strokeLinejoin="miter" strokeLinecap="square"
+        fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeLinejoin="miter" strokeLinecap="square"
       />
 
       {/* Wait labels */}
       {waits.map((w, i) =>
         w.label ? (
           <text key={`wt-${i}`} x={w.x} y={TIMELINE_TOP_Y - 12}
-            textAnchor="middle" className="text-[17px] font-bold" fill="#1e293b">
+            textAnchor="middle" className="text-[17px] font-bold" fill="hsl(var(--foreground))">
             {w.label}
           </text>
         ) : null
@@ -61,7 +61,7 @@ export function VsmSteppedTimeline({ segments, segmentCentersX, startX, totBoxLe
       {vas.map((v, i) =>
         v.label ? (
           <text key={`va-${i}`} x={v.x} y={TIMELINE_BTM_Y + 18}
-            textAnchor="middle" className="text-[17px] font-bold" fill="#047857">
+            textAnchor="middle" className="text-[17px] font-bold" fill="hsl(var(--success))">
             {v.label}
           </text>
         ) : null
@@ -70,7 +70,7 @@ export function VsmSteppedTimeline({ segments, segmentCentersX, startX, totBoxLe
       {/* Process names */}
       {segments.map((seg, i) => (
         <text key={`pn-${i}`} x={segmentCentersX[i] ?? startX} y={TIMELINE_BTM_Y + 40}
-          textAnchor="middle" className="text-[16px] font-semibold" fill="#334155">
+          textAnchor="middle" className="text-[16px] font-semibold" fill="hsl(var(--muted-foreground))">
           {seg.processLabel.length > 22 ? seg.processLabel.slice(0, 20) + "\u2026" : seg.processLabel}
         </text>
       ))}
@@ -79,16 +79,16 @@ export function VsmSteppedTimeline({ segments, segmentCentersX, startX, totBoxLe
       {taktTimeSeconds != null && vas.length > 0 && (
         <g>
           <line x1={startX} y1={TIMELINE_BTM_Y} x2={totBoxLeft} y2={TIMELINE_BTM_Y}
-            stroke="#3b82f6" strokeWidth={1} strokeDasharray="4,4" opacity={0.5} />
+            stroke="hsl(var(--primary))" strokeWidth={1} strokeDasharray="4,4" opacity={0.5} />
           <text x={startX - 4} y={TIMELINE_BTM_Y + 4}
-            textAnchor="end" className="text-[10px] font-semibold" fill="#3b82f6">
+            textAnchor="end" className="text-[10px] font-semibold" fill="hsl(var(--primary))">
             Takt ref
           </text>
         </g>
       )}
 
       {/* Clean end cap — small circle at the polyline endpoint (replaces totals box) */}
-      <circle cx={totBoxLeft} cy={TIMELINE_TOP_Y} r={3} fill="#334155" opacity={0.6} />
+      <circle cx={totBoxLeft} cy={TIMELINE_TOP_Y} r={3} fill="hsl(var(--muted-foreground))" opacity={0.6} />
     </g>
   );
 }
@@ -107,24 +107,24 @@ export function VsmTotalsBox({ x, y, width, height, totals }: TotalsProps) {
   return (
     <g>
       <rect x={x} y={y} width={width} height={height}
-        fill="#f8fafc" stroke="#94a3b8" strokeWidth={1} rx={3} />
+        fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={1} rx={3} />
 
       {/* Lead Time — 14px (+20% from 12px) */}
       <text x={x + width / 2} y={y + 20}
-        textAnchor="middle" className="text-[14px] font-semibold" fill="#64748b">
-        <tspan className="font-bold" fill="#0f172a">{totals.leadTimeLabel}</tspan>
-        <tspan fill="#94a3b8"> Lead Time</tspan>
+        textAnchor="middle" className="text-[14px] font-semibold" fill="hsl(var(--muted-foreground))">
+        <tspan className="font-bold" fill="hsl(var(--foreground))">{totals.leadTimeLabel}</tspan>
+        <tspan fill="hsl(var(--muted-foreground))"> Lead Time</tspan>
       </text>
 
       {/* VA Time — 14px */}
       <text x={x + width / 2} y={y + 40}
-        textAnchor="middle" className="text-[14px] font-semibold" fill="#64748b">
-        <tspan className="font-bold" fill="#047857">{totals.valueAddedTimeLabel}</tspan>
-        <tspan fill="#94a3b8"> VA Time</tspan>
+        textAnchor="middle" className="text-[14px] font-semibold" fill="hsl(var(--muted-foreground))">
+        <tspan className="font-bold" fill="hsl(var(--success))">{totals.valueAddedTimeLabel}</tspan>
+        <tspan fill="hsl(var(--muted-foreground))"> VA Time</tspan>
       </text>
 
       <line x1={x + 8} y1={y + 47} x2={x + width - 8} y2={y + 47}
-        stroke="#cbd5e1" strokeWidth={0.5} />
+        stroke="hsl(var(--border))" strokeWidth={0.5} />
 
       {/* VA % — 17px (+20% from 14px) */}
       <text x={x + width / 2} y={y + 60}

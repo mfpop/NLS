@@ -294,7 +294,7 @@ export function ProfileReadOnlyAccessRows({
         <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Status</div>
         {status ? (
           <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${status === "Active" ? "text-success" : "text-muted-foreground/60"}`}>
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${status === "Active" ? "bg-success/100" : "bg-slate-300"}`} />
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${status === "Active" ? "bg-success" : "bg-muted-foreground/30"}`} />
             {status}
           </span>
         ) : (

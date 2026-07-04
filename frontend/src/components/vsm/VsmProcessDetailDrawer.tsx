@@ -33,10 +33,10 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
       <div className="absolute inset-0 bg-black/10 z-10 animate-fade-in" onClick={onClose} />
       <div className="absolute right-0 top-0 bottom-0 w-[420px] z-20 bg-background border-l border-border shadow-2xl flex flex-col overflow-hidden animate-slide-left">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-gradient-to-r from-slate-50 to-white">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-gradient-to-r from-muted/30 to-background">
           <div className="flex items-center gap-2 min-w-0">
             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-              node.isBottleneck ? "bg-gradient-to-br from-amber-50 to-amber-100 text-warning ring-1 ring-amber-200" : "bg-gradient-to-br from-blue-50 to-sky-100 text-primary ring-1 ring-blue-200"
+              node.isBottleneck ? "bg-gradient-to-br from-amber-50 to-amber-100 text-warning ring-1 ring-amber-200" : "bg-gradient-to-br from-blue-50 to-primary/10 text-primary ring-1 ring-primary/20"
             }`}>
               {node.isBottleneck ? <AlertTriangle className="h-4 w-4" /> : <Activity className="h-4 w-4" />}
             </div>
@@ -61,7 +61,7 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
                 : "border-border bg-muted text-muted-foreground"
           }`}>
             <span className={`h-1.5 w-1.5 rounded-full ${
-              node.isBottleneck ? "bg-warning/100" : node.isActive ? "bg-success/100" : "bg-slate-400"
+              node.isBottleneck ? "bg-warning/100" : node.isActive ? "bg-success/100" : "bg-muted-foreground/40"
             }`} />
             {node.isBottleneck ? "Bottleneck" : node.isActive ? "Active" : "Pure Push"}
           </span>
@@ -96,10 +96,10 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
           {activeTab === "metrics" && (
             <div className="px-4 py-4 space-y-3 text-xs">
               {/* Cycle Time comparison ring */}
-              <div className="flex items-center gap-4 p-3 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-border">
+              <div className="flex items-center gap-4 p-3 bg-gradient-to-br from-muted/30 to-background rounded-xl border border-border">
                 <div className="relative flex items-center justify-center w-16 h-16 shrink-0">
                   <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                    <circle cx="32" cy="32" r="28" fill="none" stroke="#e2e8f0" strokeWidth="5" />
+                    <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
                     <circle cx="32" cy="32" r="28" fill="none"
                       stroke={ctVsTakt === "above" ? "#dc2626" : ctVsTakt === "below" ? "#16a34a" : "#3b82f6"}
                       strokeWidth="5"
@@ -167,7 +167,7 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
                   </div>
                   <div>
                     <p className={`text-[11px] font-bold ${
-                      node.isBottleneck ? "text-warning" : node.wipAfter > 120 ? "text-red-800" : "text-success"
+                      node.isBottleneck ? "text-warning" : node.wipAfter > 120 ? "text-danger" : "text-success"
                     }`}>
                       {node.isBottleneck ? "Bottleneck — Limits Throughput" : node.wipAfter > 120 ? "Excessive WIP" : "Process Healthy"}
                     </p>
@@ -322,9 +322,9 @@ function OpportunityCard({
 }) {
   const styles = {
     bottleneck: { border: "border-warning/20", bg: "bg-gradient-to-br from-amber-50 to-orange-50", badge: "bg-warning/15 text-warning border-warning/20" },
-    uptime: { border: "border-danger/20", bg: "bg-gradient-to-br from-red-50 to-rose-50", badge: "bg-danger/15 text-red-800 border-danger/20" },
+    uptime: { border: "border-danger/20", bg: "bg-gradient-to-br from-red-50 to-rose-50", badge: "bg-danger/15 text-danger border-danger/20" },
     wip: { border: "border-warning/20", bg: "bg-gradient-to-br from-orange-50 to-amber-50", badge: "bg-warning/15 text-orange-800 border-warning/20" },
-    changeover: { border: "border-primary/20", bg: "bg-gradient-to-br from-blue-50 to-indigo-50", badge: "bg-primary/15 text-blue-800 border-primary/20" },
+    changeover: { border: "border-primary/20", bg: "bg-gradient-to-br from-primary/10 to-accent/10", badge: "bg-primary/15 text-primary border-primary/20" },
     quality: { border: "border-accent/20", bg: "bg-gradient-to-br from-purple-50 to-violet-50", badge: "bg-accent/15 text-purple-800 border-accent/20" },
   };
   const s = styles[type];

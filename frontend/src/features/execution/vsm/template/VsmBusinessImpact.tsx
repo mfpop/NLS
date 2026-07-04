@@ -60,16 +60,16 @@ export function VsmBusinessImpact({ impact, x, y, onClose }: Props) {
 
       {/* Panel background */}
       <rect x={x} y={y} width={W} height={panelH}
-        fill="#f8fafc" stroke="#94a3b8" strokeWidth={1} rx={5}
+        fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={1} rx={5}
         filter="url(#drop-shadow)" />
 
       {/* Header */}
       <rect x={x} y={y} width={W} height={HEADER_H}
-        fill="#1e293b" rx={5} />
+        fill="hsl(var(--foreground))" rx={5} />
       <rect x={x} y={y + HEADER_H / 2} width={W} height={HEADER_H / 2}
-        fill="#1e293b" />
+        fill="hsl(var(--foreground))" />
       <text x={x + W / 2} y={y + HEADER_H / 2 + 1}
-        textAnchor="middle" className="text-[12px] font-bold uppercase tracking-wider" fill="#ffffff">
+        textAnchor="middle" className="text-[12px] font-bold uppercase tracking-wider" fill="hsl(var(--background))">
         Business Impact
       </text>
 
@@ -91,7 +91,7 @@ export function VsmBusinessImpact({ impact, x, y, onClose }: Props) {
           return (
             <g key={i}>
               <text x={0} y={ry + 7}
-                className="text-[12px] font-medium" fill="#475569">
+                className="text-[12px] font-medium" fill="hsl(var(--secondary-foreground))">
                 {row.label}
               </text>
               <g transform={`translate(${W - PAD * 2}, ${ry + 7})`}>
@@ -105,13 +105,13 @@ export function VsmBusinessImpact({ impact, x, y, onClose }: Props) {
               </g>
               {i < visible.length - 1 && (
                 <line x1={0} y1={ry + ROW_H} x2={W - PAD * 2} y2={ry + ROW_H}
-                  stroke="#e2e8f0" strokeWidth={0.5} />
+                  stroke="hsl(var(--border))" strokeWidth={0.5} />
               )}
             </g>
           );
         }) : (
           <text x={0} y={ROW_H / 2 + 3}
-            className="text-[12px] italic" fill="#94a3b8">
+            className="text-[12px] italic" fill="hsl(var(--muted-foreground))">
             Impact data not available
           </text>
         )}

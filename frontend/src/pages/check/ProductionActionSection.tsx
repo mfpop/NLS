@@ -145,7 +145,7 @@ export function useProductionActionSection(
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   const renderCreateForm = () => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Source</label><select value={aSourceType} onChange={(e) => setASourceType(e.target.value)} aria-label="Source" className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {aSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={aSourceId ?? ""} onChange={(e) => setASourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} placeholder="ID..." aria-label="Source ID" /></div>}
@@ -162,7 +162,7 @@ export function useProductionActionSection(
   );
 
   const renderEditForm = (item: any) => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Source</label><select value={eSourceType} onChange={(e) => setESourceType(e.target.value)} aria-label="Source" className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {eSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={eSourceId ?? ""} onChange={(e) => setESourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} aria-label="Source ID" /></div>}
@@ -194,7 +194,7 @@ export function useProductionActionSection(
     const statCls = ACTION_STATUS_STYLES[item.status] || ACTION_STATUS_STYLES.OPEN;
     const priCls = PRIORITY_STYLES[item.priority] || PRIORITY_STYLES.MEDIUM;
     return (
-      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
         <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4">
           <div><h2 className="text-base font-bold text-foreground">{item.title}</h2>
             <div className="flex items-center gap-2 mt-1"><span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${statCls}`}>{statusLabel(item.status)}</span>{item.priority && <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${priCls}`}>{item.priority}</span>}</div></div>

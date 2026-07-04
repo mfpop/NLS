@@ -137,7 +137,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What did you observe?"
             disabled={isDisabled}
-            className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500 placeholder:text-muted-foreground/60"
+            className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary placeholder:text-muted-foreground/60"
           />
         </div>
 
@@ -163,7 +163,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
             onChange={(e) => setFocus(e.target.value)}
             placeholder="e.g. WIP accumulation, tool wear, safety"
             disabled={isDisabled}
-            className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500 placeholder:text-muted-foreground/60"
+            className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary placeholder:text-muted-foreground/60"
           />
         </div>
 
@@ -175,7 +175,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
               value={category}
               onChange={(e) => setCategory(e.target.value as GembaCategory)}
               disabled={isDisabled}
-              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
             >
               {CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
@@ -188,7 +188,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
               value={severity}
               onChange={(e) => setSeverity(e.target.value as GembaSeverity)}
               disabled={isDisabled}
-              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
             >
               {SEVERITIES.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -201,7 +201,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
               value={priority}
               onChange={(e) => setPriority(e.target.value as GembaPriority)}
               disabled={isDisabled}
-              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
             >
               {PRIORITIES.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
@@ -220,7 +220,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
               onChange={(e) => setOwnerName(e.target.value)}
               placeholder="Assignee name"
               disabled={isDisabled}
-              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500 placeholder:text-muted-foreground/60"
+              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary placeholder:text-muted-foreground/60"
             />
           </div>
           <div>
@@ -230,7 +230,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               disabled={isDisabled}
-              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+              className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -243,7 +243,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe what you observed in detail..."
             disabled={isDisabled}
-            className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none placeholder:text-muted-foreground/60"
+            className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary resize-none placeholder:text-muted-foreground/60"
             style={{ minHeight: "56px" }}
           />
         </div>
@@ -257,7 +257,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
             onChange={(e) => setLinkedResourceText(e.target.value)}
             placeholder="Optional additional reference"
             disabled={isDisabled}
-            className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500 placeholder:text-muted-foreground/60"
+            className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary placeholder:text-muted-foreground/60"
           />
         </div>
 
@@ -277,7 +277,7 @@ export function GembaWalkForm({ sessionId, onSave, saving, readOnly, structureEr
           className={`w-full inline-flex h-8 items-center justify-center gap-1.5 rounded-[2px] px-3 text-sm font-medium transition-colors ${
             !canSubmit
               ? "bg-muted/80 text-muted-foreground cursor-not-allowed"
-              : "bg-blue-700 text-white hover:bg-blue-800 active:bg-blue-900"
+              : "bg-primary text-primary-foreground hover:bg-primary/80 active:bg-primary/70"
           }`}
         >
           {saving ? (

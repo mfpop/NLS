@@ -112,7 +112,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   const renderCreateForm = () => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Source</label><select value={aSourceType} onChange={(e) => setASourceType(e.target.value)} className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {aSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={aSourceId ?? ""} onChange={(e) => setASourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} placeholder="ID..." /></div>}
@@ -129,7 +129,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
   );
 
   const renderEditForm = (item: any) => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Source</label><select value={eSourceType} onChange={(e) => setESourceType(e.target.value)} className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {eSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={eSourceId ?? ""} onChange={(e) => setESourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} /></div>}
@@ -170,7 +170,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
       }
     };
     return (
-      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
         <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4">
           <div>
             <InlineEditField value={item.title} onSave={(v) => hUpdateAction("title", v)} label="title" />

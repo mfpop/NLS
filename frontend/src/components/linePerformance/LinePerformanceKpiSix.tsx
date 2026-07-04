@@ -16,7 +16,7 @@ const colorMap = {
   good: { text: "text-success", bar: "bg-success/100" },
   warning: { text: "text-warning", bar: "bg-warning/100" },
   critical: { text: "text-danger", bar: "bg-danger/100" },
-  neutral: { text: "text-muted-foreground", bar: "bg-slate-400" },
+  neutral: { text: "text-muted-foreground", bar: "bg-muted-foreground/40" },
 };
 
 function KpiCard({
@@ -68,7 +68,7 @@ export function LinePerformanceKpiSix({ kpis }: Props) {
   const qualStat = kpis.qualityStatus ? statusColor(kpis.qualityStatus) : "neutral";
 
   return (
-    <div className="grid grid-cols-6 divide-x divide-slate-300 border-b border-border bg-muted h-16">
+    <div className="grid grid-cols-6 divide-x divide-border/60 border-b border-border bg-muted h-16">
       <KpiCard title="Plan" value={kpis.planQuantity} icon={<Target className="h-4 w-4" />} status="neutral" />
       <KpiCard title="Actual" value={kpis.actualQuantity} icon={<Package className="h-4 w-4" />} status={gapStat} />
       <KpiCard title="Gap" value={kpis.gap >= 0 ? `+${kpis.gap}` : `${kpis.gap}`} icon={<TrendingDown className="h-4 w-4" />} status={gapStat} />

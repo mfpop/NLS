@@ -21,8 +21,8 @@ const STATUS_BORDER: Record<string, string> = {
 const STATUS_BADGE: Record<string, string> = {
   running: "bg-success/15 text-success border-success/20",
   idle: "bg-muted text-muted-foreground border-border",
-  stopped: "bg-danger/15 text-red-800 border-danger/20",
-  blocked: "bg-danger/15 text-red-800 border-danger/20",
+  stopped: "bg-danger/15 text-danger border-danger/20",
+  blocked: "bg-danger/15 text-danger border-danger/20",
   starved: "bg-warning/15 text-warning border-warning/20",
   maintenance: "bg-warning/15 text-warning border-warning/20",
   changeover: "bg-sky-100 text-sky-800 border-accent/20",
@@ -63,7 +63,7 @@ export function ResourceGroupFlowCard({ group, resources, isLast }: Props) {
                   r.status === "running" ? "bg-success/100" :
                   r.status === "stopped" || r.status === "blocked" ? "bg-danger/100" :
                   r.status === "starved" || r.status === "maintenance" ? "bg-warning/100" :
-                  "bg-slate-300"
+                  "bg-muted-foreground/30"
                 }`} />
                 <span className="truncate max-w-[80px]">{r.name}</span>
               </span>

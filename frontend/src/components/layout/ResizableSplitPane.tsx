@@ -161,13 +161,13 @@ export function ResizableSplitPane({
         className={cn(
           "shrink-0 flex items-center justify-center relative z-10",
           "w-[5px] cursor-col-resize",
-          "bg-muted/80 hover:bg-blue-400 active:bg-primary/100",
+          "bg-muted/80 hover:bg-primary active:bg-primary/100",
           "transition-colors duration-100",
           isDragging && "bg-primary/100",
         )}
         onMouseDown={handleMouseDown}
       >
-        <div className="h-8 w-[2px] rounded-full bg-slate-400" />
+        <div className="h-8 w-[2px] rounded-full bg-muted-foreground/40" />
       </div>
 
       {/* Right panel */}

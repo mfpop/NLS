@@ -9,7 +9,7 @@ function OeeBar({ label, value, status }: { label: string; value: number | null;
   const isAvail = value !== null;
   const barColor = status === "good" ? "bg-success/100"
     : status === "warning" ? "bg-warning/100"
-      : status === "critical" ? "bg-danger/100" : "bg-slate-300";
+      : status === "critical" ? "bg-danger/100" : "bg-muted-foreground/30";
   return (
     <div className="flex items-center gap-2">
       <span className="text-[10px] text-muted-foreground w-20 shrink-0">{label}</span>
@@ -39,7 +39,7 @@ export function OeeSignalPanel({ data }: Props) {
 
   const overallBarColor = data.overallStatus === "good" ? "bg-success/100"
     : data.overallStatus === "warning" ? "bg-warning/100"
-      : data.overallStatus === "critical" ? "bg-danger/100" : "bg-slate-300";
+      : data.overallStatus === "critical" ? "bg-danger/100" : "bg-muted-foreground/30";
 
   return (
     <div className="flex flex-col h-full">

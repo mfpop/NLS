@@ -67,37 +67,37 @@ function ArrowDefs() {
   return (
     <defs>
       <marker id="arr-PUSH" markerWidth={5} markerHeight={4} refX={5} refY={2} orient="auto">
-        <polygon points="0,0 5,2 0,4" fill="#334155" />
+        <polygon points="0,0 5,2 0,4" fill="hsl(var(--muted-foreground))" />
       </marker>
       <marker id="arr-PULL" markerWidth={5} markerHeight={4} refX={5} refY={2} orient="auto">
-        <polygon points="0,0 5,2 0,4" fill="#3b82f6" />
+        <polygon points="0,0 5,2 0,4" fill="hsl(var(--primary))" />
       </marker>
       <marker id="arr-KANBAN" markerWidth={5} markerHeight={4} refX={5} refY={2} orient="auto">
-        <polygon points="0,0 5,2 0,4" fill="#f59e0b" />
+        <polygon points="0,0 5,2 0,4" fill="hsl(var(--warning))" />
       </marker>
       <marker id="arr-FIFO" markerWidth={5} markerHeight={4} refX={5} refY={2} orient="auto">
-        <polygon points="0,0 5,2 0,4" fill="#16a34a" />
+        <polygon points="0,0 5,2 0,4" fill="hsl(var(--success))" />
       </marker>
       <marker id="arr-SUPERMARKET" markerWidth={5} markerHeight={4} refX={5} refY={2} orient="auto">
-        <polygon points="0,0 5,2 0,4" fill="#ea580c" />
+        <polygon points="0,0 5,2 0,4" fill="hsl(var(--warning))" />
       </marker>
       <marker id="arr-SHIPMENT" markerWidth={6} markerHeight={5} refX={6} refY={2.5} orient="auto">
-        <polygon points="0,0 6,2.5 0,5" fill="#1e293b" />
+        <polygon points="0,0 6,2.5 0,5" fill="hsl(var(--foreground))" />
       </marker>
       <marker id="arr-fifo-sym" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="#16a34a" />
+        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--success))" />
       </marker>
       <marker id="arr-info-MANUAL" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="#64748b" />
+        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--muted-foreground))" />
       </marker>
       <marker id="arr-info-ELECTRONIC" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="#2563eb" />
+        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--primary))" />
       </marker>
       <marker id="arr-info-KANBAN" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="#7c3aed" />
+        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--accent))" />
       </marker>
       <marker id="arr-info-SCHEDULE" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="#475569" />
+        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--secondary-foreground))" />
       </marker>
     </defs>
   );
@@ -162,7 +162,7 @@ function renderScheduleLines(
       <g key={`sched-${i}`} className="group cursor-pointer">
         {/* Curved octopus-arm line from PC bottom to process top */}
         <path d={`M${startX},${pcBottom} C${cp1x},${cp1y} ${cp2x},${cp2y} ${endX},${endY}`}
-          fill="none" stroke="#475569" strokeWidth={1.5}
+          fill="none" stroke="hsl(var(--secondary-foreground))" strokeWidth={1.5}
           strokeDasharray="5,4" strokeLinecap="round"
           markerEnd="url(#arr-info-SCHEDULE)"
           opacity={0.8}
@@ -172,9 +172,9 @@ function renderScheduleLines(
           <g>
             <rect x={midX - 4} y={midY - 12 - 20}
               width={label.length * 7.2 + 8} height={18}
-              rx={3} fill="#f8fafc" fillOpacity={0.92} />
+              rx={3} fill="hsl(var(--muted))" fillOpacity={0.92} />
             <text x={midX} y={midY - 20}
-              textAnchor="middle" className="text-[12px] font-bold" fill="#475569">
+              textAnchor="middle" className="text-[12px] font-bold" fill="hsl(var(--secondary-foreground))">
               {label}
             </text>
           </g>
@@ -335,7 +335,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
              ═══════════════════════════════════════ */}
         {/* Supplier → material flow (SHIPMENT) */}
         <line x1={SUP_CX} y1={SUP_BOTTOM} x2={SUP_CX} y2={MAT_Y - INV_HALF - 4}
-          stroke="#1e293b" strokeWidth={4}
+          stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
           cx={SUP_CX - 32}
@@ -349,7 +349,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
 
         {/* Material flow → Customer (SHIPMENT) */}
         <line x1={CUST_CX} y1={MAT_Y + INV_HALF + 4} x2={CUST_CX} y2={CUST_BOTTOM}
-          stroke="#1e293b" strokeWidth={4}
+          stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
           cx={CUST_CX + 32}
@@ -623,7 +623,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
         <g opacity={0.08}>
           <text x={CANVAS_W / 2} y={CANVAS_H / 2}
             textAnchor="middle" dominantBaseline="central"
-            className="text-[96px] font-extrabold uppercase" fill="#7c3aed"
+            className="text-[96px] font-extrabold uppercase" fill="hsl(var(--accent))"
             transform={`rotate(-30, ${CANVAS_W / 2}, ${CANVAS_H / 2})`}>
             Future State
           </text>

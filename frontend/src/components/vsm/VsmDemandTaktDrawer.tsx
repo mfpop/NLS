@@ -21,7 +21,7 @@ interface Props {
   onSave: (chartId: string, input: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
 }
 
-const FIELD = "w-full h-8 border border-border bg-background text-sm px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow";
+const FIELD = "w-full h-8 border border-border bg-background text-sm px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-shadow";
 const LABEL = "text-[10px] font-semibold uppercase tracking-wide text-muted-foreground";
 
 /** ── Takt Gauge: visual radial gauge showing takt time ── */
@@ -34,11 +34,11 @@ function TaktGauge({ taktSec, netAvailMin, demandPerDay }: {
   const strokeDash = gaugeValue * 283; // 283 = circumference of r=45 circle
   const isHealthy = taktSec != null && taktSec >= 30 && taktSec <= 120;
   const isWarning = taktSec != null && (taktSec < 30 || taktSec > 120);
-  const strokeColor = isHealthy ? "#16a34a" : isWarning ? "#f59e0b" : "#94a3b8";
-  const bgColor = isHealthy ? "#dcfce7" : isWarning ? "#fef3c7" : "#f1f5f9";
+  const strokeColor = isHealthy ? "hsl(var(--success))" : isWarning ? "hsl(var(--warning))" : "hsl(var(--muted-foreground))";
+  const bgColor = isHealthy ? "hsl(var(--success) / 0.2)" : isWarning ? "hsl(var(--warning) / 0.2)" : "hsl(var(--muted))";
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-gradient-to-br from-slate-50 to-white">
+    <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-gradient-to-br from-muted/40 to-background">
       <div className="relative flex items-center justify-center w-20 h-20 shrink-0">
         <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="45" fill="none" stroke={bgColor} strokeWidth="8" />
@@ -88,7 +88,7 @@ function StatCard({ icon, label, value, tone = "default" }: {
     default: "text-foreground bg-muted border-border",
     good: "text-success bg-success/10 border-success/20",
     warn: "text-warning bg-warning/10 border-warning/20",
-    bad: "text-red-800 bg-danger/10 border-danger/20",
+    bad: "text-danger bg-danger/10 border-danger/20",
   };
   return (
     <div className={`rounded-lg border p-2.5 ${tones[tone]}`}>
@@ -205,9 +205,9 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
       {/* Drawer */}
       <div className="relative w-full max-w-md bg-background shadow-2xl flex flex-col h-full overflow-hidden animate-slide-left">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-slate-50 to-white shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-muted/40 to-background shrink-0">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 ring-1 ring-indigo-200">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
               <Gauge className="h-3.5 w-3.5 text-primary" />
             </div>
             <h2 className="text-sm font-bold text-foreground">Demand &amp; Takt</h2>

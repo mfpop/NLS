@@ -73,9 +73,9 @@ export function VsmLegend({
         <>
           <rect x={x} y={y} width={BOX_W}
             height={Math.max(36, activeFlowEntries.length * ENTRY_H + 28)}
-            fill="white" fillOpacity={0.92} stroke="#94a3b8" strokeWidth={1} rx={4} />
+            fill="hsl(var(--background))" fillOpacity={0.92} stroke="hsl(var(--muted-foreground))" strokeWidth={1} rx={4} />
           <text x={x + BOX_W / 2} y={y + 13}
-            textAnchor="middle" className="text-[11px] font-bold tracking-wide" fill="#1e293b">
+            textAnchor="middle" className="text-[11px] font-bold tracking-wide" fill="hsl(var(--foreground))">
             Flow Notation
           </text>
           {activeFlowEntries.map((e, i) => (
@@ -92,36 +92,36 @@ export function VsmLegend({
       {/* ── Column 2: Status ── always shown, minimal */}
       <rect x={statusX} y={y} width={BOX_W}
         height={BOX_H}
-        fill="white" fillOpacity={0.92} stroke="#94a3b8" strokeWidth={1} rx={4} />
+        fill="hsl(var(--background))" fillOpacity={0.92} stroke="hsl(var(--muted-foreground))" strokeWidth={1} rx={4} />
       <text x={statusX + BOX_W / 2} y={y + 13}
-        textAnchor="middle" className="text-[11px] font-bold tracking-wide" fill="#1e293b">
+        textAnchor="middle" className="text-[11px] font-bold tracking-wide" fill="hsl(var(--foreground))">
         Status
       </text>
 
       <rect x={statusX + 10} y={y + 24} width={12} height={9} rx={1}
-        fill="none" stroke="#7c3aed" strokeWidth={2} />
-      <text x={statusX + 16} y={y + 31} textAnchor="middle" className="text-[6px] font-bold" fill="#7c3aed">PM</text>
-      <text x={statusX + 42} y={y + 32} className="text-[11px] font-semibold" fill="#7c3aed">Pacemaker</text>
+        fill="none" stroke="hsl(var(--accent))" strokeWidth={2} />
+      <text x={statusX + 16} y={y + 31} textAnchor="middle" className="text-[6px] font-bold" fill="hsl(var(--accent))">PM</text>
+      <text x={statusX + 42} y={y + 32} className="text-[11px] font-semibold" fill="hsl(var(--accent))">Pacemaker</text>
 
       <rect x={statusX + 10} y={y + 42} width={12} height={9} rx={1}
-        fill="none" stroke="#f59e0b" strokeWidth={2} strokeDasharray="3,2" />
-      <text x={statusX + 16} y={y + 49} textAnchor="middle" className="text-[6px] font-bold" fill="#f59e0b">BN</text>
-      <text x={statusX + 42} y={y + 50} className="text-[11px] font-semibold" fill="#f59e0b">Bottleneck</text>
+        fill="none" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="3,2" />
+      <text x={statusX + 16} y={y + 49} textAnchor="middle" className="text-[6px] font-bold" fill="hsl(var(--warning))">BN</text>
+      <text x={statusX + 42} y={y + 50} className="text-[11px] font-semibold" fill="hsl(var(--warning))">Bottleneck</text>
 
       <line x1={statusX + 10} y1={y + 62} x2={statusX + 22} y2={y + 62}
-        stroke="#d97706" strokeWidth={2} />
-      <text x={statusX + 42} y={y + 65} className="text-[11px] font-semibold" fill="#d97706">Warning</text>
+        stroke="hsl(var(--warning))" strokeWidth={2} />
+      <text x={statusX + 42} y={y + 65} className="text-[11px] font-semibold" fill="hsl(var(--warning))">Warning</text>
 
       {(hasCritical || hasTransportWaste) && (
         <>
           <line x1={statusX + 10} y1={y + 78} x2={statusX + 22} y2={y + 78}
-            stroke="#dc2626" strokeWidth={2.5} />
-          <text x={statusX + 42} y={y + 81} className="text-[11px] font-semibold" fill="#dc2626">Critical</text>
+            stroke="hsl(var(--danger))" strokeWidth={2.5} />
+          <text x={statusX + 42} y={y + 81} className="text-[11px] font-semibold" fill="hsl(var(--danger))">Critical</text>
         </>
       )}
 
       {hasTransportWaste && !hasCritical && (
-        <text x={statusX + 42} y={y + 96} className="text-[11px] font-semibold" fill="#dc2626">Transport waste</text>
+        <text x={statusX + 42} y={y + 96} className="text-[11px] font-semibold" fill="hsl(var(--danger))">Transport waste</text>
       )}
     </g>
   );

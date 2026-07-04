@@ -38,11 +38,11 @@ export function VsmFactorySymbol({ model, x, y }: Props) {
 
   return (
     <g>
-      <polygon points={pts} fill="#f8fafc" stroke="#334155" strokeWidth={2} strokeLinejoin="miter" />
-      <text x={cx} y={bodyMid + 1} textAnchor="middle" className="text-[18px] font-bold" fill="#1e293b">
+      <polygon points={pts} fill="hsl(var(--muted))" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeLinejoin="miter" />
+      <text x={cx} y={bodyMid + 1} textAnchor="middle" className="text-[18px] font-bold" fill="hsl(var(--foreground))">
         {model.label}
       </text>
-      <text x={cx} y={y + h - 7} textAnchor="middle" className="text-[14px] font-semibold" fill="#475569">
+      <text x={cx} y={y + h - 7} textAnchor="middle" className="text-[14px] font-semibold" fill="hsl(var(--secondary-foreground))">
         {model.typeLabel}
       </text>
       {/* Demand removed from factory box — KPI bar owns all summary values */}

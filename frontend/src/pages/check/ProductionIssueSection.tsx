@@ -155,7 +155,7 @@ export function useProductionIssueSection(
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
 
   const renderCreateForm = () => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Type *</label><select value={iType} onChange={(e) => setIType(e.target.value)} aria-label="Issue type" className={SEL_INPUT}>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         <div><label className={labelCls}>Severity *</label><select value={iSeverity} onChange={(e) => setISeverity(e.target.value)} aria-label="Severity" className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
@@ -173,7 +173,7 @@ export function useProductionIssueSection(
   );
 
   const renderEditForm = (item: any) => (
-    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+    <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
       <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Type</label><select value={item.problemType} className={SEL_INPUT + " opacity-60 cursor-not-allowed"} disabled>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         <div><label className={labelCls}>Severity *</label><select value={eSeverity} onChange={(e) => setESeverity(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
@@ -206,7 +206,7 @@ export function useProductionIssueSection(
     const statCls = ISSUE_STATUS_STYLES[item.status] || ISSUE_STATUS_STYLES.OPEN;
     const srcLabel = item.sourceType === "AUDIT_FINDING" ? "Audit Finding" : "Manual";
     return (
-      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
+      <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-muted/30 dark:to-muted/10">
         <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4">
           <div><h2 className="text-base font-bold text-foreground">{item.title || "Issue"}</h2>
             <div className="flex items-center gap-2 mt-1"><span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${statCls}`}>{statusLabel(item.status)}</span>{item.severity && <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${sevCls}`}>{item.severity}</span>}</div></div>

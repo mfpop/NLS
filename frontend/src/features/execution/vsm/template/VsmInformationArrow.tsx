@@ -39,7 +39,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
       <g>
         {tooltip && <title>{tooltip}</title>}
         <path d={pathD}
-          fill="none" stroke="#cbd5e1" strokeWidth={1} strokeDasharray="2,3"
+          fill="none" stroke="hsl(var(--border))" strokeWidth={1} strokeDasharray="2,3"
           strokeLinecap="round" opacity={0.5} />
       </g>
     );
@@ -51,7 +51,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
       <g>
         {tooltip && <title>{tooltip}</title>}
         <path d={pathD}
-          fill="none" stroke="#94a3b8" strokeWidth={1} strokeDasharray="3,3"
+          fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth={1} strokeDasharray="3,3"
           strokeLinecap="round" opacity={0.7}
           markerEnd="url(#arr-info-KANBAN)" />
         {/* Tiny Kanban card at midpoint */}
@@ -94,7 +94,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
           width={label.length * 7.2 + 8}
           height={subLabel ? 26 : 18}
           rx={3}
-          fill="#f8fafc"
+          fill="hsl(var(--muted))"
           fillOpacity={0.92}
           stroke="none"
         />
@@ -111,7 +111,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
       {/* Frequency/method sub-label */}
       {subLabel && (
         <text x={labelX} y={labelY + 14}
-          textAnchor="middle" className="text-[10px] font-semibold" fill="#64748b">
+          textAnchor="middle" className="text-[10px] font-semibold" fill="hsl(var(--muted-foreground))">
           {subLabel}
         </text>
       )}
@@ -153,9 +153,9 @@ function CompactSignalMarker({ pathD }: { pathD: string }) {
   return (
     <g transform={`translate(${mid.x - s / 2},${mid.y - s / 2})`}>
       <rect x={0} y={0} width={s} height={s * 0.75}
-        fill="#e2e8f0" stroke="#94a3b8" strokeWidth={0.8} rx={1} />
+        fill="hsl(var(--border))" stroke="hsl(var(--muted-foreground))" strokeWidth={0.8} rx={1} />
       <text x={s / 2} y={s * 0.48}
-        textAnchor="middle" className="text-[6px] font-extrabold" fill="#64748b">
+        textAnchor="middle" className="text-[6px] font-extrabold" fill="hsl(var(--muted-foreground))">
         K
       </text>
     </g>
@@ -170,7 +170,7 @@ function KanbanMarker({ pathD, stroke }: { pathD: string; stroke: string }) {
   return (
     <g transform={`translate(${mid.x - s / 2},${mid.y - s / 2})`}>
       <rect x={0} y={0} width={s} height={s * 0.75}
-        fill="#f5f3ff" stroke={stroke} strokeWidth={1.2} rx={2} />
+        fill="hsl(var(--accent) / 0.08)" stroke={stroke} strokeWidth={1.2} rx={2} />
       <text x={s / 2} y={s * 0.48}
         textAnchor="middle" className="text-[11px] font-extrabold" fill={stroke}>
         K

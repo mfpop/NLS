@@ -179,7 +179,7 @@ export function RecordListFooter({
                   className={cn(
                     "inline-flex h-7 min-w-7 items-center justify-center rounded-[2px] px-2 text-xs",
                     pageNumber === page
-                      ? "border border-amber-400 bg-warning/10 text-foreground"
+                      ? "border border-warning bg-warning/10 text-foreground"
                       : "text-muted-foreground hover:bg-muted"
                   )}
                 >

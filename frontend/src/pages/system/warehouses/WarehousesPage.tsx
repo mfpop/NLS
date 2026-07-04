@@ -68,8 +68,8 @@ const TYPE_COLORS: Record<string, string> = {
   FG: "bg-success/100/10 text-success border-emerald-500/20",
   SCRAP: "bg-danger/100/10 text-danger border-red-500/20",
   QUARANTINE: "bg-warning/100/10 text-warning border-orange-500/20",
-  SPARES: "bg-purple-500/10 text-accent-foreground border-purple-500/20",
-  GENERAL: "bg-muted0/10 text-muted-foreground border-slate-500/20",
+  SPARES: "bg-accent/10 text-accent-foreground border-accent/20",
+  GENERAL: "bg-muted0/10 text-muted-foreground border-border/40",
 };
 
 function listItems<T>(value: ListResult<T> | null | undefined): T[] {

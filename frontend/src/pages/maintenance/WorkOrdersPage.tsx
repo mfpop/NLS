@@ -137,29 +137,29 @@ function formatMaybeJson(v: string | null | undefined): string {
 }
 
 const statusColors: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
-  OPEN: "bg-primary/15 text-primary border-primary/20 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800",
-  ASSIGNED: "bg-primary/15 text-primary border-primary/20 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-800",
-  IN_PROGRESS: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
-  WAITING_PARTS: "bg-warning/15 text-warning border-warning/20 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-800",
-  WAITING_APPROVAL: "bg-accent/15 text-accent-foreground border-accent/20 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800",
-  COMPLETED: "bg-success/15 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
-  CANCELLED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
-  ARCHIVED: "bg-gray-50 text-gray-500 border-gray-100 dark:bg-gray-900 dark:text-gray-500 dark:border-gray-800",
+  DRAFT: "bg-muted text-muted-foreground border-border dark:bg-muted/80 dark:text-muted-foreground dark:border-border/70",
+  OPEN: "bg-primary/15 text-primary border-primary/20 dark:bg-primary/15 dark:text-primary dark:border-primary/20",
+  ASSIGNED: "bg-primary/15 text-primary border-primary/20 dark:bg-primary/15 dark:text-primary dark:border-primary/20",
+  IN_PROGRESS: "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning dark:border-warning/20",
+  WAITING_PARTS: "bg-warning/15 text-warning border-warning/20 dark:bg-warning/15 dark:text-warning dark:border-warning/20",
+  WAITING_APPROVAL: "bg-accent/15 text-accent-foreground border-accent/20 dark:bg-accent/15 dark:text-accent-foreground dark:border-accent/20",
+  COMPLETED: "bg-success/15 text-success border-success/20 dark:bg-success/15 dark:text-success dark:border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border dark:bg-muted/80 dark:text-muted-foreground dark:border-border/70",
+  ARCHIVED: "bg-muted/50 text-muted-foreground/70 border-border/50 dark:bg-muted/70 dark:text-muted-foreground/60 dark:border-border/60",
 };
 
 const priorityStyles: Record<string, string> = {
-  LOW: "text-gray-500", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
+  LOW: "text-muted-foreground", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
 };
 
 const statusDot = (s: string) => {
   const m: Record<string, string> = {
     DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", ASSIGNED: "bg-primary",
     IN_PROGRESS: "bg-warning/100", WAITING_PARTS: "bg-warning/100",
-    WAITING_APPROVAL: "bg-purple-500", COMPLETED: "bg-success/100",
-    CANCELLED: "bg-muted-foreground/40", ARCHIVED: "bg-gray-300",
+    WAITING_APPROVAL: "bg-accent", COMPLETED: "bg-success/100",
+    CANCELLED: "bg-muted-foreground/40", ARCHIVED: "bg-muted-foreground/30",
   };
-  return m[s] || "bg-gray-300";
+  return m[s] || "bg-muted-foreground/30";
 };
 
 // ── Inline Field ──
@@ -176,7 +176,7 @@ function Fld({ label, children, required, error }: { label: string; children: Re
   );
 }
 
-const inpCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-indigo-500 transition-colors placeholder:text-muted-foreground/40";
+const inpCls = "h-8 w-full bg-background/50 dark:bg-muted/50 backdrop-blur-sm border border-white/30 dark:border-muted/30 px-2.5 text-sm text-foreground outline-none focus:border-primary transition-colors placeholder:text-muted-foreground/40";
 const selCls = inpCls + " appearance-none";
 
 // ── Target Selector ──
@@ -207,7 +207,7 @@ function TargetSelector({
   const { data: rgs } = useQuery(RESOURCE_GROUPS_QUERY, { variables: { departmentId: deptId?.toString() }, skip: !deptId, errorPolicy: "all" });
   const rgList: { id: string; name: string }[] = (rgs as any)?.resourceGroups || [];
 
-  const baseCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-indigo-500 transition-colors disabled:opacity-40";
+  const baseCls = "h-8 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 text-xs text-foreground outline-none focus:border-primary transition-colors disabled:opacity-40";
 
   // Deepest selected level becomes the WO target (names, not raw IDs)
   const plantName = plantList.find((p) => p.id === plantId?.toString())?.name || "";
@@ -755,12 +755,12 @@ export function WorkOrdersPage() {
                 </Fld>
                 <Fld label="Problem / Request Description" required error={formErrors.description}>
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500 placeholder:text-muted-foreground/40"
+                    className="h-16 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500 placeholder:text-muted-foreground/40"
                     placeholder="Describe the problem or work requested..." />
                 </Fld>
                 <Fld label="Failure Mode / Symptom">
                   <textarea value={form.failureMode} onChange={(e) => setForm({ ...form, failureMode: e.target.value })}
-                    className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                    className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                     placeholder="Observed symptoms, error codes, failure indicators..." />
                 </Fld>
               </div>
@@ -774,12 +774,12 @@ export function WorkOrdersPage() {
               <div className="space-y-2">
                 <Fld label="Work Instructions / Job Plan">
                   <textarea value={form.workInstructions} onChange={(e) => setForm({ ...form, workInstructions: e.target.value })}
-                    className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                    className="h-16 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                     placeholder="Step-by-step work instructions or reference to job plan..." />
                 </Fld>
                 <Fld label="Safety Notes / LOTO Required">
                   <textarea value={form.safetyNotes} onChange={(e) => setForm({ ...form, safetyNotes: e.target.value })}
-                    className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                    className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                     placeholder="Safety precautions, LOTO, PPE requirements..." />
                 </Fld>
                 <Fld label="Required Tools">
@@ -820,18 +820,18 @@ export function WorkOrdersPage() {
                           setSparePartId(p.id.toString());
                           setSparePartQty("1");
                         }}
-                          className="text-[10px] font-semibold text-primary hover:text-indigo-800 dark:text-indigo-400 transition-colors">
+                          className="text-[10px] font-semibold text-primary hover:text-indigo-800 dark:text-primary transition-colors">
                           {selId ? "Use" : "—"}
                         </button>
                       </div>
                     );
                   })}
                   {selId && sparePartId && (
-                    <div className="flex items-center gap-2 mt-1 p-2 rounded border border-primary/20/30 bg-indigo-50/30 dark:bg-indigo-950/20">
+                    <div className="flex items-center gap-2 mt-1 p-2 rounded border border-primary/20/30 bg-indigo-50/30 dark:bg-primary/10">
                       <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)}
-                        className="h-7 w-16 bg-background/50 dark:bg-slate-800/50 border border-white/30 px-2 text-xs outline-none" min="1" aria-label="Spare part quantity" />
+                        className="h-7 w-16 bg-background/50 dark:bg-muted/50 border border-white/30 px-2 text-xs outline-none" min="1" aria-label="Spare part quantity" />
                       <button onClick={hRecordSpare}
-                        className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2.5 text-[10px] font-semibold text-white hover:bg-teal-700 transition-colors">
+                        className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2.5 text-[10px] font-semibold text-white hover:bg-primary/80 transition-colors">
                         <Plus className="h-3 w-3" /> Record
                       </button>
                       <button onClick={() => { setSparePartId(""); setSparePartQty("1"); }}
@@ -867,27 +867,27 @@ export function WorkOrdersPage() {
                 <div className="space-y-2">
                   <Fld label="Work Performed">
                     <textarea value={completeForm.workPerformed} onChange={(e) => setCompleteForm({ ...completeForm, workPerformed: e.target.value })}
-                      className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-16 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Describe the work that was actually performed..." />
                   </Fld>
                   <Fld label="Root Cause">
                     <textarea value={completeForm.rootCause} onChange={(e) => setCompleteForm({ ...completeForm, rootCause: e.target.value })}
-                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Identify the root cause — 5 Whys for breakdowns..." />
                   </Fld>
                   <Fld label="Corrective Action">
                     <textarea value={completeForm.correctiveAction} onChange={(e) => setCompleteForm({ ...completeForm, correctiveAction: e.target.value })}
-                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Action taken to prevent recurrence..." />
                   </Fld>
                   <Fld label="Verification / Test Result" required>
                     <textarea value={completeForm.verificationResult} onChange={(e) => setCompleteForm({ ...completeForm, verificationResult: e.target.value })}
-                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Test run, quality inspection, sign-off..." />
                   </Fld>
                   <Fld label="Completion Notes" required>
                     <textarea value={completeForm.completionNotes} onChange={(e) => setCompleteForm({ ...completeForm, completionNotes: e.target.value })}
-                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Summarize results, parts used, recommendations..." />
                   </Fld>
                   <div className="grid grid-cols-3 gap-3">
@@ -906,7 +906,7 @@ export function WorkOrdersPage() {
                   </div>
                   <Fld label="Parts Used">
                     <textarea value={completeForm.partsUsedNotes} onChange={(e) => setCompleteForm({ ...completeForm, partsUsedNotes: e.target.value })}
-                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="List parts used, quantities, and part numbers..." />
                   </Fld>
                 </div>
@@ -916,7 +916,7 @@ export function WorkOrdersPage() {
         </div>
         {/* Validation summary when save is disabled */}
         {!canSave && (
-          <div className="absolute bottom-0 left-[25%] right-0 z-10 border-t border-danger/20 bg-danger/10 dark:border-red-900/30 dark:bg-red-950/30 px-3 py-1.5 flex items-center gap-2">
+          <div className="absolute bottom-0 left-[25%] right-0 z-10 border-t border-danger/20 bg-danger/10 dark:border-danger/20 dark:bg-danger/10 px-3 py-1.5 flex items-center gap-2">
             <AlertTriangle className="h-3 w-3 shrink-0 text-danger" />
             <span className="text-[10px] text-danger dark:text-danger/80">
               Missing: {missingFields.join(", ")}
@@ -958,7 +958,7 @@ export function WorkOrdersPage() {
               </div>
             )}
             {sel.safetyNotes && (
-              <div className="rounded-lg border border-warning/20 bg-warning/10 dark:border-orange-900/30 dark:bg-orange-950/20 p-3">
+              <div className="rounded-lg border border-warning/20 bg-warning/10 dark:border-warning/20 dark:bg-warning/10 p-3">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-warning mb-1">⚠ Safety Notes</p>
                 <p className="text-sm text-orange-800 dark:text-orange-200">{sel.safetyNotes}</p>
               </div>
@@ -990,7 +990,7 @@ export function WorkOrdersPage() {
             {sel.verificationResult && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Verification / Test Result</p>
-                <div className="rounded-lg border border-success/20 bg-success/10 dark:border-green-900/30 dark:bg-green-950/20 p-3">
+                <div className="rounded-lg border border-success/20 bg-success/10 dark:border-success/20 dark:bg-success/10 p-3">
                   <p className="text-sm text-green-800 dark:text-green-200">{sel.verificationResult}</p>
                 </div>
               </div>
@@ -1062,7 +1062,7 @@ export function WorkOrdersPage() {
                   <div className="space-y-1">
                     <label className="block text-[10px] text-muted-foreground">Part</label>
                     <select value={sparePartId} onChange={(e) => setSparePartId(e.target.value)}
-                      className="h-7 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none min-w-40">
+                      className="h-7 bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 text-xs outline-none min-w-40">
                       <option value="">Select part...</option>
                       {spareParts.filter((p) => p.quantityOnHand > 0).map((p) => (
                         <option key={p.id} value={p.id}>{p.partNumber} - {p.name} ({p.quantityOnHand} {p.uom})</option>
@@ -1071,10 +1071,10 @@ export function WorkOrdersPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="block text-[10px] text-muted-foreground">Qty</label>
-                    <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)} min="1" className="h-7 w-16 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none" />
+                    <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)} min="1" className="h-7 w-16 bg-background/50 dark:bg-muted/50 border border-white/30 dark:border-muted/30 px-2 text-xs outline-none" />
                   </div>
                   <button onClick={hRecordSpare} disabled={!sparePartId}
-                    className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2.5 text-[10px] font-semibold text-white hover:bg-teal-700 disabled:opacity-40 transition-colors">
+                    className="inline-flex h-7 items-center gap-1 bg-primary px-2.5 text-[10px] font-semibold text-primary-foreground hover:bg-primary/80 disabled:opacity-40 transition-colors">
                     <Plus className="h-3 w-3" /> Record
                   </button>
                 </div>
@@ -1142,9 +1142,9 @@ export function WorkOrdersPage() {
               <div className="border-t border-border pt-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Linked</p>
                 <div className="flex flex-wrap gap-1">
-                  {sel.linkedPmId && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-accent-foreground dark:bg-purple-900/30 dark:text-purple-300">PM #{sel.linkedPmId}</span>}
-                  {sel.linkedBreakdownId && <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold text-warning dark:bg-orange-900/30 dark:text-orange-300">BD #{sel.linkedBreakdownId}</span>}
-                  {sel.linkedMerId && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary dark:bg-blue-900/30 dark:text-blue-300">MER #{sel.linkedMerId}</span>}
+                  {sel.linkedPmId && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-accent-foreground dark:bg-accent/15 dark:text-accent-foreground">PM #{sel.linkedPmId}</span>}
+                  {sel.linkedBreakdownId && <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold text-warning dark:bg-warning/15 dark:text-warning">BD #{sel.linkedBreakdownId}</span>}
+                  {sel.linkedMerId && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary dark:bg-primary/15 dark:text-primary">MER #{sel.linkedMerId}</span>}
                 </div>
               </div>
             )}
@@ -1185,7 +1185,7 @@ export function WorkOrdersPage() {
               <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                 <ClipboardList className="h-6 w-6 text-muted-foreground/30 mb-1" />
                 <p className="text-xs font-medium text-muted-foreground">No work orders recorded</p>
-                <button onClick={hNewWO} className="mt-2 inline-flex h-7 items-center gap-1 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 dark:text-indigo-400 transition-colors">
+                <button onClick={hNewWO} className="mt-2 inline-flex h-7 items-center gap-1 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 dark:text-primary transition-colors">
                   <Plus className="h-3 w-3" /> New WO
                 </button>
               </div>
@@ -1201,7 +1201,7 @@ export function WorkOrdersPage() {
                     }
                   }}
                   className={`group mx-1 my-0.5 flex h-14 cursor-pointer items-center gap-2.5 px-3 transition-all duration-150 ${
-                    selId === wo.id ? "bg-table-selected border-l-2 border-l-indigo-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover"
+                    selId === wo.id ? "bg-table-selected border-l-2 border-l-primary" : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                   }`}>
                   <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${statusDot(wo.status)} ${["OPEN", "ASSIGNED", "IN_PROGRESS"].includes(wo.status) ? "animate-pulse" : ""}`} />
                   <div className="min-w-0 flex-1">
@@ -1256,8 +1256,8 @@ export function WorkOrdersPage() {
       {(successMsg || errorMsg) && (
         <div role={errorMsg ? "alert" : "status"} aria-live={errorMsg ? "assertive" : "polite"} className={`shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b ${
           errorMsg
-            ? "bg-danger/10 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300"
-            : "bg-success/10 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300"
+            ? "bg-danger/10 text-danger border-danger/20 dark:bg-danger/15 dark:text-danger"
+            : "bg-success/10 text-success border-success/20 dark:bg-success/15 dark:text-success"
         }`}>
           {errorMsg ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
           {errorMsg || successMsg}
@@ -1265,7 +1265,7 @@ export function WorkOrdersPage() {
       )}
       <PageHeader
         icon={<Wrench className="h-5 w-5 stroke-current" />}
-        iconClass="bg-primary/15 text-primary dark:bg-indigo-900/40 dark:text-indigo-400"
+        iconClass="bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary"
         title="Work Orders"
         subtitle="Lean maintenance: plan → execute → complete with spare parts tracking"
       />
@@ -1351,53 +1351,53 @@ export function WorkOrdersPage() {
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Work Performed *</label>
             <textarea placeholder="Describe the work that was actually performed, findings, and observations..."
               value={completeForm.workPerformed} onChange={(e) => setCompleteForm({ ...completeForm, workPerformed: e.target.value })}
-              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-400 transition-colors" />
+              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Completion Notes *</label>
             <textarea placeholder="Summarize results, spare parts used, and recommendations..."
               value={completeForm.completionNotes} onChange={(e) => setCompleteForm({ ...completeForm, completionNotes: e.target.value })}
-              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-400 transition-colors" />
+              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Actual Finish Date</label>                    <input type="date" value={completeForm.actualEndDate} onChange={(e) => setCompleteForm({ ...completeForm, actualEndDate: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" aria-label="Actual end date" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-primary transition-colors" aria-label="Actual end date" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Actual Labor Hours</label>
               <input type="number" placeholder="e.g. 3.5" value={completeForm.actualLaborHours} onChange={(e) => setCompleteForm({ ...completeForm, actualLaborHours: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" min="0" step="0.5" aria-label="Actual labor hours" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-primary transition-colors" min="0" step="0.5" aria-label="Actual labor hours" />
             </div>
             <div>
               <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Downtime (minutes)</label>
               <input type="number" placeholder="e.g. 45" value={completeForm.downtimeMinutes} onChange={(e) => setCompleteForm({ ...completeForm, downtimeMinutes: e.target.value })}
-                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-indigo-400 transition-colors" aria-label="Downtime minutes" />
+                className="h-8 w-full border border-border bg-background px-2.5 text-sm outline-none focus:border-primary transition-colors" aria-label="Downtime minutes" />
             </div>
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Verification / Test Result *</label>
             <textarea placeholder="Describe how the work was verified — test run, quality inspection, sign-off..."
               value={completeForm.verificationResult} onChange={(e) => setCompleteForm({ ...completeForm, verificationResult: e.target.value })}
-              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-400 transition-colors" />
+              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Root Cause (required for BD/CM)</label>
             <textarea placeholder="Identify the root cause — apply 5 Whys for breakdowns..."
               value={completeForm.rootCause} onChange={(e) => setCompleteForm({ ...completeForm, rootCause: e.target.value })}
-              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-400 transition-colors" />
+              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Corrective Action</label>
             <textarea placeholder="Describe the corrective action taken to prevent recurrence..."
               value={completeForm.correctiveAction} onChange={(e) => setCompleteForm({ ...completeForm, correctiveAction: e.target.value })}
-              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-400 transition-colors" />
+              className="h-16 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
           <div>
             <label className="block text-[10px] font-semibold text-muted-foreground mb-1">Parts Used</label>
             <textarea placeholder="List parts used, quantities, and part numbers..."
               value={completeForm.partsUsedNotes} onChange={(e) => setCompleteForm({ ...completeForm, partsUsedNotes: e.target.value })}
-              className="h-12 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-400 transition-colors" />
+              className="h-12 w-full border border-border bg-background px-2.5 py-1.5 text-sm outline-none resize-none focus:border-primary transition-colors" />
           </div>
         </div>
       </ConfirmDialog>

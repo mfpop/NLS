@@ -62,14 +62,14 @@ const DOT = "inline-block h-2 w-2 rounded-full shrink-0";
 const today = new Date().toISOString().slice(0, 10);
 
 const priorityColors: Record<string, string> = {
-  LOW: "text-gray-500", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
+  LOW: "text-muted-foreground", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
 };
 
 const statusDotColor: Record<string, string> = {
   DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", ASSIGNED: "bg-primary",
   IN_PROGRESS: "bg-warning/100", WAITING_PARTS: "bg-warning/100",
-  WAITING_APPROVAL: "bg-purple-500", COMPLETED: "bg-success/100",
-  CANCELLED: "bg-muted-foreground/40", ARCHIVED: "bg-gray-300",
+  WAITING_APPROVAL: "bg-accent", COMPLETED: "bg-success/100",
+  CANCELLED: "bg-muted-foreground/40", ARCHIVED: "bg-muted-foreground/30",
 };
 
 const typeLabelFn = (t: string): string => ({
@@ -106,7 +106,7 @@ function KpiTile({
     <button type="button" onClick={onClick} disabled={!onClick}
       className={cls(
         "flex items-center gap-1.5 bg-background border border-border px-2 py-1 text-left transition-all",
-        onClick ? "cursor-pointer hover:border-slate-400 hover:shadow-sm" : "cursor-default",
+        onClick ? "cursor-pointer hover:border-muted-foreground/40 hover:shadow-sm" : "cursor-default",
       )}
     >
       {icon && <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted">{icon}</div>}
@@ -297,7 +297,7 @@ export function MaintenanceDashboardPage() {
     criticalAssetsDown.slice(0, 2).forEach((bd) => items.push({ id: `cd-${bd.id}`, color: "bg-danger/100", type: "Critical Down", ref: bd.number, title: bd.title, detail: bd.downtimeMinutes ? `${bd.downtimeMinutes} min` : bd.targetType }));
     activeBreakdowns.filter((b) => b.severity !== "CRITICAL").slice(0, 2).forEach((bd) => items.push({ id: `bd-${bd.id}`, color: "bg-warning/100", type: bd.severity, ref: bd.number, title: bd.title, detail: bd.downtimeMinutes ? `${bd.downtimeMinutes} min` : "Active" }));
     highPriorityWO.slice(0, 2).forEach((wo) => items.push({ id: `hp-${wo.id}`, color: "bg-danger/100", type: `${wo.priority} Priority`, ref: wo.number, title: wo.title, detail: `${wo.assignedTo || "Unassigned"} · ${typeLabelFn(wo.workOrderType)}` }));
-    pmDueOverdue.slice(0, 2).forEach((pm) => items.push({ id: `po-${pm.id}`, color: "bg-purple-500", type: "PM Overdue", ref: pm.code, title: pm.title, detail: `Due ${pm.nextDueDate?.slice(0, 10) || "—"}` }));
+    pmDueOverdue.slice(0, 2).forEach((pm) => items.push({ id: `po-${pm.id}`, color: "bg-accent", type: "PM Overdue", ref: pm.code, title: pm.title, detail: `Due ${pm.nextDueDate?.slice(0, 10) || "—"}` }));
     waitingPartsWO.slice(0, 2).forEach((wo) => items.push({ id: `wp-${wo.id}`, color: "bg-warning/100", type: "Waiting Parts", ref: wo.number, title: wo.title, detail: wo.assignedTo || "" }));
     criticalLowParts.slice(0, 2).forEach((sp) => items.push({ id: `cs-${sp.id}`, color: "bg-danger/100", type: "Stockout", ref: sp.partNumber, title: sp.name, detail: "0 on hand" }));
     return items;
@@ -322,7 +322,7 @@ export function MaintenanceDashboardPage() {
                 className={cls(
                   "inline-flex h-7 items-center gap-1 px-2 text-[10px] font-medium whitespace-nowrap rounded transition-colors",
                   navBtn("/maintenance/work-orders")
-                    ? "text-primary bg-primary/10 border-b-2 border-b-blue-500"
+                    ? "text-primary bg-primary/10 border-b-2 border-b-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}>
                 <ClipboardList className="h-3 w-3 stroke-current" /> Work Orders
@@ -427,7 +427,7 @@ export function MaintenanceDashboardPage() {
                 ) : (
                   <>
                     {dueThisWeekPM.map((pm) => (
-                      <Row key={`dp-${pm.id}`} color="bg-purple-500" type="PM" ref={pm.code} title={pm.title}
+                      <Row key={`dp-${pm.id}`} color="bg-accent" type="PM" ref={pm.code} title={pm.title}
                         detail={`${pm.assignedTo || ""} · ${pm.targetType || ""}`}
                         right={<span className={cls("text-[10px] font-semibold", priorityColors[pm.priority] || "text-muted-foreground/60")}>{pm.priority}</span>} />
                     ))}
@@ -465,7 +465,7 @@ export function MaintenanceDashboardPage() {
           {/* Row 2, Col 2: Technician Load + Spare Parts Risk + Asset/Resource Health — stacked */}
           <div className="row-span-1 shrink-0 flex flex-col gap-1.5">
             <div className="bg-background border border-border">
-              <PanelHeader label="Technician Load" color="bg-violet-500" count={techLoad.length} />
+              <PanelHeader label="Technician Load" color="bg-accent" count={techLoad.length} />
               {techLoad.length === 0 ? (
                 <Empty msg="No active assignments" />
               ) : (
@@ -542,7 +542,7 @@ export function MaintenanceDashboardPage() {
           <><span className="mx-1 h-3 w-px bg-muted/80" /><span className="text-danger font-semibold">{activeBreakdowns.length} breakdowns</span></>
         )}
         {summary.pmDueThisWeek > 0 && (
-          <><span className="mx-1 h-3 w-px bg-muted/80" /><span className="text-purple-500 font-semibold">{summary.pmDueThisWeek} PM due</span></>
+          <><span className="mx-1 h-3 w-px bg-muted/80" /><span className="text-accent-foreground font-semibold">{summary.pmDueThisWeek} PM due</span></>
         )}
         <span className="flex-1" />
         <span className="text-[9px]">Last updated: {summary.lastUpdated?.slice(0, 16).replace("T", " ") || "—"}</span>

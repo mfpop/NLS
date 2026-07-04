@@ -42,23 +42,23 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
       {/* PACEMAKER marker */}
       {pm && (
         <rect x={x - 5} y={y - 5} width={PROC_W + 10} height={PROC_H + 10}
-          fill="none" stroke="#7c3aed" strokeWidth={2.5} rx={3} />
+          fill="none" stroke="hsl(var(--accent))" strokeWidth={2.5} rx={3} />
       )}
 
       {/* Bottleneck glow */}
       {bn && (
         <rect x={x - 4} y={y - 4} width={PROC_W + 8} height={PROC_H + 8}
-          fill="none" stroke="#f59e0b" strokeWidth={1.8} strokeDasharray="5,3" />
+          fill="none" stroke="hsl(var(--warning))" strokeWidth={1.8} strokeDasharray="5,3" />
       )}
 
       {/* Severity overlay — warning (dashed amber) or critical (solid red) */}
       {!pm && !bn && !sel && sev === "critical" && (
         <rect x={x - 3} y={y - 3} width={PROC_W + 6} height={PROC_H + 6}
-          fill="none" stroke="#dc2626" strokeWidth={2} rx={2} />
+          fill="none" stroke="hsl(var(--danger))" strokeWidth={2} rx={2} />
       )}
       {!pm && !bn && !sel && sev === "warning" && (
         <rect x={x - 3} y={y - 3} width={PROC_W + 6} height={PROC_H + 6}
-          fill="none" stroke="#d97706" strokeWidth={1.5} strokeDasharray="4,3" rx={2} />
+          fill="none" stroke="hsl(var(--warning))" strokeWidth={1.5} strokeDasharray="4,3" rx={2} />
       )}
 
       {/* Box */}
@@ -83,9 +83,9 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
       {isLogistics && logisticsBadge && !pm && !bn && (
         <>
           <rect x={x + 4} y={y + 52} width={PROC_W - 8} height={20}
-            fill="#fef2f2" rx={10} stroke="#fecaca" strokeWidth={1} />
+            fill="hsl(var(--danger) / 0.08)" rx={10} stroke="hsl(var(--danger) / 0.2)" strokeWidth={1} />
           <text x={x + PROC_W / 2} y={y + 67}
-            textAnchor="middle" className="text-[10px] font-bold uppercase" fill="#dc2626">
+            textAnchor="middle" className="text-[10px] font-bold uppercase" fill="hsl(var(--danger))">
             {logisticsBadge}
           </text>
         </>
@@ -98,28 +98,28 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
       {isLogistics && (
         <g transform={`translate(${x + 6}, ${y + 4}) scale(0.5)`} opacity={0.7}>
           {/* Hand-cart icon */}
-          <line x1={0} y1={0} x2={4} y2={12} stroke="#dc2626" strokeWidth={2} strokeLinecap="round" />
-          <line x1={8} y1={0} x2={6} y2={12} stroke="#dc2626" strokeWidth={2} strokeLinecap="round" />
-          <line x1={0} y1={12} x2={16} y2={12} stroke="#dc2626" strokeWidth={2} />
-          <line x1={16} y1={12} x2={16} y2={24} stroke="#dc2626" strokeWidth={2} />
-          <circle cx={16} cy={28} r={4} fill="#dc2626" />
-          <rect x={6} y={16} width={8} height={6} rx={1} fill="none" stroke="#dc2626" strokeWidth={1.2} />
+          <line x1={0} y1={0} x2={4} y2={12} stroke="hsl(var(--danger))" strokeWidth={2} strokeLinecap="round" />
+          <line x1={8} y1={0} x2={6} y2={12} stroke="hsl(var(--danger))" strokeWidth={2} strokeLinecap="round" />
+          <line x1={0} y1={12} x2={16} y2={12} stroke="hsl(var(--danger))" strokeWidth={2} />
+          <line x1={16} y1={12} x2={16} y2={24} stroke="hsl(var(--danger))" strokeWidth={2} />
+          <circle cx={16} cy={28} r={4} fill="hsl(var(--danger))" />
+          <rect x={6} y={16} width={8} height={6} rx={1} fill="none" stroke="hsl(var(--danger))" strokeWidth={1.2} />
         </g>
       )}
 
       {/* Waste indicator */}
       {isWaste && (
         <line x1={x + PROC_W - 8} y1={y + 4} x2={x + PROC_W - 4} y2={y + 8}
-          stroke="#dc2626" strokeWidth={1.5} />
+          stroke="hsl(var(--danger))" strokeWidth={1.5} />
       )}
 
       {/* Meta badges row — subtle chip style matching footer */}
       {pm && (
         <>
           <rect x={x + PROC_W / 2 - 42} y={y + 53} width={84} height={22}
-            fill="#f5f3ff" rx={11} stroke="#c4b5fd" strokeWidth={1} />
+            fill="hsl(var(--accent) / 0.08)" rx={11} stroke="hsl(var(--accent) / 0.4)" strokeWidth={1} />
           <text x={x + PROC_W / 2} y={y + 69}
-            textAnchor="middle" className="text-[12px] font-extrabold uppercase tracking-wider" fill="#6d28d9">
+            textAnchor="middle" className="text-[12px] font-extrabold uppercase tracking-wider" fill="hsl(var(--accent))">
             PACEMAKER
           </text>
         </>
@@ -130,9 +130,9 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
       {bn && !pm && (
         <>
           <rect x={x + PROC_W / 2 - 44} y={y + 53} width={88} height={22}
-            fill="#fffbeb" rx={11} stroke="#fde68a" strokeWidth={1} />
+            fill="hsl(var(--warning) / 0.12)" rx={11} stroke="hsl(var(--warning) / 0.4)" strokeWidth={1} />
           <text x={x + PROC_W / 2} y={y + 69}
-            textAnchor="middle" className="text-[12px] font-extrabold uppercase tracking-wider" fill="#d97706">
+            textAnchor="middle" className="text-[12px] font-extrabold uppercase tracking-wider" fill="hsl(var(--warning))">
             BOTTLENECK
           </text>
         </>

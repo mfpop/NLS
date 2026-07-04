@@ -309,9 +309,9 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
              ═══════════════════════════════════════ */}
         {model.timelineSegments.length > 0 && (
           <>
-          {/* Timeline background band — subtle visual separation from flow area */}
-        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 12} width={VSM_VIEW_W} height={TIMELINE_DROP + 48}
-          fill="hsl(var(--muted))" fillOpacity={0.3} rx={4} />
+          {/* Timeline background band — visual separation from process-flow area */}
+        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 20} width={VSM_VIEW_W} height={TIMELINE_DROP + 72}
+          fill="hsl(var(--muted))" fillOpacity={0.5} rx={4} />
 
         <g transform={`translate(0,${TIMELINE_Y})`}>
             <VsmSteppedTimeline

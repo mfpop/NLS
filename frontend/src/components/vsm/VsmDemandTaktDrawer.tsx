@@ -25,10 +25,11 @@ const FIELD = "w-full h-8 border border-border bg-background text-sm px-2 rounde
 const LABEL = "text-[10px] font-semibold uppercase tracking-wide text-muted-foreground";
 
 /** ── Takt Gauge: visual radial gauge showing takt time ── */
-function TaktGauge({ taktSec, netAvailMin, demandPerDay }: {
+function TaktGauge({ taktSec, netAvailMin, demandPerDay, summary }: {
   taktSec: number | null;
   netAvailMin: number;
   demandPerDay: number | null;
+  summary?: string;
 }) {
   const gaugeValue = taktSec ? Math.min(1, taktSec / 120) : 0;
   const strokeDash = gaugeValue * 283; // 283 = circumference of r=45 circle
@@ -72,6 +73,11 @@ function TaktGauge({ taktSec, netAvailMin, demandPerDay }: {
             ? `${demandPerDay.toFixed(0)} units/day · ${netAvailMin > 0 ? `${Math.floor(netAvailMin / 60)}h ${netAvailMin % 60}m net` : "—"}`
             : "Set demand and work time to calculate"}
         </p>
+        {summary && (
+          <p className="text-[9px] text-muted-foreground/60 leading-tight mt-1 max-w-[200px]">
+            {summary}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -223,7 +229,8 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
           {/* Takt gauge — always visible when enough data */}
           {showResults && (
             <div className="animate-fade-in">
-              <TaktGauge taktSec={taktSec} netAvailMin={netAvail} demandPerDay={demandPerDay} />
+              <TaktGauge taktSec={taktSec} netAvailMin={netAvail} demandPerDay={demandPerDay}
+                summary={`Based on ${dQty} ${demandUnit}/${demandPeriod} over ${parseInt(workDays)} days, ${shiftsNum} shift${shiftsNum > 1 ? "s" : ""}/day`} />
             </div>
           )}
 

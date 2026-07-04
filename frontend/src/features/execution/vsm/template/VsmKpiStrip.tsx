@@ -102,6 +102,39 @@ function KpiChip({
   );
 }
 
+function PrimaryChip({
+  label, value, tone = "default", children,
+}: {
+  label: string;
+  value: React.ReactNode;
+  tone?: "default" | "good" | "warn" | "bad";
+  children?: React.ReactNode;
+}) {
+  const toneStyles: Record<string, string> = {
+    default: "text-foreground", good: "text-success", warn: "text-warning", bad: "text-danger",
+  };
+  return (
+    <div className="inline-flex items-center gap-2 shrink-0">
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className={`text-[14px] font-bold tabular-nums ${toneStyles[tone]}`}>{value}</span>
+      {children}
+    </div>
+  );
+}
+
+function LegendChip({ type }: { type: "pacemaker" | "bottleneck" }) {
+  const styles = {
+    pacemaker: "bg-accent/15 text-accent-foreground border-accent/30",
+    bottleneck: "bg-warning/10 text-warning border-warning/30",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0 text-[11px] font-medium rounded-sm border ${styles[type]}`}>
+      <span className={`h-2 w-2 rounded-sm ${type === "pacemaker" ? "bg-accent" : "bg-warning"}`} />
+      {type === "pacemaker" ? "PM" : "BN"}
+    </span>
+  );
+}
+
 export function VsmKpiStrip({ data, onDemandEdit, onTaktEdit }: Props) {
   const vaPct = data.vaPercent;
   const vaTone: "good" | "warn" | "bad" = vaPct < 5 ? "bad" : vaPct < 20 ? "warn" : "good";
@@ -109,45 +142,59 @@ export function VsmKpiStrip({ data, onDemandEdit, onTaktEdit }: Props) {
   const bottleneck = data.bottleneck;
 
   return (
-    <div className="h-12 flex items-center gap-2 px-3 bg-background border-b border-border overflow-x-auto scrollbar-none">
-      <KpiChip
-        label="Lead Time"
-        value={<AnimatedValue value={data.leadTime} />}
-        tone="default"
-      />
-      <KpiChip
-        label="VA Time"
-        value={<AnimatedValue value={data.vaTime} />}
-        tone="default"
-      />
-      <KpiChip
-        label="VA %"
-        value={<AnimatedValue value={`${vaPct}%`} />}
-        tone={vaTone}
-        sparkline={<VaSparkline pct={vaPct} />}
-      />
-      <KpiChip
-        label="Takt"
-        value={taktMissing ? (data.taktMissingReason || "—") : <AnimatedValue value={data.taktDisplay} />}
-        tone={taktMissing ? "warn" : "default"}
-        onClick={onTaktEdit}
-      />
-      <KpiChip
-        label="Bottleneck"
-        value={bottleneck || "—"}
-        tone={bottleneck ? "amber" : "default"}
-      />
-      <KpiChip
-        label="WIP"
-        value={data.totalWip > 0 ? <AnimatedValue value={`${data.totalWip}`} suffix="u" /> : "—"}
-        tone="default"
-      />
-      <KpiChip
-        label="Demand"
-        value={data.demandRate || "—"}
-        tone={data.demandRate ? "default" : "warn"}
-        onClick={onDemandEdit}
-      />
+    <div className="h-auto min-h-[44px] flex items-center flex-wrap gap-y-1 gap-x-2 px-3 py-1.5 bg-background border-b border-border">
+      {/* Primary group */}
+      <div className="flex items-center gap-3 flex-wrap shrink-0">
+        <PrimaryChip label="Lead Time" value={<AnimatedValue value={data.leadTime} />} />
+        <PrimaryChip
+          label="VA %"
+          value={<AnimatedValue value={`${vaPct}%`} />}
+          tone={vaTone}
+        >
+          <VaSparkline pct={vaPct} />
+        </PrimaryChip>
+        <PrimaryChip
+          label="Bottleneck"
+          value={bottleneck || "—"}
+          tone={bottleneck ? "warn" : "default"}
+        >
+          {bottleneck && (
+            <span className="flex items-center gap-1.5 ml-1">
+              <LegendChip type="pacemaker" />
+              <LegendChip type="bottleneck" />
+            </span>
+          )}
+        </PrimaryChip>
+      </div>
+
+      {/* Vertical divider */}
+      <span className="h-6 w-px bg-border shrink-0 mx-1" />
+
+      {/* Secondary group */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <KpiChip
+          label="VA Time"
+          value={<AnimatedValue value={data.vaTime} />}
+          tone="default"
+        />
+        <KpiChip
+          label="Takt"
+          value={taktMissing ? (data.taktMissingReason || "—") : <AnimatedValue value={data.taktDisplay} />}
+          tone={taktMissing ? "warn" : "default"}
+          onClick={onTaktEdit}
+        />
+        <KpiChip
+          label="WIP"
+          value={data.totalWip > 0 ? <AnimatedValue value={`${data.totalWip}`} suffix="u" /> : "—"}
+          tone="default"
+        />
+        <KpiChip
+          label="Demand"
+          value={data.demandRate || "—"}
+          tone={data.demandRate ? "default" : "warn"}
+          onClick={onDemandEdit}
+        />
+      </div>
     </div>
   );
 }

@@ -123,9 +123,9 @@ export function VsmPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   // WIP toggle removed — always shown
   const [showImpact, setShowImpact] = useState(false);
-  const [showKaizen, setShowKaizen] = useState(false);
+  const [showKaizen, setShowKaizen] = useState(true);
   const [showFlowLogic, setShowFlowLogic] = useState(true);
-  const [showAllFlows, setShowAllFlows] = useState(false);
+  const [showAllFlows, setShowAllFlows] = useState(true);
   // Zones toggle removed — clearance zones not useful for production
   const [refreshing, setRefreshing] = useState(false);
   const [viewState, setViewState] = useState<"current" | "future" | "historical">("current");

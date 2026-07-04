@@ -92,8 +92,8 @@ function ArrowDefs() {
       <marker id="arr-info-MANUAL" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
         <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--muted-foreground))" />
       </marker>
-      <marker id="arr-info-ELECTRONIC" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
-        <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--primary))" />
+      <marker id="arr-info-ELECTRONIC" markerWidth={12} markerHeight={9} refX={12} refY={4.5} orient="auto">
+        <polygon points="0,0 12,4.5 0,9" fill="hsl(var(--primary))" />
       </marker>
       <marker id="arr-info-KANBAN" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
         <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--accent))" />

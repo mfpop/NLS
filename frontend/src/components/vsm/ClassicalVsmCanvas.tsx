@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect, useMemo } from "react";
 import type { VsmDiagram } from "@/types/vsm";
 import { StandardVsmTemplate } from "@/features/execution/vsm/template/StandardVsmTemplate";
 import { mapVsmApiToTemplateModel } from "@/features/execution/vsm/template/mapVsmApiToTemplateModel";
-import { VSM_VIEW_W, VSM_VIEW_H } from "@/features/execution/vsm/template/vsmTemplateGeometry";
+import { CONTENT_W, CONTENT_H } from "@/features/execution/vsm/template/vsmTemplateGeometry";
 
 interface Props {
   diagram: VsmDiagram;
@@ -21,20 +21,6 @@ interface Props {
 
 const FIT_PAD_X = 16;
 const FIT_PAD_Y = 12;
-
-function computeFit(cw: number, ch: number): { zoom: number; pan: { x: number; y: number } } {
-  const scale = Math.min(
-    (cw - FIT_PAD_X * 2) / VSM_VIEW_W,
-    (ch - FIT_PAD_Y * 2) / VSM_VIEW_H
-  );
-  return {
-    zoom: Math.max(0.1, Math.min(2, scale)),
-    pan: {
-      x: Math.round((cw - VSM_VIEW_W * scale) / 2),
-      y: Math.round((ch - VSM_VIEW_H * scale) / 2),
-    },
-  };
-}
 
 export function ClassicalVsmCanvas({
   diagram, selectedNodeId, onSelectNode,

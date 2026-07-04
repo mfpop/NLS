@@ -101,9 +101,20 @@ export const TIMELINE_DROP = 24;
 export const TIMELINE_BTM_Y = TIMELINE_TOP_Y + TIMELINE_DROP;
 
 // ── Canvas height ──
-// Content spans FAC_Y (55) to TIMELINE_BTM (577). The viewBox height is exactly
-// the content bounds — no extra padding. preserveAspectRatio handles filling.
+// Content spans from PC_Y (50) down to TIMELINE_Y + TIMELINE_DROP = 587,
+// with the TotalsBox extending to TIMELINE_Y - 18 + 68 = 613.
+// The viewBox must include ALL visible content — no clipping.
 export const CANVAS_PAD = 0;
-export const VSM_VIEW_H = (TIMELINE_Y + TIMELINE_DROP + CANVAS_PAD) - VSM_VIEW_Y;  // (577 + 0) - 25 = 552
-export const CANVAS_H = VSM_VIEW_H + VSM_VIEW_Y;  // 552 + 25 = 577
+// Highest Y among rendered elements (excludes invisible groups)
+export const CONTENT_MIN_X = FAC_X;  // 24
+export const CONTENT_MAX_X = FAC_CUST_X + FAC_W;  // 2376
+export const CONTENT_MIN_Y = Math.min(FAC_Y, PC_Y);  // 50
+export const CONTENT_MAX_Y = Math.max(
+  TIMELINE_Y + TIMELINE_DROP,             // 587 — ladder bottom
+  TIMELINE_Y - 18 + 68                    // 613 — totals box bottom (y=-18, h=68)
+);  // = 613
+export const CONTENT_W = CONTENT_MAX_X - CONTENT_MIN_X;  // 2352
+export const CONTENT_H = CONTENT_MAX_Y - CONTENT_MIN_Y;  // 563
+export const VSM_VIEW_H = CONTENT_MAX_Y - VSM_VIEW_Y + 4;  // 613 - 25 + 4 = 592
+export const CANVAS_H = VSM_VIEW_H + VSM_VIEW_Y;  // 592 + 25 = 617
 

@@ -58,9 +58,9 @@ export function ClassicalVsmCanvas({
     const availH = ch - FIT_PAD * 2;
     const sx = availW / CONTENT_W;
     const sy = availH / CONTENT_H;
-    // Fit all content on screen while using maximum space.
-    // Content is 4.18:1, viewport ~2:1, so width is the constraint.
-    const scale = Math.min(sx, sy);
+    // Fill as much of the container as possible.
+    // Content is 4.18:1, viewport ~2:1, max() gives height-fill with balanced overflow.
+    const scale = Math.max(sx, sy);
     console.log(
       `Fit | cw=${cw} ch=${ch} availW=${availW} availH=${availH} ` +
       `contentW=${CONTENT_W} contentH=${CONTENT_H} ` +

@@ -161,16 +161,16 @@ export function LinePerformancePage() {
   // ── NO ACTIVE LINE ──
   if (!lineId && !lineLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Line Performance"
           subtitle="Select a production line from the sidebar to view OEE, plan vs actual, downtime, bottlenecks, and shift performance."
           icon={<Activity />} iconClass={theme.iconBoxAmber} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-              <Activity className="h-6 w-6 text-slate-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Activity className="h-6 w-6 text-muted-foreground/60" />
             </div>
-            <p className="text-xs text-slate-500 max-w-sm">No active line selected. Use the sidebar to select a production line.</p>
+            <p className="text-xs text-muted-foreground max-w-sm">No active line selected. Use the sidebar to select a production line.</p>
           </div>
         </div>
       </div>
@@ -180,20 +180,20 @@ export function LinePerformancePage() {
   // ── LOADING ──
   if ((dashLoading && !dashboardData) || lineLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Line Performance" subtitle="Loading production line data..." icon={<Activity />} iconClass={theme.iconBoxAmber} />
         <div className="flex-1 flex flex-col gap-4 p-4 animate-pulse">
           <div className="grid grid-cols-6 gap-2 h-16">
-            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-full rounded bg-slate-200" />)}
+            {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-full rounded bg-muted/80" />)}
           </div>
           <div className="flex-1 grid grid-rows-[45%_55%] gap-2">
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded bg-slate-100" />
-              <div className="rounded bg-slate-100" />
+              <div className="rounded bg-muted" />
+              <div className="rounded bg-muted" />
             </div>
             <div className="grid grid-cols-[50%_50%] gap-2">
-              <div className="rounded bg-slate-100" />
-              <div className="rounded bg-slate-100" />
+              <div className="rounded bg-muted" />
+              <div className="rounded bg-muted" />
             </div>
           </div>
         </div>
@@ -204,16 +204,16 @@ export function LinePerformancePage() {
   // ── ERROR ──
   if (dashError && !dashboardData && !mockLinePerformanceDashboard?.linePerformanceDashboard) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Line Performance" subtitle="Error loading data" icon={<Activity />} iconClass={theme.iconBoxAmber} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
-            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-red-200 bg-red-50 text-red-700"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />Error</span>}
+            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-danger/20 bg-danger/10 text-danger"><span className="h-1.5 w-1.5 rounded-full bg-danger/100" />Error</span>}
             actions={<ToolbarButton icon={RefreshCw} label="Retry" onClick={handleRefresh} disabled={refreshing} />} />
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-          <p className="text-sm font-medium text-slate-800">Failed to load line performance data</p>
-          <p className="text-xs text-slate-500">Check the connection and try again.</p>
+          <p className="text-sm font-medium text-foreground">Failed to load line performance data</p>
+          <p className="text-xs text-muted-foreground">Check the connection and try again.</p>
         </div>
       </div>
     );
@@ -221,7 +221,7 @@ export function LinePerformancePage() {
 
   // ── MAIN RENDER ──
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       {/* Header */}
       <div className="h-16 shrink-0">
         <PageHeader title="Line Performance" subtitle={headerSubtitle} icon={<Activity />} iconClass={theme.iconBoxAmber} />
@@ -247,32 +247,32 @@ export function LinePerformancePage() {
       {/* 3-Zone Content */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* ── LEFT: Shift Records (20%) ── */}
-        <div className={`${LEFT_WIDTH} shrink-0 border-r border-slate-300 overflow-hidden`}>
+        <div className={`${LEFT_WIDTH} shrink-0 border-r border-border overflow-hidden`}>
           <ShiftRecordList records={records} selectedId={selectedRecordId} onSelect={setSelectedRecordId} />
         </div>
 
         {/* ── CENTER: Performance Core ── */}
-        <div className="flex min-w-0 flex-[1.3] flex-col overflow-hidden border-r border-slate-300 bg-slate-50">
+        <div className="flex min-w-0 flex-[1.3] flex-col overflow-hidden border-r border-border bg-muted">
           {/* Selected shift summary */}
           {selectedRecord && (
-            <div className="h-9 shrink-0 flex items-center gap-3 px-3 border-b border-slate-200 bg-slate-50 text-xs">
-              <span className="font-semibold text-slate-800">{selectedRecord.shiftName}</span>
-              <span className="text-slate-400">·</span>
-              <span className="text-slate-600">{selectedRecord.date}</span>
-              <span className="text-slate-400">·</span>
-              <span className="text-slate-600">{selectedRecord.startTime}–{selectedRecord.endTime}</span>
+            <div className="h-9 shrink-0 flex items-center gap-3 px-3 border-b border-border bg-muted text-xs">
+              <span className="font-semibold text-foreground">{selectedRecord.shiftName}</span>
+              <span className="text-muted-foreground/60">·</span>
+              <span className="text-muted-foreground">{selectedRecord.date}</span>
+              <span className="text-muted-foreground/60">·</span>
+              <span className="text-muted-foreground">{selectedRecord.startTime}–{selectedRecord.endTime}</span>
               <span className="ml-auto flex items-center gap-2">
-                <span className="tabular-nums font-semibold text-slate-800">{selectedRecord.actualQuantity}/{selectedRecord.plannedQuantity}</span>
-                <span className="text-slate-500 text-[10px]">units</span>
+                <span className="tabular-nums font-semibold text-foreground">{selectedRecord.actualQuantity}/{selectedRecord.plannedQuantity}</span>
+                <span className="text-muted-foreground text-[10px]">units</span>
                 {selectedRecord.downtimeMinutes > 0 && (
-                  <span className="text-red-600 font-medium text-[10px]">{selectedRecord.downtimeMinutes}m down</span>
+                  <span className="text-danger font-medium text-[10px]">{selectedRecord.downtimeMinutes}m down</span>
                 )}
               </span>
               <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border rounded ${
-                selectedRecord.oeeStatus === "good" ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : selectedRecord.oeeStatus === "warning" ? "border-amber-200 bg-amber-50 text-amber-700"
-                    : selectedRecord.oeeStatus === "critical" ? "border-red-200 bg-red-50 text-red-700"
-                      : "border-slate-200 bg-slate-100 text-slate-600"
+                selectedRecord.oeeStatus === "good" ? "border-success/20 bg-success/10 text-success"
+                  : selectedRecord.oeeStatus === "warning" ? "border-warning/20 bg-warning/10 text-warning"
+                    : selectedRecord.oeeStatus === "critical" ? "border-danger/20 bg-danger/10 text-danger"
+                      : "border-border bg-muted text-muted-foreground"
               }`}>
                 {selectedRecord.oeeStatus === "pending" ? "Pending" : selectedRecord.oeeStatus.toUpperCase()}
               </span>
@@ -285,17 +285,17 @@ export function LinePerformancePage() {
           </div>
 
           {/* Performance Grid */}
-          <div className="grid flex-1 min-h-0 grid-rows-[48%_52%] divide-y divide-slate-200 overflow-hidden">
+          <div className="grid flex-1 min-h-0 grid-rows-[48%_52%] divide-y divide-border overflow-hidden">
             {/* TOP ROW: Plan vs Actual + OEE Signal */}
-            <div className="grid grid-cols-2 divide-x divide-slate-200 min-h-0 overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-border min-h-0 overflow-hidden">
               <PlanVsActualPanel data={dashboard?.planVsActual ?? null} />
               <OeeSignalPanel data={dashboard?.oeeSignal ?? null} />
             </div>
 
             {/* BOTTOM ROW: Downtime+Bottleneck | Quality+Timeline */}
-            <div className="grid grid-cols-2 divide-x divide-slate-200 min-h-0 overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-border min-h-0 overflow-hidden">
               {/* LEFT: Downtime + Bottleneck */}
-              <div className="grid grid-rows-[60%_40%] divide-y divide-slate-200 min-h-0 overflow-hidden">
+              <div className="grid grid-rows-[60%_40%] divide-y divide-border min-h-0 overflow-hidden">
                 <DowntimeParetoPanel
                   downtimeSummary={dashboard?.downtimeSummary ?? null}
                   downtimeEvents={dashboard?.downtimeEvents ?? []}
@@ -305,7 +305,7 @@ export function LinePerformancePage() {
               </div>
 
               {/* RIGHT: Quality + Timeline */}
-              <div className="grid grid-rows-[52%_48%] divide-y divide-slate-200 min-h-0 overflow-hidden">
+              <div className="grid grid-rows-[52%_48%] divide-y divide-border min-h-0 overflow-hidden">
                 <QualitySummaryPanel qualitySummary={dashboard?.qualitySummary ?? null} />
                 <TimelineMiniPanel timelineEvents={dashboard?.timelineEvents ?? []} />
               </div>
@@ -325,7 +325,7 @@ export function LinePerformancePage() {
       </div>
 
       {/* Footer */}
-      <div className="shrink-0 flex h-10 items-center gap-5 border-t border-slate-200 bg-slate-50 px-4 text-xs font-medium text-slate-600">
+      <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
         <span>Line: {activeLine?.name ?? "—"}</span>
         <span className="w-1 h-1 rounded-full bg-slate-300" />
         <span>Shift: {dashboard?.shift?.name ?? "—"}</span>
@@ -336,7 +336,7 @@ export function LinePerformancePage() {
         {dashError && !dashboardData && !mockLinePerformanceDashboard?.linePerformanceDashboard && (
           <div className="ml-auto flex items-center gap-2">
             <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-50 text-red-700 border border-red-200 cursor-default"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-danger/10 text-danger border border-danger/20 cursor-default"
               title={dashError.message || "API request failed"}
             >
               Error

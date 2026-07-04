@@ -14,7 +14,7 @@ export function StructureDocumentMetadata({ document }: StructureDocumentMetadat
   const docCfg = docStatusConfig[document.status] || docStatusConfig.ARCHIVED;
 
   return (
-    <div className="border border-gray-500/50 p-3">
+    <div className="border border-border/50 p-3">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0">
           <div className="text-xs font-bold text-foreground">{document.title}</div>

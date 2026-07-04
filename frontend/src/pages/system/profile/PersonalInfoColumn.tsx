@@ -145,12 +145,12 @@ export function PersonalInfoColumn({
     <div className="flex flex-col min-h-0 overflow-hidden border-r border-border-major">
       <ProfileSectionHeader
         icon={User}
-        iconColor="text-sky-600"
+        iconColor="text-accent-foreground"
         title="Personal information"
         subtitle="Core identity and contact details"
       />
 
-      <div className={`divide-y divide-slate-200 overflow-y-auto`}>
+      <div className={`divide-y divide-border overflow-y-auto`}>
         {/* ── Identity fields ──────────────────────────────────────── */}
         <div ref={identityRef} className="grid md:grid-cols-2 gap-x-4 gap-y-3 px-4 py-3">
           <FieldShell label="First name" error={fieldErrors.firstName}>
@@ -203,7 +203,7 @@ export function PersonalInfoColumn({
                 <div className="flex items-start gap-2">
                   <User className={`mt-2.5 h-4 w-4 shrink-0 ${theme.icon}`} />
                   {selectedUser ? (
-                    <div className={`flex items-center gap-1.5 rounded border border-slate-200 bg-muted/30 px-2 py-1 text-sm`}>
+                    <div className={`flex items-center gap-1.5 rounded border border-border bg-muted/30 px-2 py-1 text-sm`}>
                       <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success text-[9px] font-bold text-success-foreground">
                         {initials(selectedUser.name)}
                       </span>
@@ -224,7 +224,7 @@ export function PersonalInfoColumn({
                         value={userSearchText}
                         onChange={(e) => { handleUserSearchInput(e.target.value); setShowUserDropdown(true); }}
                         onFocus={() => setShowUserDropdown(true)}
-                        className={`w-full border-0 border-b border-slate-200 bg-transparent pl-5 pr-0 py-1.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground hover:border-border-major focus:border-success focus:outline-none focus:ring-0`}
+                        className={`w-full border-0 border-b border-border bg-transparent pl-5 pr-0 py-1.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground hover:border-border-major focus:border-success focus:outline-none focus:ring-0`}
                         placeholder="Search by name or role..."
                       />
                     </div>
@@ -422,7 +422,7 @@ export function PersonalInfoColumn({
         </div>
 
         {/* ── About / Summary ────────────────────────────────────────── */}
-        <div ref={summaryRef} className="border-t border-slate-200">
+        <div ref={summaryRef} className="border-t border-border">
           <ProfileSectionHeader
             icon={FileText}
             iconColor="text-indigo-500"
@@ -435,7 +435,7 @@ export function PersonalInfoColumn({
                 data-field="about"
                 value={draft.about}
                 onChange={(e) => setDraft((prev: ProfileDraft) => ({ ...prev, about: e.target.value }))}
-                className={`w-full border border-slate-200 bg-card p-2.5 text-sm ${theme.textPrimary} placeholder:text-muted-foreground focus:border-success focus:outline-none rounded`}
+                className={`w-full border border-border bg-card p-2.5 text-sm ${theme.textPrimary} placeholder:text-muted-foreground focus:border-success focus:outline-none rounded`}
                 placeholder="Summarize your role and expertise"
                 maxLength={500}
                 style={{ minHeight: "60px", resize: "vertical" }}
@@ -497,7 +497,7 @@ function AccountAccessBlock({ adminProfileId }: { adminProfileId: string | null 
   const status = roles.length > 0 ? (activeRoles.length > 0 ? "Active" : "Inactive") : "";
 
   return (
-    <div className="border-t border-slate-200">
+    <div className="border-t border-border">
       <div className="relative">
         <ProfileSectionHeader
           icon={Shield}
@@ -510,7 +510,7 @@ function AccountAccessBlock({ adminProfileId }: { adminProfileId: string | null 
 
       {!adminProfileId ? (
         <div className="px-4 py-3">
-          <span className="text-sm text-slate-400 italic">Profile not linked to a system user account.</span>
+          <span className="text-sm text-muted-foreground/60 italic">Profile not linked to a system user account.</span>
         </div>
       ) : (
         <ProfileReadOnlyAccessRows

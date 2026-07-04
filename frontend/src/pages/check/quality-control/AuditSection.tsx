@@ -19,8 +19,8 @@ import { STATUS_STYLES, SEL_INPUT, statusLabel, scoreGrade, isFailed } from "./Q
 
 function SegCtl({ rt, val, onChange, disabled }: { rt: string; val: string; onChange: (v: string) => void; disabled?: boolean }) {
   if (disabled) {
-    const dCls = "h-16 w-full bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 py-1 text-xs resize-none outline-none text-muted-foreground/50 cursor-not-allowed";
-    const dInp = "h-7 w-full bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 text-xs outline-none text-muted-foreground/50 cursor-not-allowed";
+    const dCls = "h-16 w-full bg-background/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 py-1 text-xs resize-none outline-none text-muted-foreground/50 cursor-not-allowed";
+    const dInp = "h-7 w-full bg-background/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 text-xs outline-none text-muted-foreground/50 cursor-not-allowed";
     if (rt === "TEXT") return <textarea disabled className={dCls} />;
     if (rt === "NUMBER") return <input type="number" disabled className={dInp} />;
     return <div className="inline-flex h-7 overflow-hidden rounded border border-white/10 dark:border-slate-700/10 opacity-40 cursor-not-allowed">{optsFor(rt).map((o) => <span key={o} className="min-w-11 border-r border-white/10 dark:border-slate-700/10 px-2 text-xs font-medium text-muted-foreground/40 last:border-r-0">{o === "N_A" ? "N/A" : o}</span>)}</div>;
@@ -28,8 +28,8 @@ function SegCtl({ rt, val, onChange, disabled }: { rt: string; val: string; onCh
   if (rt === "PASS_FAIL_NA") return <Seg opts={["PASS", "FAIL", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "YES_NO_NA") return <Seg opts={["YES", "NO", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "SCORE_1_5") return <Seg opts={["1", "2", "3", "4", "5"]} val={val} onChange={onChange} />;
-  if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-blue-500" />;
-  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-blue-500" />;
+  if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-primary" />;
+  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-primary" />;
   return null;
 }
 
@@ -51,20 +51,20 @@ function optsFor(rt: string): string[] {
 
 function Seg({ opts, val, onChange }: { opts: string[]; val: string; onChange: (v: string) => void }) {
   const cls = (a: boolean, o: string) => {
-    if (!a) return "bg-white/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-white/80 dark:hover:bg-slate-700/80";
-    if (o === "PASS" || o === "YES") return "bg-emerald-100/80 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300";
-    if (o === "FAIL" || o === "NO") return "bg-red-100/80 text-red-800 dark:bg-red-900/80 dark:text-red-300";
-    if (o === "N_A") return "bg-amber-100/80 text-amber-800 dark:bg-amber-900/80 dark:text-amber-300";
-    return "bg-blue-100/80 text-blue-800 dark:bg-blue-900/80 dark:text-blue-300";
+    if (!a) return "bg-background/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-background/80 dark:hover:bg-slate-700/80";
+    if (o === "PASS" || o === "YES") return "bg-success/15/80 text-success dark:bg-emerald-900/80 dark:text-emerald-300";
+    if (o === "FAIL" || o === "NO") return "bg-danger/15/80 text-red-800 dark:bg-red-900/80 dark:text-red-300";
+    if (o === "N_A") return "bg-warning/15/80 text-warning dark:bg-amber-900/80 dark:text-amber-300";
+    return "bg-primary/15/80 text-blue-800 dark:bg-blue-900/80 dark:text-blue-300";
   };
   return <div className="inline-flex h-7 overflow-hidden rounded border border-white/30 dark:border-slate-700/30">{opts.map((o) => <button key={o} onClick={() => onChange(o)} className={`min-w-11 border-r border-white/30 dark:border-slate-700/30 px-2 text-xs font-medium last:border-r-0 transition-colors ${cls(val === o, o)}`}>{o === "N_A" ? "N/A" : o}</button>)}</div>;
 }
 
 function FindingsTable({ findings, onClose }: { findings: AuditFindingData[]; onClose: (id: string | null) => void }) {
-  const fStatusStyles: Record<string, string> = { OPEN: "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30", CLOSED: "border-green-300 text-green-700 bg-green-50/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30" };
+  const fStatusStyles: Record<string, string> = { OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30", CLOSED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30" };
   return (
     <div className="p-4"><table className="w-full text-xs"><thead><tr className="border-b border-white/20 dark:border-slate-700/20"><th className="text-left font-semibold text-foreground py-1.5 px-2">Finding</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Severity</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Status</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Owner</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Due</th><th className="py-1.5 px-2" /></tr></thead>
-      <tbody>{findings.map((f) => <tr key={f.id} className="border-b border-white/10 dark:border-slate-700/10 hover:bg-white/30 dark:hover:bg-slate-800/30"><td className="py-1.5 px-2 text-foreground">{f.description}</td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${f.severity === "CRITICAL" ? "border-red-300 text-red-700 bg-red-50/80" : f.severity === "HIGH" ? "border-orange-300 text-orange-700 bg-orange-50/80" : "border-blue-300 text-blue-700 bg-blue-50/80"}`}>{f.severity}</span></td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${fStatusStyles[f.status] || ""}`}>{statusLabel(f.status)}</span></td><td className="py-1.5 px-2 text-muted-foreground">{f.owner || "-"}</td><td className="py-1.5 px-2 text-muted-foreground">{f.dueDate || "-"}</td><td className="py-1.5 px-2">{f.status === "OPEN" && <button onClick={() => onClose(f.id)} className="inline-flex items-center px-1.5 py-0.5 border border-green-200 text-[10px] font-semibold text-green-700 hover:bg-green-50">Close</button>}</td></tr>)}</tbody></table></div>
+      <tbody>{findings.map((f) => <tr key={f.id} className="border-b border-white/10 dark:border-slate-700/10 hover:bg-background/30 dark:hover:bg-slate-800/30"><td className="py-1.5 px-2 text-foreground">{f.description}</td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${f.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80" : f.severity === "HIGH" ? "border-orange-300 text-warning bg-warning/10/80" : "border-primary/30 text-primary bg-primary/10/80"}`}>{f.severity}</span></td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${fStatusStyles[f.status] || ""}`}>{statusLabel(f.status)}</span></td><td className="py-1.5 px-2 text-muted-foreground">{f.owner || "-"}</td><td className="py-1.5 px-2 text-muted-foreground">{f.dueDate || "-"}</td><td className="py-1.5 px-2">{f.status === "OPEN" && <button onClick={() => onClose(f.id)} className="inline-flex items-center px-1.5 py-0.5 border border-success/20 text-[10px] font-semibold text-success hover:bg-success/10">Close</button>}</td></tr>)}</tbody></table></div>
   );
 }
 
@@ -144,7 +144,7 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";    // ── Helpers ──
   const hasErr = (field: string) => errors.some((e) => e.toLowerCase().includes(field.toLowerCase()));
   const fieldCls = (field: string) => `${SEL_INPUT} ${hasErr(field) ? "border-red-400 dark:border-red-600" : ""}`;
-  const errLabel = (field: string) => hasErr(field) ? <span className="text-[10px] text-red-500 font-medium ml-1">(required)</span> : null;
+  const errLabel = (field: string) => hasErr(field) ? <span className="text-[10px] text-danger font-medium ml-1">(required)</span> : null;
   const resolveTarget = useCallback(() => {
     if (fRes && fRes !== "") return { targetType: "RESOURCE", targetId: fRes };
     if (fRg && fRg !== "") return { targetType: "RESOURCE_GROUP", targetId: fRg };
@@ -470,12 +470,12 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
         {isNew ? (
           <>
             {/* Left column — setup */}
-            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 flex flex-col gap-4">
+            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 flex flex-col gap-4">
               <h2 className="text-base font-bold text-foreground shrink-0">New {areaLabel(controlArea)} Audit</h2>
 
               <div className="shrink-0">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                  <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-warning dark:text-amber-300">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-warning/15 text-warning dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
                   Source Location
                 </h3>
                 <div className="space-y-2">
@@ -488,8 +488,8 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
               </div>
 
               <div className="flex flex-col flex-1 min-h-0">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300 shrink-0">
-                  <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-primary dark:text-blue-300 shrink-0">
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/15 text-primary dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
                   Audit Details
                 </h3>
                 <div className="flex flex-col gap-2 flex-1 min-h-0">
@@ -508,15 +508,15 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
 
               {errors.length > 0 && (
                 <div className="space-y-1">
-                  <div className="text-[10px] font-medium text-amber-700 dark:text-amber-300">Complete required fields to save:</div>
-                  <div className="flex flex-wrap gap-1.5">{errors.map((e, i) => <span key={i} className="inline-flex items-center gap-1 rounded bg-amber-50/80 dark:bg-amber-950/80 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">⚠ {e}</span>)}</div>
+                  <div className="text-[10px] font-medium text-warning dark:text-amber-300">Complete required fields to save:</div>
+                  <div className="flex flex-wrap gap-1.5">{errors.map((e, i) => <span key={i} className="inline-flex items-center gap-1 rounded bg-warning/10/80 dark:bg-amber-950/80 px-2 py-0.5 text-[10px] font-medium text-warning dark:text-amber-300">⚠ {e}</span>)}</div>
                 </div>
               )}
             </div>
 
             {/* Right column — tabs + checklist */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 backdrop-blur-sm">
                 <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
                 <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
               </div>
@@ -525,29 +525,29 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                 {execTab === "form" && (
                   <>
                     {isNew && allQ.length === 0 && templates.length === 0 && (
-                      <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
-                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                      <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-center text-xs text-warning dark:text-amber-400">
+                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/80"><Plus className="h-3 w-3" /> Install Defaults</button>
                       </div>
                     )}
-                    {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
-                    {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
+                    {checklistLocked && <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-xs text-warning dark:text-amber-300">Select audit type to load checklist.</div>}
+                    {answersLocked && <div className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm border border-primary/20/50 dark:border-blue-800/50 p-3 text-xs text-primary dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
                     {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
-                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+                      <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                         {isNew ? (() => {
                           const grouped: Record<string, typeof allQ> = {};
                           for (const q of allQ) (grouped[q.catName] ||= []).push(q);
                           return Object.entries(grouped).map(([catName, qs]) => (
                             <div key={catName}>
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                                 <span className="text-xs font-bold text-foreground">{catName}</span>
-                                <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                                <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
                               </div>
                               {qs.map((q, idx) => {
                                 const v = getVal(q.id);
                                 const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
                                   <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
                                 </div>;
                               })}
@@ -556,16 +556,16 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                         })() : sections.map((sec: any) => {
                           const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
                           return <div key={sec.id}>
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                               <span className="text-xs font-bold text-foreground">{sec.title}</span>
-                              <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                              <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{secC}/{sec.questions.length}</span>
                             </div>
                             {sec.questions.map((q: any, idx: number) => {
                               const v = getVal(q.id);
                               const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
                                 <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
                               </div>;
                             })}
@@ -575,13 +575,13 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                     )}
                   </>
                 )}
-                {execTab === "findings" && !isNew && <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>}
+                {execTab === "findings" && !isNew && <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>}
               </div>
 
               {/* Finding dialog */}
               {findingForAnswer && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                  <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
+                  <div className="bg-background dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
                     <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="grid grid-cols-2 gap-2">
@@ -601,7 +601,7 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
         ) : (
           <>
             {/* Left column — existing audit info */}
-            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-4">
+            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-4">
               <div>
                 <h2 className="text-base font-bold text-foreground">{execForm?.title ?? ""}</h2>
                 <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
@@ -615,8 +615,8 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
               {editing ? (
                 <>
                   <div className="shrink-0">
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-warning dark:text-amber-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-warning/15 text-warning dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
                       Source Location
                     </h3>
                     <div className="space-y-2">
@@ -628,8 +628,8 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-primary dark:text-blue-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/15 text-primary dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
                       Details
                     </h3>
                     <div className="space-y-2">
@@ -642,8 +642,8 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
               ) : (
                 <>
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-warning dark:text-amber-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-warning/15 text-warning dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>
                       Audit Info
                     </h3>
                     <div className="space-y-1.5 text-xs">
@@ -657,8 +657,8 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300">
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-primary dark:text-blue-300">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-primary/15 text-primary dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>
                       Details
                     </h3>
                     <div className="space-y-1.5 text-xs">
@@ -673,7 +673,7 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
 
             {/* Right column — tabs + checklist */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 backdrop-blur-sm">
                 <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
                 <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? `${accentCls(controlArea)} text-foreground` : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
               </div>
@@ -682,29 +682,29 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                 {execTab === "form" && (
                   <>
                     {isNew && allQ.length === 0 && templates.length === 0 && (
-                      <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
-                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                      <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-center text-xs text-warning dark:text-amber-400">
+                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/80"><Plus className="h-3 w-3" /> Install Defaults</button>
                       </div>
                     )}
-                    {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
-                    {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
+                    {checklistLocked && <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-xs text-warning dark:text-amber-300">Select audit type to load checklist.</div>}
+                    {answersLocked && <div className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm border border-primary/20/50 dark:border-blue-800/50 p-3 text-xs text-primary dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
                     {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
-                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+                      <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                         {isNew ? (() => {
                           const grouped: Record<string, typeof allQ> = {};
                           for (const q of allQ) (grouped[q.catName] ||= []).push(q);
                           return Object.entries(grouped).map(([catName, qs]) => (
                             <div key={catName}>
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                                 <span className="text-xs font-bold text-foreground">{catName}</span>
-                                <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                                <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
                               </div>
                               {qs.map((q, idx) => {
                                 const v = getVal(q.id);
                                 const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
                                   <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
                                 </div>;
                               })}
@@ -713,16 +713,16 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                         })() : sections.map((sec: any) => {
                           const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
                           return <div key={sec.id}>
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                               <span className="text-xs font-bold text-foreground">{sec.title}</span>
-                              <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                              <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{secC}/{sec.questions.length}</span>
                             </div>
                             {sec.questions.map((q: any, idx: number) => {
                               const v = getVal(q.id);
                               const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
                                 <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
                               </div>;
                             })}
@@ -732,13 +732,13 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                     )}
                   </>
                 )}
-                {execTab === "findings" && !isNew && <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>}
+                {execTab === "findings" && !isNew && <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>}
               </div>
 
               {/* Finding dialog */}
               {findingForAnswer && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                  <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
+                  <div className="bg-background dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
                     <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="grid grid-cols-2 gap-2">

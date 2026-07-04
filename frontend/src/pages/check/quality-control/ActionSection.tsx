@@ -113,7 +113,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
 
   const renderCreateForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
-      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
+      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Source</label><select value={aSourceType} onChange={(e) => setASourceType(e.target.value)} className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {aSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={aSourceId ?? ""} onChange={(e) => setASourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} placeholder="ID..." /></div>}
         <div><label className={labelCls}>Priority *</label><select value={aPriority} onChange={(e) => setAPriority(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
@@ -122,15 +122,15 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">
         <div><label className={labelCls}>Title *</label><input type="text" value={aTitle} onChange={(e) => setATitle(e.target.value)} className={SEL_INPUT} placeholder="Action title..." /></div>
-        <div><label className={labelCls}>Description</label><textarea value={aDesc} onChange={(e) => setADesc(e.target.value)} rows={3} className="h-24 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" placeholder="Describe..." /></div>
-        <div><label className={labelCls}>Notes</label><textarea value={aNotes} onChange={(e) => setANotes(e.target.value)} rows={2} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
+        <div><label className={labelCls}>Description</label><textarea value={aDesc} onChange={(e) => setADesc(e.target.value)} rows={3} className="h-24 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" placeholder="Describe..." /></div>
+        <div><label className={labelCls}>Notes</label><textarea value={aNotes} onChange={(e) => setANotes(e.target.value)} rows={2} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
       </div>
     </div>
   );
 
   const renderEditForm = (item: any) => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
-      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
+      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Source</label><select value={eSourceType} onChange={(e) => setESourceType(e.target.value)} className={SEL_INPUT}>{sourceTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         {eSourceType !== "MANUAL" && <div><label className={labelCls}>Source ID</label><input type="text" value={eSourceId ?? ""} onChange={(e) => setESourceId(e.target.value ? Number(e.target.value) : null)} className={SEL_INPUT} /></div>}
         <div><label className={labelCls}>Priority *</label><select value={ePriority} onChange={(e) => setEPriority(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
@@ -140,8 +140,8 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">
         <div><label className={labelCls}>Title *</label><input type="text" value={eTitle} onChange={(e) => setETitle(e.target.value)} className={SEL_INPUT} /></div>
-        <div><label className={labelCls}>Description</label><textarea value={eDesc} onChange={(e) => setEDesc(e.target.value)} rows={3} className="h-24 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
-        <div><label className={labelCls}>Notes</label><textarea value={eNotes} onChange={(e) => setENotes(e.target.value)} rows={2} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
+        <div><label className={labelCls}>Description</label><textarea value={eDesc} onChange={(e) => setEDesc(e.target.value)} rows={3} className="h-24 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
+        <div><label className={labelCls}>Notes</label><textarea value={eNotes} onChange={(e) => setENotes(e.target.value)} rows={2} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
       </div>
     </div>
   );
@@ -179,7 +179,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
           <div><p className="text-xs font-medium text-muted-foreground mb-1">Description</p><InlineEditField type="textarea" value={item.description || ""} onSave={(v) => hUpdateAction("description", v)} label="description" /></div>
           <div><p className="text-xs font-medium text-muted-foreground mb-1">Notes</p><InlineEditField type="textarea" value={item.notes || ""} onSave={(v) => hUpdateAction("notes", v)} label="notes" /></div>
         </div>
-        <div className="w-[35%] shrink-0 border-l border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-5 space-y-4">
+        <div className="w-[35%] shrink-0 border-l border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-5 space-y-4">
           <div><p className="text-xs font-medium text-muted-foreground mb-2">Details</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${statCls}`}>{statusLabel(item.status)}</span></div>
@@ -203,7 +203,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
         {items.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No actions found</div>
         : <div className="py-0.5">{items.map((a: any) => (
           <div key={a.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(a.id); onSelect(a.id); }}
-            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === a.id ? "bg-blue-50/60 dark:bg-blue-950/20 border-l-blue-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
+            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === a.id ? "bg-primary/10 dark:bg-blue-950/20 border-l-blue-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{a.title}</span><span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${ACTION_STATUS_STYLES[a.status] || ACTION_STATUS_STYLES.OPEN}`}>{statusLabel(a.status)}</span></div>
               <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">{a.priority && <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${PRIORITY_STYLES[a.priority] || PRIORITY_STYLES.MEDIUM}`}>{a.priority}</span>}{a.owner && <span>· {a.owner}</span>}{a.dueDate && <span>· {a.dueDate}</span>}</div>

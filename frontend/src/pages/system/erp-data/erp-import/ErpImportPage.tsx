@@ -34,12 +34,12 @@ interface ImportResult {
 
 const STATUS_BADGE: Record<string, string> = {
   "Ready to validate": "bg-muted/50 text-muted-foreground border border-border/40",
-  MISSING_FILE: "bg-amber-50 text-amber-700 border border-amber-200",
-  MISSING_FIELDS: "bg-amber-50 text-amber-700 border border-amber-300",
-  INVALID_FILE: "bg-red-50 text-red-700 border border-red-200",
-  READY: "bg-green-50 text-green-700 border border-green-200",
-  IMPORTED: "bg-green-50 text-green-700 border border-green-200",
-  FAILED: "bg-red-50 text-red-700 border border-red-200",
+  MISSING_FILE: "bg-warning/10 text-warning border border-warning/20",
+  MISSING_FIELDS: "bg-warning/10 text-warning border border-warning/30",
+  INVALID_FILE: "bg-danger/10 text-danger border border-danger/20",
+  READY: "bg-success/10 text-success border border-success/20",
+  IMPORTED: "bg-success/10 text-success border border-success/20",
+  FAILED: "bg-danger/10 text-danger border border-danger/20",
 };
 
 export function ErpImportPage() {

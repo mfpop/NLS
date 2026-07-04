@@ -21,10 +21,10 @@ const PAGE_SIZE_OPTIONS = [
 ];
 
 const EVENT_TYPE_CONFIG: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  USER_ACTIVITY: { label: "User Activity", icon: User, color: "bg-blue-100 text-blue-700 border-blue-200" },
-  DATA_CHANGE: { label: "Data Changes", icon: Database, color: "bg-amber-100 text-amber-700 border-amber-200" },
-  LOGIN_EVENT: { label: "Login / Access", icon: LogIn, color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  SYSTEM_EVENT: { label: "System Events", icon: Activity, color: "bg-purple-100 text-purple-700 border-purple-200" },
+  USER_ACTIVITY: { label: "User Activity", icon: User, color: "bg-primary/15 text-primary border-primary/20" },
+  DATA_CHANGE: { label: "Data Changes", icon: Database, color: "bg-warning/15 text-warning border-warning/20" },
+  LOGIN_EVENT: { label: "Login / Access", icon: LogIn, color: "bg-success/15 text-success border-success/20" },
+  SYSTEM_EVENT: { label: "System Events", icon: Activity, color: "bg-accent/15 text-accent-foreground border-accent/20" },
 };
 
 const FILTER_OPTIONS = [
@@ -98,7 +98,7 @@ function highlightText(text: string, query: string): React.ReactNode {
     <span>
       {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase()
-          ? <mark key={i} className="bg-yellow-200/70 text-inherit rounded-sm px-0.5">{part}</mark>
+          ? <mark key={i} className="bg-warning/20 text-inherit rounded-sm px-0.5">{part}</mark>
           : part
       )}
     </span>
@@ -135,15 +135,15 @@ function parseDetails(details: string): Record<string, unknown> | null {
 
 function SkeletonRows({ count = 6 }: { count?: number }) {
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-border/50">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="flex items-center gap-2 px-3 py-3 animate-pulse">
-          <div className="w-20 h-5 rounded-full bg-slate-200" />
-          <div className="w-28 h-4 rounded bg-slate-200" />
-          <div className="w-24 h-4 rounded bg-slate-200" />
-          <div className="w-36 h-4 rounded bg-slate-200" />
-          <div className="flex-1 h-4 rounded bg-slate-200" />
-          <div className="w-20 h-4 rounded bg-slate-200" />
+          <div className="w-20 h-5 rounded-full bg-muted/80" />
+          <div className="w-28 h-4 rounded bg-muted/80" />
+          <div className="w-24 h-4 rounded bg-muted/80" />
+          <div className="w-36 h-4 rounded bg-muted/80" />
+          <div className="flex-1 h-4 rounded bg-muted/80" />
+          <div className="w-20 h-4 rounded bg-muted/80" />
         </div>
       ))}
     </div>
@@ -155,7 +155,7 @@ function SkeletonRows({ count = 6 }: { count?: number }) {
 function TypeBadge({ eventType, small = false }: { eventType: string; small?: boolean }) {
   const cfg = EVENT_TYPE_CONFIG[eventType];
   const Icon = cfg?.icon || Info;
-  const color = cfg?.color || "bg-slate-100 text-slate-600 border-slate-200";
+  const color = cfg?.color || "bg-muted text-muted-foreground border-border";
   return (
     <span className={`inline-flex items-center gap-1 rounded-full font-semibold border whitespace-nowrap ${color} ${small ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-1 text-[10px]"}`}>
       <Icon className={small ? "h-2.5 w-2.5" : "h-3 w-3"} />
@@ -171,40 +171,40 @@ function DetailPanel({ entry, search }: { entry: AuditLogEntry; search: string }
   const detailEntries = details ? Object.entries(details).filter(([, v]) => v !== null && v !== undefined) : [];
 
   return (
-    <div className="border-t border-slate-100 bg-slate-50/70 px-3 py-3 animate-fadeIn">
+    <div className="border-t border-border/50 bg-muted/70 px-3 py-3 animate-fadeIn">
       <div className="grid grid-cols-3 gap-x-6 gap-y-2 text-xs">
         {entry.ipAddress && (
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">IP Address</span>
-            <p className="mt-0.5 font-mono text-slate-700">{entry.ipAddress}</p>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">IP Address</span>
+            <p className="mt-0.5 font-mono text-muted-foreground">{entry.ipAddress}</p>
           </div>
         )}
         {entry.entityType && (
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Entity</span>
-            <p className="mt-0.5 text-slate-700">
-              <span className="rounded bg-slate-200/60 px-1 py-0.5 text-[10px] font-medium">{entry.entityType}</span>
-              {entry.entityId && <span className="ml-1 font-mono text-[10px] text-slate-500">#{entry.entityId}</span>}
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Entity</span>
+            <p className="mt-0.5 text-muted-foreground">
+              <span className="rounded bg-muted/60 px-1 py-0.5 text-[10px] font-medium">{entry.entityType}</span>
+              {entry.entityId && <span className="ml-1 font-mono text-[10px] text-muted-foreground">#{entry.entityId}</span>}
             </p>
           </div>
         )}
         {entry.userId && (
           <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">User ID</span>
-            <p className="mt-0.5 font-mono text-slate-700">#{entry.userId}</p>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">User ID</span>
+            <p className="mt-0.5 font-mono text-muted-foreground">#{entry.userId}</p>
           </div>
         )}
       </div>
       <div className="mt-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Full Description</span>
-        <p className="mt-0.5 text-xs text-slate-700 leading-relaxed">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Full Description</span>
+        <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
           {search ? highlightText(entry.description, search) : entry.description}
         </p>
       </div>
       {detailEntries.length > 0 && (
         <div className="mt-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Details</span>
-          <pre className="mt-0.5 rounded bg-slate-900/5 p-2 text-[10px] font-mono text-slate-600 overflow-x-auto max-h-28">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Details</span>
+          <pre className="mt-0.5 rounded bg-slate-900/5 p-2 text-[10px] font-mono text-muted-foreground overflow-x-auto max-h-28">
             {JSON.stringify(details, null, 2)}
           </pre>
         </div>
@@ -233,12 +233,12 @@ function FilterChips({
   if (chips.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-slate-200 bg-slate-50">
-      <FilterX className="h-3 w-3 text-slate-400 shrink-0" />
+    <div className="flex items-center gap-1.5 px-3 py-1.5 border-b border-border bg-muted">
+      <FilterX className="h-3 w-3 text-muted-foreground/60 shrink-0" />
       {chips.map((chip, i) => (
-        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-background border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
           {chip.label}
-          <button type="button" onClick={chip.onClear} className="text-slate-400 hover:text-slate-600 ml-0.5">
+          <button type="button" onClick={chip.onClear} className="text-muted-foreground/60 hover:text-muted-foreground ml-0.5">
             <svg className="h-2.5 w-2.5" viewBox="0 0 15 15" fill="currentColor"><path d="M11.78 4.22a.75.75 0 0 1 0 1.06L8.56 8.5l3.22 3.22a.75.75 0 1 1-1.06 1.06L7.5 9.56l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.44 8.5 3.22 5.28a.75.75 0 0 1 1.06-1.06L7.5 7.44l3.22-3.22a.75.75 0 0 1 1.06 0Z"/></svg>
           </button>
         </span>
@@ -345,21 +345,21 @@ export function AuditLogsPage() {
         ]}
         placeholder="All Events"
         width="w-40"
-      />              <div className="flex items-center gap-2 text-slate-400">
+      />              <div className="flex items-center gap-2 text-muted-foreground/60">
         <CalendarDays className="h-3.5 w-3.5 shrink-0" />
         <input
           type="date"
           value={dateFrom}
           onChange={(e) => handleDateFromChange(e.target.value)}
-          className="h-8 w-40 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-700 outline-none"
+          className="h-8 w-40 rounded-[2px] border border-border bg-background px-2 text-xs text-muted-foreground outline-none"
           title="From date"
         />
-        <span className="text-slate-300">–</span>
+        <span className="text-muted-foreground/30">–</span>
         <input
           type="date"
           value={dateTo}
           onChange={(e) => handleDateToChange(e.target.value)}
-          className="h-8 w-40 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-700 outline-none"
+          className="h-8 w-40 rounded-[2px] border border-border bg-background px-2 text-xs text-muted-foreground outline-none"
           title="To date"
         />
       </div>
@@ -402,7 +402,7 @@ export function AuditLogsPage() {
   return (
     <TwoColumnPageTemplate
       icon={<History />}
-      iconClass="bg-purple-100 text-purple-600"
+      iconClass="bg-accent/15 text-accent-foreground"
       title="Audit Logs"
       subtitle="View system-wide audit logs for user activity, data changes, login events, and system events."
       toolbarProps={{
@@ -424,10 +424,10 @@ export function AuditLogsPage() {
           const count = eventCounts[f.value];
           return (
             <div className="flex items-center gap-2 py-0.5">
-              <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-              <span className="flex-1 text-xs text-slate-700 truncate">{f.label}</span>
+              <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <span className="flex-1 text-xs text-muted-foreground truncate">{f.label}</span>
               {count !== undefined && (
-                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-slate-200/60 text-[10px] font-semibold text-slate-500 tabular-nums px-1">
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-muted/60 text-[10px] font-semibold text-muted-foreground tabular-nums px-1">
                   {count}
                 </span>
               )}
@@ -443,18 +443,18 @@ export function AuditLogsPage() {
       footerCenter={
         total > 0 ? (
           <>
-            <span className="font-semibold text-slate-600">{total.toLocaleString()}</span> entries
+            <span className="font-semibold text-muted-foreground">{total.toLocaleString()}</span> entries
             &middot; {page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)} displayed
-            {isRefreshing && <Loader2 className="ml-2 h-3 w-3 inline-block animate-spin text-sky-500" />}
+            {isRefreshing && <Loader2 className="ml-2 h-3 w-3 inline-block animate-spin text-accent-foreground" />}
           </>
         ) : (
-          <span className="text-slate-400">No entries</span>
+          <span className="text-muted-foreground/60">No entries</span>
         )
       }
       footerRight={
         total > 0 ? (
           <span className="flex items-center gap-2">
-            <span className="text-slate-500">
+            <span className="text-muted-foreground">
               Page {totalPages > 0 ? page + 1 : 0} / {totalPages || 0}
             </span>
             <div className="flex items-center gap-0.5">
@@ -462,7 +462,7 @@ export function AuditLogsPage() {
                 type="button"
                 onClick={() => { setPage((p) => Math.max(0, p - 1)); setExpandedId(null); }}
                 disabled={page === 0}
-                className="rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                className="rounded p-1 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/80 disabled:pointer-events-none disabled:opacity-30 transition-colors"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </button>
@@ -470,7 +470,7 @@ export function AuditLogsPage() {
                 type="button"
                 onClick={() => { setPage((p) => p + 1); setExpandedId(null); }}
                 disabled={!hasMore}
-                className="rounded p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-200 disabled:pointer-events-none disabled:opacity-30 transition-colors"
+                className="rounded p-1 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/80 disabled:pointer-events-none disabled:opacity-30 transition-colors"
               >
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
@@ -494,7 +494,7 @@ export function AuditLogsPage() {
       )}
 
       {/* Header */}
-      <div className="grid grid-cols-[32px_140px_190px_150px_150px_minmax(360px,1fr)_180px] h-8 shrink-0 items-center border-b border-slate-200 bg-slate-50 px-3 text-[11px] uppercase tracking-wide text-slate-500 select-none">
+      <div className="grid grid-cols-[32px_140px_190px_150px_150px_minmax(360px,1fr)_180px] h-8 shrink-0 items-center border-b border-border bg-muted px-3 text-[11px] uppercase tracking-wide text-muted-foreground select-none">
         <span />
         <span>Type</span>
         <span>Timestamp</span>
@@ -508,19 +508,19 @@ export function AuditLogsPage() {
       {loading && logs.length === 0 ? (
         <SkeletonRows count={pageSize > 30 ? 8 : 6} />
       ) : logs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 gap-2 text-xs text-slate-400">
-          <div className="rounded-full bg-slate-100 p-3">
-            {search || hasActiveFilters ? <SearchIcon className="h-5 w-5 text-slate-300" /> : <History className="h-5 w-5 text-slate-300" />}
+        <div className="flex flex-col items-center justify-center py-12 gap-2 text-xs text-muted-foreground/60">
+          <div className="rounded-full bg-muted p-3">
+            {search || hasActiveFilters ? <SearchIcon className="h-5 w-5 text-muted-foreground/30" /> : <History className="h-5 w-5 text-muted-foreground/30" />}
           </div>
-          <p className="font-medium text-slate-500">
+          <p className="font-medium text-muted-foreground">
             {search ? "No matching results" : hasActiveFilters ? "No logs match the current filters" : "No audit logs recorded yet"}
           </p>
-          <p className="text-slate-400">
+          <p className="text-muted-foreground/60">
             {search || hasActiveFilters ? "Try adjusting your search or clearing filters." : "System events will appear here as they occur."}
           </p>
           {(search || hasActiveFilters) && (
             <button type="button" onClick={clearAllFilters}
-              className="mt-1 inline-flex h-7 items-center gap-1 rounded-sm bg-slate-200/60 px-2.5 text-[10px] font-medium text-slate-600 hover:bg-slate-200 transition-colors">
+              className="mt-1 inline-flex h-7 items-center gap-1 rounded-sm bg-muted/60 px-2.5 text-[10px] font-medium text-muted-foreground hover:bg-muted/80 transition-colors">
               <FilterX className="h-3 w-3" /> Clear all filters
             </button>
           )}
@@ -534,28 +534,28 @@ export function AuditLogsPage() {
                 <button
                   type="button"
                   onClick={() => toggleExpand(entry.id)}
-                  className="grid grid-cols-[32px_140px_190px_150px_150px_minmax(360px,1fr)_180px] w-full items-center px-3 min-h-10 hover:bg-white transition-colors text-left border-b border-slate-100"
+                  className="grid grid-cols-[32px_140px_190px_150px_150px_minmax(360px,1fr)_180px] w-full items-center px-3 min-h-10 hover:bg-background transition-colors text-left border-b border-border/50"
                 >
-                  <span className="text-slate-300 flex items-center h-full">
+                  <span className="text-muted-foreground/30 flex items-center h-full">
                     {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                   </span>
                   <span>
                     <TypeBadge eventType={entry.eventType} small />
                   </span>
                   <span className="flex flex-col justify-center" title={formatDateFull(entry.createdAt)}>
-                    <span className="text-sm text-slate-700 leading-tight">{formatDateTime(entry.createdAt)}</span>
-                    <span className="text-[11px] text-slate-500 leading-tight">{relativeTime(entry.createdAt)}</span>
+                    <span className="text-sm text-muted-foreground leading-tight">{formatDateTime(entry.createdAt)}</span>
+                    <span className="text-[11px] text-muted-foreground leading-tight">{relativeTime(entry.createdAt)}</span>
                   </span>
-                  <span className="truncate text-sm font-semibold text-slate-800">
+                  <span className="truncate text-sm font-semibold text-foreground">
                     {search ? highlightText(entry.username, search) : entry.username}
                   </span>
-                  <span className="truncate text-xs text-slate-600">
+                  <span className="truncate text-xs text-muted-foreground">
                     {formatAction(entry.action)}
                   </span>
-                  <span className="truncate text-sm text-slate-900" title={entry.description}>
+                  <span className="truncate text-sm text-foreground" title={entry.description}>
                     {search ? highlightText(entry.description, search) : entry.description}
                   </span>
-                  <span className="truncate text-xs text-slate-500 text-right">
+                  <span className="truncate text-xs text-muted-foreground text-right">
                     {entry.entityType || "-"}
                   </span>
                 </button>

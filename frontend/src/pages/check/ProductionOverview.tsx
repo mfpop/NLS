@@ -27,7 +27,7 @@ function badgeCls(cls: string): string {
 }
 
 function SectionH({ label }: { label: string }) {
-  return <div className="flex items-center gap-2 mb-2"><span className="w-1 h-4 bg-amber-500 shrink-0" /><span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span></div>;
+  return <div className="flex items-center gap-2 mb-2"><span className="w-1 h-4 bg-warning/100 shrink-0" /><span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span></div>;
 }
 
 function EmptyRow({ msg }: { msg: string }) {
@@ -63,7 +63,7 @@ export function ProductionOverview(props: OverviewProps) {
   const riskItems = useMemo(() => {
     const items: { id: string; priority: number; type: string; title: string; detail: string; color: string; onClick: () => void }[] = [];
     const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
-    for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-red-500", onClick: () => kpiClick({ tab: "issues" }) });
+    for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-danger/100", onClick: () => kpiClick({ tab: "issues" }) });
     const overActions = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
     for (const a of overActions) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400", onClick: () => kpiClick({ tab: "actions" }) });
     const incAudits = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
@@ -118,15 +118,15 @@ export function ProductionOverview(props: OverviewProps) {
       {/* KPI Row */}
       <div className="grid grid-cols-6 gap-2">
         {[
-          { label: "Active Audits", count: kpis.openAudits.length, color: "text-blue-600 dark:text-blue-400", onClick: () => kpiClick({ tab: "audits" }) },
-          { label: "Open Issues", count: kpis.openIssues.length, color: "text-amber-600 dark:text-amber-400", onClick: () => kpiClick({ tab: "issues" }) },
-          { label: "Open Actions", count: kpis.openActions.length, color: "text-purple-600 dark:text-purple-400", onClick: () => kpiClick({ tab: "actions" }) },
-          { label: "Overdue", count: kpis.overdueActions.length, color: "text-red-600 dark:text-red-400", onClick: () => kpiClick({ tab: "actions" }) },
-          { label: "Completed", count: kpis.completedAudits.length, color: "text-green-600 dark:text-green-400", onClick: () => kpiClick({ tab: "audits", status: "COMPLETED" }) },
+          { label: "Active Audits", count: kpis.openAudits.length, color: "text-primary dark:text-blue-400", onClick: () => kpiClick({ tab: "audits" }) },
+          { label: "Open Issues", count: kpis.openIssues.length, color: "text-warning dark:text-amber-400", onClick: () => kpiClick({ tab: "issues" }) },
+          { label: "Open Actions", count: kpis.openActions.length, color: "text-accent-foreground dark:text-purple-400", onClick: () => kpiClick({ tab: "actions" }) },
+          { label: "Overdue", count: kpis.overdueActions.length, color: "text-danger dark:text-danger/80", onClick: () => kpiClick({ tab: "actions" }) },
+          { label: "Completed", count: kpis.completedAudits.length, color: "text-success dark:text-success/80", onClick: () => kpiClick({ tab: "audits", status: "COMPLETED" }) },
           { label: "Completion", count: `${kpis.completionRate}%`, color: "text-foreground", onClick: () => kpiClick({ tab: "audits" }) },
         ].map((kpi) => (
           <button key={kpi.label} onClick={kpi.onClick}
-            className="cursor-pointer text-left bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+            className="cursor-pointer text-left bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-background/80 dark:hover:bg-slate-800/80 transition-colors"
           >
             <p className="text-[10px] text-muted-foreground font-medium">{kpi.label}</p>
             <p className={`text-base font-bold ${kpi.color}`}>{kpi.count}</p>
@@ -139,13 +139,13 @@ export function ProductionOverview(props: OverviewProps) {
         {/* Left 60% */}
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
           {/* Risk Board */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Risk / Attention" />
             {riskItems.length === 0 ? <EmptyRow msg="No items need attention" /> : (
               <div className="space-y-0.5">
                 {riskItems.map((item) => (
                   <button key={item.id} onClick={item.onClick}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                   >
                     <span className={`h-2 w-2 shrink-0 rounded-full ${item.color}`} />
                     <span className="text-[10px] font-semibold text-muted-foreground w-10 shrink-0">{item.type}</span>
@@ -158,20 +158,20 @@ export function ProductionOverview(props: OverviewProps) {
           </div>
 
           {/* Audits Needing Completion */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Audits Needing Completion" />
             {incompleteAudits.length === 0 ? <EmptyRow msg="No incomplete audits" /> : (
               <div className="space-y-0.5">
                 {incompleteAudits.map((a: any) => (
                   <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                   >
                     <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
                     <span className="text-muted-foreground shrink-0 hidden sm:inline">{a.auditType || "—"}</span>
                     {a.auditor && <span className="text-muted-foreground shrink-0 hidden sm:inline">{a.auditor}</span>}
                     <span className={badgeCls(STATUS_STYLES[a.status] || "")}>{statusLabel(a.status)}</span>
                     {a.score !== null && a.score !== undefined && (
-                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${a.score >= 80 ? "border-green-300 text-green-700 bg-green-50/80" : a.score >= 60 ? "border-amber-300 text-amber-700 bg-amber-50/80" : "border-red-300 text-red-700 bg-red-50/80"}`}>{a.score}%</span>
+                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${a.score >= 80 ? "border-green-300 text-success bg-success/10/80" : a.score >= 60 ? "border-warning/30 text-warning bg-warning/10/80" : "border-danger/30 text-danger bg-danger/10/80"}`}>{a.score}%</span>
                     )}
                   </button>
                 ))}
@@ -180,13 +180,13 @@ export function ProductionOverview(props: OverviewProps) {
           </div>
 
           {/* Due This Week */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Due This Week" />
             {dueThisWeek.length === 0 ? <EmptyRow msg="No items due this week" /> : (
               <div className="space-y-0.5">
                 {dueThisWeek.map((item) => (
                   <button key={item.id} onClick={item.onClick}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                   >
                     <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
                     {item.owner && <span className="text-muted-foreground shrink-0 hidden sm:inline">{item.owner}</span>}
@@ -203,7 +203,7 @@ export function ProductionOverview(props: OverviewProps) {
         {/* Right 40% */}
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
           {/* Recent Activity */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Recent Activity" />
             {recentItems.length === 0 ? <EmptyRow msg="No recent activity" /> : (
               <div className="space-y-0.5">
@@ -213,7 +213,7 @@ export function ProductionOverview(props: OverviewProps) {
                     : STATUS_STYLES[item.status] || "";
                   return (
                     <button key={`${item.type}-${i}`} onClick={item.onClick}
-                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                     >
                       <span className="text-[10px] font-semibold text-muted-foreground shrink-0 w-10">{item.type}</span>
                       <span className="min-w-0 flex-1 truncate text-foreground">{item.title}</span>
@@ -227,17 +227,17 @@ export function ProductionOverview(props: OverviewProps) {
           </div>
 
           {/* Audit Status */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Audit Status" />
             <div className="flex flex-wrap gap-1.5">
               {[
-                { status: "DRAFT", label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "border-gray-300 text-gray-600" },
-                { status: "OPEN", label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "border-blue-300 text-blue-700" },
-                { status: "COMPLETED", label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "border-green-300 text-green-700" },
-                { status: "ARCHIVED", label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "border-amber-300 text-amber-700" },
+                { status: "DRAFT", label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "border-border text-gray-600" },
+                { status: "OPEN", label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "border-primary/30 text-primary" },
+                { status: "COMPLETED", label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "border-green-300 text-success" },
+                { status: "ARCHIVED", label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "border-warning/30 text-warning" },
               ].map((s) => (
                 <button key={s.status} onClick={() => kpiClick({ tab: "audits", status: s.status === "COMPLETED" ? "COMPLETED" : s.status === "ARCHIVED" ? undefined : s.status })}
-                  className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
+                  className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
                 >
                   <span className="font-semibold">{s.count}</span> {s.label}
                 </button>
@@ -249,18 +249,18 @@ export function ProductionOverview(props: OverviewProps) {
 
       {/* Audit Type Breakdown */}
       {auditTypeBreakdown.length > 0 && (
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <SectionH label="Audit Type Breakdown" />
           <div className="flex flex-wrap gap-3">
             {auditTypeBreakdown.map(([type, data]) => {
               const avg = data.scores.length > 0 ? Math.round(data.scores.reduce((a: number, b: number) => a + b, 0) / data.scores.length) : null;
               return (
                 <button key={type} onClick={() => kpiClick({ tab: "audits" })}
-                  className="cursor-pointer min-w-[150px] flex-1 text-left text-xs border-r border-white/20 dark:border-slate-700/20 last:border-r-0 pr-3 last:pr-0 hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors rounded-l px-1 py-0.5"
+                  className="cursor-pointer min-w-[150px] flex-1 text-left text-xs border-r border-white/20 dark:border-slate-700/20 last:border-r-0 pr-3 last:pr-0 hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors rounded-l px-1 py-0.5"
                 >
                   <p className="font-semibold text-foreground truncate">{auditTypeLabel(type)}</p>
                   <p className="text-muted-foreground">{data.total} total · {data.completed} done · {data.draft} draft</p>
-                  {avg !== null && <p className="text-muted-foreground">Avg score: <span className={avg >= 80 ? "text-green-600 font-semibold" : avg >= 60 ? "text-amber-600 font-semibold" : "text-red-600 font-semibold"}>{avg}%</span></p>}
+                  {avg !== null && <p className="text-muted-foreground">Avg score: <span className={avg >= 80 ? "text-success font-semibold" : avg >= 60 ? "text-warning font-semibold" : "text-danger font-semibold"}>{avg}%</span></p>}
                 </button>
               );
             })}
@@ -270,9 +270,9 @@ export function ProductionOverview(props: OverviewProps) {
 
       {/* Template install banner */}
       {auditTemplates && auditTemplates.length === 0 && onInstallTemplates && (
-        <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-3 text-center">
-          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">No audit templates installed</p>
-          <button onClick={onInstallTemplates} className="mt-1 inline-flex h-6 items-center gap-1 bg-amber-600 px-2 text-[10px] font-semibold text-white hover:bg-amber-700"><svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Install Defaults</button>
+        <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-3 text-center">
+          <p className="text-xs font-medium text-warning dark:text-amber-400">No audit templates installed</p>
+          <button onClick={onInstallTemplates} className="mt-1 inline-flex h-6 items-center gap-1 bg-warning px-2 text-[10px] font-semibold text-white hover:bg-warning/80"><svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Install Defaults</button>
         </div>
       )}
     </div>

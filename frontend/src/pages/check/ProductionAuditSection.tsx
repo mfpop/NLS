@@ -107,7 +107,7 @@ export function useProductionAuditSection(
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const hasErr = (field: string) => errors.some((e) => e.toLowerCase().includes(field.toLowerCase()));
   const fieldCls = (field: string) => `${SEL_INPUT} ${hasErr(field) ? "border-red-400 dark:border-red-600" : ""}`;
-  const errLabel = (field: string) => hasErr(field) ? <span className="text-[10px] text-red-500 font-medium ml-1">(required)</span> : null;
+  const errLabel = (field: string) => hasErr(field) ? <span className="text-[10px] text-danger font-medium ml-1">(required)</span> : null;
 
   const resolveTarget = useCallback(() => {
     if (fRes && fRes !== "") return { targetType: "RESOURCE", targetId: fRes };
@@ -439,11 +439,11 @@ export function useProductionAuditSection(
         {isNew ? (
           <>
             {/* Left column - 35% - Setup */}
-            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 flex flex-col gap-4">
+            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 flex flex-col gap-4">
               <h2 className="text-base font-bold text-foreground shrink-0">New Production Audit</h2>
 
               <div className="shrink-0">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>Source Location</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-warning dark:text-amber-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-warning/15 text-warning dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>Source Location</h3>
                 <div className="space-y-2">
                   <div><label className={labelCls}>Plant *{errLabel("plant")}</label><select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Plant" className={fieldCls("plant")}><option value="">Select...</option>{plants.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                   <div><label className={labelCls}>Line</label><select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Line" className={SEL_INPUT} disabled={!fPlant}><option value="">{fPlant ? "Optional..." : "Select Plant first"}</option>{lines.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
@@ -454,7 +454,7 @@ export function useProductionAuditSection(
               </div>
 
               <div className="flex flex-col flex-1 min-h-0">
-                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300 shrink-0"><span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>Audit Details</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-primary dark:text-blue-300 shrink-0"><span className="flex h-5 w-5 items-center justify-center rounded bg-primary/15 text-primary dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>Audit Details</h3>
                 <div className="flex flex-col gap-2 flex-1 min-h-0">
                   <div className="shrink-0"><label className={labelCls}>Audit Type *{errLabel("type")}</label>
                     <select value={tplId ?? ""} onChange={(e) => { setTplId(e.target.value || null); setDraftAns({}); setErrors([]); }} aria-label="Audit type" className={fieldCls("type")}><option value="">Select type...</option>{templates.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
@@ -471,8 +471,8 @@ export function useProductionAuditSection(
 
               {errors.length > 0 && (
                 <div className="space-y-1">
-                  <div className="text-[10px] font-medium text-amber-700 dark:text-amber-300">Complete required fields to save:</div>
-                  <div className="flex flex-wrap gap-1.5">{errors.map((e, i) => <span key={i} className="inline-flex items-center gap-1 rounded bg-amber-50/80 dark:bg-amber-950/80 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">⚠ {e}</span>)}</div>
+                  <div className="text-[10px] font-medium text-warning dark:text-amber-300">Complete required fields to save:</div>
+                  <div className="flex flex-wrap gap-1.5">{errors.map((e, i) => <span key={i} className="inline-flex items-center gap-1 rounded bg-warning/10/80 dark:bg-amber-950/80 px-2 py-0.5 text-[10px] font-medium text-warning dark:text-amber-300">⚠ {e}</span>)}</div>
                 </div>
               )}
             </div>
@@ -480,7 +480,7 @@ export function useProductionAuditSection(
             {/* Right column - 65% - Checklist + Tabs */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Tabs */}
-              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 backdrop-blur-sm">
                 <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? "border-amber-500 text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
                 <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? "border-amber-500 text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
               </div>
@@ -490,29 +490,29 @@ export function useProductionAuditSection(
                 {execTab === "form" && (
                   <>
                     {isNew && allQ.length === 0 && templates.length === 0 && (
-                      <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
-                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                      <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-center text-xs text-warning dark:text-amber-400">
+                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/80"><Plus className="h-3 w-3" /> Install Defaults</button>
                       </div>
                     )}
-                    {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
-                    {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
+                    {checklistLocked && <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-xs text-warning dark:text-amber-300">Select audit type to load checklist.</div>}
+                    {answersLocked && <div className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm border border-primary/20/50 dark:border-blue-800/50 p-3 text-xs text-primary dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
                     {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
-                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+                      <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                         {isNew ? (() => {
                           const grouped: Record<string, typeof allQ> = {};
                           for (const q of allQ) (grouped[q.catName] ||= []).push(q);
                           return Object.entries(grouped).map(([catName, qs]) => (
                             <div key={catName}>
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                                 <span className="text-xs font-bold text-foreground">{catName}</span>
-                                <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                                <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
                               </div>
                               {qs.map((q, idx) => {
                                 const v = getVal(q.id);
                                 const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
                                   <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
                                 </div>;
                               })}
@@ -521,16 +521,16 @@ export function useProductionAuditSection(
                         })() : sections.map((sec: any) => {
                           const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
                           return <div key={sec.id}>
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                               <span className="text-xs font-bold text-foreground">{sec.title}</span>
-                              <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                              <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{secC}/{sec.questions.length}</span>
                             </div>
                             {sec.questions.map((q: any, idx: number) => {
                               const v = getVal(q.id);
                               const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
                                 <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
                               </div>;
                             })}
@@ -541,14 +541,14 @@ export function useProductionAuditSection(
                   </>
                 )}
                 {execTab === "findings" && !isNew && (
-                  <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>
+                  <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>
                 )}
               </div>
 
               {/* Finding dialog */}
               {findingForAnswer && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                  <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
+                  <div className="bg-background dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
                     <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="grid grid-cols-2 gap-2">
@@ -557,7 +557,7 @@ export function useProductionAuditSection(
                     </div>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="flex gap-2 justify-end">
-                      <button onClick={hFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-40">Create</button>
+                      <button onClick={hFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white bg-warning hover:bg-warning/80 disabled:opacity-40">Create</button>
                       <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
                     </div>
                   </div>
@@ -568,7 +568,7 @@ export function useProductionAuditSection(
         ) : (
           <>
             {/* Left column - 35% - Existing audit info */}
-            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-4">
+            <div className="w-[35%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-4">
               <div>
                 <h2 className="text-base font-bold text-foreground">{execForm?.title ?? ""}</h2>
                 <div className="flex items-center gap-2 mt-1 text-xs flex-wrap">
@@ -582,7 +582,7 @@ export function useProductionAuditSection(
               {editing ? (
                 <>
                   <div className="shrink-0">
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>Source Location</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-warning dark:text-amber-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-warning/15 text-warning dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>Source Location</h3>
                     <div className="space-y-2">
                       <div><label className={labelCls}>Plant</label><select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Plant" className={SEL_INPUT}><option value="">Select...</option>{plants.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                       <div><label className={labelCls}>Line</label><select value={fLine} onChange={(e) => { setFLine(e.target.value); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Line" className={SEL_INPUT} disabled={!fPlant}><option value="">{fPlant ? "Optional..." : "Select Plant first"}</option>{lines.map((l: any) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></div>
@@ -592,7 +592,7 @@ export function useProductionAuditSection(
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>Details</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-primary dark:text-blue-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-primary/15 text-primary dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>Details</h3>
                     <div className="space-y-2">
                       <div><label className={labelCls}>Auditor</label><select value={fAuditor} onChange={(e) => setFAuditor(e.target.value)} aria-label="Auditor" className={SEL_INPUT}><option value="">Select...</option>{userProfiles.map((u: any) => <option key={u.id} value={u.fullName}>{u.fullName}</option>)}</select></div>
                       <div><label className={labelCls}>Date</label><input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} aria-label="Audit date" className={SEL_INPUT} /></div>
@@ -603,7 +603,7 @@ export function useProductionAuditSection(
               ) : (
                 <>
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-amber-700 dark:text-amber-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>Audit Info</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-warning dark:text-amber-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-warning/15 text-warning dark:bg-amber-900/50 dark:text-amber-300"><MapPin className="h-3 w-3" /></span>Audit Info</h3>
                     <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="text-foreground font-medium">{headerTpl?.name ?? "-"} v{headerTpl?.version ?? ""}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Plant</span><span className="text-foreground font-medium">{plants.find((p: any) => p.id === fPlant)?.name || fPlant || "-"}</span></div>
@@ -615,7 +615,7 @@ export function useProductionAuditSection(
                   </div>
 
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-blue-700 dark:text-blue-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>Details</h3>
+                    <h3 className="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 text-primary dark:text-blue-300"><span className="flex h-5 w-5 items-center justify-center rounded bg-primary/15 text-primary dark:bg-blue-900/50 dark:text-blue-300"><ClipboardList className="h-3 w-3" /></span>Details</h3>
                     <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between"><span className="text-muted-foreground">Auditor</span><span className="text-foreground font-medium">{fAuditor || "-"}</span></div>
                       <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span className="text-foreground font-medium">{fDate || "-"}</span></div>
@@ -629,7 +629,7 @@ export function useProductionAuditSection(
             {/* Right column - 65% - Existing checklist + Tabs */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               {/* Tabs */}
-              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+              <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 backdrop-blur-sm">
                 <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? "border-amber-500 text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
                 <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? "border-amber-500 text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
               </div>
@@ -639,29 +639,29 @@ export function useProductionAuditSection(
                 {execTab === "form" && (
                   <>
                     {isNew && allQ.length === 0 && templates.length === 0 && (
-                      <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
-                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                      <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-center text-xs text-warning dark:text-amber-400">
+                        <p>No templates.</p><button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/80"><Plus className="h-3 w-3" /> Install Defaults</button>
                       </div>
                     )}
-                    {checklistLocked && <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">Select audit type to load checklist.</div>}
-                    {answersLocked && <div className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-800/50 p-3 text-xs text-blue-700 dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
+                    {checklistLocked && <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-xs text-warning dark:text-amber-300">Select audit type to load checklist.</div>}
+                    {answersLocked && <div className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm border border-primary/20/50 dark:border-blue-800/50 p-3 text-xs text-primary dark:text-blue-300">Save Draft to start answering checklist questions.</div>}
                     {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
-                      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+                      <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                         {isNew ? (() => {
                           const grouped: Record<string, typeof allQ> = {};
                           for (const q of allQ) (grouped[q.catName] ||= []).push(q);
                           return Object.entries(grouped).map(([catName, qs]) => (
                             <div key={catName}>
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                                 <span className="text-xs font-bold text-foreground">{catName}</span>
-                                <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                                <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
                               </div>
                               {qs.map((q, idx) => {
                                 const v = getVal(q.id);
                                 const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                                return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                  <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                  <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
                                   <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} disabled={answersLocked} />
                                 </div>;
                               })}
@@ -670,16 +670,16 @@ export function useProductionAuditSection(
                         })() : sections.map((sec: any) => {
                           const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
                           return <div key={sec.id}>
-                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                            <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                               <span className="text-xs font-bold text-foreground">{sec.title}</span>
-                              <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                              <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{secC}/{sec.questions.length}</span>
                             </div>
                             {sec.questions.map((q: any, idx: number) => {
                               const v = getVal(q.id);
                               const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
-                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                                <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                              return <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-2 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                                <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                                <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
                                 <SegCtl rt={q.responseType} val={v} onChange={(nv) => setAns(q.id, nv)} />
                               </div>;
                             })}
@@ -690,14 +690,14 @@ export function useProductionAuditSection(
                   </>
                 )}
                 {execTab === "findings" && !isNew && (
-                  <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>
+                  <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30"><FindingsTable findings={findings} onClose={setCloseFindingId} /></div>
                 )}
               </div>
 
               {/* Finding dialog */}
               {findingForAnswer && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-                  <div className="bg-white dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
+                  <div className="bg-background dark:bg-slate-900 border border-white/30 dark:border-slate-700/30 w-[400px] p-4 shadow-xl space-y-3">
                     <p className="text-xs font-semibold text-foreground">Create Finding for: {findingForAnswer.questionText}</p>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Description *</label><input type="text" value={findingDesc} onChange={(e) => setFindingDesc(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="grid grid-cols-2 gap-2">
@@ -706,7 +706,7 @@ export function useProductionAuditSection(
                     </div>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="flex gap-2 justify-end">
-                      <button onClick={hFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-40">Create</button>
+                      <button onClick={hFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white bg-warning hover:bg-warning/80 disabled:opacity-40">Create</button>
                       <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
                     </div>
                   </div>
@@ -757,7 +757,7 @@ export function useProductionAuditSection(
         <div className="text-center max-w-xs">
           <h3 className="text-sm font-semibold text-foreground mb-1.5">Production Audits</h3>
           <p className="text-xs text-muted-foreground/70">Template-based production control audits.</p>
-          <button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"><Plus className="h-3.5 w-3.5" /> New Audit</button>
+          <button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80"><Plus className="h-3.5 w-3.5" /> New Audit</button>
         </div>
       </div>
     );

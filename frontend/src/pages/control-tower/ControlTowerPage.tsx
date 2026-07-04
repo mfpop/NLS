@@ -133,10 +133,10 @@ function sevBorder(sev: string) {
 
 const CT_SECONDARY = "text-muted-foreground";
 const CT_MUTED = "text-muted-foreground";
-const WORK_BUTTON = "inline-flex h-7 min-w-[74px] shrink-0 items-center justify-center rounded-sm border border-gray-500/50 px-2.5 text-xs font-semibold motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-70";
+const WORK_BUTTON = "inline-flex h-7 min-w-[74px] shrink-0 items-center justify-center rounded-sm border border-border/50 px-2.5 text-xs font-semibold motion-safe:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 disabled:border-border disabled:bg-muted disabled:text-muted-foreground disabled:opacity-70";
 const WORK_BUTTON_NEUTRAL = `${WORK_BUTTON} bg-background/60 backdrop-blur-sm text-foreground hover:bg-background/80`;
 const CT_BUTTON_PRIMARY = "inline-flex h-8 items-center justify-center rounded-sm bg-primary/80 backdrop-blur-sm px-3 text-xs font-semibold text-primary-foreground shadow-sm motion-safe:transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
-const CT_BUTTON_SECONDARY = "inline-flex h-8 items-center justify-center rounded-sm border border-gray-500/50 bg-background/60 backdrop-blur-sm px-3 text-xs font-semibold text-foreground motion-safe:transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
+const CT_BUTTON_SECONDARY = "inline-flex h-8 items-center justify-center rounded-sm border border-border/50 bg-background/60 backdrop-blur-sm px-3 text-xs font-semibold text-foreground motion-safe:transition-colors hover:bg-background/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
 const CT_BUTTON_TERTIARY = "inline-flex h-8 items-center justify-center rounded-sm px-3 text-xs font-semibold text-muted-foreground motion-safe:transition-colors hover:bg-background/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20";
 
 /* Badges */
@@ -274,7 +274,7 @@ export function ControlTowerPage() {
             {/* 2. PRIMARY ACTIONS */}
             <section className="mt-4">
               <SectionLabel>Primary Action</SectionLabel>
-              <div className="flex items-center gap-2 border border-gray-500/50 px-3 py-1.5">
+              <div className="flex items-center gap-2 border border-border/50 px-3 py-1.5">
                 <Wrench className="h-4 w-4 shrink-0 text-primary stroke-current" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-semibold text-foreground">Resolve flow interruption before next pitch</div>
@@ -295,7 +295,7 @@ export function ControlTowerPage() {
                 {kpiGroups.map((group) => {
                   const GroupIcon = group.icon;
                   return (
-                    <div key={group.title} className="border border-gray-500/50 p-2">
+                    <div key={group.title} className="border border-border/50 p-2">
                       <div className="mb-1.5 flex items-center gap-1.5">
                         <GroupIcon className="h-3.5 w-3.5 text-foreground stroke-current" />
                         <span className="text-xs font-extrabold uppercase tracking-wide text-foreground">{group.title}</span>

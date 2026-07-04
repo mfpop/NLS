@@ -383,22 +383,22 @@ export function DailyGembaWalkPage() {
         body = (
           <div className="space-y-3">
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Owner</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Owner</label>
               <input
                 type="text"
                 value={assignOwner}
                 onChange={(e) => setAssignOwner(e.target.value)}
                 placeholder="Assignee name"
-                className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Due Date</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Due Date</label>
               <input
                 type="date"
                 value={assignDueDate}
                 onChange={(e) => setAssignDueDate(e.target.value)}
-                className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
               />
             </div>
           </div>
@@ -412,12 +412,12 @@ export function DailyGembaWalkPage() {
         title = "Resolve Observation";
         body = (
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Resolution Note</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Resolution Note</label>
             <textarea
               value={resolveNote}
               onChange={(e) => setResolveNote(e.target.value)}
               placeholder="Describe how this was resolved..."
-              className="w-full rounded-[2px] border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-sky-500 resize-none"
+              className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
               style={{ minHeight: "80px" }}
             />
           </div>
@@ -432,27 +432,27 @@ export function DailyGembaWalkPage() {
         body = (
           <div className="space-y-3">
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Title</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Title</label>
               <input
                 type="text"
                 value={issueTitle}
                 onChange={(e) => setIssueTitle(e.target.value)}
-                className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Description</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Description</label>
               <textarea
                 value={issueDescription}
                 onChange={(e) => setIssueDescription(e.target.value)}
-                className="w-full rounded-[2px] border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-sky-500 resize-none"
+                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
                 style={{ minHeight: "64px" }}
               />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Severity</label>
-                <select value={issueSeverity} onChange={(e) => setIssueSeverity(e.target.value)} className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Severity</label>
+                <select value={issueSeverity} onChange={(e) => setIssueSeverity(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500">
                   <option value="INFO">Info</option>
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
@@ -461,22 +461,22 @@ export function DailyGembaWalkPage() {
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Owner</label>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Owner</label>
                 <input
                   type="text"
                   value={issueOwner}
                   onChange={(e) => setIssueOwner(e.target.value)}
                   placeholder="Owner"
-                  className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Due Date</label>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Due Date</label>
                 <input
                   type="date"
                   value={issueDueDate}
                   onChange={(e) => setIssueDueDate(e.target.value)}
-                  className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
                 />
               </div>
             </div>
@@ -492,35 +492,35 @@ export function DailyGembaWalkPage() {
         body = (
           <div className="space-y-3">
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Title</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Title</label>
               <input
                 type="text"
                 value={actionTitle}
                 onChange={(e) => setActionTitle(e.target.value)}
-                className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Description</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Description</label>
               <textarea
                 value={actionDescription}
                 onChange={(e) => setActionDescription(e.target.value)}
-                className="w-full rounded-[2px] border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-sky-500 resize-none"
+                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
                 style={{ minHeight: "64px" }}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Type</label>
-                <select value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Type</label>
+                <select value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500">
                   <option value="CORRECTIVE">Corrective</option>
                   <option value="PREVENTIVE">Preventive</option>
                   <option value="IMPROVEMENT">Improvement</option>
                 </select>
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Priority</label>
-                <select value={actionPriority} onChange={(e) => setActionPriority(e.target.value)} className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Priority</label>
+                <select value={actionPriority} onChange={(e) => setActionPriority(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500">
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HIGH">High</option>
@@ -530,22 +530,22 @@ export function DailyGembaWalkPage() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Assigned To</label>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Assigned To</label>
                 <input
                   type="text"
                   value={actionAssignedTo}
                   onChange={(e) => setActionAssignedTo(e.target.value)}
                   placeholder="Assignee"
-                  className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Due Date</label>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Due Date</label>
                 <input
                   type="date"
                   value={actionDueDate}
                   onChange={(e) => setActionDueDate(e.target.value)}
-                  className="w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
                 />
               </div>
             </div>
@@ -560,12 +560,12 @@ export function DailyGembaWalkPage() {
         title = "Verify Observation";
         body = (
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Verification Note</label>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Verification Note</label>
             <textarea
               value={verifyNote}
               onChange={(e) => setVerifyNote(e.target.value)}
               placeholder="What changed on the shopfloor? Confirm the resolution is effective..."
-              className="w-full rounded-[2px] border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-sky-500 resize-none"
+              className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
               style={{ minHeight: "80px" }}
             />
           </div>
@@ -579,16 +579,16 @@ export function DailyGembaWalkPage() {
         title = "Complete Walk";
         body = (
           <div>
-            <p className="text-xs text-slate-700 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Complete the Gemba Walk session? Observations will become read-only.
             </p>
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 block mb-1">Summary (optional)</label>
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Summary (optional)</label>
               <textarea
                 value={resolveNote}
                 onChange={(e) => setResolveNote(e.target.value)}
                 placeholder="Walk summary..."
-                className="w-full rounded-[2px] border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-800 outline-none focus:border-sky-500 resize-none"
+                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
                 style={{ minHeight: "64px" }}
               />
             </div>
@@ -605,13 +605,13 @@ export function DailyGembaWalkPage() {
         {/* Backdrop */}
         <div className="fixed inset-0 bg-black/30 z-50" onClick={() => setActionModal(null)} />
         {/* Modal */}
-        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[460px] bg-white rounded-[4px] border border-slate-200 shadow-xl">
-          <div className="flex items-center justify-between px-4 h-11 border-b border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[460px] bg-background rounded-[4px] border border-border shadow-xl">
+          <div className="flex items-center justify-between px-4 h-11 border-b border-border">
+            <h3 className="text-sm font-semibold text-foreground">{title}</h3>
             <button
               type="button"
               onClick={() => setActionModal(null)}
-              className="flex h-7 w-7 items-center justify-center rounded-sm text-slate-400 hover:text-slate-700 hover:bg-slate-200"
+              className="flex h-7 w-7 items-center justify-center rounded-sm text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/80"
             >
               <X className="h-4 w-4" />
             </button>
@@ -619,11 +619,11 @@ export function DailyGembaWalkPage() {
           <div className="px-4 py-3">
             {body}
           </div>
-          <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border bg-muted">
             <button
               type="button"
               onClick={() => setActionModal(null)}
-              className="inline-flex h-8 items-center px-3 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-[2px] transition-colors"
+              className="inline-flex h-8 items-center px-3 text-xs font-medium text-muted-foreground hover:bg-muted rounded-[2px] transition-colors"
             >
               Cancel
             </button>
@@ -655,14 +655,14 @@ export function DailyGembaWalkPage() {
   // ── No active line ──
   if (!lineIdNumber && !lineLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Daily Gemba Walk" subtitle="Select a production line from the sidebar." icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3 p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-              <Footprints className="h-6 w-6 text-slate-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <Footprints className="h-6 w-6 text-muted-foreground/60" />
             </div>
-            <p className="text-xs text-slate-500 max-w-sm">No active line selected. Use the sidebar to select a production line.</p>
+            <p className="text-xs text-muted-foreground max-w-sm">No active line selected. Use the sidebar to select a production line.</p>
           </div>
         </div>
       </div>
@@ -672,12 +672,12 @@ export function DailyGembaWalkPage() {
   // ── Loading ──
   if ((queryLoading && !queryData) || (lineLoading && !activeLine)) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Daily Gemba Walk" subtitle="Loading..." icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-            <p className="text-xs text-slate-500">Loading observations...</p>
+            <p className="text-xs text-muted-foreground">Loading observations...</p>
           </div>
         </div>
       </div>
@@ -687,29 +687,29 @@ export function DailyGembaWalkPage() {
   // ── Error state ──
   if (queryError && !queryData) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Daily Gemba Walk" subtitle="Unable to load observations" icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
         <PageToolbar
           leftWidthClass={LEFT_PANEL_WIDTH}
           actions={<ToolbarButton icon={RefreshCw} label="Retry" onClick={handleRefresh} disabled={refreshing} />}
         />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-200">
-            <Footprints className="h-7 w-7 text-red-400" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-danger/10 ring-1 ring-red-200">
+            <Footprints className="h-7 w-7 text-danger/80" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-800">Unable to load observations</p>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs">
+            <p className="text-sm font-semibold text-foreground">Unable to load observations</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-xs">
               The observation list could not be loaded. This may be a temporary issue.
             </p>
           </div>
           <button type="button" onClick={handleRefresh} disabled={refreshing}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[2px] border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors">
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[2px] border border-border bg-background text-muted-foreground hover:bg-muted disabled:opacity-50 transition-colors">
             <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} />
             Retry
           </button>
         </div>
-        <footer className="shrink-0 flex h-10 items-center gap-5 border-t border-slate-300 bg-slate-50 px-4 text-xs font-medium text-slate-600">
+        <footer className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
           <span>Line: {activeLine?.name ?? "—"}</span>
         </footer>
       </div>
@@ -717,7 +717,7 @@ export function DailyGembaWalkPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       {/* Header */}
       <div className="h-16 shrink-0">
         <PageHeader title="Daily Gemba Walk" subtitle={headerSubtitle} icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
@@ -763,9 +763,9 @@ export function DailyGembaWalkPage() {
       </div>
 
       {/* Content area: grid 32%/68% */}
-      <div className="grid min-h-0 flex-1 grid-cols-[32%_68%] overflow-hidden bg-slate-50">
+      <div className="grid min-h-0 flex-1 grid-cols-[32%_68%] overflow-hidden bg-muted">
         {/* Left — Capture panel */}
-        <div className="overflow-hidden border-r border-slate-300">
+        <div className="overflow-hidden border-r border-border">
           <GembaWalkForm
             sessionId={activeSession?.id ?? null}
             onSave={handleSaveObservation}
@@ -820,7 +820,7 @@ export function DailyGembaWalkPage() {
       </div>
 
       {/* Footer */}
-      <footer className="shrink-0 flex h-10 items-center gap-5 border-t border-slate-300 bg-slate-50 px-4 text-xs font-medium text-slate-600">
+      <footer className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
         <span>Line: {activeLine?.name ?? "—"}</span>
         {activeSession && (
           <>
@@ -837,7 +837,7 @@ export function DailyGembaWalkPage() {
         {queryError && (
           <div className="ml-auto flex items-center gap-2">
             <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-50 text-red-700 border border-red-200 cursor-default"
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-danger/10 text-danger border border-danger/20 cursor-default"
               title={queryError.message || "API request failed"}
             >
               Error

@@ -34,33 +34,33 @@ interface AuditExecutionViewProps {
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border/40",
-  OPEN: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300",
-  COMPLETED: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300",
-  ARCHIVED: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300",
+  OPEN: "bg-primary/15 text-primary border-primary/20 dark:bg-blue-950/30 dark:text-blue-300",
+  COMPLETED: "bg-success/15 text-success border-success/20 dark:bg-green-900/30 dark:text-green-300",
+  ARCHIVED: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300",
 };
 
-const WARN = "text-amber-700 dark:text-amber-300";
-const SEL_INPUT = "h-8 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-sm text-foreground outline-none focus:border-blue-500";
+const WARN = "text-warning dark:text-amber-300";
+const SEL_INPUT = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-sm text-foreground outline-none focus:border-primary";
 
 function statusLabel(s: string) { return s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, " "); }
 
 function scoreGrade(s: number | null) {
   if (s === null) return { label: "N/A", cls: "bg-muted text-muted-foreground border-border/40" };
-  if (s >= 90) return { label: "Excellent", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" };
-  if (s >= 75) return { label: "Pass", cls: "bg-blue-100 text-blue-700 border-blue-200" };
-  if (s >= 60) return { label: "Needs Improvement", cls: "bg-amber-100 text-amber-700 border-amber-200" };
-  return { label: "Fail", cls: "bg-red-100 text-red-700 border-red-200" };
+  if (s >= 90) return { label: "Excellent", cls: "bg-success/15 text-success border-success/20" };
+  if (s >= 75) return { label: "Pass", cls: "bg-primary/15 text-primary border-primary/20" };
+  if (s >= 60) return { label: "Needs Improvement", cls: "bg-warning/15 text-warning border-warning/20" };
+  return { label: "Fail", cls: "bg-danger/15 text-danger border-danger/20" };
 }
 
 function isFailed(rt: string, v: string) { return (rt === "PASS_FAIL_NA" && v === "FAIL") || (rt === "YES_NO_NA" && v === "NO"); }
 
 function Seg({ opts, val, onChange }: { opts: string[]; val: string; onChange: (v: string) => void }) {
   const cls = (a: boolean, o: string) => {
-    if (!a) return "bg-white/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-white/80 dark:hover:bg-slate-700/80";
-    if (o === "PASS" || o === "YES") return "bg-emerald-100/80 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300";
-    if (o === "FAIL" || o === "NO") return "bg-red-100/80 text-red-800 dark:bg-red-900/80 dark:text-red-300";
-    if (o === "N_A") return "bg-amber-100/80 text-amber-800 dark:bg-amber-900/80 dark:text-amber-300";
-    return "bg-blue-100/80 text-blue-800 dark:bg-blue-900/80 dark:text-blue-300";
+    if (!a) return "bg-background/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-background/80 dark:hover:bg-slate-700/80";
+    if (o === "PASS" || o === "YES") return "bg-success/15/80 text-success dark:bg-emerald-900/80 dark:text-emerald-300";
+    if (o === "FAIL" || o === "NO") return "bg-danger/15/80 text-red-800 dark:bg-red-900/80 dark:text-red-300";
+    if (o === "N_A") return "bg-warning/15/80 text-warning dark:bg-amber-900/80 dark:text-amber-300";
+    return "bg-primary/15/80 text-blue-800 dark:bg-blue-900/80 dark:text-blue-300";
   };
   return <div className="inline-flex h-7 overflow-hidden rounded border border-white/30 dark:border-slate-700/30">{opts.map((o) => <button key={o} onClick={() => onChange(o)} className={`min-w-11 border-r border-white/30 dark:border-slate-700/30 px-2 text-xs font-medium last:border-r-0 transition-colors ${cls(val === o, o)}`}>{o === "N_A" ? "N/A" : o}</button>)}</div>;
 }
@@ -69,8 +69,8 @@ function SegCtl({ rt, val, onChange }: { rt: string; val: string; onChange: (v: 
   if (rt === "PASS_FAIL_NA") return <Seg opts={["PASS", "FAIL", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "YES_NO_NA") return <Seg opts={["YES", "NO", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "SCORE_1_5") return <Seg opts={["1", "2", "3", "4", "5"]} val={val} onChange={onChange} />;
-  if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-blue-500" />;
-  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} aria-label="Response" className="h-7 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-blue-500" />;
+  if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-primary" />;
+  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} aria-label="Response" className="h-7 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-primary" />;
   return null;
 }
 
@@ -384,7 +384,7 @@ export function AuditExecutionView({
   return (
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
       {/* Header */}
-      <div className="shrink-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-700/20 px-4 py-2">
+      <div className="shrink-0 bg-background/70 dark:bg-slate-900/70 backdrop-blur-md border-b border-white/20 dark:border-slate-700/20 px-4 py-2">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-bold text-foreground">{isNew ? "New Audit" : execForm?.title ?? ""}</h2>
@@ -405,7 +405,7 @@ export function AuditExecutionView({
                 <option value="">Select type...</option>
                 {templates.map((t: any) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-            ) : <div className="h-8 flex items-center px-2 text-sm text-foreground bg-white/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{headerTpl?.name ?? "-"} v{headerTpl?.version ?? ""}</div>}
+            ) : <div className="h-8 flex items-center px-2 text-sm text-foreground bg-background/30 dark:bg-slate-800/30 border border-white/20 dark:border-slate-700/20">{headerTpl?.name ?? "-"} v{headerTpl?.version ?? ""}</div>}
           </div>
           <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Plant *</label>              <select value={fPlant} onChange={(e) => { setFPlant(e.target.value); setFLine(""); setFDept(""); setFRg(""); setFRes(""); }} aria-label="Plant" className={SEL_INPUT}>
               <option value="">Select...</option>
@@ -455,7 +455,7 @@ export function AuditExecutionView({
       </div>
 
       {/* Tabs */}
-      <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+      <div className="shrink-0 flex border-b border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 backdrop-blur-sm">
         <button onClick={() => setExecTab("form")} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors ${execTab === "form" ? "border-amber-500 text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>Form ({ansCount}/{totalQ})</button>
         <button onClick={() => setExecTab("findings")} disabled={isNew} className={`px-4 py-1.5 text-[11px] font-semibold border-b-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${execTab === "findings" ? "border-amber-500 text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>Findings ({findings.length})</button>
       </div>
@@ -465,35 +465,35 @@ export function AuditExecutionView({
         {execTab === "form" && (
           <div className="p-4 space-y-3">
             {isNew && allQ.length === 0 && templates.length === 0 && (
-              <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center text-xs text-amber-700 dark:text-amber-400">
+              <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-center text-xs text-warning dark:text-amber-400">
                 <p>No templates installed for {controlArea}.</p>
-                <button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"><Plus className="h-3 w-3" /> Install Defaults</button>
+                <button onClick={hInstall} className="mt-2 inline-flex h-7 items-center gap-1 bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/80"><Plus className="h-3 w-3" /> Install Defaults</button>
               </div>
             )}
             {checklistLocked && (
-              <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-xs text-amber-800 dark:text-amber-300">
+              <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-xs text-warning dark:text-amber-300">
                 Click <strong>Save Draft</strong> above to create this audit in the database. The checklist form will unlock automatically after the draft is saved.
               </div>
             )}
             {(isNew ? allQ.length > 0 : sections.length > 0) && !checklistLocked && (
-              <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+              <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                 {isNew ? (
                   (() => {
                     const grouped: Record<string, typeof allQ> = {};
                     for (const q of allQ) (grouped[q.catName] ||= []).push(q);
                     return Object.entries(grouped).map(([catName, qs]) => (
                       <div key={catName}>
-                        <div className="flex items-center justify-between px-4 py-1.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                        <div className="flex items-center justify-between px-4 py-1.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                           <span className="text-xs font-bold text-foreground">{catName}</span>
-                          <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
+                          <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{qs.filter((q) => draftAns[q.id]?.v !== "").length}/{qs.length}</span>
                         </div>
                         {qs.map((q, idx) => {
                           const v = getVal(q.id);
                           const fail = isFailed(q.rt, v) || (q.rt === "SCORE_1_5" && v !== "" && Number(v) <= 2);
                           return (
-                            <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-1.5 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                              <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                              <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
+                            <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-1.5 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                              <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                              <div className="min-w-0"><span className="text-foreground">{q.question}</span>{q.isReq && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.help && <div className="text-[10px] text-muted-foreground/60 italic">{q.help}</div>}</div>
                               <SegCtl rt={q.rt} val={v} onChange={(nv) => setAns(q.id, nv)} />
                             </div>
                           );
@@ -506,17 +506,17 @@ export function AuditExecutionView({
                     const secC = sec.questions.filter((q: any) => getVal(q.id) !== "").length;
                     return (
                       <div key={sec.id}>
-                        <div className="flex items-center justify-between px-4 py-1.5 border-b border-white/20 dark:border-slate-700/20 bg-white/30 dark:bg-slate-900/30">
+                        <div className="flex items-center justify-between px-4 py-1.5 border-b border-white/20 dark:border-slate-700/20 bg-background/30 dark:bg-slate-900/30">
                           <span className="text-xs font-bold text-foreground">{sec.title}</span>
-                          <span className="bg-blue-50/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-blue-700 dark:text-blue-300">{secC}/{sec.questions.length}</span>
+                          <span className="bg-primary/10/80 dark:bg-blue-950/80 backdrop-blur-sm px-2 py-0.5 text-xs text-primary dark:text-blue-300">{secC}/{sec.questions.length}</span>
                         </div>
                         {sec.questions.map((q: any, idx: number) => {
                           const v = getVal(q.id);
                           const fail = isFailed(q.responseType, v) || (q.responseType === "SCORE_1_5" && v !== "" && Number(v) <= 2);
                           return (
-                            <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-1.5 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-red-50/40 dark:bg-red-950/30" : ""}`}>
-                              <div className="flex h-5 w-5 items-center justify-center rounded bg-blue-50/80 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
-                              <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-red-500 font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
+                            <div key={q.id} className={`grid grid-cols-[28px_1fr_180px] items-start gap-2 px-4 py-1.5 text-sm border-b border-white/10 dark:border-slate-700/10 last:border-b-0 ${fail ? "bg-danger/10/40 dark:bg-red-950/30" : ""}`}>
+                              <div className="flex h-5 w-5 items-center justify-center rounded bg-primary/10/80 dark:bg-blue-950/80 text-primary dark:text-blue-300 text-[10px] font-medium mt-0.5">{idx + 1}</div>
+                              <div className="min-w-0"><span className="text-foreground">{q.questionText}</span>{q.isRequired && <span className="ml-1 text-[9px] text-danger font-semibold">*</span>}{q.helpText && <div className="text-[10px] text-muted-foreground/60 italic">{q.helpText}</div>}</div>
                               <SegCtl rt={q.responseType} val={v} onChange={(nv) => {
                                 handleExistingAns(q.id, q.responseType, nv);
                                 if (isFailed(q.responseType, nv) && !isFailed(q.responseType, v) && execForm?.id && q.answerId) {
@@ -534,20 +534,20 @@ export function AuditExecutionView({
             )}
             {/* Findings below form for existing audits */}
             {!isNew && findings.length > 0 && (
-              <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+              <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                 {findings.map((f: any) => (
                   <div key={f.id} className="flex items-center gap-3 px-4 py-2 border-b border-white/10 dark:border-slate-700/10 last:border-b-0">
-                    <CircleAlert className="h-4 w-4 stroke-current shrink-0 text-red-500" />
+                    <CircleAlert className="h-4 w-4 stroke-current shrink-0 text-danger" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-foreground">{f.description}</span>
-                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.severity === "HIGH" || f.severity === "CRITICAL" ? "border-red-200 text-red-700 bg-red-50" : f.severity === "MEDIUM" ? "border-amber-200 text-amber-700 bg-amber-50" : "border-gray-200 text-gray-600 bg-gray-50"}`}>{f.severity}</span>
-                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.status === "OPEN" ? "border-blue-200 text-blue-700 bg-blue-50" : "border-green-200 text-green-700 bg-green-50"}`}>{f.status}</span>
+                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.severity === "HIGH" || f.severity === "CRITICAL" ? "border-danger/20 text-danger bg-danger/10" : f.severity === "MEDIUM" ? "border-warning/20 text-warning bg-warning/10" : "border-gray-200 text-gray-600 bg-gray-50"}`}>{f.severity}</span>
+                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.status === "OPEN" ? "border-primary/20 text-primary bg-primary/10" : "border-success/20 text-success bg-success/10"}`}>{f.status}</span>
                       </div>
                       {f.owner && <p className="text-[10px] text-muted-foreground mt-0.5">Owner: {f.owner}</p>}
                     </div>
                     {f.status === "OPEN" && (
-                      <button onClick={() => setCloseFindingId(f.id)} className="shrink-0 inline-flex h-6 items-center border border-green-200 px-1.5 text-[9px] font-semibold text-green-700 bg-green-50 hover:bg-green-100">Close</button>
+                      <button onClick={() => setCloseFindingId(f.id)} className="shrink-0 inline-flex h-6 items-center border border-success/20 px-1.5 text-[9px] font-semibold text-success bg-success/10 hover:bg-success/15">Close</button>
                     )}
                   </div>
                 ))}
@@ -560,19 +560,19 @@ export function AuditExecutionView({
             {findings.length === 0 ? (
               <p className="text-xs text-muted-foreground italic">No findings recorded.</p>
             ) : (
-              <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
+              <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30">
                 {findings.map((f: any) => (
                   <div key={f.id} className="flex items-center gap-3 px-4 py-2 border-b border-white/10 dark:border-slate-700/10 last:border-b-0">
-                    <CircleAlert className="h-4 w-4 stroke-current shrink-0 text-red-500" />
+                    <CircleAlert className="h-4 w-4 stroke-current shrink-0 text-danger" />
                     <div className="flex-1 min-w-0">
                       <span className="text-xs font-medium text-foreground">{f.description}</span>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.severity === "HIGH" || f.severity === "CRITICAL" ? "border-red-200 text-red-700 bg-red-50" : f.severity === "MEDIUM" ? "border-amber-200 text-amber-700 bg-amber-50" : "border-gray-200 text-gray-600 bg-gray-50"}`}>{f.severity}</span>
-                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.status === "OPEN" ? "border-blue-200 text-blue-700 bg-blue-50" : "border-green-200 text-green-700 bg-green-50"}`}>{f.status}</span>
+                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.severity === "HIGH" || f.severity === "CRITICAL" ? "border-danger/20 text-danger bg-danger/10" : f.severity === "MEDIUM" ? "border-warning/20 text-warning bg-warning/10" : "border-gray-200 text-gray-600 bg-gray-50"}`}>{f.severity}</span>
+                        <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-medium border ${f.status === "OPEN" ? "border-primary/20 text-primary bg-primary/10" : "border-success/20 text-success bg-success/10"}`}>{f.status}</span>
                         {f.owner && <span className="text-[10px] text-muted-foreground">Owner: {f.owner}</span>}
                       </div>
                     </div>
-                    {f.status === "OPEN" && <button onClick={() => setCloseFindingId(f.id)} className="shrink-0 inline-flex h-6 items-center border border-green-200 px-1.5 text-[9px] font-semibold text-green-700 bg-green-50 hover:bg-green-100">Close</button>}
+                    {f.status === "OPEN" && <button onClick={() => setCloseFindingId(f.id)} className="shrink-0 inline-flex h-6 items-center border border-success/20 px-1.5 text-[9px] font-semibold text-success bg-success/10 hover:bg-success/15">Close</button>}
                   </div>
                 ))}
               </div>
@@ -589,7 +589,7 @@ export function AuditExecutionView({
             <h3 className="text-sm font-bold text-foreground mb-2">Close Finding</h3>
             <p className="text-xs text-muted-foreground mb-4">Confirm closing this finding?</p>
             <div className="flex gap-2">
-              <button onClick={async () => { if (closeFindingId) { await closeFindingMut({ variables: { id: closeFindingId } }); onMessage("Finding closed"); setCloseFindingId(null); execQ.refetch(); } }} className="inline-flex h-7 items-center bg-green-600 px-3 text-xs font-semibold text-white hover:bg-green-700">Close</button>
+              <button onClick={async () => { if (closeFindingId) { await closeFindingMut({ variables: { id: closeFindingId } }); onMessage("Finding closed"); setCloseFindingId(null); execQ.refetch(); } }} className="inline-flex h-7 items-center bg-success px-3 text-xs font-semibold text-white hover:bg-success/80">Close</button>
               <button onClick={() => setCloseFindingId(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
             </div>
           </div>
@@ -609,7 +609,7 @@ export function AuditExecutionView({
                 <div><label className="block text-[10px] font-medium text-muted-foreground mb-0.5">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} placeholder="Owner name..." aria-label="Finding owner" className="h-7 w-full rounded border border-border/40 bg-card px-2 text-xs text-foreground outline-none focus:border-info/60" /></div>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={hCreateFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-40">Create Finding</button>
+                <button onClick={hCreateFinding} disabled={!findingDesc.trim()} className="inline-flex h-7 items-center gap-1 bg-danger px-3 text-xs font-semibold text-white hover:bg-danger/80 transition-colors disabled:opacity-40">Create Finding</button>
                 <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
               </div>
             </div>
@@ -624,7 +624,7 @@ export function AuditExecutionView({
             <h3 className="text-sm font-bold text-foreground mb-2">Archive Audit</h3>
             <p className="text-xs text-muted-foreground mb-4">Are you sure you want to archive this audit?</p>
             <div className="flex gap-2">
-              <button onClick={hArchiveAudit} className="inline-flex h-7 items-center bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700">Archive</button>
+              <button onClick={hArchiveAudit} className="inline-flex h-7 items-center bg-warning px-3 text-xs font-semibold text-white hover:bg-warning/80">Archive</button>
               <button onClick={() => setArchiveConfirmId(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
             </div>
           </div>
@@ -638,7 +638,7 @@ export function AuditExecutionView({
             <h3 className="text-sm font-bold text-foreground mb-2">Delete Audit</h3>
             <p className="text-xs text-muted-foreground mb-4">This cannot be undone.</p>
             <div className="flex gap-2">
-              <button onClick={hDeleteAudit} className="inline-flex h-7 items-center bg-red-600 px-3 text-xs font-semibold text-white hover:bg-red-700">Delete</button>
+              <button onClick={hDeleteAudit} className="inline-flex h-7 items-center bg-danger px-3 text-xs font-semibold text-white hover:bg-danger/80">Delete</button>
               <button onClick={() => setDeleteConfirmId(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
             </div>
           </div>

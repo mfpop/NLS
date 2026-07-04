@@ -15,16 +15,16 @@ interface PageHeaderSlotProps {
 
 function PageHeaderSlot({ icon, iconClass, title, subtitle, children }: PageHeaderSlotProps) {
   return (
-    <header className="h-16 shrink-0 border-b border-slate-200 bg-slate-50 flex items-center px-4">
+    <header className="h-16 shrink-0 border-b border-border bg-muted flex items-center px-4">
       <div className="flex items-center gap-3 min-w-0 w-full">
         {icon && (
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${iconClass || "bg-blue-50 text-blue-600"}`}>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${iconClass || "bg-primary/10 text-primary"}`}>
             {icon}
           </div>
         )}
         <div className="flex min-w-0 flex-col items-start justify-center">
-          <h1 className="truncate text-base font-semibold text-slate-950">{title}</h1>
-          {subtitle && <p className="truncate text-sm text-slate-600">{subtitle}</p>}
+          <h1 className="truncate text-base font-semibold text-foreground">{title}</h1>
+          {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
         </div>
         {children && <div className="flex items-center gap-2 shrink-0 ml-auto">{children}</div>}
       </div>
@@ -41,7 +41,7 @@ interface TwoColumnPageTemplateProps<T> {
   subtitle?: string;
   /** Optional icon element shown before title */
   icon?: ReactNode;
-  /** CSS classes for the icon wrapper (e.g. "bg-purple-100 text-purple-600") */
+  /** CSS classes for the icon wrapper (e.g. "bg-accent/15 text-accent-foreground") */
   iconClass?: string;
   /** Props forwarded to PageToolbar. If omitted, no toolbar is shown. */
   toolbarProps?: PageToolbarProps;
@@ -88,7 +88,7 @@ export function TwoColumnPageTemplate<T>({
   className = "",
 }: TwoColumnPageTemplateProps<T>) {
   return (
-    <div className={`flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 ${className}`}>
+    <div className={`flex h-full min-h-0 flex-col overflow-hidden bg-muted ${className}`}>
       <style>{`
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -110,31 +110,31 @@ export function TwoColumnPageTemplate<T>({
       )}
 
       {/* 2-Column Content */}
-      <div className="flex flex-1 min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-1 min-h-0 overflow-hidden bg-muted">
         {/* Left Column - RecordListPanel or custom children */}
         {(leftPanelProps || leftChildren) && (
-          <div className={`border-r border-slate-300 bg-slate-50 overflow-hidden ${leftWidthClass}`}>
+          <div className={`border-r border-border bg-muted overflow-hidden ${leftWidthClass}`}>
             {leftChildren ?? (
               <RecordListPanel
                 {...leftPanelProps!}
-                className="border-r-0 bg-slate-50"
+                className="border-r-0 bg-muted"
               />
             )}
           </div>
         )}
 
         {/* Right Column - Detail Content */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-muted">
           {rightHeader && (
-            <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="shrink-0 border-b border-border bg-muted px-3 py-2">
               {rightHeader}
             </div>
           )}
-          <div className="flex-1 min-h-0 overflow-auto bg-slate-50">
+          <div className="flex-1 min-h-0 overflow-auto bg-muted">
             {rightContent ?? children}
           </div>
           {rightFooter && (
-            <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="shrink-0 border-t border-border bg-muted px-3 py-2">
               {rightFooter}
             </div>
           )}
@@ -143,7 +143,7 @@ export function TwoColumnPageTemplate<T>({
 
       {/* Page Footer */}
       {(footerLeft || footerCenter || footerRight) && (
-        <div className="h-10 shrink-0 border-t border-slate-200 bg-slate-50 px-3 text-xs text-slate-600 flex items-center justify-between">
+        <div className="h-10 shrink-0 border-t border-border bg-muted px-3 text-xs text-muted-foreground flex items-center justify-between">
           <span>{footerLeft}</span>
           <span>{footerCenter}</span>
           <span>{footerRight}</span>

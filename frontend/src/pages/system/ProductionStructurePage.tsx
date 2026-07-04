@@ -31,7 +31,7 @@ function ContextMenu({ state, onClose, onAdd, onEdit }: {
   ];
   return (
     <div ref={ref} className="fixed z-50" style={{ left: Math.min(state.x, window.innerWidth - 180), top: Math.min(state.y, window.innerHeight - 160) }}>
-      <div className="min-w-40 rounded-lg border shadow-lg py-1 bg-card border-slate-200">
+      <div className="min-w-40 rounded-lg border shadow-lg py-1 bg-card border-border">
         {items.map((item, i) => (
           <button key={i} type="button" onClick={() => { item.action(); onClose(); }}
             className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-sm cursor-pointer transition-colors ${
@@ -188,7 +188,7 @@ export function ProductionFlow() {
                 onContextMenu={handleContextMenu} isLoading={loading && !treeData.length}
               />
             </div>
-            <div className="shrink-0 border-t border-slate-200 bg-card flex items-center gap-5 px-5 text-xs text-muted-foreground font-medium" style={{ height: "60px" }}>
+            <div className="shrink-0 border-t border-border bg-card flex items-center gap-5 px-5 text-xs text-muted-foreground font-medium" style={{ height: "60px" }}>
               <span className="flex items-center gap-1.5"><Factory className="h-3.5 w-3.5 text-primary stroke-current" /> Plant</span>
               <span className="flex items-center gap-1.5"><TrendingUpDown className="h-3.5 w-3.5 text-warning stroke-current" /> Line</span>
               <span className="flex items-center gap-1.5"><Layers className="h-3.5 w-3.5 text-info stroke-current" /> Dept</span>

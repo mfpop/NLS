@@ -10,10 +10,10 @@ interface Props {
 }
 
 const VALUE_COLOR: Record<string, string> = {
-  good: "text-emerald-600",
-  warning: "text-amber-600",
-  critical: "text-red-600",
-  neutral: "text-slate-800",
+  good: "text-success",
+  warning: "text-warning",
+  critical: "text-danger",
+  neutral: "text-foreground",
 };
 
 export function LinePerformanceKpiCard({ title, value, unit, critical = "neutral", icon, delta }: Props) {
@@ -22,17 +22,17 @@ export function LinePerformanceKpiCard({ title, value, unit, critical = "neutral
   return (
     <div className="flex flex-col gap-0 min-w-0 px-3 py-1.5">
       <div className="flex items-center gap-1.5">
-        {icon && <span className="shrink-0 text-slate-400">{icon}</span>}
-        <span className="text-[11px] uppercase tracking-wide text-slate-500 truncate">{title}</span>
+        {icon && <span className="shrink-0 text-muted-foreground/60">{icon}</span>}
+        <span className="text-[11px] uppercase tracking-wide text-muted-foreground truncate">{title}</span>
       </div>
       <div className="flex items-baseline gap-1.5">
         <span className={`text-lg font-semibold tabular-nums leading-tight ${color}`}>
           {value ?? "—"}
         </span>
-        {unit && <span className="text-[10px] text-slate-500">{unit}</span>}
+        {unit && <span className="text-[10px] text-muted-foreground">{unit}</span>}
       </div>
       {delta && (
-        <span className="text-[10px] text-slate-500 truncate leading-tight">{delta}</span>
+        <span className="text-[10px] text-muted-foreground truncate leading-tight">{delta}</span>
       )}
     </div>
   );

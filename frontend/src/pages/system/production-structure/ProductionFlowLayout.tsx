@@ -236,13 +236,13 @@ export function ProductionFlowLayout() {
       <div className="relative">
         <PageHeader
           icon={<Database className="h-5 w-5 stroke-current" />}
-          iconClass="bg-emerald-100 text-emerald-700 ring-emerald-200/50"
+          iconClass="bg-success/15 text-success ring-emerald-200/50"
           title="Production Structure - Flow"
           subtitle="Manufacturing hierarchy explorer"
         />
         {toast && (
           <div className="absolute inset-x-0 top-0 flex items-center justify-center pointer-events-none" style={{ height: "100%" }}>
-            <span className={`px-3 py-1 rounded text-xs font-medium pointer-events-auto ${toast.type === "success" ? "bg-emerald-600 text-white" : "bg-red-600 text-white"}`}>
+            <span className={`px-3 py-1 rounded text-xs font-medium pointer-events-auto ${toast.type === "success" ? "bg-success text-white" : "bg-danger text-white"}`}>
               {toast.message}
             </span>
           </div>
@@ -258,7 +258,7 @@ export function ProductionFlowLayout() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-8 w-36 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-900 outline-none focus:border-blue-500"
+            className="h-8 w-36 rounded-[2px] border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary"
           >
             <option value="all">All</option>
             <option value="active">Active</option>
@@ -330,7 +330,7 @@ export function ProductionFlowLayout() {
             }} disabled={seeding}>
               {seeding ? "Setting up..." : "GPT Setup"}
             </ToolbarButton>
-            {selectionFilteredOut && <span className="ml-2 text-[11px] text-slate-500">Selection filtered out</span>}
+            {selectionFilteredOut && <span className="ml-2 text-[11px] text-muted-foreground">Selection filtered out</span>}
           </>
         }
       />
@@ -338,7 +338,7 @@ export function ProductionFlowLayout() {
       {/* Content - fixed 20/80 split */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Tree column */}
-        <div className={`flex flex-col min-h-0 overflow-hidden border-r border-slate-300 bg-slate-50 ${LEFT_COLUMN_WIDTH_CLASS}`}>
+        <div className={`flex flex-col min-h-0 overflow-hidden border-r border-border bg-muted ${LEFT_COLUMN_WIDTH_CLASS}`}>
           <div className="flex-1 min-h-0 overflow-auto">
             <TreeNavigation
               data={treeData || []} selectedKey={selectedNodeKey} expandedSet={expandedSet}
@@ -346,7 +346,7 @@ export function ProductionFlowLayout() {
               onContextMenu={() => {}} isLoading={loading && !treeData.length}
             />
           </div>
-          <div className="flex h-7 shrink-0 items-center justify-between border-t border-slate-200 bg-slate-100/70 px-2.5 text-[10px] font-medium text-slate-500">
+          <div className="flex h-7 shrink-0 items-center justify-between border-t border-border bg-muted/70 px-2.5 text-[10px] font-medium text-muted-foreground">
             <span>{totalTreeNodes} structure nodes</span>
             <span>{selectedPath.length ? `Depth ${selectedPath.length}` : "No selection"}</span>
           </div>
@@ -355,7 +355,7 @@ export function ProductionFlowLayout() {
 
 
         {/* Detail column */}
-        <div className="flex flex-col min-h-0 min-w-0 flex-1 bg-slate-50">
+        <div className="flex flex-col min-h-0 min-w-0 flex-1 bg-muted">
           {embeddedDetailKind ? (
             <FlowEmbeddedDetail kind={embeddedDetailKind} />
           ) : selectedNode ? (
@@ -373,8 +373,8 @@ export function ProductionFlowLayout() {
               />
             )
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center text-slate-500 gap-2">
-              <Database className="h-8 w-8 stroke-current text-slate-500" />
+            <div className="flex flex-1 flex-col items-center justify-center text-muted-foreground gap-2">
+              <Database className="h-8 w-8 stroke-current text-muted-foreground" />
               <span className="text-sm font-medium">Select an element from the production structure</span>
               <span className="text-xs">Click on a node in the tree to view its details</span>
             </div>
@@ -383,7 +383,7 @@ export function ProductionFlowLayout() {
       </div>
 
       {/* Footer — Flow Legend */}
-      <div className="shrink-0 border-t border-slate-200 bg-slate-50 flex h-10 items-center gap-5 px-4 text-xs text-slate-600 font-medium">
+      <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
         <span className="flex items-center gap-1.5"><Factory className={`h-3.5 w-3.5 ${ENTITY_COLORS.plant.iconFg} stroke-current`} /> Plant</span>
         <span className="flex items-center gap-1.5"><TrendingUpDown className={`h-3.5 w-3.5 ${ENTITY_COLORS.line.iconFg} stroke-current`} /> Line</span>
         <span className="flex items-center gap-1.5"><Component className={`h-3.5 w-3.5 ${ENTITY_COLORS.resourceGroup.iconFg} stroke-current`} /> Assigned RG</span>

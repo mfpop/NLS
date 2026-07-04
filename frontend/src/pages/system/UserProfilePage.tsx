@@ -419,7 +419,7 @@ export function UserProfilePage() {
   if (loading) {
     return (
       <div className={`flex h-full items-center justify-center ${theme.page}`}>
-        <div className={`flex items-center gap-2 rounded-md border border-slate-200 bg-card px-5 py-3 text-sm ${theme.textSecondary} shadow-sm`}>
+        <div className={`flex items-center gap-2 rounded-md border border-border bg-card px-5 py-3 text-sm ${theme.textSecondary} shadow-sm`}>
           <Loader2 className={`h-4 w-4 animate-spin ${theme.textSuccess}`} />
           Loading profile...
         </div>
@@ -514,15 +514,15 @@ export function UserProfilePage() {
         {/* Badges — highlights, score, rating */}
         <div className="flex items-center gap-1.5 overflow-hidden shrink-0 ml-auto">
           {highlights.map((h, i) => (
-            <span key={i} title={getHighlightTitle(h)} className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-slate-200 bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
+            <span key={i} title={getHighlightTitle(h)} className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
               {h}
             </span>
           ))}
           {highlights.length > 0 && <div className={`h-5 w-px shrink-0 ${theme.dividerDot}`} />}
-          <span title="Profile quality score" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-slate-200 bg-muted/40 px-2 text-[11px] font-semibold ${theme.textPrimary}`}>
+          <span title="Profile quality score" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border bg-muted/40 px-2 text-[11px] font-semibold ${theme.textPrimary}`}>
             {score.value}/100
           </span>
-          <span title="Profile completeness rating" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-slate-200 bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
+          <span title="Profile completeness rating" className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
             {score.label}
           </span>
         </div>
@@ -654,7 +654,7 @@ export function UserProfilePage() {
 
       {/* ── Completion popover ─────────────────────────────────────── */}
       {showCompletionPopover && (
-        <div ref={completionPopoverRef} className={`fixed bottom-16 right-8 z-50 w-64 rounded-lg border border-slate-200 ${theme.dropdown} p-3 shadow-lg`}>
+        <div ref={completionPopoverRef} className={`fixed bottom-16 right-8 z-50 w-64 rounded-lg border border-border ${theme.dropdown} p-3 shadow-lg`}>
           <div className={`mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${theme.textMuted}`}>Missing fields</div>
           {missingFields.length > 0 ? (
             <div className="space-y-1">

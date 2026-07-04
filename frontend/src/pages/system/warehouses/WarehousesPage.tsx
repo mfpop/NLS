@@ -63,13 +63,13 @@ interface WarehousePayload {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  RM: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  WIP: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  FG: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  SCRAP: "bg-red-500/10 text-red-600 border-red-500/20",
-  QUARANTINE: "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  SPARES: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  GENERAL: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  RM: "bg-warning/100/10 text-warning border-amber-500/20",
+  WIP: "bg-primary/100/10 text-primary border-blue-500/20",
+  FG: "bg-success/100/10 text-success border-emerald-500/20",
+  SCRAP: "bg-danger/100/10 text-danger border-red-500/20",
+  QUARANTINE: "bg-warning/100/10 text-warning border-orange-500/20",
+  SPARES: "bg-purple-500/10 text-accent-foreground border-purple-500/20",
+  GENERAL: "bg-muted0/10 text-muted-foreground border-slate-500/20",
 };
 
 function listItems<T>(value: ListResult<T> | null | undefined): T[] {
@@ -482,13 +482,13 @@ export function WarehousesPage() {
                       </div>
                     </div>
                     <div className={`mt-2 flex flex-wrap gap-1 text-[9px] ${theme.textMuted}`}>
-                      <span className="text-amber-600 font-medium">RM: 5</span>
+                      <span className="text-warning font-medium">RM: 5</span>
                       <span>·</span>
-                      <span className="text-emerald-600 font-medium">FG: 3</span>
+                      <span className="text-success font-medium">FG: 3</span>
                       <span>·</span>
-                      <span className="text-blue-600 font-medium">WIP: 2</span>
+                      <span className="text-primary font-medium">WIP: 2</span>
                       <span>·</span>
-                      <span className="text-slate-600 font-medium">Other: 2</span>
+                      <span className="text-muted-foreground font-medium">Other: 2</span>
                     </div>
                   </SectionCard>
 
@@ -634,11 +634,11 @@ export function WarehousesPage() {
       { name: "Bulk Storage", bins: 4, pct: 55, color: "cyan" },
     ];
     const colorMap: Record<string, string> = {
-      amber: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      blue: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-      emerald: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+      amber: "bg-warning/100/10 text-warning border-amber-500/20",
+      blue: "bg-primary/100/10 text-primary border-blue-500/20",
+      emerald: "bg-success/100/10 text-success border-emerald-500/20",
       violet: "bg-violet-500/10 text-violet-600 border-violet-500/20",
-      red: "bg-red-500/10 text-red-600 border-red-500/20",
+      red: "bg-danger/100/10 text-danger border-red-500/20",
       cyan: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
     };
     return (

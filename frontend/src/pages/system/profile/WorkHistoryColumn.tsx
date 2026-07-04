@@ -38,12 +38,12 @@ export function WorkHistoryColumn({
     <div ref={experienceRef} className="flex flex-col min-h-0 overflow-hidden border-r border-border-major">
       <ProfileSectionHeader
         icon={Briefcase}
-        iconColor="text-amber-500"
+        iconColor="text-warning"
         title="Work history"
         subtitle="Roles, companies, and measurable impact"
       />
 
-      <div className={`divide-y divide-slate-200 overflow-y-auto`}>
+      <div className={`divide-y divide-border overflow-y-auto`}>
         {workDraft.length > 0 ? (
           [...workDraft].sort((a, b) => {
             const yearA = extractPeriodYear(a.period);
@@ -109,7 +109,7 @@ export function WorkHistoryColumn({
                       <textarea
                         value={job.description}
                         onChange={(e) => setWorkDraft((prev) => prev.map((item) => (item.id === job.id ? { ...item, description: e.target.value } : item)))}
-                        className={`w-full rounded border border-slate-200 bg-muted/40 p-2.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground focus:border-success focus:outline-none`}
+                        className={`w-full rounded border border-border bg-muted/40 p-2.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground focus:border-success focus:outline-none`}
                         rows={4}
                         placeholder="Describe results, process improvements, or business impact."
                       />
@@ -131,7 +131,7 @@ export function WorkHistoryColumn({
                         {job.role || <MissingValue label="Untitled role" />}
                       </span>
                       {job.period && (
-                        <span className={`shrink-0 text-xs text-slate-500`}>{job.period}</span>
+                        <span className={`shrink-0 text-xs text-muted-foreground`}>{job.period}</span>
                       )}
                     </div>
                     {/* Company row */}
@@ -145,7 +145,7 @@ export function WorkHistoryColumn({
                       <ul className="mt-1.5 space-y-1">
                         {normalized.roles[index].bullets.map((point, i) => (
                           <li key={i} className={`flex items-start gap-2 text-sm ${theme.textPrimary} leading-5`}>
-                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-200" />
+                            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-muted/80" />
                             <span>{point}</span>
                           </li>
                         ))}

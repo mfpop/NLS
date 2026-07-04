@@ -21,21 +21,21 @@ interface PageHeaderProps {
 
 const SYSTEM_MESSAGE_STYLES: Record<SystemMessageType, { bg: string; border: string; text: string; icon: ReactNode }> = {
   error: {
-    bg: "bg-red-50 dark:bg-red-950/30",
-    border: "border-red-300 dark:border-red-800",
-    text: "text-red-700 dark:text-red-300",
+    bg: "bg-danger/10 dark:bg-red-950/30",
+    border: "border-danger/30 dark:border-red-800",
+    text: "text-danger dark:text-red-300",
     icon: <AlertCircle className="h-4 w-4" />,
   },
   success: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/30",
+    bg: "bg-success/10 dark:bg-emerald-950/30",
     border: "border-emerald-300 dark:border-emerald-800",
-    text: "text-emerald-700 dark:text-emerald-300",
+    text: "text-success dark:text-emerald-300",
     icon: <CheckCircle className="h-4 w-4" />,
   },
   info: {
-    bg: "bg-blue-50 dark:bg-blue-950/30",
-    border: "border-blue-300 dark:border-blue-800",
-    text: "text-blue-700 dark:text-blue-300",
+    bg: "bg-primary/10 dark:bg-blue-950/30",
+    border: "border-primary/30 dark:border-blue-800",
+    text: "text-primary dark:text-blue-300",
     icon: <Info className="h-4 w-4" />,
   },
 };

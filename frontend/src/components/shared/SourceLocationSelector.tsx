@@ -22,9 +22,9 @@ interface Props {
   plantDisabled?: boolean;
 }
 
-const SEL = "h-8 w-full bg-white border border-slate-200 px-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30";
-const SEL_DISABLED = "h-8 w-full bg-slate-50 border border-slate-200 px-2 text-sm text-slate-400 outline-none cursor-not-allowed";
-const LABEL = "block text-xs font-medium text-slate-500 mb-1";
+const SEL = "h-8 w-full bg-background border border-border px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30";
+const SEL_DISABLED = "h-8 w-full bg-muted border border-border px-2 text-sm text-muted-foreground/60 outline-none cursor-not-allowed";
+const LABEL = "block text-xs font-medium text-muted-foreground mb-1";
 
 function labelOrCode(e: any): string {
   if (!e) return "";
@@ -88,8 +88,8 @@ export function SourceLocationSelector({ plants, lines, departments, resourceGro
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5 mb-1">
-        <MapPin className="h-3.5 w-3.5 text-slate-400" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Source Location</span>
+        <MapPin className="h-3.5 w-3.5 text-muted-foreground/60" />
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">Source Location</span>
       </div>
       {/* Plant */}
       <div>
@@ -102,7 +102,7 @@ export function SourceLocationSelector({ plants, lines, departments, resourceGro
       </div>
       {/* Line */}
       <div>
-        <label className={LABEL}>Line <span className="text-slate-400 font-normal">(optional)</span></label>
+        <label className={LABEL}>Line <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
         <select name="lineId" value={value.lineId} onChange={(e) => set({ lineId: e.target.value })}
           disabled={!value.plantId} className={selCls(!value.plantId)}>
           <option value="">{value.plantId ? "Optional..." : "Select Plant first"}</option>
@@ -111,7 +111,7 @@ export function SourceLocationSelector({ plants, lines, departments, resourceGro
       </div>
       {/* Department */}
       <div>
-        <label className={LABEL}>Department <span className="text-slate-400 font-normal">(optional)</span></label>
+        <label className={LABEL}>Department <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
         <select name="departmentId" value={value.departmentId} onChange={(e) => set({ departmentId: e.target.value })}
           disabled={!value.lineId} className={selCls(!value.lineId)}>
           <option value="">{value.lineId ? "Optional..." : "Select Line first"}</option>
@@ -120,7 +120,7 @@ export function SourceLocationSelector({ plants, lines, departments, resourceGro
       </div>
       {/* Resource Group */}
       <div>
-        <label className={LABEL}>Resource Group <span className="text-slate-400 font-normal">(optional)</span></label>
+        <label className={LABEL}>Resource Group <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
         <select name="resourceGroupId" value={value.resourceGroupId} onChange={(e) => set({ resourceGroupId: e.target.value })}
           disabled={!value.departmentId} className={selCls(!value.departmentId)}>
           <option value="">{value.departmentId ? "Optional..." : "Select Dept first"}</option>
@@ -129,7 +129,7 @@ export function SourceLocationSelector({ plants, lines, departments, resourceGro
       </div>
       {/* Resource */}
       <div>
-        <label className={LABEL}>Resource <span className="text-slate-400 font-normal">(optional)</span></label>
+        <label className={LABEL}>Resource <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
         <select name="resourceId" value={value.resourceId} onChange={(e) => set({ resourceId: e.target.value })}
           disabled={!value.resourceGroupId} className={selCls(!value.resourceGroupId)}>
           <option value="">{value.resourceGroupId ? "Optional..." : "Select RG first"}</option>

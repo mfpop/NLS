@@ -73,8 +73,8 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</div>
+          <div className="h-4 w-0.5 bg-warning/100/60 rounded-full" />
+          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-warning/70 dark:text-amber-400/70">{title}</div>
         </div>
         {action}
       </div>
@@ -229,7 +229,7 @@ export function ActionsPage() {
     setSuccessMsg("Action cancelled"); setConfirmAction(null); refetch();
   }, [confirmAction, cancelAct, refetch]);
 
-  const iCls = `h-7 w-full bg-card border border-gray-300 text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const iCls = `h-7 w-full bg-card border border-border text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
   const sCls = iCls;
 
   const renderForm = () => (
@@ -287,7 +287,7 @@ export function ActionsPage() {
           <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1.5`}>No action selected</h3>
           <p className={`text-xs ${theme.textSecondary} leading-relaxed mb-4`}>Select an action or create a new one.</p>
           <button type="button" onClick={hNew}
-            className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+            className="inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80 transition-colors">
             <Plus className="h-3.5 w-3.5 stroke-current" /> New Action
           </button>
         </div>
@@ -298,7 +298,7 @@ export function ActionsPage() {
         {mutationError && isForm && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}
         {isForm ? renderForm() : (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="shrink-0 border-b border-slate-200 px-5 py-3 flex items-center gap-3">
+            <div className="shrink-0 border-b border-border px-5 py-3 flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <div className={`text-sm font-bold ${theme.textPrimary} truncate`}>{sel.title}</div>
@@ -310,27 +310,27 @@ export function ActionsPage() {
                 <div className="flex items-center gap-2 mt-0.5">
                   {sel.owner && <span className={`text-xs ${theme.textMuted}`}>Owner: {sel.owner}</span>}
                   {sel.dueDate && (
-                    <span className={`text-xs ${isOverdue(sel.dueDate) && sel.status !== "DONE" ? "text-red-500 font-semibold" : theme.textMuted}`}>
+                    <span className={`text-xs ${isOverdue(sel.dueDate) && sel.status !== "DONE" ? "text-danger font-semibold" : theme.textMuted}`}>
                       {isOverdue(sel.dueDate) && sel.status !== "DONE" && <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />}
                       Due: {sel.dueDate}
                     </span>
                   )}
-                  {sel.completedAt && <span className="text-xs text-green-600">Completed: {sel.completedAt?.slice(0, 10)}</span>}
+                  {sel.completedAt && <span className="text-xs text-success">Completed: {sel.completedAt?.slice(0, 10)}</span>}
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {sel.status === "OPEN" && (
-                  <button type="button" onClick={hStart} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={hStart} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <Play className="h-2.5 w-2.5 stroke-current" />Start
                   </button>
                 )}
                 {sel.status === "IN_PROGRESS" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "complete" })} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "complete" })} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <CheckCircle className="h-2.5 w-2.5 stroke-current" />Complete
                   </button>
                 )}
                 {sel.status !== "DONE" && sel.status !== "CANCELLED" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-danger/20 dark:border-red-800 px-2 text-[10px] font-semibold text-danger dark:text-danger/80 hover:bg-danger/10 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
                     <Ban className="h-2.5 w-2.5 stroke-current" />Cancel
                   </button>
                 )}
@@ -402,7 +402,7 @@ export function ActionsPage() {
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           <div className="flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-slate-200 flex items-center px-4">
+            <div className="shrink-0 h-8 border-b border-border flex items-center px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Actions</span>
               <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{filteredActions.length}</span>
             </div>
@@ -414,7 +414,7 @@ export function ActionsPage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No actions</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 dark:text-amber-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-warning/10 px-3 text-xs font-semibold text-warning hover:bg-warning/20 dark:text-amber-400 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> Create action</button>
                 </div>
               ) : (
@@ -432,18 +432,18 @@ export function ActionsPage() {
                       </div>
                       <div className="flex items-center gap-1.5">
                         {a.owner && <span className={`text-xs ${theme.textMuted}`}>{a.owner}</span>}
-                        {a.dueDate && <span className={`text-[10px] ${isOverdue(a.dueDate) && a.status !== "DONE" ? "text-red-500 font-semibold" : theme.textMuted}`}>{isOverdue(a.dueDate) && a.status !== "DONE" && <AlertTriangle className="inline h-2 w-2 mr-px stroke-current" />}Due: {a.dueDate}</span>}
+                        {a.dueDate && <span className={`text-[10px] ${isOverdue(a.dueDate) && a.status !== "DONE" ? "text-danger font-semibold" : theme.textMuted}`}>{isOverdue(a.dueDate) && a.status !== "DONE" && <AlertTriangle className="inline h-2 w-2 mr-px stroke-current" />}Due: {a.dueDate}</span>}
                       </div>
                     </div>
                   </div>
                 ))}</div>
               )}
             </div>
-            <div className="shrink-0 h-8 flex items-center border-t border-slate-200 bg-muted px-4">
+            <div className="shrink-0 h-8 flex items-center border-t border-border bg-muted px-4">
               <span className={`text-xs ${theme.textMuted}`}>{filteredActions.length} action{filteredActions.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
-          <div onMouseDown={handleSplitMouseDown} className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-blue-500/10" style={{ width: 2 }} />
+          <div onMouseDown={handleSplitMouseDown} className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/100/10" style={{ width: 2 }} />
           <div className={`flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
         <div className="shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">

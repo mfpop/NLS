@@ -29,7 +29,7 @@ interface Props {
   saving?: boolean;
 }
 
-const FIELD = "w-full h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm";
+const FIELD = "w-full h-8 border border-border bg-background text-sm px-2 rounded-sm";
 
 const DELIVERY_FREQ_OPTIONS = ["Daily", "Weekly", "Monthly", "2x per week"] as const;
 type DelFreqPreset = (typeof DELIVERY_FREQ_OPTIONS)[number];
@@ -39,7 +39,7 @@ function resolveDelFreqSelect(val: string | undefined | null): string {
   if (!val) return "";
   return (DELIVERY_FREQ_OPTIONS as readonly string[]).includes(val) ? val : "CUSTOM";
 }
-const LABEL = "block text-[10px] uppercase tracking-wide font-medium text-slate-500 mb-0.5";
+const LABEL = "block text-[10px] uppercase tracking-wide font-medium text-muted-foreground mb-0.5";
 
 export function VsmChartEditor({
   chart, onClose, onSaveChart,
@@ -197,30 +197,30 @@ export function VsmChartEditor({
 
   return (
     <>
-      <div className="absolute right-0 top-0 bottom-0 w-[400px] z-20 bg-white border-l border-slate-300 shadow-lg flex flex-col overflow-hidden">
+      <div className="absolute right-0 top-0 bottom-0 w-[400px] z-20 bg-background border-l border-border shadow-lg flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-7 w-7 items-center justify-center rounded bg-slate-100">
-              <Settings className="h-3.5 w-3.5 text-slate-500" />
+            <div className="flex h-7 w-7 items-center justify-center rounded bg-muted">
+              <Settings className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-slate-900 truncate">Edit Chart</h3>
-              <p className="text-[10px] text-slate-500 truncate">{chart.name}</p>
+              <h3 className="text-sm font-semibold text-foreground truncate">Edit Chart</h3>
+              <p className="text-[10px] text-muted-foreground truncate">{chart.name}</p>
             </div>
           </div>
           <div className="flex items-center gap-1">
             {chart.sourceMode === "LINKED" && onSyncFromLine && (
               <button type="button" onClick={onSyncFromLine}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100">
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-primary/20 bg-primary/10 text-primary hover:bg-primary/15">
                 <GitBranch className="h-3 w-3" /> Sync
               </button>
             )}
             <button type="button" onClick={handleSaveChart} disabled={saving}
-              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50">
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-success/20 bg-success/10 text-success hover:bg-success/15 disabled:opacity-50">
               <Save className="h-3 w-3" /> {saving ? "Saving..." : "Save"}
             </button>
-            <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 ml-1">
+            <button type="button" onClick={onClose} className="text-muted-foreground/60 hover:text-muted-foreground ml-1">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -231,13 +231,13 @@ export function VsmChartEditor({
           {/* ═══ Chart Settings ═══ */}
           <SectionToggle label="Chart Settings" isOpen={expandedSection === "chart"} onClick={() => toggleSection("chart")} />
           {expandedSection === "chart" && (
-            <div className="px-4 py-3 space-y-2.5 border-b border-slate-100">
+            <div className="px-4 py-3 space-y-2.5 border-b border-border/50">
               <div>
                 <label className={LABEL}>Chart Name</label>
                 <input value={name} onChange={(e) => setName(e.target.value)} className={FIELD} />
               </div>
               {chart.sourceMode === "LINKED" && (
-                <div className="flex items-center gap-1.5 text-[10px] text-blue-600 bg-blue-50 px-2 py-1.5 rounded-sm border border-blue-200">
+                <div className="flex items-center gap-1.5 text-[10px] text-primary bg-primary/10 px-2 py-1.5 rounded-sm border border-primary/20">
                   <GitBranch className="h-3 w-3 shrink-0" />
                   <span>Linked to line — supplier/customer editable</span>
                 </div>
@@ -254,8 +254,8 @@ export function VsmChartEditor({
               </div>
 
               {/* ── Demand / Takt section ── */}
-              <div className="pt-2 border-t border-slate-200">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Demand &amp; Takt</p>
+              <div className="pt-2 border-t border-border">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">Demand &amp; Takt</p>
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <label className={LABEL}>Demand Rate (units/day)</label>
@@ -280,8 +280,8 @@ export function VsmChartEditor({
                     className={FIELD} placeholder="450" />
                 </div>
                 {taktPreview && (
-                  <div className="flex items-center gap-1.5 mt-1 px-2 py-1.5 bg-blue-50 rounded-sm border border-blue-200">
-                    <span className="text-[10px] text-blue-700 font-bold uppercase">Takt:</span>
+                  <div className="flex items-center gap-1.5 mt-1 px-2 py-1.5 bg-primary/10 rounded-sm border border-primary/20">
+                    <span className="text-[10px] text-primary font-bold uppercase">Takt:</span>
                     <span className="text-[12px] text-blue-800 font-extrabold tabular-nums">{taktPreview}</span>
                   </div>
                 )}
@@ -292,12 +292,12 @@ export function VsmChartEditor({
           {/* ═══ Processes ═══ */}
           <SectionToggle label={`Processes (${chart.processes.length})`} isOpen={expandedSection === "processes"} onClick={() => toggleSection("processes")} />
           {expandedSection === "processes" && (
-            <div className="border-b border-slate-100">
+            <div className="border-b border-border/50">
               {chart.processes.length === 0 && !showAddProcess && (
-                <div className="px-4 py-3 text-[11px] text-slate-400 text-center">No processes yet</div>
+                <div className="px-4 py-3 text-[11px] text-muted-foreground/60 text-center">No processes yet</div>
               )}
               {chart.processes.map((p) => (
-                <div key={p.id} className="px-4 py-2.5 border-b border-slate-50 hover:bg-slate-50">
+                <div key={p.id} className="px-4 py-2.5 border-b border-slate-50 hover:bg-muted">
                   {editingProc === p.id ? (
                     <div className="space-y-1.5">
                       <input value={editProcVals[`name-${p.id}`] ?? p.name}
@@ -306,37 +306,37 @@ export function VsmChartEditor({
                       <div className="flex gap-2">
                         <input type="number" value={editProcVals[`ops-${p.id}`] ?? p.operatorCount}
                           onChange={(e) => setEditProcVals((v) => ({ ...v, [`ops-${p.id}`]: e.target.value }))}
-                          className="w-16 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Ops" />
+                          className="w-16 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Ops" />
                         <input type="number" value={editProcVals[`ct-${p.id}`] ?? p.cycleTimeValue ?? ""}
                           onChange={(e) => setEditProcVals((v) => ({ ...v, [`ct-${p.id}`]: e.target.value }))}
-                          className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="C/T" />
+                          className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="C/T" />
                         <input type="number" value={editProcVals[`wip-${p.id}`] ?? p.wip ?? ""}
                           onChange={(e) => setEditProcVals((v) => ({ ...v, [`wip-${p.id}`]: e.target.value }))}
-                          className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="WIP" />
+                          className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="WIP" />
                       </div>
                       <div className="flex gap-2">
                         <input type="number" value={editProcVals[`up-${p.id}`] ?? p.uptimePercent ?? ""}
                           onChange={(e) => setEditProcVals((v) => ({ ...v, [`up-${p.id}`]: e.target.value }))}
-                          className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Uptime %" />
+                          className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Uptime %" />
                         <input type="number" value={editProcVals[`yl-${p.id}`] ?? p.yieldPercent ?? ""}
                           onChange={(e) => setEditProcVals((v) => ({ ...v, [`yl-${p.id}`]: e.target.value }))}
-                          className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Yield %" />
+                          className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Yield %" />
                         <input type="number" value={editProcVals[`sh-${p.id}`] ?? p.shiftsPerDay ?? ""}
                           onChange={(e) => setEditProcVals((v) => ({ ...v, [`sh-${p.id}`]: e.target.value }))}
-                          className="w-16 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Shifts" />
+                          className="w-16 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Shifts" />
                       </div>
                       <div className="flex gap-1.5 pt-1">
                         <button type="button" onClick={() => handleUpdateProcess(p.id)}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100">Save</button>
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-sky-100">Save</button>
                         <button type="button" onClick={() => setEditingProc(null)}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100">Cancel</button>
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-muted">Cancel</button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-[12px] font-semibold text-slate-800 truncate">{p.name}</p>
-                        <p className="text-[10px] text-slate-500">
+                        <p className="text-[12px] font-semibold text-foreground truncate">{p.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
                           {p.operatorCount} op{p.operatorCount !== 1 ? "s" : ""}
                           {p.cycleTimeValue != null ? ` · CT: ${p.cycleTimeValue}s` : ""}
                           {p.wip != null ? ` · WIP: ${p.wip}` : ""}
@@ -345,11 +345,11 @@ export function VsmChartEditor({
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0 ml-2">
                         <button type="button" onClick={() => { setEditingProc(p.id); setEditProcVals({}); }}
-                          className="p-0.5 text-slate-400 hover:text-sky-600">
+                          className="p-0.5 text-muted-foreground/60 hover:text-accent-foreground">
                           <Settings className="h-3 w-3" />
                         </button>
                         <button type="button" onClick={() => onDeleteProcess(p.id)}
-                          className="p-0.5 text-slate-400 hover:text-red-600">
+                          className="p-0.5 text-muted-foreground/60 hover:text-danger">
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
@@ -366,26 +366,26 @@ export function VsmChartEditor({
                           className={FIELD} placeholder="Process name" />
                         <div className="flex gap-2">
                           <input type="number" value={newProc.operatorCount} onChange={(e) => setNewProc((v) => ({ ...v, operatorCount: e.target.value }))}
-                            className="w-14 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Ops" />
+                            className="w-14 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Ops" />
                           <input type="number" value={newProc.cycleTimeValue} onChange={(e) => setNewProc((v) => ({ ...v, cycleTimeValue: e.target.value }))}
-                            className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="C/T (sec)" />
+                            className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="C/T (sec)" />
                           <input type="number" value={newProc.changeoverTimeValue} onChange={(e) => setNewProc((v) => ({ ...v, changeoverTimeValue: e.target.value }))}
-                            className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="C/O (sec)" />
+                            className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="C/O (sec)" />
                         </div>
                         <div className="flex gap-2">
                           <input type="number" value={newProc.uptimePercent} onChange={(e) => setNewProc((v) => ({ ...v, uptimePercent: e.target.value }))}
-                            className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Uptime %" />
+                            className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Uptime %" />
                           <input type="number" value={newProc.yieldPercent} onChange={(e) => setNewProc((v) => ({ ...v, yieldPercent: e.target.value }))}
-                            className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Yield %" />
+                            className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Yield %" />
                           <input type="number" value={newProc.wip} onChange={(e) => setNewProc((v) => ({ ...v, wip: e.target.value }))}
-                            className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="WIP" />
+                            className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="WIP" />
                           <input type="number" min="1" value={newProc.shiftsPerDay} onChange={(e) => setNewProc((v) => ({ ...v, shiftsPerDay: e.target.value }))}
-                            className="w-14 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Shifts" />
+                            className="w-14 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Shifts" />
                         </div>
                         <label className="flex items-center gap-1.5 cursor-pointer">
                           <input type="checkbox" checked={newProc.isBottleneck} onChange={(e) => setNewProc((v) => ({ ...v, isBottleneck: e.target.checked }))}
-                            className="h-3.5 w-3.5 rounded border-slate-300 text-amber-500 focus:ring-amber-500" />
-                          <span className="text-[10px] font-medium text-slate-600">Bottleneck</span>
+                            className="h-3.5 w-3.5 rounded border-border text-warning focus:ring-amber-500" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Bottleneck</span>
                         </label>
                       </div>
                     } />
@@ -399,9 +399,9 @@ export function VsmChartEditor({
           {/* ═══ Inventories ═══ */}
           <SectionToggle label={`Inventories (${chart.inventories.length})`} isOpen={expandedSection === "inventories"} onClick={() => toggleSection("inventories")} />
           {expandedSection === "inventories" && (
-            <div className="border-b border-slate-100">
+            <div className="border-b border-border/50">
               {chart.inventories.length === 0 && !showAddInventory && (
-                <div className="px-4 py-3 text-[11px] text-slate-400 text-center">No inventory points</div>
+                <div className="px-4 py-3 text-[11px] text-muted-foreground/60 text-center">No inventory points</div>
               )}
               {chart.inventories.map((inv) => (
                 <ListItem key={inv.id} label={inv.label || "Inventory"}
@@ -417,9 +417,9 @@ export function VsmChartEditor({
                           className={FIELD} placeholder="Label" />
                         <div className="flex gap-2">
                           <input type="number" value={newInv.quantity} onChange={(e) => setNewInv((v) => ({ ...v, quantity: e.target.value }))}
-                            className="w-20 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Qty" />
+                            className="w-20 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Qty" />
                           <input type="number" value={newInv.waitTimeValue} onChange={(e) => setNewInv((v) => ({ ...v, waitTimeValue: e.target.value }))}
-                            className="w-24 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Wait time" />
+                            className="w-24 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Wait time" />
                         </div>
                       </div>
                     } />
@@ -435,19 +435,19 @@ export function VsmChartEditor({
             label={`Info Flows (${chart.informationFlows.length})`}
             isOpen={expandedSection === "infoflows"} onClick={() => toggleSection("infoflows")} />
           {expandedSection === "infoflows" && (
-            <div className="border-b border-slate-100">
+            <div className="border-b border-border/50">
               {/* Kanban/Pull validation warning */}
               {chart.productionControlTitle && chart.controlMethod?.toLowerCase().includes('kanban') &&
                 !chart.informationFlows.some(f => f.flowStyle === 'KANBAN') && (
-                <div className="mx-3 mt-2 mb-1 px-2.5 py-1.5 rounded-sm border border-amber-200 bg-amber-50">
-                  <p className="text-[10px] font-semibold text-amber-800">⚠ Kanban/Pull mismatch</p>
-                  <p className="text-[9px] text-amber-700 mt-0.5 leading-relaxed">
+                <div className="mx-3 mt-2 mb-1 px-2.5 py-1.5 rounded-sm border border-warning/20 bg-warning/10">
+                  <p className="text-[10px] font-semibold text-warning">⚠ Kanban/Pull mismatch</p>
+                  <p className="text-[9px] text-warning mt-0.5 leading-relaxed">
                     Production Control says Kanban/Pull, but no Kanban/Pull information flow is defined.
                   </p>
                 </div>
               )}
               {chart.informationFlows.length === 0 && !showAddInfoFlow && (
-                <div className="px-4 py-3 text-[11px] text-slate-400 text-center">No information flows</div>
+                <div className="px-4 py-3 text-[11px] text-muted-foreground/60 text-center">No information flows</div>
               )}
               {chart.informationFlows.map((f) => {
                 const styleColors: Record<string, string> = {
@@ -465,15 +465,15 @@ export function VsmChartEditor({
                 const styleColor = styleColors[f.flowStyle] || '#94a3b8';
                 const styleLabel = styleLabels[f.flowStyle] || f.flowStyle;
                 return (
-                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-slate-50">
+                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-muted">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full shrink-0`} style={{ backgroundColor: styleColor }} />
-                        <p className="text-[12px] font-medium text-slate-800 truncate">
+                        <p className="text-[12px] font-medium text-foreground truncate">
                           {f.fromType === 'CUSTOMER' ? 'Customer' : f.fromType === 'PC' ? 'Prod. Control' : f.fromType === 'SUPPLIER' ? 'Supplier' : f.fromType} → {f.toType === 'PC' ? 'Prod. Control' : f.toType === 'CUSTOMER' ? 'Customer' : f.toType === 'SUPPLIER' ? 'Supplier' : f.toType}
                         </p>
                       </div>
-                      <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">
                         <span style={{ color: styleColor }} className="font-semibold">{styleLabel}</span>
                         {f.label ? ` · ${f.label}` : ''}
                         {f.frequency ? ` · ${f.frequency}` : ''}
@@ -481,7 +481,7 @@ export function VsmChartEditor({
                       </p>
                     </div>
                     <button type="button" onClick={() => onDeleteInfoFlow(f.id)}
-                      className="p-0.5 text-slate-400 hover:text-red-600 shrink-0 ml-2">
+                      className="p-0.5 text-muted-foreground/60 hover:text-danger shrink-0 ml-2">
                       <Trash2 className="h-3 w-3" />
                     </button>
                   </div>
@@ -494,14 +494,14 @@ export function VsmChartEditor({
                       <div className="space-y-1.5">
                         <div className="flex gap-2">
                           <select value={newInfo.fromType} onChange={(e) => setNewInfo((v) => ({ ...v, fromType: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="CUSTOMER">Customer</option>
                             <option value="PC">Production Control</option>
                             <option value="SUPPLIER">Supplier</option>
                           </select>
-                          <span className="text-slate-400 self-center">→</span>
+                          <span className="text-muted-foreground/60 self-center">→</span>
                           <select value={newInfo.toType} onChange={(e) => setNewInfo((v) => ({ ...v, toType: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="PC">Production Control</option>
                             <option value="SUPPLIER">Supplier</option>
                             <option value="CUSTOMER">Customer</option>
@@ -511,20 +511,20 @@ export function VsmChartEditor({
                           className={FIELD} placeholder="Label (e.g. Customer orders, Release schedule)" />
                         <div className="flex gap-2">
                           <input value={newInfo.frequency} onChange={(e) => setNewInfo((v) => ({ ...v, frequency: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Frequency (e.g. Daily, Weekly)" />
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Frequency (e.g. Daily, Weekly)" />
                           <input value={newInfo.method} onChange={(e) => setNewInfo((v) => ({ ...v, method: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Method (e.g. EDI, Email)" />
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Method (e.g. EDI, Email)" />
                         </div>
                         <div className="flex gap-2">
                           <select value={newInfo.flowStyle} onChange={(e) => setNewInfo((v) => ({ ...v, flowStyle: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="ELECTRONIC">Electronic / EDI</option>
                             <option value="MANUAL">Manual</option>
                             <option value="KANBAN">Kanban / Pull signal</option>
                             <option value="SCHEDULE">Production schedule</option>
                           </select>
                           <select value={newInfo.transmissionType} onChange={(e) => setNewInfo((v) => ({ ...v, transmissionType: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="ELECTRONIC">Electronic</option>
                             <option value="MANUAL">Manual</option>
                             <option value="NONE">None</option>
@@ -544,27 +544,27 @@ export function VsmChartEditor({
             label={`Material Flows (${chart.materialFlows.length})`}
             isOpen={expandedSection === "matflows"} onClick={() => toggleSection("matflows")} />
           {expandedSection === "matflows" && (
-            <div className="border-b border-slate-100">
+            <div className="border-b border-border/50">
               {chart.materialFlows.length === 0 && !showAddMatFlow && (
-                <div className="px-4 py-3 text-[11px] text-slate-400 text-center">No material flows</div>
+                <div className="px-4 py-3 text-[11px] text-muted-foreground/60 text-center">No material flows</div>
               )}
               {chart.materialFlows.map((f) => (
                 editingMatFlow === f.id ? (
-                  <div key={f.id} className="px-4 py-2.5 border-b border-slate-50 hover:bg-slate-50">
+                  <div key={f.id} className="px-4 py-2.5 border-b border-slate-50 hover:bg-muted">
                     <div className="space-y-1.5">
                       <div className="flex gap-2">
                         <select value={editMatVals[`fromType-${f.id}`] ?? f.fromType}
                           onChange={(e) => setEditMatVals((v) => ({ ...v, [`fromType-${f.id}`]: e.target.value }))}
-                          className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                          className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                           <option value="SUPPLIER">Supplier</option>
                           <option value="CUSTOMER">Customer</option>
                           <option value="PROCESS">Process</option>
                           <option value="INVENTORY">Inventory</option>
                         </select>
-                        <span className="text-slate-400 self-center">→</span>
+                        <span className="text-muted-foreground/60 self-center">→</span>
                         <select value={editMatVals[`toType-${f.id}`] ?? f.toType}
                           onChange={(e) => setEditMatVals((v) => ({ ...v, [`toType-${f.id}`]: e.target.value }))}
-                          className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                          className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                           <option value="CUSTOMER">Customer</option>
                           <option value="PROCESS">Process</option>
                           <option value="INVENTORY">Inventory</option>
@@ -574,10 +574,10 @@ export function VsmChartEditor({
                       <div className="flex gap-2">
                         <input value={editMatVals[`label-${f.id}`] ?? f.label}
                           onChange={(e) => setEditMatVals((v) => ({ ...v, [`label-${f.id}`]: e.target.value }))}
-                          className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Label" />
+                          className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Label" />
                         <select value={editMatVals[`flowType-${f.id}`] ?? f.flowType}
                           onChange={(e) => setEditMatVals((v) => ({ ...v, [`flowType-${f.id}`]: e.target.value }))}
-                          className="w-28 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                          className="w-28 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                           <option value="PUSH">Push</option>
                           <option value="PULL">Pull</option>
                           <option value="FIFO">FIFO</option>
@@ -604,27 +604,27 @@ export function VsmChartEditor({
                       )}
                       <div className="flex gap-1.5 pt-1">
                         <button type="button" onClick={() => handleUpdateMaterialFlow(f.id)}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100">Save</button>
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-sky-100">Save</button>
                         <button type="button" onClick={() => setEditingMatFlow(null)}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100">Cancel</button>
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-muted">Cancel</button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-slate-50">
+                  <div key={f.id} className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-muted">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-medium text-slate-800 truncate">{f.fromType} → {f.toType}</p>
-                      <p className="text-[10px] text-slate-500 truncate">
+                      <p className="text-[12px] font-medium text-foreground truncate">{f.fromType} → {f.toType}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">
                         {f.flowType}{f.label ? ` · ${f.label}` : ""}{f.deliveryFrequency ? ` · Freq: ${f.deliveryFrequency}` : ""}
                       </p>
                     </div>
                     <div className="flex items-center gap-0.5 shrink-0 ml-2">
                       <button type="button" onClick={() => { setEditingMatFlow(f.id); setEditMatVals({}); }}
-                        className="p-0.5 text-slate-400 hover:text-sky-600">
+                        className="p-0.5 text-muted-foreground/60 hover:text-accent-foreground">
                         <Settings className="h-3 w-3" />
                       </button>
                       <button type="button" onClick={() => onDeleteMaterialFlow(f.id)}
-                        className="p-0.5 text-slate-400 hover:text-red-600">
+                        className="p-0.5 text-muted-foreground/60 hover:text-danger">
                         <Trash2 className="h-3 w-3" />
                       </button>
                     </div>
@@ -638,15 +638,15 @@ export function VsmChartEditor({
                       <div className="space-y-1.5">
                         <div className="flex gap-2">
                           <select value={newMat.fromType} onChange={(e) => setNewMat((v) => ({ ...v, fromType: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="SUPPLIER">Supplier</option>
                             <option value="CUSTOMER">Customer</option>
                             <option value="PROCESS">Process</option>
                             <option value="INVENTORY">Inventory</option>
                           </select>
-                          <span className="text-slate-400 self-center">→</span>
+                          <span className="text-muted-foreground/60 self-center">→</span>
                           <select value={newMat.toType} onChange={(e) => setNewMat((v) => ({ ...v, toType: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="CUSTOMER">Customer</option>
                             <option value="PROCESS">Process</option>
                             <option value="INVENTORY">Inventory</option>
@@ -655,9 +655,9 @@ export function VsmChartEditor({
                         </div>
                         <div className="flex gap-2">
                           <input value={newMat.label} onChange={(e) => setNewMat((v) => ({ ...v, label: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Label (e.g. Kanban = 40)" />
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Label (e.g. Kanban = 40)" />
                           <select value={newMat.flowType} onChange={(e) => setNewMat((v) => ({ ...v, flowType: e.target.value }))}
-                            className="w-28 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm">
+                            className="w-28 h-8 border border-border bg-background text-sm px-2 rounded-sm">
                             <option value="PUSH">Push</option>
                             <option value="PULL">Pull</option>
                             <option value="FIFO">FIFO</option>
@@ -694,9 +694,9 @@ export function VsmChartEditor({
             label={`Timeline (${chart.timelineSegments.length})`}
             isOpen={expandedSection === "timeline"} onClick={() => toggleSection("timeline")} />
           {expandedSection === "timeline" && (
-            <div className="border-b border-slate-100">
+            <div className="border-b border-border/50">
               {chart.timelineSegments.length === 0 && !showAddTimeline && (
-                <div className="px-4 py-3 text-[11px] text-slate-400 text-center">No timeline segments</div>
+                <div className="px-4 py-3 text-[11px] text-muted-foreground/60 text-center">No timeline segments</div>
               )}
               {chart.timelineSegments.map((seg) => (
                 <ListItem key={seg.id}
@@ -713,9 +713,9 @@ export function VsmChartEditor({
                           className={FIELD} placeholder="Process label" />
                         <div className="flex gap-2">
                           <input type="number" value={newTimeline.waitDays} onChange={(e) => setNewTimeline((v) => ({ ...v, waitDays: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Wait time (days)" />
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Wait time (days)" />
                           <input type="number" value={newTimeline.processSec} onChange={(e) => setNewTimeline((v) => ({ ...v, processSec: e.target.value }))}
-                            className="flex-1 h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm" placeholder="Process time (sec)" />
+                            className="flex-1 h-8 border border-border bg-background text-sm px-2 rounded-sm" placeholder="Process time (sec)" />
                         </div>
                       </div>
                     } />
@@ -728,7 +728,7 @@ export function VsmChartEditor({
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 py-2 flex flex-col gap-2 text-[10px] text-slate-500">
+        <div className="shrink-0 border-t border-border bg-muted px-4 py-2 flex flex-col gap-2 text-[10px] text-muted-foreground">
           <div className="flex items-center justify-between">
             <span>{chart.sourceMode === "LINKED" ? "Linked to production line" : "Manual chart"}</span>
             <span>
@@ -737,7 +737,7 @@ export function VsmChartEditor({
           </div>
           {onDeleteChart && (
             <button type="button" onClick={onDeleteChart}
-              className="flex items-center justify-center gap-1.5 w-full px-2 py-1.5 text-[11px] font-medium rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors">
+              className="flex items-center justify-center gap-1.5 w-full px-2 py-1.5 text-[11px] font-medium rounded border border-danger/20 bg-danger/10 text-danger hover:bg-danger/15 transition-colors">
               <Trash2 className="h-3.5 w-3.5" />
               Delete Chart
             </button>
@@ -755,7 +755,7 @@ function SectionToggle({ label, isOpen, onClick, icon }: {
 }) {
   return (
     <button type="button" onClick={onClick}
-      className="flex items-center justify-between w-full px-4 py-2 text-[11px] font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 border-b border-slate-100">
+      className="flex items-center justify-between w-full px-4 py-2 text-[11px] font-semibold text-muted-foreground bg-muted hover:bg-muted border-b border-border/50">
       <span className="flex items-center gap-1.5">
         {icon}
         {label}
@@ -769,13 +769,13 @@ function ListItem({ label, meta, onDelete }: {
   label: string; meta: string; onDelete: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-slate-50">
+    <div className="flex items-center justify-between px-4 py-2 border-b border-slate-50 hover:bg-muted">
       <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-medium text-slate-800 truncate">{label}</p>
-        <p className="text-[10px] text-slate-500 truncate">{meta}</p>
+        <p className="text-[12px] font-medium text-foreground truncate">{label}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{meta}</p>
       </div>
       <button type="button" onClick={onDelete}
-        className="p-0.5 text-slate-400 hover:text-red-600 shrink-0 ml-2">
+        className="p-0.5 text-muted-foreground/60 hover:text-danger shrink-0 ml-2">
         <Trash2 className="h-3 w-3" />
       </button>
     </div>
@@ -785,7 +785,7 @@ function ListItem({ label, meta, onDelete }: {
 function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className="flex items-center gap-1 text-[10px] font-medium text-sky-600 hover:text-sky-700">
+      className="flex items-center gap-1 text-[10px] font-medium text-accent-foreground hover:text-accent-foreground">
       <Plus className="h-3 w-3" /> {label}
     </button>
   );
@@ -795,13 +795,13 @@ function AddForm({ onAdd, onCancel, fields }: {
   onAdd: () => void; onCancel: () => void; fields: React.ReactNode;
 }) {
   return (
-    <div className="space-y-1.5 border border-slate-200 rounded-sm p-2 bg-slate-50">
+    <div className="space-y-1.5 border border-border rounded-sm p-2 bg-muted">
       {fields}
       <div className="flex gap-1.5 pt-0.5">
         <button type="button" onClick={onAdd}
-          className="px-2 py-0.5 text-[10px] font-medium rounded bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100">Add</button>
+          className="px-2 py-0.5 text-[10px] font-medium rounded bg-accent/10 text-accent-foreground border border-accent/20 hover:bg-sky-100">Add</button>
         <button type="button" onClick={onCancel}
-          className="px-2 py-0.5 text-[10px] font-medium rounded bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100">Cancel</button>
+          className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted text-muted-foreground border border-border hover:bg-muted">Cancel</button>
       </div>
     </div>
   );

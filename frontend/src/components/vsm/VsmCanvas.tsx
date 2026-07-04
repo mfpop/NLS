@@ -138,7 +138,7 @@ export function VsmCanvas({ diagram, selectedNodeId, onSelectNode, showWip, show
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden bg-slate-50">
+      <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden bg-muted">
         <svg width="100%" height="100%"
           className="cursor-grab active:cursor-grabbing"
           onWheel={handleWheel} onMouseDown={handleMouseDown}

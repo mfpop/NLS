@@ -20,7 +20,7 @@ export const ExplorerToolbarSearch = forwardRef(function ExplorerToolbarSearch(
   ref: Ref<HTMLInputElement>,
 ) {
   return (
-    <div className="relative flex h-8 w-full items-center overflow-hidden rounded-[2px] border border-slate-300 bg-white focus-within:after:absolute focus-within:after:bottom-0 focus-within:after:left-0 focus-within:after:h-[2px] focus-within:after:w-full focus-within:after:bg-sky-500 disabled:pointer-events-none disabled:opacity-50">
+    <div className="relative flex h-8 w-full items-center overflow-hidden rounded-[2px] border border-border bg-background focus-within:after:absolute focus-within:after:bottom-0 focus-within:after:left-0 focus-within:after:h-[2px] focus-within:after:w-full focus-within:after:bg-accent/100 disabled:pointer-events-none disabled:opacity-50">
       <input
         ref={ref}
         type="text"
@@ -28,21 +28,21 @@ export const ExplorerToolbarSearch = forwardRef(function ExplorerToolbarSearch(
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className={`h-full w-full bg-transparent pl-3 pr-9 text-xs text-slate-800 placeholder:text-slate-500 outline-none disabled:pointer-events-none ${FONT}`}
+        className={`h-full w-full bg-transparent pl-3 pr-9 text-xs text-foreground placeholder:text-muted-foreground outline-none disabled:pointer-events-none ${FONT}`}
       />
       {value && !disabled && (
         <button
           type="button"
           onClick={() => onChange("")}
-          className="absolute right-7 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600"
+          className="absolute right-7 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/60 hover:text-muted-foreground"
         >
           <X className="h-3.5 w-3.5" />
         </button>
       )}
       {debouncing ? (
-        <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-500 animate-spin" />
+        <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-accent-foreground animate-spin" />
       ) : (
-        <Search className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <Search className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       )}
     </div>
   );
@@ -87,22 +87,22 @@ export function ExplorerToolbarDropdown({
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
-        className={`flex h-8 ${width} items-center justify-between gap-2 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-800 hover:bg-slate-50 leading-none ${FONT}`}
+        className={`flex h-8 ${width} items-center justify-between gap-2 rounded-[2px] border border-border bg-background px-2 text-xs text-foreground hover:bg-muted leading-none ${FONT}`}
       >
         <span className="truncate">{sel ? sel.label : placeholder}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 min-w-[180px] rounded-[4px] border border-slate-200 bg-white py-1 shadow-md ring-1 ring-black/5">
+        <div className="absolute left-0 top-full z-50 mt-1 min-w-[180px] rounded-[4px] border border-border bg-background py-1 shadow-md ring-1 ring-black/5">
           {options.map((o) => (
             <button
               key={o.value}
               type="button"
               onClick={() => { onChange(o.value); setOpen(false); }}
-              className={`flex h-8 w-full items-center gap-2 px-3 text-xs text-left hover:bg-slate-100 ${o.value === value ? "font-medium text-slate-950" : "text-slate-800"}`}
+              className={`flex h-8 w-full items-center gap-2 px-3 text-xs text-left hover:bg-muted ${o.value === value ? "font-medium text-foreground" : "text-foreground"}`}
             >
               {o.value === value ? (
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                <span className="h-2 w-2 shrink-0 rounded-full bg-success/100" />
               ) : (
                 <span className="w-3.5 shrink-0" />
               )}
@@ -130,7 +130,7 @@ interface ExplorerButtonProps {
 export function ExplorerToolbarButton({
   icon: Icon, label, onClick, disabled = false, title, variant = "default", active = false, className = "",
 }: ExplorerButtonProps) {
-  const base = `inline-flex h-8 items-center gap-1.5 rounded-[2px] bg-transparent px-2 text-xs font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:text-slate-400 disabled:hover:bg-transparent ${FONT}`;
+  const base = `inline-flex h-8 items-center gap-1.5 rounded-[2px] bg-transparent px-2 text-xs font-medium whitespace-nowrap transition-colors disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:text-muted-foreground/60 disabled:hover:bg-transparent ${FONT}`;
 
   if (variant === "success") {
     return (
@@ -139,7 +139,7 @@ export function ExplorerToolbarButton({
         onClick={onClick}
         title={title}
         disabled={disabled}
-        className={`${base} text-emerald-700 hover:bg-emerald-50 active:bg-emerald-100 ${active ? "bg-emerald-50 text-emerald-800" : ""} ${className}`}
+        className={`${base} text-success hover:bg-success/10 active:bg-success/15 ${active ? "bg-success/10 text-success" : ""} ${className}`}
       >
         <Icon className="h-4 w-4 shrink-0 stroke-current" />
         <span>{label}</span>
@@ -153,7 +153,7 @@ export function ExplorerToolbarButton({
         onClick={onClick}
         title={title}
         disabled={disabled}
-        className={`${base} text-red-600 hover:bg-red-50 active:bg-red-100 ${active ? "bg-red-50 text-red-700" : ""} ${className}`}
+        className={`${base} text-danger hover:bg-danger/10 active:bg-danger/15 ${active ? "bg-danger/10 text-danger" : ""} ${className}`}
       >
         <Icon className="h-4 w-4 shrink-0 stroke-current" />
         <span>{label}</span>
@@ -166,7 +166,7 @@ export function ExplorerToolbarButton({
       onClick={onClick}
       title={title}
       disabled={disabled}
-      className={`${base} text-slate-700 hover:bg-slate-100 active:bg-slate-200 ${active ? "bg-slate-100" : ""} ${className}`}
+      className={`${base} text-muted-foreground hover:bg-muted active:bg-muted/80 ${active ? "bg-muted" : ""} ${className}`}
     >
       <Icon className="h-4 w-4 shrink-0 stroke-current" />
       <span>{label}</span>
@@ -176,7 +176,7 @@ export function ExplorerToolbarButton({
 
 // ── Vertical Separator ──
 export function ExplorerToolbarSeparator({ className = "" }: { className?: string }) {
-  return <span className={`mx-0.5 h-5 w-px shrink-0 bg-slate-200 ${className}`} />;
+  return <span className={`mx-0.5 h-5 w-px shrink-0 bg-muted/80 ${className}`} />;
 }
 
 // ── Toolbar Layout ──
@@ -204,10 +204,10 @@ export function ExplorerToolbar({
   filters, actions, children, className = "", leftWidth = "w-[20%]",
 }: ExplorerToolbarProps) {
   return (
-    <div className={`flex h-10 shrink-0 items-center border-b border-slate-200 bg-muted text-xs leading-tight tracking-normal text-slate-800 select-none font-windows ${className}`}>
+    <div className={`flex h-10 shrink-0 items-center border-b border-border bg-muted text-xs leading-tight tracking-normal text-foreground select-none font-windows ${className}`}>
       {/* Left section — search */}
       {(searchValue !== undefined || children) && (
-        <div className={`flex h-full items-center border-r border-slate-300 px-2 ${leftWidth} min-w-[240px] max-w-[360px]`}>
+        <div className={`flex h-full items-center border-r border-border px-2 ${leftWidth} min-w-[240px] max-w-[360px]`}>
           {searchValue !== undefined ? (
             <div className="w-full">
               <ExplorerToolbarSearch

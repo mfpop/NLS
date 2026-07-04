@@ -54,9 +54,9 @@ export function InlineEditField(props: InlineEditProps) {
   }, [hSave, hCancel, props.type]);
 
   if (editing) {
-    const inputCls = "h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none focus:border-blue-500 rounded";
-    const textareaCls = "w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none focus:border-blue-500 resize-none rounded";
-    const selectCls = "h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-blue-500 rounded cursor-pointer";
+    const inputCls = "h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none focus:border-primary rounded";
+    const textareaCls = "w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none focus:border-primary resize-none rounded";
+    const selectCls = "h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-primary rounded cursor-pointer";
 
     return (
       <div className="flex items-start gap-1">
@@ -72,8 +72,8 @@ export function InlineEditField(props: InlineEditProps) {
           )}
         </div>
         <div className="flex shrink-0 gap-0.5 pt-0.5">
-          <button onClick={hSave} className="flex h-5 w-5 items-center justify-center rounded text-green-600 hover:bg-green-50 dark:hover:bg-green-950/30"><Check className="h-3 w-3 stroke-current" /></button>
-          <button onClick={hCancel} className="flex h-5 w-5 items-center justify-center rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"><X className="h-3 w-3 stroke-current" /></button>
+          <button onClick={hSave} className="flex h-5 w-5 items-center justify-center rounded text-success hover:bg-success/10 dark:hover:bg-green-950/30"><Check className="h-3 w-3 stroke-current" /></button>
+          <button onClick={hCancel} className="flex h-5 w-5 items-center justify-center rounded text-danger hover:bg-danger/10 dark:hover:bg-red-950/30"><X className="h-3 w-3 stroke-current" /></button>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export function InlineEditField(props: InlineEditProps) {
     : value || "—";
 
   return (
-    <button onClick={() => setEditing(true)} className={`group cursor-pointer text-left transition-all hover:bg-white/40 dark:hover:bg-slate-800/40 rounded px-1 -mx-1 ${className}`} title={label ? `Edit ${label}` : "Click to edit"}>
+    <button onClick={() => setEditing(true)} className={`group cursor-pointer text-left transition-all hover:bg-background/40 dark:hover:bg-slate-800/40 rounded px-1 -mx-1 ${className}`} title={label ? `Edit ${label}` : "Click to edit"}>
       <span className="text-foreground font-medium group-hover:underline group-hover:decoration-dotted group-hover:decoration-muted-foreground/40">{displayValue}</span>
     </button>
   );

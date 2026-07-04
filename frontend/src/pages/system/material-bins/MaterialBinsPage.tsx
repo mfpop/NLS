@@ -57,17 +57,17 @@ const BIN_MODE_OPTIONS = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  RM: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  INPUT: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  OUTPUT: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  RM: "bg-warning/100/10 text-warning border-amber-500/20",
+  INPUT: "bg-primary/100/10 text-primary border-blue-500/20",
+  OUTPUT: "bg-success/100/10 text-success border-emerald-500/20",
   WIP: "bg-violet-500/10 text-violet-600 border-violet-500/20",
   FIFO: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
-  SUPERMARKET: "bg-orange-500/10 text-orange-600 border-orange-500/20",
-  FG: "bg-green-500/10 text-green-600 border-green-500/20",
-  SCRAP: "bg-red-500/10 text-red-600 border-red-500/20",
-  QUARANTINE: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
-  SPARES: "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  LINE_SIDE: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  SUPERMARKET: "bg-warning/100/10 text-warning border-orange-500/20",
+  FG: "bg-success/100/10 text-success border-green-500/20",
+  SCRAP: "bg-danger/100/10 text-danger border-red-500/20",
+  QUARANTINE: "bg-warning/10 text-warning border-yellow-500/20",
+  SPARES: "bg-purple-500/10 text-accent-foreground border-purple-500/20",
+  LINE_SIDE: "bg-muted0/10 text-muted-foreground border-slate-500/20",
 };
 
 const ET: Record<string, string> = {
@@ -126,7 +126,7 @@ function ValidationPill({ ok, label, warning }: { ok: boolean; label: string; wa
 
 function TypeBadge({ type }: { type: string }) {
   const opt = BIN_TYPE_OPTIONS.find((o) => o.value === type);
-  const colors = TYPE_COLORS[type] || "bg-slate-500/10 text-slate-600 border-slate-500/20";
+  const colors = TYPE_COLORS[type] || "bg-muted0/10 text-muted-foreground border-slate-500/20";
   return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${colors}`}>{opt?.label || type}</span>;
 }
 
@@ -415,7 +415,7 @@ export function MaterialBinsPage() {
             </div>
             <div className="flex items-center gap-1.5 ml-2">
               {bin.fifoEnabled && <span className={`inline-flex items-center rounded-md border border-cyan-500/20 bg-cyan-500/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-cyan-600`}>FIFO</span>}
-              {bin.supermarketEnabled && <span className={`inline-flex items-center rounded-md border border-orange-500/20 bg-orange-500/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-orange-600`}>SM</span>}
+              {bin.supermarketEnabled && <span className={`inline-flex items-center rounded-md border border-orange-500/20 bg-warning/100/10 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-warning`}>SM</span>}
               <Badge label={bin.isActive ? "active" : "inactive"} variant={bin.isActive ? "active" : "inactive"} />
               {isForm && <Badge label="Editing" variant="rose" />}
             </div>
@@ -712,9 +712,9 @@ export function MaterialBinsPage() {
       { name: "Overflow", bins: 1, pct: 15, color: "amber" },
     ];
     const colorMap: Record<string, string> = {
-      amber: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-      blue: "bg-blue-500/10 text-blue-600 border-blue-500/20",
-      emerald: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+      amber: "bg-warning/100/10 text-warning border-amber-500/20",
+      blue: "bg-primary/100/10 text-primary border-blue-500/20",
+      emerald: "bg-success/100/10 text-success border-emerald-500/20",
       cyan: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
     };
     return (

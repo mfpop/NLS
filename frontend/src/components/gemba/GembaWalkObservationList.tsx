@@ -54,33 +54,33 @@ export function GembaWalkObservationList({
   return (
     <div className="flex flex-col h-full">
       {/* Header with summary counts */}
-      <div className="h-9 shrink-0 flex items-center justify-between px-3 border-b border-slate-200 bg-slate-50">
+      <div className="h-9 shrink-0 flex items-center justify-between px-3 border-b border-border bg-muted">
         <div className="flex items-center gap-1.5">
-          <Footprints className="h-4 w-4 text-slate-500" />
-          <h3 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Observations</h3>
+          <Footprints className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Observations</h3>
           {loading && (
             <span className="h-3 w-3 rounded-full border-2 border-sky-500 border-t-transparent animate-spin" />
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <span className="font-semibold text-slate-700">{totalCount} total</span>
-          <span className="text-slate-300">·</span>
-          <span className="text-red-600 font-medium">{openCount} open</span>
-          <span className="text-slate-300">·</span>
-          <span className="text-amber-600 font-medium">{criticalCount} critical</span>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span className="font-semibold text-muted-foreground">{totalCount} total</span>
+          <span className="text-muted-foreground/30">·</span>
+          <span className="text-danger font-medium">{openCount} open</span>
+          <span className="text-muted-foreground/30">·</span>
+          <span className="text-warning font-medium">{criticalCount} critical</span>
         </div>
       </div>
 
       {/* List body */}
-      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
+      <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border/50">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full gap-3 py-8 text-center">
-            <Footprints className="h-10 w-10 text-slate-300" />
+            <Footprints className="h-10 w-10 text-muted-foreground/30" />
             <div>
-              <p className="text-sm font-medium text-slate-700">
+              <p className="text-sm font-medium text-muted-foreground">
                 {observations.length === 0 ? "No observations recorded" : "No matching observations"}
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {observations.length === 0
                   ? "Record the first Gemba observation from the left panel."
                   : "Try adjusting the filters above."}

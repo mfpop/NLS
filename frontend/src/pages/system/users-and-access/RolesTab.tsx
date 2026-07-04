@@ -31,12 +31,12 @@ function fmtDate(iso?: string | null): string {
   catch { return iso; }
 }
 
-const hdr = "h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center";
-const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
+const hdr = "h-8 border-b border-border bg-muted px-3 flex items-center";
+const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
 const scopeBadgeMap: Record<ScopeLevel, string> = {
-  global: "border-blue-400/60 text-blue-600 bg-blue-50",
-  company: "border-indigo-400/60 text-indigo-600 bg-indigo-50",
-  plant: "border-purple-400/60 text-purple-600 bg-purple-50",
+  global: "border-blue-400/60 text-primary bg-primary/10",
+  company: "border-indigo-400/60 text-primary bg-indigo-50",
+  plant: "border-purple-400/60 text-accent-foreground bg-purple-50",
   department: "border-cyan-400/60 text-cyan-600 bg-cyan-50",
 };
 const scopeLabelMap: Record<ScopeLevel, string> = { global: "Global", company: "Company", plant: "Plant", department: "Department" };
@@ -67,12 +67,12 @@ function ModulePermissionsGrid({ permissions, allPermissions, mode, selectedPerm
 
   if (modules.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 py-3 text-xs text-slate-400">
+      <div className="flex flex-col items-center justify-center gap-2 py-3 text-xs text-muted-foreground/60">
         <Shield className="h-4 w-4" />
         <span>No permissions assigned to this role.</span>
         {canAssign && mode === "view" && (
           <button type="button" onClick={onStartAssign}
-            className="inline-flex items-center gap-1 rounded border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50">
+            className="inline-flex items-center gap-1 rounded border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10">
             <Pencil className="h-3 w-3" />Assign permissions
           </button>
         )}
@@ -81,16 +81,16 @@ function ModulePermissionsGrid({ permissions, allPermissions, mode, selectedPerm
   }
 
   return (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-border/50">
       {modules.map((mod) => {
         const perms = grouped.get(mod)!;
         const permByAction = new Map<string, PermissionNode>();
         perms.forEach((p) => permByAction.set(p.action.toLowerCase(), p));
         return (
-          <div key={mod} className="px-3 py-1.5 hover:bg-slate-50/40">
+          <div key={mod} className="px-3 py-1.5 hover:bg-muted/40">
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-[11px] font-medium text-slate-600 capitalize">{mod}</span>
-              <span className="text-[10px] text-slate-400">({perms.length})</span>
+              <span className="text-[11px] font-medium text-muted-foreground capitalize">{mod}</span>
+              <span className="text-[10px] text-muted-foreground/60">({perms.length})</span>
             </div>
             <div className="grid grid-cols-6 gap-1">
               {ACTION_COLUMNS.map((action) => {
@@ -104,10 +104,10 @@ function ModulePermissionsGrid({ permissions, allPermissions, mode, selectedPerm
                     <button key={action} type="button" onClick={toggle}
                       className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] transition-colors ${
                         isSelected
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-300 font-medium"
-                          : "bg-white text-slate-400 border border-slate-200 hover:border-slate-300"
+                          ? "bg-success/10 text-success border border-emerald-300 font-medium"
+                          : "bg-background text-muted-foreground/60 border border-border hover:border-border"
                       }`}>
-                      {isSelected ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <span className="w-3 text-center text-slate-300">—</span>}
+                      {isSelected ? <CheckCircle2 className="h-3 w-3 text-success" /> : <span className="w-3 text-center text-muted-foreground/30">—</span>}
                       <span className="truncate">{actionLabel}</span>
                     </button>
                   );
@@ -115,10 +115,10 @@ function ModulePermissionsGrid({ permissions, allPermissions, mode, selectedPerm
                 return (
                   <div key={action} className={`flex items-center gap-1 rounded border px-1.5 py-1 text-[11px] ${
                     hasAction
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200/60 font-medium"
-                      : "bg-white text-slate-400 border-slate-200"
+                      ? "bg-success/10 text-success border-success/20/60 font-medium"
+                      : "bg-background text-muted-foreground/60 border-border"
                   }`}>
-                    {hasAction ? <CheckCircle2 className="h-3 w-3 text-emerald-500" /> : <span className="w-3 text-center text-slate-300">—</span>}
+                    {hasAction ? <CheckCircle2 className="h-3 w-3 text-success" /> : <span className="w-3 text-center text-muted-foreground/30">—</span>}
                     <span className="truncate">{actionLabel}</span>
                   </div>
                 );
@@ -451,19 +451,19 @@ export function RolesTab() {
         {capabilities.canEditRole && <ToolbarButton icon={Pencil} label="Edit Role" onClick={openEditRole} disabled={!selectedRole} variant="edit" />}
         {capabilities.canAssignPermissions && <ToolbarButton icon={ShieldCheck as any} label="Assign Permissions" onClick={startAssignPermissions} disabled={!selectedRole} variant="create" />}
         {capabilities.canAssignUsers && <ToolbarButton icon={Users as any} label="Assign Users" onClick={openAssignUsers} disabled={!selectedRole} variant="create" />}
-        <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" />
+        <span className="mx-0.5 h-5 w-px shrink-0 bg-muted/80" />
         {capabilities.canDeactivateRole && selectedRole && (
           archiveConfirmId ? (
             <div className="flex items-center gap-1 text-[11px]">
-              <span className="text-red-600 font-medium">Archive role?</span>
-              <button type="button" onClick={confirmArchive} disabled={isArchiving} className="inline-flex h-7 items-center rounded bg-red-600 px-2 text-[10px] font-semibold text-white hover:bg-red-700 disabled:opacity-60">{isArchiving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
-              <button type="button" onClick={() => setArchiveConfirmId(null)} className="inline-flex h-7 items-center rounded border border-slate-300 bg-white px-2 text-[10px] text-slate-600 hover:bg-slate-50">No</button>
+              <span className="text-danger font-medium">Archive role?</span>
+              <button type="button" onClick={confirmArchive} disabled={isArchiving} className="inline-flex h-7 items-center rounded bg-danger px-2 text-[10px] font-semibold text-white hover:bg-danger/80 disabled:opacity-60">{isArchiving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
+              <button type="button" onClick={() => setArchiveConfirmId(null)} className="inline-flex h-7 items-center rounded border border-border bg-background px-2 text-[10px] text-muted-foreground hover:bg-muted">No</button>
             </div>
           ) : (
             <ToolbarButton icon={Trash2 as any} label={selectedRole.isSystemRole ? "Protected" : "Deactivate"} onClick={() => setArchiveConfirmId(selectedRole.id)} variant={selectedRole.isSystemRole ? undefined : "danger"} disabled={selectedRole.isSystemRole} />
           )
         )}
-        <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" />
+        <span className="mx-0.5 h-5 w-px shrink-0 bg-muted/80" />
       </>) : null}
       {capabilities.canCreateRole && <ToolbarButton icon={Plus} label="New Role" onClick={openCreateRole} variant="create" />}
       <ToolbarButton icon={RefreshCw} label="Refresh" onClick={refreshRoles} variant="neutral" />
@@ -486,11 +486,11 @@ export function RolesTab() {
       actions: <div className="flex items-center gap-2">{toolbarActionsRef.current}</div>,
     });
     setFooter(
-      <span className="flex items-center gap-4 text-xs text-slate-500">
+      <span className="flex items-center gap-4 text-xs text-muted-foreground">
         <span>{roleCatalog.length} role{roleCatalog.length !== 1 ? "s" : ""}</span>
-        {selectedRole && <><span className="h-4 w-px bg-slate-200" /><span>{selectedRole.renderLabel}</span></>}
-        {selectedRole && <><span className="h-4 w-px bg-slate-200" /><span>{selectedRole.permissions.length} permission{selectedRole.permissions.length !== 1 ? "s" : ""}</span></>}
-        {selectedRole && <><span className="h-4 w-px bg-slate-200" /><span>{userCountByRole.get(selectedRole.id) ?? 0} user{(userCountByRole.get(selectedRole.id) ?? 0) !== 1 ? "s" : ""}</span></>}
+        {selectedRole && <><span className="h-4 w-px bg-muted/80" /><span>{selectedRole.renderLabel}</span></>}
+        {selectedRole && <><span className="h-4 w-px bg-muted/80" /><span>{selectedRole.permissions.length} permission{selectedRole.permissions.length !== 1 ? "s" : ""}</span></>}
+        {selectedRole && <><span className="h-4 w-px bg-muted/80" /><span>{userCountByRole.get(selectedRole.id) ?? 0} user{(userCountByRole.get(selectedRole.id) ?? 0) !== 1 ? "s" : ""}</span></>}
       </span>
     );
     return () => { setToolbar(null); setFooter(null); };
@@ -516,7 +516,7 @@ export function RolesTab() {
                     title={
                       <span className="flex items-center justify-between gap-1.5">
                         <span className={`truncate ${sel ? "font-semibold" : "font-medium"}`}>{role.renderLabel}</span>
-                        {role.isSystemRole && <span className="inline-flex items-center rounded border border-amber-300/50 bg-amber-50 px-1 py-0.5 text-[8px] font-semibold text-amber-700">System</span>}
+                        {role.isSystemRole && <span className="inline-flex items-center rounded border border-warning/30/50 bg-warning/10 px-1 py-0.5 text-[8px] font-semibold text-warning">System</span>}
                       </span>
                     }
                     subtitle={
@@ -531,8 +531,8 @@ export function RolesTab() {
               }}
               emptyState={
                 <div className="flex flex-col items-center justify-center px-4 py-8 text-center text-xs text-muted-foreground">
-                  <ShieldCheck className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-                  <span className="text-sm font-medium text-slate-500">No roles found</span>
+                  <ShieldCheck className="mx-auto mb-2 h-6 w-6 text-muted-foreground/30" />
+                  <span className="text-sm font-medium text-muted-foreground">No roles found</span>
                 </div>
               }
             />
@@ -542,72 +542,72 @@ export function RolesTab() {
           {/* Right: Role detail */}
             {mode === "createRole" ? (
               <div className="h-full overflow-y-auto">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Create New Role</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Fill in the details to create a new role.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Create New Role</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Fill in the details to create a new role.</p>
                 </div>
                 <div className="px-4 py-3 space-y-3">
-                  {formError && <div className="rounded border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700">{formError}</div>}
+                  {formError && <div className="rounded border border-danger/20 bg-danger/10 px-3 py-1.5 text-[12px] text-danger">{formError}</div>}
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Code *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Code *</label>
                     <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value)} placeholder="e.g. plant_manager"
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Name *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Name *</label>
                     <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Plant Manager"
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Description</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Description</label>
                     <textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Optional description of this role" rows={3}
-                      className="w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 resize-none" />
+                      className="w-full rounded border border-border bg-background px-2 py-1.5 text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none" />
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={formIsSystemRole} onChange={(e) => setFormIsSystemRole(e.target.checked)}
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-200" />
-                    <span className="text-[13px] text-slate-700">System role</span>
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-blue-200" />
+                    <span className="text-[13px] text-muted-foreground">System role</span>
                   </label>
                 </div>
               </div>
             ) : mode === "assignUsers" && selectedRole ? (
               <div className="h-full flex flex-col overflow-hidden">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Assign Users — {selectedRole.renderLabel}</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Select users to assign this role.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Assign Users — {selectedRole.renderLabel}</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Select users to assign this role.</p>
                   {selectedRole.scope !== "global" && (
                     <div className="mt-2 flex items-center gap-2">
                       {selectedRole.scope === "company" || selectedRole.scope === "plant" || selectedRole.scope === "department" ? (
                         <select value={assignCompanyId} onChange={(e) => { setAssignCompanyId(e.target.value); setAssignPlantId(""); setAssignDeptId(""); }}
-                          className="h-7 rounded border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-blue-400">
+                          className="h-7 rounded border border-border bg-background px-2 text-[12px] outline-none focus:border-primary">
                           <option value="">Select company...</option>
                           {(companiesData?.companies ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
                       ) : null}
                       {(selectedRole.scope === "plant" || selectedRole.scope === "department") && assignCompanyId && (
                         <select value={assignPlantId} onChange={(e) => { setAssignPlantId(e.target.value); setAssignDeptId(""); }}
-                          className="h-7 rounded border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-blue-400">
+                          className="h-7 rounded border border-border bg-background px-2 text-[12px] outline-none focus:border-primary">
                           <option value="">Select plant...</option>
                         </select>
                       )}
                       {selectedRole.scope === "department" && assignPlantId && (
                         <select value={assignDeptId} onChange={(e) => setAssignDeptId(e.target.value)}
-                          className="h-7 rounded border border-slate-300 bg-white px-2 text-[12px] outline-none focus:border-blue-400">
+                          className="h-7 rounded border border-border bg-background px-2 text-[12px] outline-none focus:border-primary">
                           <option value="">Select department...</option>
                         </select>
                       )}
                       {!assignCompanyId && (
-                        <span className="text-[11px] text-amber-600">Select a company to enable user assignment.</span>
+                        <span className="text-[11px] text-warning">Select a company to enable user assignment.</span>
                       )}
                     </div>
                   )}
                   <div className="mt-2">
                     <input type="text" value={assignUserSearch} onChange={(e) => setAssignUserSearch(e.target.value)} placeholder="Search users..."
-                      className="h-7 w-full max-w-xs rounded border border-slate-300 bg-white px-2 text-[12px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                      className="h-7 w-full max-w-xs rounded border border-border bg-background px-2 text-[12px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
                   </div>
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                  {formError && <div className="px-4 py-1.5 text-[11px] text-red-600 bg-red-50 border-b border-red-100">{formError}</div>}
+                  {formError && <div className="px-4 py-1.5 text-[11px] text-danger bg-danger/10 border-b border-red-100">{formError}</div>}
                   {(() => {
                     const allUsers = (userProfilesData?.userProfiles ?? []).filter((u) => u.isActive);
                     const alreadyAssigned = new Set(assignedUsersByRole.get(selectedRole.id)?.map((a) => a.userProfileId) ?? []);
@@ -617,24 +617,24 @@ export function RolesTab() {
                     const toShow = filtered.filter((u) => !alreadyAssigned.has(u.id) && !assignUserAssignedIds.has(u.id));
                     if (toShow.length === 0) {
                       return (
-                        <div className="flex flex-col items-center justify-center py-8 text-xs text-slate-400">
+                        <div className="flex flex-col items-center justify-center py-8 text-xs text-muted-foreground/60">
                           <Users className="h-5 w-5 mb-1" />
                           <span>{assignUserSearch.trim() ? "No users match your search." : "All users are already assigned this role."}</span>
                         </div>
                       );
                     }
                     return (
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-border/50">
                         {toShow.map((u) => {
                           const submitting = assignUserSubmitting === u.id;
                           return (
-                            <div key={u.id} className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50/60">
+                            <div key={u.id} className="flex items-center gap-3 px-4 py-2 hover:bg-muted/60">
                               <div className="min-w-0 flex-1">
-                                <span className="text-[13px] font-medium text-slate-800">{u.fullName || u.username}</span>
-                                {u.email && <span className="ml-2 text-[11px] text-slate-400">{u.email}</span>}
+                                <span className="text-[13px] font-medium text-foreground">{u.fullName || u.username}</span>
+                                {u.email && <span className="ml-2 text-[11px] text-muted-foreground/60">{u.email}</span>}
                               </div>
                               <button type="button" onClick={() => handleAssignUser(u.id)} disabled={submitting}
-                                className="inline-flex h-7 items-center gap-1 rounded border border-blue-200 px-2.5 text-[11px] font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors">
+                                className="inline-flex h-7 items-center gap-1 rounded border border-primary/20 px-2.5 text-[11px] font-medium text-primary hover:bg-primary/10 disabled:opacity-50 transition-colors">
                                 {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3 w-3" />}
                                 Assign
                               </button>
@@ -645,35 +645,35 @@ export function RolesTab() {
                     );
                   })()}
                 </div>
-                <div className="shrink-0 h-9 border-t border-slate-200 bg-slate-50 px-4 flex items-center text-[11px] text-slate-500">
+                <div className="shrink-0 h-9 border-t border-border bg-muted px-4 flex items-center text-[11px] text-muted-foreground">
                   <span>{assignUserAssignedIds.size} user{assignUserAssignedIds.size !== 1 ? "s" : ""} assigned this session</span>
                 </div>
               </div>
             ) : mode === "editRole" && selectedRole ? (
               <div className="h-full overflow-y-auto">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Edit Role — {selectedRole.renderLabel}</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Update the role details.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Edit Role — {selectedRole.renderLabel}</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Update the role details.</p>
                 </div>
                 <div className="px-4 py-3 space-y-3">
-                  {formError && <div className="rounded border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700">{formError}</div>}
+                  {formError && <div className="rounded border border-danger/20 bg-danger/10 px-3 py-1.5 text-[12px] text-danger">{formError}</div>}
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Code *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Code *</label>
                     <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value)} placeholder="e.g. plant_manager"
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Name *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Name *</label>
                     <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Plant Manager"
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200" />
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Description</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Description</label>
                     <textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} placeholder="Optional description of this role" rows={3}
-                      className="w-full rounded border border-slate-300 bg-white px-2 py-1.5 text-[13px] text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 resize-none" />
+                      className="w-full rounded border border-border bg-background px-2 py-1.5 text-[13px] text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none" />
                   </div>
                   {selectedRole.isSystemRole && (
-                    <div className="rounded border border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] text-amber-700">
+                    <div className="rounded border border-warning/20 bg-warning/10 px-3 py-1.5 text-[11px] text-warning">
                       <AlertTriangle className="h-3 w-3 inline-block mr-1" />This is a system role. Some fields may be protected.
                     </div>
                   )}
@@ -682,7 +682,7 @@ export function RolesTab() {
             ) : !selectedRole ? (
               <div className="flex h-full items-center justify-center px-8">
                 <div className="max-w-lg text-center">
-                  <ShieldCheck className="mx-auto h-8 w-8 text-blue-500" />
+                  <ShieldCheck className="mx-auto h-8 w-8 text-primary" />
                   <h3 className="mt-3 text-base font-semibold text-foreground">Select a role to view permissions</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Choose a role from the catalog to see its permission matrix and assigned users.
@@ -693,45 +693,45 @@ export function RolesTab() {
               /* Detail panel — view or assignPermissions mode with a selected role */
               <div className="h-full flex flex-col overflow-hidden">
                 {/* Role Summary Strip */}
-                <div className="shrink-0 border-b border-slate-300 px-4 py-2.5">
+                <div className="shrink-0 border-b border-border px-4 py-2.5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h2 className="truncate text-sm font-semibold text-slate-900">{selectedRole.renderLabel}</h2>
+                        <h2 className="truncate text-sm font-semibold text-foreground">{selectedRole.renderLabel}</h2>
                         <span className={`inline-flex rounded border px-1.5 py-0.5 text-[11px] font-medium ${scopeBadgeMap[selectedRole.scope]}`}>{scopeLabelMap[selectedRole.scope]}</span>
-                        {selectedRole.isSystemRole && <span className="inline-flex items-center rounded border border-amber-300/50 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">System</span>}
-                        {isAdminLevel(selectedRole) && <span className="inline-flex items-center gap-1 rounded border border-amber-400/50 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"><AlertTriangle className="h-3 w-3" />Admin</span>}
+                        {selectedRole.isSystemRole && <span className="inline-flex items-center rounded border border-warning/30/50 bg-warning/10 px-1.5 py-0.5 text-[10px] font-semibold text-warning">System</span>}
+                        {isAdminLevel(selectedRole) && <span className="inline-flex items-center gap-1 rounded border border-amber-400/50 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning"><AlertTriangle className="h-3 w-3" />Admin</span>}
                       </div>
-                      {selectedRole.description && <p className="mt-0.5 text-[12px] text-slate-500">{selectedRole.description}</p>}
-                      <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-500">
-                        <span><span className="font-medium text-slate-600">{userCountByRole.get(selectedRole.id) ?? 0}</span> assigned user{(userCountByRole.get(selectedRole.id) ?? 0) !== 1 ? "s" : ""}</span>
-                        <span><span className="font-medium text-slate-600">{selectedRole.permissions.length}</span> permission{selectedRole.permissions.length !== 1 ? "s" : ""}</span>
+                      {selectedRole.description && <p className="mt-0.5 text-[12px] text-muted-foreground">{selectedRole.description}</p>}
+                      <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span><span className="font-medium text-muted-foreground">{userCountByRole.get(selectedRole.id) ?? 0}</span> assigned user{(userCountByRole.get(selectedRole.id) ?? 0) !== 1 ? "s" : ""}</span>
+                        <span><span className="font-medium text-muted-foreground">{selectedRole.permissions.length}</span> permission{selectedRole.permissions.length !== 1 ? "s" : ""}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                  {permError && <div className="px-4 py-1.5 text-xs text-red-600 bg-red-50 border-b border-red-100">{permError}</div>}
+                  {permError && <div className="px-4 py-1.5 text-xs text-danger bg-danger/10 border-b border-red-100">{permError}</div>}
 
                   {/* Access Scope */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Access Scope</span></div>
-                    <div className="px-3 py-1.5 text-[12px] text-slate-600">
+                    <div className="px-3 py-1.5 text-[12px] text-muted-foreground">
                       {selectedRole.scope === "global" ? (
                         <span>This role applies globally — no company, plant, or department restrictions.</span>
                       ) : selectedRole.scope === "company" ? (
-                        <span>This role is scoped to a <strong className="text-slate-800">company</strong> level. Assign with a specific company.</span>
+                        <span>This role is scoped to a <strong className="text-foreground">company</strong> level. Assign with a specific company.</span>
                       ) : selectedRole.scope === "plant" ? (
-                        <span>This role is scoped to a <strong className="text-slate-800">plant</strong> level. Assign with a specific plant.</span>
+                        <span>This role is scoped to a <strong className="text-foreground">plant</strong> level. Assign with a specific plant.</span>
                       ) : (
-                        <span>This role is scoped to a <strong className="text-slate-800">department</strong> level. Assign with a specific department.</span>
+                        <span>This role is scoped to a <strong className="text-foreground">department</strong> level. Assign with a specific department.</span>
                       )}
                     </div>
                   </div>
 
                   {/* Permission Matrix */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Permission Matrix</span></div>
                     {mode === "assignPermissions" ? (
                       <ModulePermissionsGrid
@@ -747,13 +747,13 @@ export function RolesTab() {
                   </div>
 
                   {/* Assigned Users */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Assigned Users</span></div>
                     {(() => {
                       const users = assignedUsersByRole.get(selectedRole.id) ?? [];
                       if (users.length === 0) {
                         return (
-                          <div className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400">
+                          <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground/60">
                             <Users className="h-4 w-4" />
                             <span>No users assigned to this role.</span>
                           </div>
@@ -762,8 +762,8 @@ export function RolesTab() {
                       return (
                         <div className="flex flex-wrap gap-1 px-3 py-1.5">
                           {users.map((u: UserRoleNode) => (
-                            <span key={u.id} className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50">
-                              <UserRound className="h-3 w-3 text-slate-400" />
+                            <span key={u.id} className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted">
+                              <UserRound className="h-3 w-3 text-muted-foreground/60" />
                               <span className="max-w-[120px] truncate">{u.fullName || u.username}</span>
                             </span>
                           ))}
@@ -773,25 +773,25 @@ export function RolesTab() {
                   </div>
 
                   {/* Audit Note */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Audit Note</span></div>
-                    <div className="px-3 py-1.5 space-y-1 text-[12px] text-slate-500">
+                    <div className="px-3 py-1.5 space-y-1 text-[12px] text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        <Clock className="h-3 w-3 text-slate-400" />
-                        <span>Created: <span className="font-medium text-slate-700">{fmtDate(selectedRole.createdAt)}</span></span>
+                        <Clock className="h-3 w-3 text-muted-foreground/60" />
+                        <span>Created: <span className="font-medium text-muted-foreground">{fmtDate(selectedRole.createdAt)}</span></span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <RefreshCw className="h-3 w-3 text-slate-400" />
-                        <span>Last updated: <span className="font-medium text-slate-700">{fmtDate(selectedRole.updatedAt)}</span></span>
+                        <RefreshCw className="h-3 w-3 text-muted-foreground/60" />
+                        <span>Last updated: <span className="font-medium text-muted-foreground">{fmtDate(selectedRole.updatedAt)}</span></span>
                       </div>
                     </div>
                   </div>
 
                   {/* Admin warning */}
                   {isAdminLevel(selectedRole) && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50/50 border-b border-amber-100">
-                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                      <span className="text-[11px] text-amber-700">This role has admin-level access. Review assignments carefully.</span>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-warning/10/50 border-b border-amber-100">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
+                      <span className="text-[11px] text-warning">This role has admin-level access. Review assignments carefully.</span>
                     </div>
                   )}
                 </div>

@@ -60,11 +60,11 @@ const MH_ORDER = ["TRUCK", "FORKLIFT", "CONVEYOR", "AGV", "TUGGER", "PALLET_JACK
 
 function LegendItem({ children, title, tone = "default" }: { children: React.ReactNode; title?: string; tone?: "default" | "purple" | "amber" | "warn" | "bad" }) {
   const toneWrap: Record<string, string> = {
-    default: "bg-slate-50 border-slate-200 text-slate-700",
-    purple:  "bg-purple-50 border-purple-200 text-purple-800",
-    amber:   "bg-amber-50 border-amber-200 text-amber-800",
-    warn:    "bg-amber-50 border-amber-200 text-amber-700",
-    bad:     "bg-red-50 border-red-200 text-red-700",
+    default: "bg-muted border-border text-muted-foreground",
+    purple:  "bg-purple-50 border-accent/20 text-purple-800",
+    amber:   "bg-warning/10 border-warning/20 text-warning",
+    warn:    "bg-warning/10 border-warning/20 text-warning",
+    bad:     "bg-danger/10 border-danger/20 text-danger",
   };
   return (
     <span
@@ -86,14 +86,14 @@ export function VsmFooterLegend({
     .sort((a, b) => MH_ORDER.indexOf(a) - MH_ORDER.indexOf(b));
 
   return (
-    <footer className="shrink-0 min-h-11 border-t border-slate-200 bg-slate-50 flex flex-wrap divide-x divide-slate-200 overflow-hidden">
+    <footer className="shrink-0 min-h-11 border-t border-border bg-muted flex flex-wrap divide-x divide-border overflow-hidden">
       {/* ── Section 1: Flow Notation ── */}
       <div className="flex-1 min-w-[200px] flex items-center gap-2.5 px-3 py-1.5 overflow-x-auto">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
           Flow
         </span>
         {showFlow ? (
-          <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-slate-600 flex-wrap">
+          <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-muted-foreground flex-wrap">
             {/* Always show legend entries — they document standard VSM notation */}
             <LegendItem title="Manual — solid line with arrowhead">
               <FlowLineSample color="#334155" dash="none" strokeWidth={1.6} />
@@ -115,16 +115,16 @@ export function VsmFooterLegend({
             )}
           </div>
         ) : (
-          <span className="text-[11px] text-slate-400 italic">— toggled off</span>
+          <span className="text-[11px] text-muted-foreground/60 italic">— toggled off</span>
         )}
       </div>
 
       {/* ── Section 2: Material Handling (icons) ── */}
       <div className="flex-1 min-w-[160px] flex items-center gap-2.5 px-3 py-1.5 overflow-x-auto">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
           MH
         </span>
-        <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-slate-600 flex-wrap">
+        <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-muted-foreground flex-wrap">
           {/* Always-show common equipment */}
           {sortedEquipment.includes("FORKLIFT") && (
             <LegendItem title="Forklift — material handling equipment">
@@ -150,29 +150,29 @@ export function VsmFooterLegend({
 
       {/* ── Section 3: Status / Severity ── */}
       <div className="flex-1 min-w-[180px] flex items-center gap-2.5 px-3 py-1.5 overflow-x-auto">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
           Status
         </span>
-        <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-slate-600 flex-wrap">
+        <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-muted-foreground flex-wrap">
           {hasPacemaker && (
             <LegendItem title="Pacemaker process — sets the production pace" tone="purple">
-              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-purple-700 bg-white" />
+              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-purple-700 bg-background" />
               <span>Pacemaker</span>
             </LegendItem>
           )}
           {hasBottleneck && (
             <LegendItem title="Bottleneck process — constrains throughput" tone="amber">
-              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-dashed border-amber-600 bg-white" />
+              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-dashed border-amber-600 bg-background" />
               <span>Bottleneck</span>
             </LegendItem>
           )}
           <LegendItem title="Warning severity — monitor closely" tone="warn">
-            <span className="inline-block w-4 h-[3px] rounded-sm bg-amber-500" />
+            <span className="inline-block w-4 h-[3px] rounded-sm bg-warning/100" />
             <span>Warning</span>
           </LegendItem>
           {hasCritical && (
             <LegendItem title="Critical severity — requires attention" tone="bad">
-              <span className="inline-block w-4 h-[3px] rounded-sm bg-red-600" />
+              <span className="inline-block w-4 h-[3px] rounded-sm bg-danger" />
               <span>Critical</span>
             </LegendItem>
           )}

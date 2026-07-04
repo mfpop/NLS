@@ -212,7 +212,7 @@ export function StructureDocumentDetailsPanel({
                     type="button"
                     disabled={importing}
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors disabled:opacity-40"
+                    className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-semibold text-primary dark:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-950/40 transition-colors disabled:opacity-40"
                     title="Import an existing document (PDF, DOCX, TXT, HTML)"
                   >
                     {importing ? (
@@ -245,7 +245,7 @@ export function StructureDocumentDetailsPanel({
                         const fn = templates[documentType];
                         if (fn) setEditContent(fn());
                       }}
-                      className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors"
+                      className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[10px] font-semibold text-warning dark:text-amber-400 hover:bg-warning/10 dark:hover:bg-amber-950/40 transition-colors"
                       title={`Insert lean ${documentTypeLabels[documentType]?.toLowerCase() || documentType} template`}
                     >
                       <FileText className="h-3 w-3 stroke-current" />
@@ -314,7 +314,7 @@ export function StructureDocumentDetailsPanel({
               {hasDocument && document && (
                 <div className="space-y-3">
                   <StructureDocumentMetadata document={document} />
-                  <div className="border border-gray-500/50 p-3">
+                  <div className="border border-border/50 p-3">
                     <div className="flex items-center gap-1.5 mb-2">
                       <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Content</span>
                     </div>

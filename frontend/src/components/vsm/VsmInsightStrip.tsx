@@ -25,21 +25,21 @@ export function VsmInsightStrip({ diagram, className = "" }: Props) {
   }
 
   return (
-    <div className={`flex items-center gap-3 px-3 py-1 border-t border-slate-200 bg-slate-50 text-[11px] shrink-0 ${className}`}>
+    <div className={`flex items-center gap-3 px-3 py-1 border-t border-border bg-muted text-[11px] shrink-0 ${className}`}>
       <div className="flex items-center gap-2.5 shrink-0">
-        <span className="flex items-center gap-1 text-slate-600">
-          <BarChart3 className="h-3 w-3 text-slate-400" />
-          Lead: <strong className="text-slate-800 tabular-nums">{formatTime(diagram.totalLeadTimeMinutes)}</strong>
+        <span className="flex items-center gap-1 text-muted-foreground">
+          <BarChart3 className="h-3 w-3 text-muted-foreground/60" />
+          Lead: <strong className="text-foreground tabular-nums">{formatTime(diagram.totalLeadTimeMinutes)}</strong>
         </span>
-        <span className="text-slate-300">|</span>
-        <span className="text-emerald-600">
+        <span className="text-muted-foreground/30">|</span>
+        <span className="text-success">
           VA: <strong className="tabular-nums">{formatTime(diagram.totalValueAddMinutes)}</strong>
-          <span className={`ml-0.5 font-semibold ${vaPct < 10 ? "text-red-500" : vaPct < 30 ? "text-amber-500" : "text-emerald-600"}`}>
+          <span className={`ml-0.5 font-semibold ${vaPct < 10 ? "text-danger" : vaPct < 30 ? "text-warning" : "text-success"}`}>
             ({vaPct}%)
           </span>
         </span>
-        <span className="text-slate-300">|</span>
-        <span className="text-slate-600">
+        <span className="text-muted-foreground/30">|</span>
+        <span className="text-muted-foreground">
           WIP: <strong className="tabular-nums">{totalWip}</strong>
         </span>
       </div>
@@ -47,13 +47,13 @@ export function VsmInsightStrip({ diagram, className = "" }: Props) {
       <span className="text-slate-200 shrink-0">|</span>
 
       {bottleneck && (
-        <span className="flex items-center gap-1 text-amber-700 shrink-0">
+        <span className="flex items-center gap-1 text-warning shrink-0">
           <AlertTriangle className="h-3 w-3" />
           <strong>{bottleneck.label}</strong> bottleneck · CT={bottleneck.cycleTimeSeconds}s · WIP={bottleneck.wipAfter}
         </span>
       )}
       {!bottleneck && largestWip && largestWip.wipAfter > 80 && (
-        <span className="flex items-center gap-1 text-amber-600 shrink-0">
+        <span className="flex items-center gap-1 text-warning shrink-0">
           <AlertTriangle className="h-3 w-3" />
           High WIP at <strong>{largestWip.label}</strong> ({largestWip.wipAfter})
         </span>
@@ -61,8 +61,8 @@ export function VsmInsightStrip({ diagram, className = "" }: Props) {
 
       <span className="text-slate-200 shrink-0">|</span>
 
-      <span className="flex items-center gap-1 text-slate-600 truncate min-w-0">
-        <Lightbulb className="h-3 w-3 text-sky-500 shrink-0" />
+      <span className="flex items-center gap-1 text-muted-foreground truncate min-w-0">
+        <Lightbulb className="h-3 w-3 text-accent-foreground shrink-0" />
         <span className="truncate">{insight}</span>
       </span>
     </div>

@@ -42,7 +42,7 @@ function AnimatedValue({ value, suffix = "" }: { value: string | number; suffix?
 
   return (
     <span className={`text-[12px] font-bold tabular-nums transition-all duration-300 ${
-      animating ? "text-indigo-600 scale-110" : ""
+      animating ? "text-primary scale-110" : ""
     }`}>
       {display}{suffix}
     </span>
@@ -51,9 +51,9 @@ function AnimatedValue({ value, suffix = "" }: { value: string | number; suffix?
 
 /* ── VA % sparkline bar ── */
 function VaSparkline({ pct }: { pct: number }) {
-  const barColor = pct < 5 ? "bg-red-500" : pct < 15 ? "bg-amber-500" : pct < 30 ? "bg-yellow-500" : "bg-emerald-500";
+  const barColor = pct < 5 ? "bg-danger/100" : pct < 15 ? "bg-warning/100" : pct < 30 ? "bg-warning" : "bg-success/100";
   return (
-    <div className="w-12 h-1.5 bg-slate-200 rounded-full overflow-hidden shrink-0">
+    <div className="w-12 h-1.5 bg-muted/80 rounded-full overflow-hidden shrink-0">
       <div
         className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
         style={{ width: `${Math.min(100, pct)}%` }}
@@ -74,12 +74,12 @@ function KpiChip({
   sparkline?: React.ReactNode;
 }) {
   const toneStyles: Record<string, { wrap: string; label: string; value: string; icon: string }> = {
-    default: { wrap: "bg-slate-50 border-slate-200 hover:bg-slate-100", label: "text-slate-500", value: "text-slate-800", icon: "text-slate-400" },
-    good:    { wrap: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100", label: "text-emerald-700", value: "text-emerald-800", icon: "text-emerald-500" },
-    warn:    { wrap: "bg-amber-50 border-amber-200 hover:bg-amber-100", label: "text-amber-700", value: "text-amber-800", icon: "text-amber-500" },
-    bad:     { wrap: "bg-red-50 border-red-200 hover:bg-red-100", label: "text-red-700", value: "text-red-800", icon: "text-red-500" },
-    purple:  { wrap: "bg-purple-50 border-purple-200 hover:bg-purple-100", label: "text-purple-700", value: "text-purple-800", icon: "text-purple-500" },
-    amber:   { wrap: "bg-orange-50 border-orange-200 hover:bg-orange-100", label: "text-orange-700", value: "text-orange-800", icon: "text-orange-500" },
+    default: { wrap: "bg-muted border-border hover:bg-muted", label: "text-muted-foreground", value: "text-foreground", icon: "text-muted-foreground/60" },
+    good:    { wrap: "bg-success/10 border-success/20 hover:bg-success/15", label: "text-success", value: "text-success", icon: "text-success" },
+    warn:    { wrap: "bg-warning/10 border-warning/20 hover:bg-warning/15", label: "text-warning", value: "text-warning", icon: "text-warning" },
+    bad:     { wrap: "bg-danger/10 border-danger/20 hover:bg-danger/15", label: "text-danger", value: "text-red-800", icon: "text-danger" },
+    purple:  { wrap: "bg-purple-50 border-accent/20 hover:bg-accent/15", label: "text-accent-foreground", value: "text-purple-800", icon: "text-purple-500" },
+    amber:   { wrap: "bg-warning/10 border-warning/20 hover:bg-warning/15", label: "text-warning", value: "text-orange-800", icon: "text-warning" },
   };
   const s = toneStyles[tone];
   const Tag = onClick ? "button" : "div";
@@ -109,7 +109,7 @@ export function VsmKpiStrip({ data, onDemandEdit, onTaktEdit }: Props) {
   const bottleneck = data.bottleneck;
 
   return (
-    <div className="h-12 flex items-center gap-2 px-3 bg-white border-b border-slate-200 overflow-x-auto scrollbar-none">
+    <div className="h-12 flex items-center gap-2 px-3 bg-background border-b border-border overflow-x-auto scrollbar-none">
       <KpiChip
         label="Lead Time"
         value={<AnimatedValue value={data.leadTime} />}

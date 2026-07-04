@@ -52,7 +52,7 @@ function safeText(v: string | null | undefined): string { const s = v?.trim(); r
 function asOptionalId(v: string): string | null { const s = v.trim(); return s ? s : null; }
 function scopeLabel(scope: ScopeLevel): string { const m: Record<string, string> = { global: "Global", company: "Company", plant: "Plant", department: "Department" }; return m[scope] || scope; }
 function scopeBadge(scope: ScopeLevel): string {
-  const m: Record<ScopeLevel, string> = { global: "border-blue-400/60 text-blue-600", company: "border-indigo-400/60 text-indigo-600", plant: "border-purple-400/60 text-purple-600", department: "border-cyan-400/60 text-cyan-600" };
+  const m: Record<ScopeLevel, string> = { global: "border-blue-400/60 text-primary", company: "border-indigo-400/60 text-primary", plant: "border-purple-400/60 text-accent-foreground", department: "border-cyan-400/60 text-cyan-600" };
   return m[scope];
 }
 
@@ -369,11 +369,11 @@ export function UsersTab() {
   const isAssignMode = mode === "assignRole";
   const profileSaveDisabled = isSavingProfile || profileMissing.length > 0 || (mode === "editProfile" && !profileDirty);
   const roleAssignDisabled = isAssigningRole || Object.keys(roleFormValidation).length > 0;
-  const secHdr = "h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center";
-  const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
-  const kpiLabel = "text-[11px] text-slate-500";
-  const kpiValue = "text-lg font-semibold text-slate-900 leading-none";
-  const fieldLabel = "text-[11px] uppercase tracking-wide text-slate-500";
+  const secHdr = "h-8 border-b border-border bg-muted px-3 flex items-center";
+  const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
+  const kpiLabel = "text-[11px] text-muted-foreground";
+  const kpiValue = "text-lg font-semibold text-foreground leading-none";
+  const fieldLabel = "text-[11px] uppercase tracking-wide text-muted-foreground";
 
   const toolbarActions = useMemo(() => {
     if (isProfileMode) return (<><ToolbarButton icon={isSavingProfile ? Loader2 : Save as any} label={isSavingProfile ? "Saving..." : "Save Profile"} onClick={saveProfile} disabled={profileSaveDisabled} variant="edit" /><ToolbarButton icon={X} label="Cancel" onClick={cancelMode} variant="danger" /><ToolbarButton icon={RefreshCw} label="Refresh" onClick={refreshAll} variant="neutral" /></>);
@@ -381,19 +381,19 @@ export function UsersTab() {
     return (<>
       {capabilities.canEditUser && <ToolbarButton icon={Pencil} label="Edit Profile" onClick={startEditProfile} disabled={!selectedProfile || mode !== "view"} variant="edit" />}
       {capabilities.canAssignRole && <ToolbarButton icon={Plus} label="Assign Role" onClick={startAssignRole} disabled={!selectedProfile || mode !== "view"} variant="create" />}
-      <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" />
+      <span className="mx-0.5 h-5 w-px shrink-0 bg-muted/80" />
       {capabilities.canDeactivateUser && (
         deactivateConfirmId ? (
           <div className="flex items-center gap-1 text-[11px]">
-            <span className="text-red-600 font-medium">{selectedProfile?.isActive ? "Deactivate" : "Activate"}?</span>
-            <button type="button" onClick={confirmDeactivate} disabled={isDeactivating} className="inline-flex h-7 items-center rounded bg-red-600 px-2 text-[10px] font-semibold text-white hover:bg-red-700 disabled:opacity-60">{isDeactivating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
-            <button type="button" onClick={cancelDeactivate} className="inline-flex h-7 items-center rounded border border-slate-300 bg-white px-2 text-[10px] text-slate-600 hover:bg-slate-50">No</button>
+            <span className="text-danger font-medium">{selectedProfile?.isActive ? "Deactivate" : "Activate"}?</span>
+            <button type="button" onClick={confirmDeactivate} disabled={isDeactivating} className="inline-flex h-7 items-center rounded bg-danger px-2 text-[10px] font-semibold text-white hover:bg-danger/80 disabled:opacity-60">{isDeactivating ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
+            <button type="button" onClick={cancelDeactivate} className="inline-flex h-7 items-center rounded border border-border bg-background px-2 text-[10px] text-muted-foreground hover:bg-muted">No</button>
           </div>
         ) : (
           <ToolbarButton icon={selectedProfile?.isActive ? ToggleRight : ToggleLeft} label={selectedProfile?.isActive ? "Deactivate" : "Activate"} onClick={() => { if (selectedProfile) setDeactivateConfirmId(selectedProfile.id); }} disabled={!selectedProfile || mode !== "view"} variant={selectedProfile?.isActive ? "danger" : "warning"} />
         )
       )}
-      <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" />
+      <span className="mx-0.5 h-5 w-px shrink-0 bg-muted/80" />
       {capabilities.canCreateUser && <ToolbarButton icon={Plus} label="New Profile" onClick={startCreateProfile} variant="create" />}
       <ToolbarButton icon={RefreshCw} label="Refresh" onClick={refreshAll} disabled={loadingProfiles && !profileData} variant="neutral" />
     </>);
@@ -421,10 +421,10 @@ export function UsersTab() {
     });
     setFooter(
       selectedProfile ? (
-        <span className="flex items-center gap-4 text-xs text-slate-500">
-          <span className="text-slate-600">{safeText(selectedProfile.fullName || selectedProfile.username)}</span>
-          <span className="h-4 w-px bg-slate-200" />
-          <span className={selectedProfile.isActive ? "text-emerald-600" : "text-slate-400"}>{selectedProfile.isActive ? "Active" : "Inactive"}</span>
+        <span className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span className="text-muted-foreground">{safeText(selectedProfile.fullName || selectedProfile.username)}</span>
+          <span className="h-4 w-px bg-muted/80" />
+          <span className={selectedProfile.isActive ? "text-success" : "text-muted-foreground/60"}>{selectedProfile.isActive ? "Active" : "Inactive"}</span>
         </span>
       ) : null
     );
@@ -448,23 +448,23 @@ export function UsersTab() {
                     title={
                       <span className="flex items-center justify-between gap-1.5">
                         <span className={`truncate ${sel ? "font-semibold" : "font-medium"}`}>{user.fullName || user.username}</span>
-                        <span className={`h-2 w-2 shrink-0 rounded-full ${user.isActive ? "bg-emerald-500" : "bg-slate-300"}`} />
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${user.isActive ? "bg-success/100" : "bg-slate-300"}`} />
                       </span>
                     }
                     subtitle={
-                      <span className="text-xs text-slate-600">
+                      <span className="text-xs text-muted-foreground">
                         <span>{safeText(user.username || user.email)}</span>
-                        <span className="mx-1 text-slate-400">·</span>
-                        <span className="text-blue-600">{safeText(user.primaryRole)}</span>
+                        <span className="mx-1 text-muted-foreground/60">·</span>
+                        <span className="text-primary">{safeText(user.primaryRole)}</span>
                       </span>
                     }
                   />
                 );
               }}
               emptyState={
-                <div className="flex flex-col items-center justify-center px-4 py-8 text-center text-xs text-slate-500">
-                  <UserRound className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-                  <span className="text-sm font-medium text-slate-500">{userSearch || statusFilter !== "all" || roleFilter !== "all" ? "No users match filters" : "No user profiles yet"}</span>
+                <div className="flex flex-col items-center justify-center px-4 py-8 text-center text-xs text-muted-foreground">
+                  <UserRound className="mx-auto mb-2 h-6 w-6 text-muted-foreground/30" />
+                  <span className="text-sm font-medium text-muted-foreground">{userSearch || statusFilter !== "all" || roleFilter !== "all" ? "No users match filters" : "No user profiles yet"}</span>
                 </div>
               }
             />
@@ -474,7 +474,7 @@ export function UsersTab() {
             {!selectedProfile && mode !== "createProfile" ? (
               <div className="flex h-full items-center justify-center px-8">
                 <div className="max-w-lg text-center">
-                  <UserRound className="mx-auto h-8 w-8 text-blue-500" />
+                  <UserRound className="mx-auto h-8 w-8 text-primary" />
                   <h3 className="mt-3 text-base font-semibold text-foreground">Select a user to view profile and access</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Choose a user from the list, or create a new profile.</p>
                 </div>
@@ -482,42 +482,42 @@ export function UsersTab() {
             ) : (
               <div className="h-full flex flex-col overflow-hidden">
                 {/* ── User Summary Strip ── */}
-                <div className={`shrink-0 border-b border-slate-300 ${isProfileMode ? "px-4 h-14 flex items-center" : "px-4 py-2.5"}`}>
+                <div className={`shrink-0 border-b border-border ${isProfileMode ? "px-4 h-14 flex items-center" : "px-4 py-2.5"}`}>
                   {isProfileMode ? (
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold text-slate-900">{safeText(selectedProfile?.fullName || "New Profile")}</span>
-                        <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${selectedProfile?.isActive !== false ? "border-emerald-400/60 text-emerald-700 bg-emerald-50" : "border-slate-300/60 text-slate-500 bg-slate-50"}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-emerald-500" : "bg-slate-400"}`} />
+                        <span className="truncate text-sm font-semibold text-foreground">{safeText(selectedProfile?.fullName || "New Profile")}</span>
+                        <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] ${selectedProfile?.isActive !== false ? "border-emerald-400/60 text-success bg-success/10" : "border-border/60 text-muted-foreground bg-muted"}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-success/100" : "bg-slate-400"}`} />
                           {selectedProfile?.isActive !== false ? "Active" : "Inactive"}
                         </span>
-                        <span className="inline-flex rounded border border-blue-400/50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 bg-blue-50">{safeText(selectedPrimaryRoleLabel)}</span>
+                        <span className="inline-flex rounded border border-blue-400/50 px-1.5 py-0.5 text-[10px] font-medium text-primary bg-primary/10">{safeText(selectedPrimaryRoleLabel)}</span>
                       </div>
-                      <div className="flex flex-wrap gap-x-4 text-[11px] text-slate-500 mt-0.5">
-                        {selectedProfile?.companyName && <span><span className="font-medium text-slate-600">Company:</span> {safeText(selectedProfile.companyName)}</span>}
-                        {selectedProfile?.plantName && <span><span className="font-medium text-slate-600">Plant:</span> {safeText(selectedProfile.plantName)}</span>}
-                        {selectedProfile?.administrativeDepartmentName && <span><span className="font-medium text-slate-600">Dept:</span> {safeText(selectedProfile.administrativeDepartmentName)}</span>}
-                        {selectedProfile?.jobTitle && <span><span className="font-medium text-slate-600">Title:</span> {safeText(selectedProfile.jobTitle)}</span>}
+                      <div className="flex flex-wrap gap-x-4 text-[11px] text-muted-foreground mt-0.5">
+                        {selectedProfile?.companyName && <span><span className="font-medium text-muted-foreground">Company:</span> {safeText(selectedProfile.companyName)}</span>}
+                        {selectedProfile?.plantName && <span><span className="font-medium text-muted-foreground">Plant:</span> {safeText(selectedProfile.plantName)}</span>}
+                        {selectedProfile?.administrativeDepartmentName && <span><span className="font-medium text-muted-foreground">Dept:</span> {safeText(selectedProfile.administrativeDepartmentName)}</span>}
+                        {selectedProfile?.jobTitle && <span><span className="font-medium text-muted-foreground">Title:</span> {safeText(selectedProfile.jobTitle)}</span>}
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h2 className="truncate text-sm font-semibold text-slate-900">{safeText(selectedProfile?.fullName || "")}</h2>
-                          <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] ${selectedProfile?.isActive !== false ? "border-emerald-400/60 text-emerald-700 bg-emerald-50" : "border-slate-300/60 text-slate-500 bg-slate-50"}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-emerald-500" : "bg-slate-400"}`} />
+                          <h2 className="truncate text-sm font-semibold text-foreground">{safeText(selectedProfile?.fullName || "")}</h2>
+                          <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] ${selectedProfile?.isActive !== false ? "border-emerald-400/60 text-success bg-success/10" : "border-border/60 text-muted-foreground bg-muted"}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${selectedProfile?.isActive !== false ? "bg-success/100" : "bg-slate-400"}`} />
                             {selectedProfile?.isActive !== false ? "Active" : "Inactive"}
                           </span>
-                          <span className="inline-flex rounded border border-blue-400/50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700 bg-blue-50">{safeText(selectedPrimaryRoleLabel)}</span>
+                          <span className="inline-flex rounded border border-blue-400/50 px-1.5 py-0.5 text-[11px] font-medium text-primary bg-primary/10">{safeText(selectedPrimaryRoleLabel)}</span>
                         </div>
-                        <div className="mt-0.5 text-[12px] text-slate-500">{selectedProfile ? `${safeText(selectedProfile.username)} / ${safeText(selectedProfile.email)}` : "New user profile"}</div>
-                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500">
-                          {selectedProfile?.companyName && <span><span className="font-medium text-slate-600">Company:</span> {safeText(selectedProfile.companyName)}</span>}
-                          {selectedProfile?.plantName && <span><span className="font-medium text-slate-600">Plant:</span> {safeText(selectedProfile.plantName)}</span>}
-                          {selectedProfile?.administrativeDepartmentName && <span><span className="font-medium text-slate-600">Dept:</span> {safeText(selectedProfile.administrativeDepartmentName)}</span>}
-                          {selectedProfile?.jobTitle && <span><span className="font-medium text-slate-600">Title:</span> {safeText(selectedProfile.jobTitle)}</span>}
-                          {selectedProfile?.lastLogin && <span><span className="font-medium text-slate-600">Last login:</span> {fmtDate(selectedProfile.lastLogin)}</span>}
+                        <div className="mt-0.5 text-[12px] text-muted-foreground">{selectedProfile ? `${safeText(selectedProfile.username)} / ${safeText(selectedProfile.email)}` : "New user profile"}</div>
+                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground">
+                          {selectedProfile?.companyName && <span><span className="font-medium text-muted-foreground">Company:</span> {safeText(selectedProfile.companyName)}</span>}
+                          {selectedProfile?.plantName && <span><span className="font-medium text-muted-foreground">Plant:</span> {safeText(selectedProfile.plantName)}</span>}
+                          {selectedProfile?.administrativeDepartmentName && <span><span className="font-medium text-muted-foreground">Dept:</span> {safeText(selectedProfile.administrativeDepartmentName)}</span>}
+                          {selectedProfile?.jobTitle && <span><span className="font-medium text-muted-foreground">Title:</span> {safeText(selectedProfile.jobTitle)}</span>}
+                          {selectedProfile?.lastLogin && <span><span className="font-medium text-muted-foreground">Last login:</span> {fmtDate(selectedProfile.lastLogin)}</span>}
                         </div>
                       </div>
                     </div>
@@ -525,52 +525,52 @@ export function UsersTab() {
                 </div>
 
                 {isProfileMode ? (
-                  <div className="flex-1 min-h-0 grid grid-cols-[55%_45%] divide-x divide-slate-200 overflow-hidden bg-slate-50">
+                  <div className="flex-1 min-h-0 grid grid-cols-[55%_45%] divide-x divide-border overflow-hidden bg-muted">
                     {/* ── LEFT EDIT COLUMN: Compact Profile Form ── */}
                     <div className="overflow-y-auto">
-                      <div className="border-b border-slate-200">
+                      <div className="border-b border-border">
                         <div className={secHdr}><span className={secTitle}>Profile</span></div>
-                        {profileError && <p className="px-3 text-[11px] text-red-600">{profileError}</p>}
-                        <div className="divide-y divide-slate-100">
+                        {profileError && <p className="px-3 text-[11px] text-danger">{profileError}</p>}
+                        <div className="divide-y divide-border/50">
                           <div className="grid grid-cols-[120px_1fr] items-center gap-3 min-h-9 px-3">
                             <label className={fieldLabel}>User *</label>
                             <div>
                               <select value={profileForm.userId} onChange={(e) => onProfileField("userId", e.target.value)} disabled={mode !== "createProfile"}
-                                className={`h-7 w-full border bg-white px-2 text-xs outline-none ${profileTouched.userId && !profileForm.userId ? "border-red-400" : "border-slate-200"} ${mode !== "createProfile" ? "opacity-70" : ""}`}>
+                                className={`h-7 w-full border bg-background px-2 text-xs outline-none ${profileTouched.userId && !profileForm.userId ? "border-red-400" : "border-border"} ${mode !== "createProfile" ? "opacity-70" : ""}`}>
                                 <option value="">Select user</option>{selectableUsers.map((u: UserNode) => (<option key={u.id} value={u.id}>{u.fullName || u.username} ({u.username})</option>))}
                               </select>
-                              {profileTouched.userId && !profileForm.userId && <p className="text-[10px] text-red-600">Required</p>}
+                              {profileTouched.userId && !profileForm.userId && <p className="text-[10px] text-danger">Required</p>}
                             </div>
                           </div>
                           <div className="grid grid-cols-[120px_1fr] items-center gap-3 min-h-9 px-3">
                             <label className={fieldLabel}>Company *</label>
                             <div>
                               <select value={profileForm.companyId} onChange={(e) => onProfileField("companyId", e.target.value)}
-                                className={`h-7 w-full border bg-white px-2 text-xs outline-none ${profileTouched.companyId && !profileForm.companyId ? "border-red-400" : "border-slate-200"}`}>
+                                className={`h-7 w-full border bg-background px-2 text-xs outline-none ${profileTouched.companyId && !profileForm.companyId ? "border-red-400" : "border-border"}`}>
                                 <option value="">Select company</option>{companies.map((c: CompanyNode) => (<option key={c.id} value={c.id}>{c.name}</option>))}
                               </select>
-                              {profileTouched.companyId && !profileForm.companyId && <p className="text-[10px] text-red-600">Required</p>}
+                              {profileTouched.companyId && !profileForm.companyId && <p className="text-[10px] text-danger">Required</p>}
                             </div>
                           </div>
                           <div className="grid grid-cols-[120px_1fr] items-center gap-3 min-h-9 px-3">
                             <label className={fieldLabel}>Plant</label>
-                            <select value={profileForm.plantId} onChange={(e) => onProfileField("plantId", e.target.value)} className="h-7 w-full border border-slate-200 bg-white px-2 text-xs outline-none">
+                            <select value={profileForm.plantId} onChange={(e) => onProfileField("plantId", e.target.value)} className="h-7 w-full border border-border bg-background px-2 text-xs outline-none">
                               <option value="">Select plant</option>{plants.filter((p: PlantNode) => !profileForm.companyId || p.companyId === profileForm.companyId).map((p: PlantNode) => (<option key={p.id} value={p.id}>{p.name}</option>))}
                             </select>
                           </div>
                           <div className="grid grid-cols-[120px_1fr] items-center gap-3 min-h-9 px-3">
                             <label className={fieldLabel}>Dept</label>
-                            <select value={profileForm.administrativeDepartmentId} onChange={(e) => onProfileField("administrativeDepartmentId", e.target.value)} className="h-7 w-full border border-slate-200 bg-white px-2 text-xs outline-none">
+                            <select value={profileForm.administrativeDepartmentId} onChange={(e) => onProfileField("administrativeDepartmentId", e.target.value)} className="h-7 w-full border border-border bg-background px-2 text-xs outline-none">
                               <option value="">Select department</option>{departments.map((d: DepartmentNode) => (<option key={d.id} value={d.id}>{d.name}</option>))}
                             </select>
                           </div>
                           <div className="grid grid-cols-[120px_1fr] items-center gap-3 min-h-9 px-3">
                             <label className={fieldLabel}>Job Title</label>
-                            <input type="text" value={profileForm.jobTitle} onChange={(e) => onProfileField("jobTitle", e.target.value)} className="h-7 w-full border border-slate-200 bg-white px-2 text-xs outline-none" />
+                            <input type="text" value={profileForm.jobTitle} onChange={(e) => onProfileField("jobTitle", e.target.value)} className="h-7 w-full border border-border bg-background px-2 text-xs outline-none" />
                           </div>
                           <div className="grid grid-cols-[120px_1fr] items-center gap-3 min-h-9 px-3">
                             <label className={fieldLabel}>Phone</label>
-                            <input type="text" value={profileForm.phone} onChange={(e) => onProfileField("phone", e.target.value)} className="h-7 w-full border border-slate-200 bg-white px-2 text-xs outline-none" />
+                            <input type="text" value={profileForm.phone} onChange={(e) => onProfileField("phone", e.target.value)} className="h-7 w-full border border-border bg-background px-2 text-xs outline-none" />
                           </div>
                         </div>
                       </div>
@@ -578,91 +578,91 @@ export function UsersTab() {
                     {/* ── RIGHT EDIT COLUMN: Compact Access Context ── */}
                     <div className="overflow-y-auto">
                       {/* Access Overview Mini Strip */}
-                      <div className="border-b border-slate-200">
-                        <div className={`h-7 border-b border-slate-200 bg-slate-50 px-3 flex items-center`}><span className={secTitle}>Access Overview</span></div>
-                        <div className="flex items-stretch divide-x divide-slate-200">
+                      <div className="border-b border-border">
+                        <div className={`h-7 border-b border-border bg-muted px-3 flex items-center`}><span className={secTitle}>Access Overview</span></div>
+                        <div className="flex items-stretch divide-x divide-border">
                           <div className="flex flex-1 flex-col items-center justify-center gap-0 py-2">
-                            <span className="text-sm font-semibold text-slate-900 leading-none">{accessSummary.total}</span>
+                            <span className="text-sm font-semibold text-foreground leading-none">{accessSummary.total}</span>
                             <span className={kpiLabel}>Roles</span>
                           </div>
                           <div className="flex flex-1 flex-col items-center justify-center gap-0 py-2">
-                            <span className="text-sm font-semibold text-slate-900 leading-none">{accessSummary.global}</span>
+                            <span className="text-sm font-semibold text-foreground leading-none">{accessSummary.global}</span>
                             <span className={kpiLabel}>Global</span>
                           </div>
                           <div className="flex flex-1 flex-col items-center justify-center gap-0 py-2">
-                            <span className="text-sm font-semibold text-slate-900 leading-none">{accessSummary.company + accessSummary.plant + accessSummary.department}</span>
+                            <span className="text-sm font-semibold text-foreground leading-none">{accessSummary.company + accessSummary.plant + accessSummary.department}</span>
                             <span className={kpiLabel}>Scoped</span>
                           </div>
                           <div className="flex flex-1 flex-col items-center justify-center gap-0 py-2">
-                            <span className="text-sm font-semibold text-slate-900 leading-none">{accessGroups.length}</span>
+                            <span className="text-sm font-semibold text-foreground leading-none">{accessGroups.length}</span>
                             <span className={kpiLabel}>Groups</span>
                           </div>
                         </div>
                       </div>
                       {/* Role Assignments Compact (max 3 rows) */}
-                      <div className="border-b border-slate-200">
-                        <div className={`h-7 border-b border-slate-200 bg-slate-50 px-3 flex items-center`}><span className={secTitle}>Role Assignments</span></div>
+                      <div className="border-b border-border">
+                        <div className={`h-7 border-b border-border bg-muted px-3 flex items-center`}><span className={secTitle}>Role Assignments</span></div>
                         {selectedAssignments.length === 0 ? (
-                          <div className="flex items-center justify-center gap-2 py-3 text-[11px] text-slate-400">
+                          <div className="flex items-center justify-center gap-2 py-3 text-[11px] text-muted-foreground/60">
                             <Shield className="h-3.5 w-3.5" />
                             <span>No role assignments</span>
                           </div>
                         ) : (
-                          <div className="divide-y divide-slate-100">
+                          <div className="divide-y divide-border/50">
                             {selectedAssignments.slice(0, 3).map((a: UserRoleNode) => {
                               const scope: ScopeLevel = a.administrativeDepartmentId ? "department" : a.plantId ? "plant" : a.companyId ? "company" : "global";
                               return (
                                 <div key={a.id} className="flex items-center gap-2 px-3 py-1 min-h-[28px]">
-                                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-slate-800">{roleLabelById.get(a.roleId) || a.roleName}</span>
+                                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">{roleLabelById.get(a.roleId) || a.roleName}</span>
                                   <span className={`inline-flex shrink-0 rounded border px-1 py-0.5 text-[10px] ${scopeBadge(scope)}`}>{scopeLabel(scope)}</span>
                                 </div>
                               );
                             })}
                             {selectedAssignments.length > 3 && (
-                              <div className="px-3 py-1 text-[10px] text-blue-600 font-medium">+{selectedAssignments.length - 3} more roles</div>
+                              <div className="px-3 py-1 text-[10px] text-primary font-medium">+{selectedAssignments.length - 3} more roles</div>
                             )}
                           </div>
                         )}
                       </div>
                       {/* Access Groups Compact (max 3 rows) */}
                       {accessGroups.length > 0 && (
-                        <div className="border-b border-slate-200">
-                          <div className={`h-7 border-b border-slate-200 bg-slate-50 px-3 flex items-center`}><span className={secTitle}>Access Groups</span></div>
-                          <div className="divide-y divide-slate-100">
+                        <div className="border-b border-border">
+                          <div className={`h-7 border-b border-border bg-muted px-3 flex items-center`}><span className={secTitle}>Access Groups</span></div>
+                          <div className="divide-y divide-border/50">
                             {accessGroups.slice(0, 3).map((g) => (
                               <div key={g.id} className="flex items-center gap-2 px-3 py-1 min-h-[28px]">
                                 <div className="flex h-5 w-5 shrink-0 items-center justify-center">
-                                  <Shield className="h-3 w-3 text-slate-400" />
+                                  <Shield className="h-3 w-3 text-muted-foreground/60" />
                                 </div>
-                                <span className="truncate text-[11px] text-slate-700">{g.name}</span>
+                                <span className="truncate text-[11px] text-muted-foreground">{g.name}</span>
                                 <span className={`inline-flex shrink-0 rounded border px-1 py-0.5 text-[10px] ${scopeBadge(g.scope)}`}>{scopeLabel(g.scope)}</span>
                               </div>
                             ))}
                             {accessGroups.length > 3 && (
-                              <div className="px-3 py-1 text-[10px] text-blue-600 font-medium">+{accessGroups.length - 3} more groups</div>
+                              <div className="px-3 py-1 text-[10px] text-primary font-medium">+{accessGroups.length - 3} more groups</div>
                             )}
                           </div>
                         </div>
                       )}
                       {/* Account State */}
                       <div className="px-3 py-1.5">
-                        <div className={`h-7 border-b border-slate-200 bg-slate-50 px-3 flex items-center -mx-3 -mt-1.5 mb-1`}><span className={secTitle}>Account State</span></div>
+                        <div className={`h-7 border-b border-border bg-muted px-3 flex items-center -mx-3 -mt-1.5 mb-1`}><span className={secTitle}>Account State</span></div>
                         <div className="space-y-0.5 text-[11px]">
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">Status</span>
-                            <span className={`font-medium ${selectedProfile?.isActive !== false ? "text-emerald-700" : "text-slate-500"}`}>{selectedProfile?.isActive !== false ? "Active" : "Inactive"}</span>
+                            <span className="text-muted-foreground">Status</span>
+                            <span className={`font-medium ${selectedProfile?.isActive !== false ? "text-success" : "text-muted-foreground"}`}>{selectedProfile?.isActive !== false ? "Active" : "Inactive"}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">Last login</span>
-                            <span className="font-medium text-slate-700">{fmtDate(selectedProfile?.lastLogin)}</span>
+                            <span className="text-muted-foreground">Last login</span>
+                            <span className="font-medium text-muted-foreground">{fmtDate(selectedProfile?.lastLogin)}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">Created</span>
-                            <span className="font-medium text-slate-700">{fmtDate(selectedProfile?.createdAt)}</span>
+                            <span className="text-muted-foreground">Created</span>
+                            <span className="font-medium text-muted-foreground">{fmtDate(selectedProfile?.createdAt)}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-500">Updated</span>
-                            <span className="font-medium text-slate-700">{fmtDate(selectedProfile?.updatedAt)}</span>
+                            <span className="text-muted-foreground">Updated</span>
+                            <span className="font-medium text-muted-foreground">{fmtDate(selectedProfile?.updatedAt)}</span>
                           </div>
                         </div>
                       </div>
@@ -671,9 +671,9 @@ export function UsersTab() {
                 ) : (
                   <div className="flex-1 min-h-0 overflow-y-auto">
                     {/* ── Access Overview KPIs ── */}
-                    <div className="border-b border-slate-200">
+                    <div className="border-b border-border">
                       <div className={secHdr}><span className={secTitle}>Access Overview</span></div>
-                      <div className="flex items-stretch divide-x divide-slate-200">
+                      <div className="flex items-stretch divide-x divide-border">
                         <div className="flex flex-1 flex-col items-center justify-center gap-0.5 py-3">
                           <span className={kpiValue}>{accessSummary.total}</span>
                           <span className={kpiLabel}>Roles</span>
@@ -691,7 +691,7 @@ export function UsersTab() {
                           <span className={kpiLabel}>Groups</span>
                         </div>
                         <div className="flex flex-1 flex-col items-center justify-center gap-0.5 py-3">
-                          <span className={`text-lg font-semibold leading-none ${selectedProfile?.isActive !== false ? "text-emerald-600" : "text-slate-400"}`}>
+                          <span className={`text-lg font-semibold leading-none ${selectedProfile?.isActive !== false ? "text-success" : "text-muted-foreground/60"}`}>
                             {selectedProfile?.isActive !== false ? "Active" : "Inactive"}
                           </span>
                           <span className={kpiLabel}>Account</span>
@@ -700,44 +700,44 @@ export function UsersTab() {
                     </div>
 
                     {/* ── Role Assignments ── */}
-                    <div className="border-b border-slate-200">
+                    <div className="border-b border-border">
                       <div className={secHdr}><span className={secTitle}>Role Assignments</span></div>
                       {isAssignMode && (
-                        <div className="border-b border-slate-200 bg-slate-50/50 px-3 py-2">
+                        <div className="border-b border-border bg-muted/50 px-3 py-2">
                           <div className="grid grid-cols-4 gap-2">
                             <div><label className={fieldLabel}>Role *</label>
                               <select value={roleForm.roleId} onChange={(e) => { setRoleForm((prev) => ({ ...prev, roleId: e.target.value, companyId: "", plantId: "", administrativeDepartmentId: "" })); setRoleErrors({}); }}
-                                className={`mt-0.5 h-7 w-full border bg-white px-2 text-xs outline-none ${roleDisplayErrors.roleId ? "border-red-300" : "border-slate-200"}`}>
+                                className={`mt-0.5 h-7 w-full border bg-background px-2 text-xs outline-none ${roleDisplayErrors.roleId ? "border-danger/30" : "border-border"}`}>
                                 <option value="">Select role</option>{roleCatalog.map((role: { id: string; label: string }) => (<option key={role.id} value={role.id}>{role.label}</option>))}
-                              </select>{roleDisplayErrors.roleId && <p className="text-[11px] text-red-600">{roleDisplayErrors.roleId}</p>}</div>
+                              </select>{roleDisplayErrors.roleId && <p className="text-[11px] text-danger">{roleDisplayErrors.roleId}</p>}</div>
                             <div><label className={fieldLabel}>Company</label>
                               <select value={roleForm.companyId} onChange={(e) => setRoleForm((prev) => ({ ...prev, companyId: e.target.value, plantId: "", administrativeDepartmentId: "" }))} disabled={!selectedRoleScope || selectedRoleScope === "global"}
-                                className={`mt-0.5 h-7 w-full border bg-white px-2 text-xs outline-none ${roleDisplayErrors.companyId ? "border-red-300" : "border-slate-200"} disabled:opacity-60`}>
+                                className={`mt-0.5 h-7 w-full border bg-background px-2 text-xs outline-none ${roleDisplayErrors.companyId ? "border-danger/30" : "border-border"} disabled:opacity-60`}>
                                 <option value="">{selectedRoleScope === "global" ? "Global" : "Select company"}</option>{companies.map((c: CompanyNode) => (<option key={c.id} value={c.id}>{c.name}</option>))}
-                              </select>{roleDisplayErrors.companyId && <p className="text-[11px] text-red-600">{roleDisplayErrors.companyId}</p>}</div>
+                              </select>{roleDisplayErrors.companyId && <p className="text-[11px] text-danger">{roleDisplayErrors.companyId}</p>}</div>
                             <div><label className={fieldLabel}>Plant</label>
                               <select value={roleForm.plantId} onChange={(e) => setRoleForm((prev) => ({ ...prev, plantId: e.target.value, administrativeDepartmentId: "" }))} disabled={!selectedRoleScope || selectedRoleScope === "global" || selectedRoleScope === "company"}
-                                className={`mt-0.5 h-7 w-full border bg-white px-2 text-xs outline-none ${roleDisplayErrors.plantId ? "border-red-300" : "border-slate-200"} disabled:opacity-60`}>
+                                className={`mt-0.5 h-7 w-full border bg-background px-2 text-xs outline-none ${roleDisplayErrors.plantId ? "border-danger/30" : "border-border"} disabled:opacity-60`}>
                                 <option value="">{selectedRoleScope === "plant" || selectedRoleScope === "department" ? "Select plant" : "—"}</option>{plants.filter((p: PlantNode) => !roleForm.companyId || p.companyId === roleForm.companyId).map((p: PlantNode) => (<option key={p.id} value={p.id}>{p.name}</option>))}
-                              </select>{roleDisplayErrors.plantId && <p className="text-[11px] text-red-600">{roleDisplayErrors.plantId}</p>}</div>
+                              </select>{roleDisplayErrors.plantId && <p className="text-[11px] text-danger">{roleDisplayErrors.plantId}</p>}</div>
                             <div><label className={fieldLabel}>Dept</label>
                               <select value={roleForm.administrativeDepartmentId} onChange={(e) => setRoleForm((prev) => ({ ...prev, administrativeDepartmentId: e.target.value }))} disabled={selectedRoleScope !== "department"}
-                                className={`mt-0.5 h-7 w-full border bg-white px-2 text-xs outline-none ${roleDisplayErrors.administrativeDepartmentId ? "border-red-300" : "border-slate-200"} disabled:opacity-60`}>
+                                className={`mt-0.5 h-7 w-full border bg-background px-2 text-xs outline-none ${roleDisplayErrors.administrativeDepartmentId ? "border-danger/30" : "border-border"} disabled:opacity-60`}>
                                 <option value="">{selectedRoleScope === "department" ? "Select dept" : "—"}</option>{filteredDepartments.map((d: DepartmentNode) => (<option key={d.id} value={d.id}>{d.name}</option>))}
-                              </select>{roleDisplayErrors.administrativeDepartmentId && <p className="text-[11px] text-red-600">{roleDisplayErrors.administrativeDepartmentId}</p>}</div>
+                              </select>{roleDisplayErrors.administrativeDepartmentId && <p className="text-[11px] text-danger">{roleDisplayErrors.administrativeDepartmentId}</p>}</div>
                           </div>
-                          {roleDisplayErrors.form && <p className="mt-1 text-xs text-red-600">{roleDisplayErrors.form}</p>}
+                          {roleDisplayErrors.form && <p className="mt-1 text-xs text-danger">{roleDisplayErrors.form}</p>}
                         </div>
                       )}
                       {selectedAssignments.length === 0 && !isAssignMode ? (
-                        <div className="flex items-center justify-center gap-2 py-4 text-xs text-slate-400">
+                        <div className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground/60">
                           <Shield className="h-4 w-4" />
                           <span>No role assignments yet</span>
                         </div>
                       ) : (
                         <div className="overflow-x-auto">
                           <table className="w-full table-fixed text-xs">
-                            <thead><tr className="border-b border-slate-200 bg-slate-50 text-left text-[11px] font-medium text-slate-500">
+                            <thead><tr className="border-b border-border bg-muted text-left text-[11px] font-medium text-muted-foreground">
                               <th className="w-[26%] px-3 py-1.5">Role</th>
                               <th className="w-[14%] px-3 py-1.5">Scope</th>
                               <th className="w-[18%] px-3 py-1.5">Company</th>
@@ -748,25 +748,25 @@ export function UsersTab() {
                             <tbody>{selectedAssignments.map((a: UserRoleNode) => {
                               const scope: ScopeLevel = a.administrativeDepartmentId ? "department" : a.plantId ? "plant" : a.companyId ? "company" : "global";
                               return (
-                                <tr key={a.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                                  <td className="truncate px-3 py-1 text-[12px] text-slate-800">{roleLabelById.get(a.roleId) || a.roleName}</td>
+                                <tr key={a.id} className="border-b border-border/50 hover:bg-muted/50">
+                                  <td className="truncate px-3 py-1 text-[12px] text-foreground">{roleLabelById.get(a.roleId) || a.roleName}</td>
                                   <td className="px-3 py-1"><span className={`inline-flex rounded border px-1.5 py-0.5 text-[11px] ${scopeBadge(scope)}`}>{scopeLabel(scope)}</span></td>
-                                  <td className="truncate px-3 py-1 text-[11px] text-slate-500">{safeText(a.companyName)}</td>
-                                  <td className="truncate px-3 py-1 text-[11px] text-slate-500">{safeText(a.plantName)}</td>
-                                  <td className="truncate px-3 py-1 text-[11px] text-slate-500">{safeText(a.administrativeDepartmentName)}</td>
+                                  <td className="truncate px-3 py-1 text-[11px] text-muted-foreground">{safeText(a.companyName)}</td>
+                                  <td className="truncate px-3 py-1 text-[11px] text-muted-foreground">{safeText(a.plantName)}</td>
+                                  <td className="truncate px-3 py-1 text-[11px] text-muted-foreground">{safeText(a.administrativeDepartmentName)}</td>
                                   <td className="px-3 py-1 text-right">
                                     {!roleIsSystemById.get(a.roleId) ? (
                                       removeConfirmId === a.id ? (
                                         <div className="flex items-center justify-end gap-0.5">
-                                          <span className="text-[10px] text-red-500 font-medium">Remove?</span>
-                                          <button type="button" onClick={removeRole} className="rounded p-0.5 text-red-500 hover:bg-red-50"><CheckCircle2 className="h-3 w-3" /></button>
-                                          <button type="button" onClick={cancelRemoveRole} className="rounded p-0.5 text-slate-400 hover:bg-slate-100"><X className="h-3 w-3" /></button>
+                                          <span className="text-[10px] text-danger font-medium">Remove?</span>
+                                          <button type="button" onClick={removeRole} className="rounded p-0.5 text-danger hover:bg-danger/10"><CheckCircle2 className="h-3 w-3" /></button>
+                                          <button type="button" onClick={cancelRemoveRole} className="rounded p-0.5 text-muted-foreground/60 hover:bg-muted"><X className="h-3 w-3" /></button>
                                         </div>
                                       ) : (
-                                        <button type="button" onClick={() => confirmRemoveRole(a.id)} className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500" title="Remove role"><Trash2 className="h-3 w-3" /></button>
+                                        <button type="button" onClick={() => confirmRemoveRole(a.id)} className="rounded p-1 text-muted-foreground/60 hover:bg-danger/10 hover:text-danger" title="Remove role"><Trash2 className="h-3 w-3" /></button>
                                       )
                                     ) : (
-                                      <span className="text-[11px] text-slate-400">—</span>
+                                      <span className="text-[11px] text-muted-foreground/60">—</span>
                                     )}
                                   </td>
                                 </tr>
@@ -779,27 +779,27 @@ export function UsersTab() {
 
                     {/* ── Access Groups ── */}
                     {accessGroups.length > 0 && (
-                      <div className="border-b border-slate-200">
+                      <div className="border-b border-border">
                         <div className={secHdr}><span className={secTitle}>Access Groups</span></div>
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-border/50">
                           {accessGroups.map((g) => (
-                            <div key={g.id} className="flex items-center gap-3 px-3 py-1.5 min-h-[30px] hover:bg-slate-50/50">
-                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-slate-100">
-                                <Shield className="h-3 w-3 text-slate-500" />
+                            <div key={g.id} className="flex items-center gap-3 px-3 py-1.5 min-h-[30px] hover:bg-muted/50">
+                              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted">
+                                <Shield className="h-3 w-3 text-muted-foreground" />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="truncate text-[12px] font-medium text-slate-800">{g.name}</span>
+                                  <span className="truncate text-[12px] font-medium text-foreground">{g.name}</span>
                                   <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] ${scopeBadge(g.scope)}`}>{scopeLabel(g.scope)}</span>
                                 </div>
                                 <div className="mt-0.5 flex flex-wrap gap-1">
                                   {g.roleNames.slice(0, 3).map((rn, i) => (
-                                    <span key={i} className="inline-flex rounded bg-blue-50 px-1.5 py-0.5 text-[10px] text-blue-600">{rn}</span>
+                                    <span key={i} className="inline-flex rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">{rn}</span>
                                   ))}
-                                  {g.roleNames.length > 3 && <span className="text-[10px] text-slate-400">+{g.roleNames.length - 3} more</span>}
+                                  {g.roleNames.length > 3 && <span className="text-[10px] text-muted-foreground/60">+{g.roleNames.length - 3} more</span>}
                                 </div>
                               </div>
-                              <div className="shrink-0 text-right text-[11px] text-slate-500">{g.roleCount} role{g.roleCount !== 1 ? "s" : ""}</div>
+                              <div className="shrink-0 text-right text-[11px] text-muted-foreground">{g.roleCount} role{g.roleCount !== 1 ? "s" : ""}</div>
                             </div>
                           ))}
                         </div>
@@ -808,32 +808,32 @@ export function UsersTab() {
 
                     {/* ── Effective Permissions Summary ── */}
                     {selectedProfile && (
-                      <div className="border-b border-slate-200">
+                      <div className="border-b border-border">
                         <div className={secHdr}><span className={secTitle}>Effective Permissions</span></div>
                         {permsLoading ? (
-                          <div className="flex items-center justify-center py-3"><Loader2 className="h-4 w-4 animate-spin text-slate-400" /></div>
+                          <div className="flex items-center justify-center py-3"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground/60" /></div>
                         ) : permsByModule.length === 0 ? (
-                          <div className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400">
+                          <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground/60">
                             <ShieldCheck className="h-4 w-4" /><span>No specific permissions assigned</span>
                           </div>
                         ) : (
-                          <div className="divide-y divide-slate-100">
+                          <div className="divide-y divide-border/50">
                             {hasAdminAccess && (
-                              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50/50">
-                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                                <span className="text-[11px] text-amber-700">User has admin/system-level access</span>
+                              <div className="flex items-center gap-2 px-3 py-1.5 bg-warning/10/50">
+                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-warning" />
+                                <span className="text-[11px] text-warning">User has admin/system-level access</span>
                               </div>
                             )}
                             <div className="gap-x-1 gap-y-0.5 px-3 py-1.5">
                               {permsByModule.map(([module, actions]) => (
                                 <div key={module} className="flex items-center gap-2 py-0.5">
-                                  <span className="w-28 shrink-0 truncate text-[11px] font-medium text-slate-600 capitalize">{module}</span>
+                                  <span className="w-28 shrink-0 truncate text-[11px] font-medium text-muted-foreground capitalize">{module}</span>
                                   <div className="flex flex-wrap gap-1">
                                     {Array.from(actions).sort().map((action) => (
                                       <span key={`${module}-${action}`} className={`inline-flex rounded px-1.5 py-0.5 text-[10px] font-medium ${
                                         action === "admin" || action === "manage"
-                                          ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                          : "bg-slate-100 text-slate-600"
+                                          ? "bg-warning/10 text-warning border border-warning/20"
+                                          : "bg-muted text-muted-foreground"
                                       }`}>
                                         {action}
                                       </span>
@@ -852,10 +852,10 @@ export function UsersTab() {
                       <div className="px-3 py-1.5">
                         <div className={secHdr + " -mx-3 -mt-1.5 mb-1"}><span className={secTitle}>Account State</span></div>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[12px]">
-                          <div><span className="text-slate-500">Status</span><span className="ml-2 font-medium text-slate-800">{selectedProfile.isActive ? "Active" : "Inactive"}</span></div>
-                          <div><span className="text-slate-500">Last login</span><span className="ml-2 font-medium text-slate-800">{fmtDate(selectedProfile.lastLogin)}</span></div>
-                          <div><span className="text-slate-500">Created</span><span className="ml-2 font-medium text-slate-800">{fmtDate(selectedProfile.createdAt)}</span></div>
-                          <div><span className="text-slate-500">Updated</span><span className="ml-2 font-medium text-slate-800">{fmtDate(selectedProfile.updatedAt)}</span></div>
+                          <div><span className="text-muted-foreground">Status</span><span className="ml-2 font-medium text-foreground">{selectedProfile.isActive ? "Active" : "Inactive"}</span></div>
+                          <div><span className="text-muted-foreground">Last login</span><span className="ml-2 font-medium text-foreground">{fmtDate(selectedProfile.lastLogin)}</span></div>
+                          <div><span className="text-muted-foreground">Created</span><span className="ml-2 font-medium text-foreground">{fmtDate(selectedProfile.createdAt)}</span></div>
+                          <div><span className="text-muted-foreground">Updated</span><span className="ml-2 font-medium text-foreground">{fmtDate(selectedProfile.updatedAt)}</span></div>
                         </div>
                       </div>
                     )}

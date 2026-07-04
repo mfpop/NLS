@@ -200,13 +200,13 @@ export function useRmaSection(
 
   // ── Styles ──
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
-  const errTxtCls = "text-[10px] text-red-500 mt-0.5";
+  const errTxtCls = "text-[10px] text-danger mt-0.5";
 
   // ── Create Form (25/75 layout) ──
   const renderCreateForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
       {/* ── Left 25%: Customer/Status/Product Metadata ── */}
-      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
+      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">Return Metadata</h3>
         <div>
           <label className={labelCls}>RMA Number *</label>
@@ -267,58 +267,58 @@ export function useRmaSection(
           <input type="text" value={fSerialLot} onChange={(e) => setFSerialLot(e.target.value)} className={selCls()} placeholder="Serial/Lot #..." />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Return Reason *</label>
           <textarea
             value={fReason}
             onChange={(e) => setFReason(e.target.value)}
             rows={3}
-            className={`h-20 w-full bg-white/50 dark:bg-slate-800/50 border ${errors.reason ? "border-red-400" : "border-white/30 dark:border-slate-700/30"} px-2 py-1 text-xs outline-none resize-none`}
+            className={`h-20 w-full bg-background/50 dark:bg-slate-800/50 border ${errors.reason ? "border-red-400" : "border-white/30 dark:border-slate-700/30"} px-2 py-1 text-xs outline-none resize-none`}
             placeholder="Reason for return..."
           />
           {errors.reason && <p className={errTxtCls}>{errors.reason}</p>}
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Receiving Inspection Result</label>
           <textarea
             value={fInspectionResult}
             onChange={(e) => setFInspectionResult(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Inspection findings..."
           />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Confirmed Defect</label>
           <textarea
             value={fConfirmedDefect}
             onChange={(e) => setFConfirmedDefect(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Defect description..."
           />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Suspected Cause</label>
           <textarea
             value={fSuspectedCause}
             onChange={(e) => setFSuspectedCause(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Suspected root cause..."
           />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Root Cause / Confirmed Cause</label>
           <textarea
             value={fConfirmedCause}
             onChange={(e) => setFConfirmedCause(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Confirmed root cause..."
           />
         </div>
@@ -342,24 +342,24 @@ export function useRmaSection(
           </div>
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Customer Response</label>
           <textarea
             value={fCustomerResponse}
             onChange={(e) => setFCustomerResponse(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Customer response details..."
           />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Verification / Closure Notes</label>
           <textarea
             value={fNotes}
             onChange={(e) => setFNotes(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Verification and closure details..."
           />
         </div>
@@ -468,7 +468,7 @@ export function useRmaSection(
                 label="disposition"
               />
               {sel.disposition && (
-                <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border border-indigo-300 text-indigo-700 bg-indigo-50/80`}>
+                <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border border-indigo-300 text-primary bg-indigo-50/80`}>
                   {RMA_DISPOSITION_OPTIONS.find((o) => o.value === sel.disposition)?.label || statusLabel(sel.disposition)}
                 </span>
               )}
@@ -533,7 +533,7 @@ export function useRmaSection(
                   >
                     {RMA_DISPOSITION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
-                  <button onClick={hDisposition} className="inline-flex h-7 items-center gap-1 border border-indigo-300 px-2 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30 transition-all">
+                  <button onClick={hDisposition} className="inline-flex h-7 items-center gap-1 border border-indigo-300 px-2 text-[10px] font-semibold text-primary hover:bg-primary/10 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30 transition-all">
                     Disposition
                   </button>
                 </>
@@ -543,7 +543,7 @@ export function useRmaSection(
         </div>
 
         {/* ── Right 35%: Status, Customer, Quantity, Owner, Dates, Linked Items ── */}
-        <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4 bg-white/30 dark:bg-slate-900/30">
+        <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4 bg-background/30 dark:bg-slate-900/30">
           {/* Status & Customer */}
           <div>
             <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground/70 mb-2">Overview</h3>

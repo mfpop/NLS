@@ -229,9 +229,9 @@ ${cNotes}` : ""}`
 
   // ── Form ──
   const renderForm = () => {
-    const sc = "border-b border-slate-100 pb-2 mb-2";
-    const st = "text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5";
-    const lc = "block text-xs font-medium text-slate-500 mb-1";
+    const sc = "border-b border-border/50 pb-2 mb-2";
+    const st = "text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1.5";
+    const lc = "block text-xs font-medium text-muted-foreground mb-1";
     const isCreating = creating;
 
     return (
@@ -262,7 +262,7 @@ ${cNotes}` : ""}`
                 </div>
                 <div>
                   <label className={lc}>Description</label>
-                  <textarea value={cDesc} onChange={(e) => setCD(e.target.value)} rows={2} className="w-full border border-slate-200 bg-white px-2 py-1 text-xs outline-none resize-none" placeholder="Describe the environmental event..." />
+                  <textarea value={cDesc} onChange={(e) => setCD(e.target.value)} rows={2} className="w-full border border-border bg-background px-2 py-1 text-xs outline-none resize-none" placeholder="Describe the environmental event..." />
                 </div>
               </div>
             </div>
@@ -275,7 +275,7 @@ ${cNotes}` : ""}`
                 value={cLoc} onChange={setCLoc}
               />
               <div className="mt-1.5">
-                <label className={lc}>Location Detail <span className="text-slate-400 font-normal">(optional)</span></label>
+                <label className={lc}>Location Detail <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
                 <input type="text" value={cLocationText} onChange={(e) => setCLT(e.target.value)} className={SEL_INPUT} placeholder="Specific physical location..." />
               </div>
             </div>
@@ -314,12 +314,12 @@ ${cNotes}` : ""}`
               <div className="flex-1 min-h-0 flex flex-col space-y-1">
                 <div className="flex-1 min-h-0 flex flex-col">
                   <label className={`${lc} shrink-0`}>Containment Action</label>
-                  <textarea value={cContainment} onChange={(e) => setCC(e.target.value)} className="min-h-[48px] w-full flex-1 border border-slate-200 bg-white px-2 py-1 text-xs outline-none resize-none overflow-auto" placeholder="Actions taken to contain..." />
+                  <textarea value={cContainment} onChange={(e) => setCC(e.target.value)} className="min-h-[48px] w-full flex-1 border border-border bg-background px-2 py-1 text-xs outline-none resize-none overflow-auto" placeholder="Actions taken to contain..." />
                 </div>
                 {cCleanup && (
                   <div className="flex-1 min-h-0 flex flex-col">
                     <label className={`${lc} shrink-0`}>Cleanup Notes</label>
-                    <textarea value={cCleanupNotes} onChange={(e) => setCCN(e.target.value)} className="min-h-[48px] w-full flex-1 border border-slate-200 bg-white px-2 py-1 text-xs outline-none resize-none overflow-auto" placeholder="Cleanup details..." />
+                    <textarea value={cCleanupNotes} onChange={(e) => setCCN(e.target.value)} className="min-h-[48px] w-full flex-1 border border-border bg-background px-2 py-1 text-xs outline-none resize-none overflow-auto" placeholder="Cleanup details..." />
                   </div>
                 )}
               </div>
@@ -349,7 +349,7 @@ ${cNotes}` : ""}`
                       ))}
               </select>
               {isCreating && envEvents.length === 0 && (
-                <p className="text-[10px] text-slate-400 leading-tight mt-1">
+                <p className="text-[10px] text-muted-foreground/60 leading-tight mt-1">
                   Reports may be linked after an environmental-impact event is reported.
                 </p>
               )}
@@ -368,11 +368,11 @@ ${cNotes}` : ""}`
             <div className={`${sc} shrink-0`}>
               <div className={st}>Impact / Reporting</div>
               <div className="space-y-1.5">
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                   <input type="checkbox" checked={cCleanup} onChange={(e) => setCCU(e.target.checked)} className="h-3.5 w-3.5" />
                   Cleanup required
                 </label>
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                   <input type="checkbox" checked={cExternal} onChange={(e) => setCE(e.target.checked)} className="h-3.5 w-3.5" />
                   Reported externally
                 </label>
@@ -388,7 +388,7 @@ ${cNotes}` : ""}`
             {/* Notes — grows second, fills remaining */}
             <div style={{ flex: 1 }} className="min-h-0 flex flex-col">
               <div className={`${st} shrink-0`}>Notes</div>
-              <textarea value={cNotes} onChange={(e) => setCN(e.target.value)} className="min-h-[48px] w-full flex-1 border border-slate-200 bg-white px-2 py-1 text-xs outline-none resize-none overflow-auto" placeholder="Additional notes..." />
+              <textarea value={cNotes} onChange={(e) => setCN(e.target.value)} className="min-h-[48px] w-full flex-1 border border-border bg-background px-2 py-1 text-xs outline-none resize-none overflow-auto" placeholder="Additional notes..." />
             </div>
           </div>
         </div>
@@ -404,9 +404,9 @@ ${cNotes}` : ""}`
       return (
         <div className="flex flex-1 items-center justify-center h-full">
           <div className="text-center max-w-sm px-6">
-            <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-semibold text-slate-900 mb-1">Environmental Reports</h3>
-            <p className="text-xs text-slate-500 mb-3">Select a report to view details or create a new record.</p>
+            <FileText className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+            <h3 className="text-sm font-semibold text-foreground mb-1">Environmental Reports</h3>
+            <p className="text-xs text-muted-foreground mb-3">Select a report to view details or create a new record.</p>
           </div>
         </div>
       );
@@ -417,13 +417,13 @@ ${cNotes}` : ""}`
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
         {/* Header */}
-        <div className="border-b border-slate-200 px-5 py-4">
-          <h2 className="text-sm font-bold text-slate-900">{selItem.title}</h2>
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="text-sm font-bold text-foreground">{selItem.title}</h2>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${stCls}`}>
               {statusLabel(selItem.status)}
             </span>
-            <span className="inline-flex px-1 py-0.5 text-[10px] font-medium border bg-slate-100 text-slate-700 border-slate-200">
+            <span className="inline-flex px-1 py-0.5 text-[10px] font-medium border bg-muted text-muted-foreground border-border">
               {REPORT_TYPE_OPTS.find((o: any) => o.value === selItem.reportType)?.label || selItem.reportType}
             </span>
           </div>
@@ -436,20 +436,20 @@ ${cNotes}` : ""}`
             <div className="space-y-3">
               {selItem.description && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Description</p>
-                  <p className="text-sm text-slate-900">{selItem.description}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Description</p>
+                  <p className="text-sm text-foreground">{selItem.description}</p>
                 </div>
               )}
               {selItem.occurredAt && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Occurred At</p>
-                  <p className="text-xs text-slate-900">{formatDateFull(selItem.occurredAt)}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Occurred At</p>
+                  <p className="text-xs text-foreground">{formatDateFull(selItem.occurredAt)}</p>
                 </div>
               )}
               {(selItem.materialInvolved || selItem.estimatedQuantity) && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Material</p>
-                  <p className="text-xs text-slate-900">
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Material</p>
+                  <p className="text-xs text-foreground">
                     {selItem.materialInvolved}
                     {selItem.estimatedQuantity ? ` — ${selItem.estimatedQuantity} ${selItem.unit || ""}` : ""}
                   </p>
@@ -457,20 +457,20 @@ ${cNotes}` : ""}`
               )}
               {selEnvEvent && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Linked Event</p>
-                  <p className="text-xs text-slate-900">{selEnvEvent.title} ({selEnvEvent.eventType})</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Linked Event</p>
+                  <p className="text-xs text-foreground">{selEnvEvent.title} ({selEnvEvent.eventType})</p>
                 </div>
               )}
               {selItem.locationText && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Location</p>
-                  <p className="text-xs text-slate-900">{selItem.locationText}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Location</p>
+                  <p className="text-xs text-foreground">{selItem.locationText}</p>
                 </div>
               )}
               {selItem.targetType && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Source</p>
-                  <p className="text-xs text-slate-900">{selItem.targetType} #{selItem.targetId}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Source</p>
+                  <p className="text-xs text-foreground">{selItem.targetType} #{selItem.targetId}</p>
                 </div>
               )}
               <div className="flex gap-2 text-xs flex-wrap">
@@ -487,30 +487,30 @@ ${cNotes}` : ""}`
             <div className="space-y-3">
               {selItem.containmentAction && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Containment</p>
-                  <p className="text-xs text-slate-900">{selItem.containmentAction}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Containment</p>
+                  <p className="text-xs text-foreground">{selItem.containmentAction}</p>
                 </div>
               )}
               {selItem.owner && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Owner</p>
-                  <p className="text-xs text-slate-900">{selItem.owner}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Owner</p>
+                  <p className="text-xs text-foreground">{selItem.owner}</p>
                 </div>
               )}
               {selItem.externalReference && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">External Reference</p>
-                  <p className="text-xs text-slate-900">{selItem.externalReference}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">External Reference</p>
+                  <p className="text-xs text-foreground">{selItem.externalReference}</p>
                 </div>
               )}
               <div>
-                <p className="text-[10px] font-medium text-slate-500 mb-1">Reported</p>
-                <p className="text-xs text-slate-900">{selItem.reportedAt ? formatDateFull(selItem.reportedAt) : "—"}</p>
+                <p className="text-[10px] font-medium text-muted-foreground mb-1">Reported</p>
+                <p className="text-xs text-foreground">{selItem.reportedAt ? formatDateFull(selItem.reportedAt) : "—"}</p>
               </div>
               {selItem.notes && (
                 <div>
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Notes</p>
-                  <p className="text-xs text-slate-900">{selItem.notes}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground mb-1">Notes</p>
+                  <p className="text-xs text-foreground">{selItem.notes}</p>
                 </div>
               )}
             </div>
@@ -568,18 +568,18 @@ ${cNotes}` : ""}`
   // ── Left list ──
   const leftColumnContent = (
     <>
-      <div className="shrink-0 h-8 border-b border-slate-200 flex items-center bg-slate-50 px-4">
-        <span className="text-sm font-medium text-slate-700">Reports</span>
-        <span className="ml-auto text-[10px] text-slate-500 font-mono">{items.length}</span>
+      <div className="shrink-0 h-8 border-b border-border flex items-center bg-muted px-4">
+        <span className="text-sm font-medium text-muted-foreground">Reports</span>
+        <span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span>
       </div>
-      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No reports match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">
+      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-muted-foreground/60 italic">No reports match &quot;{searchQuery}&quot;</div>}
+      <div className="flex-1 overflow-y-auto divide-y divide-border/50 sidebar-scroll">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-6 text-center">
-            <Search className="h-5 w-5 text-slate-300 mb-2" />
-            <p className="text-xs text-slate-500 font-medium mb-2">No environmental reports recorded.</p>
+            <Search className="h-5 w-5 text-muted-foreground/30 mb-2" />
+            <p className="text-xs text-muted-foreground font-medium mb-2">No environmental reports recorded.</p>
             {!filterStatus && (
-              <button onClick={hNew} className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700">
+              <button onClick={hNew} className="inline-flex items-center gap-1 text-xs font-medium text-success hover:text-success">
                 <Plus className="h-3.5 w-3.5" /> New Report
               </button>
             )}
@@ -597,9 +597,9 @@ ${cNotes}` : ""}`
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{e.title}</span>
+                  <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{e.title}</span>
                 </div>
-                <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
                   <span>{REPORT_TYPE_OPTS.find((o: any) => o.value === e.reportType)?.label || e.reportType}</span>
                   <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>
                     {statusLabel(e.status)}
@@ -620,17 +620,17 @@ ${cNotes}` : ""}`
   // ── Cancel confirmation dialog ──
   const confirmDialog = cancelId && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setCancelId(null)}>
-      <div className="bg-white border border-slate-200 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-background border border-border shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
         <div className="p-4 space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900">Cancel Report</h3>
-          <p className="text-xs text-slate-600">Cancel this environmental report?</p>
+          <h3 className="text-sm font-semibold text-foreground">Cancel Report</h3>
+          <p className="text-xs text-muted-foreground">Cancel this environmental report?</p>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setCancelId(null)} className="h-8 px-3 text-xs font-medium text-slate-700 border border-slate-200 bg-white hover:bg-slate-50">
+            <button onClick={() => setCancelId(null)} className="h-8 px-3 text-xs font-medium text-muted-foreground border border-border bg-background hover:bg-muted">
               No
             </button>
             <button
               onClick={() => { hTransition(cancelMut, cancelId, "Cancelled"); setCancelId(null); }}
-              className="h-8 px-3 text-xs font-semibold text-white bg-red-600 hover:bg-red-700"
+              className="h-8 px-3 text-xs font-semibold text-white bg-danger hover:bg-danger/80"
             >
               Yes
             </button>

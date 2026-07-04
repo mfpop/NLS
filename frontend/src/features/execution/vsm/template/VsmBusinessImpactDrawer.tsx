@@ -9,16 +9,16 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  GOOD: "text-emerald-600 bg-emerald-50 border-emerald-200",
-  WARNING: "text-amber-600 bg-amber-50 border-amber-200",
-  CRITICAL: "text-red-600 bg-red-50 border-red-200",
-  UNKNOWN: "text-slate-400 bg-slate-50 border-slate-200",
+  GOOD: "text-success bg-success/10 border-success/20",
+  WARNING: "text-warning bg-warning/10 border-warning/20",
+  CRITICAL: "text-danger bg-danger/10 border-danger/20",
+  UNKNOWN: "text-muted-foreground/60 bg-muted border-border",
 };
 
 const STATUS_DOT: Record<string, string> = {
-  GOOD: "bg-emerald-500",
-  WARNING: "bg-amber-500",
-  CRITICAL: "bg-red-500",
+  GOOD: "bg-success/100",
+  WARNING: "bg-warning/100",
+  CRITICAL: "bg-danger/100",
   UNKNOWN: "bg-slate-300",
 };
 
@@ -40,14 +40,14 @@ export function VsmBusinessImpactDrawer({ impact, onClose }: Props) {
   const visible = rows.filter((r) => r.value != null);
 
   return (
-    <div className="w-[340px] h-full shrink-0 bg-white border-l border-slate-300 shadow-2xl flex flex-col overflow-hidden animate-slide-left">
+    <div className="w-[340px] h-full shrink-0 bg-background border-l border-border shadow-2xl flex flex-col overflow-hidden animate-slide-left">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 shrink-0 bg-slate-50">
-          <h3 className="text-[13px] font-bold uppercase tracking-wider text-slate-800">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-muted">
+          <h3 className="text-[13px] font-bold uppercase tracking-wider text-foreground">
             Business Impact
           </h3>
           <button onClick={onClose}
-            className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
+            className="p-1 rounded hover:bg-muted/80 text-muted-foreground/60 hover:text-muted-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -55,13 +55,13 @@ export function VsmBusinessImpactDrawer({ impact, onClose }: Props) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4">
           {visible.length === 0 ? (
-            <p className="text-[13px] italic text-slate-400 text-center mt-8">
+            <p className="text-[13px] italic text-muted-foreground/60 text-center mt-8">
               Impact data not available
             </p>
           ) : (
             <div className="space-y-1">
               {visible.map((row, i) => {
-                const sc = row.status ? STATUS_COLORS[row.status] : "text-slate-800";
+                const sc = row.status ? STATUS_COLORS[row.status] : "text-foreground";
                 const sd = row.status ? STATUS_DOT[row.status] : "";
                 return (
                   <div key={i}
@@ -79,11 +79,11 @@ export function VsmBusinessImpactDrawer({ impact, onClose }: Props) {
 
           {/* Estimated savings */}
           {impact.estimatedSavings && (
-            <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+            <div className="mt-4 p-3 rounded-lg bg-success/10 border border-success/20">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-success">
                 Estimated Savings
               </p>
-              <p className="text-[15px] font-extrabold text-emerald-800 mt-0.5">
+              <p className="text-[15px] font-extrabold text-success mt-0.5">
                 {impact.estimatedSavings}
               </p>
             </div>
@@ -91,7 +91,7 @@ export function VsmBusinessImpactDrawer({ impact, onClose }: Props) {
 
           {/* Last calculated timestamp */}
           {impact.lastCalculatedAt && (
-            <p className="mt-3 text-[10px] text-slate-400 text-center">
+            <p className="mt-3 text-[10px] text-muted-foreground/60 text-center">
               Last calculated: {impact.lastCalculatedAt}
             </p>
           )}

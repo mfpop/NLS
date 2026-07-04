@@ -81,7 +81,7 @@ export function buildCompactTargetPath(
 
 /* ── Shared select class ── */
 const SELECT_CLASS =
-  "w-full h-8 rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-sky-500 focus:ring-0 disabled:bg-slate-50 disabled:text-slate-400";
+  "w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500 focus:ring-0 disabled:bg-muted disabled:text-muted-foreground/60";
 
 export function GembaLocationPicker({
   value, onChange, disabled, structureError, onRetryStructure,
@@ -210,10 +210,10 @@ export function GembaLocationPicker({
   if (!hasContext && !structureError) {
     return (
       <div>
-        <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-1">Target *</label>
-        <div className="flex items-center gap-1.5 rounded bg-slate-50 border border-slate-200 px-2 py-1.5">
-          <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-          <span className="text-[10px] text-slate-500">Select a plant and production line from the sidebar first.</span>
+        <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-1">Target *</label>
+        <div className="flex items-center gap-1.5 rounded bg-muted border border-border px-2 py-1.5">
+          <Info className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+          <span className="text-[10px] text-muted-foreground">Select a plant and production line from the sidebar first.</span>
         </div>
       </div>
     );
@@ -223,14 +223,14 @@ export function GembaLocationPicker({
   if (structureError) {
     return (
       <div>
-        <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-1">Target *</label>
-        <div className="rounded bg-red-50 border border-red-200 px-2 py-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-1">Target *</label>
+        <div className="rounded bg-danger/10 border border-danger/20 px-2 py-1.5">
           <div className="flex items-start gap-1.5">
-            <AlertCircle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5" />
+            <AlertCircle className="h-3.5 w-3.5 text-danger shrink-0 mt-0.5" />
             <div className="min-w-0">
-              <p className="text-[10px] text-red-700">Unable to load structure locations. Refresh and try again.</p>
+              <p className="text-[10px] text-danger">Unable to load structure locations. Refresh and try again.</p>
               <button type="button" onClick={onRetryStructure}
-                className="text-[10px] font-medium text-red-700 underline hover:no-underline mt-0.5">Retry</button>
+                className="text-[10px] font-medium text-danger underline hover:no-underline mt-0.5">Retry</button>
             </div>
           </div>
         </div>
@@ -244,18 +244,18 @@ export function GembaLocationPicker({
 
   return (
     <div>
-      <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-1">Target *</label>
+      <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-1">Target *</label>
 
       <div className="space-y-1.5">
         {/* ── Context breadcrumb ── */}
-        <div className="flex items-center gap-1 text-[10px] text-slate-500 bg-slate-50 rounded px-1.5 py-1 border border-slate-200">
-          <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted rounded px-1.5 py-1 border border-border">
+          <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/60" />
           <span className="truncate">{plantName} › {productionLineName}</span>
         </div>
 
         {/* ── Target Level dropdown ── */}
         <div>
-          <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-0.5">Target Level</label>
+          <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-0.5">Target Level</label>
           <select
             value={level}
             onChange={(e) => handleLevelChange(e.target.value)}
@@ -271,13 +271,13 @@ export function GembaLocationPicker({
 
         {/* ── Loading / Error states ── */}
         {loading && (
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 px-1 py-0.5">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground px-1 py-0.5">
             <Loader2 className="h-3 w-3 animate-spin" />
             Loading structure...
           </div>
         )}
         {fetchError && !loading && (
-          <div className="flex items-center gap-1.5 px-1.5 py-0.5 text-[10px] text-red-600">
+          <div className="flex items-center gap-1.5 px-1.5 py-0.5 text-[10px] text-danger">
             <AlertCircle className="h-3 w-3 shrink-0" />
             Failed to load.
             <button type="button" onClick={() => refetchOptions()} className="underline font-medium ml-1">Retry</button>
@@ -287,7 +287,7 @@ export function GembaLocationPicker({
         {/* ── Department dropdown ── */}
         {needsDept && (
           <div>
-            <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-0.5">Department</label>
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-0.5">Department</label>
             <select
               value={selectedDeptId}
               onChange={(e) => handleDeptChange(e.target.value)}
@@ -305,7 +305,7 @@ export function GembaLocationPicker({
         {/* ── Resource Group dropdown ── */}
         {needsRg && selectedDeptId && (
           <div>
-            <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-0.5">Resource Group</label>
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-0.5">Resource Group</label>
             <select
               value={selectedRgId}
               onChange={(e) => handleRgChange(e.target.value)}
@@ -323,7 +323,7 @@ export function GembaLocationPicker({
         {/* ── Resource dropdown ── */}
         {needsResource && selectedDeptId && selectedRgId && (
           <div>
-            <label className="text-[11px] font-medium uppercase tracking-wide text-slate-500 block mb-0.5">Resource</label>
+            <label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground block mb-0.5">Resource</label>
             <select
               value={value?.targetType === "RESOURCE" ? value.targetId : ""}
               onChange={(e) => handleResourceSelect(e.target.value)}
@@ -342,8 +342,8 @@ export function GembaLocationPicker({
 
         {/* ── Selected path breadcrumb ── */}
         {value && value.locationPath && (
-          <div className="flex h-7 items-center gap-1 text-xs text-slate-600 bg-slate-50 rounded px-1.5 border border-slate-200 truncate">
-            <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
+          <div className="flex h-7 items-center gap-1 text-xs text-muted-foreground bg-muted rounded px-1.5 border border-border truncate">
+            <MapPin className="h-3 w-3 shrink-0 text-muted-foreground/60" />
             <span className="truncate" title={value.locationPath}>{value.locationPath}</span>
           </div>
         )}

@@ -37,7 +37,7 @@ function SectionH({ label, color = "bg-cyan-500" }: { label: string; color?: str
 function KpiCard({ label, count, color, onClick }: { label: string; count: string | number; color: string; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className="cursor-pointer text-left bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
+      className="cursor-pointer text-left bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-background/80 dark:hover:bg-slate-800/80 transition-colors"
     >
       <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
       <p className={`text-base font-bold ${color}`}>{count}</p>
@@ -227,7 +227,7 @@ export function QualityOverview(props: OverviewProps) {
   const dmrStatusBreakdown = useMemo(() => {
     const statuses = ["OPEN", "UNDER_REVIEW", "QUARANTINED", "DISPOSITION_PENDING", "CLOSED"];
     const labels: Record<string, string> = { OPEN: "Open", UNDER_REVIEW: "Review", QUARANTINED: "Quarantined", DISPOSITION_PENDING: "Disp. Pending", CLOSED: "Closed" };
-    const colors: Record<string, string> = { OPEN: "border-blue-300 text-blue-700", UNDER_REVIEW: "border-amber-300 text-amber-700", QUARANTINED: "border-purple-300 text-purple-700", DISPOSITION_PENDING: "border-indigo-300 text-indigo-700", CLOSED: "border-green-300 text-green-700" };
+    const colors: Record<string, string> = { OPEN: "border-primary/30 text-primary", UNDER_REVIEW: "border-warning/30 text-warning", QUARANTINED: "border-purple-300 text-accent-foreground", DISPOSITION_PENDING: "border-indigo-300 text-primary", CLOSED: "border-green-300 text-success" };
     return statuses.map((s) => ({
       status: s, label: labels[s] || s, count: dmrs.filter((d) => d.status === s).length, color: colors[s] || "",
     }));
@@ -237,7 +237,7 @@ export function QualityOverview(props: OverviewProps) {
   const rmaStatusBreakdown = useMemo(() => {
     const statuses = ["OPEN", "RECEIVED", "UNDER_REVIEW", "DISPOSITION_PENDING", "CUSTOMER_RESPONSE_PENDING", "CLOSED"];
     const labels: Record<string, string> = { OPEN: "Open", RECEIVED: "Received", UNDER_REVIEW: "Review", DISPOSITION_PENDING: "Disp. Pending", CUSTOMER_RESPONSE_PENDING: "Cust. Resp.", CLOSED: "Closed" };
-    const colors: Record<string, string> = { OPEN: "border-blue-300 text-blue-700", RECEIVED: "border-teal-300 text-teal-700", UNDER_REVIEW: "border-amber-300 text-amber-700", DISPOSITION_PENDING: "border-indigo-300 text-indigo-700", CUSTOMER_RESPONSE_PENDING: "border-purple-300 text-purple-700", CLOSED: "border-green-300 text-green-700" };
+    const colors: Record<string, string> = { OPEN: "border-primary/30 text-primary", RECEIVED: "border-teal-300 text-teal-700", UNDER_REVIEW: "border-warning/30 text-warning", DISPOSITION_PENDING: "border-indigo-300 text-primary", CUSTOMER_RESPONSE_PENDING: "border-purple-300 text-accent-foreground", CLOSED: "border-green-300 text-success" };
     return statuses.map((s) => ({
       status: s, label: labels[s] || s, count: rmas.filter((r) => r.status === s).length, color: colors[s] || "",
     }));
@@ -288,7 +288,7 @@ export function QualityOverview(props: OverviewProps) {
     const isBetter = diff <= 0;
     if (previous === 0) return <span className="text-[10px] text-muted-foreground">—</span>;
     return (
-      <span className={`text-[10px] font-medium ${isBetter ? "text-green-600" : "text-red-600"}`}>
+      <span className={`text-[10px] font-medium ${isBetter ? "text-success" : "text-danger"}`}>
         {isBetter ? "\u2193" : "\u2191"} {Math.abs(diff)}%
       </span>
     );
@@ -301,10 +301,10 @@ export function QualityOverview(props: OverviewProps) {
       <div className="space-y-0.5">
         {items.slice(0, 8).map((item) => (
           <button key={item.id} onClick={item.onClick}
-            className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+            className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
           >
             <span className={`h-2 w-2 shrink-0 rounded-full ${
-              item.priority <= 0 ? "bg-red-500" : item.priority <= 1 ? "bg-orange-500" : item.priority <= 2 ? "bg-amber-500" : "bg-slate-400"
+              item.priority <= 0 ? "bg-danger/100" : item.priority <= 1 ? "bg-warning/100" : item.priority <= 2 ? "bg-warning/100" : "bg-slate-400"
             }`} />
             <span className="text-[10px] font-semibold text-muted-foreground w-24 shrink-0">{item.type}</span>
             <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
@@ -320,13 +320,13 @@ export function QualityOverview(props: OverviewProps) {
     <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
       {/* ═══ KPI Row ═══ */}
       <div className="grid grid-cols-8 gap-2">
-        <KpiCard label="Open Issues" count={kpis.openIssues.length} color="text-amber-600 dark:text-amber-400" onClick={() => kpiClick({ tab: "issues", status: "OPEN" })} />
-        <KpiCard label="Critical Issues" count={kpis.criticalIssues.length} color="text-red-600 dark:text-red-400" onClick={() => kpiClick({ tab: "issues" })} />
+        <KpiCard label="Open Issues" count={kpis.openIssues.length} color="text-warning dark:text-amber-400" onClick={() => kpiClick({ tab: "issues", status: "OPEN" })} />
+        <KpiCard label="Critical Issues" count={kpis.criticalIssues.length} color="text-danger dark:text-danger/80" onClick={() => kpiClick({ tab: "issues" })} />
         <KpiCard label="Open Corrective Actions" count={kpis.openActions.length} color="text-violet-600 dark:text-violet-400" onClick={() => kpiClick({ tab: "actions", status: "OPEN" })} />
-        <KpiCard label="Audit Completion" count={`${kpis.completionRate}%`} color="text-blue-600 dark:text-blue-400" onClick={() => kpiClick({ tab: "audits" })} />
-        <KpiCard label="Defect Rate" count={`${kpis.defectRate}%`} color="text-orange-600 dark:text-orange-400" onClick={() => kpiClick({ tab: "dmrs" })} />
-        <KpiCard label="First Pass Yield" count={`${kpis.fpy}%`} color="text-green-600 dark:text-green-400" onClick={() => kpiClick({ tab: "audits", status: "COMPLETED" })} />
-        <KpiCard label="Open DMR" count={kpis.openDmrs.length} color="text-orange-600 dark:text-orange-400" onClick={() => kpiClick({ tab: "dmrs", status: "OPEN" })} />
+        <KpiCard label="Audit Completion" count={`${kpis.completionRate}%`} color="text-primary dark:text-blue-400" onClick={() => kpiClick({ tab: "audits" })} />
+        <KpiCard label="Defect Rate" count={`${kpis.defectRate}%`} color="text-warning dark:text-orange-400" onClick={() => kpiClick({ tab: "dmrs" })} />
+        <KpiCard label="First Pass Yield" count={`${kpis.fpy}%`} color="text-success dark:text-success/80" onClick={() => kpiClick({ tab: "audits", status: "COMPLETED" })} />
+        <KpiCard label="Open DMR" count={kpis.openDmrs.length} color="text-warning dark:text-orange-400" onClick={() => kpiClick({ tab: "dmrs", status: "OPEN" })} />
         <KpiCard label="Open RMA" count={kpis.openRmas.length} color="text-teal-600 dark:text-teal-400" onClick={() => kpiClick({ tab: "rmas", status: "OPEN" })} />
       </div>
 
@@ -335,7 +335,7 @@ export function QualityOverview(props: OverviewProps) {
         {/* ── Left 60% ── */}
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
           {/* Work Queue */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <div className="flex items-center justify-between mb-2">
               <SectionH label="Work Queue" color="bg-violet-500" />
               <div className="flex items-center gap-1">
@@ -368,16 +368,16 @@ export function QualityOverview(props: OverviewProps) {
 
           {/* Open Quality Audits */}
           {openQualityAudits.length > 0 || overdueAudits.length > 0 ? (
-            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-              <SectionH label="Open Quality Audits" color="bg-red-500" />
+            <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <SectionH label="Open Quality Audits" color="bg-danger/100" />
               {overdueAudits.length > 0 && (
                 <div className="mb-2">
-                  <p className="text-[10px] font-semibold text-red-600 uppercase tracking-wider mb-1">Overdue</p>
+                  <p className="text-[10px] font-semibold text-danger uppercase tracking-wider mb-1">Overdue</p>
                   {overdueAudits.map((a: any) => (
                     <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
-                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                     >
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-danger/100" />
                       <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
                       <span className="text-muted-foreground shrink-0 text-[10px]">{a.auditType || ""}</span>
                       <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${STATUS_STYLES[a.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(a.status)}</span>
@@ -387,12 +387,12 @@ export function QualityOverview(props: OverviewProps) {
               )}
               {openQualityAudits.length > 0 && (
                 <div>
-                  {overdueAudits.length > 0 && <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-wider mb-1">In Progress / Draft</p>}
+                  {overdueAudits.length > 0 && <p className="text-[10px] font-semibold text-warning uppercase tracking-wider mb-1">In Progress / Draft</p>}
                   {openQualityAudits.map((a: any) => (
                     <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
-                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                      className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                     >
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500" />
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-warning/100" />
                       <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
                       <span className="text-muted-foreground shrink-0 text-[10px]">{a.auditType || ""}</span>
                       <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${STATUS_STYLES[a.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(a.status)}</span>
@@ -405,15 +405,15 @@ export function QualityOverview(props: OverviewProps) {
 
           {/* DMR Status */}
           {dmrs.length > 0 && (
-            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
               <div className="flex items-center gap-2 mb-2">
-                <span className="w-1 h-4 shrink-0 bg-orange-500" />
+                <span className="w-1 h-4 shrink-0 bg-warning/100" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">DMR Status</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {dmrStatusBreakdown.map((s) => (
                   <button key={s.status} onClick={() => kpiClick({ tab: "dmrs", status: s.status === "CLOSED" ? undefined : s.status })}
-                    className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
+                    className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
                   >
                     <span className="font-semibold">{s.count}</span> {s.label}
                   </button>
@@ -425,7 +425,7 @@ export function QualityOverview(props: OverviewProps) {
 
           {/* RMA Status */}
           {rmas.length > 0 && (
-            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-1 h-4 shrink-0 bg-teal-500" />
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">RMA Status</span>
@@ -433,7 +433,7 @@ export function QualityOverview(props: OverviewProps) {
               <div className="flex flex-wrap gap-1.5">
                 {rmaStatusBreakdown.map((s) => (
                   <button key={s.status} onClick={() => kpiClick({ tab: "rmas", status: s.status === "CLOSED" ? undefined : s.status })}
-                    className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
+                    className={`cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border text-[10px] font-medium hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors ${s.color}`}
                   >
                     <span className="font-semibold">{s.count}</span> {s.label}
                   </button>
@@ -445,12 +445,12 @@ export function QualityOverview(props: OverviewProps) {
 
           {/* Top Defect Categories */}
           {defectCategories.length > 0 && (
-            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-              <SectionH label="Top Defect Categories" color="bg-amber-500" />
+            <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <SectionH label="Top Defect Categories" color="bg-warning/100" />
               <div className="flex flex-wrap gap-1.5">
                 {defectCategories.map(([cat, count]) => (
                   <button key={cat} onClick={() => kpiClick({ tab: "dmrs" })}
-                    className="cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border border-border/40 text-[10px] font-medium text-muted-foreground hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors"
+                    className="cursor-pointer inline-flex items-center gap-1 px-1.5 py-0.5 border border-border/40 text-[10px] font-medium text-muted-foreground hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors"
                   >
                     <span className="font-semibold text-foreground">{count}</span> {cat}
                   </button>
@@ -463,7 +463,7 @@ export function QualityOverview(props: OverviewProps) {
         {/* ── Right 40% ── */}
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
           {/* Quality Performance */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Quality Performance" color="bg-cyan-500" />
             <div className="space-y-2">
               <div className="grid grid-cols-4 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pb-1 border-b border-white/10 dark:border-slate-700/10">
@@ -491,20 +491,20 @@ export function QualityOverview(props: OverviewProps) {
 
           {/* Audit Type Breakdown */}
           {auditTypeBreakdown.length > 0 && (
-            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-              <SectionH label="Audit Breakdown" color="bg-blue-500" />
+            <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <SectionH label="Audit Breakdown" color="bg-primary/100" />
               <div className="flex flex-wrap gap-3">
                 {auditTypeBreakdown.map(([type, data]) => {
                   const avg = data.scores.length > 0 ? Math.round(data.scores.reduce((a: number, b: number) => a + b, 0) / data.scores.length) : null;
                   return (
                     <button key={type} onClick={() => kpiClick({ tab: "audits" })}
-                      className="cursor-pointer min-w-[150px] flex-1 text-left text-xs border-r border-white/20 dark:border-slate-700/20 last:border-r-0 pr-3 last:pr-0 hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors rounded-l px-1 py-0.5"
+                      className="cursor-pointer min-w-[150px] flex-1 text-left text-xs border-r border-white/20 dark:border-slate-700/20 last:border-r-0 pr-3 last:pr-0 hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors rounded-l px-1 py-0.5"
                     >
                       <p className="font-semibold text-foreground truncate">{type.replace(/_/g, " ")}</p>
                       <p className="text-muted-foreground">{data.total} total · {data.completed} done · {data.draft} draft</p>
                       {avg !== null && (
                         <p className="text-muted-foreground">
-                          Avg score: <span className={avg >= 80 ? "text-green-600 font-semibold" : avg >= 60 ? "text-amber-600 font-semibold" : "text-red-600 font-semibold"}>{avg}%</span>
+                          Avg score: <span className={avg >= 80 ? "text-success font-semibold" : avg >= 60 ? "text-warning font-semibold" : "text-danger font-semibold"}>{avg}%</span>
                         </p>
                       )}
                     </button>
@@ -518,9 +518,9 @@ export function QualityOverview(props: OverviewProps) {
 
       {/* Template install banner */}
       {auditTemplates && auditTemplates.length === 0 && onInstallTemplates && (
-        <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-3 text-center">
-          <p className="text-xs font-medium text-amber-700 dark:text-amber-400">No audit templates installed</p>
-          <button onClick={onInstallTemplates} className="mt-1 inline-flex h-6 items-center gap-1 bg-amber-600 px-2 text-[10px] font-semibold text-white hover:bg-amber-700">Install Defaults</button>
+        <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-3 text-center">
+          <p className="text-xs font-medium text-warning dark:text-amber-400">No audit templates installed</p>
+          <button onClick={onInstallTemplates} className="mt-1 inline-flex h-6 items-center gap-1 bg-warning px-2 text-[10px] font-semibold text-white hover:bg-warning/80">Install Defaults</button>
         </div>
       )}
     </div>

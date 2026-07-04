@@ -75,14 +75,14 @@ const typeLabelFn = (t: string): string => {
 };
 
 const priorityColors: Record<string, string> = {
-  LOW: "text-gray-500", MEDIUM: "text-blue-500", HIGH: "text-orange-500", CRITICAL: "text-red-500",
+  LOW: "text-gray-500", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
 };
 
 const statusDotColor: Record<string, string> = {
-  DRAFT: "bg-gray-400", OPEN: "bg-blue-500", ASSIGNED: "bg-indigo-500",
-  IN_PROGRESS: "bg-amber-500", WAITING_PARTS: "bg-orange-500",
-  WAITING_APPROVAL: "bg-purple-500", COMPLETED: "bg-green-500",
-  CANCELLED: "bg-gray-400", ARCHIVED: "bg-gray-300",
+  DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", ASSIGNED: "bg-primary",
+  IN_PROGRESS: "bg-warning/100", WAITING_PARTS: "bg-warning/100",
+  WAITING_APPROVAL: "bg-purple-500", COMPLETED: "bg-success/100",
+  CANCELLED: "bg-muted-foreground/40", ARCHIVED: "bg-gray-300",
 };
 
 const DOT = "inline-block h-2 w-2 rounded-full shrink-0";
@@ -93,12 +93,12 @@ const cls = (...args: (string | false | null | undefined)[]): string => args.fil
 
 // ── Section Header ──
 
-function SecH({ label, count, color = "bg-indigo-500" }: { label: string; count?: number; color?: string }) {
+function SecH({ label, count, color = "bg-primary" }: { label: string; count?: number; color?: string }) {
   return (
     <div className="flex items-center gap-2 mb-2">
       <span className={cls("w-1 h-3.5 shrink-0 rounded-sm", color)} />
-      <span className="text-[11px] font-bold text-slate-900 uppercase tracking-wider">{label}</span>
-      {count !== undefined &&      <span className="text-[10px] font-mono text-slate-500 ml-auto">{count}</span>}
+      <span className="text-[11px] font-bold text-foreground uppercase tracking-wider">{label}</span>
+      {count !== undefined &&      <span className="text-[10px] font-mono text-muted-foreground ml-auto">{count}</span>}
     </div>
   );
 }
@@ -155,14 +155,14 @@ export function MaintenanceDashboard({
       items.push({
         id: `wo-${wo.id}`, type: typeLabelFn(wo.workOrderType), ref: wo.number,
         title: wo.title, detail: statusLabelFn(wo.status),
-        color: statusDotColor[wo.status] || "bg-gray-400", date: wo.dateOpened || "",
+        color: statusDotColor[wo.status] || "bg-muted-foreground/40", date: wo.dateOpened || "",
       });
     }
     for (const bd of breakdowns.slice(0, 10)) {
       items.push({
         id: `bd-${bd.id}`, type: "BD", ref: bd.number,
         title: bd.title, detail: bd.status,
-        color: bd.severity === "CRITICAL" ? "bg-red-500" : bd.severity === "HIGH" ? "bg-orange-500" : "bg-blue-500",
+        color: bd.severity === "CRITICAL" ? "bg-danger/100" : bd.severity === "HIGH" ? "bg-warning/100" : "bg-primary/100",
         date: bd.reportedAt || "",
       });
     }
@@ -226,24 +226,24 @@ export function MaintenanceDashboard({
     <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
       {/* ═══ KPI ROW ═══ */}
       <div className="grid grid-cols-9 gap-2">
-        <KpiTile label="Open WOs" value={dash.openWorkOrders} sub="Active" color="bg-blue-500" onClick={() => onFilterView("")}
-          icon={<ClipboardList className="h-3.5 w-3.5 text-blue-600 stroke-current" />} />
-        <KpiTile label="Overdue" value={dash.overdue} sub="Past due" color="bg-red-500" onClick={() => onFilterView("OVERDUE")}
-          icon={<AlertTriangle className="h-3.5 w-3.5 text-red-600 stroke-current" />} />
-        <KpiTile label="Breakdowns" value={activeBreakdowns.length} sub="Active failures" color="bg-orange-500" onClick={() => onNavigateTo?.("/maintenance/breakdowns")}
-          icon={<AlertOctagon className="h-3.5 w-3.5 text-orange-600 stroke-current" />} />
+        <KpiTile label="Open WOs" value={dash.openWorkOrders} sub="Active" color="bg-primary/100" onClick={() => onFilterView("")}
+          icon={<ClipboardList className="h-3.5 w-3.5 text-primary stroke-current" />} />
+        <KpiTile label="Overdue" value={dash.overdue} sub="Past due" color="bg-danger/100" onClick={() => onFilterView("OVERDUE")}
+          icon={<AlertTriangle className="h-3.5 w-3.5 text-danger stroke-current" />} />
+        <KpiTile label="Breakdowns" value={activeBreakdowns.length} sub="Active failures" color="bg-warning/100" onClick={() => onNavigateTo?.("/maintenance/breakdowns")}
+          icon={<AlertOctagon className="h-3.5 w-3.5 text-warning stroke-current" />} />
         <KpiTile label="PM Due" value={duePlans.length} sub={pmDueOverdue.length > 0 ? `${pmDueOverdue.length} overdue` : "On track"} color="bg-purple-500"
-          icon={<CalendarClock className="h-3.5 w-3.5 text-purple-600 stroke-current" />} />
-        <KpiTile label="PM Overdue" value={pmDueOverdue.length} sub={pmDueOverdue.length === 0 ? "None overdue" : "Past due"} color="bg-red-500"
-          icon={<AlertTriangle className="h-3.5 w-3.5 text-red-600 stroke-current" />} />
-        <KpiTile label="Waiting Parts" value={dash.waitingParts} sub="WOs on hold" color="bg-orange-500" onClick={() => onFilterView("WAITING_PARTS")}
-          icon={<Package className="h-3.5 w-3.5 text-orange-600 stroke-current" />} />
-        <KpiTile label="Completed Wk" value={dash.completed} sub="This week" color="bg-green-500" onClick={() => onFilterView("COMPLETED")}
-          icon={<CheckCircle className="h-3.5 w-3.5 text-green-600 stroke-current" />} />
+          icon={<CalendarClock className="h-3.5 w-3.5 text-accent-foreground stroke-current" />} />
+        <KpiTile label="PM Overdue" value={pmDueOverdue.length} sub={pmDueOverdue.length === 0 ? "None overdue" : "Past due"} color="bg-danger/100"
+          icon={<AlertTriangle className="h-3.5 w-3.5 text-danger stroke-current" />} />
+        <KpiTile label="Waiting Parts" value={dash.waitingParts} sub="WOs on hold" color="bg-warning/100" onClick={() => onFilterView("WAITING_PARTS")}
+          icon={<Package className="h-3.5 w-3.5 text-warning stroke-current" />} />
+        <KpiTile label="Completed Wk" value={dash.completed} sub="This week" color="bg-success/100" onClick={() => onFilterView("COMPLETED")}
+          icon={<CheckCircle className="h-3.5 w-3.5 text-success stroke-current" />} />
         <KpiTile label="Downtime" value={`${dash.totalDowntimeMinutes} min`} sub={dash.totalDowntimeMinutes > 0 ? `~${Math.round(dash.totalDowntimeMinutes / 60)} hrs` : "Today"} color="bg-rose-500"
           icon={<Clock className="h-3.5 w-3.5 text-rose-600 stroke-current" />} />
-        <KpiTile label="Low Stock" value={lowStockParts.length} sub={lowStockParts.length > 0 ? "Critical spares" : "OK"} color="bg-amber-500"
-          icon={<AlertOctagon className="h-3.5 w-3.5 text-amber-600 stroke-current" />} onClick={() => onNavigateTo?.("/maintenance/spare-parts?stock=critical")} />
+        <KpiTile label="Low Stock" value={lowStockParts.length} sub={lowStockParts.length > 0 ? "Critical spares" : "OK"} color="bg-warning/100"
+          icon={<AlertOctagon className="h-3.5 w-3.5 text-warning stroke-current" />} onClick={() => onNavigateTo?.("/maintenance/spare-parts?stock=critical")} />
       </div>
 
       {/* ═══ 60/40 MAIN LAYOUT ═══ */}
@@ -252,26 +252,26 @@ export function MaintenanceDashboard({
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
 
           {/* 1. Maintenance Risk Board */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Maintenance Risk Board" color="bg-red-500" count={overdueWOList.length + activeBreakdowns.length + pmDueOverdue.length + waitingPartsWO.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Maintenance Risk Board" color="bg-danger/100" count={overdueWOList.length + activeBreakdowns.length + pmDueOverdue.length + waitingPartsWO.length} />
             {overdueWOList.length === 0 && activeBreakdowns.length === 0 && pmDueOverdue.length === 0 && waitingPartsWO.length === 0 && criticalLowParts.length === 0 && highPriorityWO.length === 0 ? (
               <Empty msg="No active risks — all clear" />
             ) : (
               <div className="space-y-0.5">
                 {overdueWOList.slice(0, 3).map((wo) => (
-                  <Row key={`overdue-${wo.id}`} color="bg-red-500" type="Overdue WO" ref={wo.number} title={wo.title}
+                  <Row key={`overdue-${wo.id}`} color="bg-danger/100" type="Overdue WO" ref={wo.number} title={wo.title}
                     detail={`Due ${wo.dueDate?.slice(0, 10) || "—"} · ${wo.assignedTo || "Unassigned"}`} />
                 ))}
                 {criticalAssetsDown.slice(0, 2).map((bd) => (
-                  <Row key={`cad-${bd.id}`} color="bg-red-500" type="Critical Down" ref={bd.number} title={bd.title}
+                  <Row key={`cad-${bd.id}`} color="bg-danger/100" type="Critical Down" ref={bd.number} title={bd.title}
                     detail={bd.downtimeMinutes ? `${bd.downtimeMinutes} min downtime` : bd.targetType} />
                 ))}
                 {activeBreakdowns.filter((b) => b.severity !== "CRITICAL").slice(0, 2).map((bd) => (
-                  <Row key={`bd-${bd.id}`} color="bg-orange-500" type={bd.severity} ref={bd.number} title={bd.title}
+                  <Row key={`bd-${bd.id}`} color="bg-warning/100" type={bd.severity} ref={bd.number} title={bd.title}
                     detail={bd.downtimeMinutes ? `${bd.downtimeMinutes} min downtime` : "Active"} />
                 ))}
                 {highPriorityWO.slice(0, 2).map((wo) => (
-                  <Row key={`hp-${wo.id}`} color="bg-red-500" type={`${wo.priority} Priority`} ref={wo.number} title={wo.title}
+                  <Row key={`hp-${wo.id}`} color="bg-danger/100" type={`${wo.priority} Priority`} ref={wo.number} title={wo.title}
                     detail={`${wo.assignedTo || "Unassigned"} · ${typeLabelFn(wo.workOrderType)}`} />
                 ))}
                 {pmDueOverdue.slice(0, 2).map((pm) => (
@@ -279,11 +279,11 @@ export function MaintenanceDashboard({
                     detail={`Due ${pm.nextDueDate?.slice(0, 10) || "—"} · ${pm.assignedTo || "Unassigned"}`} />
                 ))}
                 {waitingPartsWO.slice(0, 2).map((wo) => (
-                  <Row key={`wp-${wo.id}`} color="bg-orange-500" type="Waiting Parts" ref={wo.number} title={wo.title}
+                  <Row key={`wp-${wo.id}`} color="bg-warning/100" type="Waiting Parts" ref={wo.number} title={wo.title}
                     detail={wo.assignedTo ? `Assigned: ${wo.assignedTo}` : ""} />
                 ))}
                 {criticalLowParts.slice(0, 2).map((sp) => (
-                  <Row key={`cs-${sp.id}`} color="bg-red-500" type="Stockout" ref={sp.partNumber} title={sp.name}
+                  <Row key={`cs-${sp.id}`} color="bg-danger/100" type="Stockout" ref={sp.partNumber} title={sp.name}
                     detail="0 on hand — reorder immediately" />
                 ))}
               </div>
@@ -291,8 +291,8 @@ export function MaintenanceDashboard({
           </div>
 
           {/* 2. Due This Week */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Due This Week" color="bg-indigo-500" count={dueThisWeekPM.length + dueThisWeekWO.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Due This Week" color="bg-primary" count={dueThisWeekPM.length + dueThisWeekWO.length} />
             {dueThisWeekPM.length === 0 && dueThisWeekWO.length === 0 ? (
               <Empty msg="No tasks due this week" />
             ) : (
@@ -303,7 +303,7 @@ export function MaintenanceDashboard({
                     right={<span className={cls("text-[10px] font-semibold", priorityColors[pm.priority] || "")}>{pm.priority}</span>} />
                 ))}
                 {dueThisWeekWO.map((wo) => (
-                  <Row key={`dwo-${wo.id}`} color="bg-blue-500" type={typeLabelFn(wo.workOrderType)} ref={wo.number} title={wo.title}
+                  <Row key={`dwo-${wo.id}`} color="bg-primary/100" type={typeLabelFn(wo.workOrderType)} ref={wo.number} title={wo.title}
                     detail={`${wo.assignedTo || "Unassigned"} · ${wo.targetType || ""}${wo.targetId ? ` #${wo.targetId}` : ""} — Due ${wo.dueDate?.slice(0, 10) || "—"}`}
                     right={<span className={cls("text-[10px] font-semibold", priorityColors[wo.priority] || "")}>{wo.priority}</span>} />
                 ))}
@@ -312,17 +312,17 @@ export function MaintenanceDashboard({
           </div>
 
           {/* 3. Work Order Flow */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Work Order Flow" color="bg-blue-500" count={workOrders.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Work Order Flow" color="bg-primary/100" count={workOrders.length} />
             <div className="flex flex-wrap gap-1.5">
-              <StatusBadge color="bg-blue-500" label="Open" count={statusCounts.OPEN} onClick={() => onFilterView("OPEN")} />
-              <StatusBadge color="bg-indigo-500" label="Assigned" count={statusCounts.ASSIGNED} onClick={() => onFilterView("ASSIGNED")} />
-              <StatusBadge color="bg-amber-500" label="In Progress" count={statusCounts.IN_PROGRESS} onClick={() => onFilterView("IN_PROGRESS")} />
-              <StatusBadge color="bg-orange-500" label="Waiting Parts" count={statusCounts.WAITING_PARTS} onClick={() => onFilterView("WAITING_PARTS")} />
-              <StatusBadge color="bg-green-500" label="Completed" count={statusCounts.COMPLETED} onClick={() => onFilterView("COMPLETED")} />
-              <StatusBadge color="bg-gray-400" label="Cancelled" count={statusCounts.CANCELLED} />
+              <StatusBadge color="bg-primary/100" label="Open" count={statusCounts.OPEN} onClick={() => onFilterView("OPEN")} />
+              <StatusBadge color="bg-primary" label="Assigned" count={statusCounts.ASSIGNED} onClick={() => onFilterView("ASSIGNED")} />
+              <StatusBadge color="bg-warning/100" label="In Progress" count={statusCounts.IN_PROGRESS} onClick={() => onFilterView("IN_PROGRESS")} />
+              <StatusBadge color="bg-warning/100" label="Waiting Parts" count={statusCounts.WAITING_PARTS} onClick={() => onFilterView("WAITING_PARTS")} />
+              <StatusBadge color="bg-success/100" label="Completed" count={statusCounts.COMPLETED} onClick={() => onFilterView("COMPLETED")} />
+              <StatusBadge color="bg-muted-foreground/40" label="Cancelled" count={statusCounts.CANCELLED} />
               {statusCounts.WAITING_PARTS > 0 && (
-                <span className="ml-auto text-[9px] font-medium text-orange-600">{statusCounts.WAITING_PARTS} blocked by parts</span>
+                <span className="ml-auto text-[9px] font-medium text-warning">{statusCounts.WAITING_PARTS} blocked by parts</span>
               )}
             </div>
           </div>
@@ -332,7 +332,7 @@ export function MaintenanceDashboard({
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
 
           {/* 1. Recent Maintenance Activity */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Recent Activity" color="bg-teal-500" />
             {recentActivity.length === 0 ? (
               <Empty msg="No recent maintenance activity" />
@@ -347,7 +347,7 @@ export function MaintenanceDashboard({
           </div>
 
           {/* 2. Technician Load */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Technician Load" color="bg-violet-500" count={techLoad.length} />
             {techLoad.length === 0 ? (
               <Empty msg="No active assignments" />
@@ -359,8 +359,8 @@ export function MaintenanceDashboard({
                       {name.charAt(0).toUpperCase()}
                     </div>
                     <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">{name}</span>
-                    <span className="text-xs font-semibold text-blue-600">{d.open}</span>
-                    {d.overdue > 0 && <span className="text-[10px] font-semibold text-red-500">{d.overdue} overdue</span>}
+                    <span className="text-xs font-semibold text-primary">{d.open}</span>
+                    {d.overdue > 0 && <span className="text-[10px] font-semibold text-danger">{d.overdue} overdue</span>}
                   </div>
                 ))}
               </div>
@@ -368,18 +368,18 @@ export function MaintenanceDashboard({
           </div>
 
           {/* 3. Spare Parts Risk */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Spare Parts Risk" color="bg-emerald-500" count={lowStockParts.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Spare Parts Risk" color="bg-success/100" count={lowStockParts.length} />
             {lowStockParts.length === 0 ? (
               <Empty msg="No spare parts below minimum" />
             ) : (
               <div className="space-y-0.5">
                 {criticalLowParts.map((sp) => (
-                  <Row key={`cs-${sp.id}`} color="bg-red-500" type="Stockout" ref={sp.partNumber} title={sp.name}
+                  <Row key={`cs-${sp.id}`} color="bg-danger/100" type="Stockout" ref={sp.partNumber} title={sp.name}
                     detail={`0 / ${sp.minQuantity} ${sp.uom}`} />
                 ))}
                 {warningLowParts.map((sp) => (
-                  <Row key={`ls-${sp.id}`} color="bg-amber-500" type="Low" ref={sp.partNumber} title={sp.name}
+                  <Row key={`ls-${sp.id}`} color="bg-warning/100" type="Low" ref={sp.partNumber} title={sp.name}
                     detail={`${sp.quantityOnHand} / ${sp.minQuantity} ${sp.uom}${sp.storageLocation ? ` · ${sp.storageLocation}` : ""}`} />
                 ))}
               </div>
@@ -389,8 +389,8 @@ export function MaintenanceDashboard({
       </div>
 
       {/* ═══ BOTTOM: ASSET / RESOURCE HEALTH ═══ */}
-      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-        <SecH label="Asset / Resource Health" color="bg-sky-500" count={assetHealth.length} />
+      <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <SecH label="Asset / Resource Health" color="bg-accent/100" count={assetHealth.length} />
         {assetHealth.length === 0 ? (
           <Empty msg="No assets with open work orders" />
         ) : (
@@ -405,9 +405,9 @@ export function MaintenanceDashboard({
                   </span>
                 </div>
                 <div className="flex gap-2 text-[9px] text-muted-foreground">
-                  <span className="text-blue-500 font-semibold">{a.openWOs} open</span>
-                  {a.breakdowns > 0 && <span className="text-red-500 font-semibold">{a.breakdowns} BD</span>}
-                  {a.totalDowntime > 0 && <span className="text-amber-500 font-semibold">{a.totalDowntime} min</span>}
+                  <span className="text-primary font-semibold">{a.openWOs} open</span>
+                  {a.breakdowns > 0 && <span className="text-danger font-semibold">{a.breakdowns} BD</span>}
+                  {a.totalDowntime > 0 && <span className="text-warning font-semibold">{a.totalDowntime} min</span>}
                 </div>
               </div>
             ))}
@@ -418,7 +418,7 @@ export function MaintenanceDashboard({
       {/* ═══ QUICK ACTIONS ═══ */}
       <div className="flex items-center gap-2 pb-2 flex-wrap">
         <button type="button" onClick={onNewWO}
-          className="inline-flex h-7 items-center gap-1.5 border border-indigo-200 bg-indigo-50 px-2.5 text-[10px] font-semibold text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300 transition-colors">
+          className="inline-flex h-7 items-center gap-1.5 border border-primary/20 bg-indigo-50 px-2.5 text-[10px] font-semibold text-primary hover:bg-primary/15 dark:border-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-300 transition-colors">
           <Plus className="h-3 w-3 stroke-current" /> New WO
         </button>
         <button type="button" onClick={() => onFilterView("")}

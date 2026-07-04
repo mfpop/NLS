@@ -138,26 +138,26 @@ function formatMaybeJson(v: string | null | undefined): string {
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
-  OPEN: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800",
-  ASSIGNED: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-800",
-  IN_PROGRESS: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
-  WAITING_PARTS: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-800",
-  WAITING_APPROVAL: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800",
-  COMPLETED: "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
+  OPEN: "bg-primary/15 text-primary border-primary/20 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800",
+  ASSIGNED: "bg-primary/15 text-primary border-primary/20 dark:bg-indigo-950/30 dark:text-indigo-300 dark:border-indigo-800",
+  IN_PROGRESS: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
+  WAITING_PARTS: "bg-warning/15 text-warning border-warning/20 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-800",
+  WAITING_APPROVAL: "bg-accent/15 text-accent-foreground border-accent/20 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800",
+  COMPLETED: "bg-success/15 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
   CANCELLED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
   ARCHIVED: "bg-gray-50 text-gray-500 border-gray-100 dark:bg-gray-900 dark:text-gray-500 dark:border-gray-800",
 };
 
 const priorityStyles: Record<string, string> = {
-  LOW: "text-gray-500", MEDIUM: "text-blue-500", HIGH: "text-orange-500", CRITICAL: "text-red-500",
+  LOW: "text-gray-500", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
 };
 
 const statusDot = (s: string) => {
   const m: Record<string, string> = {
-    DRAFT: "bg-gray-400", OPEN: "bg-blue-500", ASSIGNED: "bg-indigo-500",
-    IN_PROGRESS: "bg-amber-500", WAITING_PARTS: "bg-orange-500",
-    WAITING_APPROVAL: "bg-purple-500", COMPLETED: "bg-green-500",
-    CANCELLED: "bg-gray-400", ARCHIVED: "bg-gray-300",
+    DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", ASSIGNED: "bg-primary",
+    IN_PROGRESS: "bg-warning/100", WAITING_PARTS: "bg-warning/100",
+    WAITING_APPROVAL: "bg-purple-500", COMPLETED: "bg-success/100",
+    CANCELLED: "bg-muted-foreground/40", ARCHIVED: "bg-gray-300",
   };
   return m[s] || "bg-gray-300";
 };
@@ -168,15 +168,15 @@ function Fld({ label, children, required, error }: { label: string; children: Re
   return (
     <div className="space-y-1">
       <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-danger ml-0.5">*</span>}
       </label>
       {children}
-      {error && <p className="text-[10px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[10px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
 
-const inpCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-indigo-500 transition-colors placeholder:text-muted-foreground/40";
+const inpCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-indigo-500 transition-colors placeholder:text-muted-foreground/40";
 const selCls = inpCls + " appearance-none";
 
 // ── Target Selector ──
@@ -207,7 +207,7 @@ function TargetSelector({
   const { data: rgs } = useQuery(RESOURCE_GROUPS_QUERY, { variables: { departmentId: deptId?.toString() }, skip: !deptId, errorPolicy: "all" });
   const rgList: { id: string; name: string }[] = (rgs as any)?.resourceGroups || [];
 
-  const baseCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-indigo-500 transition-colors disabled:opacity-40";
+  const baseCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-indigo-500 transition-colors disabled:opacity-40";
 
   // Deepest selected level becomes the WO target (names, not raw IDs)
   const plantName = plantList.find((p) => p.id === plantId?.toString())?.name || "";
@@ -257,7 +257,7 @@ function TargetSelector({
           disabled={disabled || !rgId} className={baseCls} placeholder="Resource ID..." aria-label="Resource ID" />
       </Fld>
       {effectiveTarget && (
-        <p className="text-[9px] font-medium text-indigo-600 dark:text-indigo-400">
+        <p className="text-[9px] font-medium text-primary dark:text-indigo-400">
           Target: {effectiveTarget}
         </p>
       )}
@@ -638,7 +638,7 @@ export function WorkOrdersPage() {
           {view === "form" && (
             <>
               {!editMode && missingFields.length > 0 && (
-                <span className="text-red-500 font-medium text-[10px]" title={missingFields.join(", ")}>
+                <span className="text-danger font-medium text-[10px]" title={missingFields.join(", ")}>
                   {missingFields.length} required
                 </span>
               )}
@@ -673,7 +673,7 @@ export function WorkOrdersPage() {
     return (
       <div className="flex flex-1 min-h-0">
         {/* Left column: Target → Metadata → Schedule — scrolls independently */}
-        <div className="w-[25%] min-w-55 max-w-70 border-r border-slate-200 bg-card/30 overflow-y-auto">
+        <div className="w-[25%] min-w-55 max-w-70 border-r border-border bg-card/30 overflow-y-auto">
           <div className="p-3 space-y-2">
             {/* 1. Target */}
             <div>
@@ -755,12 +755,12 @@ export function WorkOrdersPage() {
                 </Fld>
                 <Fld label="Problem / Request Description" required error={formErrors.description}>
                   <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500 placeholder:text-muted-foreground/40"
+                    className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500 placeholder:text-muted-foreground/40"
                     placeholder="Describe the problem or work requested..." />
                 </Fld>
                 <Fld label="Failure Mode / Symptom">
                   <textarea value={form.failureMode} onChange={(e) => setForm({ ...form, failureMode: e.target.value })}
-                    className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                    className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                     placeholder="Observed symptoms, error codes, failure indicators..." />
                 </Fld>
               </div>
@@ -774,12 +774,12 @@ export function WorkOrdersPage() {
               <div className="space-y-2">
                 <Fld label="Work Instructions / Job Plan">
                   <textarea value={form.workInstructions} onChange={(e) => setForm({ ...form, workInstructions: e.target.value })}
-                    className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                    className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                     placeholder="Step-by-step work instructions or reference to job plan..." />
                 </Fld>
                 <Fld label="Safety Notes / LOTO Required">
                   <textarea value={form.safetyNotes} onChange={(e) => setForm({ ...form, safetyNotes: e.target.value })}
-                    className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                    className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                     placeholder="Safety precautions, LOTO, PPE requirements..." />
                 </Fld>
                 <Fld label="Required Tools">
@@ -813,23 +813,23 @@ export function WorkOrdersPage() {
                           <p className="truncate text-[10px] text-muted-foreground font-mono">{p.partNumber}</p>
                         </div>
                         <span className="text-right text-muted-foreground">—</span>
-                        <span className={`text-right font-semibold ${isLow ? "text-amber-500" : "text-foreground"}`}>
+                        <span className={`text-right font-semibold ${isLow ? "text-warning" : "text-foreground"}`}>
                           {p.quantityOnHand} {p.uom}
                         </span>
                         <button onClick={() => {
                           setSparePartId(p.id.toString());
                           setSparePartQty("1");
                         }}
-                          className="text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 transition-colors">
+                          className="text-[10px] font-semibold text-primary hover:text-indigo-800 dark:text-indigo-400 transition-colors">
                           {selId ? "Use" : "—"}
                         </button>
                       </div>
                     );
                   })}
                   {selId && sparePartId && (
-                    <div className="flex items-center gap-2 mt-1 p-2 rounded border border-indigo-200/30 bg-indigo-50/30 dark:bg-indigo-950/20">
+                    <div className="flex items-center gap-2 mt-1 p-2 rounded border border-primary/20/30 bg-indigo-50/30 dark:bg-indigo-950/20">
                       <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)}
-                        className="h-7 w-16 bg-white/50 dark:bg-slate-800/50 border border-white/30 px-2 text-xs outline-none" min="1" aria-label="Spare part quantity" />
+                        className="h-7 w-16 bg-background/50 dark:bg-slate-800/50 border border-white/30 px-2 text-xs outline-none" min="1" aria-label="Spare part quantity" />
                       <button onClick={hRecordSpare}
                         className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2.5 text-[10px] font-semibold text-white hover:bg-teal-700 transition-colors">
                         <Plus className="h-3 w-3" /> Record
@@ -867,27 +867,27 @@ export function WorkOrdersPage() {
                 <div className="space-y-2">
                   <Fld label="Work Performed">
                     <textarea value={completeForm.workPerformed} onChange={(e) => setCompleteForm({ ...completeForm, workPerformed: e.target.value })}
-                      className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Describe the work that was actually performed..." />
                   </Fld>
                   <Fld label="Root Cause">
                     <textarea value={completeForm.rootCause} onChange={(e) => setCompleteForm({ ...completeForm, rootCause: e.target.value })}
-                      className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Identify the root cause — 5 Whys for breakdowns..." />
                   </Fld>
                   <Fld label="Corrective Action">
                     <textarea value={completeForm.correctiveAction} onChange={(e) => setCompleteForm({ ...completeForm, correctiveAction: e.target.value })}
-                      className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Action taken to prevent recurrence..." />
                   </Fld>
                   <Fld label="Verification / Test Result" required>
                     <textarea value={completeForm.verificationResult} onChange={(e) => setCompleteForm({ ...completeForm, verificationResult: e.target.value })}
-                      className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Test run, quality inspection, sign-off..." />
                   </Fld>
                   <Fld label="Completion Notes" required>
                     <textarea value={completeForm.completionNotes} onChange={(e) => setCompleteForm({ ...completeForm, completionNotes: e.target.value })}
-                      className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="Summarize results, parts used, recommendations..." />
                   </Fld>
                   <div className="grid grid-cols-3 gap-3">
@@ -906,7 +906,7 @@ export function WorkOrdersPage() {
                   </div>
                   <Fld label="Parts Used">
                     <textarea value={completeForm.partsUsedNotes} onChange={(e) => setCompleteForm({ ...completeForm, partsUsedNotes: e.target.value })}
-                      className="h-14 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
+                      className="h-14 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-indigo-500"
                       placeholder="List parts used, quantities, and part numbers..." />
                   </Fld>
                 </div>
@@ -916,9 +916,9 @@ export function WorkOrdersPage() {
         </div>
         {/* Validation summary when save is disabled */}
         {!canSave && (
-          <div className="absolute bottom-0 left-[25%] right-0 z-10 border-t border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-950/30 px-3 py-1.5 flex items-center gap-2">
-            <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />
-            <span className="text-[10px] text-red-600 dark:text-red-400">
+          <div className="absolute bottom-0 left-[25%] right-0 z-10 border-t border-danger/20 bg-danger/10 dark:border-red-900/30 dark:bg-red-950/30 px-3 py-1.5 flex items-center gap-2">
+            <AlertTriangle className="h-3 w-3 shrink-0 text-danger" />
+            <span className="text-[10px] text-danger dark:text-danger/80">
               Missing: {missingFields.join(", ")}
             </span>
           </div>
@@ -958,8 +958,8 @@ export function WorkOrdersPage() {
               </div>
             )}
             {sel.safetyNotes && (
-              <div className="rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900/30 dark:bg-orange-950/20 p-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-600 mb-1">⚠ Safety Notes</p>
+              <div className="rounded-lg border border-warning/20 bg-warning/10 dark:border-orange-900/30 dark:bg-orange-950/20 p-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-warning mb-1">⚠ Safety Notes</p>
                 <p className="text-sm text-orange-800 dark:text-orange-200">{sel.safetyNotes}</p>
               </div>
             )}
@@ -990,7 +990,7 @@ export function WorkOrdersPage() {
             {sel.verificationResult && (
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Verification / Test Result</p>
-                <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-900/30 dark:bg-green-950/20 p-3">
+                <div className="rounded-lg border border-success/20 bg-success/10 dark:border-green-900/30 dark:bg-green-950/20 p-3">
                   <p className="text-sm text-green-800 dark:text-green-200">{sel.verificationResult}</p>
                 </div>
               </div>
@@ -1062,7 +1062,7 @@ export function WorkOrdersPage() {
                   <div className="space-y-1">
                     <label className="block text-[10px] text-muted-foreground">Part</label>
                     <select value={sparePartId} onChange={(e) => setSparePartId(e.target.value)}
-                      className="h-7 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none min-w-40">
+                      className="h-7 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none min-w-40">
                       <option value="">Select part...</option>
                       {spareParts.filter((p) => p.quantityOnHand > 0).map((p) => (
                         <option key={p.id} value={p.id}>{p.partNumber} - {p.name} ({p.quantityOnHand} {p.uom})</option>
@@ -1071,7 +1071,7 @@ export function WorkOrdersPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="block text-[10px] text-muted-foreground">Qty</label>
-                    <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)} min="1" className="h-7 w-16 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none" />
+                    <input type="number" value={sparePartQty} onChange={(e) => setSparePartQty(e.target.value)} min="1" className="h-7 w-16 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none" />
                   </div>
                   <button onClick={hRecordSpare} disabled={!sparePartId}
                     className="inline-flex h-7 items-center gap-1 bg-teal-600 px-2.5 text-[10px] font-semibold text-white hover:bg-teal-700 disabled:opacity-40 transition-colors">
@@ -1083,7 +1083,7 @@ export function WorkOrdersPage() {
           </div>
         </div>
         {/* Right 35%: Status → Priority → Type → Target → Requested By → Assigned To → Schedule → Linked */}
-        <div className="w-[35%] min-w-50 max-w-70 border-l border-slate-200 bg-card/20 overflow-y-auto">
+        <div className="w-[35%] min-w-50 max-w-70 border-l border-border bg-card/20 overflow-y-auto">
           <div className="p-4 space-y-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Details</p>
             <div className="space-y-2.5">
@@ -1114,7 +1114,7 @@ export function WorkOrdersPage() {
                   {sel.productionLineId && <p className="text-xs text-foreground">Line #{sel.productionLineId}</p>}
                   {sel.departmentId && <p className="text-xs text-foreground">Dept #{sel.departmentId}</p>}
                   {sel.resourceGroupId && <p className="text-xs text-foreground">RG #{sel.resourceGroupId}</p>}
-                  {sel.resourceId && <p className="text-xs font-semibold text-indigo-600">Resource #{sel.resourceId}</p>}
+                  {sel.resourceId && <p className="text-xs font-semibold text-primary">Resource #{sel.resourceId}</p>}
                 </div>
                 {!sel.plantId && <p className="text-sm text-muted-foreground">—</p>}
               </div>
@@ -1133,22 +1133,22 @@ export function WorkOrdersPage() {
                   <p>Due: {sel.dueDate?.slice(0, 10) || "—"}</p>
                   {sel.plannedStartDate && <p>Planned Start: {sel.plannedStartDate.slice(0, 10)}</p>}
                   {sel.plannedEndDate && <p>Planned End: {sel.plannedEndDate.slice(0, 10)}</p>}
-                  {sel.actualStartDate && <p className="text-green-700 dark:text-green-400">Actual Start: {sel.actualStartDate.slice(0, 10)}</p>}
-                  {sel.actualEndDate && <p className="text-green-700 dark:text-green-400">Actual End: {sel.actualEndDate.slice(0, 10)}</p>}
+                  {sel.actualStartDate && <p className="text-success dark:text-success/80">Actual Start: {sel.actualStartDate.slice(0, 10)}</p>}
+                  {sel.actualEndDate && <p className="text-success dark:text-success/80">Actual End: {sel.actualEndDate.slice(0, 10)}</p>}
                 </div>
               </div>
             </div>
             {(sel.linkedPmId || sel.linkedBreakdownId) && (
-              <div className="border-t border-slate-200 pt-2">
+              <div className="border-t border-border pt-2">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Linked</p>
                 <div className="flex flex-wrap gap-1">
-                  {sel.linkedPmId && <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">PM #{sel.linkedPmId}</span>}
-                  {sel.linkedBreakdownId && <span className="rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700 dark:bg-orange-900/30 dark:text-orange-300">BD #{sel.linkedBreakdownId}</span>}
-                  {sel.linkedMerId && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">MER #{sel.linkedMerId}</span>}
+                  {sel.linkedPmId && <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-semibold text-accent-foreground dark:bg-purple-900/30 dark:text-purple-300">PM #{sel.linkedPmId}</span>}
+                  {sel.linkedBreakdownId && <span className="rounded bg-warning/15 px-1.5 py-0.5 text-[10px] font-semibold text-warning dark:bg-orange-900/30 dark:text-orange-300">BD #{sel.linkedBreakdownId}</span>}
+                  {sel.linkedMerId && <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-semibold text-primary dark:bg-blue-900/30 dark:text-blue-300">MER #{sel.linkedMerId}</span>}
                 </div>
               </div>
             )}
-            <div className="border-t border-slate-200 pt-2">
+            <div className="border-t border-border pt-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Metadata</p>
               <div className="space-y-0.5 text-xs text-foreground">
                 <p>Record ID: {sel.id}</p>
@@ -1171,9 +1171,9 @@ export function WorkOrdersPage() {
     return (
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left 20%: Work Order Records List — always visible */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-muted"
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border bg-muted"
           style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-          <div className="shrink-0 h-8 flex items-center border-b border-slate-200 px-3">
+          <div className="shrink-0 h-8 flex items-center border-b border-border px-3">
             <span className="text-xs font-medium text-muted-foreground">Work Orders</span>
             <span className="ml-auto text-[10px] font-mono text-muted-foreground">{workOrders.length}</span>
           </div>
@@ -1185,7 +1185,7 @@ export function WorkOrdersPage() {
               <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                 <ClipboardList className="h-6 w-6 text-muted-foreground/30 mb-1" />
                 <p className="text-xs font-medium text-muted-foreground">No work orders recorded</p>
-                <button onClick={hNewWO} className="mt-2 inline-flex h-7 items-center gap-1 bg-indigo-600/10 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-600/20 dark:text-indigo-400 transition-colors">
+                <button onClick={hNewWO} className="mt-2 inline-flex h-7 items-center gap-1 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 dark:text-indigo-400 transition-colors">
                   <Plus className="h-3 w-3" /> New WO
                 </button>
               </div>
@@ -1223,14 +1223,14 @@ export function WorkOrdersPage() {
             )}
           </div>
           {/* Footer inside left panel */}
-          <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
+          <div className="shrink-0 h-7 flex items-center border-t border-border bg-muted/50 px-3">
             <span className="text-[10px] text-muted-foreground">{workOrders.length} WO{workOrders.length !== 1 ? "s" : ""}</span>
             <span className="ml-auto flex gap-2">
-              <span className="text-[9px] text-blue-600">{workOrders.filter((w) => ["OPEN", "ASSIGNED"].includes(w.status)).length} open</span>
-              <span className="text-[9px] text-amber-600">{workOrders.filter((w) => w.status === "IN_PROGRESS").length} active</span>
-              <span className="text-[9px] text-green-600">{workOrders.filter((w) => w.status === "COMPLETED").length} done</span>
+              <span className="text-[9px] text-primary">{workOrders.filter((w) => ["OPEN", "ASSIGNED"].includes(w.status)).length} open</span>
+              <span className="text-[9px] text-warning">{workOrders.filter((w) => w.status === "IN_PROGRESS").length} active</span>
+              <span className="text-[9px] text-success">{workOrders.filter((w) => w.status === "COMPLETED").length} done</span>
               {workOrders.filter((w) => w.dueDate && w.dueDate < todayStr && !["COMPLETED", "CANCELLED", "ARCHIVED"].includes(w.status)).length > 0 && (
-                <span className="text-[9px] text-red-600">{workOrders.filter((w) => w.dueDate && w.dueDate < todayStr && !["COMPLETED", "CANCELLED", "ARCHIVED"].includes(w.status)).length} overdue</span>
+                <span className="text-[9px] text-danger">{workOrders.filter((w) => w.dueDate && w.dueDate < todayStr && !["COMPLETED", "CANCELLED", "ARCHIVED"].includes(w.status)).length} overdue</span>
               )}
             </span>
           </div>
@@ -1239,7 +1239,7 @@ export function WorkOrdersPage() {
         {/* Resizer */}
         {view !== "form" && selId && (
           <div onMouseDown={handleSplitMouseDown}
-            className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-indigo-500/10"
+            className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/100/10"
             style={{ width: 2 }} />
         )}
 
@@ -1256,8 +1256,8 @@ export function WorkOrdersPage() {
       {(successMsg || errorMsg) && (
         <div role={errorMsg ? "alert" : "status"} aria-live={errorMsg ? "assertive" : "polite"} className={`shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b ${
           errorMsg
-            ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-300"
-            : "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300"
+            ? "bg-danger/10 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300"
+            : "bg-success/10 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300"
         }`}>
           {errorMsg ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
           {errorMsg || successMsg}
@@ -1265,7 +1265,7 @@ export function WorkOrdersPage() {
       )}
       <PageHeader
         icon={<Wrench className="h-5 w-5 stroke-current" />}
-        iconClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+        iconClass="bg-primary/15 text-primary dark:bg-indigo-900/40 dark:text-indigo-400"
         title="Work Orders"
         subtitle="Lean maintenance: plan → execute → complete with spare parts tracking"
       />
@@ -1285,16 +1285,16 @@ export function WorkOrdersPage() {
       </div>
       {renderMain()}
       {/* Page footer — state-specific metadata */}
-      <div className="shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
+      <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
         {view === "form" ? (
           <>
             <span className="font-semibold text-foreground">Work Orders</span>
             <span className="flex-1" />
             {!editMode && missingFields.length > 0 && (
-              <span className="text-red-500 font-medium">{missingFields.length} required fields missing</span>
+              <span className="text-danger font-medium">{missingFields.length} required fields missing</span>
             )}
-            {editMode && <span className="text-amber-500 italic">Editing — unsaved changes</span>}
-            {!editMode && missingFields.length === 0 && <span className="text-green-600">New work order — ready to save</span>}
+            {editMode && <span className="text-warning italic">Editing — unsaved changes</span>}
+            {!editMode && missingFields.length === 0 && <span className="text-success">New work order — ready to save</span>}
           </>
         ) : sel ? (
           <>
@@ -1314,9 +1314,9 @@ export function WorkOrdersPage() {
           <>
             <span className="font-semibold text-foreground">Maintenance Dashboard</span>
             <span className="flex-1" />
-            <span className="text-blue-600">{workOrders.filter((w) => ["OPEN", "ASSIGNED"].includes(w.status)).length} open WOs</span>
-            <span className="text-orange-600">{breakdowns.filter((b: any) => ["REPORTED", "UNDER_REPAIR"].includes(b.status)).length} active BD</span>
-            <span className="text-purple-600">{duePlans.length} PM due</span>
+            <span className="text-primary">{workOrders.filter((w) => ["OPEN", "ASSIGNED"].includes(w.status)).length} open WOs</span>
+            <span className="text-warning">{breakdowns.filter((b: any) => ["REPORTED", "UNDER_REPAIR"].includes(b.status)).length} active BD</span>
+            <span className="text-accent-foreground">{duePlans.length} PM due</span>
             <span className="text-muted-foreground">·</span>
             <span className="text-muted-foreground">{dash.totalDowntimeMinutes.toLocaleString()} min downtime</span>
             <span className="flex-1" />

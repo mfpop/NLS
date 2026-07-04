@@ -29,7 +29,7 @@ function freqLabel(f: string): string {
 }
 
 const priorityColors: Record<string, string> = {
-  LOW: "text-gray-500", MEDIUM: "text-blue-500", HIGH: "text-orange-500", CRITICAL: "text-red-500",
+  LOW: "text-gray-500", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
 };
 
 const DOT = "inline-block h-2 w-2 rounded-full shrink-0";
@@ -168,22 +168,22 @@ export function PmDashboard({
     <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
       {/* ═══ KPI ROW ═══ */}
       <div className="grid grid-cols-8 gap-2">
-        <KpiTile label="Active Plans" value={activePlans.length} sub={plans.length === 0 ? "No plans" : `${Math.round((activePlans.length / plans.length) * 100)}% of total`} color="bg-blue-500"
-          icon={<CalendarClock className="h-3.5 w-3.5 text-blue-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
-        <KpiTile label="Overdue PMs" value={overduePlans.length} sub={overduePlans.length === 0 ? "All on track" : `${criticalOverdue.length} critical/high`} color="bg-red-500"
-          icon={<AlertTriangle className="h-3.5 w-3.5 text-red-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
-        <KpiTile label="Due This Week" value={pmDueThisWeek.length} sub={pmDueThisWeek.length === 0 ? "Schedule clear" : "Including overdue"} color="bg-amber-500"
-          icon={<Clock className="h-3.5 w-3.5 text-amber-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
+        <KpiTile label="Active Plans" value={activePlans.length} sub={plans.length === 0 ? "No plans" : `${Math.round((activePlans.length / plans.length) * 100)}% of total`} color="bg-primary/100"
+          icon={<CalendarClock className="h-3.5 w-3.5 text-primary stroke-current" />} onClick={() => onNavigateView("detail")} />
+        <KpiTile label="Overdue PMs" value={overduePlans.length} sub={overduePlans.length === 0 ? "All on track" : `${criticalOverdue.length} critical/high`} color="bg-danger/100"
+          icon={<AlertTriangle className="h-3.5 w-3.5 text-danger stroke-current" />} onClick={() => onNavigateView("detail")} />
+        <KpiTile label="Due This Week" value={pmDueThisWeek.length} sub={pmDueThisWeek.length === 0 ? "Schedule clear" : "Including overdue"} color="bg-warning/100"
+          icon={<Clock className="h-3.5 w-3.5 text-warning stroke-current" />} onClick={() => onNavigateView("detail")} />
         <KpiTile label="Due Today" value={dueToday.length} sub={dueToday.length === 0 ? "Clear" : "Due now"} color="bg-purple-500"
-          icon={<CalendarClock className="h-3.5 w-3.5 text-purple-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
+          icon={<CalendarClock className="h-3.5 w-3.5 text-accent-foreground stroke-current" />} onClick={() => onNavigateView("detail")} />
         <KpiTile label="Paused" value={pausedPlans.length} sub={pausedPlans.length === 0 ? "All active" : `${Math.round((pausedPlans.length / plans.length) * 100)}% paused`} color="bg-gray-500"
           icon={<Pause className="h-3.5 w-3.5 text-gray-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
-        <KpiTile label="Compl. Wk" value={completedThisWeek.length} sub={`${completedThisWeek.length > 0 ? `${Math.round((completedThisWeek.length / plans.length) * 100)}% this week` : "No completions"}`} color="bg-green-500"
-          icon={<CheckCircle className="h-3.5 w-3.5 text-green-600 stroke-current" />} />
-        <KpiTile label="Compliance" value={activePlans.length > 0 ? `${Math.round((activePlans.filter((p) => p.lastCompletedDate).length / activePlans.length) * 100)}%` : "—"} sub={activePlans.length === 0 ? "No active plans" : "Have completion record"} color="bg-emerald-500"
-          icon={<Activity className="h-3.5 w-3.5 text-emerald-600 stroke-current" />} />
-        <KpiTile label="Uniq. Freq." value={freqDist.length} sub={freqDist.map(([f]) => freqLabel(f)).join(", ")} color="bg-sky-500"
-          icon={<Activity className="h-3.5 w-3.5 text-sky-600 stroke-current" />} />
+        <KpiTile label="Compl. Wk" value={completedThisWeek.length} sub={`${completedThisWeek.length > 0 ? `${Math.round((completedThisWeek.length / plans.length) * 100)}% this week` : "No completions"}`} color="bg-success/100"
+          icon={<CheckCircle className="h-3.5 w-3.5 text-success stroke-current" />} />
+        <KpiTile label="Compliance" value={activePlans.length > 0 ? `${Math.round((activePlans.filter((p) => p.lastCompletedDate).length / activePlans.length) * 100)}%` : "—"} sub={activePlans.length === 0 ? "No active plans" : "Have completion record"} color="bg-success/100"
+          icon={<Activity className="h-3.5 w-3.5 text-success stroke-current" />} />
+        <KpiTile label="Uniq. Freq." value={freqDist.length} sub={freqDist.map(([f]) => freqLabel(f)).join(", ")} color="bg-accent/100"
+          icon={<Activity className="h-3.5 w-3.5 text-accent-foreground stroke-current" />} />
       </div>
 
       {/* ═══ 60/40 MAIN LAYOUT ═══ */}
@@ -192,22 +192,22 @@ export function PmDashboard({
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
 
           {/* 1. PM Risk Board */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="PM Risk Board" color="bg-red-500" count={overduePlans.length + noCompletion.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="PM Risk Board" color="bg-danger/100" count={overduePlans.length + noCompletion.length} />
             {overduePlans.length === 0 && noCompletion.length === 0 ? (
               <Empty msg="No PM risks — all active plans on schedule" />
             ) : (
               <div className="space-y-0.5">
                 {criticalOverdue.slice(0, 4).map((pm) => (
-                  <Row key={`co-${pm.id}`} color="bg-red-500" type="Overdue" ref={pm.code} title={pm.title}
+                  <Row key={`co-${pm.id}`} color="bg-danger/100" type="Overdue" ref={pm.code} title={pm.title}
                     detail={`${pm.priority} · Due ${pm.nextDueDate?.slice(0, 10) || "—"} · ${pm.assignedTo || "Unassigned"}`} />
                 ))}
                 {overduePlans.filter((p) => p.priority !== "CRITICAL" && p.priority !== "HIGH").slice(0, 3).map((pm) => (
-                  <Row key={`po-${pm.id}`} color="bg-orange-500" type="Late" ref={pm.code} title={pm.title}
+                  <Row key={`po-${pm.id}`} color="bg-warning/100" type="Late" ref={pm.code} title={pm.title}
                     detail={`Due ${pm.nextDueDate?.slice(0, 10) || "—"} · ${pm.assignedTo || "Unassigned"}`} />
                 ))}
                 {noCompletion.slice(0, 3).map((pm) => (
-                  <Row key={`nc-${pm.id}`} color="bg-amber-500" type="No Record" ref={pm.code} title={pm.title}
+                  <Row key={`nc-${pm.id}`} color="bg-warning/100" type="No Record" ref={pm.code} title={pm.title}
                     detail={`${freqLabel(pm.frequency)} · Next due: ${pm.nextDueDate?.slice(0, 10) || "—"}`} />
                 ))}
               </div>
@@ -215,14 +215,14 @@ export function PmDashboard({
           </div>
 
           {/* 2. Due This Week */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Due This Week" color="bg-purple-500" count={dueThisWeekAll.length} />
             {dueThisWeekAll.length === 0 ? (
               <Empty msg="No PM tasks due this week" />
             ) : (
               <div className="space-y-0.5">
                 {dueThisWeekAll.map((pm) => (
-                  <Row key={`dpm-${pm.id}`} color={pm.nextDueDate && pm.nextDueDate < today ? "bg-red-500" : "bg-purple-500"}
+                  <Row key={`dpm-${pm.id}`} color={pm.nextDueDate && pm.nextDueDate < today ? "bg-danger/100" : "bg-purple-500"}
                     type={pm.nextDueDate && pm.nextDueDate < today ? "Overdue" : freqLabel(pm.frequency)}
                     ref={pm.code} title={pm.title}
                     detail={`${pm.assignedTo || "Unassigned"} · ${pm.targetType}${pm.targetId ? ` #${pm.targetId}` : ""}${pm.nextDueDate ? ` · Due ${pm.nextDueDate.slice(0, 10)}` : ""}`}
@@ -233,12 +233,12 @@ export function PmDashboard({
           </div>
 
           {/* 3. PM Status Distribution */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="PM Status" color="bg-blue-500" count={plans.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="PM Status" color="bg-primary/100" count={plans.length} />
             <div className="flex flex-wrap gap-1.5">
-              <StatusBadge color="bg-green-500" label="Active" count={activePlans.length} />
-              <StatusBadge color="bg-amber-500" label="Paused" count={pausedPlans.length} />
-              <StatusBadge color="bg-gray-400" label="Archived" count={archivedPlans.length} />
+              <StatusBadge color="bg-success/100" label="Active" count={activePlans.length} />
+              <StatusBadge color="bg-warning/100" label="Paused" count={pausedPlans.length} />
+              <StatusBadge color="bg-muted-foreground/40" label="Archived" count={archivedPlans.length} />
               <span className="mx-2 h-5 w-px bg-border/30" />
               {freqDist.slice(0, 4).map(([freq, cnt]) => (
                 <span key={freq} className="inline-flex items-center gap-1 border border-border/30 px-2 py-1 text-[10px] text-muted-foreground">
@@ -254,7 +254,7 @@ export function PmDashboard({
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
 
           {/* 1. Technician Load */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Technician Load" color="bg-violet-500" count={techLoad.length} />
             {techLoad.length === 0 ? (
               <Empty msg="No PM assignments" />
@@ -266,8 +266,8 @@ export function PmDashboard({
                       {name.charAt(0).toUpperCase()}
                     </div>
                     <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">{name}</span>
-                    <span className="text-xs font-semibold text-purple-600">{d.active} active</span>
-                    {d.overdue > 0 && <span className="text-[10px] font-semibold text-red-500">{d.overdue} overdue</span>}
+                    <span className="text-xs font-semibold text-accent-foreground">{d.active} active</span>
+                    {d.overdue > 0 && <span className="text-[10px] font-semibold text-danger">{d.overdue} overdue</span>}
                     {d.total > 0 && <span className="text-[9px] text-muted-foreground">({d.total} total)</span>}
                   </div>
                 ))}
@@ -276,8 +276,8 @@ export function PmDashboard({
           </div>
 
           {/* 2. Plans by Target */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Plans by Target" color="bg-sky-500" count={plansByTarget.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Plans by Target" color="bg-accent/100" count={plansByTarget.length} />
             {plansByTarget.length === 0 ? (
               <Empty msg="No target-linked PM plans" />
             ) : (
@@ -290,7 +290,7 @@ export function PmDashboard({
                       {t.targetId ? `#${t.targetId}` : "(global)"}
                     </span>
                     <span className="text-xs font-semibold text-foreground">{t.count}</span>
-                    {t.overdue > 0 && <span className="text-[10px] font-semibold text-red-500">{t.overdue} overdue</span>}
+                    {t.overdue > 0 && <span className="text-[10px] font-semibold text-danger">{t.overdue} overdue</span>}
                   </div>
                 ))}
               </div>
@@ -298,8 +298,8 @@ export function PmDashboard({
           </div>
 
           {/* 3. Frequency Distribution */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Frequency Breakdown" color="bg-emerald-500" count={plans.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Frequency Breakdown" color="bg-success/100" count={plans.length} />
             {freqDist.length === 0 ? (
               <Empty msg="No plans to analyze" />
             ) : (

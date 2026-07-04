@@ -126,11 +126,11 @@ function Toggle({ checked, onChange, id }: { checked: boolean; onChange: (v: boo
       id={id}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 ${
-        checked ? "bg-blue-600" : "bg-slate-300"
+        checked ? "bg-primary" : "bg-slate-300"
       }`}
     >
       <span
-        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-in-out ${
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-background shadow-sm ring-0 transition-transform duration-200 ease-in-out ${
           checked ? "translate-x-[18px]" : "translate-x-[3px]"
         }`}
       />
@@ -147,19 +147,19 @@ function LoadingSkeleton() {
     <div className="grid grid-cols-1 md:grid-cols-2 animate-pulse">
       <div>
         {leftFields.map((fcount, si) => (
-          <div key={`l-${si}`} className={`${si > 0 ? "border-t border-slate-300" : ""} md:border-r border-slate-300`}>
-            <div className="h-9 border-b border-slate-200 bg-slate-50 px-3 flex items-center gap-2">
-              <div className="h-4 w-4 rounded bg-slate-200" />
-              <div className="h-3 w-28 rounded bg-slate-200" />
+          <div key={`l-${si}`} className={`${si > 0 ? "border-t border-border" : ""} md:border-r border-border`}>
+            <div className="h-9 border-b border-border bg-muted px-3 flex items-center gap-2">
+              <div className="h-4 w-4 rounded bg-muted/80" />
+              <div className="h-3 w-28 rounded bg-muted/80" />
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border/50">
               {Array.from({ length: fcount }, (_, j) => (
                 <div key={j} className="grid grid-cols-[1fr_220px] items-center gap-4 px-3 py-2 min-h-12">
                   <div className="space-y-1">
-                    <div className="h-3 w-32 rounded bg-slate-100" />
-                    <div className="h-2 w-48 rounded bg-slate-50" />
+                    <div className="h-3 w-32 rounded bg-muted" />
+                    <div className="h-2 w-48 rounded bg-muted" />
                   </div>
-                  <div className="h-8 w-full rounded bg-slate-100" />
+                  <div className="h-8 w-full rounded bg-muted" />
                 </div>
               ))}
             </div>
@@ -168,19 +168,19 @@ function LoadingSkeleton() {
       </div>
       <div>
         {rightFields.map((fcount, si) => (
-          <div key={`r-${si}`} className={`${si > 0 ? "border-t border-slate-300" : ""}`}>
-            <div className="h-9 border-b border-slate-200 bg-slate-50 px-3 flex items-center gap-2">
-              <div className="h-4 w-4 rounded bg-slate-200" />
-              <div className="h-3 w-28 rounded bg-slate-200" />
+          <div key={`r-${si}`} className={`${si > 0 ? "border-t border-border" : ""}`}>
+            <div className="h-9 border-b border-border bg-muted px-3 flex items-center gap-2">
+              <div className="h-4 w-4 rounded bg-muted/80" />
+              <div className="h-3 w-28 rounded bg-muted/80" />
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border/50">
               {Array.from({ length: fcount }, (_, j) => (
                 <div key={j} className="grid grid-cols-[1fr_220px] items-center gap-4 px-3 py-2 min-h-12">
                   <div className="space-y-1">
-                    <div className="h-3 w-32 rounded bg-slate-100" />
-                    <div className="h-2 w-48 rounded bg-slate-50" />
+                    <div className="h-3 w-32 rounded bg-muted" />
+                    <div className="h-2 w-48 rounded bg-muted" />
                   </div>
-                  <div className="h-8 w-full rounded bg-slate-100" />
+                  <div className="h-8 w-full rounded bg-muted" />
                 </div>
               ))}
             </div>
@@ -352,7 +352,7 @@ export function ApplicationSettingsPage() {
                 <Cog className="h-4 w-4" />
                 <span className="hidden md:inline">Global settings only</span>
                 {isDirty && (
-                  <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[10px] font-semibold rounded-sm border border-blue-200 bg-blue-50 text-blue-600 whitespace-nowrap">
+                  <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[10px] font-semibold rounded-sm border border-primary/20 bg-primary/10 text-primary whitespace-nowrap">
                     {draftInputs.length} changed
                   </span>
                 )}
@@ -373,11 +373,11 @@ export function ApplicationSettingsPage() {
                 )}
                 {isDirty && discardConfirm && (
                   <div className="flex items-center gap-1 text-[11px]">
-                    <span className="text-amber-600 font-medium">Discard changes?</span>
+                    <span className="text-warning font-medium">Discard changes?</span>
                     <button type="button" onClick={confirmDiscard}
-                      className="inline-flex h-7 items-center rounded bg-amber-600 px-2 text-[10px] font-semibold text-white hover:bg-amber-700">Yes</button>
+                      className="inline-flex h-7 items-center rounded bg-warning px-2 text-[10px] font-semibold text-white hover:bg-warning/80">Yes</button>
                     <button type="button" onClick={cancelDiscard}
-                      className="inline-flex h-7 items-center rounded border border-slate-300 bg-white px-2 text-[10px] text-slate-600 hover:bg-slate-50">No</button>
+                      className="inline-flex h-7 items-center rounded border border-border bg-background px-2 text-[10px] text-muted-foreground hover:bg-muted">No</button>
                   </div>
                 )}
                 <ToolbarButton
@@ -394,7 +394,7 @@ export function ApplicationSettingsPage() {
         footer={
           <>
             <span className="font-medium">Application Settings</span>
-            <span className={`${isDirty ? "text-amber-600 font-medium" : "text-muted-foreground/60"}`}>
+            <span className={`${isDirty ? "text-warning font-medium" : "text-muted-foreground/60"}`}>
               {footerState}
             </span>
             <span className="flex-1" />
@@ -402,10 +402,10 @@ export function ApplicationSettingsPage() {
           </>
         }
       >
-        <div className="flex-1 min-h-0 overflow-y-auto bg-slate-50">
+        <div className="flex-1 min-h-0 overflow-y-auto bg-muted">
           <div className="mx-auto w-full max-w-[1400px] px-4 py-1.5">
             {/* Domain banner - full width aligned with content */}
-            <div className="flex h-9 items-center border border-blue-200 bg-blue-50/60 px-2.5 mb-3 text-xs text-blue-700 overflow-hidden">
+            <div className="flex h-9 items-center border border-primary/20 bg-primary/10 px-2.5 mb-3 text-xs text-primary overflow-hidden">
               <TriangleAlert className="h-3.5 w-3.5 shrink-0 stroke-current mr-2" />
               <p className="min-w-0 truncate">
                 <span className="font-semibold">Domain boundary:</span> Application Settings controls global app defaults only. Manufacturing structure, ERP imports, diagnostics, integrations, and personal preferences are managed in their own modules.
@@ -414,7 +414,7 @@ export function ApplicationSettingsPage() {
 
             {/* Error banner */}
             {error && (
-              <div className="border border-red-200 bg-red-50 px-3 py-2 mb-3 text-xs text-red-700 flex items-center gap-2">
+              <div className="border border-danger/20 bg-danger/10 px-3 py-2 mb-3 text-xs text-danger flex items-center gap-2">
                 <TriangleAlert className="h-3.5 w-3.5 shrink-0 stroke-current" />
                 <span>{error.message}</span>
               </div>
@@ -422,7 +422,7 @@ export function ApplicationSettingsPage() {
 
             {/* Validation errors */}
             {validationErrors.length > 0 && isDirty && (
-              <div className="border border-amber-200 bg-amber-50 px-3 py-1.5 mb-3 text-[10px] text-amber-800 flex items-center gap-2">
+              <div className="border border-warning/20 bg-warning/10 px-3 py-1.5 mb-3 text-[10px] text-warning flex items-center gap-2">
                 <TriangleAlert className="h-3 w-3 shrink-0 stroke-current" />
                 <span>{validationErrors.join("; ")}</span>
               </div>
@@ -432,21 +432,21 @@ export function ApplicationSettingsPage() {
             {loading && !data ? (
               <LoadingSkeleton />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-x divide-border">
                 {/* Left column: General, Notification Defaults, Numbering / Codes */}
                 <div className="divide-y divide-slate-300">
                   {leftSections.map((section) => (
                     <section key={section.id} className="flex flex-col">
-                      <div className="h-9 border-b border-slate-200 bg-slate-50 px-3 flex items-center gap-2 group">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-blue-600">{section.icon}</span>
+                      <div className="h-9 border-b border-border bg-muted px-3 flex items-center gap-2 group">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-primary">{section.icon}</span>
                         <div className="min-w-0 flex-1">
                           <h2 className="text-xs font-semibold text-foreground truncate">{section.title}</h2>
                         </div>
-                        <span className="text-[9px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity truncate max-w-[180px] text-right">
+                        <span className="text-[9px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity truncate max-w-[180px] text-right">
                           {section.description}
                         </span>
                       </div>
-                      <div className="divide-y divide-slate-200">
+                      <div className="divide-y divide-border">
                         {section.fields.map((field) => {
                           const setting = settingsByKey.get(field.key);
                           const dirty = isFieldDirty(field.key);
@@ -471,16 +471,16 @@ export function ApplicationSettingsPage() {
                 <div className="divide-y divide-slate-300">
                   {rightSections.map((section) => (
                     <section key={section.id} className="flex flex-col">
-                      <div className="h-9 border-b border-slate-200 bg-slate-50 px-3 flex items-center gap-2 group">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-blue-600">{section.icon}</span>
+                      <div className="h-9 border-b border-border bg-muted px-3 flex items-center gap-2 group">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center text-primary">{section.icon}</span>
                         <div className="min-w-0 flex-1">
                           <h2 className="text-xs font-semibold text-foreground truncate">{section.title}</h2>
                         </div>
-                        <span className="text-[9px] text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity truncate max-w-[180px] text-right">
+                        <span className="text-[9px] text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity truncate max-w-[180px] text-right">
                           {section.description}
                         </span>
                       </div>
-                      <div className="divide-y divide-slate-200">
+                      <div className="divide-y divide-border">
                         {section.fields.map((field) => {
                           const setting = settingsByKey.get(field.key);
                           const dirty = isFieldDirty(field.key);
@@ -513,8 +513,8 @@ export function ApplicationSettingsPage() {
           <div
             className={`pointer-events-auto inline-flex max-w-full items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-sm backdrop-blur-sm transition-all duration-200 ${
               statusMessage.type === "success"
-                ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
-                : "border-red-200 bg-red-50/95 text-red-700"
+                ? "border-success/20 bg-success/10/95 text-success"
+                : "border-danger/20 bg-danger/10/95 text-danger"
             }`}
           >
             <Info className="h-3.5 w-3.5 shrink-0 stroke-current" />
@@ -542,18 +542,18 @@ function SettingRow({ field, value, description, isDirty, onChange, onRevert }: 
   return (
     <label
       htmlFor={field.type === "boolean" ? undefined : controlId}              className={`grid grid-cols-[1fr_220px] items-center gap-4 px-3 py-1.5 min-h-[40px] transition-colors duration-150 cursor-pointer ${
-        isDirty ? "bg-blue-50/40" : "hover:bg-slate-50/50"
+        isDirty ? "bg-primary/10/40" : "hover:bg-muted/50"
       }`}
     >
       {/* Label + description */}
       <div className="min-w-0 flex items-center gap-2">
         {isDirty && (
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500 animate-in fade-in duration-150" title="Unsaved change" />
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary/100 animate-in fade-in duration-150" title="Unsaved change" />
         )}
         <div className="min-w-0 flex-1">
-          <span className="block text-sm font-medium text-slate-900 truncate">{field.label}</span>
+          <span className="block text-sm font-medium text-foreground truncate">{field.label}</span>
           {description && (
-            <span className="block text-xs text-slate-500 truncate leading-tight">{description}</span>
+            <span className="block text-xs text-muted-foreground truncate leading-tight">{description}</span>
           )}
         </div>
       </div>
@@ -568,9 +568,9 @@ function SettingRow({ field, value, description, isDirty, onChange, onRevert }: 
               id={controlId}
               value={String(value ?? "")}
               onChange={(e) => onChange(e.target.value)}
-              className={`h-8 w-full border bg-white px-2 text-xs text-foreground outline-none transition-colors duration-150 ${
-                isDirty ? "border-blue-300 bg-blue-50/50 focus:border-blue-500" : "border-slate-200 focus:border-blue-400"
-              } focus:ring-1 focus:ring-blue-200`}
+              className={`h-8 w-full border bg-background px-2 text-xs text-foreground outline-none transition-colors duration-150 ${
+                isDirty ? "border-primary/30 bg-primary/10/50 focus:border-primary" : "border-border focus:border-primary"
+              } focus:ring-1 focus:ring-primary/30`}
             >
               {field.options?.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -584,9 +584,9 @@ function SettingRow({ field, value, description, isDirty, onChange, onRevert }: 
               min={field.min}
               max={field.max}
               onChange={(e) => onChange(Number(e.target.value))}
-              className={`h-8 w-full border bg-white px-2 text-xs text-foreground outline-none transition-colors duration-150 ${
-                isDirty ? "border-blue-300 bg-blue-50/50 focus:border-blue-500" : "border-slate-200 focus:border-blue-400"
-              } focus:ring-1 focus:ring-blue-200`}
+              className={`h-8 w-full border bg-background px-2 text-xs text-foreground outline-none transition-colors duration-150 ${
+                isDirty ? "border-primary/30 bg-primary/10/50 focus:border-primary" : "border-border focus:border-primary"
+              } focus:ring-1 focus:ring-primary/30`}
             />
           ) : field.type === "json" ? (
             <textarea
@@ -598,9 +598,9 @@ function SettingRow({ field, value, description, isDirty, onChange, onRevert }: 
               }}
               rows={3}
               placeholder='{ "key": "value" }'
-              className={`h-full w-full border bg-white px-2 py-1 text-[10px] font-mono text-foreground outline-none transition-colors duration-150 resize-y ${
-                isDirty ? "border-blue-300 bg-blue-50/50 focus:border-blue-500" : "border-slate-200 focus:border-blue-400"
-              } focus:ring-1 focus:ring-blue-200`}
+              className={`h-full w-full border bg-background px-2 py-1 text-[10px] font-mono text-foreground outline-none transition-colors duration-150 resize-y ${
+                isDirty ? "border-primary/30 bg-primary/10/50 focus:border-primary" : "border-border focus:border-primary"
+              } focus:ring-1 focus:ring-primary/30`}
             />
           ) : (
             <input
@@ -609,9 +609,9 @@ function SettingRow({ field, value, description, isDirty, onChange, onRevert }: 
               value={String(value ?? "")}
               onChange={(e) => onChange(e.target.value)}
               placeholder={field.placeholder}
-              className={`h-8 w-full border bg-white px-2 text-xs text-foreground outline-none transition-colors duration-150 ${
-                isDirty ? "border-blue-300 bg-blue-50/50 focus:border-blue-500" : "border-slate-200 focus:border-blue-400"
-              } focus:ring-1 focus:ring-blue-200`}
+              className={`h-8 w-full border bg-background px-2 text-xs text-foreground outline-none transition-colors duration-150 ${
+                isDirty ? "border-primary/30 bg-primary/10/50 focus:border-primary" : "border-border focus:border-primary"
+              } focus:ring-1 focus:ring-primary/30`}
             />
           )}
         </div>
@@ -620,7 +620,7 @@ function SettingRow({ field, value, description, isDirty, onChange, onRevert }: 
           <button
             type="button"
             onClick={onRevert}
-            className="shrink-0 p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors duration-150"
+            className="shrink-0 p-1 text-muted-foreground/60 hover:text-primary hover:bg-primary/10 rounded transition-colors duration-150"
             title="Revert this field"
           >
             <Undo2 className="h-3 w-3" />

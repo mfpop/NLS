@@ -25,8 +25,8 @@ interface ListColumnHeaderProps {
 
 export function ListColumnHeader({ title, count, children }: ListColumnHeaderProps) {
   return (
-    <div className="shrink-0 flex h-9 items-center gap-2 border-b border-slate-200 px-3">
-      <span className="text-sm font-semibold text-slate-800 dark:text-slate-300 truncate">{title}</span>
+    <div className="shrink-0 flex h-9 items-center gap-2 border-b border-border px-3">
+      <span className="text-sm font-semibold text-foreground dark:text-muted-foreground/30 truncate">{title}</span>
       {count !== undefined && (
         <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
           {count}
@@ -57,7 +57,7 @@ interface ListColumnFooterProps {
 
 export function ListColumnFooter({ children, className = "" }: ListColumnFooterProps) {
   return (
-    <div className={`shrink-0 flex h-9 items-center gap-2 border-t border-slate-200 bg-muted px-3 text-xs text-slate-600 dark:text-slate-400 ${className}`}>
+    <div className={`shrink-0 flex h-9 items-center gap-2 border-t border-border bg-muted px-3 text-xs text-muted-foreground dark:text-muted-foreground/60 ${className}`}>
       {children}
     </div>
   );
@@ -72,8 +72,8 @@ interface ListColumnEmptyProps {
 export function ListColumnEmpty({ icon, message, action }: ListColumnEmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-      {icon && <div className="text-slate-300 dark:text-slate-600 mb-2">{icon}</div>}
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{message}</p>
+      {icon && <div className="text-muted-foreground/30 dark:text-muted-foreground mb-2">{icon}</div>}
+      <p className="text-xs font-medium text-muted-foreground dark:text-muted-foreground/60">{message}</p>
       {action && <div className="mt-2">{action}</div>}
     </div>
   );

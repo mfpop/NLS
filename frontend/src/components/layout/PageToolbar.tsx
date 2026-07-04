@@ -87,11 +87,11 @@ function resolveVariant(variant: string): ToolbarButtonVariant {
 }
 
 const buttonVariantClasses: Record<ToolbarButtonVariant, string> = {
-  neutral: "text-slate-700 hover:bg-slate-100 active:bg-slate-200",
-  create: "text-blue-700 hover:bg-blue-50 active:bg-blue-100",
-  edit: "text-emerald-700 hover:bg-emerald-50 active:bg-emerald-100",
-  warning: "text-amber-700 hover:bg-amber-50 active:bg-amber-100",
-  danger: "text-red-700 hover:bg-red-50 active:bg-red-100",
+  neutral: "text-muted-foreground hover:bg-muted active:bg-muted/80",
+  create: "text-primary hover:bg-primary/10 active:bg-primary/15",
+  edit: "text-success hover:bg-success/10 active:bg-success/15",
+  warning: "text-warning hover:bg-warning/10 active:bg-warning/15",
+  danger: "text-danger hover:bg-danger/10 active:bg-danger/15",
 };
 
 /* ── ToolbarSearch ── */
@@ -107,8 +107,8 @@ export function ToolbarSearch({
   return (
     <div
       className={cn(
-        "relative flex h-8 w-full items-center overflow-hidden rounded-[2px] border border-slate-300 bg-white",
-        "focus-within:after:absolute focus-within:after:bottom-0 focus-within:after:left-0 focus-within:after:h-[2px] focus-within:after:w-full focus-within:after:bg-sky-500",
+        "relative flex h-8 w-full items-center overflow-hidden rounded-[2px] border border-border bg-background",
+        "focus-within:after:absolute focus-within:after:bottom-0 focus-within:after:left-0 focus-within:after:h-[2px] focus-within:after:w-full focus-within:after:bg-accent/100",
         "disabled:pointer-events-none disabled:opacity-50",
         className
       )}
@@ -119,21 +119,21 @@ export function ToolbarSearch({
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="h-full w-full bg-transparent pl-3 pr-9 text-xs text-slate-800 placeholder:text-slate-500 outline-none disabled:pointer-events-none"
+        className="h-full w-full bg-transparent pl-3 pr-9 text-xs text-foreground placeholder:text-muted-foreground outline-none disabled:pointer-events-none"
       />
       {value && !disabled && (
         <button
           type="button"
           onClick={() => onChange?.("")}
-          className="absolute right-7 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600"
+          className="absolute right-7 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground/60 hover:text-muted-foreground"
         >
           <X className="h-3.5 w-3.5" />
         </button>
       )}
       {debouncing ? (
-        <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-sky-500 animate-spin" />
+        <Loader2 className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-accent-foreground animate-spin" />
       ) : (
-        <Search className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <Search className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       )}
     </div>
   );
@@ -176,7 +176,7 @@ export function ToolbarButton({
         "text-xs font-medium whitespace-nowrap transition-colors",
         buttonVariantClasses[resolved],
         disabled &&
-          "cursor-not-allowed text-slate-400 opacity-50 hover:bg-transparent active:bg-transparent",
+          "cursor-not-allowed text-muted-foreground/60 opacity-50 hover:bg-transparent active:bg-transparent",
         className
       )}
       {...props}
@@ -200,9 +200,9 @@ export function ToolbarSelect({
   return (
     <select
       className={cn(
-        "h-8 rounded-[2px] border border-slate-300 bg-white px-2",
-        "text-xs text-slate-900 outline-none",
-        "focus:border-blue-500",
+        "h-8 rounded-[2px] border border-border bg-background px-2",
+        "text-xs text-foreground outline-none",
+        "focus:border-primary",
         widthClassName,
         className
       )}
@@ -248,25 +248,25 @@ export function ToolbarDropdown({
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
-        className="flex h-8 w-full items-center justify-between gap-2 rounded-[2px] border border-slate-300 bg-white px-2 text-xs text-slate-800 hover:bg-slate-50 leading-none"
+        className="flex h-8 w-full items-center justify-between gap-2 rounded-[2px] border border-border bg-background px-2 text-xs text-foreground hover:bg-muted leading-none"
       >
         <span className="truncate">{sel ? sel.label : placeholder}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-[4px] border border-slate-200 bg-white py-1 shadow-md ring-1 ring-black/5">
+        <div className="absolute left-0 top-full z-50 mt-1 w-full rounded-[4px] border border-border bg-background py-1 shadow-md ring-1 ring-black/5">
           {options.map((o) => (
             <button
               key={o.value}
               type="button"
               onClick={() => { onChange(o.value); setOpen(false); }}
               className={cn(
-                "flex h-8 w-full items-center gap-2 px-3 text-xs text-left hover:bg-slate-100",
-                o.value === value ? "font-medium text-slate-950" : "text-slate-800"
+                "flex h-8 w-full items-center gap-2 px-3 text-xs text-left hover:bg-muted",
+                o.value === value ? "font-medium text-foreground" : "text-foreground"
               )}
             >
               {o.value === value ? (
-                <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                <span className="h-2 w-2 shrink-0 rounded-full bg-success/100" />
               ) : (
                 <span className="w-3.5 shrink-0" />
               )}
@@ -282,7 +282,7 @@ export function ToolbarDropdown({
 /* ── ToolbarSeparator ── */
 
 export function ToolbarSeparator({ className }: { className?: string }) {
-  return <div className={cn("mx-1 h-5 w-px bg-slate-200", className)} />;
+  return <div className={cn("mx-1 h-5 w-px bg-muted/80", className)} />;
 }
 
 /* ── PageToolbar ── */
@@ -307,7 +307,7 @@ export function PageToolbar({
   return (
     <div
       className={cn(
-        "flex h-10 shrink-0 items-center overflow-hidden border-b border-slate-200 bg-slate-50",
+        "flex h-10 shrink-0 items-center overflow-hidden border-b border-border bg-muted",
         "font-windows text-xs select-none",
         className
       )}
@@ -315,7 +315,7 @@ export function PageToolbar({
       {/* ── Left section: search or custom slot ── */}
       <div
         className={cn(
-          "flex h-full shrink-0 items-center border-r border-slate-300 px-2",
+          "flex h-full shrink-0 items-center border-r border-border px-2",
           leftWidthClass
         )}
       >
@@ -337,7 +337,7 @@ export function PageToolbar({
       {/* ── Main section: filters → spacer → actions → rightActions ── */}
       <div className="flex min-w-0 flex-1 items-center gap-2 px-2 h-full">
         {statusSlot && (
-          <div className="flex items-center gap-2 text-xs text-slate-500 shrink-0">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground shrink-0">
             {statusSlot}
           </div>
         )}

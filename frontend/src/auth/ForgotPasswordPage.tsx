@@ -46,9 +46,9 @@ export function ForgotPasswordPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-muted/40 to-background px-4 relative">
       {/* Soft radial glow blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-500/8 blur-[150px]" />
-        <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-blue-600/6 blur-[150px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-orange-500/3 blur-[180px]" />
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-success/100/8 blur-[150px]" />
+        <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] rounded-full bg-primary/6 blur-[150px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-warning/100/3 blur-[180px]" />
       </div>
 
       <div className="w-full max-w-[480px] max-sm:max-w-[90vw] rounded-2xl bg-card/55 backdrop-blur-2xl border border-white/30 shadow-xl shadow-black/8 shadow-2xl shadow-black/4 ring-1 ring-white/15 p-6">

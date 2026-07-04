@@ -234,7 +234,7 @@ export function SafetyInjuryClaimsPage() {
               </div>
             </FormSection>
             <FormSection title="Status">
-              <div className="h-8 flex items-center text-sm text-slate-700">
+              <div className="h-8 flex items-center text-sm text-muted-foreground">
                 {creating ? (
                   <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border bg-muted text-muted-foreground border-border">DRAFT</span>
                 ) : editing ? (
@@ -307,8 +307,8 @@ export function SafetyInjuryClaimsPage() {
                 <div><p className="text-[10px] font-medium text-muted-foreground">Insurer</p><p className="text-xs text-foreground">{selItem.insurerReference || "Reported"}</p></div>
               )}
               <div><p className="text-[10px] font-medium text-muted-foreground">Owner</p><p className="text-xs text-foreground">{selItem.owner || "-"}</p></div>
-              <div><p className="text-[10px] font-medium text-slate-500">Opened</p><p className="text-xs text-slate-900">{selItem.openedAt ? new Date(selItem.openedAt).toLocaleDateString() : "Not yet opened"}</p></div>
-              {selItem.closedAt && <div><p className="text-[10px] font-medium text-slate-500">Closed</p><p className="text-xs text-slate-900">{new Date(selItem.closedAt).toLocaleDateString()}</p></div>}
+              <div><p className="text-[10px] font-medium text-muted-foreground">Opened</p><p className="text-xs text-foreground">{selItem.openedAt ? new Date(selItem.openedAt).toLocaleDateString() : "Not yet opened"}</p></div>
+              {selItem.closedAt && <div><p className="text-[10px] font-medium text-muted-foreground">Closed</p><p className="text-xs text-foreground">{new Date(selItem.closedAt).toLocaleDateString()}</p></div>}
             </div>
           </div>
           {selItem.notes && <div className="border-t border-border/50 pt-3"><p className="text-[10px] font-medium text-muted-foreground mb-1">Notes</p><p className="text-xs text-muted-foreground/70">{selItem.notes}</p></div>}
@@ -345,8 +345,8 @@ export function SafetyInjuryClaimsPage() {
         <span className="text-sm font-medium text-secondary-foreground">Claims</span>
         <span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span>
       </div>
-      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No claims match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">
+      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-muted-foreground/60 italic">No claims match &quot;{searchQuery}&quot;</div>}
+      <div className="flex-1 overflow-y-auto divide-y divide-border/50 sidebar-scroll">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
             <Search className="h-5 w-5 text-muted-foreground/30 mb-2" />
@@ -357,8 +357,8 @@ export function SafetyInjuryClaimsPage() {
           <div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }}
             className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}>
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{e.claimantName}</span></div>
-              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+              <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{e.claimantName}</span></div>
+              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
                 <span>{CLAIM_TYPE_OPTS.find((o: any) => o.value === e.claimType)?.label || e.claimType}</span>
                 <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>
               </div>

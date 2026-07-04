@@ -32,8 +32,8 @@ const PHASE_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
   PLAN: "bg-primary/15 text-primary",
   DO: "bg-warning/15 text-warning",
-  CHECK: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  ACT: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+  CHECK: "bg-accent/15 text-accent-foreground dark:bg-purple-900/30 dark:text-purple-300",
+  ACT: "bg-primary/15 text-primary dark:bg-indigo-900/30 dark:text-indigo-300",
   COMPLETED: "bg-success/15 text-success",
   CANCELLED: "bg-danger/15 text-danger",
 };
@@ -126,8 +126,8 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-indigo-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-indigo-600/70 dark:text-indigo-400/70">{title}</div>
+          <div className="h-4 w-0.5 bg-primary/60 rounded-full" />
+          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-primary/70 dark:text-primary/70">{title}</div>
         </div>
         {action}
       </div>
@@ -141,7 +141,7 @@ function MethodToggle({ value, onChange }: { value: TemplateMethod; onChange: (v
     <div className="flex items-center gap-1 rounded-lg border border-border/40 bg-muted p-0.5">
       {(["A3", "PDCA"] as const).map((method) => (
         <button key={method} type="button" onClick={() => onChange(method)}
-          className={`inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-[10px] font-semibold transition-all ${value === method ? "bg-indigo-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+          className={`inline-flex h-7 items-center gap-1.5 rounded-md px-3 text-[10px] font-semibold transition-all ${value === method ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
           {method === "A3" ? <FileText className="h-3 w-3 stroke-current" /> : <RefreshCw className="h-3 w-3 stroke-current" />}
           {method}
         </button>
@@ -154,8 +154,8 @@ function FlatSection({ title, content }: { title: string; content: string }) {
   return (
     <div className="min-w-0 w-full">
       <div className="flex items-center gap-2 mb-2">
-        <div className="h-3.5 w-0.5 bg-indigo-400/50 rounded-full" />
-        <span className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600/60 dark:text-indigo-400/60">{title}</span>
+        <div className="h-3.5 w-0.5 bg-primary/50 rounded-full" />
+        <span className="text-xs font-bold uppercase tracking-[0.12em] text-primary/60 dark:text-primary/60">{title}</span>
       </div>
       {content ? (
         <div className="prose prose-sm prose-neutral dark:prose-invert max-w-none w-full min-w-0 text-sm leading-snug"
@@ -174,7 +174,7 @@ function ActionProgressBar({ actions }: { actions: A3PDCAActionNode[] }) {
   return (
     <div className="flex items-center gap-1.5" title={`${done}/${total} actions completed`}>
       <div className="h-1 w-10 rounded-full bg-muted overflow-hidden">
-        <div className="h-full rounded-full bg-green-500 transition-all duration-300" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-success/100 transition-all duration-300" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-[10px] text-muted-foreground font-mono">{done}/{total}</span>
     </div>
@@ -395,7 +395,7 @@ export function A3PdcaPage() {
     return PHASES[idx + 1];
   };
 
-  const iCls = `h-7 w-full bg-card border border-gray-300 text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const iCls = `h-7 w-full bg-card border border-border text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
   const sCls = iCls;
 
   /* ── Render helpers ── */
@@ -418,11 +418,11 @@ export function A3PdcaPage() {
         <div className="flex items-center gap-2 mb-4 w-full min-w-0">
           <input type="text" value={g("title")} onChange={(e) => sf("title", e.target.value)} placeholder="Title *"
             className={`${iCls} flex-1`} />
-          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold border shrink-0 ${templateMethod === "A3" ? "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800" : "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"}`}>
+          <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold border shrink-0 ${templateMethod === "A3" ? "bg-primary/15 text-primary border-primary/20 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800" : "bg-success/15 text-success border-success/20 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800"}`}>
             {templateMethod}
           </span>
           <button type="button" onClick={() => applyTemplate(templateMethod)}
-            className="inline-flex h-6 items-center gap-1 px-2 text-[10px] font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors rounded shrink-0">
+            className="inline-flex h-6 items-center gap-1 px-2 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-colors rounded shrink-0">
             <FileText className="h-3 w-3 stroke-current" /> Template
           </button>
         </div>
@@ -517,7 +517,7 @@ export function A3PdcaPage() {
         )}
         <div className="print-ignore">
           <PageHeader icon={<ClipboardList className="h-5 w-5 stroke-current" />}
-            iconClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+            iconClass="bg-primary/15 text-primary dark:bg-indigo-900/40 dark:text-indigo-400"
             title="A3 / PDCA" subtitle="Advanced problem-solving and root-cause improvement cycles." />
         </div>
         <div className="print-ignore">
@@ -560,7 +560,7 @@ export function A3PdcaPage() {
           {/* Left panel — list */}
           <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major"
             style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-slate-200 flex items-center px-4">
+            <div className="shrink-0 h-8 border-b border-border flex items-center px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>A3 / PDCA</span>
               <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{records.length}</span>
             </div>
@@ -573,7 +573,7 @@ export function A3PdcaPage() {
                   <p className="text-xs font-medium text-muted-foreground">No A3/PDCA records</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-0.5">Create one from a Kaizen or manually.</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-indigo-600/10 px-3 text-xs font-semibold text-indigo-700 hover:bg-indigo-600/20 dark:text-indigo-400 dark:hover:bg-indigo-500/20 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20 dark:text-indigo-400 dark:hover:bg-primary/100/20 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> Create A3/PDCA</button>
                 </div>
               ) : (
@@ -603,7 +603,7 @@ export function A3PdcaPage() {
                           <div className="flex items-center gap-1.5">
                             {r.owner && <span className={`text-xs ${theme.textMuted}`}>{r.owner}</span>}
                             {r.dueDate && (
-                              <span className={`text-[10px] ${isOverdue(r.dueDate) && r.status !== "COMPLETED" ? "text-red-500 font-semibold" : theme.textMuted}`}>
+                              <span className={`text-[10px] ${isOverdue(r.dueDate) && r.status !== "COMPLETED" ? "text-danger font-semibold" : theme.textMuted}`}>
                                 {isOverdue(r.dueDate) && r.status !== "COMPLETED" && <AlertTriangle className="inline h-2 w-2 mr-px stroke-current" />}
                                 Due: {r.dueDate}
                               </span>
@@ -617,13 +617,13 @@ export function A3PdcaPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 flex h-8 items-center border-t border-slate-200 bg-muted px-4">
+            <div className="shrink-0 flex h-8 items-center border-t border-border bg-muted px-4">
               <span className={`text-xs ${theme.textMuted}`}>{records.length} record{records.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
           {/* Divider */}
           <div onMouseDown={handleSplitMouseDown}
-            className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-indigo-500/10"
+            className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-primary/100/10"
             style={{ width: 2 }} />
           {/* Right panel */}
           <div className={`print-area flex flex-col min-h-0 min-w-0 flex-1 overflow-hidden ${isForm ? "" : "mode-enter"}`}>
@@ -632,21 +632,21 @@ export function A3PdcaPage() {
                 <div className="p-4 space-y-5">
                   <SectionCard title="A3 / PDCA">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-indigo-300/50 transition-colors">
+                      <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-primary/30 transition-colors">
                         <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Total</p>
                         <p className={`text-lg font-bold ${theme.textPrimary}`}>{records.length}</p>
                       </button>
-                      <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-indigo-300/50 transition-colors">
+                      <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-primary/30 transition-colors">
                         <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Active</p>
-                        <p className={`text-lg font-bold text-indigo-600 dark:text-indigo-400`}>{records.filter((r) => !["COMPLETED", "CANCELLED"].includes(r.status)).length}</p>
+                        <p className={`text-lg font-bold text-primary dark:text-indigo-400`}>{records.filter((r) => !["COMPLETED", "CANCELLED"].includes(r.status)).length}</p>
                       </button>
-                      <button type="button" onClick={() => setFilterStatus("COMPLETED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-indigo-300/50 transition-colors">
+                      <button type="button" onClick={() => setFilterStatus("COMPLETED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-primary/30 transition-colors">
                         <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Completed</p>
-                        <p className={`text-lg font-bold text-green-600 dark:text-green-400`}>{records.filter((r) => r.status === "COMPLETED").length}</p>
+                        <p className={`text-lg font-bold text-success dark:text-success/80`}>{records.filter((r) => r.status === "COMPLETED").length}</p>
                       </button>
                       <div className="rounded-sm border border-border/60 bg-card p-3">
                         <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Overdue</p>
-                        <p className={`text-lg font-bold text-red-600 dark:text-red-400`}>{records.filter((r) => r.dueDate && isOverdue(r.dueDate) && r.status !== "COMPLETED").length}</p>
+                        <p className={`text-lg font-bold text-danger dark:text-danger/80`}>{records.filter((r) => r.dueDate && isOverdue(r.dueDate) && r.status !== "COMPLETED").length}</p>
                       </div>
                     </div>
                   </SectionCard>
@@ -656,7 +656,7 @@ export function A3PdcaPage() {
                     {records.length === 0 ? (
                       <div className={`flex items-center justify-center h-16 text-xs italic ${theme.textMuted}`}>No A3/PDCA records yet.</div>
                     ) : (
-                      <div className="space-y-2">{[{ phase: "DRAFT", label: "Draft", color: "bg-gray-400" }, { phase: "PLAN", label: "Plan", color: "bg-blue-500" }, { phase: "DO", label: "Do", color: "bg-yellow-500" }, { phase: "CHECK", label: "Check", color: "bg-purple-500" }, { phase: "ACT", label: "Act", color: "bg-indigo-500" }, { phase: "COMPLETED", label: "Completed", color: "bg-green-500" }, { phase: "CANCELLED", label: "Cancelled", color: "bg-gray-400" }].map((p) => {
+                      <div className="space-y-2">{[{ phase: "DRAFT", label: "Draft", color: "bg-muted-foreground/40" }, { phase: "PLAN", label: "Plan", color: "bg-primary/100" }, { phase: "DO", label: "Do", color: "bg-warning" }, { phase: "CHECK", label: "Check", color: "bg-purple-500" }, { phase: "ACT", label: "Act", color: "bg-primary" }, { phase: "COMPLETED", label: "Completed", color: "bg-success/100" }, { phase: "CANCELLED", label: "Cancelled", color: "bg-muted-foreground/40" }].map((p) => {
                         const count = records.filter((r) => r.status === p.phase).length;
                         return (
                           <div key={p.phase}>
@@ -670,7 +670,7 @@ export function A3PdcaPage() {
 
                   <div className="flex justify-center pt-2">
                     <button type="button" onClick={hNew}
-                      className="inline-flex h-8 items-center gap-1.5 bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
+                      className="inline-flex h-8 items-center gap-1.5 bg-primary px-4 text-sm font-semibold text-white hover:bg-primary transition-colors">
                       <Plus className="h-3.5 w-3.5 stroke-current" /> New A3/PDCA
                     </button>
                   </div>
@@ -697,18 +697,18 @@ export function A3PdcaPage() {
                       {sel.targetType && <span>{sel.targetType} #{sel.targetId}</span>}
                       {sel.startDate && <span>Start: {sel.startDate}</span>}
                       {sel.dueDate && (
-                        <span className={isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-red-500 font-semibold" : ""}>
+                        <span className={isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-danger font-semibold" : ""}>
                           {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" && <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />}
                           Due: {sel.dueDate}
                         </span>
                       )}
-                      {sel.completedDate && <span className="text-green-600">Completed: {sel.completedDate}</span>}
+                      {sel.completedDate && <span className="text-success">Completed: {sel.completedDate}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     {nextPhase(sel.status) && !["COMPLETED", "CANCELLED"].includes(sel.status) && (
                       <button type="button" onClick={() => setConfirmTransition({ id: sel.id, phase: nextPhase(sel.status)! })}
-                        className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                        className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                         <ArrowRight className="h-2.5 w-2.5 stroke-current" />{phaseLabel(nextPhase(sel.status)!)}
                       </button>
                     )}
@@ -727,10 +727,10 @@ export function A3PdcaPage() {
                     const isCancelled = sel.status === "CANCELLED";
                     return (
                       <div key={phase} className="flex items-center gap-0.5">
-                        <span className={`text-[11px] font-semibold px-2 py-0.5 ${isActive ? (PHASE_STYLES[phase] || "") + " font-bold ring-1 ring-indigo-300/50" : isCancelled ? "text-muted-foreground line-through" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 ${isActive ? (PHASE_STYLES[phase] || "") + " font-bold ring-1 ring-primary/30" : isCancelled ? "text-muted-foreground line-through" : isPast ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
                           {isPast && !isCancelled ? "✓ " : ""}{phaseLabel(phase)}
                         </span>
-                        {idx < PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${PHASES.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>→</span>}
+                        {idx < PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${PHASES.indexOf(sel.status) > idx ? "text-success/80" : "text-muted-foreground/30"}`}>→</span>}
                       </div>
                     );
                   })}
@@ -771,22 +771,22 @@ export function A3PdcaPage() {
                   {/* PDCA Actions */}
                   <div className="mt-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="h-4 w-0.5 bg-indigo-400/60 rounded-full" />
-                      <span className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-600/70 dark:text-indigo-400/70">PDCA Actions</span>
+                      <div className="h-4 w-0.5 bg-primary/60 rounded-full" />
+                      <span className="text-xs font-bold uppercase tracking-[0.12em] text-primary/70 dark:text-primary/70">PDCA Actions</span>
                     </div>
                     {sel.actions && sel.actions.length > 0 ? (
                       <div className="space-y-1">
                         {sel.actions.map((action) => (
                           <div key={action.id} className="flex items-center gap-2 px-3 py-1.5 border border-border/30 bg-card text-sm">
                             <div className="shrink-0">
-                              {action.status === "DONE" ? <CheckCircle className="h-3.5 w-3.5 text-green-500 stroke-current" />
-                                : action.status === "CANCELLED" ? <Ban className="h-3.5 w-3.5 text-red-400 stroke-current" />
+                              {action.status === "DONE" ? <CheckCircle className="h-3.5 w-3.5 text-success stroke-current" />
+                                : action.status === "CANCELLED" ? <Ban className="h-3.5 w-3.5 text-danger/80 stroke-current" />
                                 : <div className="h-3.5 w-3.5 rounded-full border-2 border-indigo-400" />}
                             </div>
                             <span className="min-w-0 flex-1 truncate font-medium text-foreground">{action.title}</span>
                             {action.owner && <span className="text-xs text-muted-foreground">{action.owner}</span>}
                             {action.dueDate && (
-                              <span className={`text-xs ${isOverdue(action.dueDate) && action.status !== "DONE" ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+                              <span className={`text-xs ${isOverdue(action.dueDate) && action.status !== "DONE" ? "text-danger font-semibold" : "text-muted-foreground"}`}>
                                 {isOverdue(action.dueDate) && action.status !== "DONE" && <AlertTriangle className="inline h-2 w-2 mr-0.5 stroke-current" />}
                                 {action.dueDate}
                               </span>

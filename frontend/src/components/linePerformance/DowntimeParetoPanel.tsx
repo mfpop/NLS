@@ -43,16 +43,16 @@ export function DowntimeParetoPanel({ downtimeSummary, downtimeEvents, onLogDown
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-200 bg-slate-50 shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted shrink-0">
         <div className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 text-slate-500" />
-          <h3 className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">Downtime</h3>
-          <span className={`text-xs font-bold tabular-nums ${totalMinutes > 60 ? "text-red-600" : totalMinutes > 30 ? "text-amber-600" : "text-slate-500"}`}>
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Downtime</h3>
+          <span className={`text-xs font-bold tabular-nums ${totalMinutes > 60 ? "text-danger" : totalMinutes > 30 ? "text-warning" : "text-muted-foreground"}`}>
             {totalMinutes}m
           </span>
         </div>
         <button type="button" onClick={onLogDowntime}
-          className="inline-flex h-6 items-center gap-0.5 rounded px-1.5 text-[10px] font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+          className="inline-flex h-6 items-center gap-0.5 rounded px-1.5 text-[10px] font-medium text-muted-foreground hover:bg-muted transition-colors">
           Log
         </button>
       </div>
@@ -61,18 +61,18 @@ export function DowntimeParetoPanel({ downtimeSummary, downtimeEvents, onLogDown
       <div className="flex-1 min-h-0 px-3 py-1.5">
         {/* Active downtime alert */}
         {isActive && downtimeSummary?.activeDowntimeEvent && (
-          <div className="flex items-start gap-1.5 rounded border border-red-200 bg-red-50 p-1.5 mb-2">
-            <XCircle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5" />
+          <div className="flex items-start gap-1.5 rounded border border-danger/20 bg-danger/10 p-1.5 mb-2">
+            <XCircle className="h-3.5 w-3.5 text-danger shrink-0 mt-0.5" />
             <div className="min-w-0">
-              <p className="text-[10px] font-medium text-slate-800 leading-tight">{downtimeSummary.activeDowntimeEvent.reason}</p>
-              <p className="text-[10px] text-slate-600">{downtimeSummary.activeDowntimeEvent.startTime} · {downtimeSummary.activeDowntimeEvent.durationMinutes}m</p>
+              <p className="text-[10px] font-medium text-foreground leading-tight">{downtimeSummary.activeDowntimeEvent.reason}</p>
+              <p className="text-[10px] text-muted-foreground">{downtimeSummary.activeDowntimeEvent.startTime} · {downtimeSummary.activeDowntimeEvent.durationMinutes}m</p>
             </div>
           </div>
         )}
 
         {/* Pareto top causes */}
         {topCauses.length === 0 && !isActive ? (
-          <p className="text-[10px] text-slate-500 text-center py-3">No downtime recorded</p>
+          <p className="text-[10px] text-muted-foreground text-center py-3">No downtime recorded</p>
         ) : (
           <>
             {visibleCauses.map((cause) => {
@@ -80,30 +80,30 @@ export function DowntimeParetoPanel({ downtimeSummary, downtimeEvents, onLogDown
               return (
                 <div key={cause.code} className="mb-1.5 last:mb-0">
                   <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <span className="text-[10px] text-slate-800 truncate font-medium">{cause.reason}</span>
-                    <span className="shrink-0 text-[10px] text-slate-600 tabular-nums font-medium">{cause.totalMinutes}m</span>
+                    <span className="text-[10px] text-foreground truncate font-medium">{cause.reason}</span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums font-medium">{cause.totalMinutes}m</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                    <div className="flex-1 h-1.5 rounded-full bg-muted/80 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-amber-500"
+                        className="h-full rounded-full bg-warning/100"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="shrink-0 text-[10px] text-slate-500 tabular-nums w-8 text-right">{pct}%</span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums w-8 text-right">{pct}%</span>
                   </div>
                 </div>
               );
             })}
             {hasMore && !showAll && (
               <button type="button" onClick={() => setShowAll(true)}
-                className="w-full py-1 text-[10px] font-medium text-sky-700 hover:bg-slate-50 transition-colors text-center">
+                className="w-full py-1 text-[10px] font-medium text-accent-foreground hover:bg-muted transition-colors text-center">
                 View all {topCauses.length} causes →
               </button>
             )}
             {showAll && hasMore && (
               <button type="button" onClick={() => setShowAll(false)}
-                className="w-full py-1 text-[10px] font-medium text-sky-700 hover:bg-slate-50 transition-colors text-center">
+                className="w-full py-1 text-[10px] font-medium text-accent-foreground hover:bg-muted transition-colors text-center">
                 Show less
               </button>
             )}

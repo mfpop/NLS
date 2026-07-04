@@ -93,22 +93,22 @@ export function GembaObservationActionMenu({
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen((p) => !p); }}
-        className="flex h-6 w-6 items-center justify-center rounded-sm text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+        className="flex h-6 w-6 items-center justify-center rounded-sm text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition-colors"
         title="Actions"
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-0.5 w-44 rounded-[4px] border border-slate-200 bg-white py-1 shadow-md ring-1 ring-black/5">
+        <div className="absolute right-0 top-full z-50 mt-0.5 w-44 rounded-[4px] border border-border bg-background py-1 shadow-md ring-1 ring-black/5">
           {visibleItems.map((item) => (
             <button
               key={item.label}
               type="button"
               onClick={(e) => { e.stopPropagation(); handle(item.action); }}
-              className="flex h-8 w-full items-center gap-2.5 px-3 text-xs text-slate-700 hover:bg-slate-100 text-left"
+              className="flex h-8 w-full items-center gap-2.5 px-3 text-xs text-muted-foreground hover:bg-muted text-left"
             >
-              <item.icon className="h-4 w-4 text-slate-500 shrink-0" />
+              <item.icon className="h-4 w-4 text-muted-foreground shrink-0" />
               <span>{item.label}</span>
             </button>
           ))}

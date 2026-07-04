@@ -338,8 +338,8 @@ export function ProductionControlPage() {
             paged.map((row) => {
               const cfg = (() => {
                 const m: Record<string, { color: string; border: string; label: string }> = {
-                  AUDITS: { color: "bg-blue-500", border: "border-l-blue-500", label: "Audit" },
-                  ISSUES: { color: "bg-amber-500", border: "border-l-amber-500", label: "Issue" },
+                  AUDITS: { color: "bg-primary/100", border: "border-l-blue-500", label: "Audit" },
+                  ISSUES: { color: "bg-warning/100", border: "border-l-amber-500", label: "Issue" },
                   ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", label: "Action" },
                 };
                 return m[row.rt];
@@ -367,9 +367,9 @@ export function ProductionControlPage() {
                       )}
                       {row.score !== null && row.score !== undefined && (
                         <span className={`inline-flex items-center px-1 py-0.5 text-[8px] font-medium border ${
-                          row.score >= 80 ? "border-green-300 text-green-700 bg-green-50/60" :
-                          row.score >= 60 ? "border-amber-300 text-amber-700 bg-amber-50/60" :
-                          "border-red-300 text-red-700 bg-red-50/60"
+                          row.score >= 80 ? "border-green-300 text-success bg-success/10/60" :
+                          row.score >= 60 ? "border-warning/30 text-warning bg-warning/10/60" :
+                          "border-danger/30 text-danger bg-danger/10/60"
                         }`}>{row.score}%</span>
                       )}
                     </div>
@@ -406,7 +406,7 @@ export function ProductionControlPage() {
         title="Production Control"
         subtitle="Production control audits, issues, and actions"
         icon={Activity}
-        iconClass="bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400"
+        iconClass="bg-accent/15 text-accent-foreground dark:bg-purple-900/40 dark:text-purple-400"
         headerMessage={headerMsg}
         onDismissHeaderMessage={hDismissMsg}
         tabs={tabs}

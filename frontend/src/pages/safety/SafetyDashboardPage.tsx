@@ -161,7 +161,7 @@ export function SafetyDashboardPage() {
   );
 
   const renderQuickActions = () => (
-    <div className="p-3 border-t border-slate-200 space-y-2">
+    <div className="p-3 border-t border-border space-y-2">
       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Quick Actions</p>
       <div className="flex flex-wrap gap-1.5">
         <button onClick={() => navigateTo("/safety/incidents")}
@@ -184,17 +184,17 @@ export function SafetyDashboardPage() {
   const overdueEvents: Array<any> = s?.overdueEvents ?? [];
 
   const renderRecentEvents = () => (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-border/50">
       {recentEvents.length === 0 ? (
         <p className="p-3 text-xs text-muted-foreground/60 italic">No recent events</p>
       ) : recentEvents.slice(0, 6).map((e: any) => (
         <div key={e.id}
           onClick={() => navigateTo(`/safety/${e.eventType === "NEAR_MISS" ? "near-misses" : e.eventType === "HAZARD" || e.eventType === "OBSERVATION" ? "hazards" : "incidents"}`)}
-          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors">
+          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
           <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${
-            e.severity === "CRITICAL" ? "bg-red-500" :
-            e.severity === "HIGH" ? "bg-orange-500" :
-            e.severity === "MEDIUM" ? "bg-amber-500" :
+            e.severity === "CRITICAL" ? "bg-danger/100" :
+            e.severity === "HIGH" ? "bg-warning/100" :
+            e.severity === "MEDIUM" ? "bg-warning/100" :
             "bg-slate-400"
           }`} />
           <div className="min-w-0 flex-1">
@@ -219,17 +219,17 @@ export function SafetyDashboardPage() {
   );
 
   const renderOverdueEvents = () => (
-    <div className="divide-y divide-slate-100">
+    <div className="divide-y divide-border/50">
       {overdueEvents.length === 0 ? (
         <p className="p-3 text-xs text-muted-foreground/60 italic">No overdue follow-ups</p>
       ) : overdueEvents.map((e: any) => (
         <div key={e.id}
           onClick={() => navigateTo(`/safety/${e.eventType === "NEAR_MISS" ? "near-misses" : e.eventType === "HAZARD" || e.eventType === "OBSERVATION" ? "hazards" : "incidents"}`)}
-          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-50 transition-colors">
+          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted transition-colors">
           <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${
-            e.severity === "CRITICAL" ? "bg-red-500" :
-            e.severity === "HIGH" ? "bg-orange-500" :
-            e.severity === "MEDIUM" ? "bg-amber-500" :
+            e.severity === "CRITICAL" ? "bg-danger/100" :
+            e.severity === "HIGH" ? "bg-warning/100" :
+            e.severity === "MEDIUM" ? "bg-warning/100" :
             "bg-slate-400"
           }`} />
           <div className="min-w-0 flex-1">
@@ -255,7 +255,7 @@ export function SafetyDashboardPage() {
       {renderKpiStrip()}
       <div className="flex-1 grid grid-cols-2 auto-rows-[1fr] gap-0 min-h-0 overflow-hidden">
         {/* Left top: Events by Type */}
-        <div className="flex flex-col border-r border-b border-slate-200 overflow-hidden">
+        <div className="flex flex-col border-r border-b border-border overflow-hidden">
           <div className={PANEL_HEADER}>
             <List className="h-3.5 w-3.5 text-muted-foreground mr-1.5" />
             <span className={PANEL_TITLE}>Events by Type</span>
@@ -266,7 +266,7 @@ export function SafetyDashboardPage() {
                 <div key={e.eventType} className="flex items-center gap-2">
                   <span className="text-muted-foreground w-24 truncate">{typeLabel(e.eventType)}</span>
                   <div className="flex-1">{renderBar(e.count, maxTypeCount, "bg-primary")}</div>
-                  <span className="text-slate-900 font-medium tabular-nums w-8 text-right">{e.count}</span>
+                  <span className="text-foreground font-medium tabular-nums w-8 text-right">{e.count}</span>
                 </div>
               ))}
               {byType.length === 0 && <p className="text-xs text-muted-foreground/60 italic">No data</p>}
@@ -274,7 +274,7 @@ export function SafetyDashboardPage() {
           </div>
         </div>
         {/* Right top: Events by Severity */}
-        <div className="flex flex-col border-b border-slate-200 overflow-hidden">
+        <div className="flex flex-col border-b border-border overflow-hidden">
           <div className={PANEL_HEADER}>
             <BarChart3 className="h-3.5 w-3.5 text-muted-foreground mr-1.5" />
             <span className={PANEL_TITLE}>Events by Severity</span>
@@ -289,7 +289,7 @@ export function SafetyDashboardPage() {
                     <span className={`w-2 h-2 rounded-full shrink-0 ${sevColor[sev] || "bg-muted-foreground/40"}`} />
                     <span className="text-muted-foreground w-20">{sev.charAt(0) + sev.slice(1).toLowerCase()}</span>
                     <div className="flex-1">{renderBar(count, maxSevCount, sevColor[sev] || "bg-muted-foreground/40")}</div>
-                    <span className="text-slate-900 font-medium tabular-nums w-8 text-right">{count}</span>
+                    <span className="text-foreground font-medium tabular-nums w-8 text-right">{count}</span>
                   </div>
                 );
               })}
@@ -297,7 +297,7 @@ export function SafetyDashboardPage() {
           </div>
         </div>
         {/* Left bottom: Recent Safety Events */}
-        <div className="flex flex-col border-r border-slate-200 overflow-hidden">
+        <div className="flex flex-col border-r border-border overflow-hidden">
           <div className={PANEL_HEADER}>
             <Activity className="h-3.5 w-3.5 text-muted-foreground mr-1.5" />
             <span className={PANEL_TITLE}>Recent Safety Events</span>
@@ -319,7 +319,7 @@ export function SafetyDashboardPage() {
         </div>
       </div>
       {overdueEvents.length > 0 && (
-        <div className="shrink-0 border-t border-slate-200 bg-muted">
+        <div className="shrink-0 border-t border-border bg-muted">
           <div className={PANEL_HEADER}>
             <Clock className="h-3.5 w-3.5 text-danger mr-1.5" />
             <span className="text-xs font-semibold text-danger">Overdue Follow-ups</span>

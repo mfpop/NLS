@@ -204,7 +204,7 @@ export function DocumentControlPage() {
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3">
               <StructureDocumentMetadata document={selectedDoc} />
-              <div className="border border-gray-500/50 p-3">
+              <div className="border border-border/50 p-3">
                 <div className="flex items-center gap-1.5 mb-2">
                   <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Content</span>
                 </div>

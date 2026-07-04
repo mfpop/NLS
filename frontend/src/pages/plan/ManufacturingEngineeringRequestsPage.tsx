@@ -24,30 +24,30 @@ import {
 } from "@/graphql/merMutations";
 
 /* ── CONSTANTS ── */  const STATUS_STYLES: Record<string, string> = {
-  SUBMITTED: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  UNDER_REVIEW: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  APPROVED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-  IN_PROGRESS: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  COMPLETED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  CANCELLED: "bg-slate-100 text-slate-800 dark:bg-slate-800/40 dark:text-slate-300",
+  SUBMITTED: "bg-primary/15 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  UNDER_REVIEW: "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-300",
+  APPROVED: "bg-success/15 text-success dark:bg-emerald-900/30 dark:text-emerald-300",
+  IN_PROGRESS: "bg-warning/15 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+  COMPLETED: "bg-success/15 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  REJECTED: "bg-danger/15 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  CANCELLED: "bg-muted text-foreground dark:bg-slate-800/40 dark:text-muted-foreground/30",
 };
 
 const STATUS_DOT: Record<string, string> = {
-  SUBMITTED: "bg-blue-500",
-  UNDER_REVIEW: "bg-amber-500",
-  APPROVED: "bg-emerald-500",
-  IN_PROGRESS: "bg-orange-500",
-  COMPLETED: "bg-green-600",
-  REJECTED: "bg-red-500",
+  SUBMITTED: "bg-primary/100",
+  UNDER_REVIEW: "bg-warning/100",
+  APPROVED: "bg-success/100",
+  IN_PROGRESS: "bg-warning/100",
+  COMPLETED: "bg-success",
+  REJECTED: "bg-danger/100",
   CANCELLED: "bg-slate-400",
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
   LOW: "bg-gray-100 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  CRITICAL: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  MEDIUM: "bg-primary/15 text-primary dark:bg-blue-900/30 dark:text-blue-300",
+  HIGH: "bg-warning/15 text-warning dark:bg-orange-900/30 dark:text-orange-300",
+  CRITICAL: "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-red-300",
 };
 
 const PRIORITY_OPTIONS = [
@@ -186,8 +186,8 @@ function MERDetailSkeleton() {
 function FlatSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <div className="h-8 border-b border-slate-200 px-3 flex items-center">
-        <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">{title}</span>
+      <div className="h-8 border-b border-border px-3 flex items-center">
+        <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">{title}</span>
       </div>
       <div className="px-3 py-2">
         {children}
@@ -199,8 +199,8 @@ function FlatSection({ title, children }: { title: string; children: ReactNode }
 function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children?: ReactNode }) {
   return (
     <section>
-      <div className="h-8 border-b border-slate-200 px-0 flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">{title}</span>
+      <div className="h-8 border-b border-border px-0 flex items-center justify-between">
+        <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">{title}</span>
         {action}
       </div>
       {children && <div className="pt-2">{children}</div>}
@@ -220,51 +220,51 @@ function ImpactRow({ label, value }: { label: string; value: string }) {
 /* ── Dashboard Components ── */
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  SUBMITTED: { label: "Submitted", color: "bg-blue-500" },
-  UNDER_REVIEW: { label: "Under Review", color: "bg-amber-500" },
-  APPROVED: { label: "Approved", color: "bg-emerald-500" },
-  IN_PROGRESS: { label: "In Progress", color: "bg-orange-500" },
-  COMPLETED: { label: "Completed", color: "bg-green-600" },
-  REJECTED: { label: "Rejected", color: "bg-red-500" },
+  SUBMITTED: { label: "Submitted", color: "bg-primary/100" },
+  UNDER_REVIEW: { label: "Under Review", color: "bg-warning/100" },
+  APPROVED: { label: "Approved", color: "bg-success/100" },
+  IN_PROGRESS: { label: "In Progress", color: "bg-warning/100" },
+  COMPLETED: { label: "Completed", color: "bg-success" },
+  REJECTED: { label: "Rejected", color: "bg-danger/100" },
   CANCELLED: { label: "Cancelled", color: "bg-slate-400" },
 };
 
 const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
-  CRITICAL: { label: "Critical", color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20" },
-  HIGH: { label: "High", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-900/20" },
-  MEDIUM: { label: "Medium", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },
+  CRITICAL: { label: "Critical", color: "text-danger dark:text-danger/80", bg: "bg-danger/10 dark:bg-red-900/20" },
+  HIGH: { label: "High", color: "text-warning dark:text-orange-400", bg: "bg-warning/10 dark:bg-orange-900/20" },
+  MEDIUM: { label: "Medium", color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20" },
   LOW: { label: "Low", color: "text-gray-500", bg: "bg-gray-50 dark:bg-gray-900/20" },
 };
 
 const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
-  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-200 dark:border-blue-800" },
-  TOOLING: { label: "Tooling", icon: Settings, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-200 dark:border-amber-800" },
-  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-green-600 dark:text-green-400", bg: "bg-green-50 dark:bg-green-900/20", border: "border-green-200 dark:border-green-800" },
-  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-purple-200 dark:border-purple-800" },
+  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20", border: "border-primary/20 dark:border-blue-800" },
+  TOOLING: { label: "Tooling", icon: Settings, color: "text-warning dark:text-amber-400", bg: "bg-warning/10 dark:bg-amber-900/20", border: "border-warning/20 dark:border-amber-800" },
+  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-success dark:text-success/80", bg: "bg-success/10 dark:bg-green-900/20", border: "border-success/20 dark:border-green-800" },
+  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-accent-foreground dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-accent/20 dark:border-purple-800" },
 };
 
 function KpiCell({ label, value, muted, dotClass, icon }: { label: string; value: ReactNode; muted?: boolean; dotClass?: string; icon?: ReactNode }) {
   return (
     <div className="px-3 py-2 text-left min-w-0">
-      <p className="text-[11px] font-medium text-slate-500 truncate flex items-center gap-1.5">
+      <p className="text-[11px] font-medium text-muted-foreground truncate flex items-center gap-1.5">
         {icon ? icon : dotClass ? <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${dotClass}`} /> : null}
         {label}
       </p>
-      <p className={`text-lg font-bold ${muted ? "text-slate-500" : "text-slate-950"}`}>{value}</p>
+      <p className={`text-lg font-bold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
 
 function BarRow({ label, count, total, color }: { label: string; count: number; total: number; color?: string }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  const barColor = color || "bg-indigo-500/60";
+  const barColor = color || "bg-primary/60";
   return (
     <div className="space-y-0.5">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] text-slate-950">{label}</span>
-        <span className="text-[11px] font-semibold text-slate-950">{count} <span className="text-slate-500 font-normal">({pct}%)</span></span>
+        <span className="text-[11px] text-foreground">{label}</span>
+        <span className="text-[11px] font-semibold text-foreground">{count} <span className="text-muted-foreground font-normal">({pct}%)</span></span>
       </div>
-      <div className="h-1 w-full rounded-full bg-slate-200 overflow-hidden">
+      <div className="h-1 w-full rounded-full bg-muted/80 overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${barColor}`} style={{ width: `${Math.max(pct, 3)}%` }} />
       </div>
     </div>
@@ -273,7 +273,7 @@ function BarRow({ label, count, total, color }: { label: string; count: number; 
 
 function StatusDot({ status }: { status: string }) {
   const meta = STATUS_META[status];
-  return <span className={`inline-block h-2 w-2 rounded-full ${meta?.color || "bg-gray-400"}`} />;
+  return <span className={`inline-block h-2 w-2 rounded-full ${meta?.color || "bg-muted-foreground/40"}`} />;
 }
 
 function daysUntil(dateStr: string | null): number | null {
@@ -309,15 +309,15 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
           <div className="flex flex-col items-center justify-center h-48 text-center px-4">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl mb-6">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="border border-slate-200 bg-slate-100 p-3 animate-pulse">
+                <div key={i} className="border border-border bg-muted p-3 animate-pulse">
                   <div className="space-y-2">
-                    <div className="h-3 w-16 bg-slate-200" />
-                    <div className="h-5 w-10 bg-slate-200" />
+                    <div className="h-3 w-16 bg-muted/80" />
+                    <div className="h-5 w-10 bg-muted/80" />
                   </div>
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-2 text-xs text-slate-500">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               Loading MER data...
             </div>
           </div>
@@ -329,18 +329,18 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
             </p>
             <div className="flex gap-2">
               <button type="button" onClick={onNew}
-                className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-3 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+                className="inline-flex h-8 items-center gap-1.5 bg-warning px-3 text-sm font-semibold text-white hover:bg-warning/80 transition-colors">
                 New MER
               </button>
             </div>
           </div>
         ) : (
           <>
-            <div className="border-b border-slate-200 bg-slate-50">
-              <div className="px-3 h-8 flex items-center border-b border-slate-200">
-                <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Key Metrics</span>
+            <div className="border-b border-border bg-muted">
+              <div className="px-3 h-8 flex items-center border-b border-border">
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Key Metrics</span>
               </div>
-              <div className="grid grid-cols-8 divide-x divide-slate-200">
+              <div className="grid grid-cols-8 divide-x divide-border">
                 <KpiCell label="Submitted" value={summary.submitted} dotClass={STATUS_DOT.SUBMITTED} />
                 <KpiCell label="Under Review" value={summary.underReview} dotClass={STATUS_DOT.UNDER_REVIEW} />
                 <KpiCell label="Approved" value={summary.approved} dotClass={STATUS_DOT.APPROVED} />
@@ -348,27 +348,27 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                 <KpiCell label="Completed" value={summary.completed} dotClass={STATUS_DOT.COMPLETED} />
                 <KpiCell label="Rejected" value={summary.rejected} muted={summary.rejected === 0} dotClass={STATUS_DOT.REJECTED} />
                 <KpiCell label="Cancelled" value={summary.cancelled} muted={summary.cancelled === 0} dotClass={STATUS_DOT.CANCELLED} />
-                <KpiCell label="Overdue" value={summary.overdue} muted={summary.overdue === 0} icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-500 stroke-current shrink-0" />} />
+                <KpiCell label="Overdue" value={summary.overdue} muted={summary.overdue === 0} icon={<AlertTriangle className="h-3.5 w-3.5 text-warning stroke-current shrink-0" />} />
               </div>
             </div>
 
-              <div className="border-b border-slate-200">
-                <div className="h-8 border-b border-slate-200 px-3 flex items-center">
-                  <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Breakdown by Type</span>
+              <div className="border-b border-border">
+                <div className="h-8 border-b border-border px-3 flex items-center">
+                  <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Breakdown by Type</span>
                 </div>
                 <div className="px-3 py-2 space-y-2">
                   {summary.byType.map((t: { requestType: string; count: number }) => {
                     const meta = TYPE_META[t.requestType];
                     const barColors: Record<string, string> = {
-                      ENGINEERING_CHANGE: "bg-blue-500", TOOLING: "bg-amber-500",
-                      PROCESS_IMPROVEMENT: "bg-green-500", EQUIPMENT_MODIFICATION: "bg-purple-500",
+                      ENGINEERING_CHANGE: "bg-primary/100", TOOLING: "bg-warning/100",
+                      PROCESS_IMPROVEMENT: "bg-success/100", EQUIPMENT_MODIFICATION: "bg-purple-500",
                     };
                     return (
                       <div key={t.requestType} className="flex items-center gap-2">
                         {meta && <meta.icon className={`h-3.5 w-3.5 shrink-0 ${meta.color} stroke-current`} />}
                         <div className="flex-1">
                           <BarRow label={meta?.label || t.requestType} count={t.count} total={summary.total}
-                            color={barColors[t.requestType] || "bg-indigo-500"} />
+                            color={barColors[t.requestType] || "bg-primary"} />
                         </div>
                       </div>
                     );
@@ -376,25 +376,25 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                 </div>
               </div>
 
-            <div className="border-t border-slate-200">
-              <div className="flex divide-x divide-slate-200">
+            <div className="border-t border-border">
+              <div className="flex divide-x divide-border">
                 <div className="w-[40%] min-w-0">
-                  <div className="h-8 border-b border-slate-200 px-3 flex items-center">
-                    <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Due This Week</span>
+                  <div className="h-8 border-b border-border px-3 flex items-center">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Due This Week</span>
                   </div>
                   <div className="px-3 py-2">
                     {upcomingDeadlines.length === 0 ? (
-                      <p className="text-xs italic text-slate-500">No upcoming deadlines</p>
+                      <p className="text-xs italic text-muted-foreground">No upcoming deadlines</p>
                     ) : (
                       <div className="space-y-1">
                         {upcomingDeadlines.map((m) => {
                           const days = daysUntil(m.dueDate);
                           return (
-                            <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
-                              <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
+                            <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0">
+                              <Clock3 className="h-3 w-3 shrink-0 text-warning stroke-current" />
                               <div className="min-w-0 flex-1">
-                                <div className="text-xs font-semibold text-slate-950 truncate">{m.title}</div>
-                                <div className="text-xs text-amber-600">
+                                <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
+                                <div className="text-xs text-warning">
                                   {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
                                 </div>
                               </div>
@@ -407,26 +407,26 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="h-8 border-b border-slate-200 px-3 flex items-center">
-                    <span className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">Recent Activity</span>
+                  <div className="h-8 border-b border-border px-3 flex items-center">
+                    <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Recent Activity</span>
                   </div>
                   <div className="px-3 py-2">
                     {recentMERs.length === 0 ? (
-                      <p className="text-xs italic text-slate-500">No recent activity</p>
+                      <p className="text-xs italic text-muted-foreground">No recent activity</p>
                     ) : (
                       <div className="space-y-1">
                         {recentMERs.map((m) => (
-                          <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-slate-100 last:border-0">
+                          <div key={m.id} className="flex items-center gap-2 py-1.5 border-b border-border/50 last:border-0">
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
                                 <StatusDot status={m.status} />
-                                <div className="text-xs font-semibold text-slate-950 truncate">{m.title}</div>
+                                <div className="text-xs font-semibold text-foreground truncate">{m.title}</div>
                               </div>
-                              <div className="text-xs text-slate-500 ml-4">
+                              <div className="text-xs text-muted-foreground ml-4">
                                 {m.merCode || `MER-${m.id}`} {"\u00B7"} {formatDate(m.createdAt)}
                               </div>
                             </div>
-                            <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-slate-500"}`}>
+                            <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${PRIORITY_META[m.priority]?.color || "text-muted-foreground"}`}>
                               {PRIORITY_META[m.priority]?.label || m.priority}
                             </span>
                           </div>
@@ -735,7 +735,7 @@ export function ManufacturingEngineeringRequestsPage() {
     setSuccessMsg("MER deleted"); setConfirmDelete(null); setSelectedId(null); refetch();
   }, [confirmDelete, deleteMer, refetch]);
 
-  const iCls = `h-7 w-full bg-card border border-gray-300 text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const iCls = `h-7 w-full bg-card border border-border text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
   const sCls = iCls;
 
   const renderHtmlBlock = (content: string, fallback = "Not defined") => (
@@ -798,7 +798,7 @@ export function ManufacturingEngineeringRequestsPage() {
           </SectionCard>
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden mt-3">
             <SectionCard title="Description" />
-            <div className="flex-1 min-h-0 overflow-hidden border border-gray-300">
+            <div className="flex-1 min-h-0 overflow-hidden border border-border">
               <div className="h-full overflow-y-auto"><RichTextEditor content={g("description")} onChange={(html) => sf("description", html)}
                 placeholder="Describe the engineering request, problem, and expected outcome..." /></div>
             </div>
@@ -853,37 +853,37 @@ export function ManufacturingEngineeringRequestsPage() {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {sel.status === "SUBMITTED" && (
-                  <button type="button" onClick={hReview} className="inline-flex h-7 items-center gap-1 border border-blue-200 dark:border-blue-800 px-2 text-[10px] font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={hReview} className="inline-flex h-7 items-center gap-1 border border-primary/20 dark:border-blue-800 px-2 text-[10px] font-semibold text-primary dark:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20 transition-all whitespace-nowrap">
                     <RotateCcw className="h-2.5 w-2.5 stroke-current" />Review
                   </button>
                 )}
                 {(sel.status === "SUBMITTED" || sel.status === "UNDER_REVIEW") && (
-                  <button type="button" onClick={() => { setReviewNotes(""); setConfirmAction({ id: sel.id, action: "approve" }); }} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => { setReviewNotes(""); setConfirmAction({ id: sel.id, action: "approve" }); }} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <Check className="h-2.5 w-2.5 stroke-current" />Approve
                   </button>
                 )}
                 {(sel.status === "SUBMITTED" || sel.status === "UNDER_REVIEW") && (
-                  <button type="button" onClick={() => { setRejectReason(""); setConfirmAction({ id: sel.id, action: "reject" }); }} className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => { setRejectReason(""); setConfirmAction({ id: sel.id, action: "reject" }); }} className="inline-flex h-7 items-center gap-1 border border-danger/20 dark:border-red-800 px-2 text-[10px] font-semibold text-danger dark:text-danger/80 hover:bg-danger/10 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
                     <Ban className="h-2.5 w-2.5 stroke-current" />Reject
                   </button>
                 )}
                 {sel.status === "APPROVED" && (
-                  <button type="button" onClick={hStart} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={hStart} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <Play className="h-2.5 w-2.5 stroke-current" />Start
                   </button>
                 )}
                 {sel.status === "IN_PROGRESS" && (
-                  <button type="button" onClick={() => { setResultSummary(""); setConfirmAction({ id: sel.id, action: "complete" }); }} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => { setResultSummary(""); setConfirmAction({ id: sel.id, action: "complete" }); }} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <CheckCircle className="h-2.5 w-2.5 stroke-current" />Complete
                   </button>
                 )}
                 {(sel.status === "APPROVED" || sel.status === "COMPLETED") && (
-                  <button type="button" onClick={hConvert} className="inline-flex h-7 items-center gap-1 border border-purple-200 dark:border-purple-800 px-2 text-[10px] font-semibold text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={hConvert} className="inline-flex h-7 items-center gap-1 border border-accent/20 dark:border-purple-800 px-2 text-[10px] font-semibold text-accent-foreground dark:text-purple-400 hover:bg-accent/10 dark:hover:bg-purple-900/20 transition-all whitespace-nowrap">
                     <GitBranch className="h-2.5 w-2.5 stroke-current" />Kaizen
                   </button>
                 )}
                 {sel.status !== "COMPLETED" && sel.status !== "CANCELLED" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-danger/20 dark:border-red-800 px-2 text-[10px] font-semibold text-danger dark:text-danger/80 hover:bg-danger/10 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
                     <XCircle className="h-2.5 w-2.5 stroke-current" />Cancel
                   </button>
                 )}
@@ -899,10 +899,10 @@ export function ManufacturingEngineeringRequestsPage() {
                 const isPast = WORKFLOW_PHASES.indexOf(sel.status) >= idx && sel.status !== phase;
                 return (
                   <div key={phase} className="flex items-center gap-0.5">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "REJECTED" || sel.status === "CANCELLED" ? "text-muted-foreground" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "REJECTED" || sel.status === "CANCELLED" ? "text-muted-foreground" : isPast ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
                       {isPast && sel.status !== "REJECTED" && sel.status !== "CANCELLED" ? "\u2713 " : ""}{statusLabel(phase)}
                     </span>
-                    {idx < WORKFLOW_PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${WORKFLOW_PHASES.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
+                    {idx < WORKFLOW_PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${WORKFLOW_PHASES.indexOf(sel.status) > idx ? "text-success/80" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
                   </div>
                 );
               })}
@@ -952,7 +952,7 @@ export function ManufacturingEngineeringRequestsPage() {
                         <div className={sel.status === "REJECTED" ? "border-l-2 border-red-400 pl-3 py-1" : "border-l-2 border-blue-400 pl-3 py-1"}>
                           <p className={`text-xs font-semibold ${theme.textMuted} mb-1`}>{sel.status === "REJECTED" ? "Rejection Reason" : "Review Notes"}</p>
                           {sel.status === "REJECTED" && sel.rejectionReason ? (
-                            <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 stroke-current" /><p className={`text-sm ${theme.textPrimary}`}>{sel.rejectionReason}</p></div>
+                            <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-danger shrink-0 mt-0.5 stroke-current" /><p className={`text-sm ${theme.textPrimary}`}>{sel.rejectionReason}</p></div>
                           ) : <p className={`text-sm ${theme.textPrimary}`}>{sel.reviewNotes}</p>}
                         </div>
                       )}
@@ -963,7 +963,7 @@ export function ManufacturingEngineeringRequestsPage() {
                         <div><p className={`text-xs font-semibold ${theme.textMuted} mb-1`}>Lessons Learned</p>{renderHtmlBlock(sel.lessonsLearned)}</div>
                       )}
                       {sel.linkedKaizenId && (
-                        <div className="flex items-center gap-2"><GitBranch className="h-3.5 w-3.5 text-purple-600 stroke-current" /><span className="text-sm text-purple-700 font-medium">Kaizen #{sel.linkedKaizenId}</span></div>
+                        <div className="flex items-center gap-2"><GitBranch className="h-3.5 w-3.5 text-accent-foreground stroke-current" /><span className="text-sm text-accent-foreground font-medium">Kaizen #{sel.linkedKaizenId}</span></div>
                       )}
                     </div>
                   </FlatSection>
@@ -996,13 +996,13 @@ export function ManufacturingEngineeringRequestsPage() {
                       {sel.startDate ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Start</span><span className="text-foreground">{sel.startDate}</span></div> : null}
                       {sel.dueDate ? (
                         <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Due</span>
-                          <span className={`text-foreground ${isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-red-500 font-semibold" : ""}`}>
+                          <span className={`text-foreground ${isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-danger font-semibold" : ""}`}>
                             {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" /> : null}
                             {sel.dueDate}
                           </span>
                         </div>
                       ) : null}
-                      {sel.completedDate ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Completed</span><span className="text-green-600">{sel.completedDate}</span></div> : null}
+                      {sel.completedDate ? <div className="flex items-center gap-2"><span className="text-muted-foreground w-28 shrink-0">Completed</span><span className="text-success">{sel.completedDate}</span></div> : null}
                     </div>
                   </FlatSection>
                 </div>
@@ -1022,7 +1022,7 @@ export function ManufacturingEngineeringRequestsPage() {
         {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b border-border-major print-ignore`}>{successMsg}</div>}
         <div className="print-ignore">
           <PageHeader icon={<Wrench className="h-5 w-5 stroke-current" />}
-            iconClass="bg-indigo-500/10 text-indigo-600"
+            iconClass="bg-primary/10 text-primary"
             title="MER"
             subtitle="Manufacturing Engineering Requests — submit, track, and manage." />
         </div>
@@ -1064,8 +1064,8 @@ export function ManufacturingEngineeringRequestsPage() {
           {/* ── Left Panel: List ── */}
           <div className="print-ignore" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
             {loading && mers.length === 0 ? (
-              <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50 border-r border-slate-300">
-                <div className="flex items-center justify-center h-full text-xs text-slate-500">
+              <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted border-r border-border">
+                <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
                   <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2" />Loading...
                 </div>
               </div>
@@ -1084,9 +1084,9 @@ export function ManufacturingEngineeringRequestsPage() {
                 } : undefined}
                 emptyState={
                   <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                    <p className="text-xs font-medium text-slate-500">{filterAssignee ? "No requests match filter" : "No engineering requests"}</p>
+                    <p className="text-xs font-medium text-muted-foreground">{filterAssignee ? "No requests match filter" : "No engineering requests"}</p>
                     <button type="button" onClick={hNew}
-                      className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 transition-colors">
+                      className="mt-2 inline-flex h-7 items-center gap-1 bg-warning/10 px-3 text-xs font-semibold text-warning hover:bg-warning/20 transition-colors">
                       <Plus className="h-3 w-3 stroke-current" /> Create MER</button>
                   </div>
                 }
@@ -1105,7 +1105,7 @@ export function ManufacturingEngineeringRequestsPage() {
                       title={
                         <span className="flex items-center gap-1.5">
                           {m.priority && m.priority !== "MEDIUM" && (
-                            <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${m.priority === "CRITICAL" ? "bg-red-500" : m.priority === "HIGH" ? "bg-orange-500" : "bg-gray-400"}`} />
+                            <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${m.priority === "CRITICAL" ? "bg-danger/100" : m.priority === "HIGH" ? "bg-warning/100" : "bg-muted-foreground/40"}`} />
                           )}
                           <span className="truncate" title={m.title}>{m.title}</span>
                         </span>
@@ -1117,7 +1117,7 @@ export function ManufacturingEngineeringRequestsPage() {
                         </>
                       }
                       trailing={
-                        <span className={`inline-block h-2.5 w-2.5 ${STATUS_DOT[m.status] || "bg-gray-400"}`} title={statusLabel(m.status)} />
+                        <span className={`inline-block h-2.5 w-2.5 ${STATUS_DOT[m.status] || "bg-muted-foreground/40"}`} title={statusLabel(m.status)} />
                       }
                     />
                   ))}
@@ -1126,11 +1126,11 @@ export function ManufacturingEngineeringRequestsPage() {
             )}
           </div>
           <div onMouseDown={handleSplitMouseDown}
-            className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10"
+            className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-warning/100/10"
             style={{ width: 2 }} />
           <div className={`print-area flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
-        <div className="print-ignore shrink-0 border-t border-slate-200 bg-slate-50 flex h-10 items-center gap-5 px-4 text-xs text-slate-500 font-medium">
+        <div className="print-ignore shrink-0 border-t border-border bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">
           <div className="flex items-center gap-3">
             {Object.entries(STATUS_DOT).map(([status, dotClass]) => (
               <span key={status} className="flex items-center gap-1">

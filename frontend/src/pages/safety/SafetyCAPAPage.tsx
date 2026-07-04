@@ -13,14 +13,14 @@ import {
 } from "@/graphql/checkMutations";
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  OPEN: "bg-blue-100 text-blue-700 border-blue-200",
-  IN_PROGRESS: "bg-amber-100 text-amber-700 border-amber-200",
-  PENDING_EFFECTIVENESS: "bg-purple-100 text-purple-700 border-purple-200",
-  EFFECTIVE: "bg-green-100 text-green-700 border-green-200",
-  INEFFECTIVE: "bg-red-100 text-red-700 border-red-200",
-  CLOSED: "bg-green-100 text-green-700 border-green-200",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  OPEN: "bg-primary/15 text-primary border-primary/20",
+  IN_PROGRESS: "bg-warning/15 text-warning border-warning/20",
+  PENDING_EFFECTIVENESS: "bg-accent/15 text-accent-foreground border-accent/20",
+  EFFECTIVE: "bg-success/15 text-success border-success/20",
+  INEFFECTIVE: "bg-danger/15 text-danger border-danger/20",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 const SOURCE_TYPE_OPTS = [
@@ -39,16 +39,16 @@ const STATUS_FILTERS = [
   { value: "CLOSED", label: "Closed" }, { value: "CANCELLED", label: "Cancelled" },
 ];
 
-const SEL_INPUT = "h-8 w-full bg-white border border-slate-200 px-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30";
-const SEL_TEXTAREA = "w-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 resize-none";
+const SEL_INPUT = "h-8 w-full bg-background border border-border px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30";
+const SEL_TEXTAREA = "w-full border border-border bg-background px-2 py-1 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 resize-none";
 
 function statusLabel(s: string) { return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()); }
 
 function SectionBlock({ label, text }: { label: string; text: string }) {
   return (
     <div>
-      <p className="text-[10px] font-medium text-slate-500 mb-1">{label}</p>
-      <p className="text-sm text-slate-900 whitespace-pre-wrap">{text}</p>
+      <p className="text-[10px] font-medium text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm text-foreground whitespace-pre-wrap">{text}</p>
     </div>
   );
 }
@@ -205,15 +205,15 @@ export function SafetyCAPAPage() {
   const selStatus = selItem?.status || "";
 
   const renderForm = () => {
-    const sc = (border?: boolean) => border ? "border-b border-slate-200 pb-4 mb-4" : "";
-    const st = "text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2";
-    const lc = "block text-xs font-medium text-slate-500 mb-1";
+    const sc = (border?: boolean) => border ? "border-b border-border pb-4 mb-4" : "";
+    const st = "text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2";
+    const lc = "block text-xs font-medium text-muted-foreground mb-1";
 
     const sourceOpts = sourceOptions;
 
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="grid grid-cols-2 gap-0 divide-x divide-slate-200 min-h-0">
+        <div className="grid grid-cols-2 gap-0 divide-x divide-border min-h-0">
           {/* Left column */}
           <div className="p-4 space-y-4">
             <div className={sc(true)}>
@@ -242,12 +242,12 @@ export function SafetyCAPAPage() {
                         <input type="text" value={cSourceId} onChange={(e) => setCSI(e.target.value)} className={SEL_INPUT} placeholder="Source ID..." />
                       )
                     ) : (
-                      <div className="h-8 flex items-center text-xs text-slate-400 italic">
+                      <div className="h-8 flex items-center text-xs text-muted-foreground/60 italic">
                         Select source type first
                       </div>
                     )}
                     {cSourceType === "" && (
-                      <p className="text-[10px] text-slate-400 mt-1 italic">CAPA should be linked before opening.</p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1 italic">CAPA should be linked before opening.</p>
                     )}
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export function SafetyCAPAPage() {
             <div>
               <div className={st}>Effectiveness & Notes</div>
               <div className="space-y-3">
-                <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                   <input type="checkbox" checked={cEffectiveness} onChange={(e) => setCE(e.target.checked)} className="h-3.5 w-3.5" />
                   Effectiveness check required
                 </label>
@@ -311,7 +311,7 @@ export function SafetyCAPAPage() {
           </div>
         </div>
         {!requiredOk && (
-          <div className="p-2 bg-amber-50 border-t border-amber-200 text-[10px] text-amber-700">
+          <div className="p-2 bg-warning/10 border-t border-warning/20 text-[10px] text-warning">
             Required: {[!cTitle.trim() && "Title", !cCorrective.trim() && "Corrective Action", !cOwner.trim() && "Owner"].filter(Boolean).join(", ")}
           </div>
         )}
@@ -324,9 +324,9 @@ export function SafetyCAPAPage() {
     if (!selItem) return (
       <div className="flex flex-1 items-center justify-center h-full">
         <div className="text-center max-w-sm px-6">
-          <CheckCircle className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-          <h3 className="text-sm font-semibold text-slate-900 mb-1">CAPA</h3>
-          <p className="text-xs text-slate-500 mb-3">Select a CAPA record to view details or create a new record.</p>
+          <CheckCircle className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+          <h3 className="text-sm font-semibold text-foreground mb-1">CAPA</h3>
+          <p className="text-xs text-muted-foreground mb-3">Select a CAPA record to view details or create a new record.</p>
         </div>
       </div>
     );
@@ -334,10 +334,10 @@ export function SafetyCAPAPage() {
     return (
       <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4">
         <div>
-          <h2 className="text-sm font-bold text-slate-900">{selItem.title}</h2>
+          <h2 className="text-sm font-bold text-foreground">{selItem.title}</h2>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${stCls}`}>{statusLabel(selItem.status)}</span>
-            {selItem.sourceType && <span className="inline-flex px-1 py-0.5 text-[10px] font-medium border bg-slate-100 text-slate-700 border-slate-200">{SOURCE_TYPE_OPTS.find((o: any) => o.value === selItem.sourceType)?.label || selItem.sourceType}</span>}
+            {selItem.sourceType && <span className="inline-flex px-1 py-0.5 text-[10px] font-medium border bg-muted text-muted-foreground border-border">{SOURCE_TYPE_OPTS.find((o: any) => o.value === selItem.sourceType)?.label || selItem.sourceType}</span>}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
@@ -350,13 +350,13 @@ export function SafetyCAPAPage() {
             {selItem.correctiveAction && <SectionBlock label="Corrective Action" text={selItem.correctiveAction} />}
             {selItem.preventiveAction && <SectionBlock label="Preventive Action" text={selItem.preventiveAction} />}
             <div>
-              <p className="text-[10px] font-medium text-slate-500 mb-1">Effectiveness</p>
-              <p className="text-xs text-slate-900">{selItem.effectivenessCheckRequired ? (selItem.effectivenessResult ? statusLabel(selItem.effectivenessResult) : "Pending check") : "Not required"}</p>
+              <p className="text-[10px] font-medium text-muted-foreground mb-1">Effectiveness</p>
+              <p className="text-xs text-foreground">{selItem.effectivenessCheckRequired ? (selItem.effectivenessResult ? statusLabel(selItem.effectivenessResult) : "Pending check") : "Not required"}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {selItem.dueDate && <div className="text-xs"><span className="text-slate-500">Due:</span> <span className="text-slate-900">{selItem.dueDate?.slice(0, 10)}</span></div>}
-              {selItem.owner && <div className="text-xs"><span className="text-slate-500">Owner:</span> <span className="text-slate-900">{selItem.owner}</span></div>}
-              {selItem.notes && <div className="col-span-2 text-xs"><span className="text-slate-500">Notes:</span> <span className="text-slate-700">{selItem.notes}</span></div>}
+              {selItem.dueDate && <div className="text-xs"><span className="text-muted-foreground">Due:</span> <span className="text-foreground">{selItem.dueDate?.slice(0, 10)}</span></div>}
+              {selItem.owner && <div className="text-xs"><span className="text-muted-foreground">Owner:</span> <span className="text-foreground">{selItem.owner}</span></div>}
+              {selItem.notes && <div className="col-span-2 text-xs"><span className="text-muted-foreground">Notes:</span> <span className="text-muted-foreground">{selItem.notes}</span></div>}
             </div>
           </div>
         </div>
@@ -390,29 +390,29 @@ export function SafetyCAPAPage() {
   );
 
   const leftColumnContent = (
-    <><div className="shrink-0 h-8 border-b border-slate-200 flex items-center bg-slate-50 px-4"><span className="text-sm font-medium text-slate-700">CAPAs</span><span className="ml-auto text-[10px] text-slate-500 font-mono">{items.length}</span></div>      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-slate-400 italic">No CAPAs match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">{filteredItems.length === 0 ? (<div className="flex flex-col items-center justify-center px-4 py-8 text-center"><Search className="h-5 w-5 text-slate-300 mb-2" /><p className="text-xs text-slate-500 font-medium">No CAPA records recorded.</p><button onClick={hNew} className="mt-3 h-7 px-3 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700">New CAPA</button></div>) : filteredItems.map((e: any) => (<div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }} className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{e.title}</span></div>              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>{e.owner && <span>· {e.owner}</span>}</div></div></div>))}</div></>
+    <><div className="shrink-0 h-8 border-b border-border flex items-center bg-muted px-4"><span className="text-sm font-medium text-muted-foreground">CAPAs</span><span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span></div>      {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-muted-foreground/60 italic">No CAPAs match &quot;{searchQuery}&quot;</div>}
+      <div className="flex-1 overflow-y-auto divide-y divide-border/50 sidebar-scroll">{filteredItems.length === 0 ? (<div className="flex flex-col items-center justify-center px-4 py-8 text-center"><Search className="h-5 w-5 text-muted-foreground/30 mb-2" /><p className="text-xs text-muted-foreground font-medium">No CAPA records recorded.</p><button onClick={hNew} className="mt-3 h-7 px-3 text-xs font-medium text-white bg-primary hover:bg-blue-700">New CAPA</button></div>) : filteredItems.map((e: any) => (<div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); }} className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}><div className="min-w-0 flex-1"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{e.title}</span></div>              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>{e.owner && <span>· {e.owner}</span>}</div></div></div>))}</div></>
   );
 
   const footerContent = <>{items.length} CAPA{items.length !== 1 ? "s" : ""}{!creating && !selItem && <span className="ml-auto">Select a CAPA to view details</span>}</>;
 
   const confirmDialog = cancelId && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setCancelId(null)}>
-      <div className="bg-white border border-slate-200 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-slate-900">Cancel CAPA</h3><p className="text-xs text-slate-600">Cancel this CAPA?</p><div className="flex justify-end gap-2"><button onClick={() => setCancelId(null)} className="h-8 px-3 text-xs font-medium text-slate-700 border border-slate-200 bg-white hover:bg-slate-50">No</button><button onClick={() => { hTransition(cancelMut, cancelId, "CAPA cancelled"); setCancelId(null); }} className="h-8 px-3 text-xs font-semibold text-white bg-red-600 hover:bg-red-700">Yes</button></div></div></div></div>
+      <div className="bg-background border border-border shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-foreground">Cancel CAPA</h3><p className="text-xs text-muted-foreground">Cancel this CAPA?</p><div className="flex justify-end gap-2"><button onClick={() => setCancelId(null)} className="h-8 px-3 text-xs font-medium text-muted-foreground border border-border bg-background hover:bg-muted">No</button><button onClick={() => { hTransition(cancelMut, cancelId, "CAPA cancelled"); setCancelId(null); }} className="h-8 px-3 text-xs font-semibold text-white bg-danger hover:bg-danger/80">Yes</button></div></div></div></div>
   );
 
   const effPopup = effectivenessPopup && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setEffectivenessPopup(null)}>
-      <div className="bg-white border border-slate-200 shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
-        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-slate-900">Effectiveness Result</h3><p className="text-xs text-slate-600">Was the CAPA effective?</p><div className="flex justify-end gap-2">
-          <button onClick={() => hCompleteEffectiveness(effectivenessPopup.id, false)} className="h-8 px-3 text-xs font-semibold text-white bg-red-600 hover:bg-red-700">Ineffective</button>
-          <button onClick={() => hCompleteEffectiveness(effectivenessPopup.id, true)} className="h-8 px-3 text-xs font-semibold text-white bg-green-600 hover:bg-green-700">Effective</button>
+      <div className="bg-background border border-border shadow-lg w-80" onClick={(e) => e.stopPropagation()}>
+        <div className="p-4 space-y-3"><h3 className="text-sm font-semibold text-foreground">Effectiveness Result</h3><p className="text-xs text-muted-foreground">Was the CAPA effective?</p><div className="flex justify-end gap-2">
+          <button onClick={() => hCompleteEffectiveness(effectivenessPopup.id, false)} className="h-8 px-3 text-xs font-semibold text-white bg-danger hover:bg-danger/80">Ineffective</button>
+          <button onClick={() => hCompleteEffectiveness(effectivenessPopup.id, true)} className="h-8 px-3 text-xs font-semibold text-white bg-success hover:bg-success/80">Effective</button>
         </div></div></div></div>
   );
 
   return (
-    <><AppPageLayout icon={<CheckCircle className="h-5 w-5 stroke-current" />} iconClass="bg-purple-100 text-purple-600"
+    <><AppPageLayout icon={<CheckCircle className="h-5 w-5 stroke-current" />} iconClass="bg-accent/15 text-accent-foreground"
       title="CAPA" subtitle="Track corrective and preventive actions from identification through effectiveness verification."
       systemMessage={msg ? { text: msg.text, type: msg.tone } : null} onDismissSystemMessage={() => setMsg(null)}
       toolbar={toolbarContent} leftColumn={leftColumnContent} leftColumnWidth="w-[20%]" footer={footerContent}>{renderDetail()}</AppPageLayout>{confirmDialog}{effPopup}</>

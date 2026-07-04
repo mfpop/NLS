@@ -111,8 +111,8 @@ export function SafetyAuditsPage() {
 
   // ── Unified list ──
   const TYPE_CONFIG = useMemo(() => ({
-    AUDITS: { color: "bg-orange-500", border: "border-l-orange-500", hover: "hover:bg-orange-50/40 dark:hover:bg-orange-950/20", label: "Audit" },
-    ISSUES: { color: "bg-amber-500", border: "border-l-amber-500", hover: "hover:bg-amber-50/40 dark:hover:bg-amber-950/20", label: "Issue" },
+    AUDITS: { color: "bg-warning/100", border: "border-l-orange-500", hover: "hover:bg-warning/10/40 dark:hover:bg-orange-950/20", label: "Audit" },
+    ISSUES: { color: "bg-warning/100", border: "border-l-amber-500", hover: "hover:bg-warning/10/40 dark:hover:bg-amber-950/20", label: "Issue" },
     ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action" },
   }), []);
 
@@ -169,7 +169,7 @@ export function SafetyAuditsPage() {
         title="Safety Audits"
         subtitle="Run safety inspections, checklist audits, and record safety findings."
         icon={ClipboardCheck}
-        iconClass="bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
+        iconClass="bg-warning/15 text-warning dark:bg-amber-900/40 dark:text-amber-400"
         renderOverview={() => <SafetyOverview audits={auditS.items} problems={problems} actions={actions} auditTemplates={auditS.templates} onInstallTemplates={auditS.hInstall} navigateBase="/check/safety-audits" />}
         renderUnifiedList={renderUnifiedList}
         toolbarSearch={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search..." />}

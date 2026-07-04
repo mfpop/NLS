@@ -24,21 +24,21 @@ const EVENT_ICONS: Record<string, typeof Clock> = {
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  line_status_changed: "text-sky-600",
-  resource_status_changed: "text-sky-600",
-  downtime_started: "text-red-600",
-  downtime_closed: "text-emerald-600",
-  issue_created: "text-amber-600",
-  action_created: "text-emerald-600",
-  action_completed: "text-emerald-600",
-  quality_alert: "text-amber-600",
-  material_shortage: "text-amber-600",
-  safety_alert: "text-red-600",
-  production_count_update: "text-sky-600",
-  shift_started: "text-sky-600",
-  changeover_started: "text-sky-600",
-  changeover_completed: "text-emerald-600",
-  bottleneck_detected: "text-amber-600",
+  line_status_changed: "text-accent-foreground",
+  resource_status_changed: "text-accent-foreground",
+  downtime_started: "text-danger",
+  downtime_closed: "text-success",
+  issue_created: "text-warning",
+  action_created: "text-success",
+  action_completed: "text-success",
+  quality_alert: "text-warning",
+  material_shortage: "text-warning",
+  safety_alert: "text-danger",
+  production_count_update: "text-accent-foreground",
+  shift_started: "text-accent-foreground",
+  changeover_started: "text-accent-foreground",
+  changeover_completed: "text-success",
+  bottleneck_detected: "text-warning",
 };
 
 const MAX_VISIBLE_EVENTS = 5;
@@ -50,12 +50,12 @@ export function ShopfloorTimeline({ events }: Props) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-200 bg-slate-50 shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted shrink-0">
         <div className="flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5 text-slate-500" />
-          <h3 className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">Recent Events</h3>
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Recent Events</h3>
           {events.length > 0 && (
-            <span className="text-[10px] text-slate-400">{events.length}</span>
+            <span className="text-[10px] text-muted-foreground/60">{events.length}</span>
           )}
         </div>
       </div>
@@ -64,27 +64,27 @@ export function ShopfloorTimeline({ events }: Props) {
       <div className="flex-1 min-h-0 overflow-y-auto">
         {events.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-xs text-slate-500">No recent events</p>
+            <p className="text-xs text-muted-foreground">No recent events</p>
           </div>
         ) : (
           <>
             {visibleEvents.map((event) => {
               const Icon = EVENT_ICONS[event.eventType] || Activity;
-              const color = EVENT_COLORS[event.eventType] || "text-slate-400";
+              const color = EVENT_COLORS[event.eventType] || "text-muted-foreground/60";
               return (
-                <div key={event.id} className="flex items-start gap-2 px-3 py-1.5 border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
+                <div key={event.id} className="flex items-start gap-2 px-3 py-1.5 border-b border-border/50 last:border-b-0 hover:bg-muted/50">
                   <div className={`shrink-0 mt-0.5 ${color}`}>
                     <Icon className="h-3.5 w-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-700 leading-snug truncate">{event.description}</p>
-                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 leading-tight">
+                    <p className="text-xs text-muted-foreground leading-snug truncate">{event.description}</p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground leading-tight">
                       <span className="tabular-nums">{event.timestamp}</span>
                       {event.userName && (
-                        <><span className="text-slate-300">·</span><span className="flex items-center gap-0.5"><User className="h-3 w-3" />{event.userName}</span></>
+                        <><span className="text-muted-foreground/30">·</span><span className="flex items-center gap-0.5"><User className="h-3 w-3" />{event.userName}</span></>
                       )}
                       {event.linkedResourceName && (
-                        <><span className="text-slate-300">·</span><span className="truncate">{event.linkedResourceName}</span></>
+                        <><span className="text-muted-foreground/30">·</span><span className="truncate">{event.linkedResourceName}</span></>
                       )}
                     </div>
                   </div>
@@ -95,7 +95,7 @@ export function ShopfloorTimeline({ events }: Props) {
             {hasMore && (
               <button
                 type="button"
-                className="w-full py-1.5 text-[10px] font-medium text-sky-700 hover:bg-slate-50 transition-colors text-center"
+                className="w-full py-1.5 text-[10px] font-medium text-accent-foreground hover:bg-muted transition-colors text-center"
                 onClick={() => {}}
               >
                 View all {events.length} events →

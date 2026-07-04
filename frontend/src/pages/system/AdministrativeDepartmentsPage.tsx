@@ -22,7 +22,7 @@ interface UserOption { id: string; username: string; fullName: string; }
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-card p-8 text-center text-xs text-muted-foreground shadow-sm">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card p-8 text-center text-xs text-muted-foreground shadow-sm">
       <Building2 className="mb-2 h-8 w-8 stroke-current opacity-40" />
       {message}
     </div>
@@ -176,7 +176,7 @@ export function AdministrativeDepartmentsPage() {
         )}
 
         {showForm && (
-          <div className="mb-3 rounded-lg border border-slate-200 bg-card p-3 shadow-md">
+          <div className="mb-3 rounded-lg border border-border bg-card p-3 shadow-md">
             <h3 className="mb-2 text-[11px] font-bold text-foreground">{editingId ? "Edit Department" : "New Department"}</h3>
             <div className="grid grid-cols-4 gap-2">
               <div>
@@ -236,7 +236,7 @@ export function AdministrativeDepartmentsPage() {
         {!loading && !error && filtered.length === 0 && <EmptyState message={search ? "No departments match your search." : "No departments yet. Create one to get started."} />}
 
         {filtered.length > 0 && (
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
+          <div className="overflow-x-auto rounded-lg border border-border">
             <table className="w-full text-[11px]">
               <thead>
                 <tr className="bg-muted/50 text-left text-[10px] font-semibold text-muted-foreground">
@@ -252,7 +252,7 @@ export function AdministrativeDepartmentsPage() {
               </thead>
               <tbody>
                 {filtered.map((dept) => (
-                  <tr key={dept.id} className="border-t border-slate-200 text-foreground transition-colors hover:bg-muted/30">
+                  <tr key={dept.id} className="border-t border-border text-foreground transition-colors hover:bg-muted/30">
                     <td className="px-3 py-2 font-mono text-[10px] font-bold">{dept.code}</td>
                     <td className="px-3 py-2 font-semibold">{dept.name}</td>
                     <td className="px-3 py-2 text-muted-foreground">{dept.companyName}</td>

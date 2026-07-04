@@ -27,7 +27,7 @@ type NavTarget = { tab: string; status?: string };
 
 function MiniBar({ pct, color }: { pct: number; color: string }) {
   return (
-    <div className="h-1.5 w-full bg-white/30 dark:bg-slate-800/30 rounded-full overflow-hidden">
+    <div className="h-1.5 w-full bg-background/30 dark:bg-slate-800/30 rounded-full overflow-hidden">
       <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
     </div>
   );
@@ -42,7 +42,7 @@ function Gauge({ value, label, sub, color, size = "sm" }: { value: number; label
   return (
     <div className="flex flex-col items-center">
       <svg width={(r + 8) * 2} height={(r + 8) * 2} className="transform -rotate-90">
-        <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke="currentColor" strokeWidth={strokeW} className="text-white/10 dark:text-slate-800/30" />
+        <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke="currentColor" strokeWidth={strokeW} className="text-white/10 dark:text-foreground/30" />
         <circle cx={r + 8} cy={r + 8} r={r} fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset} className="transition-all duration-700" />
       </svg>
@@ -57,7 +57,7 @@ function Gauge({ value, label, sub, color, size = "sm" }: { value: number; label
 
 function Badge({ cls, label }: { cls: string; label: string }) {
   return <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${cls}`}>{label}</span>;
-}  function SectionH({ label, color = "bg-orange-500", action }: { label: string; color?: string; action?: ReactNode }) {
+}  function SectionH({ label, color = "bg-warning/100", action }: { label: string; color?: string; action?: ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-2">
       <div className="flex items-center gap-2">
@@ -71,20 +71,20 @@ function Badge({ cls, label }: { cls: string; label: string }) {
 
 function StatusDot({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    DRAFT: "bg-gray-400", OPEN: "bg-blue-500", COMPLETED: "bg-green-500",
-    ARCHIVED: "bg-amber-400", RESOLVED: "bg-green-400", CLOSED: "bg-green-600",
-    CANCELLED: "bg-red-400", IN_PROGRESS: "bg-amber-500", IN_REVIEW: "bg-purple-500",
+    DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", COMPLETED: "bg-success/100",
+    ARCHIVED: "bg-amber-400", RESOLVED: "bg-green-400", CLOSED: "bg-success",
+    CANCELLED: "bg-red-400", IN_PROGRESS: "bg-warning/100", IN_REVIEW: "bg-purple-500",
   };
-  return <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${colors[status] || "bg-gray-400"}`} />;
+  return <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${colors[status] || "bg-muted-foreground/40"}`} />;
 }
 
 type KpiCard = { label: string; count: number | string; color: string; sub?: string; trend?: "up" | "down" | "neutral"; trendVal?: string; onClick: () => void };
 function KpiCard({ card }: { card: KpiCard }) {
   const trendIcon = card.trend === "up" ? "↑" : card.trend === "down" ? "↓" : "→";
-  const trendCls = card.trend === "up" ? "text-green-500" : card.trend === "down" ? "text-red-500" : "text-muted-foreground";
+  const trendCls = card.trend === "up" ? "text-success" : card.trend === "down" ? "text-danger" : "text-muted-foreground";
   return (
     <button onClick={card.onClick}
-      className="group cursor-pointer text-left bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all hover:shadow-md hover:-translate-y-0.5"
+      className="group cursor-pointer text-left bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-2.5 hover:bg-background/80 dark:hover:bg-slate-800/80 transition-all hover:shadow-md hover:-translate-y-0.5"
     >
       <p className="text-[10px] text-muted-foreground font-medium truncate">{card.label}</p>
       <div className="flex items-baseline gap-1.5">
@@ -128,13 +128,13 @@ export function SafetyOverview(props: OverviewProps) {
   }, [problems, actions, audits]);
 
   const kpiCards: KpiCard[] = useMemo(() => [
-    { label: "Safety Audits Open", count: kpis.openAudits.length, color: "text-blue-600 dark:text-blue-400", sub: `${kpis.openAudits.length} pending review`, onClick: () => kpiClick({ tab: "audits", status: "OPEN" }) },
-    { label: "Open Issues", count: kpis.openIssues.length, color: "text-amber-600 dark:text-amber-400", sub: "Requires action", trend: kpis.openIssues.length > 3 ? "up" : kpis.openIssues.length === 0 ? "down" : "neutral", trendVal: `${kpis.openIssues.length}`, onClick: () => kpiClick({ tab: "issues", status: "OPEN" }) },
-    { label: "Open Actions", count: kpis.openActions.length, color: "text-purple-600 dark:text-purple-400", sub: `${actions.length} total`, onClick: () => kpiClick({ tab: "actions", status: "OPEN" }) },
-    { label: "Overdue Actions", count: kpis.overdueActions.length, color: "text-red-600 dark:text-red-400", sub: "Past due date", trend: kpis.overdueActions.length > 0 ? "up" : "down", trendVal: `${kpis.overdueActions.length}`, onClick: () => kpiClick({ tab: "actions" }) },
-    { label: "Critical / High", count: kpis.criticalHigh.length, color: "text-red-600 dark:text-red-400", sub: "Needs immediate attention", onClick: () => kpiClick({ tab: "issues" }) },
-    { label: "Completed Audits", count: kpis.completedAudits.length, color: "text-green-600 dark:text-green-400", sub: `${kpis.recentCompleted} in last 30d`, onClick: () => kpiClick({ tab: "audits", status: "COMPLETED" }) },
-    { label: "Safety Score", count: kpis.avgScore !== null ? `${kpis.avgScore}%` : "—", color: kpis.avgScore !== null && kpis.avgScore >= 85 ? "text-green-500" : kpis.avgScore !== null && kpis.avgScore >= 70 ? "text-amber-500" : kpis.avgScore !== null ? "text-red-500" : "text-foreground", sub: `${audits.length} audits total`, onClick: () => kpiClick({ tab: "audits" }) },
+    { label: "Safety Audits Open", count: kpis.openAudits.length, color: "text-primary dark:text-blue-400", sub: `${kpis.openAudits.length} pending review`, onClick: () => kpiClick({ tab: "audits", status: "OPEN" }) },
+    { label: "Open Issues", count: kpis.openIssues.length, color: "text-warning dark:text-amber-400", sub: "Requires action", trend: kpis.openIssues.length > 3 ? "up" : kpis.openIssues.length === 0 ? "down" : "neutral", trendVal: `${kpis.openIssues.length}`, onClick: () => kpiClick({ tab: "issues", status: "OPEN" }) },
+    { label: "Open Actions", count: kpis.openActions.length, color: "text-accent-foreground dark:text-purple-400", sub: `${actions.length} total`, onClick: () => kpiClick({ tab: "actions", status: "OPEN" }) },
+    { label: "Overdue Actions", count: kpis.overdueActions.length, color: "text-danger dark:text-danger/80", sub: "Past due date", trend: kpis.overdueActions.length > 0 ? "up" : "down", trendVal: `${kpis.overdueActions.length}`, onClick: () => kpiClick({ tab: "actions" }) },
+    { label: "Critical / High", count: kpis.criticalHigh.length, color: "text-danger dark:text-danger/80", sub: "Needs immediate attention", onClick: () => kpiClick({ tab: "issues" }) },
+    { label: "Completed Audits", count: kpis.completedAudits.length, color: "text-success dark:text-success/80", sub: `${kpis.recentCompleted} in last 30d`, onClick: () => kpiClick({ tab: "audits", status: "COMPLETED" }) },
+    { label: "Safety Score", count: kpis.avgScore !== null ? `${kpis.avgScore}%` : "—", color: kpis.avgScore !== null && kpis.avgScore >= 85 ? "text-success" : kpis.avgScore !== null && kpis.avgScore >= 70 ? "text-warning" : kpis.avgScore !== null ? "text-danger" : "text-foreground", sub: `${audits.length} audits total`, onClick: () => kpiClick({ tab: "audits" }) },
   ], [kpis, actions.length, audits.length]);
 
   // ── Performance Gauges ──
@@ -165,7 +165,7 @@ export function SafetyOverview(props: OverviewProps) {
   const riskItems = useMemo(() => {
     const items: { id: string; priority: number; type: string; title: string; detail: string; color: string; onClick: () => void }[] = [];
     const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
-    for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-red-500", onClick: () => kpiClick({ tab: "issues" }) });
+    for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-danger/100", onClick: () => kpiClick({ tab: "issues" }) });
     const over = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
     for (const a of over) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400", onClick: () => kpiClick({ tab: "actions" }) });
     const inc = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
@@ -218,9 +218,9 @@ export function SafetyOverview(props: OverviewProps) {
     const total = audits.length;
     if (total === 0) return [];
     const counts = [
-      { label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "bg-gray-400" },
-      { label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "bg-blue-500" },
-      { label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "bg-green-500" },
+      { label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "bg-muted-foreground/40" },
+      { label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "bg-primary/100" },
+      { label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "bg-success/100" },
       { label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "bg-amber-400" },
     ];
     return counts.filter((c) => c.count > 0).map((c) => ({ ...c, pct: Math.round((c.count / total) * 100) }));
@@ -255,7 +255,7 @@ export function SafetyOverview(props: OverviewProps) {
 
   const safetyScoreBadge = (pct: number | null) => {
     if (pct === null) return <span className="text-[11px] text-muted-foreground">—</span>;
-    const color = pct >= 85 ? "text-green-600" : pct >= 70 ? "text-amber-600" : "text-red-600";
+    const color = pct >= 85 ? "text-success" : pct >= 70 ? "text-warning" : "text-danger";
     return <span className={`text-xs font-bold ${color}`}>{pct}%</span>;
   };
 
@@ -264,9 +264,9 @@ export function SafetyOverview(props: OverviewProps) {
       {/* Alert Banner */}
       {alertBanner && (
         <div className={`flex items-center gap-2 px-3 py-2 text-xs font-medium backdrop-blur-sm border ${
-          alertBanner.severity === "critical" ? "bg-red-50/90 dark:bg-red-950/80 border-red-200/50 dark:border-red-800/50 text-red-700 dark:text-red-300"
-          : alertBanner.severity === "warning" ? "bg-orange-50/90 dark:bg-orange-950/80 border-orange-200/50 dark:border-orange-800/50 text-orange-700 dark:text-orange-300"
-          : "bg-blue-50/90 dark:bg-blue-950/80 border-blue-200/50 dark:border-blue-800/50 text-blue-700 dark:text-blue-300"}`}
+          alertBanner.severity === "critical" ? "bg-danger/10/90 dark:bg-red-950/80 border-danger/20/50 dark:border-red-800/50 text-danger dark:text-red-300"
+          : alertBanner.severity === "warning" ? "bg-warning/10/90 dark:bg-orange-950/80 border-warning/20/50 dark:border-orange-800/50 text-warning dark:text-orange-300"
+          : "bg-primary/10/90 dark:bg-blue-950/80 border-primary/20/50 dark:border-blue-800/50 text-primary dark:text-blue-300"}`}
         >
           <span className="text-base shrink-0">{alertBanner.severity === "critical" ? "🚨" : alertBanner.severity === "warning" ? "⚠️" : "ℹ️"}</span>
           <span className="flex-1">{alertBanner.msg}</span>
@@ -280,8 +280,8 @@ export function SafetyOverview(props: OverviewProps) {
       </div>
 
       {/* Safety Scorecard with Gauges */}
-      <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-4">
-        <SectionH label="Safety Compliance Scorecard" color="bg-orange-500" />
+      <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-4">
+        <SectionH label="Safety Compliance Scorecard" color="bg-warning/100" />
         <div className="flex items-center justify-around gap-4">
           <div className="relative flex flex-col items-center">
             <Gauge value={scores.overall ?? 0} label="Overall Safety" sub={`${audits.length} audits`} color={gaugeColor(scores.overall)} size="md" />
@@ -300,9 +300,9 @@ export function SafetyOverview(props: OverviewProps) {
           </div>
           <div className="h-16 w-px bg-border/30" />
           <div className="flex flex-col gap-1.5 text-xs">
-            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-green-500" /><span className="text-muted-foreground">Exceeds (≥85%)</span></div>
-            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-muted-foreground">Needs Improvement (70-84%)</span></div>
-            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500" /><span className="text-muted-foreground">Critical (&lt;70%)</span></div>
+            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-success/100" /><span className="text-muted-foreground">Exceeds (≥85%)</span></div>
+            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-warning/100" /><span className="text-muted-foreground">Needs Improvement (70-84%)</span></div>
+            <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-danger/100" /><span className="text-muted-foreground">Critical (&lt;70%)</span></div>
           </div>
         </div>
 
@@ -315,14 +315,14 @@ export function SafetyOverview(props: OverviewProps) {
                 const avg = data.scores.length > 0 ? Math.round(data.scores.reduce((a: number, b: number) => a + b, 0) / data.scores.length) : null;
                 return (
                   <button key={type} onClick={() => kpiClick({ tab: "audits" })}
-                    className="cursor-pointer text-left hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors rounded px-1.5 py-1"
+                    className="cursor-pointer text-left hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors rounded px-1.5 py-1"
                   >
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] font-semibold text-foreground truncate">{auditTypeName(type)}</p>
                       {safetyScoreBadge(avg)}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <MiniBar pct={avg ?? 0} color={avg !== null && avg >= 85 ? "bg-green-500" : avg !== null && avg >= 70 ? "bg-amber-500" : "bg-red-500"} />
+                      <MiniBar pct={avg ?? 0} color={avg !== null && avg >= 85 ? "bg-success/100" : avg !== null && avg >= 70 ? "bg-warning/100" : "bg-danger/100"} />
                     </div>
                     <p className="text-[9px] text-muted-foreground mt-0.5">{data.total} total · {data.completed} done</p>
                   </button>
@@ -355,19 +355,19 @@ export function SafetyOverview(props: OverviewProps) {
         {/* Left 60% */}
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
           {/* Safety Risk Board */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Safety Risk Board" color="bg-red-500" action={
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SectionH label="Safety Risk Board" color="bg-danger/100" action={
               <span className="text-[10px] text-muted-foreground">{riskItems.length} items</span>
             } />
             {riskItems.length === 0 ? (
               <div className="flex items-center justify-center h-20 text-xs text-muted-foreground italic">
-                <span className="text-green-500 mr-1.5">✓</span> No safety risks need attention
+                <span className="text-success mr-1.5">✓</span> No safety risks need attention
               </div>
             ) : (
               <div className="space-y-0.5 max-h-64 overflow-y-auto">
                 {riskItems.map((item) => (
                   <button key={item.id} onClick={item.onClick}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
+                    className="w-full text-left flex items-center gap-2 text-xs py-1 px-0.5 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
                   >
                     <span className={`h-2 w-2 shrink-0 rounded-full ${item.color} group-hover:animate-pulse`} />
                     <span className="text-[10px] font-semibold text-muted-foreground w-10 shrink-0">{item.type}</span>
@@ -380,8 +380,8 @@ export function SafetyOverview(props: OverviewProps) {
           </div>
 
           {/* Due This Week */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Due This Week" color="bg-blue-500" action={
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SectionH label="Due This Week" color="bg-primary/100" action={
               <span className="text-[10px] text-muted-foreground">{dueThisWeek.length} item{dueThisWeek.length !== 1 ? "s" : ""}</span>
             } />
             {dueThisWeek.length === 0 ? (
@@ -392,12 +392,12 @@ export function SafetyOverview(props: OverviewProps) {
                   const isToday = item.dueDate === TODAY;
                   return (
                     <button key={item.id} onClick={item.onClick}
-                      className={`w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer ${isToday ? "bg-red-50/40 dark:bg-red-950/20" : ""}`}
+                      className={`w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer ${isToday ? "bg-danger/10/40 dark:bg-red-950/20" : ""}`}
                     >
-                      <span className={`h-2 w-2 shrink-0 rounded-full ${item.priority === "CRITICAL" || item.priority === "HIGH" ? "bg-red-500" : item.priority === "MEDIUM" ? "bg-amber-500" : "bg-blue-500"}`} />
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${item.priority === "CRITICAL" || item.priority === "HIGH" ? "bg-danger/100" : item.priority === "MEDIUM" ? "bg-warning/100" : "bg-primary/100"}`} />
                       <span className="min-w-0 flex-1 truncate text-foreground font-medium">{item.title}</span>
                       {item.owner && <span className="text-muted-foreground shrink-0 hidden sm:inline text-[10px]">{item.owner}</span>}
-                      {isToday && <span className="text-[9px] font-semibold text-red-500 uppercase shrink-0">Today!</span>}
+                      {isToday && <span className="text-[9px] font-semibold text-danger uppercase shrink-0">Today!</span>}
                       {!isToday && <span className="text-muted-foreground shrink-0 text-[10px]">{item.dueDate}</span>}
                       <span className="text-[10px] text-muted-foreground bg-muted/40 px-1 py-0.5 shrink-0">{item.source}</span>
                     </button>
@@ -408,19 +408,19 @@ export function SafetyOverview(props: OverviewProps) {
           </div>
 
           {/* Open Safety Audits */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Open Safety Audits" color="bg-orange-500" action={
-              <button onClick={() => kpiClick({ tab: "audits" })} className="text-[10px] font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">View all</button>
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SectionH label="Open Safety Audits" color="bg-warning/100" action={
+              <button onClick={() => kpiClick({ tab: "audits" })} className="text-[10px] font-medium text-primary hover:text-primary dark:text-blue-400">View all</button>
             } />
             {kpis.openAudits.length === 0 ? (
               <div className="flex items-center justify-center h-16 text-xs text-muted-foreground italic">
-                <span className="text-green-500 mr-1.5">✓</span> All safety audits completed
+                <span className="text-success mr-1.5">✓</span> All safety audits completed
               </div>
             ) : (
               <div className="space-y-0.5">
                 {audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN").slice(0, 5).map((a: any) => (
                   <button key={a.id} onClick={() => kpiClick({ tab: "audits" })}
-                    className="w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                   >
                     <StatusDot status={a.status} />
                     <span className="min-w-0 flex-1 truncate text-foreground font-medium">{a.title || `Audit #${a.id}`}</span>
@@ -438,9 +438,9 @@ export function SafetyOverview(props: OverviewProps) {
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
           {/* Audit Status Distribution */}
           {statusDist.length > 0 && (
-            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-              <SectionH label="Audit Status Distribution" color="bg-blue-500" />
-              <div className="h-6 flex rounded-full overflow-hidden bg-white/30 dark:bg-slate-800/30 border border-white/10 dark:border-slate-700/10">
+            <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+              <SectionH label="Audit Status Distribution" color="bg-primary/100" />
+              <div className="h-6 flex rounded-full overflow-hidden bg-background/30 dark:bg-slate-800/30 border border-white/10 dark:border-slate-700/10">
                 {statusDist.map((s) => (
                   <div key={s.label} style={{ width: `${s.pct}%` }}
                     className={`${s.color} flex items-center justify-center text-[8px] font-bold text-white first:rounded-l-full last:rounded-r-full min-w-[20px] transition-all duration-500`}
@@ -453,7 +453,7 @@ export function SafetyOverview(props: OverviewProps) {
               <div className="flex flex-wrap gap-2 mt-2">
                 {statusDist.map((s) => (
                   <button key={s.label} onClick={() => kpiClick({ tab: "audits", status: s.label === "All" ? undefined : s.label.toUpperCase() })}
-                    className="inline-flex items-center gap-1 cursor-pointer hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors rounded px-1 py-0.5"
+                    className="inline-flex items-center gap-1 cursor-pointer hover:bg-background/30 dark:hover:bg-slate-800/30 transition-colors rounded px-1 py-0.5"
                   >
                     <span className={`h-1.5 w-1.5 rounded-full ${s.color}`} />
                     <span className="text-[10px] text-muted-foreground">{s.label} <strong>{s.count}</strong></span>
@@ -464,13 +464,13 @@ export function SafetyOverview(props: OverviewProps) {
           )}
 
           {/* Safety Severity Matrix Mini-View */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Issue Severity Matrix" color="bg-red-500" />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SectionH label="Issue Severity Matrix" color="bg-danger/100" />
             <div className="grid grid-cols-3 gap-1.5 text-center">
               {[
-                { severity: "CRITICAL", label: "Critical", count: problems.filter((p) => p.severity === "CRITICAL" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300" },
-                { severity: "HIGH", label: "High", count: problems.filter((p) => p.severity === "HIGH" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-orange-100 text-orange-700 dark:bg-orange-950/30 dark:text-orange-300" },
-                { severity: "MEDIUM", label: "Medium", count: problems.filter((p) => p.severity === "MEDIUM" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
+                { severity: "CRITICAL", label: "Critical", count: problems.filter((p) => p.severity === "CRITICAL" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-danger/15 text-danger dark:bg-red-950/30 dark:text-red-300" },
+                { severity: "HIGH", label: "High", count: problems.filter((p) => p.severity === "HIGH" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-warning/15 text-warning dark:bg-orange-950/30 dark:text-orange-300" },
+                { severity: "MEDIUM", label: "Medium", count: problems.filter((p) => p.severity === "MEDIUM" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-primary/15 text-primary dark:bg-blue-950/30 dark:text-blue-300" },
               ].map((s) => (
                 <button key={s.severity} onClick={() => kpiClick({ tab: "issues", status: "OPEN" })}
                   className={`cursor-pointer p-2 ${s.color} hover:brightness-95 transition-all rounded`}
@@ -490,7 +490,7 @@ export function SafetyOverview(props: OverviewProps) {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Recent Safety Activity" color="bg-violet-500" action={
               <span className="text-[10px] text-muted-foreground">Latest 12</span>
             } />
@@ -505,19 +505,19 @@ export function SafetyOverview(props: OverviewProps) {
                   const typeIcon = item.type === "Action" ? "→" : item.type === "Issue" ? "!" : "◎";
                   return (
                     <button key={`${item.type}-${i}`} onClick={item.onClick}
-                      className="w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
+                      className="w-full text-left flex items-center gap-2 text-xs py-1.5 px-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0 hover:bg-background/40 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
                     >
                       <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold ${
-                        item.type === "Action" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                        : item.type === "Issue" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
-                        : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
+                        item.type === "Action" ? "bg-accent/15 text-accent-foreground dark:bg-purple-900/30 dark:text-purple-300"
+                        : item.type === "Issue" ? "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-red-300"
+                        : "bg-warning/15 text-warning dark:bg-orange-900/30 dark:text-orange-300"
                       }`}>{typeIcon}</span>
                       <span className="min-w-0 flex-1 truncate text-foreground">{item.title}</span>
                       {item.score !== undefined && item.score !== null && (
                         <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold shrink-0 ${
-                          item.score >= 80 ? "text-green-700 bg-green-50/80 dark:text-green-300 dark:bg-green-950/30"
-                          : item.score >= 60 ? "text-amber-700 bg-amber-50/80 dark:text-amber-300 dark:bg-amber-950/30"
-                          : "text-red-700 bg-red-50/80 dark:text-red-300 dark:bg-red-950/30"
+                          item.score >= 80 ? "text-success bg-success/10/80 dark:text-green-300 dark:bg-green-950/30"
+                          : item.score >= 60 ? "text-warning bg-warning/10/80 dark:text-amber-300 dark:bg-amber-950/30"
+                          : "text-danger bg-danger/10/80 dark:text-red-300 dark:bg-red-950/30"
                         }`}>{item.score}%</span>
                       )}
                       <Badge cls={stCls} label={statusLabel(item.status)} />
@@ -529,22 +529,22 @@ export function SafetyOverview(props: OverviewProps) {
           </div>
 
           {/* Quick Stats */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SectionH label="Quick Stats" color="bg-gray-500" />
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-white/40 dark:bg-slate-800/40 p-2">
+              <div className="bg-background/40 dark:bg-slate-800/40 p-2">
                 <p className="text-muted-foreground text-[10px]">Total Safety Audits</p>
                 <p className="text-sm font-bold text-foreground">{audits.length}</p>
               </div>
-              <div className="bg-white/40 dark:bg-slate-800/40 p-2">
+              <div className="bg-background/40 dark:bg-slate-800/40 p-2">
                 <p className="text-muted-foreground text-[10px]">Total Issues</p>
                 <p className="text-sm font-bold text-foreground">{problems.length}</p>
               </div>
-              <div className="bg-white/40 dark:bg-slate-800/40 p-2">
+              <div className="bg-background/40 dark:bg-slate-800/40 p-2">
                 <p className="text-muted-foreground text-[10px]">Total Actions</p>
                 <p className="text-sm font-bold text-foreground">{actions.length}</p>
               </div>
-              <div className="bg-white/40 dark:bg-slate-800/40 p-2">
+              <div className="bg-background/40 dark:bg-slate-800/40 p-2">
                 <p className="text-muted-foreground text-[10px]">Completion Rate</p>
                 <p className="text-sm font-bold text-foreground">{kpis.completionRate}%</p>
               </div>
@@ -555,13 +555,13 @@ export function SafetyOverview(props: OverviewProps) {
 
       {/* Template install banner */}
       {auditTemplates && auditTemplates.length === 0 && onInstallTemplates && (
-        <div className="bg-amber-50/80 dark:bg-amber-950/80 backdrop-blur-sm border border-amber-200/50 dark:border-amber-800/50 p-4 text-center rounded-lg">
+        <div className="bg-warning/10/80 dark:bg-amber-950/80 backdrop-blur-sm border border-warning/20/50 dark:border-amber-800/50 p-4 text-center rounded-lg">
           <div className="flex items-center justify-center gap-1.5 mb-1">
             <span className="text-lg">🦺</span>
-            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">No safety audit templates installed</p>
+            <p className="text-xs font-semibold text-warning dark:text-amber-400">No safety audit templates installed</p>
           </div>
-          <p className="text-[10px] text-amber-600/70 dark:text-amber-400/70 mb-2">Install default safety templates to begin auditing PPE, hazards, machine guarding, LOTO, and more.</p>
-          <button onClick={onInstallTemplates} className="inline-flex h-7 items-center gap-1.5 bg-amber-600 px-3 text-[11px] font-semibold text-white hover:bg-amber-700 transition-colors rounded">
+          <p className="text-[10px] text-warning/70 dark:text-amber-400/70 mb-2">Install default safety templates to begin auditing PPE, hazards, machine guarding, LOTO, and more.</p>
+          <button onClick={onInstallTemplates} className="inline-flex h-7 items-center gap-1.5 bg-warning px-3 text-[11px] font-semibold text-white hover:bg-warning/80 transition-colors rounded">
             <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
             Install Default Safety Templates
           </button>

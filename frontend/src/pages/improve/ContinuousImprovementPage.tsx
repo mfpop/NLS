@@ -32,7 +32,7 @@ const STATUS_COLORS: Record<string, string> = {
   REJECTED: "bg-danger", CONVERTED_TO_KAIZEN: "bg-purple-500",
   PLANNED: "bg-primary", IN_PROGRESS: "bg-warning", COMPLETED: "bg-success",
   CANCELLED: "bg-danger", DRAFT: "bg-muted-foreground/40", PLAN: "bg-primary",
-  DO: "bg-warning", CHECK: "bg-purple-500", ACT: "bg-indigo-500",
+  DO: "bg-warning", CHECK: "bg-purple-500", ACT: "bg-primary",
 };
 
 function formatStatus(s: string): string {
@@ -48,8 +48,8 @@ function SectionCard({ title, badge, children }: { title: string; badge?: ReactN
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</div>
+          <div className="h-4 w-0.5 bg-warning/100/60 rounded-full" />
+          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-warning/70 dark:text-amber-400/70">{title}</div>
         </div>
         {badge}
       </div>
@@ -73,7 +73,7 @@ function KpiCard({ label, value, onClick, badge, muted }: KpiCardProps) {
       onClick={onClick}
       disabled={!onClick}
       className={`group rounded-sm border border-border/60 bg-card p-3 transition-all duration-200 text-left ${
-        onClick ? "hover:border-amber-300/60 dark:hover:border-amber-600/40 hover:shadow-sm cursor-pointer" : "cursor-default"
+        onClick ? "hover:border-warning/30/60 dark:hover:border-amber-600/40 hover:shadow-sm cursor-pointer" : "cursor-default"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -88,7 +88,7 @@ function KpiCard({ label, value, onClick, badge, muted }: KpiCardProps) {
         )}
       </div>
       {onClick && (
-        <div className="mt-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="mt-1 text-[10px] font-medium text-warning dark:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">
           View details →
         </div>
       )}
@@ -165,7 +165,7 @@ export function ContinuousImprovementPage() {
         {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b print-ignore`}>{successMsg}</div>}
         <div className="print-ignore">
           <PageHeader icon={<RefreshCw className="h-5 w-5 stroke-current" />}
-            iconClass="bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
+            iconClass="bg-warning/15 text-warning dark:bg-amber-900/40 dark:text-amber-400"
             title="Continuous Improvement" subtitle="Overview and tracking of the improvement system." />
         </div>
         <div className="print-ignore">
@@ -206,7 +206,7 @@ export function ContinuousImprovementPage() {
                 </p>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => navigate("/improve/suggestions")}
-                    className="inline-flex h-8 items-center gap-1.5 rounded-sm bg-amber-600 px-3 text-[11px] font-semibold text-white hover:bg-amber-700 transition-colors">
+                    className="inline-flex h-8 items-center gap-1.5 rounded-sm bg-warning px-3 text-[11px] font-semibold text-white hover:bg-warning/80 transition-colors">
                     New Suggestion
                   </button>
                   <button type="button" onClick={hRefresh}
@@ -219,7 +219,7 @@ export function ContinuousImprovementPage() {
               <>
                 {/* ── Suggestions ── */}
                 <SectionCard title="Suggestions" badge={conversionRate > 0 ? (
-                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-accent/15 dark:bg-purple-900/30 text-accent-foreground dark:text-purple-300 border-accent/20 dark:border-purple-800">
                     {conversionRate}% conversion
                   </span>
                 ) : undefined}>
@@ -229,14 +229,14 @@ export function ContinuousImprovementPage() {
                     <KpiCard label="Accepted" value={summary.acceptedSuggestions} />
                     <KpiCard label="Rejected" value={summary.rejectedSuggestions} muted />
                     <KpiCard label="Converted" value={summary.convertedSuggestions}
-                      badge={conversionRate > 0 ? { text: `${conversionRate}%`, color: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300" } : undefined} />
+                      badge={conversionRate > 0 ? { text: `${conversionRate}%`, color: "bg-accent/15 dark:bg-purple-900/30 text-accent-foreground dark:text-purple-300" } : undefined} />
                     <KpiCard label="Conversion Rate" value={`${conversionRate}%`} muted />
                   </div>
                 </SectionCard>
 
                 {/* ── Kaizen ── */}
                 <SectionCard title="Kaizen" badge={summary.overdueKaizenCount > 0 ? (
-                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800">
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-danger/15 dark:bg-red-900/30 text-danger dark:text-red-300 border-danger/20 dark:border-red-800">
                     {summary.overdueKaizenCount} overdue
                   </span>
                 ) : undefined}>
@@ -245,7 +245,7 @@ export function ContinuousImprovementPage() {
                       onClick={() => navigate("/improve/kaizen")} />
                     <KpiCard label="Completed" value={summary.completedKaizenCount} />
                     <KpiCard label="Overdue" value={summary.overdueKaizenCount}
-                      badge={summary.overdueKaizenCount > 0 ? { text: "\u26A0", color: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300" } : undefined}
+                      badge={summary.overdueKaizenCount > 0 ? { text: "\u26A0", color: "bg-warning/15 dark:bg-orange-900/30 text-warning dark:text-orange-300" } : undefined}
                       muted={summary.overdueKaizenCount === 0} />
                     <KpiCard label="Completion Rate" value={totalKaizens > 0 ? `${Math.round((summary.completedKaizenCount / totalKaizens) * 100)}%` : "0%"}
                       muted />
@@ -254,7 +254,7 @@ export function ContinuousImprovementPage() {
 
                 {/* ── A3/PDCA ── */}
                 <SectionCard title="A3 / PDCA" badge={summary.overdueA3Count > 0 ? (
-                  <span className="inline-flex items-center rounded-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1.5 py-0.5 text-[8px] font-semibold">
+                  <span className="inline-flex items-center rounded-sm bg-danger/15 dark:bg-red-900/30 text-danger dark:text-red-300 px-1.5 py-0.5 text-[8px] font-semibold">
                     {summary.overdueA3Count} overdue
                   </span>
                 ) : undefined}>
@@ -263,7 +263,7 @@ export function ContinuousImprovementPage() {
                       onClick={() => navigate("/improve/a3-pdca")} />
                     <KpiCard label="Completed" value={summary.completedA3Count} />
                     <KpiCard label="Overdue" value={summary.overdueA3Count}
-                      badge={summary.overdueA3Count > 0 ? { text: "\u26A0", color: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300" } : undefined}
+                      badge={summary.overdueA3Count > 0 ? { text: "\u26A0", color: "bg-warning/15 dark:bg-orange-900/30 text-warning dark:text-orange-300" } : undefined}
                       muted={summary.overdueA3Count === 0} />
                     <KpiCard label="Completion Rate" value={totalA3 > 0 ? `${Math.round((summary.completedA3Count / totalA3) * 100)}%` : "0%"}
                       muted />
@@ -274,7 +274,7 @@ export function ContinuousImprovementPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="rounded-sm border border-border/60 bg-card p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
+                      <div className="h-4 w-0.5 bg-warning/100/60 rounded-full" />
                       <h3 className={`text-[11px] font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>By Target Area</h3>
                     </div>
                     {targetTotal === 0 ? (
@@ -289,7 +289,7 @@ export function ContinuousImprovementPage() {
                   </div>
                   <div className="rounded-sm border border-border/60 bg-card p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <div className="h-4 w-0.5 bg-indigo-500/60 rounded-full" />
+                      <div className="h-4 w-0.5 bg-primary/60 rounded-full" />
                       <h3 className={`text-[11px] font-bold uppercase tracking-[0.12em] ${theme.textMuted}`}>By Status</h3>
                     </div>
                     {statusTotal === 0 ? (

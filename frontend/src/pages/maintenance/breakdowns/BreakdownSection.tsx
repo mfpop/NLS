@@ -104,10 +104,10 @@ function Field({ label, children, required, error }: { label: string; children: 
   return (
     <div className="space-y-1">
       <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-danger ml-0.5">*</span>}
       </label>
       {children}
-      {error && <p className="text-[10px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[10px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
@@ -565,13 +565,13 @@ export function useBreakdownSection(
                 return (
                   <div key={step} className="flex items-center gap-1">
                     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold transition-colors
-                      ${isCurrent ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300" :
-                        isPast && !isCancelled ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" :
+                      ${isCurrent ? "bg-warning/15 text-warning dark:bg-orange-900/30 dark:text-orange-300" :
+                        isPast && !isCancelled ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300" :
                         "bg-muted text-muted-foreground"}`}>
                       {isPast && !isCancelled ? "✓ " : ""}{wfLabel(step)}
                     </span>
                     {i < WORKFLOW_STEPS.length - 1 && (
-                      <ArrowRight className={`h-3 w-3 ${isPast && !isCancelled ? "text-green-400" : "text-muted-foreground/30"} stroke-current`} />
+                      <ArrowRight className={`h-3 w-3 ${isPast && !isCancelled ? "text-success/80" : "text-muted-foreground/30"} stroke-current`} />
                     )}
                   </div>
                 );
@@ -629,7 +629,7 @@ export function useBreakdownSection(
             <MetaRow label="Downtime" value={sel.downtimeMinutes != null ? `${sel.downtimeMinutes.toLocaleString()} min` : "—"} />
             <MetaRow label="Equipment Down" value={sel.isEquipmentDown ? "Yes" : "No"} />
             {sel.linkedWorkOrderId && (
-              <MetaRow label="Linked WO" value={<a href="/maintenance/work-orders" className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 text-xs font-semibold"><Wrench className="h-3 w-3 stroke-current" /> #{sel.linkedWorkOrderId}</a>} />
+              <MetaRow label="Linked WO" value={<a href="/maintenance/work-orders" className="inline-flex items-center gap-1 text-primary hover:text-blue-800 dark:text-blue-400 text-xs font-semibold"><Wrench className="h-3 w-3 stroke-current" /> #{sel.linkedWorkOrderId}</a>} />
             )}
           </div>
           <div className="pt-2 text-[10px] text-muted-foreground">
@@ -688,9 +688,9 @@ export function useBreakdownSection(
 
 function InfoRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className={highlight ? "rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900/30 dark:bg-orange-950/20 p-3 space-y-1" : ""}>
+    <div className={highlight ? "rounded-lg border border-warning/20 bg-warning/10 dark:border-orange-900/30 dark:bg-orange-950/20 p-3 space-y-1" : ""}>
       {!highlight && <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{label}</p>}
-      {highlight && <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400 mb-1">⚠ {label}</p>}
+      {highlight && <p className="text-[10px] font-semibold uppercase tracking-wider text-warning dark:text-orange-400 mb-1">⚠ {label}</p>}
       <p className="text-sm text-foreground whitespace-pre-wrap">{value}</p>
     </div>
   );

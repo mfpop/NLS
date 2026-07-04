@@ -376,7 +376,7 @@ export function RichTextEditor({
   if (!editor) return null;
 
   return (
-    <div className="flex flex-col h-full border border-gray-300 bg-card">
+    <div className="flex flex-col h-full border border-border bg-card">
       <EditorToolbar editor={editor} />
 
       <div className="flex-1 min-h-0 overflow-y-auto">

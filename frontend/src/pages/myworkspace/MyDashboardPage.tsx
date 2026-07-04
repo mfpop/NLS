@@ -58,7 +58,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const SEVERITY_DOTS: Record<string, string> = {
-  LOW: "bg-muted-foreground/50", MEDIUM: "bg-warning", HIGH: "bg-orange-500", CRITICAL: "bg-danger",
+  LOW: "bg-muted-foreground/50", MEDIUM: "bg-warning", HIGH: "bg-warning/100", CRITICAL: "bg-danger",
 };
 
 const SEVERITY_PULSE: Record<string, string> = {
@@ -98,7 +98,7 @@ const FILTER_OPTIONS = [
 
 const statusLabel = (s: string) => ({ OPEN: "Open", IN_PROGRESS: "In Progress", WAITING: "Waiting", COMPLETED: "Completed", CANCELLED: "Cancelled" }[s] || s);
 const moduleLabel = (s: string) => MODULE_LABELS[s] || s || "General";
-const moduleBadge = (s: string) => `inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm ${MODULE_COLORS[s] || "text-slate-600 bg-slate-100 border-slate-200"}`;
+const moduleBadge = (s: string) => `inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm ${MODULE_COLORS[s] || "text-muted-foreground bg-muted border-border"}`;
 
 const formatDate = (s: string | null) => s ? (formatDateShort(s) || s) : "";
 
@@ -156,14 +156,14 @@ function MetricCell({ label, value, color, icon, urgent, onClick }: {
     <button type="button" onClick={onClick} disabled={!onClick}
       className={cn(
         "relative flex items-center gap-2.5 px-3 h-full min-w-0 transition-all duration-150 group",
-        onClick ? "cursor-pointer hover:bg-white/60" : "cursor-default",
-        urgent ? "bg-red-50/40" : "",
+        onClick ? "cursor-pointer hover:bg-background/60" : "cursor-default",
+        urgent ? "bg-danger/10/40" : "",
       )}
     >
       {urgent && <div className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-red-400" />}
-      <span className={cn("shrink-0 transition-transform duration-150 group-hover:scale-110", urgent ? "drop-shadow-sm ring-2 ring-red-400/20" : "")}>{icon}</span>
+      <span className={cn("shrink-0 transition-transform duration-150 group-hover:scale-110", urgent ? "drop-shadow-sm ring-2 ring-danger/20" : "")}>{icon}</span>
       <div className="min-w-0 text-left">
-        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider truncate">{label}</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{label}</p>
         <p className={cn("text-xl font-bold tabular-nums leading-tight transition-colors", color)}>
           <AnimatedValue value={value} />
         </p>
@@ -186,7 +186,7 @@ function DashboardItemRow({ item, compact }: { item: DashboardItem; compact?: bo
   return (
     <div onClick={handleClick}
       className={cn(
-        "relative flex items-start gap-2.5 px-3 cursor-pointer min-h-0 border-b border-slate-100 transition-all duration-150 group hover:bg-slate-50 hover:border-l-2 hover:border-l-blue-400 hover:pl-[10px]",
+        "relative flex items-start gap-2.5 px-3 cursor-pointer min-h-0 border-b border-border/50 transition-all duration-150 group hover:bg-muted hover:border-l-2 hover:border-l-blue-400 hover:pl-[10px]",
         compact ? "py-1" : "py-1.5",
       )}
     >
@@ -197,23 +197,23 @@ function DashboardItemRow({ item, compact }: { item: DashboardItem; compact?: bo
       )} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="min-w-0 truncate text-sm font-medium text-slate-900 group-hover:text-slate-800 transition-colors" title={item.title}>{item.title}</span>
-          {item.isOverdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500 animate-pulse" />}
+          <span className="min-w-0 truncate text-sm font-medium text-foreground group-hover:text-foreground transition-colors" title={item.title}>{item.title}</span>
+          {item.isOverdue && <AlertTriangle className="h-3 w-3 shrink-0 text-danger animate-pulse" />}
         </div>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          <span className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm", STATUS_STYLES[item.status] || "bg-slate-50 text-slate-600")}>
+          <span className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm", STATUS_STYLES[item.status] || "bg-muted text-muted-foreground")}>
             {statusLabel(item.status)}
           </span>
           <span className={moduleBadge(item.sourceModule)}>{moduleLabel(item.sourceModule)}</span>
           {item.dueDate && (
-            <span className={cn("text-[10px] flex items-center gap-0.5", item.isOverdue ? "text-red-500 font-semibold" : "text-slate-500")}>
+            <span className={cn("text-[10px] flex items-center gap-0.5", item.isOverdue ? "text-danger font-semibold" : "text-muted-foreground")}>
               <Calendar className="h-2.5 w-2.5 stroke-current" />
               {formatDate(item.dueDate)}
             </span>
           )}
         </div>
       </div>
-      <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 mt-1 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150" />
+      <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/30 mt-1 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150" />
     </div>
   );
 }
@@ -222,10 +222,10 @@ function DashboardItemRow({ item, compact }: { item: DashboardItem; compact?: bo
 
 function PanelHeader({ title, count, icon, iconColor }: { title: string; count?: number; icon?: React.ReactNode; iconColor?: string }) {
   return (
-    <div className="shrink-0 h-9 flex items-center gap-2 px-3 border-b border-slate-200 bg-slate-50/80">
-      {icon && <span className={cn("shrink-0", iconColor || "text-slate-500")}>{icon}</span>}
-      <span className="text-xs font-semibold text-slate-800 truncate tracking-wide">{title}</span>
-      {count !== undefined && <span className="ml-auto text-[10px] font-mono text-slate-400 shrink-0 tabular-nums">{count} total</span>}
+    <div className="shrink-0 h-9 flex items-center gap-2 px-3 border-b border-border bg-muted/80">
+      {icon && <span className={cn("shrink-0", iconColor || "text-muted-foreground")}>{icon}</span>}
+      <span className="text-xs font-semibold text-foreground truncate tracking-wide">{title}</span>
+      {count !== undefined && <span className="ml-auto text-[10px] font-mono text-muted-foreground/60 shrink-0 tabular-nums">{count} total</span>}
     </div>
   );
 }
@@ -238,8 +238,8 @@ function PanelEmpty({ icon, title, message }: { icon?: React.ReactNode; title?: 
   return (
     <div className="flex flex-col items-center justify-center h-full min-h-[60px] px-4 text-center">
       {icon && <div className="text-slate-200 mb-1.5">{icon}</div>}
-      {title && <p className="text-xs font-medium text-slate-400 mb-0.5">{title}</p>}
-      <p className="text-[11px] text-slate-400 italic leading-relaxed">{message}</p>
+      {title && <p className="text-xs font-medium text-muted-foreground/60 mb-0.5">{title}</p>}
+      <p className="text-[11px] text-muted-foreground/60 italic leading-relaxed">{message}</p>
     </div>
   );
 }
@@ -250,7 +250,7 @@ function PriorityWorkPanel({ items }: { items: DashboardItem[] }) {
   const visible = items.slice(0, 5);
   return (
     <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
-      <PanelHeader title="Priority Work" count={items.length} icon={<ArrowUpRight className="h-3.5 w-3.5" />} iconColor="text-orange-500" />
+      <PanelHeader title="Priority Work" count={items.length} icon={<ArrowUpRight className="h-3.5 w-3.5" />} iconColor="text-warning" />
       <PanelScroller>
         {visible.length === 0 ? (
           <PanelEmpty icon={<ListChecks className="h-5 w-5" />} message="No priority items right now" />
@@ -282,18 +282,18 @@ function UpcomingPanel({ items }: { items: DashboardItem[] }) {
 
   return (
     <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
-      <PanelHeader title="Upcoming" count={items.length} icon={<Calendar className="h-3.5 w-3.5" />} iconColor="text-blue-500" />
+      <PanelHeader title="Upcoming" count={items.length} icon={<Calendar className="h-3.5 w-3.5" />} iconColor="text-primary" />
       <PanelScroller>
         {!hasAny ? (
           <PanelEmpty icon={<Calendar className="h-5 w-5" />} message="No upcoming items" />
         ) : bands.map((band) =>
           band.items.length > 0 ? (
             <div key={band.label}>
-              <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-50/70 border-b border-slate-100">
-                <span className={band.label === "Today" ? "text-blue-600" : band.label === "This Week" ? "text-slate-600" : "text-slate-400"}>
+              <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider bg-muted/70 border-b border-border/50">
+                <span className={band.label === "Today" ? "text-primary" : band.label === "This Week" ? "text-muted-foreground" : "text-muted-foreground/60"}>
                   {band.label}
                 </span>
-                <span className="text-slate-400 font-normal">({band.items.length})</span>
+                <span className="text-muted-foreground/60 font-normal">({band.items.length})</span>
               </div>
               {band.items.slice(0, 2).map((item) => <DashboardItemRow key={item.id} item={item} compact />)}
             </div>
@@ -313,7 +313,7 @@ function AlertsApprovalsPanel({ alerts, approvals }: { alerts: DashboardItem[]; 
 
   return (
     <div className="flex flex-col min-h-0 overflow-hidden scroll-section">
-      <PanelHeader title="Alerts & Approvals" count={total} icon={<Bell className="h-3.5 w-3.5" />} iconColor="text-amber-500" />
+      <PanelHeader title="Alerts & Approvals" count={total} icon={<Bell className="h-3.5 w-3.5" />} iconColor="text-warning" />
       <PanelScroller>
         {total === 0 ? (
           <PanelEmpty icon={<Bell className="h-5 w-5" />} message="No alerts or pending approvals" />
@@ -321,9 +321,9 @@ function AlertsApprovalsPanel({ alerts, approvals }: { alerts: DashboardItem[]; 
           <>
             {visibleAlerts.length > 0 && (
               <div>
-                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-amber-50/40 border-b border-amber-200/50">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                  <span className="text-amber-700">Alerts</span>
+                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-warning/10/40 border-b border-warning/20/50">
+                  <span className="h-1.5 w-1.5 rounded-full bg-warning/100 animate-pulse shrink-0" />
+                  <span className="text-warning">Alerts</span>
                   {alerts.length > 4 && <span className="text-amber-400 font-normal">({alerts.length})</span>}
                 </div>
                 {visibleAlerts.map((item) => <DashboardItemRow key={item.id} item={item} />)}
@@ -331,10 +331,10 @@ function AlertsApprovalsPanel({ alerts, approvals }: { alerts: DashboardItem[]; 
             )}
             {visibleApprovals.length > 0 && (
               <div>
-                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-slate-50/70 border-b border-slate-100">
+                <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider bg-muted/70 border-b border-border/50">
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
-                  <span className="text-slate-600">Approvals</span>
-                  {approvals.length > 4 && <span className="text-slate-400 font-normal">({approvals.length})</span>}
+                  <span className="text-muted-foreground">Approvals</span>
+                  {approvals.length > 4 && <span className="text-muted-foreground/60 font-normal">({approvals.length})</span>}
                 </div>
                 {visibleApprovals.map((item) => <DashboardItemRow key={item.id} item={item} />)}
               </div>
@@ -364,9 +364,9 @@ function RecentActivitySection({ items }: { items: DashboardItem[] }) {
             {display.map((item, idx) => (
               <div key={item.id} onClick={() => {
                 if (item.sourceType && item.sourceId) { const r = getSourceRoute(item.sourceType, item.sourceId); if (r) navigate(r); }
-              }} className="relative flex items-start hover:bg-slate-50 cursor-pointer min-h-0 border-b border-slate-100 transition-all duration-150 group">
+              }} className="relative flex items-start hover:bg-muted cursor-pointer min-h-0 border-b border-border/50 transition-all duration-150 group">
                 <div className="w-[64px] shrink-0 pt-2.5 text-center">
-                  <span className="text-[9px] leading-tight block text-slate-400 font-medium tabular-nums">{formatDate(item.createdAt)}</span>
+                  <span className="text-[9px] leading-tight block text-muted-foreground/60 font-medium tabular-nums">{formatDate(item.createdAt)}</span>
                 </div>
                 <div className="shrink-0 relative z-10 pt-2.5 flex items-center justify-center">
                   <div className={cn(
@@ -374,18 +374,18 @@ function RecentActivitySection({ items }: { items: DashboardItem[] }) {
                     item.isOverdue ? "bg-red-400" : SEVERITY_DOTS[item.severity] || "bg-slate-400",
                     item.isOverdue ? "animate-pulse" : "",
                   )} />
-                  {idx < display.length - 1 && <div className="absolute top-4 left-1/2 -translate-x-1/2 w-px h-[calc(100%+4px)] bg-slate-100 -z-10" />}
+                  {idx < display.length - 1 && <div className="absolute top-4 left-1/2 -translate-x-1/2 w-px h-[calc(100%+4px)] bg-muted -z-10" />}
                 </div>
                 <div className="min-w-0 flex-1 px-2.5 py-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="min-w-0 truncate text-xs font-medium text-slate-900 group-hover:text-slate-700 transition-colors" title={item.title}>{item.title}</span>
-                    {item.isOverdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />}
+                    <span className="min-w-0 truncate text-xs font-medium text-foreground group-hover:text-muted-foreground transition-colors" title={item.title}>{item.title}</span>
+                    {item.isOverdue && <AlertTriangle className="h-3 w-3 shrink-0 text-danger" />}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm", STATUS_STYLES[item.status] || "bg-slate-50 text-slate-600")}>
+                    <span className={cn("inline-flex items-center px-2 py-0.5 text-[10px] font-medium border rounded-sm", STATUS_STYLES[item.status] || "bg-muted text-muted-foreground")}>
                       {statusLabel(item.status)}
                     </span>
-                    <span className="text-[10px] text-slate-500 flex items-center gap-1">{moduleLabel(item.sourceModule)}</span>
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">{moduleLabel(item.sourceModule)}</span>
                   </div>
                 </div>
               </div>
@@ -393,9 +393,9 @@ function RecentActivitySection({ items }: { items: DashboardItem[] }) {
           </div>
         )}
       </div>
-      <div className="shrink-0 h-8 border-t border-slate-200 bg-muted px-3 flex items-center justify-end">
+      <div className="shrink-0 h-8 border-t border-border bg-muted px-3 flex items-center justify-end">
         <button onClick={() => navigate("/myworkspace/tasks")}
-          className="text-[10px] font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1 group/btn">
+          className="text-[10px] font-medium text-muted-foreground hover:text-muted-foreground transition-colors flex items-center gap-1 group/btn">
           View All Activity
           <ArrowRight className="h-3 w-3 stroke-current transition-transform duration-150 group-hover/btn:translate-x-0.5" />
         </button>
@@ -432,11 +432,11 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden scroll-section">
-      <PanelHeader title="Workspace Analytics" icon={<PieChart className="h-3.5 w-3.5" />} iconColor="text-emerald-500" />
-      <div className="grid flex-1 min-h-0 grid-cols-[42%_58%] divide-x divide-slate-200 overflow-hidden">
+      <PanelHeader title="Workspace Analytics" icon={<PieChart className="h-3.5 w-3.5" />} iconColor="text-success" />
+      <div className="grid flex-1 min-h-0 grid-cols-[42%_58%] divide-x divide-border overflow-hidden">
         {/* Module Distribution */}
         <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2.5 shrink-0">Module Distribution</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2.5 shrink-0">Module Distribution</p>
           {sourceData.length === 0 ? (
             <PanelEmpty icon={<PieChart className="h-5 w-5" />} message="No data yet" />
           ) : (
@@ -446,12 +446,12 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
                 const barColor = MODULE_BAR_COLORS[s.sourceModule] || "bg-emerald-400";
                 return (
                   <div key={s.sourceModule} className="flex items-center gap-2 h-6 group/bar">
-                    <span className="w-[70px] shrink-0 text-[11px] text-slate-600 truncate font-medium" title={moduleLabel(s.sourceModule)}>{moduleLabel(s.sourceModule)}</span>
-                    <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <span className="w-[70px] shrink-0 text-[11px] text-muted-foreground truncate font-medium" title={moduleLabel(s.sourceModule)}>{moduleLabel(s.sourceModule)}</span>
+                    <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
                       <div className={cn("h-full rounded-full transition-all duration-700 ease-out group-hover/bar:opacity-80", barColor)} style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-xs font-semibold text-slate-800 w-7 text-right tabular-nums">{s.count}</span>
-                    <span className="text-[10px] text-slate-400 w-8 text-right tabular-nums">{pct}%</span>
+                    <span className="text-xs font-semibold text-foreground w-7 text-right tabular-nums">{s.count}</span>
+                    <span className="text-[10px] text-muted-foreground/60 w-8 text-right tabular-nums">{pct}%</span>
                   </div>
                 );
               })}
@@ -460,14 +460,14 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
         </div>
 
         {/* Right: Workload Trend + Risk Mix */}
-        <div className="grid grid-rows-[auto_1fr] divide-y divide-slate-200 min-h-0 overflow-hidden">
+        <div className="grid grid-rows-[auto_1fr] divide-y divide-border min-h-0 overflow-hidden">
           {/* Workload Trend */}
           <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2 shrink-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 shrink-0">Workload Trend</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 shrink-0">Workload Trend</p>
             {!hasTrend ? (
               <div className="flex items-center gap-2 py-1">
-                <Activity className="h-4 w-4 text-slate-300 shrink-0" />
-                <p className="text-[10px] text-slate-400 italic">Trend data pending</p>
+                <Activity className="h-4 w-4 text-muted-foreground/30 shrink-0" />
+                <p className="text-[10px] text-muted-foreground/60 italic">Trend data pending</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-0.5">
@@ -495,7 +495,7 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
                     return <circle cx={lx} cy={ly} r="3" className="fill-emerald-500 stroke-white" strokeWidth="2" />;
                   })()}
                 </svg>
-                <div className="flex gap-1.5 text-[9px] text-slate-400 tabular-nums w-full justify-between px-1 max-w-[200px]">
+                <div className="flex gap-1.5 text-[9px] text-muted-foreground/60 tabular-nums w-full justify-between px-1 max-w-[200px]">
                   {dailyCounts.map((d) => (<span key={d.day} className="text-center">{d.day}</span>))}
                 </div>
               </div>
@@ -504,11 +504,11 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
 
           {/* Risk Mix Donut */}
           <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1 shrink-0">Risk Mix</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 shrink-0">Risk Mix</p>
             {riskTotal === 0 ? (
               <div className="flex items-center gap-2 py-1">
-                <AlertTriangle className="h-4 w-4 text-slate-300 shrink-0" />
-                <p className="text-[10px] text-slate-400 italic">No risk data</p>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground/30 shrink-0" />
+                <p className="text-[10px] text-muted-foreground/60 italic">No risk data</p>
               </div>
             ) : (
               <div className="flex items-center gap-4 flex-1 min-h-0">
@@ -545,27 +545,27 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
                 {/* Legend */}
                 <div className="flex flex-col gap-1 min-w-0">
                   {riskMix.open > 0 && (
-                    <span className="text-[10px] text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500 ring-1 ring-blue-200" />
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary/100 ring-1 ring-blue-200" />
                       <span className="font-medium">Open</span>
-                      <span className="font-semibold tabular-nums text-slate-800">{riskMix.open}</span>
-                      <span className="text-slate-400">({Math.round((riskMix.open / riskTotal) * 100)}%)</span>
+                      <span className="font-semibold tabular-nums text-foreground">{riskMix.open}</span>
+                      <span className="text-muted-foreground/60">({Math.round((riskMix.open / riskTotal) * 100)}%)</span>
                     </span>
                   )}
                   {riskMix.inProgress > 0 && (
-                    <span className="text-[10px] text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-amber-500 ring-1 ring-amber-200" />
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-warning/100 ring-1 ring-amber-200" />
                       <span className="font-medium">In Prog</span>
-                      <span className="font-semibold tabular-nums text-slate-800">{riskMix.inProgress}</span>
-                      <span className="text-slate-400">({Math.round((riskMix.inProgress / riskTotal) * 100)}%)</span>
+                      <span className="font-semibold tabular-nums text-foreground">{riskMix.inProgress}</span>
+                      <span className="text-muted-foreground/60">({Math.round((riskMix.inProgress / riskTotal) * 100)}%)</span>
                     </span>
                   )}
                   {riskMix.overdue > 0 && (
-                    <span className="text-[10px] text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-red-500 ring-1 ring-red-200 animate-pulse" />
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-danger/100 ring-1 ring-red-200 animate-pulse" />
                       <span className="font-medium">Overdue</span>
-                      <span className="font-semibold tabular-nums text-slate-800">{riskMix.overdue}</span>
-                      <span className="text-slate-400">({Math.round((riskMix.overdue / riskTotal) * 100)}%)</span>
+                      <span className="font-semibold tabular-nums text-foreground">{riskMix.overdue}</span>
+                      <span className="text-muted-foreground/60">({Math.round((riskMix.overdue / riskTotal) * 100)}%)</span>
                     </span>
                   )}
                 </div>
@@ -584,32 +584,32 @@ function DashboardSkeleton() {
   return (
     <div className="h-full flex flex-col animate-pulse">
       {/* KPI skeleton */}
-      <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200">
+      <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-border border-b border-border">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-2.5 px-3">
-            <div className="h-4 w-4 rounded bg-slate-200" />
+            <div className="h-4 w-4 rounded bg-muted/80" />
             <div className="space-y-1.5">
-              <div className="h-2.5 bg-slate-200 rounded w-16" />
-              <div className="h-4 bg-slate-200 rounded w-8" />
+              <div className="h-2.5 bg-muted/80 rounded w-16" />
+              <div className="h-4 bg-muted/80 rounded w-8" />
             </div>
           </div>
         ))}
       </div>
       {/* Grid skeleton */}
-      <div className="flex-1 grid grid-rows-[42%_58%] divide-y divide-slate-200">
-        <div className="grid grid-cols-[36%_28%_36%] divide-x divide-slate-200">
+      <div className="flex-1 grid grid-rows-[42%_58%] divide-y divide-border">
+        <div className="grid grid-cols-[36%_28%_36%] divide-x divide-border">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="flex flex-col">
-              <div className="h-9 border-b border-slate-200 bg-slate-50/80 px-3 flex items-center">
-                <div className="h-3 bg-slate-200 rounded w-24" />
+              <div className="h-9 border-b border-border bg-muted/80 px-3 flex items-center">
+                <div className="h-3 bg-muted/80 rounded w-24" />
               </div>
               <div className="flex-1 space-y-2 p-3">
                 {Array.from({ length: 3 }).map((_, j) => (
                   <div key={j} className="flex items-start gap-2">
-                    <div className="h-2 w-2 rounded-full bg-slate-200 mt-1" />
+                    <div className="h-2 w-2 rounded-full bg-muted/80 mt-1" />
                     <div className="flex-1 space-y-1">
-                      <div className="h-3 bg-slate-200 rounded w-3/4" />
-                      <div className="h-3 bg-slate-200 rounded w-1/2" />
+                      <div className="h-3 bg-muted/80 rounded w-3/4" />
+                      <div className="h-3 bg-muted/80 rounded w-1/2" />
                     </div>
                   </div>
                 ))}
@@ -617,29 +617,29 @@ function DashboardSkeleton() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-[42%_58%] divide-x divide-slate-200">
+        <div className="grid grid-cols-[42%_58%] divide-x divide-border">
           <div className="flex flex-col">
-            <div className="h-9 border-b border-slate-200 bg-slate-50/80 px-3 flex items-center">
-              <div className="h-3 bg-slate-200 rounded w-20" />
+            <div className="h-9 border-b border-border bg-muted/80 px-3 flex items-center">
+              <div className="h-3 bg-muted/80 rounded w-20" />
             </div>
             <div className="flex-1 space-y-2 p-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-start gap-2">
-                  <div className="h-2 w-2 rounded-full bg-slate-200 mt-1" />
+                  <div className="h-2 w-2 rounded-full bg-muted/80 mt-1" />
                   <div className="flex-1 space-y-1">
-                    <div className="h-3 bg-slate-200 rounded w-2/3" />
-                    <div className="h-3 bg-slate-200 rounded w-1/3" />
+                    <div className="h-3 bg-muted/80 rounded w-2/3" />
+                    <div className="h-3 bg-muted/80 rounded w-1/3" />
                   </div>
                 </div>
               ))}
             </div>
           </div>
           <div className="flex flex-col">
-            <div className="h-9 border-b border-slate-200 bg-slate-50/80 px-3 flex items-center">
-              <div className="h-3 bg-slate-200 rounded w-28" />
+            <div className="h-9 border-b border-border bg-muted/80 px-3 flex items-center">
+              <div className="h-3 bg-muted/80 rounded w-28" />
             </div>
             <div className="flex-1 flex items-center justify-center">
-              <div className="h-12 w-12 rounded-full bg-slate-100" />
+              <div className="h-12 w-12 rounded-full bg-muted" />
             </div>
           </div>
         </div>
@@ -705,7 +705,7 @@ export function MyDashboardPage() {
         />
       }
       footer={
-        <span className="flex items-center gap-4 text-xs text-slate-500">
+        <span className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="font-medium">Personal Dashboard</span>
           {dashboard?.lastUpdated && <span>Updated: {new Date(dashboard.lastUpdated).toLocaleTimeString()}</span>}
           <span className="flex-1" />
@@ -713,38 +713,38 @@ export function MyDashboardPage() {
         </span>
       }
     >
-      <div className="h-full min-h-0 overflow-hidden flex flex-col bg-slate-50">
+      <div className="h-full min-h-0 overflow-hidden flex flex-col bg-muted">
         {loading && !dashboard ? (
           <DashboardSkeleton />
         ) : !dashboard ? (
           <div className="h-full flex flex-col items-center justify-center text-center px-8 animate-[fadeIn_0.3s_ease-out]">
             <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}`}</style>
             <LayoutDashboard className="h-14 w-14 text-slate-200 mb-4" />
-            <p className="text-base font-semibold text-slate-500">No assigned work right now</p>
-            <p className="text-sm text-slate-400 mt-1 max-w-sm">When tasks are assigned from any module within LeanSynk, they will appear here for quick access.</p>
+            <p className="text-base font-semibold text-muted-foreground">No assigned work right now</p>
+            <p className="text-sm text-muted-foreground/60 mt-1 max-w-sm">When tasks are assigned from any module within LeanSynk, they will appear here for quick access.</p>
           </div>
         ) : (
           <>
             {/* KPI Strip */}
-            <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200 bg-white/50">
-              <MetricCell label="Open Tasks" value={dashboard.openTasks} color="text-blue-600" icon={<ListChecks className="h-4 w-4 stroke-current text-blue-600 shrink-0" />} onClick={() => hKpiNavigate("OPEN")} />
-              <MetricCell label="In Progress" value={dashboard.inProgress} color="text-amber-600" icon={<Clock className="h-4 w-4 stroke-current text-amber-600 shrink-0" />} onClick={() => hKpiNavigate("IN_PROGRESS")} />
-              <MetricCell label="Overdue" value={dashboard.overdueTasks} color={dashboard.overdueTasks > 0 ? "text-red-600" : "text-slate-700"} icon={<AlertOctagon className={`h-4 w-4 stroke-current shrink-0 ${dashboard.overdueTasks > 0 ? "text-red-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("OVERDUE")} urgent={dashboard.overdueTasks > 0} />
-              <MetricCell label="Due Today" value={dashboard.dueToday} color={dashboard.dueToday > 0 ? "text-orange-600" : "text-slate-700"} icon={<Calendar className={`h-4 w-4 stroke-current shrink-0 ${dashboard.dueToday > 0 ? "text-orange-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("DUE_TODAY")} />
-              <MetricCell label="High Priority" value={dashboard.highPriority} color={dashboard.highPriority > 0 ? "text-red-600" : "text-slate-700"} icon={<ArrowUpRight className={`h-4 w-4 stroke-current shrink-0 ${dashboard.highPriority > 0 ? "text-red-600" : "text-slate-400"}`} />} onClick={() => hKpiNavigate("HIGH_PRIORITY")} />
-              <MetricCell label="Completed Today" value={dashboard.completedToday} color="text-emerald-600" icon={<CheckCircle2 className="h-4 w-4 stroke-current text-emerald-600 shrink-0" />} onClick={() => hKpiNavigate("COMPLETED")} />
+            <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-border border-b border-border bg-background/50">
+              <MetricCell label="Open Tasks" value={dashboard.openTasks} color="text-primary" icon={<ListChecks className="h-4 w-4 stroke-current text-primary shrink-0" />} onClick={() => hKpiNavigate("OPEN")} />
+              <MetricCell label="In Progress" value={dashboard.inProgress} color="text-warning" icon={<Clock className="h-4 w-4 stroke-current text-warning shrink-0" />} onClick={() => hKpiNavigate("IN_PROGRESS")} />
+              <MetricCell label="Overdue" value={dashboard.overdueTasks} color={dashboard.overdueTasks > 0 ? "text-danger" : "text-muted-foreground"} icon={<AlertOctagon className={`h-4 w-4 stroke-current shrink-0 ${dashboard.overdueTasks > 0 ? "text-danger" : "text-muted-foreground/60"}`} />} onClick={() => hKpiNavigate("OVERDUE")} urgent={dashboard.overdueTasks > 0} />
+              <MetricCell label="Due Today" value={dashboard.dueToday} color={dashboard.dueToday > 0 ? "text-warning" : "text-muted-foreground"} icon={<Calendar className={`h-4 w-4 stroke-current shrink-0 ${dashboard.dueToday > 0 ? "text-warning" : "text-muted-foreground/60"}`} />} onClick={() => hKpiNavigate("DUE_TODAY")} />
+              <MetricCell label="High Priority" value={dashboard.highPriority} color={dashboard.highPriority > 0 ? "text-danger" : "text-muted-foreground"} icon={<ArrowUpRight className={`h-4 w-4 stroke-current shrink-0 ${dashboard.highPriority > 0 ? "text-danger" : "text-muted-foreground/60"}`} />} onClick={() => hKpiNavigate("HIGH_PRIORITY")} />
+              <MetricCell label="Completed Today" value={dashboard.completedToday} color="text-success" icon={<CheckCircle2 className="h-4 w-4 stroke-current text-success shrink-0" />} onClick={() => hKpiNavigate("COMPLETED")} />
             </div>
 
             {/* Dashboard Grid */}
-            <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[42%_58%] divide-y divide-slate-200">
+            <div className="flex-1 min-h-0 overflow-hidden grid grid-rows-[42%_58%] divide-y divide-border">
               {/* Top row */}
-              <div className="min-h-0 overflow-hidden grid grid-cols-[36%_28%_36%] divide-x divide-slate-200">
+              <div className="min-h-0 overflow-hidden grid grid-cols-[36%_28%_36%] divide-x divide-border">
                 <PriorityWorkPanel items={priorityItems} />
                 <UpcomingPanel items={dueItems} />
                 <AlertsApprovalsPanel alerts={alertItems} approvals={approvalItems} />
               </div>
               {/* Bottom row */}
-              <div className="min-h-0 overflow-hidden grid grid-cols-[42%_58%] divide-x divide-slate-200">
+              <div className="min-h-0 overflow-hidden grid grid-cols-[42%_58%] divide-x divide-border">
                 <RecentActivitySection items={activityItems} />
                 <WorkspaceAnalyticsSection sourceData={sourceData} analyticsData={analyticsData} />
               </div>

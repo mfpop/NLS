@@ -131,16 +131,16 @@ export function SparePartsDashboard({
       <div className="grid grid-cols-8 gap-2">
         <KpiTile label="Total Parts" value={parts.length} sub={activeParts.length === parts.length ? "All active" : `${activeParts.length} active`} color="bg-teal-500"
           icon={<Package className="h-3.5 w-3.5 text-teal-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
-        <KpiTile label="Stockout" value={stockoutParts.length} sub={stockoutParts.length === 0 ? "Fully stocked" : "Reorder immediately"} color="bg-red-500"
-          icon={<AlertTriangle className="h-3.5 w-3.5 text-red-600 stroke-current" />} onClick={() => onFilterStock?.("critical")} />
-        <KpiTile label="Low Stock" value={lowStockParts.length} sub={lowStockParts.length === 0 ? "All above min" : "Below minimum"} color="bg-amber-500"
-          icon={<AlertTriangle className="h-3.5 w-3.5 text-amber-600 stroke-current" />} onClick={() => onFilterStock?.("low")} />
-        <KpiTile label="Healthy" value={healthyParts.length} sub={activeParts.length > 0 ? `${Math.round((healthyParts.length / activeParts.length) * 100)}% of active` : "—"} color="bg-green-500"
-          icon={<Activity className="h-3.5 w-3.5 text-green-600 stroke-current" />} onClick={() => onNavigateView("detail")} />
-        <KpiTile label="Avg Stock" value={avgStock} sub={`per active part`} color="bg-blue-500"
-          icon={<Layers className="h-3.5 w-3.5 text-blue-600 stroke-current" />} />
+        <KpiTile label="Stockout" value={stockoutParts.length} sub={stockoutParts.length === 0 ? "Fully stocked" : "Reorder immediately"} color="bg-danger/100"
+          icon={<AlertTriangle className="h-3.5 w-3.5 text-danger stroke-current" />} onClick={() => onFilterStock?.("critical")} />
+        <KpiTile label="Low Stock" value={lowStockParts.length} sub={lowStockParts.length === 0 ? "All above min" : "Below minimum"} color="bg-warning/100"
+          icon={<AlertTriangle className="h-3.5 w-3.5 text-warning stroke-current" />} onClick={() => onFilterStock?.("low")} />
+        <KpiTile label="Healthy" value={healthyParts.length} sub={activeParts.length > 0 ? `${Math.round((healthyParts.length / activeParts.length) * 100)}% of active` : "—"} color="bg-success/100"
+          icon={<Activity className="h-3.5 w-3.5 text-success stroke-current" />} onClick={() => onNavigateView("detail")} />
+        <KpiTile label="Avg Stock" value={avgStock} sub={`per active part`} color="bg-primary/100"
+          icon={<Layers className="h-3.5 w-3.5 text-primary stroke-current" />} />
         <KpiTile label="Categories" value={categoryDist.length} sub={categoryDist.slice(0, 3).map(([c]) => c).join(", ")} color="bg-purple-500"
-          icon={<Hash className="h-3.5 w-3.5 text-purple-600 stroke-current" />} />
+          icon={<Hash className="h-3.5 w-3.5 text-accent-foreground stroke-current" />} />
         <KpiTile label="Inact./Obs." value={`${inactiveParts.length}/${obsoleteParts.length}`} sub={`${Math.round(((inactiveParts.length + obsoleteParts.length) / Math.max(parts.length, 1)) * 100)}% non-active`} color="bg-gray-500"
           icon={<Archive className="h-3.5 w-3.5 text-gray-600 stroke-current" />} />
         <KpiTile label="Blocking WOs" value={stockoutParts.length + lowStockParts.length} sub={stockoutParts.length + lowStockParts.length === 0 ? "None" : "Parts at risk"} color="bg-rose-500"
@@ -153,18 +153,18 @@ export function SparePartsDashboard({
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
 
           {/* 1. Inventory Risk Board */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Inventory Risk Board" color="bg-red-500" count={stockoutParts.length + lowStockParts.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Inventory Risk Board" color="bg-danger/100" count={stockoutParts.length + lowStockParts.length} />
             {stockoutParts.length === 0 && lowStockParts.length === 0 ? (
               <Empty msg="No inventory risks — all parts sufficiently stocked" />
             ) : (
               <div className="space-y-0.5">
                 {stockoutParts.slice(0, 5).map((sp) => (
-                  <Row key={`so-${sp.id}`} color="bg-red-500" type="Stockout" ref={sp.partNumber} title={sp.name}
+                  <Row key={`so-${sp.id}`} color="bg-danger/100" type="Stockout" ref={sp.partNumber} title={sp.name}
                     detail={`0 / ${sp.minQuantity} ${sp.uom}${sp.storageLocation ? ` · ${sp.storageLocation}` : ""}`} />
                 ))}
                 {lowStockParts.slice(0, 5).map((sp) => (
-                  <Row key={`ls-${sp.id}`} color="bg-amber-500" type="Low" ref={sp.partNumber} title={sp.name}
+                  <Row key={`ls-${sp.id}`} color="bg-warning/100" type="Low" ref={sp.partNumber} title={sp.name}
                     detail={`${sp.quantityOnHand} / ${sp.minQuantity} ${sp.uom}${sp.storageLocation ? ` · ${sp.storageLocation}` : ""}`} />
                 ))}
               </div>
@@ -172,36 +172,36 @@ export function SparePartsDashboard({
           </div>
 
           {/* 2. Stock Level Distribution */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Stock Level Distribution" color="bg-teal-500" count={activeParts.length} />
             <div className="space-y-2">
               <div className="flex h-5 overflow-hidden rounded-sm">
                 {stockoutParts.length > 0 && (
-                  <div className="flex items-center justify-center bg-red-500 text-[9px] font-bold text-white" style={{ width: `${(stockoutParts.length / Math.max(activeParts.length, 1)) * 100}%` }}>
+                  <div className="flex items-center justify-center bg-danger/100 text-[9px] font-bold text-white" style={{ width: `${(stockoutParts.length / Math.max(activeParts.length, 1)) * 100}%` }}>
                     {stockoutParts.length > 0 && `${stockoutParts.length}`}
                   </div>
                 )}
                 {lowStockParts.length > 0 && (
-                  <div className="flex items-center justify-center bg-amber-500 text-[9px] font-bold text-white" style={{ width: `${(lowStockParts.length / Math.max(activeParts.length, 1)) * 100}%` }}>
+                  <div className="flex items-center justify-center bg-warning/100 text-[9px] font-bold text-white" style={{ width: `${(lowStockParts.length / Math.max(activeParts.length, 1)) * 100}%` }}>
                     {lowStockParts.length}
                   </div>
                 )}
                 {healthyParts.length > 0 && (
-                  <div className="flex items-center justify-center bg-green-500 text-[9px] font-bold text-white" style={{ width: `${(healthyParts.length / Math.max(activeParts.length, 1)) * 100}%` }}>
+                  <div className="flex items-center justify-center bg-success/100 text-[9px] font-bold text-white" style={{ width: `${(healthyParts.length / Math.max(activeParts.length, 1)) * 100}%` }}>
                     {healthyParts.length}
                   </div>
                 )}
               </div>
               <div className="flex gap-4 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-red-500" /> Stockout ({stockoutParts.length})</span>
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-amber-500" /> Low ({lowStockParts.length})</span>
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-green-500" /> Healthy ({healthyParts.length})</span>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-danger/100" /> Stockout ({stockoutParts.length})</span>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-warning/100" /> Low ({lowStockParts.length})</span>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm bg-success/100" /> Healthy ({healthyParts.length})</span>
               </div>
             </div>
           </div>
 
           {/* 3. Category Breakdown */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Category Breakdown" color="bg-purple-500" count={categoryDist.length} />
             {categoryDist.length === 0 ? (
               <Empty msg="No categories defined" />
@@ -229,7 +229,7 @@ export function SparePartsDashboard({
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "40%" }}>
 
           {/* 1. Recent Usage */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Recent Usage" color="bg-teal-500" count={recentUsage.length} />
             {recentUsage.length === 0 ? (
               <Empty msg="No usage recorded" />
@@ -238,7 +238,7 @@ export function SparePartsDashboard({
                 {recentUsage.map((u) => {
                   const part = parts.find((p) => p.id === u.partId);
                   return (
-                    <Row key={u.id} color="bg-blue-500" type="Used" ref={part?.partNumber || `#${u.partId}`}
+                    <Row key={u.id} color="bg-primary/100" type="Used" ref={part?.partNumber || `#${u.partId}`}
                       title={part?.name || `Part #${u.partId}`}
                       detail={`-${u.quantity} ${part?.uom || ""} · WO #${u.workOrderId}`}
                       right={<span className="text-[9px] text-muted-foreground">{u.usedAt?.slice(0, 10)}</span>} />
@@ -249,7 +249,7 @@ export function SparePartsDashboard({
           </div>
 
           {/* 2. Top Used Parts */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
             <SecH label="Most Frequently Used" color="bg-violet-500" count={topUsedParts.length} />
             {topUsedParts.length === 0 ? (
               <Empty msg="No usage data yet" />
@@ -260,7 +260,7 @@ export function SparePartsDashboard({
                     <Clock className="h-3 w-3 shrink-0 text-muted-foreground/50 stroke-current" />
                     <span className="text-[9px] font-mono text-muted-foreground w-16 shrink-0 truncate">{t.partNumber}</span>
                     <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">{t.name}</span>
-                    <span className="text-xs font-semibold text-red-500">{t.totalQty}</span>
+                    <span className="text-xs font-semibold text-danger">{t.totalQty}</span>
                     <span className="text-[9px] text-muted-foreground">used {t.count}x</span>
                   </div>
                 ))}
@@ -269,36 +269,36 @@ export function SparePartsDashboard({
           </div>
 
           {/* 3. Status Distribution */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Part Status" color="bg-emerald-500" count={parts.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Part Status" color="bg-success/100" count={parts.length} />
             <div className="flex flex-wrap gap-1.5">
-              <StatusBadge color="bg-green-500" label="Active" count={activeParts.length} />
-              <StatusBadge color="bg-amber-500" label="Inactive" count={inactiveParts.length} />
-              <StatusBadge color="bg-gray-400" label="Obsolete" count={obsoleteParts.length} />
+              <StatusBadge color="bg-success/100" label="Active" count={activeParts.length} />
+              <StatusBadge color="bg-warning/100" label="Inactive" count={inactiveParts.length} />
+              <StatusBadge color="bg-muted-foreground/40" label="Obsolete" count={obsoleteParts.length} />
             </div>
           </div>
 
           {/* 4. Parts Blocking Work Orders */}
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SecH label="Parts Blocking WOs" color="bg-red-500" count={stockoutParts.length + lowStockParts.length} />
+          <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+            <SecH label="Parts Blocking WOs" color="bg-danger/100" count={stockoutParts.length + lowStockParts.length} />
             {stockoutParts.length === 0 && lowStockParts.length === 0 ? (
               <Empty msg="No parts currently blocking work orders" />
             ) : (
               <div className="space-y-0.5">
                 {stockoutParts.slice(0, 4).map((sp) => (
                   <div key={`bw-${sp.id}`} className="flex items-center gap-2 py-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0">
-                    <AlertTriangle className="h-3 w-3 shrink-0 text-red-500 stroke-current" />
+                    <AlertTriangle className="h-3 w-3 shrink-0 text-danger stroke-current" />
                     <span className="text-[9px] font-mono text-muted-foreground w-16 shrink-0">{sp.partNumber}</span>
                     <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">{sp.name}</span>
-                    <span className="text-[9px] font-semibold text-red-500">Stockout</span>
+                    <span className="text-[9px] font-semibold text-danger">Stockout</span>
                   </div>
                 ))}
                 {lowStockParts.slice(0, 3).map((sp) => (
                   <div key={`bl-${sp.id}`} className="flex items-center gap-2 py-1 border-b border-white/10 dark:border-slate-700/10 last:border-b-0">
-                    <Wrench className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
+                    <Wrench className="h-3 w-3 shrink-0 text-warning stroke-current" />
                     <span className="text-[9px] font-mono text-muted-foreground w-16 shrink-0">{sp.partNumber}</span>
                     <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-foreground">{sp.name}</span>
-                    <span className="text-[9px] font-semibold text-amber-500">Low ({sp.quantityOnHand})</span>
+                    <span className="text-[9px] font-semibold text-warning">Low ({sp.quantityOnHand})</span>
                   </div>
                 ))}
               </div>

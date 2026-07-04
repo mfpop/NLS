@@ -22,7 +22,7 @@ import {
 const STATUS_STYLES: Record<string, string> = {
   OPEN: "bg-primary/15 text-primary",
   IN_REVIEW: "bg-warning/15 text-warning",
-  CONTAINED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+  CONTAINED: "bg-primary/15 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
   CLOSED: "bg-success/15 text-success",
   CANCELLED: "bg-danger/15 text-danger",
 };
@@ -35,7 +35,7 @@ const SEVERITY_STYLES: Record<string, string> = {
 };
 
 const PROBLEM_TYPE_STYLES: Record<string, string> = {
-  PRODUCTION: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
+  PRODUCTION: "bg-accent/15 text-accent-foreground dark:bg-purple-900/30 dark:text-purple-300",
   QUALITY: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
   SAFETY: "bg-warning/15 text-warning",
   MATERIAL: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300",
@@ -99,8 +99,8 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</div>
+          <div className="h-4 w-0.5 bg-warning/100/60 rounded-full" />
+          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-warning/70 dark:text-amber-400/70">{title}</div>
         </div>
         {action}
       </div>
@@ -264,7 +264,7 @@ export function ProblemsPage() {
     setSuccessMsg("Problem cancelled"); setConfirmAction(null); refetch();
   }, [confirmAction, cancelProblem, refetch]);
 
-  const iCls = `h-7 w-full bg-card border border-gray-300 text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const iCls = `h-7 w-full bg-card border border-border text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
   const sCls = iCls;
 
   const renderHtmlBlock = (content: string, fallback = "Not defined") => (
@@ -338,7 +338,7 @@ export function ProblemsPage() {
           <h3 className={`text-sm font-semibold ${theme.textPrimary} mb-1.5`}>No problem selected</h3>
           <p className={`text-xs ${theme.textSecondary} leading-relaxed mb-4`}>Select a problem or create a new one.</p>
           <button type="button" onClick={hNew}
-            className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+            className="inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80 transition-colors">
             <Plus className="h-3.5 w-3.5 stroke-current" /> New Problem
           </button>
         </div>
@@ -349,7 +349,7 @@ export function ProblemsPage() {
         {mutationError && isForm && <div className="shrink-0 px-4 pt-2"><p className={`text-xs font-medium ${theme.textCritical}`}>{mutationError}</p></div>}
         {isForm ? renderForm() : (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="shrink-0 border-b border-slate-200 px-5 py-3 flex items-center gap-3">
+            <div className="shrink-0 border-b border-border px-5 py-3 flex items-center gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <div className={`text-sm font-bold ${theme.textPrimary} truncate`}>{sel.title}</div>
@@ -367,37 +367,37 @@ export function ProblemsPage() {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {sel.status === "OPEN" && (
-                  <button type="button" onClick={hReview} className="inline-flex h-7 items-center gap-1 border border-blue-200 dark:border-blue-800 px-2 text-[10px] font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={hReview} className="inline-flex h-7 items-center gap-1 border border-primary/20 dark:border-blue-800 px-2 text-[10px] font-semibold text-primary dark:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20 transition-all whitespace-nowrap">
                     <Eye className="h-2.5 w-2.5 stroke-current" />Review
                   </button>
                 )}
                 {sel.status === "IN_REVIEW" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "contain" })} className="inline-flex h-7 items-center gap-1 border border-indigo-200 dark:border-indigo-800 px-2 text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "contain" })} className="inline-flex h-7 items-center gap-1 border border-primary/20 dark:border-indigo-800 px-2 text-[10px] font-semibold text-primary dark:text-indigo-400 hover:bg-primary/10 dark:hover:bg-indigo-900/20 transition-all whitespace-nowrap">
                     <ShieldAlert className="h-2.5 w-2.5 stroke-current" />Contain
                   </button>
                 )}
                 {sel.status !== "CLOSED" && sel.status !== "CANCELLED" && sel.status !== "OPEN" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "close" })} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "close" })} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <ClipboardX className="h-2.5 w-2.5 stroke-current" />Close
                   </button>
                 )}
                 {sel.status !== "CLOSED" && sel.status !== "CANCELLED" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-danger/20 dark:border-red-800 px-2 text-[10px] font-semibold text-danger dark:text-danger/80 hover:bg-danger/10 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
                     <Ban className="h-2.5 w-2.5 stroke-current" />Cancel
                   </button>
                 )}
               </div>
             </div>
-            <div className="flex items-center border-b border-slate-200 bg-muted/20 px-3 py-1.5">
+            <div className="flex items-center border-b border-border bg-muted/20 px-3 py-1.5">
               {VIEW_PHASES.map((phase, idx) => {
                 const isActive = sel.status === phase;
                 const isPast = VIEW_PHASES.indexOf(sel.status) >= idx && sel.status !== phase;
                 return (
                   <div key={phase} className="flex items-center gap-0.5">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "CANCELLED" ? "text-muted-foreground" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "CANCELLED" ? "text-muted-foreground" : isPast ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
                       {isPast && sel.status !== "CANCELLED" ? "\u2713 " : ""}{statusLabel(phase)}
                     </span>
-                    {idx < VIEW_PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${VIEW_PHASES.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
+                    {idx < VIEW_PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${VIEW_PHASES.indexOf(sel.status) > idx ? "text-success/80" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
                   </div>
                 );
               })}
@@ -442,7 +442,7 @@ export function ProblemsPage() {
         {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b`}>{successMsg}</div>}
         <div>
           <PageHeader icon={<CircleAlert className="h-5 w-5 stroke-current" />}
-            iconClass="bg-amber-500/10 text-amber-600"
+            iconClass="bg-warning/100/10 text-warning"
             title="Problems" subtitle="Surface abnormalities, blockers, and deviations that require immediate production attention." />
         </div>
         <div>
@@ -471,7 +471,7 @@ export function ProblemsPage() {
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           <div className="flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-slate-200 flex items-center px-4">
+            <div className="shrink-0 h-8 border-b border-border flex items-center px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Problems</span>
               <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{problems.length}</span>
             </div>
@@ -483,7 +483,7 @@ export function ProblemsPage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No problems</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 dark:text-amber-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-warning/10 px-3 text-xs font-semibold text-warning hover:bg-warning/20 dark:text-amber-400 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> Create problem</button>
                 </div>
               ) : (
@@ -508,11 +508,11 @@ export function ProblemsPage() {
                 ))}</div>
               )}
             </div>
-            <div className="shrink-0 h-8 flex items-center border-t border-slate-200 bg-muted px-4">
+            <div className="shrink-0 h-8 flex items-center border-t border-border bg-muted px-4">
               <span className={`text-xs ${theme.textMuted}`}>{problems.length} problem{problems.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
-          <div onMouseDown={handleSplitMouseDown} className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10" style={{ width: 2 }} />
+          <div onMouseDown={handleSplitMouseDown} className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-warning/100/10" style={{ width: 2 }} />
           <div className={`flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
         <div className="shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">

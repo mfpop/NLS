@@ -33,9 +33,9 @@ type ActivityTab = "all" | "mine" | "mentions" | "following";
 /* ── Helpers ── */
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: "bg-blue-100 text-blue-700", IN_PROGRESS: "bg-amber-100 text-amber-700",
-  WAITING: "bg-slate-100 text-slate-600", COMPLETED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-slate-100 text-slate-500",
+  OPEN: "bg-primary/15 text-primary", IN_PROGRESS: "bg-warning/15 text-warning",
+  WAITING: "bg-muted text-muted-foreground", COMPLETED: "bg-success/15 text-success",
+  CANCELLED: "bg-muted text-muted-foreground",
 };
 
 const MODULE_ICONS: Record<string, typeof Activity> = {
@@ -45,11 +45,11 @@ const MODULE_ICONS: Record<string, typeof Activity> = {
 };
 
 const MODULE_COLORS: Record<string, string> = {
-  SAFETY: "bg-amber-100 text-amber-700", QUALITY: "bg-blue-100 text-blue-700",
-  MAINTENANCE: "bg-orange-100 text-orange-700", IMPROVE: "bg-purple-100 text-purple-700",
-  CHECK: "bg-teal-100 text-teal-700", DOCUMENT_CONTROL: "bg-indigo-100 text-indigo-700",
-  MER: "bg-rose-100 text-rose-700", MANUAL: "bg-sky-100 text-sky-700",
-  TASK: "bg-slate-100 text-slate-700",
+  SAFETY: "bg-warning/15 text-warning", QUALITY: "bg-primary/15 text-primary",
+  MAINTENANCE: "bg-warning/15 text-warning", IMPROVE: "bg-accent/15 text-accent-foreground",
+  CHECK: "bg-teal-100 text-teal-700", DOCUMENT_CONTROL: "bg-primary/15 text-primary",
+  MER: "bg-rose-100 text-rose-700", MANUAL: "bg-sky-100 text-accent-foreground",
+  TASK: "bg-muted text-muted-foreground",
 };
 
 function statusLabel(s: string): string {
@@ -97,32 +97,32 @@ function ActivityRow({ task }: { task: WorkspaceTaskNode }) {
   const ModuleIcon = MODULE_ICONS[task.sourceModule] || Activity;
 
   return (
-    <div className="flex items-start gap-3 px-4 py-2.5 border-b border-slate-100 hover:bg-white transition-colors min-h-0 group">
-      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${MODULE_COLORS[task.sourceModule] || "bg-slate-100 text-slate-600"}`}>
+    <div className="flex items-start gap-3 px-4 py-2.5 border-b border-border/50 hover:bg-background transition-colors min-h-0 group">
+      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${MODULE_COLORS[task.sourceModule] || "bg-muted text-muted-foreground"}`}>
         <ModuleIcon className="h-4 w-4 stroke-current" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="min-w-0 truncate text-sm font-semibold text-slate-900">{task.title}</span>
-          {overdue && <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />}
+          <span className="min-w-0 truncate text-sm font-semibold text-foreground">{task.title}</span>
+          {overdue && <AlertTriangle className="h-3 w-3 shrink-0 text-danger" />}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap text-[11px] text-slate-500">
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap text-[11px] text-muted-foreground">
           <span className="font-medium">{task.assignedTo || task.createdBy || "System"}</span>
           <span className="w-0.5 h-0.5 rounded-full bg-slate-300" />
-          <span className="text-slate-400">{moduleLabel(task.sourceModule)}</span>
+          <span className="text-muted-foreground/60">{moduleLabel(task.sourceModule)}</span>
           {task.dueDate && (
-            <span className={`flex items-center gap-0.5 ${overdue ? "text-red-500 font-semibold" : "text-slate-400"}`}>
+            <span className={`flex items-center gap-0.5 ${overdue ? "text-danger font-semibold" : "text-muted-foreground/60"}`}>
               <Calendar className="h-2.5 w-2.5 stroke-current" />Due {task.dueDate}
             </span>
           )}
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium rounded-sm ${STATUS_STYLES[task.status] || "bg-slate-50 text-slate-600"}`}>
+        <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium rounded-sm ${STATUS_STYLES[task.status] || "bg-muted text-muted-foreground"}`}>
           {statusLabel(task.status)}
         </span>
-        <span className="text-[10px] text-slate-400 whitespace-nowrap">{formatDateTime(task.updatedAt)}</span>
-        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className="text-[10px] text-muted-foreground/60 whitespace-nowrap">{formatDateTime(task.updatedAt)}</span>
+        <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/30 opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </div>
   );
@@ -132,8 +132,8 @@ function ActivityRow({ task }: { task: WorkspaceTaskNode }) {
 
 function SectionHeader({ label, action }: { label: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center h-8 border-b border-slate-200 px-4">
-      <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wide">{label}</span>
+    <div className="flex items-center h-8 border-b border-border px-4">
+      <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
       <div className="flex-1" />
       {action}
     </div>
@@ -144,21 +144,21 @@ function FilterLink({ label, active, count, onClick }: { label: string; active: 
   return (
     <button type="button" onClick={onClick}
       className={`flex items-center gap-2 w-full h-8 px-4 text-xs text-left transition-colors ${
-        active ? "bg-slate-100 font-semibold text-slate-900" : "text-slate-600 hover:bg-slate-50 hover:text-slate-800"
+        active ? "bg-muted font-semibold text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
       <span className="flex-1 truncate">{label}</span>
-      {count !== undefined && <span className="text-[10px] font-medium text-slate-400 tabular-nums">{count}</span>}
+      {count !== undefined && <span className="text-[10px] font-medium text-muted-foreground/60 tabular-nums">{count}</span>}
     </button>
   );
 }
 
 function SummaryRow({ label, count, icon }: { label: string; count: number; icon: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2.5 px-4 h-8 border-b border-slate-100 last:border-0">
-      <span className="shrink-0 text-slate-400">{icon}</span>
-      <span className="flex-1 text-xs text-slate-600 truncate">{label}</span>
-      <span className="text-xs font-semibold text-slate-800 tabular-nums">{count}</span>
+    <div className="flex items-center gap-2.5 px-4 h-8 border-b border-border/50 last:border-0">
+      <span className="shrink-0 text-muted-foreground/60">{icon}</span>
+      <span className="flex-1 text-xs text-muted-foreground truncate">{label}</span>
+      <span className="text-xs font-semibold text-foreground tabular-nums">{count}</span>
     </div>
   );
 }
@@ -293,11 +293,11 @@ export function ActivityFeedPage() {
         />
       }
       footer={
-        <span className="flex items-center gap-4 text-xs text-slate-500">
+        <span className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="font-medium">Activity Feed</span>
           <span className="flex-1" />
           {sorted.length > 0 && <span>{sorted.length} activities</span>}
-          {lastUpdated && <span className="text-slate-400">Updated: {lastUpdated}</span>}
+          {lastUpdated && <span className="text-muted-foreground/60">Updated: {lastUpdated}</span>}
         </span>
       }
     >
@@ -305,7 +305,7 @@ export function ActivityFeedPage() {
         {/* ── Main Feed ── */}
         <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
           {/* Tabs */}
-          <div className="shrink-0 flex items-center border-b border-slate-200 bg-muted">
+          <div className="shrink-0 flex items-center border-b border-border bg-muted">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -313,14 +313,14 @@ export function ActivityFeedPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-1.5 h-9 px-3 text-xs font-semibold transition-colors border-b-2 ${
                   activeTab === tab.key
-                    ? "text-slate-900 border-sky-500 bg-white"
-                    : "text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-100"
+                    ? "text-foreground border-sky-500 bg-background"
+                    : "text-muted-foreground border-transparent hover:text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {tab.label}
                 {tab.count !== undefined && (
                   <span className={`inline-flex items-center justify-center h-[18px] min-w-[18px] px-1 text-[10px] font-semibold rounded-sm ${
-                    activeTab === tab.key ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"
+                    activeTab === tab.key ? "bg-sky-100 text-accent-foreground" : "bg-muted text-muted-foreground"
                   }`}>
                     {tab.count}
                   </span>
@@ -328,21 +328,21 @@ export function ActivityFeedPage() {
               </button>
             ))}
             <div className="flex-1" />
-            <span className="pr-3 text-[10px] text-slate-400 tabular-nums">{sorted.length} items</span>
+            <span className="pr-3 text-[10px] text-muted-foreground/60 tabular-nums">{sorted.length} items</span>
           </div>
 
           {/* Activity list */}
           <div className="flex-1 min-h-0 overflow-y-auto bg-muted">
             {loading && allTasks.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-xs text-slate-500">
+              <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                 <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2 rounded-full" />
                 Loading activity feed...
               </div>
             ) : sorted.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-8">
                 <Activity className="h-12 w-12 text-slate-200 mb-3" />
-                <p className="text-sm font-medium text-slate-500">No activity yet</p>
-                <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                <p className="text-sm font-medium text-muted-foreground">No activity yet</p>
+                <p className="text-xs text-muted-foreground/60 mt-1 max-w-sm">
                   Updates from tasks, audits, safety, documents, and improvement work will appear here.
                 </p>
               </div>

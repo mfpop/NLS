@@ -26,7 +26,7 @@ const STATUS_STYLES: Record<string, string> = {
   UNDER_REVIEW: "bg-warning/15 text-warning",
   ACCEPTED: "bg-success/15 text-success",
   REJECTED: "bg-danger/15 text-danger",
-  CONVERTED_TO_KAIZEN: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  CONVERTED_TO_KAIZEN: "bg-accent/15 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
 };
 const PRIORITY_STYLES: Record<string, string> = {
   LOW: "bg-muted text-muted-foreground",
@@ -77,8 +77,8 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-amber-500/60" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</div>
+          <div className="h-4 w-0.5 bg-warning/100/60" />
+          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-warning/70 dark:text-amber-400/70">{title}</div>
         </div>
         {action}
       </div>
@@ -238,7 +238,7 @@ export function SuggestionsPage() {
     } catch (e: unknown) { setMutationError(e instanceof Error ? e.message : "Delete failed"); setConfirmDelete(null); }
   }, [confirmDelete, deleteSuggestion, refetch]);
 
-  const iCls = `h-7 w-full bg-card border border-gray-300 text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const iCls = `h-7 w-full bg-card border border-border text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
   const sCls = iCls;
 
   const renderHtmlBlock = (content: string, fallback = "Not defined") => (
@@ -293,7 +293,7 @@ export function SuggestionsPage() {
           </SectionCard>
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden mt-3">
             <SectionCard title="Description" />
-            <div className="flex-1 min-h-0 overflow-hidden border border-gray-300">
+            <div className="flex-1 min-h-0 overflow-hidden border border-border">
               <div className="h-full overflow-y-auto"><RichTextEditor content={g("description")} onChange={(html) => sf("description", html)}
                 placeholder="Describe the improvement idea, current issue, or opportunity..." /></div>
             </div>
@@ -318,32 +318,32 @@ export function SuggestionsPage() {
         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
           <div className="p-4 space-y-5">
             <SectionCard title="Suggestions" action={conversionRate > 0 ? (
-              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">{conversionRate}% conversion</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-accent/15 dark:bg-purple-900/30 text-accent-foreground dark:text-purple-300 border-accent/20 dark:border-purple-800">{conversionRate}% conversion</span>
             ) : undefined}>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Total</p>
                   <p className={`text-lg font-bold ${theme.textPrimary}`}>{total}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("NEW")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("NEW")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>New</p>
-                  <p className={`text-lg font-bold text-blue-600 dark:text-blue-400`}>{newCount}</p>
+                  <p className={`text-lg font-bold text-primary dark:text-blue-400`}>{newCount}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("UNDER_REVIEW")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("UNDER_REVIEW")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Under Review</p>
-                  <p className={`text-lg font-bold text-yellow-600 dark:text-yellow-400`}>{reviewCount}</p>
+                  <p className={`text-lg font-bold text-warning dark:text-yellow-400`}>{reviewCount}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("ACCEPTED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("ACCEPTED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Accepted</p>
-                  <p className={`text-lg font-bold text-green-600 dark:text-green-400`}>{acceptedCount}</p>
+                  <p className={`text-lg font-bold text-success dark:text-success/80`}>{acceptedCount}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("REJECTED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("REJECTED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Rejected</p>
                   <p className={`text-lg font-bold ${theme.textMuted}`}>{rejectedCount}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("CONVERTED_TO_KAIZEN")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("CONVERTED_TO_KAIZEN")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Converted</p>
-                  <p className={`text-lg font-bold text-purple-600 dark:text-purple-400`}>{convertedCount}</p>
+                  <p className={`text-lg font-bold text-accent-foreground dark:text-purple-400`}>{convertedCount}</p>
                 </button>
               </div>
             </SectionCard>
@@ -356,19 +356,19 @@ export function SuggestionsPage() {
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>New</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{newCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(newCount / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-blue-500" style={{ width: `${total > 0 ? (newCount / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary/100" style={{ width: `${total > 0 ? (newCount / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Under Review</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{reviewCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(reviewCount / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-yellow-500" style={{ width: `${total > 0 ? (reviewCount / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-warning" style={{ width: `${total > 0 ? (reviewCount / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Accepted</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{acceptedCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(acceptedCount / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-green-500" style={{ width: `${total > 0 ? (acceptedCount / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-success/100" style={{ width: `${total > 0 ? (acceptedCount / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Rejected</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{rejectedCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(rejectedCount / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-gray-400" style={{ width: `${total > 0 ? (rejectedCount / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-muted-foreground/40" style={{ width: `${total > 0 ? (rejectedCount / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Converted to Kaizen</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{convertedCount} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(convertedCount / total * 100) : 0}%)</span></span></div>
@@ -380,7 +380,7 @@ export function SuggestionsPage() {
 
             <div className="flex justify-center pt-2">
               <button type="button" onClick={hNew}
-                className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+                className="inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80 transition-colors">
                 <Plus className="h-3.5 w-3.5 stroke-current" /> New Suggestion
               </button>
             </div>
@@ -409,22 +409,22 @@ export function SuggestionsPage() {
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {sel.status === "NEW" && (
-                  <button type="button" onClick={hReview} className="inline-flex h-7 items-center gap-1 border border-blue-200 dark:border-blue-800 px-2 text-[10px] font-semibold text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20  transition-all whitespace-nowrap">
+                  <button type="button" onClick={hReview} className="inline-flex h-7 items-center gap-1 border border-primary/20 dark:border-blue-800 px-2 text-[10px] font-semibold text-primary dark:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20  transition-all whitespace-nowrap">
                     <RotateCcw className="h-2.5 w-2.5 stroke-current" />Review
                   </button>
                 )}
                 {(sel.status === "NEW" || sel.status === "UNDER_REVIEW") && (
-                  <button type="button" onClick={hAccept} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20  transition-all whitespace-nowrap">
+                  <button type="button" onClick={hAccept} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20  transition-all whitespace-nowrap">
                     <ThumbsUp className="h-2.5 w-2.5 stroke-current" />Accept
                   </button>
                 )}
                 {(sel.status === "NEW" || sel.status === "UNDER_REVIEW") && (
-                  <button type="button" onClick={() => { setDecisionText(""); setConfirmReject(sel.id); }} className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20  transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => { setDecisionText(""); setConfirmReject(sel.id); }} className="inline-flex h-7 items-center gap-1 border border-danger/20 dark:border-red-800 px-2 text-[10px] font-semibold text-danger dark:text-danger/80 hover:bg-danger/10 dark:hover:bg-red-900/20  transition-all whitespace-nowrap">
                     <ThumbsDown className="h-2.5 w-2.5 stroke-current" />Reject
                   </button>
                 )}
                 {sel.status === "ACCEPTED" && (
-                  <button type="button" onClick={hConvert} className="inline-flex h-7 items-center gap-1 border border-purple-200 dark:border-purple-800 px-2 text-[10px] font-semibold text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20  transition-all whitespace-nowrap">
+                  <button type="button" onClick={hConvert} className="inline-flex h-7 items-center gap-1 border border-accent/20 dark:border-purple-800 px-2 text-[10px] font-semibold text-accent-foreground dark:text-purple-400 hover:bg-accent/10 dark:hover:bg-purple-900/20  transition-all whitespace-nowrap">
                     <MessageSquare className="h-2.5 w-2.5 stroke-current" />Convert to Kaizen
                   </button>
                 )}
@@ -440,10 +440,10 @@ export function SuggestionsPage() {
                 const isPast = statusOrder.indexOf(sel.status) >= idx && sel.status !== phase;
                 return (
                   <div key={phase} className="flex items-center gap-0.5">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5  transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "REJECTED" || sel.status === "CONVERTED_TO_KAIZEN" ? "text-muted-foreground" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5  transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "REJECTED" || sel.status === "CONVERTED_TO_KAIZEN" ? "text-muted-foreground" : isPast ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
                       {isPast && sel.status !== "REJECTED" && sel.status !== "CONVERTED_TO_KAIZEN" ? "\u2713 " : ""}{statusLabel(phase)}
                     </span>
-                    {idx < 2 && <span className={`text-[10px] mx-0.5 ${statusOrder.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
+                    {idx < 2 && <span className={`text-[10px] mx-0.5 ${statusOrder.indexOf(sel.status) > idx ? "text-success/80" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
                   </div>
                 );
               })}
@@ -471,14 +471,14 @@ export function SuggestionsPage() {
               </SectionCard>
               {sel.decision && sel.status !== "REJECTED" && (<SectionCard title="Review Notes"><p className={`text-sm ${theme.textPrimary}`}>{sel.decision}</p></SectionCard>)}
               {sel.status === "REJECTED" && sel.decision && (<SectionCard title="Rejection Reason">
-                <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 stroke-current" /><p className={`text-sm ${theme.textPrimary}`}>{sel.decision}</p></div></SectionCard>
+                <div className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 text-danger shrink-0 mt-0.5 stroke-current" /><p className={`text-sm ${theme.textPrimary}`}>{sel.decision}</p></div></SectionCard>
               )}
               <SectionCard title="Status">
                 {sel.status === "CONVERTED_TO_KAIZEN" ? (
-                  <div className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5 text-purple-600 stroke-current" /><span className="text-sm text-purple-700 font-medium">Converted to Kaizen</span></div>
+                  <div className="flex items-center gap-2"><MessageSquare className="h-3.5 w-3.5 text-accent-foreground stroke-current" /><span className="text-sm text-accent-foreground font-medium">Converted to Kaizen</span></div>
                 ) : sel.status === "ACCEPTED" ? (
                   <div className="space-y-2"><p className={`text-sm ${theme.textPrimary}`}>Accepted — ready for Kaizen conversion.</p>
-                    <button type="button" onClick={hConvert} className="inline-flex h-6 items-center gap-1 border border-purple-200 px-2 text-xs font-medium text-purple-700 hover:bg-purple-50 transition-colors whitespace-nowrap"><MessageSquare className="h-3 w-3 stroke-current" /> Convert to Kaizen</button></div>
+                    <button type="button" onClick={hConvert} className="inline-flex h-6 items-center gap-1 border border-accent/20 px-2 text-xs font-medium text-accent-foreground hover:bg-accent/10 transition-colors whitespace-nowrap"><MessageSquare className="h-3 w-3 stroke-current" /> Convert to Kaizen</button></div>
                 ) : sel.status === "REJECTED" ? (<p className={`text-sm italic ${theme.textMuted}`}>Not accepted for conversion.</p>) : (<p className={`text-sm italic ${theme.textMuted}`}>Accept this suggestion to enable Kaizen conversion.</p>)}
               </SectionCard>
             </div>
@@ -506,7 +506,7 @@ export function SuggestionsPage() {
         )}
         <div className="print-ignore">
           <PageHeader icon={<Lightbulb className="h-5 w-5 stroke-current" />}
-            iconClass="bg-amber-500/10 text-amber-600"
+            iconClass="bg-warning/100/10 text-warning"
             title="Suggestions" subtitle="Collect, review, and implement improvement ideas." />
         </div>
         <div className="print-ignore">
@@ -537,7 +537,7 @@ export function SuggestionsPage() {
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-slate-200 flex items-center px-4">
+            <div className="shrink-0 h-8 border-b border-border flex items-center px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Suggestions</span>
               <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{suggestions.length}</span>
             </div>
@@ -549,7 +549,7 @@ export function SuggestionsPage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No suggestions</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 dark:text-amber-400  transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-warning/10 px-3 text-xs font-semibold text-warning hover:bg-warning/20 dark:text-amber-400  transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> Create suggestion</button>
                 </div>
               ) : (
@@ -585,12 +585,12 @@ export function SuggestionsPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 h-8 flex items-center border-t border-slate-200 bg-muted px-4">
+            <div className="shrink-0 h-8 flex items-center border-t border-border bg-muted px-4">
               <span className={`text-xs ${theme.textMuted}`}>{suggestions.length} suggestion{suggestions.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
           <div onMouseDown={handleSplitMouseDown}
-            className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10"
+            className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-warning/100/10"
             style={{ width: 2 }} />
           <div className={`print-area flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>
             {renderDetail()}

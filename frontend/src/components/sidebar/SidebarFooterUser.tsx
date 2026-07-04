@@ -56,7 +56,7 @@ export function SidebarFooterUser() {
             User Manual
           </NavLink>
           <NavLink to="/system/sign-out" onClick={closeDropdownAndMenus}
-            className="flex items-center gap-2.5 h-[22px] px-3 text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors"
+            className="flex items-center gap-2.5 h-[22px] px-3 text-[13px] font-medium text-danger hover:bg-danger/10 transition-colors"
           >
             <LogOut className="h-4 w-4 stroke-current" />
             Sign out

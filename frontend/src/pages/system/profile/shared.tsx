@@ -158,13 +158,13 @@ export function ProfileSectionHeader({
   subtitle: string;
 }) {
   return (
-    <header className="flex items-start gap-3 border-b border-slate-200 px-4 py-3">
+    <header className="flex items-start gap-3 border-b border-border px-4 py-3">
       <div className="w-5 shrink-0 flex justify-center pt-0.5">
         <Icon className={`h-4 w-4 ${iconColor}`} />
       </div>
       <div className="min-w-0 flex-1 text-left">
         <h2 className="text-sm font-semibold leading-5 text-left">{title}</h2>
-        <p className="text-xs leading-4 text-slate-500 text-left">{subtitle}</p>
+        <p className="text-xs leading-4 text-muted-foreground text-left">{subtitle}</p>
       </div>
     </header>
   );
@@ -249,7 +249,7 @@ export function ProfileReadOnlyAccessRows({
     return (
       <div className="space-y-3 px-4 py-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-4 w-24 animate-pulse rounded bg-slate-100" />
+          <div key={i} className="h-4 w-24 animate-pulse rounded bg-muted" />
         ))}
       </div>
     );
@@ -259,51 +259,51 @@ export function ProfileReadOnlyAccessRows({
     <div className="space-y-3 px-4 py-3">
       {/* Roles */}
       <div>
-        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Roles</div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Roles</div>
         {activeRoles.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {activeRoles.map((r) => (
               <span
                 key={r.id}
-                className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-700 shadow-sm"
+                className="inline-flex items-center rounded-md border border-border bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground shadow-sm"
               >
                 {r.roleName}
               </span>
             ))}
           </div>
         ) : (
-          <span className="text-sm text-slate-400 italic">No roles assigned</span>
+          <span className="text-sm text-muted-foreground/60 italic">No roles assigned</span>
         )}
       </div>
 
       {/* Access Level */}
       <div>
-        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Access Level</div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Access Level</div>
         {accessLevel ? (
-          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-700">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-sky-500" />
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-foreground">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent/100" />
             {accessLevel}
           </span>
         ) : (
-          <span className="text-sm text-slate-400 italic">—</span>
+          <span className="text-sm text-muted-foreground/60 italic">—</span>
         )}
       </div>
 
       {/* Status */}
       <div>
-        <div className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Status</div>
+        <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1">Status</div>
         {status ? (
-          <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${status === "Active" ? "text-emerald-700" : "text-slate-400"}`}>
-            <span className={`inline-block h-1.5 w-1.5 rounded-full ${status === "Active" ? "bg-emerald-500" : "bg-slate-300"}`} />
+          <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${status === "Active" ? "text-success" : "text-muted-foreground/60"}`}>
+            <span className={`inline-block h-1.5 w-1.5 rounded-full ${status === "Active" ? "bg-success/100" : "bg-slate-300"}`} />
             {status}
           </span>
         ) : (
-          <span className="text-sm text-slate-400 italic">—</span>
+          <span className="text-sm text-muted-foreground/60 italic">—</span>
         )}
       </div>
 
       {/* Read-only helper text */}
-      <p className="text-[10px] text-slate-400 italic pt-1 leading-relaxed">
+      <p className="text-[10px] text-muted-foreground/60 italic pt-1 leading-relaxed">
         {canEditAccess
           ? "Role assignments and access levels can be changed in System &gt; Users &amp; Access."
           : "Requires admin rights to view or modify detailed permissions."}
@@ -315,7 +315,7 @@ export function ProfileReadOnlyAccessRows({
 /* ── CSS Classes ────────────────────────────────────────────────── */
 
 export const inputClass =
-  `w-full border-0 border-b border-slate-200 bg-transparent px-0 py-1.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground hover:border-border-major focus:border-success focus:outline-none focus:ring-0`;
+  `w-full border-0 border-b border-border bg-transparent px-0 py-1.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground hover:border-border-major focus:border-success focus:outline-none focus:ring-0`;
 
 export const inputErrorClass =
   `w-full border-0 border-b border-danger bg-transparent px-0 py-1.5 text-sm ${theme.textPrimary} transition placeholder:text-muted-foreground hover:border-danger focus:border-danger focus:outline-none focus:ring-0`;

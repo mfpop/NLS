@@ -74,15 +74,15 @@ function Fld({ label, children, required, error }: { label: string; children: Re
   return (
     <div className="space-y-1">
       <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-danger ml-0.5">*</span>}
       </label>
       {children}
-      {error && <p className="text-[10px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[10px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
 
-const inpCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-teal-500 transition-colors placeholder:text-muted-foreground/40";
+const inpCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-teal-500 transition-colors placeholder:text-muted-foreground/40";
 const selCls = inpCls + " appearance-none";
 
 function cls(...args: (string | false | null | undefined)[]): string {
@@ -283,8 +283,8 @@ export function SparePartsPage() {
   }, [parts, filterStock]);
 
   const statusColors: Record<string, string> = {
-    ACTIVE: "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
-    INACTIVE: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
+    ACTIVE: "bg-success/15 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
+    INACTIVE: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
     OBSOLETE: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
   };
 
@@ -325,7 +325,7 @@ export function SparePartsPage() {
   // ── Form ──
   const renderForm = () => (
     <div className="flex flex-1 min-h-0">
-      <div className="w-[25%] min-w-50 border-r border-slate-200 bg-card/30 p-4 space-y-4 overflow-visible">
+      <div className="w-[25%] min-w-50 border-r border-border bg-card/30 p-4 space-y-4 overflow-visible">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <Hash className="h-3 w-3" /> Part Info & Location
         </p>
@@ -375,12 +375,12 @@ export function SparePartsPage() {
         </p>
         <Fld label="Description">
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="h-20 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-500"
+            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-500"
             placeholder="Part description, specifications..." />
         </Fld>
         <Fld label="Notes">
           <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="h-20 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-500"
+            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-teal-500"
             placeholder="Additional notes, cross-references..." />
         </Fld>
       </div>
@@ -393,7 +393,7 @@ export function SparePartsPage() {
     const level = stockLevel(sel);
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="sticky top-0 bg-card z-10 border-b border-slate-200 px-5 py-3">
+        <div className="sticky top-0 bg-card z-10 border-b border-border px-5 py-3">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -430,11 +430,11 @@ export function SparePartsPage() {
                 </div>
                 <div className="h-2 w-full overflow-hidden bg-muted">
                   <div className={cls("h-full transition-all duration-700",
-                    level === "critical" ? "bg-red-500" : level === "low" ? "bg-amber-500" : level === "full" ? "bg-green-500" : "bg-gray-400")}
+                    level === "critical" ? "bg-danger/100" : level === "low" ? "bg-warning/100" : level === "full" ? "bg-success/100" : "bg-muted-foreground/40")}
                     style={{ width: `${Math.min((sel.quantityOnHand / (Math.max(sel.minQuantity, 1) * 2)) * 100, 100)}%` }} />
                 </div>
                 {lowStock(sel) && (
-                  <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-red-500">
+                  <p className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-danger">
                     <AlertTriangle className="h-3.5 w-3.5 stroke-current" />
                     {sel.quantityOnHand === 0 ? "Out of stock — reorder immediately" : "Low stock — reorder soon"}
                   </p>
@@ -477,7 +477,7 @@ export function SparePartsPage() {
                 <div className="space-y-1">
                   {usages.map((u) => (
                     <div key={u.id} className="flex items-center gap-2 border border-border/30 bg-card/40 px-2.5 py-1.5 text-[11px]">
-                      <span className="font-semibold text-red-500">-{u.quantity}</span>
+                      <span className="font-semibold text-danger">-{u.quantity}</span>
                       <span className="font-mono text-muted-foreground">WO #{u.workOrderId}</span>
                       {u.usedBy && <span className="text-muted-foreground">by {u.usedBy}</span>}
                       <span className="text-muted-foreground ml-auto">{u.usedAt?.slice(0, 10)}</span>
@@ -499,7 +499,7 @@ export function SparePartsPage() {
           </div>
 
           {/* Right 35%: Status, Category, Min/Max, Supplier, Location */}
-          <div className="border-l border-slate-200 bg-card/20 p-5 space-y-5" style={{ flexBasis: "35%", minWidth: 240 }}>
+          <div className="border-l border-border bg-card/20 p-5 space-y-5" style={{ flexBasis: "35%", minWidth: 240 }}>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Details</h3>
               <div className="space-y-2.5">
@@ -519,7 +519,7 @@ export function SparePartsPage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Current Stock</p>
-                  <p className={cls("text-sm font-bold", level === "critical" ? "text-red-500" : level === "low" ? "text-amber-500" : "text-foreground")}>
+                  <p className={cls("text-sm font-bold", level === "critical" ? "text-danger" : level === "low" ? "text-warning" : "text-foreground")}>
                     {sel.quantityOnHand} {sel.uom || "units"}
                   </p>
                 </div>
@@ -548,8 +548,8 @@ export function SparePartsPage() {
         <div className={cls(
           "shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b",
           errorMsg
-            ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-300"
-            : "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300",
+            ? "bg-danger/10 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300"
+            : "bg-success/10 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300",
         )}>
           {errorMsg ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
           {errorMsg || successMsg}
@@ -605,8 +605,8 @@ export function SparePartsPage() {
       {view === "dashboard" ? (
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left 20%: Inventory Records Panel */}
-          <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-card/30" style={{ flexBasis: "20%", minWidth: 200 }}>
-            <div className="shrink-0 h-8 flex items-center border-b border-slate-200 bg-muted/50 px-3">
+          <div className="flex flex-col min-h-0 overflow-hidden border-r border-border bg-card/30" style={{ flexBasis: "20%", minWidth: 200 }}>
+            <div className="shrink-0 h-8 flex items-center border-b border-border bg-muted/50 px-3">
               <span className="text-xs font-medium text-muted-foreground">Inventory</span>
               <span className="ml-auto text-[10px] font-mono text-muted-foreground">{parts.length}</span>
             </div>
@@ -615,7 +615,7 @@ export function SparePartsPage() {
               <div className="relative">
                 <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search parts..."
-                  className="h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-teal-500 transition-colors placeholder:text-muted-foreground/40" />
+                  className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-teal-500 transition-colors placeholder:text-muted-foreground/40" />
                 {search && (
                   <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <XCircle className="h-3 w-3 stroke-current" />
@@ -625,14 +625,14 @@ export function SparePartsPage() {
               {/* Filters */}
               <div className="flex gap-1">
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-teal-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-teal-500 transition-colors appearance-none">
                   <option value="">All Status</option>
                   <option value="ACTIVE">Active</option>
                   <option value="INACTIVE">Inactive</option>
                   <option value="OBSOLETE">Obsolete</option>
                 </select>
                 <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-teal-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-teal-500 transition-colors appearance-none">
                   <option value="">All Cat</option>
                   <option value="Seals">Seals</option>
                   <option value="Bearings">Bearings</option>
@@ -670,17 +670,17 @@ export function SparePartsPage() {
                           selId === sp.id ? "bg-table-selected border-l-2 border-l-teal-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
                         )}>
                         <div className={cls("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                          level === "critical" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" :
-                          level === "low" ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" :
-                          level === "full" ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" :
+                          level === "critical" ? "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-danger/80" :
+                          level === "low" ? "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-400" :
+                          level === "full" ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-success/80" :
                           "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400")}>
                           {sp.quantityOnHand}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span className="min-w-0 truncate text-sm font-semibold text-foreground">{sp.name}</span>
-                            {level === "critical" && <span className="shrink-0" title="Out of stock"><AlertTriangle className="h-3 w-3 text-red-500 stroke-current" /></span>}
-                            {level === "low" && <span className="shrink-0" title="Low stock"><AlertTriangle className="h-3 w-3 text-amber-500 stroke-current" /></span>}
+                            {level === "critical" && <span className="shrink-0" title="Out of stock"><AlertTriangle className="h-3 w-3 text-danger stroke-current" /></span>}
+                            {level === "low" && <span className="shrink-0" title="Low stock"><AlertTriangle className="h-3 w-3 text-warning stroke-current" /></span>}
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span className="font-mono">{sp.partNumber}</span>
@@ -696,7 +696,7 @@ export function SparePartsPage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
+            <div className="shrink-0 h-7 flex items-center border-t border-border bg-muted/50 px-3">
               <span className="text-[10px] text-muted-foreground">{parts.length} part{parts.length !== 1 ? "s" : ""}</span>
               {filterStatus && (
                 <span className="ml-auto text-[10px] text-muted-foreground">{filterStatus.charAt(0) + filterStatus.slice(1).toLowerCase()}</span>
@@ -711,9 +711,9 @@ export function SparePartsPage() {
       ) : (
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: List */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-card/30"
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border bg-card/30"
           style={{ flexBasis: `${leftPct}%`, minWidth: 280 }}>
-          <div className="shrink-0 h-8 flex items-center border-b border-slate-200 bg-muted/50 px-3">
+          <div className="shrink-0 h-8 flex items-center border-b border-border bg-muted/50 px-3">
             <span className="text-xs font-medium text-muted-foreground">Inventory</span>
             <span className="ml-auto text-[10px] font-mono text-muted-foreground">{filteredParts.length}</span>
           </div>
@@ -750,17 +750,17 @@ export function SparePartsPage() {
                           selId === sp.id ? "bg-table-selected border-l-2 border-l-teal-500" : "border-l-2 border-l-transparent hover:bg-table-row-hover",
                         )}>
                         <div className={cls("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold",
-                          level === "critical" ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" :
-                          level === "low" ? "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400" :
-                          level === "full" ? "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" :
+                          level === "critical" ? "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-danger/80" :
+                          level === "low" ? "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-400" :
+                          level === "full" ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-success/80" :
                           "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400")}>
                           {sp.quantityOnHand}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span className="min-w-0 truncate text-sm font-semibold text-foreground">{sp.name}</span>
-                            {level === "critical" && <span className="shrink-0" title="Out of stock"><AlertTriangle className="h-3 w-3 text-red-500 stroke-current" /></span>}
-                            {level === "low" && <span className="shrink-0" title="Low stock"><AlertTriangle className="h-3 w-3 text-amber-500 stroke-current" /></span>}
+                            {level === "critical" && <span className="shrink-0" title="Out of stock"><AlertTriangle className="h-3 w-3 text-danger stroke-current" /></span>}
+                            {level === "low" && <span className="shrink-0" title="Low stock"><AlertTriangle className="h-3 w-3 text-warning stroke-current" /></span>}
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <span className="font-mono">{sp.partNumber}</span>
@@ -777,10 +777,10 @@ export function SparePartsPage() {
               )}
             </div>
           )}
-          <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
+          <div className="shrink-0 h-7 flex items-center border-t border-border bg-muted/50 px-3">
             <span className="text-[10px] text-muted-foreground">{filteredParts.length} part{filteredParts.length !== 1 ? "s" : ""}</span>
             {parts.filter((p) => lowStock(p)).length > 0 && (
-              <span className="ml-auto text-[10px] font-semibold text-red-500">{parts.filter((p) => lowStock(p)).length} low stock</span>
+              <span className="ml-auto text-[10px] font-semibold text-danger">{parts.filter((p) => lowStock(p)).length} low stock</span>
             )}
           </div>
         </div>
@@ -808,7 +808,7 @@ export function SparePartsPage() {
       )}
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
+      <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
         <span className="font-semibold text-foreground">Spare Parts</span>
         <span className="mx-1 h-3 w-px bg-border/30" />
         <span>{parts.length} part{parts.length !== 1 ? "s" : ""}</span>

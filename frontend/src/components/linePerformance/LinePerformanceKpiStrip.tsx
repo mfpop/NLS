@@ -16,10 +16,10 @@ function mapCritical(status: string): "good" | "warning" | "critical" | "neutral
 export function LinePerformanceKpiStrip({ kpis }: Props) {
   if (!kpis) {
     return (
-      <div className="grid grid-cols-7 divide-x divide-slate-200 border-b border-slate-200 h-16">
+      <div className="grid grid-cols-7 divide-x divide-border border-b border-border h-16">
         {Array.from({ length: 7 }).map((_, i) => (
           <div key={i} className="flex items-center px-3 animate-pulse">
-            <div className="h-8 w-full rounded bg-slate-200" />
+            <div className="h-8 w-full rounded bg-muted/80" />
           </div>
         ))}
       </div>
@@ -27,7 +27,7 @@ export function LinePerformanceKpiStrip({ kpis }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-7 divide-x divide-slate-300 border-b border-slate-300 bg-slate-50">
+    <div className="grid grid-cols-7 divide-x divide-slate-300 border-b border-border bg-muted">
       <LinePerformanceKpiCard
         title="Plan"
         value={kpis.planQuantity}

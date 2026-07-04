@@ -29,11 +29,11 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
   }, [pageCount, safePage]);
 
   if (totalItems === 0) {
-    return <span className="font-medium whitespace-nowrap text-xs text-slate-600">0 items</span>;
+    return <span className="font-medium whitespace-nowrap text-xs text-muted-foreground">0 items</span>;
   }
 
   return (
-    <div className="flex items-center gap-2 text-xs text-slate-600">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
       <span className="font-medium whitespace-nowrap">
         {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, totalItems)} of {totalItems}
       </span>
@@ -43,7 +43,7 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
             type="button"
             disabled={safePage <= 1}
             onClick={() => onPageChange(1)}
-            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
             title="First page"
           >
             {"\u00AB"}
@@ -52,7 +52,7 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
             type="button"
             disabled={safePage <= 1}
             onClick={() => onPageChange(Math.max(1, safePage - 1))}
-            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
             title="Previous page"
           >
             {"\u2039"}
@@ -62,7 +62,7 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
               p === "..." ? (
                 <span
                   key={`ellipsis-${i}`}
-                  className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-slate-400 select-none"
+                  className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-muted-foreground/60 select-none"
                 >
                   {"\u2026"}
                 </span>
@@ -73,8 +73,8 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
                   onClick={() => onPageChange(p)}
                   className={`inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] px-1 text-xs font-semibold transition-all ${
                     p === safePage
-                      ? "bg-amber-50 border border-amber-300 text-amber-800"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? "bg-warning/10 border border-warning/30 text-warning"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {p}
@@ -86,7 +86,7 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
             type="button"
             disabled={safePage >= pageCount}
             onClick={() => onPageChange(Math.min(pageCount, safePage + 1))}
-            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
             title="Next page"
           >
             {"\u203A"}
@@ -95,7 +95,7 @@ export function CompactPagination({ currentPage, totalItems, pageSize, onPageCha
             type="button"
             disabled={safePage >= pageCount}
             onClick={() => onPageChange(pageCount)}
-            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors"
+            className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
             title="Last page"
           >
             {"\u00BB"}

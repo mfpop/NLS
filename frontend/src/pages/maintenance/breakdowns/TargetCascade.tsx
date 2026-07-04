@@ -189,7 +189,7 @@ export function TargetCascade({ value, onChange, plantRequired, disabled }: Targ
       </div>
 
       {effectiveTarget && (
-        <p className="text-[11px] font-medium text-orange-600 dark:text-orange-400">
+        <p className="text-[11px] font-medium text-warning dark:text-orange-400">
           Target: {effectiveTarget}
         </p>
       )}

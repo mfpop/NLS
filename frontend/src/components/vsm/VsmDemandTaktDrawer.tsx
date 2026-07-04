@@ -21,8 +21,8 @@ interface Props {
   onSave: (chartId: string, input: Record<string, unknown>) => Promise<Record<string, unknown> | null>;
 }
 
-const FIELD = "w-full h-8 border border-slate-300 bg-white text-sm px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow";
-const LABEL = "text-[10px] font-semibold uppercase tracking-wide text-slate-500";
+const FIELD = "w-full h-8 border border-border bg-background text-sm px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow";
+const LABEL = "text-[10px] font-semibold uppercase tracking-wide text-muted-foreground";
 
 /** ── Takt Gauge: visual radial gauge showing takt time ── */
 function TaktGauge({ taktSec, netAvailMin, demandPerDay }: {
@@ -38,7 +38,7 @@ function TaktGauge({ taktSec, netAvailMin, demandPerDay }: {
   const bgColor = isHealthy ? "#dcfce7" : isWarning ? "#fef3c7" : "#f1f5f9";
 
   return (
-    <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white">
+    <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-gradient-to-br from-slate-50 to-white">
       <div className="relative flex items-center justify-center w-20 h-20 shrink-0">
         <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="45" fill="none" stroke={bgColor} strokeWidth="8" />
@@ -50,24 +50,24 @@ function TaktGauge({ taktSec, netAvailMin, demandPerDay }: {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[22px] font-extrabold tabular-nums text-slate-800 leading-none">
+          <span className="text-[22px] font-extrabold tabular-nums text-foreground leading-none">
             {taktSec ? (taktSec < 60 ? taktSec.toFixed(0) : (taktSec / 60).toFixed(1)) : "—"}
           </span>
-          <span className="text-[9px] font-semibold text-slate-500 mt-0.5">
+          <span className="text-[9px] font-semibold text-muted-foreground mt-0.5">
             {taktSec && taktSec < 60 ? "sec/unit" : "min/unit"}
           </span>
         </div>
       </div>
       <div className="min-w-0 space-y-1">
-        <p className="text-[11px] font-semibold text-slate-700">Takt Time</p>
+        <p className="text-[11px] font-semibold text-muted-foreground">Takt Time</p>
         <p className={`text-[15px] font-bold tabular-nums ${
-          isHealthy ? "text-emerald-700" : isWarning ? "text-amber-700" : "text-slate-500"
+          isHealthy ? "text-success" : isWarning ? "text-warning" : "text-muted-foreground"
         }`}>
           {taktSec != null
             ? taktSec < 60 ? `${taktSec.toFixed(1)}s / unit` : `${(taktSec / 60).toFixed(1)}min / unit`
             : "Not calculated"}
         </p>
-        <p className="text-[10px] text-slate-500">
+        <p className="text-[10px] text-muted-foreground">
           {demandPerDay != null
             ? `${demandPerDay.toFixed(0)} units/day · ${netAvailMin > 0 ? `${Math.floor(netAvailMin / 60)}h ${netAvailMin % 60}m net` : "—"}`
             : "Set demand and work time to calculate"}
@@ -85,16 +85,16 @@ function StatCard({ icon, label, value, tone = "default" }: {
   tone?: "default" | "good" | "warn" | "bad";
 }) {
   const tones = {
-    default: "text-slate-800 bg-slate-50 border-slate-200",
-    good: "text-emerald-800 bg-emerald-50 border-emerald-200",
-    warn: "text-amber-800 bg-amber-50 border-amber-200",
-    bad: "text-red-800 bg-red-50 border-red-200",
+    default: "text-foreground bg-muted border-border",
+    good: "text-success bg-success/10 border-success/20",
+    warn: "text-warning bg-warning/10 border-warning/20",
+    bad: "text-red-800 bg-danger/10 border-danger/20",
   };
   return (
     <div className={`rounded-lg border p-2.5 ${tones[tone]}`}>
       <div className="flex items-center gap-1.5 mb-0.5">
-        <span className="text-slate-400">{icon}</span>
-        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+        <span className="text-muted-foreground/60">{icon}</span>
+        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
       </div>
       <p className="text-[13px] font-bold tabular-nums">{value}</p>
     </div>
@@ -203,16 +203,16 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
       <div className="absolute inset-0 bg-black/20" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="relative w-full max-w-md bg-white shadow-2xl flex flex-col h-full overflow-hidden animate-slide-left">
+      <div className="relative w-full max-w-md bg-background shadow-2xl flex flex-col h-full overflow-hidden animate-slide-left">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-to-r from-slate-50 to-white shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 ring-1 ring-indigo-200">
-              <Gauge className="h-3.5 w-3.5 text-indigo-600" />
+              <Gauge className="h-3.5 w-3.5 text-primary" />
             </div>
-            <h2 className="text-sm font-bold text-slate-800">Demand &amp; Takt</h2>
+            <h2 className="text-sm font-bold text-foreground">Demand &amp; Takt</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="p-1 rounded hover:bg-muted/80 text-muted-foreground/60 hover:text-muted-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -229,10 +229,10 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
 
           {/* Validation errors */}
           {errors.length > 0 && (
-            <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg space-y-0.5 animate-slide-down">
+            <div className="px-3 py-2 bg-danger/10 border border-danger/20 rounded-lg space-y-0.5 animate-slide-down">
               {errors.map((e, i) => (
-                <p key={i} className="text-[12px] text-red-700 font-medium flex items-start gap-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-red-500" />
+                <p key={i} className="text-[12px] text-danger font-medium flex items-start gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-danger" />
                   {e}
                 </p>
               ))}
@@ -241,8 +241,8 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
 
           {/* Save confirmation */}
           {saveResult && !errors.length && (
-            <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg animate-slide-down">
-              <p className="text-[12px] text-emerald-700 font-semibold flex items-center gap-1.5">
+            <div className="px-3 py-2 bg-success/10 border border-success/20 rounded-lg animate-slide-down">
+              <p className="text-[12px] text-success font-semibold flex items-center gap-1.5">
                 <Save className="h-3.5 w-3.5" />
                 Saved — {taktStatus === "ok" ? `Takt: ${saveResult.taktTimeDisplay as string}` : taktStatus === "missing_demand" ? "Demand not set" : "Takt unavailable"}
               </p>
@@ -252,18 +252,18 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
           {/* ── Customer Demand ── */}
           <fieldset>
             <legend className={LABEL + " mb-2 flex items-center gap-1.5"}>
-              <Clock className="h-3 w-3 text-slate-400" />
+              <Clock className="h-3 w-3 text-muted-foreground/60" />
               Customer Demand
             </legend>
             <div className="grid grid-cols-3 gap-2">
               <div className="col-span-1">
-                <label className="text-[10px] text-slate-400">Quantity</label>
+                <label className="text-[10px] text-muted-foreground/60">Quantity</label>
                 <input type="number" min="0" step="1" value={demandQty}
                   onChange={(e) => setDemandQty(e.target.value)}
                   className={FIELD} placeholder="e.g. 500" />
               </div>
               <div>
-                <label className="text-[10px] text-slate-400">Unit</label>
+                <label className="text-[10px] text-muted-foreground/60">Unit</label>
                 <select value={demandUnit} onChange={(e) => setDemandUnit(e.target.value)}
                   className={FIELD}>
                   <option value="units">units</option>
@@ -274,7 +274,7 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
                 </select>
               </div>
               <div>
-                <label className="text-[10px] text-slate-400">Period</label>
+                <label className="text-[10px] text-muted-foreground/60">Period</label>
                 <select value={demandPeriod} onChange={(e) => setDemandPeriod(e.target.value)}
                   className={FIELD}>
                   <option value="day">per day</option>
@@ -289,24 +289,24 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
           {/* ── Available Work Time ── */}
           <fieldset>
             <legend className={LABEL + " mb-2 flex items-center gap-1.5"}>
-              <Calendar className="h-3 w-3 text-slate-400" />
+              <Calendar className="h-3 w-3 text-muted-foreground/60" />
               Work Time per Shift (minutes)
             </legend>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="text-[10px] text-slate-400">Available</label>
+                <label className="text-[10px] text-muted-foreground/60">Available</label>
                 <input type="number" min="0" step="5" value={availWorkTime}
                   onChange={(e) => setAvailWorkTime(e.target.value)}
                   className={FIELD} placeholder="450" />
               </div>
               <div>
-                <label className="text-[10px] text-slate-400">Break</label>
+                <label className="text-[10px] text-muted-foreground/60">Break</label>
                 <input type="number" min="0" step="5" value={breakTime}
                   onChange={(e) => setBreakTime(e.target.value)}
                   className={FIELD} placeholder="0" />
               </div>
               <div>
-                <label className="text-[10px] text-slate-400">Downtime</label>
+                <label className="text-[10px] text-muted-foreground/60">Downtime</label>
                 <input type="number" min="0" step="5" value={downtime}
                   onChange={(e) => setDowntime(e.target.value)}
                   className={FIELD} placeholder="0" />
@@ -317,18 +317,18 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
           {/* ── Schedule ── */}
           <fieldset>
             <legend className={LABEL + " mb-2 flex items-center gap-1.5"}>
-              <Clock className="h-3 w-3 text-slate-400" />
+              <Clock className="h-3 w-3 text-muted-foreground/60" />
               Schedule
             </legend>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-slate-400">Shifts / Day</label>
+                <label className="text-[10px] text-muted-foreground/60">Shifts / Day</label>
                 <input type="number" min="1" max="5" value={shifts}
                   onChange={(e) => setShifts(e.target.value)}
                   className={FIELD} />
               </div>
               <div>
-                <label className="text-[10px] text-slate-400">Work Days / Week</label>
+                <label className="text-[10px] text-muted-foreground/60">Work Days / Week</label>
                 <input type="number" min="1" max="7" value={workDays}
                   onChange={(e) => setWorkDays(e.target.value)}
                   className={FIELD} />
@@ -355,8 +355,8 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
 
           {/* ── Last Save Summary ── */}
           {saveResult && !errors.length && (
-            <div className="text-[11px] text-slate-400 space-y-0.5 px-1 border-t border-slate-100 pt-3">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Last Save</p>
+            <div className="text-[11px] text-muted-foreground/60 space-y-0.5 px-1 border-t border-border/50 pt-3">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Last Save</p>
               <p>Net work time: {saveResult.availableProductionTimePerShift as string || netAvailDisplay}</p>
               <p>Demand: {demandSummary || (demandPerDay != null ? `${demandPerDay.toFixed(0)}/${demandPeriod}` : "—")}</p>
               <p>Takt: {saveResult.taktTimeDisplay as string || taktDisplay}</p>
@@ -366,13 +366,13 @@ export function VsmDemandTaktDrawer({ open, onClose, chartId, initialData, onSav
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 border-t border-border bg-muted flex items-center justify-between shrink-0">
           <button onClick={onClose}
-            className="px-3 py-1.5 text-[12px] font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors">
+            className="px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors">
             Cancel
           </button>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-all duration-150 shadow-sm active:scale-[0.98]">
+            className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold bg-primary text-white rounded-lg hover:bg-primary disabled:opacity-50 transition-all duration-150 shadow-sm active:scale-[0.98]">
             <Save className="h-3.5 w-3.5" />
             {saving ? "Saving..." : "Save"}
           </button>

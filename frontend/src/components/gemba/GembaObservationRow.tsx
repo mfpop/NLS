@@ -15,35 +15,35 @@ interface Props {
 }
 
 const SEVERITY_STYLES: Record<string, { icon: typeof AlertCircle; color: string }> = {
-  CRITICAL: { icon: AlertCircle, color: "text-red-600" },
-  HIGH: { icon: AlertTriangle, color: "text-amber-600" },
-  MEDIUM: { icon: Info, color: "text-orange-600" },
-  LOW: { icon: Info, color: "text-sky-600" },
-  INFO: { icon: Info, color: "text-slate-600" },
+  CRITICAL: { icon: AlertCircle, color: "text-danger" },
+  HIGH: { icon: AlertTriangle, color: "text-warning" },
+  MEDIUM: { icon: Info, color: "text-warning" },
+  LOW: { icon: Info, color: "text-accent-foreground" },
+  INFO: { icon: Info, color: "text-muted-foreground" },
 };
 
 const CATEGORY_STYLES: Record<string, string> = {
-  SAFETY: "text-red-700 bg-red-50 border-red-200",
-  QUALITY: "text-amber-700 bg-amber-50 border-amber-200",
-  PRODUCTIVITY: "text-emerald-700 bg-emerald-50 border-emerald-200",
-  FIVE_S: "text-sky-700 bg-sky-50 border-sky-200",
-  MAINTENANCE: "text-yellow-700 bg-yellow-50 border-yellow-200",
-  MATERIAL: "text-purple-700 bg-purple-50 border-purple-200",
+  SAFETY: "text-danger bg-danger/10 border-danger/20",
+  QUALITY: "text-warning bg-warning/10 border-warning/20",
+  PRODUCTIVITY: "text-success bg-success/10 border-success/20",
+  FIVE_S: "text-accent-foreground bg-accent/10 border-accent/20",
+  MAINTENANCE: "text-yellow-700 bg-yellow-50 border-warning/20",
+  MATERIAL: "text-accent-foreground bg-purple-50 border-accent/20",
   MORALE: "text-violet-700 bg-violet-50 border-violet-200",
-  OTHER: "text-slate-700 bg-slate-100 border-slate-200",
+  OTHER: "text-muted-foreground bg-muted border-border",
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: "text-red-700 bg-red-50 border-red-200",
-  IN_REVIEW: "text-amber-700 bg-amber-50 border-amber-200",
-  ACTION_REQUIRED: "text-orange-700 bg-orange-50 border-orange-200",
-  CONVERTED_TO_ACTION: "text-sky-700 bg-sky-50 border-sky-200",
-  CONVERTED_TO_ISSUE: "text-blue-700 bg-blue-50 border-blue-200",
-  RESOLVED: "text-emerald-700 bg-emerald-50 border-emerald-200",
-  VERIFIED: "text-green-700 bg-green-50 border-green-200",
-  REOPENED: "text-amber-700 bg-amber-50 border-amber-200",
-  CLOSED: "text-slate-600 bg-slate-100 border-slate-200",
-  CANCELLED: "text-slate-400 bg-slate-50 border-slate-200",
+  OPEN: "text-danger bg-danger/10 border-danger/20",
+  IN_REVIEW: "text-warning bg-warning/10 border-warning/20",
+  ACTION_REQUIRED: "text-warning bg-warning/10 border-warning/20",
+  CONVERTED_TO_ACTION: "text-accent-foreground bg-accent/10 border-accent/20",
+  CONVERTED_TO_ISSUE: "text-primary bg-primary/10 border-primary/20",
+  RESOLVED: "text-success bg-success/10 border-success/20",
+  VERIFIED: "text-success bg-success/10 border-success/20",
+  REOPENED: "text-warning bg-warning/10 border-warning/20",
+  CLOSED: "text-muted-foreground bg-muted border-border",
+  CANCELLED: "text-muted-foreground/60 bg-muted border-border",
 };
 
 function categoryLabel(cat: GembaCategory): string {
@@ -78,13 +78,13 @@ export function GembaObservationRow({
   onReopen,
 }: Props) {
   const SevIcon = SEVERITY_STYLES[obs.severity]?.icon ?? Info;
-  const sevColor = SEVERITY_STYLES[obs.severity]?.color ?? "text-slate-500";
+  const sevColor = SEVERITY_STYLES[obs.severity]?.color ?? "text-muted-foreground";
   const catClass = CATEGORY_STYLES[obs.category] ?? CATEGORY_STYLES.OTHER;
   const statusClass = STATUS_STYLES[obs.status] ?? STATUS_STYLES.CLOSED;
 
   return (
     <div
-      className="grid grid-cols-[28px_1fr_auto_24px] gap-2 px-3 py-2.5 hover:bg-white transition-colors cursor-pointer border-b border-slate-100 last:border-b-0"
+      className="grid grid-cols-[28px_1fr_auto_24px] gap-2 px-3 py-2.5 hover:bg-background transition-colors cursor-pointer border-b border-border/50 last:border-b-0"
       onClick={() => onSelect(obs)}
     >
       {/* Severity icon */}
@@ -94,50 +94,50 @@ export function GembaObservationRow({
 
       {/* Content */}
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-900 truncate">{obs.title}</p>
-        <p className="text-xs text-slate-700 line-clamp-1 leading-snug mt-0.5">{obs.description || obs.title}</p>
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1 flex-wrap">
+        <p className="text-sm font-semibold text-foreground truncate">{obs.title}</p>
+        <p className="text-xs text-muted-foreground line-clamp-1 leading-snug mt-0.5">{obs.description || obs.title}</p>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 flex-wrap">
           {/* Structured location: primary label + compact breadcrumb */}
-          <span className="font-medium text-slate-600 truncate max-w-[200px]" title={obs.locationPath || obs.area}>
+          <span className="font-medium text-muted-foreground truncate max-w-[200px]" title={obs.locationPath || obs.area}>
             {obs.locationLabel || obs.area}
           </span>
           {obs.locationPath && obs.locationPath !== obs.locationLabel && (
-            <span className="text-[10px] text-slate-400 truncate max-w-[180px]" title={obs.locationPath}>
+            <span className="text-[10px] text-muted-foreground/60 truncate max-w-[180px]" title={obs.locationPath}>
               {obs.locationPath}
             </span>
           )}
-          <span className="text-slate-300">·</span>
-          <span className="font-medium text-slate-600">{obs.createdByName ?? "—"}</span>
-          <span className="text-slate-300">·</span>
+          <span className="text-muted-foreground/30">·</span>
+          <span className="font-medium text-muted-foreground">{obs.createdByName ?? "—"}</span>
+          <span className="text-muted-foreground/30">·</span>
           <span className="tabular-nums">{new Date(obs.createdAt).toLocaleDateString()}</span>
           {obs.linkedResourceText && (
             <>
-              <span className="text-slate-300">·</span>
+              <span className="text-muted-foreground/30">·</span>
               <span className="truncate max-w-[140px]">{obs.linkedResourceText}</span>
             </>
           )}
           {obs.ownerName && (
             <>
-              <span className="text-slate-300">·</span>
-              <span className="text-slate-600">Owner: {obs.ownerName}</span>
+              <span className="text-muted-foreground/30">·</span>
+              <span className="text-muted-foreground">Owner: {obs.ownerName}</span>
             </>
           )}
           {obs.dueDate && (
             <>
-              <span className="text-slate-300">·</span>
-              <span className="text-amber-600">Due: {obs.dueDate}</span>
+              <span className="text-muted-foreground/30">·</span>
+              <span className="text-warning">Due: {obs.dueDate}</span>
             </>
           )}
           {obs.createdIssueId && (
             <>
-              <span className="text-slate-300">·</span>
-              <span className="text-blue-600 font-medium">Issue #{obs.createdIssueId}</span>
+              <span className="text-muted-foreground/30">·</span>
+              <span className="text-primary font-medium">Issue #{obs.createdIssueId}</span>
             </>
           )}
           {obs.createdActionId && (
             <>
-              <span className="text-slate-300">·</span>
-              <span className="text-sky-600 font-medium">Action #{obs.createdActionId}</span>
+              <span className="text-muted-foreground/30">·</span>
+              <span className="text-accent-foreground font-medium">Action #{obs.createdActionId}</span>
             </>
           )}
         </div>

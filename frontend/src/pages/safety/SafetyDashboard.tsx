@@ -103,7 +103,7 @@ export function SafetyDashboard() {
               <h3 className="text-[11px] font-semibold text-secondary-foreground uppercase tracking-wider mb-2">By Severity</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 {(summary.bySeverity || []).map((s: any) => (
-                  <div key={s.severity} className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2">
+                  <div key={s.severity} className="flex items-center gap-2 bg-background border border-border px-3 py-2">
                     <span className={`h-2.5 w-2.5 rounded-full ${s.severity === "CRITICAL" ? "bg-danger" : s.severity === "HIGH" ? "bg-warning" : s.severity === "MEDIUM" ? "bg-warning" : "bg-muted-foreground/40"}`} />
                     <span className="text-sm font-bold text-foreground">{s.count}</span>
                     <span className="text-[11px] text-muted-foreground">{s.severity}</span>
@@ -117,8 +117,8 @@ export function SafetyDashboard() {
               <h3 className="text-[11px] font-semibold text-secondary-foreground uppercase tracking-wider mb-2">By Status</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1.5">
                 {(summary.byStatus || []).map((s: any) => (
-                  <div key={s.status} className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2">
-                    <span className={`text-sm font-bold text-slate-900 min-w-[24px]`}>{s.count}</span>
+                  <div key={s.status} className="flex items-center gap-2 bg-background border border-border px-3 py-2">
+                    <span className={`text-sm font-bold text-foreground min-w-[24px]`}>{s.count}</span>
                     <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${STATUS_COLORS[s.status] || "bg-muted text-muted-foreground border-border"}`}>
                       {s.status.replace(/_/g, " ")}
                     </span>

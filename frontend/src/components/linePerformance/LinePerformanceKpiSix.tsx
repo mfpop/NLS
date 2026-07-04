@@ -13,10 +13,10 @@ function statusColor(status: string): "good" | "warning" | "critical" | "neutral
 }
 
 const colorMap = {
-  good: { text: "text-emerald-600", bar: "bg-emerald-500" },
-  warning: { text: "text-amber-600", bar: "bg-amber-500" },
-  critical: { text: "text-red-600", bar: "bg-red-500" },
-  neutral: { text: "text-slate-700", bar: "bg-slate-400" },
+  good: { text: "text-success", bar: "bg-success/100" },
+  warning: { text: "text-warning", bar: "bg-warning/100" },
+  critical: { text: "text-danger", bar: "bg-danger/100" },
+  neutral: { text: "text-muted-foreground", bar: "bg-slate-400" },
 };
 
 function KpiCard({
@@ -35,12 +35,12 @@ function KpiCard({
   const c = colorMap[status];
   return (
     <div className="flex items-center gap-2 px-3 min-w-0">
-      <div className="shrink-0 text-slate-400">{icon}</div>
+      <div className="shrink-0 text-muted-foreground/60">{icon}</div>
       <div className="min-w-0">
-        <span className="block text-[11px] uppercase tracking-wide text-slate-500 truncate">{title}</span>
+        <span className="block text-[11px] uppercase tracking-wide text-muted-foreground truncate">{title}</span>
         <div className="flex items-baseline gap-1">
           <span className={`text-xl font-semibold tabular-nums ${c.text}`}>{value}</span>
-          {unit && <span className="text-xs text-slate-500">{unit}</span>}
+          {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
         </div>
       </div>
     </div>
@@ -50,10 +50,10 @@ function KpiCard({
 export function LinePerformanceKpiSix({ kpis }: Props) {
   if (!kpis) {
     return (
-      <div className="grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200 h-16">
+      <div className="grid grid-cols-6 divide-x divide-border border-b border-border h-16">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center px-3 animate-pulse">
-            <div className="h-10 w-full rounded bg-slate-200" />
+            <div className="h-10 w-full rounded bg-muted/80" />
           </div>
         ))}
       </div>
@@ -68,7 +68,7 @@ export function LinePerformanceKpiSix({ kpis }: Props) {
   const qualStat = kpis.qualityStatus ? statusColor(kpis.qualityStatus) : "neutral";
 
   return (
-    <div className="grid grid-cols-6 divide-x divide-slate-300 border-b border-slate-300 bg-slate-50 h-16">
+    <div className="grid grid-cols-6 divide-x divide-slate-300 border-b border-border bg-muted h-16">
       <KpiCard title="Plan" value={kpis.planQuantity} icon={<Target className="h-4 w-4" />} status="neutral" />
       <KpiCard title="Actual" value={kpis.actualQuantity} icon={<Package className="h-4 w-4" />} status={gapStat} />
       <KpiCard title="Gap" value={kpis.gap >= 0 ? `+${kpis.gap}` : `${kpis.gap}`} icon={<TrendingDown className="h-4 w-4" />} status={gapStat} />

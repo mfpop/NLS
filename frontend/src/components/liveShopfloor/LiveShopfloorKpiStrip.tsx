@@ -25,11 +25,11 @@ function KpiCard({
   helper?: string;
 }) {
   const colorMap = {
-    green: { text: "text-emerald-600", icon: "text-emerald-500" },
-    amber: { text: "text-amber-600", icon: "text-amber-500" },
-    red: { text: "text-red-600", icon: "text-red-500" },
-    blue: { text: "text-sky-600", icon: "text-sky-500" },
-    slate: { text: "text-slate-600", icon: "text-slate-400" },
+    green: { text: "text-success", icon: "text-success" },
+    amber: { text: "text-warning", icon: "text-warning" },
+    red: { text: "text-danger", icon: "text-danger" },
+    blue: { text: "text-accent-foreground", icon: "text-accent-foreground" },
+    slate: { text: "text-muted-foreground", icon: "text-muted-foreground/60" },
   };
   const c = colorMap[color];
 
@@ -37,9 +37,9 @@ function KpiCard({
     <div className="flex items-center gap-2 px-3 min-w-0">
       <div className={`shrink-0 ${c.icon}`}>{icon}</div>
       <div className="min-w-0 overflow-hidden">
-        <span className="block text-[11px] uppercase tracking-wide text-slate-500 truncate">{title}</span>
+        <span className="block text-[11px] uppercase tracking-wide text-muted-foreground truncate">{title}</span>
         <span className={`block text-lg font-semibold tabular-nums leading-tight truncate ${c.text}`}>{value}</span>
-        {helper && <span className="block text-[10px] text-slate-500 leading-tight truncate">{helper}</span>}
+        {helper && <span className="block text-[10px] text-muted-foreground leading-tight truncate">{helper}</span>}
       </div>
     </div>
   );
@@ -64,7 +64,7 @@ export function LiveShopfloorKpiStrip({
   const actionColor = actionCount > 0 ? "blue" : "slate";
 
   return (
-    <div className="grid h-16 grid-cols-7 divide-x divide-slate-200 border-b border-slate-200 bg-slate-50">
+    <div className="grid h-16 grid-cols-7 divide-x divide-border border-b border-border bg-muted">
       <KpiCard
         title="Line Status"
         value={liveStatus?.displayStatus ?? "—"}

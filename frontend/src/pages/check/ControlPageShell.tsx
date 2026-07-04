@@ -234,7 +234,7 @@ export function ControlPageShell({
                 )}
           </div>
           {selectedRecordType && (
-            <div className="shrink-0 border-t border-slate-200 bg-muted/20 flex h-8 items-center gap-2 px-3 text-[10px] text-muted-foreground">
+            <div className="shrink-0 border-t border-border bg-muted/20 flex h-8 items-center gap-2 px-3 text-[10px] text-muted-foreground">
               <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="font-medium hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed">Prev</button>
               <span className="font-mono">Page {page + 1}</span>
               <button onClick={() => setPage(p => p + 1)} className="font-medium hover:text-foreground">Next </button>
@@ -242,7 +242,7 @@ export function ControlPageShell({
           )}
         </div>
         <div onMouseDown={handleSplitMouseDown}
-          className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10"
+          className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-warning/100/10"
           style={{ width: 2 }} />
         <div className="flex flex-col min-h-0 min-w-0 flex-1 overflow-hidden">
           {selectedId !== null && tab
@@ -253,10 +253,10 @@ export function ControlPageShell({
       <div className="print-ignore shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-2 px-4 text-xs text-muted-foreground font-medium">
         {typeof footerLeft === "function" ? footerLeft(selectedRecordType, page, 0) : footerLeft || (
           <div className="flex items-center gap-3 shrink-0">
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" /><span className="text-[10px]">{getRecordTypeLabel("ISSUES")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning/100" /><span className="text-[10px]">{getRecordTypeLabel("ISSUES")}</span></span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="text-[10px]">{getRecordTypeLabel("ACTIONS")}</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-blue-500" /><span className="text-[10px]">{getRecordTypeLabel("AUDITS")}</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-orange-500" /><span className="text-[10px]">{getRecordTypeLabel("DMRS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary/100" /><span className="text-[10px]">{getRecordTypeLabel("AUDITS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning/100" /><span className="text-[10px]">{getRecordTypeLabel("DMRS")}</span></span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500" /><span className="text-[10px]">{getRecordTypeLabel("RMAS")}</span></span>
           </div>
         )}

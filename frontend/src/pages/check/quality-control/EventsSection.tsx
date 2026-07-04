@@ -21,16 +21,16 @@ const SEVERITY_OPTS = [
 ];
 
 const SEVERITY_DOT: Record<string, string> = {
-  LOW: "bg-slate-400", MEDIUM: "bg-amber-500", HIGH: "bg-orange-500", CRITICAL: "bg-red-500",
+  LOW: "bg-slate-400", MEDIUM: "bg-warning/100", HIGH: "bg-warning/100", CRITICAL: "bg-danger/100",
 };
 
 const EVENT_STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-slate-100 text-slate-700 border-slate-200",
-  REPORTED: "bg-blue-100 text-blue-700 border-blue-200",
-  UNDER_REVIEW: "bg-amber-100 text-amber-700 border-amber-200",
-  ACTION_REQUIRED: "bg-orange-100 text-orange-700 border-orange-200",
-  CLOSED: "bg-green-100 text-green-700 border-green-200",
-  CANCELLED: "bg-slate-100 text-slate-500 border-slate-200",
+  DRAFT: "bg-muted text-muted-foreground border-border",
+  REPORTED: "bg-primary/15 text-primary border-primary/20",
+  UNDER_REVIEW: "bg-warning/15 text-warning border-warning/20",
+  ACTION_REQUIRED: "bg-warning/15 text-warning border-warning/20",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
 function statusLabel(s: string): string {
@@ -161,7 +161,7 @@ export function useEventSection(_search: string, filterStatus: string, onMessage
     if (editing && editItem) return renderCreateForm();
     if (!id) return (
       <div className="flex flex-1 items-center justify-center h-full">
-        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Safety Events</h3><p className="text-xs text-muted-foreground/70">Record incidents, accidents, near misses, hazards, and observations.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"><Plus className="h-3.5 w-3.5" /> New Event</button></div>
+        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Safety Events</h3><p className="text-xs text-muted-foreground/70">Record incidents, accidents, near misses, hazards, and observations.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80"><Plus className="h-3.5 w-3.5" /> New Event</button></div>
       </div>
     );
     if (!item) return <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Loading...</div>;
@@ -174,13 +174,13 @@ export function useEventSection(_search: string, filterStatus: string, onMessage
             <h2 className="text-sm font-bold text-foreground">{item.title}</h2>
             <div className="flex items-center gap-2 mt-1">
               <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${stCls}`}>{statusLabel(item.status)}</span>
-              <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border bg-slate-100 text-slate-700 border-slate-200`}>{EVENT_TYPE_OPTS.find((o) => o.value === item.eventType)?.label || item.eventType}</span>
-              <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${item.severity === "CRITICAL" ? "bg-red-100 text-red-700 border-red-200" : item.severity === "HIGH" ? "bg-orange-100 text-orange-700 border-orange-200" : item.severity === "MEDIUM" ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{item.severity}</span>
+              <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border bg-muted text-muted-foreground border-border`}>{EVENT_TYPE_OPTS.find((o) => o.value === item.eventType)?.label || item.eventType}</span>
+              <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${item.severity === "CRITICAL" ? "bg-danger/15 text-danger border-danger/20" : item.severity === "HIGH" ? "bg-warning/15 text-warning border-warning/20" : item.severity === "MEDIUM" ? "bg-warning/15 text-warning border-warning/20" : "bg-muted text-muted-foreground border-border"}`}>{item.severity}</span>
             </div>
           </div>
           {item.description && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Description</p><p className="text-sm text-foreground">{item.description}</p></div>}
           {item.immediateAction && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Immediate Action</p><p className="text-sm text-foreground">{item.immediateAction}</p></div>}
-          <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Flags</p><div className="flex gap-2 text-xs">{item.injuryInvolved && <span className="bg-red-50 text-red-700 px-1.5 py-0.5 border border-red-200">Injury</span>}{item.propertyDamage && <span className="bg-orange-50 text-orange-700 px-1.5 py-0.5 border border-orange-200">Property Damage</span>}{item.environmentalImpact && <span className="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 border border-emerald-200">Environmental</span>}{!item.injuryInvolved && !item.propertyDamage && !item.environmentalImpact && <span className="text-muted-foreground italic">None reported</span>}</div></div>
+          <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Flags</p><div className="flex gap-2 text-xs">{item.injuryInvolved && <span className="bg-danger/10 text-danger px-1.5 py-0.5 border border-danger/20">Injury</span>}{item.propertyDamage && <span className="bg-warning/10 text-warning px-1.5 py-0.5 border border-warning/20">Property Damage</span>}{item.environmentalImpact && <span className="bg-success/10 text-success px-1.5 py-0.5 border border-success/20">Environmental</span>}{!item.injuryInvolved && !item.propertyDamage && !item.environmentalImpact && <span className="text-muted-foreground italic">None reported</span>}</div></div>
         </div>
         <div className="w-[30%] shrink-0 border-l border-border/20 bg-card/40 p-5 space-y-4">
           <div><p className="text-[10px] font-medium text-muted-foreground mb-2">Details</p><div className="space-y-2 text-xs"><div className="flex justify-between"><span className="text-muted-foreground">Event Type</span><span className="text-foreground font-medium">{EVENT_TYPE_OPTS.find((o) => o.value === item.eventType)?.label || item.eventType}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Severity</span><span className="text-foreground font-medium">{item.severity}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="text-foreground font-medium">{statusLabel(item.status)}</span></div></div></div>
@@ -202,7 +202,7 @@ export function useEventSection(_search: string, filterStatus: string, onMessage
         {items.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No safety events reported</div>
         : <div className="py-0.5">{items.map((e: any) => (
           <div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); onSelect(e.id); }}
-            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2 cursor-pointer text-sm transition-all border-l-2 ${selId === e.id ? "bg-orange-50/60 dark:bg-orange-950/20 border-l-orange-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
+            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2 cursor-pointer text-sm transition-all border-l-2 ${selId === e.id ? "bg-warning/10/60 dark:bg-orange-950/20 border-l-orange-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${SEVERITY_DOT[e.severity] || "bg-slate-400"}`} />

@@ -22,7 +22,7 @@ export function UsersAndRolesPage() {
     <ToolbarContext.Provider value={{ setToolbar: setToolbarConfig, setFooter }}>
       <AppPageLayout
         icon={<ShieldCheck />}
-        iconClass="bg-blue-100 text-blue-600"
+        iconClass="bg-primary/15 text-primary"
         title="Users & Access"
         subtitle="Manage user profiles, roles, permissions, and organizational access."
         toolbar={

@@ -73,12 +73,12 @@ export const READING_THEME_STYLES: Record<ReadingTheme, {
   muted: string;
 }> = {
   light: {
-    bg: "bg-white",
+    bg: "bg-background",
     text: "text-gray-900",
-    proseBg: "bg-white",
+    proseBg: "bg-background",
     navBg: "bg-gray-50",
     border: "border-gray-200",
-    accent: "text-blue-600",
+    accent: "text-primary",
     muted: "text-gray-500",
   },
   sepia: {

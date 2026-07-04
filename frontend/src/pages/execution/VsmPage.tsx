@@ -42,15 +42,15 @@ const LEFT_WIDTH = "w-[20%] min-w-[240px] max-w-[320px]";
 /* ── Skeleton loading shimmer ── */
 function SkeletonBar({ className = "" }: { className?: string }) {
   return (
-    <div className={`animate-pulse rounded bg-slate-200 ${className}`} />
+    <div className={`animate-pulse rounded bg-muted/80 ${className}`} />
   );
 }
 
 function SkeletonKpiStrip() {
   return (
-    <div className="h-12 flex items-center gap-2 px-3 bg-white border-b border-slate-200 overflow-hidden">
+    <div className="h-12 flex items-center gap-2 px-3 bg-background border-b border-border overflow-hidden">
       {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-        <div key={i} className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full border border-slate-200 bg-slate-50">
+        <div key={i} className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full border border-border bg-muted">
           <SkeletonBar className="w-12 h-3" />
           <SkeletonBar className="w-16 h-3.5" />
         </div>
@@ -72,14 +72,14 @@ function EmptyStateCard({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="flex-1 flex items-center justify-center bg-white">
+    <div className="flex-1 flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4 p-10 text-center max-w-xs animate-fade-in">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 ring-1 ring-indigo-200/60 shadow-sm">
           {icon}
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-800 mb-1">{title}</p>
-          <p className="text-xs text-slate-500 leading-relaxed max-w-[260px]">{description}</p>
+          <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">{description}</p>
         </div>
         {actions && <div className="flex items-center gap-2 mt-2">{actions}</div>}
       </div>
@@ -96,18 +96,18 @@ function ErrorStateCard({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex-1 flex items-center justify-center bg-white">
+    <div className="flex-1 flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4 p-10 text-center max-w-xs">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50 ring-1 ring-red-200/60">
-          <AlertTriangle className="h-8 w-8 text-red-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-danger/10 ring-1 ring-red-200/60">
+          <AlertTriangle className="h-8 w-8 text-danger/80" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-slate-800 mb-1">Failed to load VSM data</p>
-          <p className="text-xs text-slate-500 leading-relaxed">{message}</p>
+          <p className="text-sm font-semibold text-foreground mb-1">Failed to load VSM data</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{message}</p>
         </div>
         {onRetry && (
           <button type="button" onClick={onRetry}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors">
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-background text-muted-foreground hover:bg-muted hover:border-border transition-colors">
             <RefreshCw className="h-3.5 w-3.5" />
             Retry
           </button>
@@ -558,19 +558,19 @@ export function VsmPage() {
   const toolbarActions = (
     <>
       <ToolbarButton icon={<AlertTriangle className="h-4 w-4" />} label="Kaizen" onClick={() => setShowKaizen((p) => !p)}
-        className={showKaizen ? "bg-amber-50 text-amber-700 border border-amber-200 shadow-sm" : "text-slate-500"} />
+        className={showKaizen ? "bg-warning/10 text-warning border border-warning/20 shadow-sm" : "text-muted-foreground"} />
       <ToolbarButton icon={<Eye className="h-4 w-4" />} label="Flow" onClick={() => setShowFlowLogic((p) => !p)}
-        className={showFlowLogic ? "bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm" : "text-slate-500"} />
+        className={showFlowLogic ? "bg-indigo-50 text-primary border border-primary/20 shadow-sm" : "text-muted-foreground"} />
       {showFlowLogic && (
         <ToolbarButton icon={<Layers className="h-4 w-4" />} label="Detail" onClick={() => setShowAllFlows((p) => !p)}
-          className={showAllFlows ? "bg-violet-50 text-violet-700 border border-violet-200 shadow-sm" : "text-slate-500"} />
+          className={showAllFlows ? "bg-violet-50 text-violet-700 border border-violet-200 shadow-sm" : "text-muted-foreground"} />
       )}
       <ToolbarButton icon={<BarChart3 className="h-4 w-4" />} label="Impact" onClick={() => setShowImpact((p) => !p)}
-        className={showImpact ? "bg-amber-50 text-amber-700 border border-amber-200 shadow-sm" : "text-slate-500"} />
+        className={showImpact ? "bg-warning/10 text-warning border border-warning/20 shadow-sm" : "text-muted-foreground"} />
       <ToolbarSeparator />
       {/* View controls */}
       <ToolbarButton icon={<ZoomOut className="h-4 w-4" />} label="" onClick={handleZoomOut} />
-      <span className="text-[11px] text-slate-500 w-10 text-center tabular-nums font-mono">{Math.round(zoom * 100)}%</span>
+      <span className="text-[11px] text-muted-foreground w-10 text-center tabular-nums font-mono">{Math.round(zoom * 100)}%</span>
       <ToolbarButton icon={<ZoomIn className="h-4 w-4" />} label="" onClick={handleZoomIn} />
       <ToolbarButton icon={<Maximize2 className="h-4 w-4" />} label="Fit" onClick={handleFit} />
       <ToolbarSeparator />
@@ -585,10 +585,10 @@ export function VsmPage() {
   // ── No line state ──
   if (hasNoLine) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Value Stream Map" subtitle="Select a production line from the sidebar to view the value stream map." icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
         <EmptyStateCard
-          icon={<GitBranch className="h-8 w-8 text-slate-400" />}
+          icon={<GitBranch className="h-8 w-8 text-muted-foreground/60" />}
           title="No line selected"
           description="Open the sidebar and select a production line to view its value stream map."
         />
@@ -599,18 +599,18 @@ export function VsmPage() {
   // ── Loading state ──
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Value Stream Map" subtitle="Loading value stream data..." icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
         <SkeletonKpiStrip />
-        <div className="flex-1 flex items-center justify-center bg-white">
+        <div className="flex-1 flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-5">
             <div className="relative">
               <div className="h-12 w-12 rounded-full border-[3px] border-sky-100" />
               <div className="absolute inset-0 h-12 w-12 rounded-full border-[3px] border-transparent border-t-sky-500 animate-spin" />
             </div>
             <div className="flex flex-col items-center gap-1">
-              <p className="text-sm font-semibold text-slate-700">Loading VSM diagram</p>
-              <p className="text-xs text-slate-400">Building value stream for {activeLine?.name ?? "selected line"}</p>
+              <p className="text-sm font-semibold text-muted-foreground">Loading VSM diagram</p>
+              <p className="text-xs text-muted-foreground/60">Building value stream for {activeLine?.name ?? "selected line"}</p>
             </div>
             <div className="flex gap-1.5 mt-2">
               {[0, 1, 2, 3, 4].map((i) => (
@@ -630,7 +630,7 @@ export function VsmPage() {
   // ── Error state ──
   if (errorMessage && !diagram) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
         <ErrorStateCard message={errorMessage} onRetry={handleRefresh} />
       </div>
@@ -638,7 +638,7 @@ export function VsmPage() {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
 
       {/* Toolbar */}
@@ -653,7 +653,7 @@ export function VsmPage() {
           ) : (
             <div className="flex items-center gap-1.5 w-full">
               <select value={editChartId ?? ""} onChange={(e) => handleSelectChart(e.target.value)}
-                className="flex-1 h-8 text-xs border border-slate-300 bg-white px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400">
+                className="flex-1 h-8 text-xs border border-border bg-background px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400">
                 <option value="">Select a chart...</option>
                 {charts.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -663,12 +663,12 @@ export function VsmPage() {
               </select>
               {editChartId && (
                 <button type="button" onClick={handleDeleteChart}
-                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 shrink-0 whitespace-nowrap transition-colors">
+                  className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-danger/20 bg-danger/10 text-danger hover:bg-danger/15 shrink-0 whitespace-nowrap transition-colors">
                   <Trash2 className="h-3 w-3" /> Delete
                 </button>
               )}
               <button type="button" onClick={() => setShowCreateDialog(true)} disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 shrink-0 whitespace-nowrap transition-colors">
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-accent/20 bg-accent/10 text-accent-foreground hover:bg-sky-100 shrink-0 whitespace-nowrap transition-colors">
                 <Plus className="h-3 w-3" /> New
               </button>
             </div>
@@ -679,14 +679,14 @@ export function VsmPage() {
           <button type="button" onClick={() => setViewMode(viewMode === "derived" ? "charts" : "derived")}
             className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium rounded border transition-all duration-200 ${
               viewMode === "charts"
-                ? "bg-indigo-50 text-indigo-700 border-indigo-200 shadow-sm"
-                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                ? "bg-indigo-50 text-primary border-primary/20 shadow-sm"
+                : "bg-background text-muted-foreground border-border hover:bg-muted hover:border-border"
             }`}>
             <Layers className="h-3 w-3" /> {viewMode === "derived" ? "Charts" : "Derived"}
           </button>
           {viewMode === "charts" && editChartId && (
             <button type="button" onClick={() => setEditChartId(editChartId)}
-              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+              className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-border bg-background text-muted-foreground hover:bg-muted transition-colors">
               <Edit3 className="h-3 w-3" /> Edit
             </button>
           )}
@@ -700,9 +700,9 @@ export function VsmPage() {
 
       {/* Persistent Takt/Demand missing alert banner */}
       {!dismissTaktAlert && kpiData && kpiData.taktStatus !== "ok" && (
-        <div className="relative flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-200 animate-slide-down">
-          <button onClick={() => setShowDemandTaktDrawer(true)} className="flex items-center gap-2 text-red-800 text-[13px] font-semibold text-left flex-1 hover:bg-red-100/50 rounded-sm px-1 -mx-1 py-0.5 transition-colors">
-            <AlertTriangle className="h-4 w-4 shrink-0 text-red-500 animate-pulse" />
+        <div className="relative flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-red-50 to-orange-50 border-b border-danger/20 animate-slide-down">
+          <button onClick={() => setShowDemandTaktDrawer(true)} className="flex items-center gap-2 text-red-800 text-[13px] font-semibold text-left flex-1 hover:bg-danger/15/50 rounded-sm px-1 -mx-1 py-0.5 transition-colors">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-danger animate-pulse" />
             <span>
               {kpiData.taktStatus === "missing_demand"
                 ? "Customer demand is not set. Click to open Demand & Takt settings."
@@ -713,7 +713,7 @@ export function VsmPage() {
             </span>
           </button>
           <button onClick={() => setDismissTaktAlert(true)}
-            className="shrink-0 p-1 rounded hover:bg-red-100 text-red-400 hover:text-red-600 transition-colors"
+            className="shrink-0 p-1 rounded hover:bg-danger/15 text-danger/80 hover:text-danger transition-colors"
             aria-label="Dismiss alert">
             <X className="h-4 w-4" />
           </button>
@@ -722,10 +722,10 @@ export function VsmPage() {
 
       {/* Error banner (non-blocking) */}
       {errorMessage && diagram && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-red-50 border-b border-red-200 text-xs text-red-700 animate-slide-down">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-red-500" />
+        <div className="flex items-center gap-2 px-4 py-1.5 bg-danger/10 border-b border-danger/20 text-xs text-danger animate-slide-down">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-danger" />
           <span className="flex-1">{errorMessage}</span>
-          <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-600">
+          <button onClick={() => setErrorMessage(null)} className="text-danger/80 hover:text-danger">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -745,7 +745,7 @@ export function VsmPage() {
           </div>
         )}
         {viewMode === "charts" && activeChart && chartTemplateModel && (
-          <div className="flex-1 min-h-0 overflow-hidden bg-white animate-fade-in">
+          <div className="flex-1 min-h-0 overflow-hidden bg-background animate-fade-in">
             <div style={{
               width: "100%", height: "100%",
               transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`,
@@ -779,11 +779,11 @@ export function VsmPage() {
             actions={
               <>
                 <button type="button" onClick={() => setShowCreateDialog(true)} disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors shadow-sm">
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-accent/20 bg-accent/10 text-accent-foreground hover:bg-sky-100 transition-colors shadow-sm">
                   <Plus className="h-3.5 w-3.5" /> Create Chart
                 </button>
                 <button type="button" onClick={handleCreateTestChart}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors shadow-sm">
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-success/20 bg-success/10 text-success hover:bg-success/15 transition-colors shadow-sm">
                   <BarChart3 className="h-3.5 w-3.5" /> Test Chart
                 </button>
               </>
@@ -940,28 +940,28 @@ export function VsmPage() {
       {showCreateDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-[2px] animate-fade-in"
           onClick={() => setShowCreateDialog(false)}>
-          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 w-[440px] max-w-[90vw] animate-scale-in"
+          <div className="bg-background rounded-xl shadow-2xl border border-border w-[440px] max-w-[90vw] animate-scale-in"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">Create VSM Chart</h3>
-                <p className="text-[11px] text-slate-500 mt-0.5">Choose how the chart will be created</p>
+                <h3 className="text-sm font-semibold text-foreground">Create VSM Chart</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Choose how the chart will be created</p>
               </div>
               <button type="button" onClick={() => setShowCreateDialog(false)}
-                className="text-slate-400 hover:text-slate-600 p-0.5 rounded hover:bg-slate-100 transition-colors">
+                className="text-muted-foreground/60 hover:text-muted-foreground p-0.5 rounded hover:bg-muted transition-colors">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="p-5 space-y-3">
               {/* Manual option */}
               <button type="button" onClick={() => handleCreateChart("MANUAL")} disabled={saving}
-                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 hover:border-sky-300 hover:bg-sky-50/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-50 border border-sky-200 group-hover:bg-sky-100 group-hover:border-sky-300 transition-colors">
-                  <PenLine className="h-5 w-5 text-sky-600" />
+                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-border hover:border-sky-300 hover:bg-accent/10/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 border border-accent/20 group-hover:bg-sky-100 group-hover:border-sky-300 transition-colors">
+                  <PenLine className="h-5 w-5 text-accent-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Manual Chart</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-sm font-semibold text-foreground">Manual Chart</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Start from scratch — add processes, inventories, and flows manually.
                     Full control over every element.
                   </p>
@@ -970,13 +970,13 @@ export function VsmPage() {
 
               {/* Linked option */}
               <button type="button" onClick={() => handleCreateChart("LINKED")} disabled={saving}
-                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-200 group-hover:bg-indigo-100 group-hover:border-indigo-300 transition-colors">
-                  <Link2 className="h-5 w-5 text-indigo-600" />
+                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-border hover:border-indigo-300 hover:bg-primary/10/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 border border-primary/20 group-hover:bg-primary/15 group-hover:border-indigo-300 transition-colors">
+                  <Link2 className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">Linked to Production Line</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                  <p className="text-sm font-semibold text-foreground">Linked to Production Line</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                     Auto-populate processes from the production line routing data.
                     Processes sync on creation and can be refreshed later.
                   </p>
@@ -984,8 +984,8 @@ export function VsmPage() {
               </button>
             </div>
             {saving && (
-              <div className="px-5 pb-4 flex items-center gap-2 text-[11px] text-slate-500">
-                <Loader2 className="h-3 w-3 animate-spin text-sky-500" />
+              <div className="px-5 pb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin text-accent-foreground" />
                 Creating chart...
               </div>
             )}

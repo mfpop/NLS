@@ -132,16 +132,16 @@ export function LiveShopfloorPage() {
   // ── NO ACTIVE LINE ──
   if (!lineId && !lineLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Live Shopfloor"
           subtitle="Select a production line from the sidebar to view real-time line status, resources, downtime, issues, and actions."
           icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
-              <PanelTop className="h-6 w-6 text-slate-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <PanelTop className="h-6 w-6 text-muted-foreground/60" />
             </div>
-            <p className="text-xs text-slate-500 max-w-sm">No active line selected. Use the sidebar to select a production line.</p>
+            <p className="text-xs text-muted-foreground max-w-sm">No active line selected. Use the sidebar to select a production line.</p>
           </div>
         </div>
       </div>
@@ -151,16 +151,16 @@ export function LiveShopfloorPage() {
   // ── LOADING ──
   if ((dashLoading && !dashboardData) || lineLoading) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Live Shopfloor" subtitle="Loading production line data..." icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
         <div className="flex-1 flex flex-col gap-4 p-4 animate-pulse">
           <div className="grid grid-cols-7 gap-2 h-16">
-            {Array.from({ length: 7 }).map((_, i) => <div key={i} className="h-full rounded bg-slate-200" />)}
+            {Array.from({ length: 7 }).map((_, i) => <div key={i} className="h-full rounded bg-muted/80" />)}
           </div>
           <div className="flex-1 grid grid-cols-[20%_1fr_30%] gap-2">
-            <div className="rounded bg-slate-100" />
-            <div className="rounded bg-slate-100" />
-            <div className="rounded bg-slate-100" />
+            <div className="rounded bg-muted" />
+            <div className="rounded bg-muted" />
+            <div className="rounded bg-muted" />
           </div>
         </div>
       </div>
@@ -170,16 +170,16 @@ export function LiveShopfloorPage() {
   // ── ERROR ──
   if (dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Live Shopfloor" subtitle="Error loading data" icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
-            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-red-200 bg-red-50 text-red-700"><span className="h-1.5 w-1.5 rounded-full bg-red-500" />Error</span>}
+            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-danger/20 bg-danger/10 text-danger"><span className="h-1.5 w-1.5 rounded-full bg-danger/100" />Error</span>}
             actions={<ToolbarButton icon={RefreshCw} label="Retry" onClick={handleRefresh} disabled={refreshing} />} />
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-          <p className="text-sm font-medium text-slate-800">Failed to load shopfloor data</p>
-          <p className="text-xs text-slate-500">Check the connection and try again.</p>
+          <p className="text-sm font-medium text-foreground">Failed to load shopfloor data</p>
+          <p className="text-xs text-muted-foreground">Check the connection and try again.</p>
         </div>
       </div>
     );
@@ -188,11 +188,11 @@ export function LiveShopfloorPage() {
   // ── EMPTY ──
   if (!dashboard?.liveStatus && !dashboard?.assignedResourceGroups?.length) {
     return (
-      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
-            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-slate-200 bg-slate-100 text-slate-500"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Empty</span>}
+            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-border bg-muted text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Empty</span>}
             actions={
               <><ToolbarButton icon={RefreshCw} label={refreshing ? "Refreshing..." : "Refresh"} onClick={handleRefresh} disabled={!allowRefresh || refreshing} />
                 <ToolbarSeparator />
@@ -202,10 +202,10 @@ export function LiveShopfloorPage() {
             } />
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-            <PanelTop className="h-7 w-7 text-slate-400" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+            <PanelTop className="h-7 w-7 text-muted-foreground/60" />
           </div>
-          <p className="text-xs text-slate-500 max-w-sm">No shopfloor data available for the selected line.</p>
+          <p className="text-xs text-muted-foreground max-w-sm">No shopfloor data available for the selected line.</p>
         </div>
       </div>
     );
@@ -213,7 +213,7 @@ export function LiveShopfloorPage() {
 
   // ── MAIN RENDER ──
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-slate-50">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       {/* Header */}
       <div className="h-16 shrink-0">
         <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
@@ -227,13 +227,13 @@ export function LiveShopfloorPage() {
             <div className="flex items-center gap-2 w-full">
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border ${
                 dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : isLive ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-amber-200 bg-amber-50 text-amber-700"
+                  ? "border-danger/20 bg-danger/10 text-danger"
+                  : isLive ? "border-success/20 bg-success/10 text-success"
+                    : "border-warning/20 bg-warning/10 text-warning"
               }`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${
-                  dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard ? "bg-red-500"
-                    : isLive ? "bg-emerald-500" : "bg-amber-500"
+                  dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard ? "bg-danger/100"
+                    : isLive ? "bg-success/100" : "bg-warning/100"
                 }`} />
                 {dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard ? "Error" : isLive ? "Live" : "Demo"}
               </span>
@@ -269,7 +269,7 @@ export function LiveShopfloorPage() {
       {/* 3-Column Command Board */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* ── LEFT (20%): Line Context ── */}
-        <div className={`${LEFT_WIDTH} shrink-0 border-r border-slate-300 overflow-hidden`}>
+        <div className={`${LEFT_WIDTH} shrink-0 border-r border-border overflow-hidden`}>
           <LineContextPanel
             lineSummary={dashboard?.lineSummary ?? null}
             shiftSummary={dashboard?.shiftSummary ?? null}
@@ -278,7 +278,7 @@ export function LiveShopfloorPage() {
         </div>
 
         {/* ── CENTER (flex-1): Resource Flow ── */}
-        <div className="flex-[1.45] min-w-0 border-r border-slate-300 overflow-hidden flex flex-col">
+        <div className="flex-[1.45] min-w-0 border-r border-border overflow-hidden flex flex-col">
           {/* Bottleneck highlight (when active) */}
           <BottleneckHighlight bottleneckSignal={dashboard?.bottleneckSignal ?? null} />
 
@@ -315,14 +315,14 @@ export function LiveShopfloorPage() {
           </div>
 
           {/* Recent Events (30%) */}
-          <div className="shrink-0 border-t border-slate-200" style={{ flex: "0 0 auto", maxHeight: "30%" }}>
+          <div className="shrink-0 border-t border-border" style={{ flex: "0 0 auto", maxHeight: "30%" }}>
             <RecentEventsPanel timelineEvents={dashboard?.timelineEvents ?? []} />
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="shrink-0 flex h-10 items-center gap-5 border-t border-slate-300 bg-slate-50 px-4 text-xs font-medium text-slate-600">
+      <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
         <span>Line: {activeLine?.name ?? "—"}</span>
         <span className="w-1 h-1 rounded-full bg-slate-300" />
         <span>Shift: {dashboard?.shiftSummary?.name ?? "—"}</span>
@@ -332,7 +332,7 @@ export function LiveShopfloorPage() {
         <span>Updated: {dashboard?.lastUpdatedAt ? new Date(dashboard.lastUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</span>
         <div className="ml-auto flex items-center gap-2">
           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-            dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard ? "bg-red-50 text-red-700" : isLive ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+            dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard ? "bg-danger/10 text-danger" : isLive ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
           }`}>
             {dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard ? "Error" : isLive ? "Live" : "Demo"}
           </span>

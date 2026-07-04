@@ -124,9 +124,9 @@ function threadDisplayName(thread: ChatThread, currentUserId: string): string {
 function threadDisplayIcon(thread: ChatThread, currentUserId: string): React.ReactNode {
   const name = threadDisplayName(thread, currentUserId);
   return thread.threadType === "GROUP" ? (
-    <Users className="h-4 w-4 text-slate-500" />
+    <Users className="h-4 w-4 text-muted-foreground" />
   ) : (
-    <span className="text-[11px] font-bold text-slate-600">{initials(name)}</span>
+    <span className="text-[11px] font-bold text-muted-foreground">{initials(name)}</span>
   );
 }
 
@@ -164,7 +164,7 @@ function ContactRow({
           <span className={`min-w-0 truncate text-sm font-semibold ${theme.textPrimary}`}>{contact.displayName}</span>
         </div>
         {contact.lastMessagePreview && (
-          <span className="block truncate text-xs text-slate-500">{contact.lastMessagePreview}</span>
+          <span className="block truncate text-xs text-muted-foreground">{contact.lastMessagePreview}</span>
         )}
       </div>
     </div>
@@ -206,9 +206,9 @@ function ThreadRow({
         title={thread.isFavorited ? "Remove from favorites" : "Add to favorites"}
       >
         {thread.isFavorited ? (
-          <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+          <Star className="h-3.5 w-3.5 text-warning fill-yellow-500" />
         ) : (
-          <Star className="h-3.5 w-3.5 text-slate-300 hover:text-yellow-500" />
+          <Star className="h-3.5 w-3.5 text-muted-foreground/30 hover:text-warning" />
         )}
       </button>
       <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center ${isGroup ? "bg-card border border-border" : "rounded-full bg-card"} text-xs font-bold text-muted-foreground ${isGroup ? "rounded-[4px]" : "rounded-full"}`}>
@@ -225,7 +225,7 @@ function ThreadRow({
           {isGroup && <span className="shrink-0 text-[9px] font-medium text-muted-foreground uppercase tracking-wide">Group</span>}
         </div>
         {thread.lastMessagePreview && (
-          <span className="block truncate text-xs text-slate-500">{thread.lastMessagePreview}</span>
+          <span className="block truncate text-xs text-muted-foreground">{thread.lastMessagePreview}</span>
         )}
       </div>
       {thread.lastMessageAt && (
@@ -248,8 +248,8 @@ function formatFileSize(bytes: number): string {
 }
 
 function attachmentIcon(mimeType: string): React.ReactNode {
-  if (isImageMime(mimeType)) return <Image className="h-4 w-4 text-sky-500" />;
-  return <FileText className="h-4 w-4 text-slate-500" />;
+  if (isImageMime(mimeType)) return <Image className="h-4 w-4 text-accent-foreground" />;
+  return <FileText className="h-4 w-4 text-muted-foreground" />;
 }
 
 /* ── Message Bubble ── */
@@ -262,11 +262,11 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       <div
         className={`max-w-[70%] rounded-[4px] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap break-words ${
           message.isMine
-            ? "bg-blue-50 border border-blue-100 text-slate-900"
-            : "bg-white border border-slate-200 text-slate-900"
+            ? "bg-primary/10 border border-blue-100 text-foreground"
+            : "bg-background border border-border text-foreground"
         }`}
       >
-        <p className="text-[11px] font-medium text-slate-500 mb-0.5">
+        <p className="text-[11px] font-medium text-muted-foreground mb-0.5">
           {message.isMine ? "You" : message.sender.displayName || message.sender.username}
         </p>
 
@@ -284,7 +284,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                       <img
                         src={att.fileUrl}
                         alt={att.fileName}
-                        className="max-w-full max-h-48 rounded-[2px] border border-slate-200 object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                        className="max-w-full max-h-48 rounded-[2px] border border-border object-cover hover:opacity-90 transition-opacity cursor-pointer"
                       />
                     </a>
                   ) : (
@@ -294,16 +294,16 @@ function MessageBubble({ message }: { message: ChatMessage }) {
                       rel="noopener noreferrer"
                       className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[2px] text-xs transition-colors ${
                         message.isMine
-                          ? "bg-blue-100/60 hover:bg-blue-100"
-                          : "bg-slate-100 hover:bg-slate-200"
+                          ? "bg-primary/15/60 hover:bg-primary/15"
+                          : "bg-muted hover:bg-muted/80"
                       }`}
                     >
                       {attachmentIcon(att.mimeType)}
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-slate-800">{att.fileName}</p>
-                        <p className="text-[10px] text-slate-500">{formatFileSize(att.fileSize)}</p>
+                        <p className="truncate font-medium text-foreground">{att.fileName}</p>
+                        <p className="text-[10px] text-muted-foreground">{formatFileSize(att.fileSize)}</p>
                       </div>
-                      <Download className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                      <Download className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
                     </a>
                   )}
                 </div>
@@ -312,7 +312,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           </div>
         )}
 
-        <p className="text-[10px] text-slate-400 text-right mt-1">{formatTime(message.createdAt)}</p>
+        <p className="text-[10px] text-muted-foreground/60 text-right mt-1">{formatTime(message.createdAt)}</p>
       </div>
     </div>
   );
@@ -359,7 +359,7 @@ function ChatMessagesPanel({
 
   if (loading && messages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-24 text-xs text-slate-500">
+      <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
         <Loader2 className="h-3 w-3 animate-spin mr-2" />
         Loading messages...
       </div>
@@ -370,8 +370,8 @@ function ChatMessagesPanel({
     return (
       <div className="flex flex-col items-center justify-center h-full text-center px-8">
         <MessageSquare className="h-8 w-8 text-slate-200 mb-2" />
-        <p className="text-xs font-medium text-slate-500">No messages yet</p>
-        <p className="text-[10px] text-slate-400 mt-0.5">Send a message to start the conversation.</p>
+        <p className="text-xs font-medium text-muted-foreground">No messages yet</p>
+        <p className="text-[10px] text-muted-foreground/60 mt-0.5">Send a message to start the conversation.</p>
       </div>
     );
   }
@@ -694,7 +694,7 @@ export function ChatPage() {
             </button>
           </div>
           <div className="flex-1" />
-          <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-slate-200 bg-card text-muted-foreground whitespace-nowrap">
+          <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
             {activeTab === "threads" ? filteredThreads.length : contacts.length}
           </span>
         </div>
@@ -705,14 +705,14 @@ export function ChatPage() {
         {activeTab === "threads" ? (
           <>
             {threadsLoading && threads.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-xs text-slate-500">
+              <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin mr-2" />
                 Loading...
               </div>
             ) : filteredThreads.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                <p className="text-xs font-medium text-slate-500">No conversations found</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Select a person to start chatting.</p>
+                <p className="text-xs font-medium text-muted-foreground">No conversations found</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">Select a person to start chatting.</p>
               </div>
             ) : (
               <div>
@@ -732,14 +732,14 @@ export function ChatPage() {
         ) : (
           <>
             {contactsLoading && contacts.length === 0 ? (
-              <div className="flex items-center justify-center h-24 text-xs text-slate-500">
+              <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
                 <Loader2 className="h-3 w-3 animate-spin mr-2" />
                 Loading...
               </div>
             ) : contacts.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-                <p className="text-xs font-medium text-slate-500">No people found</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">Try a different search.</p>
+                <p className="text-xs font-medium text-muted-foreground">No people found</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">Try a different search.</p>
               </div>
             ) : (
               <div>
@@ -757,7 +757,7 @@ export function ChatPage() {
         )}
       </div>
 
-      {/* Footer */}          <div className="shrink-0 border-t border-border-major bg-muted px-3 py-1.5 flex items-center text-xs text-slate-500">
+      {/* Footer */}          <div className="shrink-0 border-t border-border-major bg-muted px-3 py-1.5 flex items-center text-xs text-muted-foreground">
         {activeTab === "threads" ? (
           <span className="font-medium">{filteredThreads.length} conversation{filteredThreads.length !== 1 ? "s" : ""}</span>
         ) : (
@@ -772,20 +772,20 @@ export function ChatPage() {
   const mainContent = selectedThread ? (
     <div className="h-full flex flex-col bg-muted" key={selectedThreadId}>
       {/* Conversation header */}
-      <div className="shrink-0 h-12 border-b border-slate-200 bg-muted flex items-center gap-2.5 px-4">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center ${selectedThread.threadType === "GROUP" ? "bg-slate-100 border border-slate-300 rounded-[4px]" : "rounded-full bg-slate-200"} text-[11px] font-bold text-slate-600`}>
+      <div className="shrink-0 h-12 border-b border-border bg-muted flex items-center gap-2.5 px-4">
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center ${selectedThread.threadType === "GROUP" ? "bg-muted border border-border rounded-[4px]" : "rounded-full bg-muted/80"} text-[11px] font-bold text-muted-foreground`}>
           {selectedThread.threadType === "GROUP" ? (
-            <Users className="h-4 w-4 text-slate-500" />
+            <Users className="h-4 w-4 text-muted-foreground" />
           ) : (
             initials(selectedOther?.displayName || "")
           )}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-900 truncate">
+          <p className="text-sm font-semibold text-foreground truncate">
             {threadDisplayName(selectedThread, currentUserId)}
           </p>
           {selectedThread.threadType === "GROUP" && (
-            <p className="text-[10px] text-slate-500 truncate">
+            <p className="text-[10px] text-muted-foreground truncate">
               {selectedThread.participants.map((p) => p.displayName).join(", ")}
             </p>
           )}
@@ -802,20 +802,20 @@ export function ChatPage() {
       </div>
 
       {/* Composer */}
-      <div className="shrink-0 border-t border-slate-200 bg-muted">
+      <div className="shrink-0 border-t border-border bg-muted">
         {/* Pending attachments */}
         {pendingAttachments.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-4 pt-2 pb-0">
             {pendingAttachments.map((att, idx) => (
-              <div key={idx} className="flex items-center gap-1.5 h-8 px-2 rounded-[2px] bg-sky-50 border border-sky-100 text-xs">
+              <div key={idx} className="flex items-center gap-1.5 h-8 px-2 rounded-[2px] bg-accent/10 border border-sky-100 text-xs">
                 {isImageMime(att.mimeType) ? (
-                  <Image className="h-3.5 w-3.5 text-sky-500" />
+                  <Image className="h-3.5 w-3.5 text-accent-foreground" />
                 ) : (
-                  <FileText className="h-3.5 w-3.5 text-sky-500" />
+                  <FileText className="h-3.5 w-3.5 text-accent-foreground" />
                 )}
                 <span className="max-w-[120px] truncate text-sky-800">{att.fileName}</span>
-                <span className="text-[10px] text-sky-500">{formatFileSize(att.fileSize)}</span>
-                <button type="button" onClick={() => hRemoveAttachment(idx)} className="p-0.5 text-sky-400 hover:text-red-500 transition-colors">
+                <span className="text-[10px] text-accent-foreground">{formatFileSize(att.fileSize)}</span>
+                <button type="button" onClick={() => hRemoveAttachment(idx)} className="p-0.5 text-sky-400 hover:text-danger transition-colors">
                   <X className="h-3 w-3" />
                 </button>
               </div>
@@ -824,12 +824,12 @@ export function ChatPage() {
         )}
 
         {attachmentUploadError && (
-          <p className="text-[11px] font-medium text-red-600 px-4 pt-1">{attachmentUploadError}</p>
+          <p className="text-[11px] font-medium text-danger px-4 pt-1">{attachmentUploadError}</p>
         )}
 
         <div className="px-4 py-3">
           {sendError && (
-            <p className="text-[11px] font-medium text-red-600 mb-1">{sendError}</p>
+            <p className="text-[11px] font-medium text-danger mb-1">{sendError}</p>
           )}
           <div className="flex items-end gap-1.5">
             <button
@@ -837,7 +837,7 @@ export function ChatPage() {
               onClick={hPickAttachment}
               disabled={uploadingAttachment}
               title="Attach file"
-              className="shrink-0 flex h-9 w-9 items-center justify-center rounded-[2px] text-slate-500 hover:text-sky-600 hover:bg-sky-50 disabled:opacity-40 transition-colors"
+              className="shrink-0 flex h-9 w-9 items-center justify-center rounded-[2px] text-muted-foreground hover:text-accent-foreground hover:bg-accent/10 disabled:opacity-40 transition-colors"
             >
               {uploadingAttachment ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -852,13 +852,13 @@ export function ChatPage() {
               onKeyDown={hKeyDown}
               placeholder="Type a message... (Enter to send, Shift+Enter for new line)"
               rows={1}
-              className="flex-1 min-h-[36px] max-h-[120px] resize-none rounded-[2px] border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-sky-500 focus:ring-0 leading-relaxed"
+              className="flex-1 min-h-[36px] max-h-[120px] resize-none rounded-[2px] border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none focus:border-sky-500 focus:ring-0 leading-relaxed"
             />
             <button
               type="button"
               onClick={hSendMessage}
               disabled={(!composingText.trim() && pendingAttachments.length === 0) || sendingMessage}
-              className="shrink-0 flex h-9 w-9 items-center justify-center rounded-[2px] bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700 disabled:pointer-events-none disabled:opacity-40 transition-colors"
+              className="shrink-0 flex h-9 w-9 items-center justify-center rounded-[2px] bg-accent/100 text-white hover:bg-sky-600 active:bg-sky-700 disabled:pointer-events-none disabled:opacity-40 transition-colors"
             >
               {sendingMessage ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -882,8 +882,8 @@ export function ChatPage() {
   ) : (
     <div className="h-full flex flex-col items-center justify-center bg-muted text-center px-8">
       <MessageSquare className="h-12 w-12 text-slate-200 mb-3" />
-      <p className="text-sm font-medium text-slate-500">Select a contact or group</p>
-      <p className="text-xs text-slate-400 mt-1">Choose a conversation from the left or create a new group chat.</p>
+      <p className="text-sm font-medium text-muted-foreground">Select a contact or group</p>
+      <p className="text-xs text-muted-foreground/60 mt-1">Choose a conversation from the left or create a new group chat.</p>
     </div>
   );
 
@@ -891,35 +891,35 @@ export function ChatPage() {
 
   const groupDialog = showGroupDialog && (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowGroupDialog(false)}>
-      <div className="w-[420px] max-h-[80vh] overflow-y-auto bg-white rounded-[4px] shadow-xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
+      <div className="w-[420px] max-h-[80vh] overflow-y-auto bg-background rounded-[4px] shadow-xl border border-border" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between h-12 px-4 border-b border-slate-200">
-          <h3 className="text-sm font-semibold text-slate-900">New Group Chat</h3>
-          <button type="button" onClick={() => setShowGroupDialog(false)} className="p-1 text-slate-400 hover:text-slate-600">
+        <div className="flex items-center justify-between h-12 px-4 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">New Group Chat</h3>
+          <button type="button" onClick={() => setShowGroupDialog(false)} className="p-1 text-muted-foreground/60 hover:text-muted-foreground">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Group Title */}
-        <div className="px-4 py-3 border-b border-slate-100">
-          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-1">Group Name</label>
+        <div className="px-4 py-3 border-b border-border/50">
+          <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Group Name</label>
           <input
             type="text"
             value={groupTitle}
             onChange={(e) => setGroupTitle(e.target.value)}
             placeholder="e.g. Quality Team"
-            className="w-full h-8 rounded-[2px] border border-slate-300 px-2 text-xs text-slate-900 outline-none focus:border-sky-500"
+            className="w-full h-8 rounded-[2px] border border-border px-2 text-xs text-foreground outline-none focus:border-sky-500"
           />
         </div>
 
         {/* Select Participants */}
-        <div className="px-4 py-3 border-b border-slate-100">
-          <label className="block text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
+        <div className="px-4 py-3 border-b border-border/50">
+          <label className="block text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             Add Participants (select at least 2)
           </label>
           <div className="max-h-[200px] overflow-y-auto space-y-0.5">
             {contacts.length === 0 ? (
-              <p className="text-xs text-slate-400 italic py-2">Loading contacts...</p>
+              <p className="text-xs text-muted-foreground/60 italic py-2">Loading contacts...</p>
             ) : (
               contacts.map((c) => {
                 const isSelected = selectedContactIds.includes(c.id);
@@ -932,11 +932,11 @@ export function ChatPage() {
                       );
                     }}
                     className={`flex items-center gap-2 px-2 py-1.5 rounded-[2px] cursor-pointer text-xs ${
-                      isSelected ? "bg-sky-50 text-sky-800" : "hover:bg-slate-50 text-slate-800"
+                      isSelected ? "bg-accent/10 text-sky-800" : "hover:bg-muted text-foreground"
                     }`}
                   >
                     <div className={`h-4 w-4 shrink-0 rounded-[2px] border flex items-center justify-center ${
-                      isSelected ? "bg-sky-500 border-sky-500" : "border-slate-300"
+                      isSelected ? "bg-accent/100 border-sky-500" : "border-border"
                     }`}>
                       {isSelected && <Check className="h-3 w-3 text-white stroke-[3]" />}
                     </div>
@@ -951,16 +951,16 @@ export function ChatPage() {
         {/* Error */}
         {groupError && (
           <div className="px-4 py-2">
-            <p className="text-[11px] font-medium text-red-600">{groupError}</p>
+            <p className="text-[11px] font-medium text-danger">{groupError}</p>
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-200">
+        <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-border">
           <button
             type="button"
             onClick={() => setShowGroupDialog(false)}
-            className="h-8 px-3 rounded-[2px] border border-slate-300 bg-white text-xs text-slate-700 hover:bg-slate-50"
+            className="h-8 px-3 rounded-[2px] border border-border bg-background text-xs text-muted-foreground hover:bg-muted"
           >
             Cancel
           </button>
@@ -968,7 +968,7 @@ export function ChatPage() {
             type="button"
             onClick={hCreateGroup}
             disabled={!groupTitle.trim() || selectedContactIds.length < 2 || creatingGroup}
-            className="h-8 px-3 rounded-[2px] bg-sky-500 text-xs text-white font-medium hover:bg-sky-600 disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5"
+            className="h-8 px-3 rounded-[2px] bg-accent/100 text-xs text-white font-medium hover:bg-sky-600 disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5"
           >
             {creatingGroup ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             Create Group
@@ -1001,13 +1001,13 @@ export function ChatPage() {
       leftColumn={leftColumn}
       leftColumnWidth="w-[20%]"
       footer={
-        <span className="flex items-center gap-4 text-xs text-slate-500">
+        <span className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="font-medium">Chat</span>
           <span className="flex-1" />
           {selectedThread
             ? `${visibleMessageCount} message${visibleMessageCount !== 1 ? "s" : ""} · ${selectedThread.threadType === "GROUP" ? `${selectedThread.participants.length} participants` : `with ${selectedOther?.displayName || ""}`}`
             : `${filteredThreads.length} conversation${filteredThreads.length !== 1 ? "s" : ""}`}
-          <span className="text-slate-400">
+          <span className="text-muted-foreground/60">
             {selectedThread?.lastMessageAt
               ? `Last updated: ${formatTime(selectedThread.lastMessageAt)}`
               : ""}

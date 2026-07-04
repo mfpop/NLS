@@ -71,18 +71,18 @@ const TARGET_TYPE_OPTIONS = [
   { value: "RESOURCE", label: "Resource" },
 ];
 
-const inputClass = "h-8 w-full rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-colors";
-const selectClass = "h-8 w-full rounded-[2px] border border-slate-300 bg-white px-2 text-sm text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200 transition-colors";
+const inputClass = "h-8 w-full rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors";
+const selectClass = "h-8 w-full rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    DRAFT: "bg-blue-50 text-blue-700 border-blue-200",
-    ARCHIVED: "bg-slate-100 text-slate-500 border-slate-200",
+    ACTIVE: "bg-success/15 text-success border-success/20",
+    DRAFT: "bg-primary/15 text-primary border-primary/20",
+    ARCHIVED: "bg-muted text-muted-foreground border-border/40",
   };
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold ${colors[status] || "bg-slate-100 text-slate-500 border-slate-200"}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${status === "ACTIVE" ? "bg-emerald-500" : status === "DRAFT" ? "bg-blue-500" : "bg-slate-400"}`} />
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold ${colors[status] || "bg-muted text-muted-foreground border-border/40"}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${status === "ACTIVE" ? "bg-success" : status === "DRAFT" ? "bg-primary" : "bg-muted-foreground/40"}`} />
       {status || "UNKNOWN"}
     </span>
   );
@@ -300,7 +300,7 @@ export function AuditTemplateManagerPage() {
 
   return (
     <AppPageLayout
-      icon={<ClipboardCheck />}          iconClass="bg-purple-100 text-purple-600"
+      icon={<ClipboardCheck />}          iconClass="bg-accent/15 text-accent-foreground"
       title={pageTitle}
       subtitle={pageSubtitle}
       toolbar={
@@ -351,13 +351,13 @@ export function AuditTemplateManagerPage() {
           renderRecord={(t, _selected) => (
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="flex-1 truncate text-sm font-semibold text-slate-900">{t.name}</span>
+                <span className="flex-1 truncate text-sm font-semibold text-foreground">{t.name}</span>
                 <StatusBadge status={t.status} />
               </div>
-              <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+              <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                 <span className="font-mono">{t.code}</span>
                 <span>v{t.version}</span>
-                {t.isDefault && <span className="rounded bg-slate-100 px-1 text-[8px] text-slate-500">default</span>}
+                {t.isDefault && <span className="rounded bg-muted px-1 text-[8px] text-muted-foreground">default</span>}
               </div>
             </div>
           )}
@@ -369,19 +369,19 @@ export function AuditTemplateManagerPage() {
         />
       }
       footer={
-        <span className="flex items-center gap-4 text-xs text-slate-500">
+        <span className="flex items-center gap-4 text-xs text-muted-foreground">
           {statusMessage ? (
-            <span className={/fail|error|required/i.test(statusMessage) ? "text-red-600 font-medium" : "text-emerald-600 font-medium"}>{statusMessage}</span>
+            <span className={/fail|error|required/i.test(statusMessage) ? "text-danger font-medium" : "text-success font-medium"}>{statusMessage}</span>
           ) : pageMode === "create" ? (
-            <span className="text-blue-600 font-medium">Creating template</span>
+            <span className="text-primary font-medium">Creating template</span>
           ) : selectedTemplate ? (
-            <span>Editing: <span className="font-semibold text-slate-700">{selectedTemplate.name}</span> <span className="font-mono text-[10px]">{selectedTemplate.code}</span></span>
+            <span>Editing: <span className="font-semibold text-muted-foreground">{selectedTemplate.name}</span> <span className="font-mono text-[10px]">{selectedTemplate.code}</span></span>
           ) : (
             <span>{filteredTemplates.length} template{filteredTemplates.length !== 1 ? "s" : ""}</span>
           )}
         </span>
       }
-    >      <div className="flex flex-1 flex-col overflow-hidden bg-slate-50">
+    >      <div className="flex flex-1 flex-col overflow-hidden bg-muted">
         {confirmAction && (
           <ConfirmBanner
             label={confirmAction.label}
@@ -392,20 +392,20 @@ export function AuditTemplateManagerPage() {
 
         {/* ── Create Mode ── */}
         {pageMode === "create" && (
-          <div className="h-full overflow-y-auto bg-slate-50">
-            <div className="border-b border-slate-300 px-4 py-3">
-              <h2 className="text-sm font-semibold text-slate-900">New Audit Template</h2>
-              <p className="mt-0.5 text-[12px] text-slate-500">Fill in the details to create a new audit template.</p>
+          <div className="h-full overflow-y-auto bg-muted">
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold text-foreground">New Audit Template</h2>
+              <p className="mt-0.5 text-[12px] text-muted-foreground">Fill in the details to create a new audit template.</p>
             </div>
             <div className="grid grid-cols-5 gap-2 max-w-2xl p-3">
-              <div><label className="block text-[11px] font-medium text-slate-600 mb-1">Code</label><input type="text" value={createForm.code} onChange={(e) => setCreateForm({ ...createForm, code: e.target.value })} placeholder="e.g. PC_MY_AUDIT" className={inputClass} /></div>
-              <div><label className="block text-[11px] font-medium text-slate-600 mb-1">Name</label><input type="text" value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} placeholder="Template name" className={inputClass} /></div>
-              <div><label className="block text-[11px] font-medium text-slate-600 mb-1">Audit Type</label><select value={createForm.auditType} onChange={(e) => setCreateForm({ ...createForm, auditType: e.target.value })} className={selectClass}>{AUDIT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
-              <div><label className="block text-[11px] font-medium text-slate-600 mb-1">Module</label><select value={createForm.moduleScope} onChange={(e) => setCreateForm({ ...createForm, moduleScope: e.target.value })} className={selectClass}>{MODULE_SCOPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+              <div><label className="block text-[11px] font-medium text-muted-foreground mb-1">Code</label><input type="text" value={createForm.code} onChange={(e) => setCreateForm({ ...createForm, code: e.target.value })} placeholder="e.g. PC_MY_AUDIT" className={inputClass} /></div>
+              <div><label className="block text-[11px] font-medium text-muted-foreground mb-1">Name</label><input type="text" value={createForm.name} onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })} placeholder="Template name" className={inputClass} /></div>
+              <div><label className="block text-[11px] font-medium text-muted-foreground mb-1">Audit Type</label><select value={createForm.auditType} onChange={(e) => setCreateForm({ ...createForm, auditType: e.target.value })} className={selectClass}>{AUDIT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
+              <div><label className="block text-[11px] font-medium text-muted-foreground mb-1">Module</label><select value={createForm.moduleScope} onChange={(e) => setCreateForm({ ...createForm, moduleScope: e.target.value })} className={selectClass}>{MODULE_SCOPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
               <div className="flex items-end">
                 <div className="flex flex-wrap gap-1.5">
                   {TARGET_TYPE_OPTIONS.map((o) => (
-                    <label key={o.value} className="flex cursor-pointer items-center gap-1 text-[10px] text-slate-500">
+                    <label key={o.value} className="flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground">
                       <input type="checkbox" checked={createForm.targetTypes.includes(o.value)} onChange={(e) => { setCreateForm({ ...createForm, targetTypes: e.target.checked ? [...createForm.targetTypes, o.value] : createForm.targetTypes.filter((t) => t !== o.value) }); }} className="h-3.5 w-3.5" />{o.label}
                     </label>
                   ))}
@@ -418,7 +418,7 @@ export function AuditTemplateManagerPage() {
         {/* ── Empty State ── */}
         {pageMode === "view" && !selectedTemplate && (
           <div className="flex h-32 items-center justify-center">
-            <p className="text-xs text-slate-400">Select an audit template from the left panel to view and edit.</p>
+            <p className="text-xs text-muted-foreground/60">Select an audit template from the left panel to view and edit.</p>
           </div>
         )}
 
@@ -426,44 +426,44 @@ export function AuditTemplateManagerPage() {
         {pageMode === "edit" && selectedTemplate && (
           <div className="flex flex-1 flex-col overflow-hidden">
             {/* Summary strip */}
-            <div className="shrink-0 border-b border-slate-300 px-4 py-2.5 flex items-center justify-between">
+            <div className="shrink-0 border-b border-border px-4 py-2.5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-slate-900">{selectedTemplate.name}</h2>
+                <h2 className="text-sm font-semibold text-foreground">{selectedTemplate.name}</h2>
                 <StatusBadge status={selectedTemplate.status} />
-                {selectedTemplate.isDefault && <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">Default</span>}
-                <span className="text-[11px] text-slate-500">{selectedTemplate.categories?.length || 0} section{(selectedTemplate.categories?.length || 0) !== 1 ? "s" : ""}</span>
+                {selectedTemplate.isDefault && <span className="rounded border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Default</span>}
+                <span className="text-[11px] text-muted-foreground">{selectedTemplate.categories?.length || 0} section{(selectedTemplate.categories?.length || 0) !== 1 ? "s" : ""}</span>
               </div>
             </div>
 
             {/* Grid editor */}
-            <div className="grid flex-1 min-h-0 grid-cols-[280px_1fr] divide-x divide-slate-200 overflow-hidden">
+            <div className="grid flex-1 min-h-0 grid-cols-[280px_1fr] divide-x divide-border overflow-hidden">
               {/* Left: Template Setup */}
-              <div className="overflow-y-auto bg-slate-50 px-3 py-2 space-y-3">
+              <div className="overflow-y-auto bg-muted px-3 py-2 space-y-3">
                 <div className="grid grid-cols-[90px_1fr] items-center min-h-9 gap-2 px-3">
-                  <span className="text-[11px] font-medium text-slate-600">Name</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Name</span>
                   <input type="text" value={editForm?.name ?? selectedTemplate.name} onChange={(e) => setEditForm((prev) => prev ? { ...prev, name: e.target.value } : null)} className={inputClass} />
                 </div>
                 <div className="grid grid-cols-[90px_1fr] items-center min-h-9 gap-2 px-3">
-                  <span className="text-[11px] font-medium text-slate-600">Code</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Code</span>
                   <input type="text" defaultValue={selectedTemplate.code} className={inputClass} readOnly />
                 </div>
                 <div className="grid grid-cols-[90px_1fr] items-center min-h-9 gap-2 px-3">
-                  <span className="text-[11px] font-medium text-slate-600">Audit Type</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Audit Type</span>
                   <select defaultValue={selectedTemplate.auditType} className={`${selectClass} opacity-60 cursor-not-allowed`} disabled>
                     {AUDIT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-[90px_1fr] items-center min-h-9 gap-2 px-3">
-                  <span className="text-[11px] font-medium text-slate-600">Module</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Module</span>
                   <select value={editForm?.moduleScope ?? selectedTemplate.moduleScope} onChange={(e) => setEditForm((prev) => prev ? { ...prev, moduleScope: e.target.value } : null)} className={selectClass}>
                     {MODULE_SCOPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-[90px_1fr] items-center min-h-9 gap-2 px-3">
-                  <span className="text-[11px] font-medium text-slate-600">Targets</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Targets</span>
                   <div className="flex flex-wrap gap-1.5">
                     {TARGET_TYPE_OPTIONS.map((o) => (
-                      <label key={o.value} className="flex cursor-pointer items-center gap-1 text-[10px] text-slate-500">
+                      <label key={o.value} className="flex cursor-pointer items-center gap-1 text-[10px] text-muted-foreground">
                         <input type="checkbox" checked={(editForm?.targetTypes ?? selectedTemplate.targetTypes ?? []).includes(o.value)} onChange={(e) => setEditForm((prev) => prev ? { ...prev, targetTypes: e.target.checked ? [...prev.targetTypes, o.value] : prev.targetTypes.filter((t) => t !== o.value) } : null)} className="h-3.5 w-3.5" />{o.label}
                       </label>
                     ))}
@@ -472,42 +472,42 @@ export function AuditTemplateManagerPage() {
               </div>
 
               {/* Right: Sections & Questions */}
-              <div className="overflow-y-auto bg-slate-50">
+              <div className="overflow-y-auto bg-muted">
                 {/* Sections */}
                 {(!selectedTemplate.categories || selectedTemplate.categories.length === 0) && (
-                  <p className="px-3 py-2 text-[10px] text-slate-400">No sections defined.</p>
+                  <p className="px-3 py-2 text-[10px] text-muted-foreground/60">No sections defined.</p>
                 )}
                 {selectedTemplate.categories && selectedTemplate.categories.map((section) => (
                   <div key={section.id}>
                     {/* Section header */}
-                    <div className="h-9 border-b border-slate-200 bg-slate-50 px-3 flex items-center justify-between">
+                    <div className="h-9 border-b border-border bg-muted px-3 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-slate-700">{section.name}</span>
-                        <span className="text-[10px] text-slate-400">Seq: {section.sequence}</span>
+                        <span className="text-[11px] font-medium text-muted-foreground">{section.name}</span>
+                        <span className="text-[10px] text-muted-foreground/60">Seq: {section.sequence}</span>
                       </div>
                       <div className="flex items-center gap-0.5">
-                        <button type="button" onClick={() => openAddQuestion(section.id)} className="rounded p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50" title="Add question"><Plus className="h-3.5 w-3.5" /></button>
-                        <button type="button" onClick={() => openEditSection(section)} className="rounded p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50" title="Edit section"><Pencil className="h-3.5 w-3.5" /></button>
-                        <button type="button" onClick={() => setConfirmAction({ type: "removeSection", id: section.id, label: `Remove section "${section.name}" and its questions?` })} className="rounded p-1 text-slate-400 hover:text-red-600 hover:bg-red-50" title="Remove section">
+                        <button type="button" onClick={() => openAddQuestion(section.id)} className="rounded p-1 text-muted-foreground/60 hover:text-primary hover:bg-primary/10" title="Add question"><Plus className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => openEditSection(section)} className="rounded p-1 text-muted-foreground/60 hover:text-primary hover:bg-primary/10" title="Edit section"><Pencil className="h-3.5 w-3.5" /></button>
+                        <button type="button" onClick={() => setConfirmAction({ type: "removeSection", id: section.id, label: `Remove section "${section.name}" and its questions?` })} className="rounded p-1 text-muted-foreground/60 hover:text-danger hover:bg-danger/10" title="Remove section">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>
                     {/* Questions */}
                     {section.questions && section.questions.length > 0 && (
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-border/50">
                         {section.questions.map((q) => (
-                          <div key={q.id} className="grid grid-cols-[48px_minmax(280px,1fr)_120px_90px_96px] items-center min-h-9 border-b border-slate-100 px-3 hover:bg-slate-50/60">
-                            <span className="text-[10px] font-mono font-medium text-slate-400">Q{q.sequence}</span>
+                          <div key={q.id} className="grid grid-cols-[48px_minmax(280px,1fr)_120px_90px_96px] items-center min-h-9 border-b border-border/50 px-3 hover:bg-muted/60">
+                            <span className="text-[10px] font-mono font-medium text-muted-foreground/60">Q{q.sequence}</span>
                             <div className="min-w-0">
-                              <span className="text-sm font-medium text-slate-900">{q.question}</span>
-                              {q.helpText && <p className="text-xs text-slate-500 truncate">{q.helpText}</p>}
+                              <span className="text-sm font-medium text-foreground">{q.question}</span>
+                              {q.helpText && <p className="text-xs text-muted-foreground truncate">{q.helpText}</p>}
                             </div>
-                            <span className="text-[10px] text-slate-500">{RESPONSE_TYPE_OPTIONS.find((o) => o.value === q.responseType)?.label || q.responseType}</span>
-                            <span className="text-[10px] text-slate-500">{q.weight}</span>
+                            <span className="text-[10px] text-muted-foreground">{RESPONSE_TYPE_OPTIONS.find((o) => o.value === q.responseType)?.label || q.responseType}</span>
+                            <span className="text-[10px] text-muted-foreground">{q.weight}</span>
                             <div className="flex items-center gap-0.5 justify-end">
-                              <button type="button" onClick={() => openEditQuestion(q)} className="rounded p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50" title="Edit question"><Pencil className="h-3 w-3" /></button>
-                              <button type="button" onClick={() => setConfirmAction({ type: "removeQuestion", id: q.id, label: `Remove question "${q.question.substring(0, 40)}..."?` })} className="rounded p-1 text-slate-400 hover:text-red-600 hover:bg-red-50" title="Remove question">
+                              <button type="button" onClick={() => openEditQuestion(q)} className="rounded p-1 text-muted-foreground/60 hover:text-primary hover:bg-primary/10" title="Edit question"><Pencil className="h-3 w-3" /></button>
+                              <button type="button" onClick={() => setConfirmAction({ type: "removeQuestion", id: q.id, label: `Remove question "${q.question.substring(0, 40)}..."?` })} className="rounded p-1 text-muted-foreground/60 hover:text-danger hover:bg-danger/10" title="Remove question">
                                 <Trash2 className="h-3 w-3" />
                               </button>
                             </div>
@@ -520,27 +520,27 @@ export function AuditTemplateManagerPage() {
 
                 {/* Section Form */}
                 {showSectionForm && (
-                  <div className="border-b border-slate-200 bg-slate-50 p-2">
-                    <h4 className="mb-1 text-[10px] font-semibold text-slate-700">{editingSection ? "Edit Section" : "New Section"}</h4>
+                  <div className="border-b border-border bg-muted p-2">
+                    <h4 className="mb-1 text-[10px] font-semibold text-muted-foreground">{editingSection ? "Edit Section" : "New Section"}</h4>
                     <div className="flex flex-wrap gap-1.5 max-w-lg">
                       <input type="text" value={sectionForm.code} onChange={(e) => setSectionForm({ ...sectionForm, code: e.target.value })} placeholder="Code" className={`${inputClass} w-32`} />
                       <input type="text" value={sectionForm.name} onChange={(e) => setSectionForm({ ...sectionForm, name: e.target.value })} placeholder="Name" className={`${inputClass} w-40`} />
                       <input type="number" value={sectionForm.sequence} onChange={(e) => setSectionForm({ ...sectionForm, sequence: parseInt(e.target.value) || 0 })} placeholder="Seq" className={`${inputClass} w-16`} />
-                      <label className="flex items-center gap-1 text-[10px] text-slate-500">
+                      <label className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <input type="checkbox" checked={sectionForm.isRequired} onChange={(e) => setSectionForm({ ...sectionForm, isRequired: e.target.checked })} className="h-3.5 w-3.5" /> Required
                       </label>
                       <button type="button" onClick={handleSaveSection} disabled={saving}
-                        className="inline-flex h-8 items-center gap-1 rounded bg-emerald-600 px-2 text-[10px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                        className="inline-flex h-8 items-center gap-1 rounded bg-success px-2 text-[10px] font-semibold text-white hover:bg-success/80 disabled:opacity-50">
                         {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}</button>
-                      <button type="button" onClick={() => { setShowSectionForm(false); setEditingSection(null); }} className="inline-flex h-8 items-center gap-1 rounded border border-slate-300 bg-white px-2 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"><X className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => { setShowSectionForm(false); setEditingSection(null); }} className="inline-flex h-8 items-center gap-1 rounded border border-border bg-background px-2 text-[10px] font-semibold text-muted-foreground hover:bg-muted"><X className="h-3 w-3" /></button>
                     </div>
                   </div>
                 )}
 
                 {/* Question Form */}
                 {showQuestionForm && (
-                  <div className="border-b border-slate-200 bg-slate-50 p-2">
-                    <h4 className="mb-1 text-[10px] font-semibold text-slate-700">{editingQuestion ? "Edit Question" : "New Question"}</h4>
+                  <div className="border-b border-border bg-muted p-2">
+                    <h4 className="mb-1 text-[10px] font-semibold text-muted-foreground">{editingQuestion ? "Edit Question" : "New Question"}</h4>
                     <div className="space-y-1.5 max-w-xl">
                       <input type="text" value={questionForm.question} onChange={(e) => setQuestionForm({ ...questionForm, question: e.target.value })} placeholder="Question text" className={inputClass} />
                       <div className="flex flex-wrap gap-1.5">
@@ -550,13 +550,13 @@ export function AuditTemplateManagerPage() {
                         </select>
                         <input type="number" value={questionForm.weight} onChange={(e) => setQuestionForm({ ...questionForm, weight: parseInt(e.target.value) || 1 })} placeholder="Weight" className={`${inputClass} w-20`} />
                         <input type="number" value={questionForm.sequence} onChange={(e) => setQuestionForm({ ...questionForm, sequence: parseInt(e.target.value) || 0 })} placeholder="Seq" className={`${inputClass} w-16`} />
-                        <label className="flex items-center gap-1 text-[10px] text-slate-500">
+                        <label className="flex items-center gap-1 text-[10px] text-muted-foreground">
                           <input type="checkbox" checked={questionForm.isRequired} onChange={(e) => setQuestionForm({ ...questionForm, isRequired: e.target.checked })} className="h-3.5 w-3.5" /> Required
                         </label>
                         <button type="button" onClick={handleSaveQuestion} disabled={saving}
-                          className="inline-flex h-8 items-center gap-1 rounded bg-emerald-600 px-2 text-[10px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                          className="inline-flex h-8 items-center gap-1 rounded bg-success px-2 text-[10px] font-semibold text-white hover:bg-success/80 disabled:opacity-50">
                           {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}</button>
-                        <button type="button" onClick={() => { setShowQuestionForm(false); setEditingQuestion(null); setSelectedCategoryId(null); }} className="inline-flex h-8 items-center gap-1 rounded border border-slate-300 bg-white px-2 text-[10px] font-semibold text-slate-600 hover:bg-slate-50"><X className="h-3 w-3" /></button>
+                        <button type="button" onClick={() => { setShowQuestionForm(false); setEditingQuestion(null); setSelectedCategoryId(null); }} className="inline-flex h-8 items-center gap-1 rounded border border-border bg-background px-2 text-[10px] font-semibold text-muted-foreground hover:bg-muted"><X className="h-3 w-3" /></button>
                       </div>
                       <input type="text" value={questionForm.helpText} onChange={(e) => setQuestionForm({ ...questionForm, helpText: e.target.value })} placeholder="Help text (optional)" className={inputClass} />
                     </div>
@@ -569,53 +569,53 @@ export function AuditTemplateManagerPage() {
 
         {/* ── View Mode Detail ── */}
         {pageMode === "view" && selectedTemplate && (
-          <div className="h-full overflow-y-auto divide-y divide-slate-100 bg-slate-50">
+          <div className="h-full overflow-y-auto divide-y divide-border/50 bg-muted">
             {/* Template Summary */}
             <div className="px-4 py-3">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-slate-900">{selectedTemplate.name}</h2>
-                  <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
+                  <h2 className="text-sm font-semibold text-foreground">{selectedTemplate.name}</h2>
+                  <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="font-mono">{selectedTemplate.code}</span>
                     <span>v{selectedTemplate.version}</span>
                     <StatusBadge status={selectedTemplate.status} />
-                    {selectedTemplate.isDefault && <span className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">Default</span>}
+                    {selectedTemplate.isDefault && <span className="rounded border border-primary/20 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">Default</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
                   {selectedTemplate.status !== "ACTIVE" && (
-                    <button type="button" onClick={handleActivate} className="inline-flex h-7 items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 text-[10px] font-medium text-emerald-700 hover:bg-emerald-100"><Eye className="h-3 w-3" /> Activate</button>
+                    <button type="button" onClick={handleActivate} className="inline-flex h-7 items-center gap-1 rounded border border-success/20 bg-success/10 px-2 text-[10px] font-medium text-success hover:bg-success/15"><Eye className="h-3 w-3" /> Activate</button>
                   )}
                   {selectedTemplate.status !== "ARCHIVED" && (
-                    <button type="button" onClick={handleArchive} className="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-600 hover:bg-slate-50"><Archive className="h-3 w-3" /> Archive</button>
+                    <button type="button" onClick={handleArchive} className="inline-flex h-7 items-center gap-1 rounded border border-border bg-background px-2 text-[10px] font-medium text-muted-foreground hover:bg-muted"><Archive className="h-3 w-3" /> Archive</button>
                   )}
-                  <button type="button" onClick={handleClone} className="inline-flex h-7 items-center gap-1 rounded border border-slate-200 bg-white px-2 text-[10px] font-medium text-slate-600 hover:bg-slate-50"><Copy className="h-3 w-3" /> Clone</button>
+                  <button type="button" onClick={handleClone} className="inline-flex h-7 items-center gap-1 rounded border border-border bg-background px-2 text-[10px] font-medium text-muted-foreground hover:bg-muted"><Copy className="h-3 w-3" /> Clone</button>
                   <button type="button" onClick={() => { setPageMode("edit"); setEditForm({ name: selectedTemplate.name, moduleScope: selectedTemplate.moduleScope, targetTypes: selectedTemplate.targetTypes || [] }); }} className="inline-flex h-7 items-center gap-1 rounded bg-violet-600 px-2 text-[10px] font-medium text-white hover:bg-violet-700"><Pencil className="h-3 w-3" /> Edit</button>
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-600">{selectedTemplate.auditType}</span>
-                <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-600">{selectedTemplate.moduleScope}</span>
+                <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">{selectedTemplate.auditType}</span>
+                <span className="inline-flex items-center gap-1 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">{selectedTemplate.moduleScope}</span>
                 {(selectedTemplate.targetTypes || []).map((tt: string) => (
-                  <span key={tt} className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-600">{tt}</span>
+                  <span key={tt} className="inline-flex items-center gap-1 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">{tt}</span>
                 ))}
               </div>
             </div>
 
             {/* Scope / Targets */}
             <div className="px-4 py-2">
-              <div className="h-8 border-b border-slate-200 bg-slate-50 flex items-center"><span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Scope / Targets</span></div>
+              <div className="h-8 border-b border-border bg-muted flex items-center"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Scope / Targets</span></div>
               <div className="flex flex-wrap gap-1.5 py-2">
-                <span className="text-[11px] font-medium text-slate-700">Control Area:</span>
-                <span className="text-xs text-slate-600">{selectedTemplate.moduleScope}</span>
-                <span className="mx-1 text-slate-300">|</span>
-                <span className="text-[11px] font-medium text-slate-700">Targets:</span>
+                <span className="text-[11px] font-medium text-muted-foreground">Control Area:</span>
+                <span className="text-xs text-muted-foreground">{selectedTemplate.moduleScope}</span>
+                <span className="mx-1 text-muted-foreground/30">|</span>
+                <span className="text-[11px] font-medium text-muted-foreground">Targets:</span>
                 {(selectedTemplate.targetTypes || []).length > 0 ? (
                   (selectedTemplate.targetTypes || []).map((tt: string) => (
-                    <span key={tt} className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-600">{tt}</span>
+                    <span key={tt} className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">{tt}</span>
                   ))
                 ) : (
-                  <span className="text-xs text-slate-400">None</span>
+                  <span className="text-xs text-muted-foreground/60">None</span>
                 )}
               </div>
             </div>
@@ -623,31 +623,31 @@ export function AuditTemplateManagerPage() {
             {/* Sections & Questions */}
             <div className="px-4 py-2">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Sections &amp; Questions</span>
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Sections &amp; Questions</span>
               </div>
               {(!selectedTemplate.categories || selectedTemplate.categories.length === 0) && (
-                <p className="text-xs text-slate-400">No sections defined.</p>
+                <p className="text-xs text-muted-foreground/60">No sections defined.</p>
               )}
               {selectedTemplate.categories && selectedTemplate.categories.map((section) => (
-                <div key={section.id} className="mb-2 border border-slate-100 rounded-sm">
-                  <div className="h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center justify-between">
+                <div key={section.id} className="mb-2 border border-border/50 rounded-sm">
+                  <div className="h-8 border-b border-border bg-muted px-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium text-slate-700">{section.name}</span>
-                      <span className="text-[10px] text-slate-400">{section.code} · Seq: {section.sequence}{section.isRequired ? ' · Required' : ''}</span>
+                      <span className="text-[11px] font-medium text-muted-foreground">{section.name}</span>
+                      <span className="text-[10px] text-muted-foreground/60">{section.code} · Seq: {section.sequence}{section.isRequired ? ' · Required' : ''}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400">{section.questions?.length || 0} question{(section.questions?.length || 0) !== 1 ? "s" : ""}</span>
+                    <span className="text-[10px] text-muted-foreground/60">{section.questions?.length || 0} question{(section.questions?.length || 0) !== 1 ? "s" : ""}</span>
                   </div>
                   {section.questions && section.questions.length > 0 && (
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-border/50">
                       {section.questions.map((q, qi) => (
-                        <div key={q.id} className="grid grid-cols-[48px_minmax(280px,1fr)_120px_90px] items-center min-h-8 px-3 hover:bg-slate-50/60">
-                          <span className="text-[10px] font-mono font-medium text-slate-400">Q{q.sequence || qi + 1}</span>
+                        <div key={q.id} className="grid grid-cols-[48px_minmax(280px,1fr)_120px_90px] items-center min-h-8 px-3 hover:bg-muted/60">
+                          <span className="text-[10px] font-mono font-medium text-muted-foreground/60">Q{q.sequence || qi + 1}</span>
                           <div className="min-w-0">
-                            <span className="text-sm font-medium text-slate-900">{q.question}</span>
-                            {q.helpText && <p className="text-xs text-slate-500 truncate">{q.helpText}</p>}
+                            <span className="text-sm font-medium text-foreground">{q.question}</span>
+                            {q.helpText && <p className="text-xs text-muted-foreground truncate">{q.helpText}</p>}
                           </div>
-                          <span className="text-[10px] text-slate-500">{RESPONSE_TYPE_OPTIONS.find((o) => o.value === q.responseType)?.label || q.responseType}{q.isRequired ? ' *' : ''}</span>
-                          <span className="text-[10px] text-slate-500 text-right">Weight: {q.weight}</span>
+                          <span className="text-[10px] text-muted-foreground">{RESPONSE_TYPE_OPTIONS.find((o) => o.value === q.responseType)?.label || q.responseType}{q.isRequired ? ' *' : ''}</span>
+                          <span className="text-[10px] text-muted-foreground text-right">Weight: {q.weight}</span>
                         </div>
                       ))}
                     </div>
@@ -658,11 +658,11 @@ export function AuditTemplateManagerPage() {
 
             {/* Audit Note */}
             <div className="px-4 py-2">
-              <div className="h-8 border-b border-slate-200 bg-slate-50 flex items-center"><span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Audit Note</span></div>
-              <div className="py-2 space-y-1 text-[12px] text-slate-500">
-                <div>Created: <span className="font-medium text-slate-700">{selectedTemplate.createdAt ? new Date(selectedTemplate.createdAt).toLocaleDateString() : '—'}</span></div>
-                <div>Updated: <span className="font-medium text-slate-700">{selectedTemplate.updatedAt ? new Date(selectedTemplate.updatedAt).toLocaleDateString() : '—'}</span></div>
-                <div>Version: <span className="font-medium text-slate-700">{selectedTemplate.version}</span></div>
+              <div className="h-8 border-b border-border bg-muted flex items-center"><span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Audit Note</span></div>
+              <div className="py-2 space-y-1 text-[12px] text-muted-foreground">
+                <div>Created: <span className="font-medium text-muted-foreground">{selectedTemplate.createdAt ? new Date(selectedTemplate.createdAt).toLocaleDateString() : '—'}</span></div>
+                <div>Updated: <span className="font-medium text-muted-foreground">{selectedTemplate.updatedAt ? new Date(selectedTemplate.updatedAt).toLocaleDateString() : '—'}</span></div>
+                <div>Version: <span className="font-medium text-muted-foreground">{selectedTemplate.version}</span></div>
               </div>
             </div>
           </div>

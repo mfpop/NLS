@@ -47,26 +47,26 @@ interface MERItem {
 /* ── Constants ── */
 
 const TYPE_META: Record<string, { label: string; icon: typeof Wrench; color: string; bg: string; border: string }> = {
-  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20", border: "border-blue-200 dark:border-blue-800" },
-  TOOLING: { label: "Tooling", icon: Settings, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", border: "border-amber-200 dark:border-amber-800" },
-  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-green-600 dark:text-green-400", bg: "bg-green-50 dark:bg-green-900/20", border: "border-green-200 dark:border-green-800" },
-  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-purple-200 dark:border-purple-800" },
+  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20", border: "border-primary/20 dark:border-blue-800" },
+  TOOLING: { label: "Tooling", icon: Settings, color: "text-warning dark:text-amber-400", bg: "bg-warning/10 dark:bg-amber-900/20", border: "border-warning/20 dark:border-amber-800" },
+  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-success dark:text-success/80", bg: "bg-success/10 dark:bg-green-900/20", border: "border-success/20 dark:border-green-800" },
+  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-accent-foreground dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-accent/20 dark:border-purple-800" },
 };
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  SUBMITTED: { label: "Submitted", color: "bg-blue-500" },
-  UNDER_REVIEW: { label: "Under Review", color: "bg-yellow-500" },
-  APPROVED: { label: "Approved", color: "bg-emerald-500" },
-  IN_PROGRESS: { label: "In Progress", color: "bg-amber-500" },
-  COMPLETED: { label: "Completed", color: "bg-green-600" },
-  REJECTED: { label: "Rejected", color: "bg-red-500" },
-  CANCELLED: { label: "Cancelled", color: "bg-gray-400" },
+  SUBMITTED: { label: "Submitted", color: "bg-primary/100" },
+  UNDER_REVIEW: { label: "Under Review", color: "bg-warning" },
+  APPROVED: { label: "Approved", color: "bg-success/100" },
+  IN_PROGRESS: { label: "In Progress", color: "bg-warning/100" },
+  COMPLETED: { label: "Completed", color: "bg-success" },
+  REJECTED: { label: "Rejected", color: "bg-danger/100" },
+  CANCELLED: { label: "Cancelled", color: "bg-muted-foreground/40" },
 };
 
 const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
-  CRITICAL: { label: "Critical", color: "text-red-600 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20" },
-  HIGH: { label: "High", color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-900/20" },
-  MEDIUM: { label: "Medium", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/20" },
+  CRITICAL: { label: "Critical", color: "text-danger dark:text-danger/80", bg: "bg-danger/10 dark:bg-red-900/20" },
+  HIGH: { label: "High", color: "text-warning dark:text-orange-400", bg: "bg-warning/10 dark:bg-orange-900/20" },
+  MEDIUM: { label: "Medium", color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20" },
   LOW: { label: "Low", color: "text-gray-500", bg: "bg-gray-50 dark:bg-gray-900/20" },
 };
 
@@ -75,8 +75,8 @@ const PRIORITY_META: Record<string, { label: string; color: string; bg: string }
 function SectionCard({ title, badge, children }: { title: string; badge?: ReactNode; children: ReactNode }) {
   return (
     <section>
-      <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-1.5">
-        <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">{title}</h3>
+      <div className="mb-3 flex items-center gap-2 border-b border-border pb-1.5">
+        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">{title}</h3>
         <div className="flex-1" />
         {badge}
       </div>
@@ -100,14 +100,14 @@ function KpiCard({ label, value, onClick, badge, muted, icon }: KpiCardProps) {
       type="button"
       onClick={onClick}
       disabled={!onClick}
-      className={`flex flex-col gap-0.5 px-3 py-2 min-w-0 text-left hover:bg-slate-50 transition-colors ${
+      className={`flex flex-col gap-0.5 px-3 py-2 min-w-0 text-left hover:bg-muted transition-colors ${
         onClick ? "cursor-pointer" : "cursor-default"
       }`}
     >
       <div className="flex items-center justify-between">
         <div className="min-w-0 flex-1">
-          <p className={`text-[10px] font-medium text-slate-500 uppercase tracking-wide truncate`}>{label}</p>
-          <p className={`text-lg font-bold tabular-nums leading-none ${muted ? "text-slate-400" : "text-slate-900"}`}>{value}</p>
+          <p className={`text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate`}>{label}</p>
+          <p className={`text-lg font-bold tabular-nums leading-none ${muted ? "text-muted-foreground/60" : "text-foreground"}`}>{value}</p>
         </div>
         {icon && <span className="ml-1 opacity-50 group-hover:opacity-80 transition-opacity">{icon}</span>}
         {badge && (
@@ -122,7 +122,7 @@ function KpiCard({ label, value, onClick, badge, muted, icon }: KpiCardProps) {
 
 function BarRow({ label, count, total, color }: { label: string; count: number; total: number; color?: string }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-  const barColor = color || "bg-indigo-500/60";
+  const barColor = color || "bg-primary/60";
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ function BarRow({ label, count, total, color }: { label: string; count: number; 
 function StatusDot({ status }: { status: string }) {
   const meta = STATUS_META[status];
   return (
-    <span className={`inline-block h-2 w-2 rounded-full ${meta?.color || "bg-gray-400"}`} />
+    <span className={`inline-block h-2 w-2 rounded-full ${meta?.color || "bg-muted-foreground/40"}`} />
   );
 }
 
@@ -180,24 +180,24 @@ function MERRecentActivity({ items }: { items: MERItem[] }) {
 
   return (
     <div className="flex flex-col min-h-0">
-      <div className="shrink-0 flex items-center gap-2 px-3 h-8 border-b border-slate-200">
-        <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">Recent Activity</h3>
+      <div className="shrink-0 flex items-center gap-2 px-3 h-8 border-b border-border">
+        <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Recent Activity</h3>
         {items.length > 0 && (
-          <span className="ml-auto text-[10px] font-mono text-slate-400 shrink-0">{items.length}</span>
+          <span className="ml-auto text-[10px] font-mono text-muted-foreground/60 shrink-0">{items.length}</span>
         )}
       </div>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto divide-y divide-border/50">
         {items.length === 0 ? (
-          <div className="flex items-center justify-center h-12 text-xs text-slate-400 italic">No recent activity</div>
+          <div className="flex items-center justify-center h-12 text-xs text-muted-foreground/60 italic">No recent activity</div>
         ) : (
           paginatedItems.map((m) => (
             <button key={m.id} type="button"
               onClick={() => navigate("/plan/mer")}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors">
+              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted transition-colors">
               <StatusDot status={m.status} />
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-slate-900 truncate">{m.title}</div>
-                <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                <div className="text-xs font-medium text-foreground truncate">{m.title}</div>
+                <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                   <span>{m.merCode || `MER-${m.id}`}</span>
                   <span>·</span>
                   <span>{formatDate(m.createdAt)}</span>
@@ -210,7 +210,7 @@ function MERRecentActivity({ items }: { items: MERItem[] }) {
           ))
         )}
       </div>
-      <div className="shrink-0 flex items-center h-8 px-3 border-t border-slate-200">
+      <div className="shrink-0 flex items-center h-8 px-3 border-t border-border">
         <CompactPagination
           currentPage={safePage}
           totalItems={items.length}
@@ -299,7 +299,7 @@ export function MERDashboardPage() {
         {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b print-ignore`}>{successMsg}</div>}
         <div className="print-ignore">
           <PageHeader icon={<ClipboardList className="h-5 w-5 stroke-current" />}
-            iconClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400"
+            iconClass="bg-primary/15 text-primary dark:bg-indigo-900/40 dark:text-indigo-400"
             title="MER Dashboard" subtitle="Manufacturing Engineering Requests — analytics and overview" />
         </div>
         <div className="print-ignore">
@@ -318,10 +318,10 @@ export function MERDashboardPage() {
               <div className="flex flex-col items-center justify-center h-48 text-center px-4">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full max-w-4xl mb-6">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="border border-slate-200 bg-white p-3 animate-pulse">
+                    <div key={i} className="border border-border bg-background p-3 animate-pulse">
                       <div className="space-y-2">
-                        <div className="h-3 w-16 rounded bg-slate-100" />
-                        <div className="h-5 w-10 rounded bg-slate-100" />
+                        <div className="h-3 w-16 rounded bg-muted" />
+                        <div className="h-5 w-10 rounded bg-muted" />
                       </div>
                     </div>
                   ))}
@@ -340,11 +340,11 @@ export function MERDashboardPage() {
                 </p>
                 <div className="flex gap-2">
                     <button type="button" onClick={() => navigate("/plan/mer")}
-                      className="inline-flex h-8 items-center gap-1.5 bg-indigo-600 px-3 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
+                      className="inline-flex h-8 items-center gap-1.5 bg-primary px-3 text-sm font-semibold text-white hover:bg-primary transition-colors">
                       New MER
                     </button>
                     <button type="button" onClick={hRefresh}
-                      className="inline-flex h-8 items-center gap-1.5 border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                      className="inline-flex h-8 items-center gap-1.5 border border-border bg-background px-3 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors">
                     <RefreshCw className="h-3 w-3 stroke-current" /> Refresh
                   </button>
                 </div>
@@ -361,9 +361,9 @@ export function MERDashboardPage() {
                     <KpiCard label="Approved" value={summary.approved} />
                     <KpiCard label="In Progress" value={summary.inProgress} />
                     <KpiCard label="Completed" value={summary.completed}
-                      badge={completionRate > 0 ? { text: `${completionRate}% rate`, color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" } : undefined} />
+                      badge={completionRate > 0 ? { text: `${completionRate}% rate`, color: "bg-success/15 dark:bg-green-900/30 text-success dark:text-green-300" } : undefined} />
                     <KpiCard label="Rejected" value={summary.rejected} muted={summary.rejected === 0}
-                      badge={rejectionRate > 0 ? { text: `${rejectionRate}%`, color: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" } : undefined} />
+                      badge={rejectionRate > 0 ? { text: `${rejectionRate}%`, color: "bg-danger/15 dark:bg-red-900/30 text-danger dark:text-red-300" } : undefined} />
                     <KpiCard label="Cancelled" value={summary.cancelled} muted={summary.cancelled === 0} />
                     <KpiCard label="Overdue" value={summary.overdue} muted={summary.overdue === 0} />
                     <KpiCard label="Est. Cost" value={`$${totalEstimated.toLocaleString()}`} muted={totalEstimated === 0} />
@@ -372,16 +372,16 @@ export function MERDashboardPage() {
 
                 {/* ═══ ROW 3: BREAKDOWN + COST ═══ */}
                 <div>
-                  <div className="bg-white border border-slate-200 divide-y divide-slate-200">
+                  <div className="bg-background border border-border divide-y divide-border">
                     <div className="flex items-center gap-2 px-3 h-8">
-                    <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">Breakdown</h3>
-                      <div className="ml-auto flex items-center gap-0.5 bg-slate-100 p-0.5">
+                    <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Breakdown</h3>
+                      <div className="ml-auto flex items-center gap-0.5 bg-muted p-0.5">
                         <button type="button" onClick={() => setChartView("type")}
-                          className={`inline-flex h-6 items-center px-2 text-[10px] font-semibold transition-all ${chartView === "type" ? "bg-indigo-600 text-white" : "text-muted-foreground hover:text-foreground"}`}>
+                          className={`inline-flex h-6 items-center px-2 text-[10px] font-semibold transition-all ${chartView === "type" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}>
                           By Type
                         </button>
                         <button type="button" onClick={() => setChartView("priority")}
-                          className={`inline-flex h-6 items-center px-2 text-[10px] font-semibold transition-all ${chartView === "priority" ? "bg-indigo-600 text-white" : "text-muted-foreground hover:text-foreground"}`}>
+                          className={`inline-flex h-6 items-center px-2 text-[10px] font-semibold transition-all ${chartView === "priority" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}>
                           By Priority
                         </button>
                       </div>
@@ -395,9 +395,9 @@ export function MERDashboardPage() {
                             {summary.byType.map((t) => {
                               const meta = TYPE_META[t.requestType];
                               const barColors: Record<string, string> = {
-                                ENGINEERING_CHANGE: "bg-blue-500",
-                                TOOLING: "bg-amber-500",
-                                PROCESS_IMPROVEMENT: "bg-green-500",
+                                ENGINEERING_CHANGE: "bg-primary/100",
+                                TOOLING: "bg-warning/100",
+                                PROCESS_IMPROVEMENT: "bg-success/100",
                                 EQUIPMENT_MODIFICATION: "bg-purple-500",
                               };
                               return (
@@ -405,7 +405,7 @@ export function MERDashboardPage() {
                                   {meta && <meta.icon className={`h-3.5 w-3.5 shrink-0 ${meta.color} stroke-current`} />}
                                   <div className="flex-1">
                                     <BarRow label={meta?.label || t.requestType} count={t.count} total={summary.total}
-                                      color={barColors[t.requestType] || "bg-indigo-500"} />
+                                      color={barColors[t.requestType] || "bg-primary"} />
                                   </div>
                                 </div>
                               );
@@ -420,14 +420,14 @@ export function MERDashboardPage() {
                             {summary.byPriority.map((p) => {
                               const meta = PRIORITY_META[p.priority];
                               const barColors: Record<string, string> = {
-                                CRITICAL: "bg-red-500",
-                                HIGH: "bg-orange-500",
-                                MEDIUM: "bg-blue-500",
-                                LOW: "bg-gray-400",
+                                CRITICAL: "bg-danger/100",
+                                HIGH: "bg-warning/100",
+                                MEDIUM: "bg-primary/100",
+                                LOW: "bg-muted-foreground/40",
                               };
                               return (
                                 <BarRow key={p.priority} label={meta?.label || p.priority} count={p.count} total={summary.total}
-                                  color={barColors[p.priority] || "bg-indigo-500"} />
+                                  color={barColors[p.priority] || "bg-primary"} />
                               );
                             })}
                           </div>
@@ -439,32 +439,32 @@ export function MERDashboardPage() {
                 </div>
 
                 {/* ═══ ROW 4: UPCOMING + RECENT ACTIVITY ═══ */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 divide-x divide-slate-200 border border-slate-200 bg-white">
+                <div className="grid grid-cols-1 lg:grid-cols-2 divide-x divide-border border border-border bg-background">
 
                   {/* Upcoming deadlines */}
                   <div className="flex flex-col min-h-0">
-                    <div className="shrink-0 flex items-center gap-2 px-3 h-8 border-b border-slate-200">
-                      <h3 className="text-xs font-semibold text-slate-800 uppercase tracking-wide">Due This Week</h3>
+                    <div className="shrink-0 flex items-center gap-2 px-3 h-8 border-b border-border">
+                      <h3 className="text-xs font-semibold text-foreground uppercase tracking-wide">Due This Week</h3>
                       {upcomingDeadlines.length > 0 && (
-                        <span className="ml-auto text-[10px] font-mono text-amber-700 font-medium">
+                        <span className="ml-auto text-[10px] font-mono text-warning font-medium">
                           {upcomingDeadlines.length}
                         </span>
                       )}
                     </div>
-                    <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100">
+                    <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-border/50">
                     {upcomingDeadlines.length === 0 ? (
-                      <div className="flex items-center justify-center h-12 text-xs text-slate-400 italic">No upcoming deadlines</div>
+                      <div className="flex items-center justify-center h-12 text-xs text-muted-foreground/60 italic">No upcoming deadlines</div>
                     ) : (
                       upcomingDeadlines.map((m) => {
                           const days = daysUntil(m.dueDate);
                           return (
                             <button key={m.id} type="button"
                               onClick={() => navigate("/plan/mer")}
-                              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-50 transition-colors">
-                              <Clock3 className="h-3 w-3 shrink-0 text-amber-500 stroke-current" />
+                              className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted transition-colors">
+                              <Clock3 className="h-3 w-3 shrink-0 text-warning stroke-current" />
                               <div className="min-w-0 flex-1">
-                                <div className="text-xs font-medium text-slate-900 truncate">{m.title}</div>
-                                <div className="text-[10px] text-amber-600 font-medium">
+                                <div className="text-xs font-medium text-foreground truncate">{m.title}</div>
+                                <div className="text-[10px] text-warning font-medium">
                                   {days !== null ? (days === 0 ? "Due today" : `${days}d remaining`) : "Upcoming"}
                                 </div>
                               </div>

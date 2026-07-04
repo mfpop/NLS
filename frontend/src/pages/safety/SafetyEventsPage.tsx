@@ -388,18 +388,18 @@ export function SafetyEventsPage() {
 
   const selItem = selectedId ? items.find((e: any) => e.id === selectedId) ?? null : null;
   const selStatus = selItem?.status || "";
-  const labelCls = "block text-xs font-medium text-slate-500 mb-1";
-  const sectionCls = "border-b border-slate-100 pb-3 mb-3";
-  const sectionTitleCls = "text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2";
+  const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
+  const sectionCls = "border-b border-border/50 pb-3 mb-3";
+  const sectionTitleCls = "text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2";
 
   const renderForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden">
-      <div className="w-[40%] shrink-0 overflow-y-auto border-r border-slate-200 bg-slate-50/40 p-4 space-y-0">
+      <div className="w-[40%] shrink-0 overflow-y-auto border-r border-border bg-muted/40 p-4 space-y-0">
         <div className={sectionCls}>
           <div className={sectionTitleCls}>Event Classification</div>
           <div className="space-y-3">
             {singleEventType ? (
-              <div><label className={labelCls}>Event Type</label><div className="h-8 flex items-center px-2 text-sm text-slate-700 bg-slate-50 border border-slate-200">{routeEventTypeOpts[0]?.label}</div></div>
+              <div><label className={labelCls}>Event Type</label><div className="h-8 flex items-center px-2 text-sm text-muted-foreground bg-muted border border-border">{routeEventTypeOpts[0]?.label}</div></div>
             ) : (
               <div><label className={labelCls}>Event Type *</label><select name="eventType" value={cType} onChange={(e) => setCType(e.target.value)} className={SEL_INPUT}>{routeEventTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
             )}
@@ -413,7 +413,7 @@ export function SafetyEventsPage() {
             value={cLoc} onChange={setCLoc} plantDisabled={false}
           />
           <div className="mt-3">
-            <label className={labelCls}>Location Details <span className="text-slate-400 font-normal">(optional)</span></label>
+            <label className={labelCls}>Location Details <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
             <input name="location" type="text" value={cLocation} onChange={(e) => setCLocation(e.target.value)} className={SEL_INPUT} placeholder="Area, equipment, or specific location..." />
           </div>
         </div>
@@ -421,7 +421,7 @@ export function SafetyEventsPage() {
           <div className={sectionTitleCls}>Ownership / Follow-up</div>
           <div className="space-y-3">
             <div><label className={labelCls}>Reported By *</label><input name="reportedBy" type="text" value={cReportedBy} onChange={(e) => setCReportedBy(e.target.value)} className={SEL_INPUT} placeholder="Reporter name..." /></div>
-            <div><label className={labelCls}>Owner <span className="text-slate-400 font-normal">(optional)</span></label><input name="owner" type="text" value={cOwner} onChange={(e) => setCOwner(e.target.value)} className={SEL_INPUT} placeholder="Assigned owner..." /></div>
+            <div><label className={labelCls}>Owner <span className="text-muted-foreground/60 font-normal">(optional)</span></label><input name="owner" type="text" value={cOwner} onChange={(e) => setCOwner(e.target.value)} className={SEL_INPUT} placeholder="Assigned owner..." /></div>
             <div><label className={labelCls}>Occurred At *</label><input name="occurredAt" type="datetime-local" value={cOccurredAt} onChange={(e) => setCOccurredAt(e.target.value)} className={SEL_INPUT} /></div>
           </div>
         </div>
@@ -429,7 +429,7 @@ export function SafetyEventsPage() {
           <div className={sectionTitleCls}>{cfg.impactFlagTitle}</div>
           <div className="space-y-1.5">
             {cfg.impactFlags.map((f) => (
-              <label key={f.field} className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+              <label key={f.field} className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                 <input type="checkbox" name={f.field} checked={f.field === "injuryInvolved" ? cInjury : f.field === "propertyDamage" ? cProperty : cEnvironmental}
                   onChange={(e) => { if (f.field === "injuryInvolved") setCInjury(e.target.checked); else if (f.field === "propertyDamage") setCProperty(e.target.checked); else setCEnvironmental(e.target.checked); }}
                   className="h-3.5 w-3.5" /> {f.label}
@@ -441,7 +441,7 @@ export function SafetyEventsPage() {
       {/* Two-column layout: Description (left) | Immediate Response + Notes (right) */}
       <div className="flex flex-1 min-h-0 overflow-hidden p-0 gap-0">
         {/* Left: Description */}
-        <div className="flex-1 min-h-0 flex flex-col p-4 border-r border-slate-200" style={{ minHeight: "180px" }}>
+        <div className="flex-1 min-h-0 flex flex-col p-4 border-r border-border" style={{ minHeight: "180px" }}>
           <div className={`${sectionTitleCls} shrink-0`}>Description</div>
           <div className="flex-1 min-h-0 flex flex-col gap-2">
             <div className="shrink-0">
@@ -450,27 +450,27 @@ export function SafetyEventsPage() {
             </div>
             <div className="flex-1 min-h-0 flex flex-col">
               <label className={`${labelCls} shrink-0`}>{cfg.descLabel} *</label>
-              <textarea name="description" value={cDesc} onChange={(e) => setCDesc(e.target.value)} className="flex-1 min-h-0 w-full resize-none overflow-auto border border-slate-200 bg-white px-2 py-1 text-xs outline-none" placeholder={cfg.descPlaceholder} />
+              <textarea name="description" value={cDesc} onChange={(e) => setCDesc(e.target.value)} className="flex-1 min-h-0 w-full resize-none overflow-auto border border-border bg-background px-2 py-1 text-xs outline-none" placeholder={cfg.descPlaceholder} />
             </div>
           </div>
         </div>
         {/* Right: Immediate Response + Notes */}
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="flex-1 min-h-0 flex flex-col p-4 border-b border-slate-200" style={{ minHeight: "120px" }}>
+          <div className="flex-1 min-h-0 flex flex-col p-4 border-b border-border" style={{ minHeight: "120px" }}>
             <div className={`${sectionTitleCls} shrink-0`}>Immediate Response</div>
             <div className="flex-1 min-h-0 flex flex-col">
-              <label className={`${labelCls} shrink-0`}>{cfg.actionLabel} <span className="text-slate-400 font-normal">(optional)</span></label>
-              <textarea name="immediateAction" value={cImmediateAction} onChange={(e) => setCImmediateAction(e.target.value)} className="flex-1 min-h-0 w-full resize-none overflow-auto border border-slate-200 bg-white px-2 py-1 text-xs outline-none" placeholder={cfg.actionPlaceholder} />
+              <label className={`${labelCls} shrink-0`}>{cfg.actionLabel} <span className="text-muted-foreground/60 font-normal">(optional)</span></label>
+              <textarea name="immediateAction" value={cImmediateAction} onChange={(e) => setCImmediateAction(e.target.value)} className="flex-1 min-h-0 w-full resize-none overflow-auto border border-border bg-background px-2 py-1 text-xs outline-none" placeholder={cfg.actionPlaceholder} />
             </div>
           </div>
           <div className="flex-1 min-h-0 flex flex-col p-4" style={{ minHeight: "120px" }}>
-            <div className={`${sectionTitleCls} shrink-0`}>Additional Notes <span className="text-slate-400 font-normal">(optional)</span></div>
+            <div className={`${sectionTitleCls} shrink-0`}>Additional Notes <span className="text-muted-foreground/60 font-normal">(optional)</span></div>
             <div className="flex-1 min-h-0 flex flex-col">
-              <textarea name="notes" value={cNotes} onChange={(e) => setCNotes(e.target.value)} className="flex-1 min-h-0 w-full resize-none overflow-auto border border-slate-200 bg-white px-2 py-1 text-xs outline-none" placeholder="Any other relevant information..." />
+              <textarea name="notes" value={cNotes} onChange={(e) => setCNotes(e.target.value)} className="flex-1 min-h-0 w-full resize-none overflow-auto border border-border bg-background px-2 py-1 text-xs outline-none" placeholder="Any other relevant information..." />
             </div>
           </div>
           {!requiredFieldsOk && (
-            <div className="shrink-0 p-2 bg-amber-50 border-t border-amber-200 text-[10px] text-amber-700">
+            <div className="shrink-0 p-2 bg-warning/10 border-t border-warning/20 text-[10px] text-warning">
               Required: {requiredFieldsMissing.join(", ")}
             </div>
           )}
@@ -485,14 +485,14 @@ export function SafetyEventsPage() {
     if (!selItem) return (
       <div className="flex flex-1 items-center justify-center h-full">
         <div className="text-center max-w-sm px-6">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-            <cfg.icon className="h-6 w-6 text-red-500" />
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-danger/10">
+            <cfg.icon className="h-6 w-6 text-danger" />
           </div>
-          <h3 className="text-sm font-semibold text-slate-900 mb-1">{cfg.title}</h3>
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">{cfg.purpose}</p>
-          <div className="border-t border-slate-100 pt-3 mt-3">
-            <p className="text-[10px] text-slate-400 mb-2">Select an event from the list to view details, or create a new record.</p>
-            <button onClick={hNew} className="inline-flex h-8 items-center gap-1.5 bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700">
+          <h3 className="text-sm font-semibold text-foreground mb-1">{cfg.title}</h3>
+          <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{cfg.purpose}</p>
+          <div className="border-t border-border/50 pt-3 mt-3">
+            <p className="text-[10px] text-muted-foreground/60 mb-2">Select an event from the list to view details, or create a new record.</p>
+            <button onClick={hNew} className="inline-flex h-8 items-center gap-1.5 bg-danger px-4 text-sm font-semibold text-white hover:bg-danger/80">
               <Plus className="h-3.5 w-3.5" /> New Event
             </button>
           </div>
@@ -506,22 +506,22 @@ export function SafetyEventsPage() {
       <div className="flex-1 min-h-0 flex overflow-hidden">
         <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">{selItem.title}</h2>
+            <h2 className="text-sm font-bold text-foreground">{selItem.title}</h2>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${stCls}`}>{statusLabel(selItem.status)}</span>
-              <span className="inline-flex items-center px-1 py-0.5 text-[10px] font-medium border bg-slate-100 text-slate-700 border-slate-200">{EVENT_TYPE_OPTS.find((o: any) => o.value === selItem.eventType)?.label || selItem.eventType}</span>
+              <span className="inline-flex items-center px-1 py-0.5 text-[10px] font-medium border bg-muted text-muted-foreground border-border">{EVENT_TYPE_OPTS.find((o: any) => o.value === selItem.eventType)?.label || selItem.eventType}</span>
               <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${selItem.severity === "CRITICAL" ? "bg-danger/15 text-danger border-danger/20" : selItem.severity === "HIGH" ? "bg-warning/15 text-warning border-warning/20" : selItem.severity === "MEDIUM" ? "bg-warning/15 text-warning border-warning/20" : "bg-muted text-muted-foreground border-border"}`}>{selItem.severity}</span>
             </div>
           </div>
-          {selItem.description && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Description</p><p className="text-sm text-slate-900">{selItem.description}</p></div>}
-          {selItem.immediateAction && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Immediate Action</p><p className="text-sm text-slate-900">{selItem.immediateAction}</p></div>}
-          <div><p className="text-[10px] font-medium text-slate-500 mb-1">Flags</p><div className="flex gap-2 text-xs flex-wrap">{selItem.injuryInvolved && <span className="bg-danger/10 text-danger px-1.5 py-0.5 border border-danger/20">Injury</span>}{selItem.propertyDamage && <span className="bg-warning/10 text-warning px-1.5 py-0.5 border border-warning/20">Property Damage</span>}{selItem.environmentalImpact && <span className="bg-success/10 text-success px-1.5 py-0.5 border border-success/20">Environmental</span>}{!selItem.injuryInvolved && !selItem.propertyDamage && !selItem.environmentalImpact && <span className="text-muted-foreground/60 italic">None reported</span>}</div></div>
+          {selItem.description && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Description</p><p className="text-sm text-foreground">{selItem.description}</p></div>}
+          {selItem.immediateAction && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Immediate Action</p><p className="text-sm text-foreground">{selItem.immediateAction}</p></div>}
+          <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Flags</p><div className="flex gap-2 text-xs flex-wrap">{selItem.injuryInvolved && <span className="bg-danger/10 text-danger px-1.5 py-0.5 border border-danger/20">Injury</span>}{selItem.propertyDamage && <span className="bg-warning/10 text-warning px-1.5 py-0.5 border border-warning/20">Property Damage</span>}{selItem.environmentalImpact && <span className="bg-success/10 text-success px-1.5 py-0.5 border border-success/20">Environmental</span>}{!selItem.injuryInvolved && !selItem.propertyDamage && !selItem.environmentalImpact && <span className="text-muted-foreground/60 italic">None reported</span>}</div></div>
         </div>
-        <div className="w-[30%] shrink-0 border-l border-slate-200 bg-slate-50/40 p-5 space-y-4 overflow-y-auto">
-          <div><p className="text-[10px] font-medium text-slate-500 mb-2">Details</p><div className="space-y-2 text-xs"><div className="flex justify-between"><span className="text-slate-500">Event Type</span><span className="text-slate-900 font-medium">{EVENT_TYPE_OPTS.find((o: any) => o.value === selItem.eventType)?.label || selItem.eventType}</span></div><div className="flex justify-between"><span className="text-slate-500">Severity</span><span className="text-slate-900 font-medium">{selItem.severity}</span></div><div className="flex justify-between"><span className="text-slate-500">Status</span><span className="text-slate-900 font-medium">{statusLabel(selItem.status)}</span></div><div className="flex justify-between"><span className="text-slate-500">Target</span><span className="text-slate-900 font-medium">{targetLabel || selItem.targetType}</span></div></div></div>
-          <div><p className="text-[10px] font-medium text-slate-500 mb-2">People & Time</p><div className="space-y-2 text-xs"><div className="flex justify-between"><span className="text-slate-500">Reported By</span><span className="text-slate-900">{selItem.reportedBy || "-"}</span></div>{selItem.owner && <div className="flex justify-between"><span className="text-slate-500">Owner</span><span className="text-slate-900">{selItem.owner}</span></div>}<div className="flex justify-between"><span className="text-slate-500">Reported</span><span className="text-slate-900">{selItem.reportedAt?.slice(0, 10) || "-"}</span></div>{selItem.occurredAt && <div className="flex justify-between"><span className="text-slate-500">Occurred</span><span className="text-slate-900">{selItem.occurredAt?.slice(0, 10) || "-"}</span></div>}</div></div>
-          {selItem.locationText && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Location</p><p className="text-xs text-slate-900">{selItem.locationText}</p></div>}
-          {selItem.notes && <div><p className="text-[10px] font-medium text-slate-500 mb-1">Notes</p><p className="text-xs text-slate-500/70">{selItem.notes}</p></div>}
+        <div className="w-[30%] shrink-0 border-l border-border bg-muted/40 p-5 space-y-4 overflow-y-auto">
+          <div><p className="text-[10px] font-medium text-muted-foreground mb-2">Details</p><div className="space-y-2 text-xs"><div className="flex justify-between"><span className="text-muted-foreground">Event Type</span><span className="text-foreground font-medium">{EVENT_TYPE_OPTS.find((o: any) => o.value === selItem.eventType)?.label || selItem.eventType}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Severity</span><span className="text-foreground font-medium">{selItem.severity}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="text-foreground font-medium">{statusLabel(selItem.status)}</span></div><div className="flex justify-between"><span className="text-muted-foreground">Target</span><span className="text-foreground font-medium">{targetLabel || selItem.targetType}</span></div></div></div>
+          <div><p className="text-[10px] font-medium text-muted-foreground mb-2">People & Time</p><div className="space-y-2 text-xs"><div className="flex justify-between"><span className="text-muted-foreground">Reported By</span><span className="text-foreground">{selItem.reportedBy || "-"}</span></div>{selItem.owner && <div className="flex justify-between"><span className="text-muted-foreground">Owner</span><span className="text-foreground">{selItem.owner}</span></div>}<div className="flex justify-between"><span className="text-muted-foreground">Reported</span><span className="text-foreground">{selItem.reportedAt?.slice(0, 10) || "-"}</span></div>{selItem.occurredAt && <div className="flex justify-between"><span className="text-muted-foreground">Occurred</span><span className="text-foreground">{selItem.occurredAt?.slice(0, 10) || "-"}</span></div>}</div></div>
+          {selItem.locationText && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Location</p><p className="text-xs text-foreground">{selItem.locationText}</p></div>}
+          {selItem.notes && <div><p className="text-[10px] font-medium text-muted-foreground mb-1">Notes</p><p className="text-xs text-muted-foreground/70">{selItem.notes}</p></div>}
         </div>
       </div>
     );
@@ -555,11 +555,11 @@ export function SafetyEventsPage() {
     <>
       <div className="shrink-0 h-8 border-b border-border flex items-center bg-muted px-4"><span className="text-sm font-medium text-secondary-foreground">Events</span><span className="ml-auto text-[10px] text-muted-foreground font-mono">{items.length}</span></div>
       {searchQuery && filteredItems.length === 0 && items.length > 0 && <div className="px-4 py-2 text-[10px] text-muted-foreground/60 italic">No events match &quot;{searchQuery}&quot;</div>}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 sidebar-scroll">
+      <div className="flex-1 overflow-y-auto divide-y divide-border/50 sidebar-scroll">
         {filteredItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
-            {loading ? <p className="text-xs text-slate-400">Loading events...</p> : (
-              <><Search className="h-5 w-5 text-slate-300 mb-2" /><p className="text-xs text-slate-500 font-medium">{cfg.emptyStateText}</p><p className="text-[10px] text-slate-400 mt-1">Create a new event to get started.</p><button onClick={hNew} className="mt-3 inline-flex h-7 items-center gap-1 bg-red-600 px-2.5 text-[10px] font-semibold text-white hover:bg-red-700"><Plus className="h-3 w-3" /> New Event</button></>
+            {loading ? <p className="text-xs text-muted-foreground/60">Loading events...</p> : (
+              <><Search className="h-5 w-5 text-muted-foreground/30 mb-2" /><p className="text-xs text-muted-foreground font-medium">{cfg.emptyStateText}</p><p className="text-[10px] text-muted-foreground/60 mt-1">Create a new event to get started.</p><button onClick={hNew} className="mt-3 inline-flex h-7 items-center gap-1 bg-danger px-2.5 text-[10px] font-semibold text-white hover:bg-danger/80"><Plus className="h-3 w-3" /> New Event</button></>
             )}
           </div>
         ) : filteredItems.map((e: any) => (
@@ -567,8 +567,8 @@ export function SafetyEventsPage() {
             className={`group flex items-start gap-2 w-full rounded-md px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selectedId === e.id ? "bg-accent/15 border-accent" : "border-l-transparent hover:bg-muted"}`}>
             <span className={`inline-block h-2 w-2 rounded-full shrink-0 mt-1 ${SEVERITY_DOT[e.severity] || "bg-slate-400"}`} />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-slate-900">{e.title || "Event"}</span></div>
-              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+              <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{e.title || "Event"}</span></div>
+              <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
                 <span>{EVENT_TYPE_OPTS.find((o: any) => o.value === e.eventType)?.label || e.eventType}</span>
                 <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[e.status] || STATUS_STYLES.DRAFT}`}>{statusLabel(e.status)}</span>
                 {e.occurredAt && <span>· {e.occurredAt.slice(0, 10)}</span>}

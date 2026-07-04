@@ -30,8 +30,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   TRAINING: "bg-accent/15 text-accent",
 };
 
-const FIELD_CLASS = `rounded border border-slate-200 bg-white px-2.5 py-1 text-xs ${theme.textPrimary} placeholder:text-muted-foreground focus:border-success focus:outline-none`;
-const DATE_CLASS = `rounded border border-slate-200 bg-white px-2 py-1 text-xs ${theme.textPrimary} focus:border-success focus:outline-none`;
+const FIELD_CLASS = `rounded border border-border bg-background px-2.5 py-1 text-xs ${theme.textPrimary} placeholder:text-muted-foreground focus:border-success focus:outline-none`;
+const DATE_CLASS = `rounded border border-border bg-background px-2 py-1 text-xs ${theme.textPrimary} focus:border-success focus:outline-none`;
 
 interface EducationColumnProps {
   adminProfileId: string | null;
@@ -214,12 +214,12 @@ export function EducationColumn({
       <div ref={educationRef}>
         <ProfileSectionHeader
           icon={BookOpen}
-          iconColor="text-emerald-600"
+          iconColor="text-success"
           title="Education"
           subtitle="Formal training and credentials"
         />
 
-        <div className={`divide-y divide-slate-200 overflow-y-auto`}>
+        <div className={`divide-y divide-border overflow-y-auto`}>
           {eduDraft.length > 0 ? (
             [...eduDraft].sort((a, b) => {
               const ya = extractPeriodYear(a.period);
@@ -285,7 +285,7 @@ export function EducationColumn({
       </div>
 
       {/* ── Skills & Certifications ── */}
-      <div className="border-t border-slate-200">
+      <div className="border-t border-border">
         <div>
           <ProfileSectionHeader
             icon={ShieldCheck}
@@ -299,9 +299,9 @@ export function EducationColumn({
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : skills.length > 0 ? (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border/50">
               {skills.map((skill) => (
-                <div key={skill.id} className="flex items-start gap-3 px-4 py-3 group/row hover:bg-slate-50 transition-colors">
+                <div key={skill.id} className="flex items-start gap-3 px-4 py-3 group/row hover:bg-muted transition-colors">
                   {/* Icon */}
                   <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded ${theme.entityIconBg}`}>
                     <Award className={`h-3.5 w-3.5 ${theme.icon}`} />
@@ -325,43 +325,43 @@ export function EducationColumn({
                       </div>
                       <div className="flex gap-2">
                         <div className="flex-1">
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Issued Date</label>
+                          <label className="block text-[10px] text-muted-foreground mb-0.5">Issued Date</label>
                           <input type="date" value={editSkillIssuedDate} onChange={(e) => setEditSkillIssuedDate(e.target.value)} className={`w-full ${DATE_CLASS}`} />
                         </div>
                         {(editSkillCategory === "CERTIFICATION" || editSkillCategory === "LICENSE") && (
                           <div className="flex-1">
-                            <label className="block text-[10px] text-slate-500 mb-0.5">Expiry Date</label>
+                            <label className="block text-[10px] text-muted-foreground mb-0.5">Expiry Date</label>
                             <input type="date" value={editSkillExpiresDate} onChange={(e) => setEditSkillExpiresDate(e.target.value)} className={`w-full ${DATE_CLASS}`} />
                           </div>
                         )}
                       </div>
                       <div className="flex gap-2">
                         <div className="flex-1">
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Evaluation Score</label>
+                          <label className="block text-[10px] text-muted-foreground mb-0.5">Evaluation Score</label>
                           <input type="number" step="0.1" min="0" max="10" value={editSkillEvaluationScore} onChange={(e) => setEditSkillEvaluationScore(e.target.value)}
                             className={`w-full ${DATE_CLASS}`} placeholder="e.g. 8.5" />
                         </div>
                         <div className="flex items-end pb-1">
                           <label className="flex items-center gap-1.5 cursor-pointer">
                             <input type="checkbox" checked={editSkillIsCertification} onChange={(e) => setEditSkillIsCertification(e.target.checked)}
-                              className="h-3.5 w-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" />
-                            <span className="text-[10px] text-slate-500 font-medium">Certification</span>
+                              className="h-3.5 w-3.5 rounded border-border text-cyan-600 focus:ring-cyan-500" />
+                            <span className="text-[10px] text-muted-foreground font-medium">Certification</span>
                           </label>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-slate-500 mb-0.5">Notes</label>
+                        <label className="block text-[10px] text-muted-foreground mb-0.5">Notes</label>
                         <textarea value={editSkillNotes} onChange={(e) => setEditSkillNotes(e.target.value)}
                           className={`w-full resize-none ${FIELD_CLASS}`} rows={2} placeholder="Optional notes..." />
                       </div>
                       <div className="flex items-center justify-end gap-1.5">
                         <button type="button" onClick={handleCancelEditSkill}
-                          className="inline-flex h-7 items-center rounded px-2.5 text-xs font-medium text-slate-500 hover:bg-slate-100 transition-colors">Cancel</button>
+                          className="inline-flex h-7 items-center rounded px-2.5 text-xs font-medium text-muted-foreground hover:bg-muted transition-colors">Cancel</button>
                         <button type="button" onClick={handleSaveEditSkill} disabled={!editSkillName.trim() || updatingSkill}
-                          className="inline-flex h-7 items-center rounded px-2.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-40 disabled:pointer-events-none transition-colors">{updatingSkill ? "Saving..." : "Save"}</button>
+                          className="inline-flex h-7 items-center rounded px-2.5 text-xs font-semibold text-success hover:bg-success/10 disabled:opacity-40 disabled:pointer-events-none transition-colors">{updatingSkill ? "Saving..." : "Save"}</button>
                       </div>
                       {skillError && (
-                        <p className="text-[11px] text-red-600 mt-1">{skillError}</p>
+                        <p className="text-[11px] text-danger mt-1">{skillError}</p>
                       )}
                     </div>
                   ) : (
@@ -377,28 +377,28 @@ export function EducationColumn({
                       {/* Meta row: level, issuer, dates */}
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
                         {skill.level && (
-                          <span className="text-[11px] text-slate-500">
-                            <span className="font-medium text-slate-600">Level:</span> {skill.level}
+                          <span className="text-[11px] text-muted-foreground">
+                            <span className="font-medium text-muted-foreground">Level:</span> {skill.level}
                           </span>
                         )}
                         {skill.issuer && (
-                          <span className="text-[11px] text-slate-500">
-                            <span className="font-medium text-slate-600">Issuer:</span> {skill.issuer}
+                          <span className="text-[11px] text-muted-foreground">
+                            <span className="font-medium text-muted-foreground">Issuer:</span> {skill.issuer}
                           </span>
                         )}
                         {skill.issuedDate && (
-                          <span className="text-[11px] text-slate-500">
-                            <span className="font-medium text-slate-600">Issued:</span> {new Date(skill.issuedDate).toLocaleDateString()}
+                          <span className="text-[11px] text-muted-foreground">
+                            <span className="font-medium text-muted-foreground">Issued:</span> {new Date(skill.issuedDate).toLocaleDateString()}
                           </span>
                         )}
                         {skill.expiresDate && (
-                          <span className={`text-[11px] ${new Date(skill.expiresDate) < new Date() ? "text-amber-600 font-medium" : "text-slate-500"}`}>
-                            <span className="font-medium text-slate-600">Expires:</span> {new Date(skill.expiresDate).toLocaleDateString()}
+                          <span className={`text-[11px] ${new Date(skill.expiresDate) < new Date() ? "text-warning font-medium" : "text-muted-foreground"}`}>
+                            <span className="font-medium text-muted-foreground">Expires:</span> {new Date(skill.expiresDate).toLocaleDateString()}
                           </span>
                         )}
                         {skill.evaluationScore != null && (
-                          <span className="text-[11px] text-slate-500">
-                            <span className="font-medium text-slate-600">Score:</span> {skill.evaluationScore}
+                          <span className="text-[11px] text-muted-foreground">
+                            <span className="font-medium text-muted-foreground">Score:</span> {skill.evaluationScore}
                           </span>
                         )}
                         {skill.isCertification && (
@@ -417,20 +417,20 @@ export function EducationColumn({
                   {/* ── Action buttons ── */}
                   {deleteConfirmId === skill.id ? (
                     <div className="flex items-center gap-1 shrink-0 mt-1">
-                      <span className="text-[10px] text-red-600 font-medium flex items-center gap-0.5">
+                      <span className="text-[10px] text-danger font-medium flex items-center gap-0.5">
                         <AlertTriangle className="h-3 w-3" />Delete?
                       </span>
                       <button type="button" onClick={() => handleDeleteSkill(skill.id)} disabled={deletingSkill}
-                        className="inline-flex h-6 items-center rounded px-1.5 text-[10px] font-semibold text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors">
+                        className="inline-flex h-6 items-center rounded px-1.5 text-[10px] font-semibold text-danger hover:bg-danger/10 disabled:opacity-40 transition-colors">
                         {deletingSkill ? <Loader2 className="h-3 w-3 animate-spin" /> : "Yes"}
                       </button>
                       <button type="button" onClick={handleCancelDelete}
-                        className="inline-flex h-6 items-center rounded px-1.5 text-[10px] font-medium text-slate-500 hover:bg-slate-100 transition-colors">No</button>
+                        className="inline-flex h-6 items-center rounded px-1.5 text-[10px] font-medium text-muted-foreground hover:bg-muted transition-colors">No</button>
                     </div>
                   ) : editingSkillId !== skill.id ? (
                     <div className="flex items-center gap-0.5 shrink-0 mt-1">
                       <button type="button" onClick={() => handleStartEditSkill(skill)}
-                        className="opacity-0 group-hover/row:opacity-100 rounded p-0.5 text-muted-foreground transition-all hover:text-sky-600" title="Edit skill">
+                        className="opacity-0 group-hover/row:opacity-100 rounded p-0.5 text-muted-foreground transition-all hover:text-accent-foreground" title="Edit skill">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button type="button" onClick={() => setDeleteConfirmId(skill.id)}
@@ -450,8 +450,8 @@ export function EducationColumn({
               <div className={`flex h-10 w-10 items-center justify-center rounded-full ${theme.entityIconBg} mb-2`}>
                 <Award className={`h-5 w-5 ${theme.icon}`} />
               </div>
-              <p className="text-sm font-medium text-slate-700">No skills or certifications added.</p>
-              <p className="text-xs text-slate-500 mt-0.5">Add your competencies, training, and credentials.</p>
+              <p className="text-sm font-medium text-muted-foreground">No skills or certifications added.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Add your competencies, training, and credentials.</p>
               <ToolbarButton icon={Plus} label="Add Skill" onClick={() => setShowSkillForm(true)}
                 variant="success" className="mt-3 !h-7 !px-2.5 !text-xs" />
             </div>
@@ -459,7 +459,7 @@ export function EducationColumn({
 
           {/* ── Add skill form ── */}
           {showSkillForm && (
-            <div className={`mx-3 my-3 space-y-2 rounded border border-slate-200 bg-muted/40 p-3`}>
+            <div className={`mx-3 my-3 space-y-2 rounded border border-border bg-muted/40 p-3`}>
               <div className="flex items-start gap-2">
                 <input value={newSkillName} onChange={(e) => setNewSkillName(e.target.value)}
                   className={`flex-1 ${FIELD_CLASS} text-sm`} placeholder="Skill or certification name" />
@@ -475,33 +475,33 @@ export function EducationColumn({
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Issued Date</label>
+                  <label className="block text-[10px] text-muted-foreground mb-0.5">Issued Date</label>
                   <input type="date" value={newSkillIssuedDate} onChange={(e) => setNewSkillIssuedDate(e.target.value)} className={`w-full ${DATE_CLASS}`} />
                 </div>
                 {(newSkillCategory === "CERTIFICATION" || newSkillCategory === "LICENSE") && (
                   <div className="flex-1">
-                    <label className="block text-[10px] text-slate-500 mb-0.5">Expiry Date</label>
+                    <label className="block text-[10px] text-muted-foreground mb-0.5">Expiry Date</label>
                     <input type="date" value={newSkillExpiresDate} onChange={(e) => setNewSkillExpiresDate(e.target.value)} className={`w-full ${DATE_CLASS}`} />
                   </div>
                 )}
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Evaluation Score</label>
+                  <label className="block text-[10px] text-muted-foreground mb-0.5">Evaluation Score</label>
                   <input type="number" step="0.1" min="0" max="10" value={newSkillEvaluationScore} onChange={(e) => setNewSkillEvaluationScore(e.target.value)}
                     className={`w-full ${DATE_CLASS}`} placeholder="e.g. 8.5" />
                 </div>
                 <div className="flex items-end pb-1">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input type="checkbox" checked={newSkillIsCertification} onChange={(e) => setNewSkillIsCertification(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" />
-                    <span className="text-[10px] text-slate-500 font-medium">Certification</span>
+                      className="h-3.5 w-3.5 rounded border-border text-cyan-600 focus:ring-cyan-500" />
+                    <span className="text-[10px] text-muted-foreground font-medium">Certification</span>
                   </label>
                 </div>
               </div>
               {showCertFields && (
                 <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Notes</label>
+                  <label className="block text-[10px] text-muted-foreground mb-0.5">Notes</label>
                   <textarea value={newSkillNotes} onChange={(e) => setNewSkillNotes(e.target.value)}
                     className={`w-full resize-none ${FIELD_CLASS} text-sm`} rows={2} placeholder="Optional notes..." />
                 </div>

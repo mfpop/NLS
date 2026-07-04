@@ -97,8 +97,8 @@ export function isFailed(rt: string, v: string): boolean {
 
 export function SegCtl({ rt, val, onChange, disabled }: { rt: string; val: string; onChange: (v: string) => void; disabled?: boolean }) {
   if (disabled) {
-    const dCls = "h-16 w-full bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 py-1 text-xs resize-none outline-none text-muted-foreground/50 cursor-not-allowed";
-    const dInp = "h-7 w-full bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 text-xs outline-none text-muted-foreground/50 cursor-not-allowed";
+    const dCls = "h-16 w-full bg-background/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 py-1 text-xs resize-none outline-none text-muted-foreground/50 cursor-not-allowed";
+    const dInp = "h-7 w-full bg-background/30 dark:bg-slate-800/30 backdrop-blur-sm border border-white/10 dark:border-slate-700/10 px-2 text-xs outline-none text-muted-foreground/50 cursor-not-allowed";
     if (rt === "TEXT") return <textarea disabled className={dCls} />;
     if (rt === "NUMBER") return <input type="number" disabled className={dInp} />;
     return <div className="inline-flex h-7 overflow-hidden rounded border border-white/10 dark:border-slate-700/10 opacity-40 cursor-not-allowed">
@@ -108,8 +108,8 @@ export function SegCtl({ rt, val, onChange, disabled }: { rt: string; val: strin
   if (rt === "PASS_FAIL_NA") return <Seg opts={["PASS", "FAIL", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "YES_NO_NA") return <Seg opts={["YES", "NO", "N_A"]} val={val} onChange={onChange} />;
   if (rt === "SCORE_1_5") return <Seg opts={["1", "2", "3", "4", "5"]} val={val} onChange={onChange} />;
-  if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-blue-500" />;
-  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-blue-500" />;
+  if (rt === "TEXT") return <textarea value={val} onChange={(e) => onChange(e.target.value)} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs resize-none outline-none focus:border-primary" />;
+  if (rt === "NUMBER") return <input type="number" value={val} onChange={(e) => onChange(e.target.value)} className="h-7 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-primary" />;
   return null;
 }
 
@@ -122,7 +122,7 @@ function optsFor(rt: string): string[] {
 
 export function Seg({ opts, val, onChange }: { opts: string[]; val: string; onChange: (v: string) => void }) {
   const cls = (a: boolean, o: string) => {
-    if (!a) return "bg-white/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-white/80 dark:hover:bg-slate-700/80";
+    if (!a) return "bg-background/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-background/80 dark:hover:bg-slate-700/80";
     if (o === "PASS" || o === "YES") return "bg-success/20 text-success";
     if (o === "FAIL" || o === "NO") return "bg-danger/20 text-danger";
     if (o === "N_A") return "bg-warning/20 text-warning";
@@ -136,15 +136,15 @@ export function Seg({ opts, val, onChange }: { opts: string[]; val: string; onCh
 import type { AuditFindingData } from "@/types/audit";
 
 export function FindingsTable({ findings, onClose }: { findings: AuditFindingData[]; onClose: (id: string | null) => void }) {
-  const fStatusStyles: Record<string, string> = { OPEN: "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30", CLOSED: "border-green-300 text-green-700 bg-green-50/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30" };
+  const fStatusStyles: Record<string, string> = { OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30", CLOSED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30" };
   return (
     <div className="p-4"><table className="w-full text-xs"><thead><tr className="border-b border-white/20 dark:border-slate-700/20"><th className="text-left font-semibold text-foreground py-1.5 px-2">Finding</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Severity</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Status</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Owner</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Due</th><th className="py-1.5 px-2" /></tr></thead>
-      <tbody>{findings.map((f) => <tr key={f.id} className="border-b border-white/10 dark:border-slate-700/10 hover:bg-white/30 dark:hover:bg-slate-800/30"><td className="py-1.5 px-2 text-foreground">{f.description}</td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${SEVERITY_STYLES[f.severity] || ""}`}>{f.severity}</span></td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${fStatusStyles[f.status] || ""}`}>{statusLabel(f.status)}</span></td><td className="py-1.5 px-2 text-muted-foreground">{f.owner || "-"}</td><td className="py-1.5 px-2 text-muted-foreground">{f.dueDate || "-"}</td><td className="py-1.5 px-2">{f.status === "OPEN" && <button onClick={() => onClose(f.id)} className="inline-flex items-center px-1.5 py-0.5 border border-green-200 text-[10px] font-semibold text-green-700 hover:bg-green-50">Close</button>}</td></tr>)}</tbody></table></div>
+      <tbody>{findings.map((f) => <tr key={f.id} className="border-b border-white/10 dark:border-slate-700/10 hover:bg-background/30 dark:hover:bg-slate-800/30"><td className="py-1.5 px-2 text-foreground">{f.description}</td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${SEVERITY_STYLES[f.severity] || ""}`}>{f.severity}</span></td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${fStatusStyles[f.status] || ""}`}>{statusLabel(f.status)}</span></td><td className="py-1.5 px-2 text-muted-foreground">{f.owner || "-"}</td><td className="py-1.5 px-2 text-muted-foreground">{f.dueDate || "-"}</td><td className="py-1.5 px-2">{f.status === "OPEN" && <button onClick={() => onClose(f.id)} className="inline-flex items-center px-1.5 py-0.5 border border-success/20 text-[10px] font-semibold text-success hover:bg-success/10">Close</button>}</td></tr>)}</tbody></table></div>
   );
 }
 
 // ── Section Header ──
 
 export function SectionH({ label }: { label: string }) {
-  return <div className="flex items-center gap-2 mb-2"><span className="w-1 h-4 bg-amber-500 shrink-0" /><span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span></div>;
+  return <div className="flex items-center gap-2 mb-2"><span className="w-1 h-4 bg-warning/100 shrink-0" /><span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span></div>;
 }

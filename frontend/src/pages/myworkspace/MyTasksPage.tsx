@@ -58,25 +58,25 @@ function isOverdue(dueDate: string | null, status: string): boolean {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  IN_PROGRESS: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-  WAITING: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-  COMPLETED: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  CANCELLED: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+  OPEN: "bg-primary/15 text-primary dark:bg-blue-900/30 dark:text-blue-300",
+  IN_PROGRESS: "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-300",
+  WAITING: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-muted-foreground/60",
+  COMPLETED: "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300",
+  CANCELLED: "bg-muted text-muted-foreground dark:bg-slate-800 dark:text-muted-foreground/60",
 };
 
 const PRIORITY_DOTS: Record<string, string> = {
   LOW: "bg-slate-400",
   MEDIUM: "bg-amber-400",
-  HIGH: "bg-orange-500",
-  CRITICAL: "bg-red-500",
+  HIGH: "bg-warning/100",
+  CRITICAL: "bg-danger/100",
 };
 
 const STATUS_DOT: Record<string, string> = {
-  OPEN: "bg-blue-500",
-  IN_PROGRESS: "bg-amber-500",
+  OPEN: "bg-primary/100",
+  IN_PROGRESS: "bg-warning/100",
   WAITING: "bg-slate-400",
-  COMPLETED: "bg-emerald-500",
+  COMPLETED: "bg-success/100",
   CANCELLED: "bg-slate-300",
 };
 
@@ -130,7 +130,7 @@ function MetricCell({ label, value, color, icon }: { label: string; value: numbe
     <div className="flex items-center gap-2.5 px-3 min-w-0">
       <span className="shrink-0">{icon}</span>
       <div className="min-w-0 text-left">
-        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide truncate">{label}</p>
+        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">{label}</p>
         <p className={`text-lg font-bold tabular-nums ${color} leading-tight`}>{value}</p>
       </div>
     </div>
@@ -140,12 +140,12 @@ function MetricCell({ label, value, color, icon }: { label: string; value: numbe
 function Section({ title, count, icon, children }: { title: string; count?: number; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-0 overflow-hidden">
-      <div className="shrink-0 h-8 flex items-center justify-between px-3 border-b border-slate-200 bg-muted">
+      <div className="shrink-0 h-8 flex items-center justify-between px-3 border-b border-border bg-muted">
         <div className="flex items-center gap-2 min-w-0">
-          {icon && <span className="text-slate-500 shrink-0">{icon}</span>}
-          <span className="text-sm font-semibold text-slate-800 truncate">{title}</span>
+          {icon && <span className="text-muted-foreground shrink-0">{icon}</span>}
+          <span className="text-sm font-semibold text-foreground truncate">{title}</span>
         </div>
-        {count !== undefined && <span className="text-[10px] font-mono text-slate-400 shrink-0">{count}</span>}
+        {count !== undefined && <span className="text-[10px] font-mono text-muted-foreground/60 shrink-0">{count}</span>}
       </div>
       <div className="flex-1 overflow-y-auto min-h-0">
         {children}
@@ -156,7 +156,7 @@ function Section({ title, count, icon, children }: { title: string; count?: numb
 
 function SectionEmpty({ message }: { message: string }) {
   return (
-    <div className="flex h-full items-center justify-center text-xs italic text-slate-500 px-3 text-center">
+    <div className="flex h-full items-center justify-center text-xs italic text-muted-foreground px-3 text-center">
       {message}
     </div>
   );
@@ -295,10 +295,10 @@ export function MyTasksPage() {
 
   const taskList = (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted border-r border-border-major">
-      <div className="shrink-0 h-9 border-b border-slate-200 bg-muted flex items-center justify-between px-3">
-        <span className="text-sm font-semibold text-slate-800">Tasks</span>
+      <div className="shrink-0 h-9 border-b border-border bg-muted flex items-center justify-between px-3">
+        <span className="text-sm font-semibold text-foreground">Tasks</span>
         {loading && tasks.length === 0 ? null : (
-          <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-slate-200 bg-card text-muted-foreground whitespace-nowrap">
+          <span className="inline-flex items-center justify-center h-[18px] min-w-[22px] px-1.5 text-[11px] font-semibold rounded-sm border border-border bg-card text-muted-foreground whitespace-nowrap">
             {tasks.length}
           </span>
         )}
@@ -328,14 +328,14 @@ export function MyTasksPage() {
                 <div className="min-w-0 flex-1">
                   <div className="mb-0.5 flex items-center gap-1.5">
                     {t.priority && t.priority !== "MEDIUM" && (
-                      <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${t.priority === "CRITICAL" ? "bg-red-500" : t.priority === "HIGH" ? "bg-orange-500" : "bg-slate-400"}`} />
+                      <span className={`shrink-0 inline-block h-2 w-2 rounded-full ${t.priority === "CRITICAL" ? "bg-danger/100" : t.priority === "HIGH" ? "bg-warning/100" : "bg-slate-400"}`} />
                     )}
-                    <span className={`min-w-0 truncate text-sm font-semibold text-slate-900`} title={t.title}>{t.title}</span>
+                    <span className={`min-w-0 truncate text-sm font-semibold text-foreground`} title={t.title}>{t.title}</span>
                     {isOverdue(t.dueDate, t.status) && (
-                      <AlertTriangle className="h-3 w-3 shrink-0 text-red-500" />
+                      <AlertTriangle className="h-3 w-3 shrink-0 text-danger" />
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${STATUS_STYLES[t.status] || ""}`}>
                       {statusLabel(t.status)}
                     </span>
@@ -344,7 +344,7 @@ export function MyTasksPage() {
                     {t.dueDate && (
                       <>
                         <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30" />
-                        <span className={`text-[10px] ${isOverdue(t.dueDate, t.status) ? "text-red-500 font-semibold" : "text-slate-500"}`}>
+                        <span className={`text-[10px] ${isOverdue(t.dueDate, t.status) ? "text-danger font-semibold" : "text-muted-foreground"}`}>
                           <Calendar className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />
                           {t.dueDate}
                         </span>
@@ -358,7 +358,7 @@ export function MyTasksPage() {
           </div>
         )}
       </div>
-      <div className="shrink-0 h-10 border-t border-slate-200 bg-muted px-3 flex items-center gap-2 text-xs text-slate-600">
+      <div className="shrink-0 h-10 border-t border-border bg-muted px-3 flex items-center gap-2 text-xs text-muted-foreground">
         {tasks.length === 0 ? (
           <span className="font-medium">0 tasks</span>
         ) : (
@@ -370,11 +370,11 @@ export function MyTasksPage() {
             {pageCount > 1 && (
               <div className="flex items-center gap-0.5">
                 <button type="button" disabled={safePage <= 1} onClick={() => setPage(1)}
-                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="First page">
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors" title="First page">
                   {"\u00AB"}
                 </button>
                 <button type="button" disabled={safePage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Previous page">
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Previous page">
                   {"\u2039"}
                 </button>
                 <div className="flex items-center gap-0.5 mx-1">
@@ -394,13 +394,13 @@ export function MyTasksPage() {
                     }
                     return pages.map((p, i) =>
                       p === "..." ? (
-                        <span key={`ellipsis-${i}`} className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-slate-400 select-none">{"\u2026"}</span>
+                        <span key={`ellipsis-${i}`} className="inline-flex items-center justify-center w-5 h-7 text-[10px] text-muted-foreground/60 select-none">{"\u2026"}</span>
                       ) : (
                         <button key={p} type="button" onClick={() => setPage(p)}
                           className={`inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] px-1 text-xs font-semibold transition-all ${
                             p === safePage
-                              ? "bg-amber-50 border border-amber-300 text-amber-800"
-                              : "text-slate-600 hover:bg-slate-100"
+                              ? "bg-warning/10 border border-warning/30 text-warning"
+                              : "text-muted-foreground hover:bg-muted"
                           }`}>
                           {p}
                         </button>
@@ -409,11 +409,11 @@ export function MyTasksPage() {
                   })()}
                 </div>
                 <button type="button" disabled={safePage >= pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
-                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Next page">
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Next page">
                   {"\u203A"}
                 </button>
                 <button type="button" disabled={safePage >= pageCount} onClick={() => setPage(pageCount)}
-                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Last page">
+                  className="inline-flex items-center justify-center h-7 min-w-7 rounded-[2px] text-xs font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors" title="Last page">
                   {"\u00BB"}
                 </button>
               </div>
@@ -431,8 +431,8 @@ export function MyTasksPage() {
       return (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
           <ListChecks className="h-10 w-10 text-slate-200 mb-3" />
-          <p className="text-sm font-medium text-slate-500">No tasks assigned to you</p>
-          <p className="text-xs text-slate-400 mt-1">When tasks are assigned from any module, they will appear here.</p>
+          <p className="text-sm font-medium text-muted-foreground">No tasks assigned to you</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">When tasks are assigned from any module, they will appear here.</p>
         </div>
       );
     }
@@ -456,7 +456,7 @@ export function MyTasksPage() {
     ).slice(0, 8);
 
     return (
-      <div className="flex-1 min-h-0 grid grid-rows-[30%_30%_40%] divide-y divide-slate-200">
+      <div className="flex-1 min-h-0 grid grid-rows-[30%_30%_40%] divide-y divide-border">
         {/* Row 1: Priority Work */}
         <Section title="Priority Work" count={priorityWork.length} icon={<ArrowUpRight className="h-3.5 w-3.5" />}>
           {priorityWork.length === 0 ? (
@@ -466,15 +466,15 @@ export function MyTasksPage() {
               <div
                 key={t.id}
                 onClick={() => { setSelectedId(t.id); }}
-                className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointerborder-b border-slate-200"
+                className="flex items-start gap-2 px-3 py-1.5 hover:bg-muted cursor-pointerborder-b border-border"
                 >
                   <span className={`h-2 w-2 shrink-0 rounded-full mt-1 ${PRIORITY_DOTS[t.priority] || "bg-slate-400"}`} />
                 <div className="min-w-0 flex-1">
-                  <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
+                  <span className="min-w-0 truncate text-sm font-medium text-foreground block" title={t.title}>{t.title}</span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border rounded-sm ${STATUS_STYLES[t.status] || ""}`}>{statusLabel(t.status)}</span>
-                    <span className="text-[10px] text-slate-500">{sourceModuleLabel(t.sourceModule)}</span>
-                    {isOverdue(t.dueDate, t.status) && <span className="text-[10px] text-red-500 font-semibold">Overdue</span>}
+                    <span className="text-[10px] text-muted-foreground">{sourceModuleLabel(t.sourceModule)}</span>
+                    {isOverdue(t.dueDate, t.status) && <span className="text-[10px] text-danger font-semibold">Overdue</span>}
                   </div>
                 </div>
               </div>
@@ -493,14 +493,14 @@ export function MyTasksPage() {
                 <div
                   key={t.id}
                   onClick={() => { setSelectedId(t.id); }}
-                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer border-b border-border"
                 >
-                  <Calendar className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
+                  <Calendar className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
                   <div className="min-w-0 flex-1">
-                    <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
+                    <span className="min-w-0 truncate text-sm font-medium text-foreground block" title={t.title}>{t.title}</span>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-[10px] ${overdue ? "text-red-500 font-semibold" : "text-slate-500"}`}>{t.dueDate}</span>
-                      {overdue && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                      <span className={`text-[10px] ${overdue ? "text-danger font-semibold" : "text-muted-foreground"}`}>{t.dueDate}</span>
+                      {overdue && <AlertTriangle className="h-3 w-3 text-danger" />}
                     </div>
                   </div>
                 </div>
@@ -510,7 +510,7 @@ export function MyTasksPage() {
         </Section>
 
         {/* Row 3: Waiting / Blocked + Recent Activity (side-by-side) */}
-        <div className="min-h-0 grid grid-cols-[45%_55%] divide-x divide-slate-200">
+        <div className="min-h-0 grid grid-cols-[45%_55%] divide-x divide-border">
           <Section title="Waiting / Blocked" count={waiting.length} icon={<Clock className="h-3.5 w-3.5" />}>
             {waiting.length === 0 ? (
               <SectionEmpty message="No blocked or waiting tasks" />
@@ -519,12 +519,12 @@ export function MyTasksPage() {
                 <div
                   key={t.id}
                   onClick={() => { setSelectedId(t.id); }}
-                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer border-b border-border"
                 >
                   <span className="h-2 w-2 shrink-0 rounded-full mt-1 bg-slate-400" />
                   <div className="min-w-0 flex-1">
-                    <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
-                    <span className="text-[10px] text-slate-500">{sourceModuleLabel(t.sourceModule)}</span>
+                    <span className="min-w-0 truncate text-sm font-medium text-foreground block" title={t.title}>{t.title}</span>
+                    <span className="text-[10px] text-muted-foreground">{sourceModuleLabel(t.sourceModule)}</span>
                   </div>
                 </div>
               ))
@@ -539,12 +539,12 @@ export function MyTasksPage() {
                 <div
                   key={t.id}
                   onClick={() => { setSelectedId(t.id); }}
-                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-slate-50 cursor-pointer border-b border-slate-200"
+                  className="flex items-start gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer border-b border-border"
                 >
-                  <Activity className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
+                  <Activity className="h-3.5 w-3.5 shrink-0 mt-0.5 text-muted-foreground/60" />
                   <div className="min-w-0 flex-1">
-                    <span className="min-w-0 truncate text-sm font-medium text-slate-900 block" title={t.title}>{t.title}</span>
-                    <span className="text-[10px] text-slate-400">{sourceModuleLabel(t.sourceModule)} · {statusLabel(t.status)}</span>
+                    <span className="min-w-0 truncate text-sm font-medium text-foreground block" title={t.title}>{t.title}</span>
+                    <span className="text-[10px] text-muted-foreground/60">{sourceModuleLabel(t.sourceModule)} · {statusLabel(t.status)}</span>
                   </div>
                 </div>
               ))
@@ -563,13 +563,13 @@ export function MyTasksPage() {
         {/* Title + badges */}
         <div>
           <div className="flex items-start gap-3">
-            <h2 className="text-base font-bold text-slate-900 flex-1">{sel.title}</h2>
+            <h2 className="text-base font-bold text-foreground flex-1">{sel.title}</h2>
             <span className={`inline-flex items-center px-2 py-0.5 text-[11px] font-semibold border shrink-0 ${STATUS_STYLES[sel.status] || ""}`}>
               {statusLabel(sel.status)}
             </span>
           </div>
           {sel.sourceTitle && (
-            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
               <ExternalLink className="h-3 w-3 stroke-current" />
               {sel.sourceTitle}
               {sel.sourceModule && <span className="text-[10px]">({sourceModuleLabel(sel.sourceModule)})</span>}
@@ -580,16 +580,16 @@ export function MyTasksPage() {
         {/* Metadata grid */}
         <div className="grid grid-cols-2 gap-x-6 gap-y-3">
           <div>
-            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Priority</p>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Priority</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className={`h-2 w-2 rounded-full ${PRIORITY_DOTS[sel.priority] || "bg-slate-400"}`} />
-              <span className="text-sm text-slate-900">{priorityLabel(sel.priority)}</span>
+              <span className="text-sm text-foreground">{priorityLabel(sel.priority)}</span>
             </div>
           </div>
           {sel.dueDate && (
             <div>
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Due Date</p>
-              <p className={`text-sm flex items-center gap-1 mt-0.5 ${isOverdue(sel.dueDate, sel.status) ? "text-red-600 font-semibold" : "text-slate-900"}`}>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Due Date</p>
+              <p className={`text-sm flex items-center gap-1 mt-0.5 ${isOverdue(sel.dueDate, sel.status) ? "text-danger font-semibold" : "text-foreground"}`}>
                 <Calendar className="h-3.5 w-3.5 stroke-current" />
                 {sel.dueDate}
                 {isOverdue(sel.dueDate, sel.status) && <AlertTriangle className="h-3 w-3 stroke-current" />}
@@ -598,20 +598,20 @@ export function MyTasksPage() {
           )}
           {sel.assignedTo && (
             <div>
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Assigned To</p>
-              <p className="text-sm mt-0.5 text-slate-900">{sel.assignedTo}</p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Assigned To</p>
+              <p className="text-sm mt-0.5 text-foreground">{sel.assignedTo}</p>
             </div>
           )}
           {sel.sourceModule && (
             <div>
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Source Module</p>
-              <p className="text-sm mt-0.5 text-slate-900">{sourceModuleLabel(sel.sourceModule)}</p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Source Module</p>
+              <p className="text-sm mt-0.5 text-foreground">{sourceModuleLabel(sel.sourceModule)}</p>
             </div>
           )}
           {sel.completedAt && (
             <div>
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Completed At</p>
-              <p className="text-sm mt-0.5 text-slate-900">
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Completed At</p>
+              <p className="text-sm mt-0.5 text-foreground">
                 {new Date(sel.completedAt).toLocaleDateString()}
                 {sel.completedBy ? ` by ${sel.completedBy}` : ""}
               </p>
@@ -619,8 +619,8 @@ export function MyTasksPage() {
           )}
           {sel.createdBy && (
             <div>
-              <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Created By</p>
-              <p className="text-sm mt-0.5 text-slate-900">{sel.createdBy}</p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Created By</p>
+              <p className="text-sm mt-0.5 text-foreground">{sel.createdBy}</p>
             </div>
           )}
         </div>
@@ -628,28 +628,28 @@ export function MyTasksPage() {
         {/* Description */}
         {sel.description && (
           <div>
-            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Description</p>
-            <p className="text-sm leading-relaxed text-slate-700">{sel.description}</p>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Description</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{sel.description}</p>
           </div>
         )}
 
         {/* Notes */}
         {sel.notes && (
           <div>
-            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Notes</p>
-            <p className="text-sm leading-relaxed text-slate-700">{sel.notes}</p>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Notes</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{sel.notes}</p>
           </div>
         )}
 
         {/* Source Reference */}
         {sel.sourceTitle && (
-          <div className="border-t border-slate-200 pt-4">
-            <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-2">Source Reference</p>
-            <div className="flex items-center gap-2 text-sm text-slate-900">
-              {sel.sourceType && <span className="font-mono text-[11px] text-slate-400">{sel.sourceType}#{sel.sourceId}</span>}
-              <ArrowRight className="h-3 w-3 text-slate-400" />
+          <div className="border-t border-border pt-4">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-2">Source Reference</p>
+            <div className="flex items-center gap-2 text-sm text-foreground">
+              {sel.sourceType && <span className="font-mono text-[11px] text-muted-foreground/60">{sel.sourceType}#{sel.sourceId}</span>}
+              <ArrowRight className="h-3 w-3 text-muted-foreground/60" />
               <span>{sel.sourceTitle}</span>
-              <span className="text-[10px] text-slate-500 px-1.5 py-0.5 border border-slate-200">{sourceModuleLabel(sel.sourceModule || sel.sourceType)}</span>
+              <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 border border-border">{sourceModuleLabel(sel.sourceModule || sel.sourceType)}</span>
             </div>
           </div>
         )}
@@ -679,14 +679,14 @@ export function MyTasksPage() {
       leftColumn={taskList}
       leftColumnWidth="w-[20%]"
       footer={
-        <span className="flex w-full items-center justify-between text-xs text-slate-600">
+        <span className="flex w-full items-center justify-between text-xs text-muted-foreground">
           <span className="font-medium">My Tasks</span>
           <span>
             {summary
               ? `Total: ${summary.total} | Open: ${summary.open} | Overdue: ${summary.overdue}`
               : `${tasks.length} task${tasks.length !== 1 ? "s" : ""}`}
           </span>
-          <span className="text-slate-400">
+          <span className="text-muted-foreground/60">
             {tasks.length > 0
               ? `Last updated: ${new Date(Math.max(...tasks.map((t) => new Date(t.updatedAt).getTime()))).toLocaleDateString()}`
               : ""}
@@ -696,13 +696,13 @@ export function MyTasksPage() {
     >
       <div className="h-full flex flex-col min-h-0 bg-muted">
         {/* Integrated Metrics Strip */}
-        <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-slate-200 border-b border-slate-200">
-          <MetricCell label="Open" value={summary?.open ?? "—"} color="text-blue-600" icon={<ListChecks className="h-4 w-4 stroke-current text-blue-600 shrink-0" />} />
-          <MetricCell label="In Progress" value={summary?.inProgress ?? "—"} color="text-amber-600" icon={<Clock className="h-4 w-4 stroke-current text-amber-600 shrink-0" />} />
-          <MetricCell label="Due Today" value={summary?.dueToday ?? "—"} color={summary?.dueToday ? "text-orange-600" : "text-slate-700"} icon={<Calendar className="h-4 w-4 stroke-current shrink-0" />} />
-          <MetricCell label="Overdue" value={summary?.overdue ?? "—"} color={(summary?.overdue ?? 0) > 0 ? "text-red-600" : "text-slate-700"} icon={<AlertOctagon className="h-4 w-4 stroke-current shrink-0" />} />
-          <MetricCell label="Completed This Week" value={summary?.completedThisWeek ?? "—"} color="text-emerald-600" icon={<CheckCircle className="h-4 w-4 stroke-current text-emerald-600 shrink-0" />} />
-          <MetricCell label="Total Tasks" value={summary?.total ?? "—"} color="text-slate-700" icon={<ListChecks className="h-4 w-4 stroke-current text-slate-600 shrink-0" />} />
+        <div className="shrink-0 h-16 grid grid-cols-6 divide-x divide-border border-b border-border">
+          <MetricCell label="Open" value={summary?.open ?? "—"} color="text-primary" icon={<ListChecks className="h-4 w-4 stroke-current text-primary shrink-0" />} />
+          <MetricCell label="In Progress" value={summary?.inProgress ?? "—"} color="text-warning" icon={<Clock className="h-4 w-4 stroke-current text-warning shrink-0" />} />
+          <MetricCell label="Due Today" value={summary?.dueToday ?? "—"} color={summary?.dueToday ? "text-warning" : "text-muted-foreground"} icon={<Calendar className="h-4 w-4 stroke-current shrink-0" />} />
+          <MetricCell label="Overdue" value={summary?.overdue ?? "—"} color={(summary?.overdue ?? 0) > 0 ? "text-danger" : "text-muted-foreground"} icon={<AlertOctagon className="h-4 w-4 stroke-current shrink-0" />} />
+          <MetricCell label="Completed This Week" value={summary?.completedThisWeek ?? "—"} color="text-success" icon={<CheckCircle className="h-4 w-4 stroke-current text-success shrink-0" />} />
+          <MetricCell label="Total Tasks" value={summary?.total ?? "—"} color="text-muted-foreground" icon={<ListChecks className="h-4 w-4 stroke-current text-muted-foreground shrink-0" />} />
         </div>
 
         {mutationError && (
@@ -711,13 +711,13 @@ export function MyTasksPage() {
           </div>
         )}
         {successMsg && (
-          <div className="shrink-0 h-8 flex items-center justify-center bg-emerald-50 border-b border-emerald-200 text-sm font-semibold text-emerald-700">
+          <div className="shrink-0 h-8 flex items-center justify-center bg-success/10 border-b border-success/20 text-sm font-semibold text-success">
             {successMsg}
           </div>
         )}
 
         {loading && !summary && !sel ? (
-          <div className="flex-1 flex items-center justify-center text-sm text-slate-500">
+          <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
             <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2 rounded-full" />
             Loading...
           </div>

@@ -77,10 +77,10 @@ export function RecordListItem({
       onClick={onClick}
       title={titleText}
       className={cn(
-        "group flex min-h-[52px] w-full items-center gap-2 border-b border-slate-100 px-3 py-2 text-left",
-        "hover:bg-white focus:outline-none",
+        "group flex min-h-[52px] w-full items-center gap-2 border-b border-border/50 px-3 py-2 text-left",
+        "hover:bg-background focus:outline-none",
         active
-          ? "border-l-2 border-l-blue-600 bg-blue-50/30"
+          ? "border-l-2 border-l-blue-600 bg-primary/10/30"
           : "border-l-2 border-l-transparent",
         className
       )}
@@ -90,19 +90,19 @@ export function RecordListItem({
       ) : null}
 
       <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-semibold text-slate-950">
+        <div className="truncate text-sm font-semibold text-foreground">
           {title}
         </div>
 
         {subtitle ? (
-          <div className="truncate text-xs text-slate-600">{subtitle}</div>
+          <div className="truncate text-xs text-muted-foreground">{subtitle}</div>
         ) : null}
 
-        {meta ? <div className="mt-0.5 text-xs text-slate-500">{meta}</div> : null}
+        {meta ? <div className="mt-0.5 text-xs text-muted-foreground">{meta}</div> : null}
       </div>
 
       {trailing ? (
-        <div className="shrink-0 text-xs text-slate-500">{trailing}</div>
+        <div className="shrink-0 text-xs text-muted-foreground">{trailing}</div>
       ) : null}
     </button>
   );
@@ -141,7 +141,7 @@ export function RecordListFooter({
 
   return (
     <div className="flex h-full w-full items-center justify-between">
-      <span className="whitespace-nowrap text-xs text-slate-600">
+      <span className="whitespace-nowrap text-xs text-muted-foreground">
         {start}–{end} of {total}
       </span>
 
@@ -151,7 +151,7 @@ export function RecordListFooter({
             type="button"
             disabled={!canPrev}
             onClick={() => go(1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
             aria-label="First page"
           >
             <ChevronsLeft className="h-3.5 w-3.5" />
@@ -161,7 +161,7 @@ export function RecordListFooter({
             type="button"
             disabled={!canPrev}
             onClick={() => go(page - 1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
             aria-label="Previous page"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -179,8 +179,8 @@ export function RecordListFooter({
                   className={cn(
                     "inline-flex h-7 min-w-7 items-center justify-center rounded-[2px] px-2 text-xs",
                     pageNumber === page
-                      ? "border border-amber-400 bg-amber-50 text-slate-900"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? "border border-amber-400 bg-warning/10 text-foreground"
+                      : "text-muted-foreground hover:bg-muted"
                   )}
                 >
                   {pageNumber}
@@ -192,7 +192,7 @@ export function RecordListFooter({
             type="button"
             disabled={!canNext}
             onClick={() => go(page + 1)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
             aria-label="Next page"
           >
             <ChevronRight className="h-3.5 w-3.5" />
@@ -202,7 +202,7 @@ export function RecordListFooter({
             type="button"
             disabled={!canNext}
             onClick={() => go(totalPages)}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-slate-500 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-[2px] text-muted-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
             aria-label="Last page"
           >
             <ChevronsRight className="h-3.5 w-3.5" />
@@ -349,33 +349,33 @@ export function RecordListPanel<T>({
   return (
     <aside
       className={cn(
-        "flex h-full min-h-0 flex-col overflow-hidden border-r border-slate-300 bg-slate-50",
+        "flex h-full min-h-0 flex-col overflow-hidden border-r border-border bg-muted",
         className
       )}
     >
       {/* Search bar — only shown when search props are provided */}
       {hasSearch && (
-        <div className="flex h-10 shrink-0 items-center border-b border-slate-200 bg-slate-50 px-2">
+        <div className="flex h-10 shrink-0 items-center border-b border-border bg-muted px-2">
           {searchSlot ?? (
             <div className="relative w-full">
               <input
                 value={searchValue ?? ""}
                 onChange={(event) => onSearchChange?.(event.target.value)}
                 placeholder={searchPlaceholder}
-                className="h-8 w-full rounded-[2px] border border-slate-300 bg-white px-2 pr-8 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500"
+                className="h-8 w-full rounded-[2px] border border-border bg-background px-2 pr-8 text-xs text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-primary"
               />
-              <Search className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+              <Search className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
           )}
         </div>
       )}
 
       {/* Title row */}
-      <div className="flex h-9 shrink-0 items-center justify-between border-b border-slate-200 bg-slate-50 px-3">
-        <div className="truncate text-sm font-semibold text-slate-900">{title}</div>
+      <div className="flex h-9 shrink-0 items-center justify-between border-b border-border bg-muted px-3">
+        <div className="truncate text-sm font-semibold text-foreground">{title}</div>
 
         {typeof count === "number" ? (
-          <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-500">
+          <span className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
             {count}
           </span>
         ) : null}
@@ -385,7 +385,7 @@ export function RecordListPanel<T>({
       <div
         ref={bodyRef}
         className={cn(
-          "min-h-0 flex-1 overflow-hidden bg-slate-50 px-2",
+          "min-h-0 flex-1 overflow-hidden bg-muted px-2",
           !autoPageSize && "overflow-y-auto",
           bodyClassName
         )}
@@ -397,7 +397,7 @@ export function RecordListPanel<T>({
           : null}
 
         {!hasChildren && !hasRenderedItems ? (
-          <div className="flex h-full items-center justify-center px-4 text-center text-xs text-slate-500">
+          <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">
             {emptyState ?? "No records found."}
           </div>
         ) : null}
@@ -405,13 +405,13 @@ export function RecordListPanel<T>({
 
       {/* Legend */}
       {legend ? (
-        <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        <div className="shrink-0 border-t border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
           {legend}
         </div>
       ) : null}
 
       {/* Footer — pinned to bottom */}
-      <div className="flex h-10 shrink-0 items-center border-t border-slate-200 bg-slate-50 px-3 text-xs text-slate-600">
+      <div className="flex h-10 shrink-0 items-center border-t border-border bg-muted px-3 text-xs text-muted-foreground">
         <RecordListFooter pagination={computedPagination} footer={footer} />
       </div>
     </aside>

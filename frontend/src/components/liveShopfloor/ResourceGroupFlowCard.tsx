@@ -19,14 +19,14 @@ const STATUS_BORDER: Record<string, string> = {
 };
 
 const STATUS_BADGE: Record<string, string> = {
-  running: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  idle: "bg-slate-100 text-slate-600 border-slate-200",
-  stopped: "bg-red-100 text-red-800 border-red-200",
-  blocked: "bg-red-100 text-red-800 border-red-200",
-  starved: "bg-amber-100 text-amber-800 border-amber-200",
-  maintenance: "bg-amber-100 text-amber-800 border-amber-200",
-  changeover: "bg-sky-100 text-sky-800 border-sky-200",
-  unknown: "bg-slate-100 text-slate-500 border-slate-200",
+  running: "bg-success/15 text-success border-success/20",
+  idle: "bg-muted text-muted-foreground border-border",
+  stopped: "bg-danger/15 text-red-800 border-danger/20",
+  blocked: "bg-danger/15 text-red-800 border-danger/20",
+  starved: "bg-warning/15 text-warning border-warning/20",
+  maintenance: "bg-warning/15 text-warning border-warning/20",
+  changeover: "bg-sky-100 text-sky-800 border-accent/20",
+  unknown: "bg-muted text-muted-foreground border-border",
 };
 
 export function ResourceGroupFlowCard({ group, resources, isLast }: Props) {
@@ -39,7 +39,7 @@ export function ResourceGroupFlowCard({ group, resources, isLast }: Props) {
     <div className={`flex items-stretch gap-2 border-l-4 ${border} ${!isLast ? "border-b border-b-slate-100" : ""}`}>
       {/* Sequence + Status badge */}
       <div className="flex w-10 shrink-0 flex-col items-center justify-center gap-0.5">
-        <span className="text-[10px] font-bold text-slate-500">{String(group.sequence).padStart(2, "0")}</span>
+        <span className="text-[10px] font-bold text-muted-foreground">{String(group.sequence).padStart(2, "0")}</span>
         <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-medium border ${badge}`}>
           {group.displayStatus || group.status}
         </span>
@@ -48,28 +48,28 @@ export function ResourceGroupFlowCard({ group, resources, isLast }: Props) {
       {/* Group info */}
       <div className="flex-1 min-w-0 py-2 pr-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-800 truncate">{group.resourceGroupName}</span>
-          <span className="text-[10px] text-slate-500 truncate">{group.departmentName}</span>
+          <span className="text-xs font-semibold text-foreground truncate">{group.resourceGroupName}</span>
+          <span className="text-[10px] text-muted-foreground truncate">{group.departmentName}</span>
         </div>
         {group.activeOperation && (
-          <p className="text-[10px] text-slate-600 truncate leading-tight">{group.activeOperation}</p>
+          <p className="text-[10px] text-muted-foreground truncate leading-tight">{group.activeOperation}</p>
         )}
         {/* Resources */}
         {visibleResources.length > 0 && (
           <div className="flex items-center gap-2 mt-0.5">
             {visibleResources.map((r) => (
-              <span key={r.id} className="flex items-center gap-1 text-[10px] text-slate-600">
+              <span key={r.id} className="flex items-center gap-1 text-[10px] text-muted-foreground">
                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                  r.status === "running" ? "bg-emerald-500" :
-                  r.status === "stopped" || r.status === "blocked" ? "bg-red-500" :
-                  r.status === "starved" || r.status === "maintenance" ? "bg-amber-500" :
+                  r.status === "running" ? "bg-success/100" :
+                  r.status === "stopped" || r.status === "blocked" ? "bg-danger/100" :
+                  r.status === "starved" || r.status === "maintenance" ? "bg-warning/100" :
                   "bg-slate-300"
                 }`} />
                 <span className="truncate max-w-[80px]">{r.name}</span>
               </span>
             ))}
             {extraCount > 0 && (
-              <span className="text-[10px] text-slate-400">+{extraCount} more</span>
+              <span className="text-[10px] text-muted-foreground/60">+{extraCount} more</span>
             )}
           </div>
         )}
@@ -78,19 +78,19 @@ export function ResourceGroupFlowCard({ group, resources, isLast }: Props) {
       {/* Mini badges */}
       <div className="flex items-center gap-1 pr-2 shrink-0">
         {group.activeDowntimeReason && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-red-50 px-1.5 py-0.5 text-[9px] font-medium text-red-600 border border-red-200" title={group.activeDowntimeReason}>
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-danger/10 px-1.5 py-0.5 text-[9px] font-medium text-danger border border-danger/20" title={group.activeDowntimeReason}>
             <Clock className="h-2.5 w-2.5" />
             D
           </span>
         )}
         {group.issueCount > 0 && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[9px] font-medium text-amber-600 border border-amber-200">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-warning/10 px-1.5 py-0.5 text-[9px] font-medium text-warning border border-warning/20">
             <AlertTriangle className="h-2.5 w-2.5" />
             {group.issueCount}
           </span>
         )}
         {group.actionCount > 0 && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-sky-50 px-1.5 py-0.5 text-[9px] font-medium text-sky-600 border border-sky-200">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-accent/10 px-1.5 py-0.5 text-[9px] font-medium text-accent-foreground border border-accent/20">
             <ListChecks className="h-2.5 w-2.5" />
             {group.actionCount}
           </span>

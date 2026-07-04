@@ -139,10 +139,10 @@ export function SafetyControlPage() {
 
   // ── Unified list ──
   const TYPE_CONFIG = useMemo(() => ({
-    AUDITS: { color: "bg-orange-500", border: "border-l-orange-500", hover: "hover:bg-orange-50/40 dark:hover:bg-orange-950/20", label: "Audit" },
-    ISSUES: { color: "bg-amber-500", border: "border-l-amber-500", hover: "hover:bg-amber-50/40 dark:hover:bg-amber-950/20", label: "Issue" },
+    AUDITS: { color: "bg-warning/100", border: "border-l-orange-500", hover: "hover:bg-warning/10/40 dark:hover:bg-orange-950/20", label: "Audit" },
+    ISSUES: { color: "bg-warning/100", border: "border-l-amber-500", hover: "hover:bg-warning/10/40 dark:hover:bg-amber-950/20", label: "Issue" },
     ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action" },
-    EVENTS: { color: "bg-red-500", border: "border-l-red-500", hover: "hover:bg-red-50/40 dark:hover:bg-red-950/20", label: "Event" },
+    EVENTS: { color: "bg-danger/100", border: "border-l-red-500", hover: "hover:bg-danger/10/40 dark:hover:bg-red-950/20", label: "Event" },
   }), []);
 
   const ITEMS_PER_PAGE = 50;
@@ -199,7 +199,7 @@ export function SafetyControlPage() {
         title="Safety Control"
         subtitle="Track safety audits, hazard inspections, observations, and compliance."
         icon={AlertTriangle}
-        iconClass="bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400"
+        iconClass="bg-warning/15 text-warning dark:bg-orange-900/40 dark:text-orange-400"
         renderOverview={() => <SafetyOverview audits={auditS.items} problems={problems} actions={actions} auditTemplates={auditS.templates} onInstallTemplates={auditS.hInstall} />}
         renderUnifiedList={renderUnifiedList}
         toolbarSearch={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search..." />}

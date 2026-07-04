@@ -100,15 +100,15 @@ function Fld({ label, children, required, error }: { label: string; children: Re
   return (
     <div className="space-y-1">
       <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-danger ml-0.5">*</span>}
       </label>
       {children}
-      {error && <p className="text-[10px] text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-[10px] text-danger mt-0.5">{error}</p>}
     </div>
   );
 }
 
-const inpCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-purple-500 transition-colors placeholder:text-muted-foreground/40";
+const inpCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 px-2.5 text-sm text-foreground outline-none focus:border-purple-500 transition-colors placeholder:text-muted-foreground/40";
 const selCls = inpCls + " appearance-none";
 
 function TargetSelector({
@@ -129,7 +129,7 @@ function TargetSelector({
     errorPolicy: "all",
   });
   const lineList: { id: string; name: string }[] = (lines as any)?.productionLines || [];
-  const baseCls = "h-8 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-purple-500 transition-colors disabled:opacity-40";
+  const baseCls = "h-8 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs text-foreground outline-none focus:border-purple-500 transition-colors disabled:opacity-40";
 
   return (
     <div className="space-y-2">
@@ -383,13 +383,13 @@ export function PreventiveMaintenancePage() {
   }, []);
 
   const statusColors: Record<string, string> = {
-    ACTIVE: "bg-green-100 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
-    PAUSED: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
+    ACTIVE: "bg-success/15 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800",
+    PAUSED: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800",
     ARCHIVED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700",
   };
 
   const priorityStyles: Record<string, string> = {
-    LOW: "text-gray-500", MEDIUM: "text-blue-500", HIGH: "text-orange-500", CRITICAL: "text-red-500",
+    LOW: "text-gray-500", MEDIUM: "text-primary", HIGH: "text-warning", CRITICAL: "text-danger",
   };
 
   const today = new Date().toISOString().slice(0, 10);
@@ -426,7 +426,7 @@ export function PreventiveMaintenancePage() {
 
   const renderForm = () => (
     <div className="flex flex-1 min-h-0">
-      <div className="w-[25%] min-w-[200px] border-r border-slate-200 bg-card/30 overflow-y-auto p-4 space-y-4">
+      <div className="w-[25%] min-w-[200px] border-r border-border bg-card/30 overflow-y-auto p-4 space-y-4">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
           <FileText className="h-3 w-3" /> Plan Info
         </p>
@@ -478,12 +478,12 @@ export function PreventiveMaintenancePage() {
         </Fld>
         <Fld label="Description">
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="h-20 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-purple-500 placeholder:text-muted-foreground/40"
+            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-purple-500 placeholder:text-muted-foreground/40"
             placeholder="Describe the maintenance plan..." />
         </Fld>
         <Fld label="Notes">
           <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="h-20 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-purple-500"
+            className="h-20 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2.5 py-1.5 text-sm outline-none resize-none focus:border-purple-500"
             placeholder="Additional notes, safety precautions, references..." />
         </Fld>
 
@@ -492,7 +492,7 @@ export function PreventiveMaintenancePage() {
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Checklist Items</p>
             <button type="button" onClick={addChecklistItem}
-              className="inline-flex h-6 items-center gap-1 bg-purple-600/10 px-2 text-[10px] font-semibold text-purple-700 hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
+              className="inline-flex h-6 items-center gap-1 bg-purple-600/10 px-2 text-[10px] font-semibold text-accent-foreground hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
               <Plus className="h-3 w-3" /> Add Item
             </button>
           </div>
@@ -505,10 +505,10 @@ export function PreventiveMaintenancePage() {
                   <div className="flex items-start gap-2">
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <input type="text" value={item.task} onChange={(e) => updateChecklistItem(item.id, "task", e.target.value)}
-                        className="h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-purple-500"
+                        className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-purple-500"
                         placeholder="Task description..." />
                       <input type="text" value={item.instructions} onChange={(e) => updateChecklistItem(item.id, "instructions", e.target.value)}
-                        className="h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-purple-500"
+                        className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 text-xs outline-none focus:border-purple-500"
                         placeholder="Instructions / notes..." />
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0 pt-1">
@@ -518,7 +518,7 @@ export function PreventiveMaintenancePage() {
                         Req
                       </label>
                       <button type="button" onClick={() => removeChecklistItem(item.id)}
-                        className="flex h-5 w-5 items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                        className="flex h-5 w-5 items-center justify-center text-danger/80 hover:text-danger hover:bg-danger/10 dark:hover:bg-red-950/30 transition-colors">
                         <XCircle className="h-3 w-3 stroke-current" />
                       </button>
                     </div>
@@ -539,7 +539,7 @@ export function PreventiveMaintenancePage() {
 
     return (
       <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="sticky top-0 bg-card z-10 border-b border-slate-200 px-5 py-3">
+        <div className="sticky top-0 bg-card z-10 border-b border-border px-5 py-3">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -577,13 +577,13 @@ export function PreventiveMaintenancePage() {
                 <Calendar className="h-3.5 w-3.5 stroke-current" /> Schedule
               </h3>
               <div className="grid grid-cols-2 gap-3">
-                <div className={cls("border p-3", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-950/20" : "border-border/30 bg-card/50")}>
+                <div className={cls("border p-3", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "border-danger/20 bg-danger/10 dark:border-red-900/30 dark:bg-red-950/20" : "border-border/30 bg-card/50")}>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Next Due</p>
-                  <p className={cls("mt-1 text-lg font-bold", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "text-red-500" : "text-foreground")}>
+                  <p className={cls("mt-1 text-lg font-bold", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "text-danger" : "text-foreground")}>
                     {sel.nextDueDate?.slice(0, 10) || "—"}
                   </p>
                   {sel.nextDueDate && isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" && (
-                    <p className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-red-500">
+                    <p className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-danger">
                       <AlertTriangle className="h-3 w-3 stroke-current" /> Overdue
                     </p>
                   )}
@@ -592,7 +592,7 @@ export function PreventiveMaintenancePage() {
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Last Completed</p>
                   <p className="mt-1 text-lg font-bold text-foreground">{sel.lastCompletedDate?.slice(0, 10) || "—"}</p>
                   {sel.lastCompletedDate && (
-                    <p className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-green-500">
+                    <p className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-success">
                       <CheckCircle className="h-3 w-3 stroke-current" /> Completed
                     </p>
                   )}
@@ -609,7 +609,7 @@ export function PreventiveMaintenancePage() {
                 <div className="space-y-1.5">
                   {checklist.map((item, idx) => (
                     <div key={item.id || idx} className="flex items-start gap-2.5 border border-border/30 bg-card/40 px-3 py-2">
-                      <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-purple-100 text-[9px] font-bold text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                      <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-accent/15 text-[9px] font-bold text-accent-foreground dark:bg-purple-900/40 dark:text-purple-300">
                         {idx + 1}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -617,7 +617,7 @@ export function PreventiveMaintenancePage() {
                         {item.instructions && <p className="text-xs text-muted-foreground mt-0.5">{item.instructions}</p>}
                       </div>
                       {item.required && (
-                        <span className="shrink-0 text-[9px] font-semibold text-red-500 uppercase">Required</span>
+                        <span className="shrink-0 text-[9px] font-semibold text-danger uppercase">Required</span>
                       )}
                     </div>
                   ))}
@@ -643,7 +643,7 @@ export function PreventiveMaintenancePage() {
           </div>
 
           {/* Right 35%: Status, Target, Frequency, Technician, Linked WOs */}
-          <div className="border-l border-slate-200 bg-card/20 p-5 space-y-5" style={{ flexBasis: "35%", minWidth: 240 }}>
+          <div className="border-l border-border bg-card/20 p-5 space-y-5" style={{ flexBasis: "35%", minWidth: 240 }}>
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Details</h3>
               <div className="space-y-2.5">
@@ -670,7 +670,7 @@ export function PreventiveMaintenancePage() {
                 </div>
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Next Due</p>
-                  <p className={cls("text-sm font-bold", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "text-red-500" : "text-foreground")}>
+                  <p className={cls("text-sm font-bold", isOverdue(sel.nextDueDate) && sel.status === "ACTIVE" ? "text-danger" : "text-foreground")}>
                     {sel.nextDueDate?.slice(0, 10) || "—"}
                   </p>
                 </div>
@@ -689,9 +689,9 @@ export function PreventiveMaintenancePage() {
                   {linkedWOs.map((wo: any) => (
                     <div key={wo.id} className="flex items-center gap-2 border border-border/30 bg-card/40 px-2 py-1.5 text-xs">
                       <span className={`inline-block h-2 w-2 rounded-full ${
-                        wo.status === "COMPLETED" ? "bg-green-500" :
-                        wo.status === "IN_PROGRESS" ? "bg-amber-500" :
-                        wo.status === "CANCELLED" ? "bg-gray-400" : "bg-blue-500"
+                        wo.status === "COMPLETED" ? "bg-success/100" :
+                        wo.status === "IN_PROGRESS" ? "bg-warning/100" :
+                        wo.status === "CANCELLED" ? "bg-muted-foreground/40" : "bg-primary/100"
                       }`} />
                       <span className="font-mono text-muted-foreground shrink-0">{wo.number}</span>
                       <span className="font-semibold text-foreground flex-1 min-w-0 truncate">{wo.title}</span>
@@ -712,8 +712,8 @@ export function PreventiveMaintenancePage() {
         <div className={cls(
           "shrink-0 h-8 flex items-center justify-center text-sm font-semibold border-b",
           errorMsg
-            ? "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-300"
-            : "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-300",
+            ? "bg-danger/10 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300"
+            : "bg-success/10 text-success border-success/20 dark:bg-green-950/30 dark:text-green-300",
         )}>
           {errorMsg ? <AlertTriangle className="h-3.5 w-3.5 mr-1.5" /> : <CheckCircle className="h-3.5 w-3.5 mr-1.5" />}
           {errorMsg || successMsg}
@@ -721,12 +721,12 @@ export function PreventiveMaintenancePage() {
       )}
       <PageHeader
         icon={<CalendarClock className="h-5 w-5 stroke-current" />}
-        iconClass="bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400"
+        iconClass="bg-accent/15 text-accent-foreground dark:bg-purple-900/40 dark:text-purple-400"
         title="Preventive Maintenance"
         subtitle="Schedule and manage preventive maintenance plans — TPM framework"
       >
         {duePlans.length > 0 && (
-          <span className="ml-3 inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[10px] font-semibold text-red-600 dark:bg-red-900/30 dark:text-red-400">
+          <span className="ml-3 inline-flex items-center gap-1 rounded-full bg-danger/15 px-2.5 py-1 text-[10px] font-semibold text-danger dark:bg-red-900/30 dark:text-danger/80">
             <AlertTriangle className="h-3 w-3 stroke-current" />
             {duePlans.length} due
           </span>
@@ -778,8 +778,8 @@ export function PreventiveMaintenancePage() {
       {view === "dashboard" ? (
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Left 20%: PM Plans Records Panel */}
-          <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-card/30" style={{ flexBasis: "20%", minWidth: 200 }}>
-            <div className="shrink-0 h-8 flex items-center border-b border-slate-200 bg-muted/50 px-3">
+          <div className="flex flex-col min-h-0 overflow-hidden border-r border-border bg-card/30" style={{ flexBasis: "20%", minWidth: 200 }}>
+            <div className="shrink-0 h-8 flex items-center border-b border-border bg-muted/50 px-3">
               <span className="text-xs font-medium text-muted-foreground">PM Plans</span>
               <span className="ml-auto text-[10px] font-mono text-muted-foreground">{plans.length}</span>
             </div>
@@ -788,7 +788,7 @@ export function PreventiveMaintenancePage() {
               <div className="relative">
                 <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search PM plans..."
-                  className="h-7 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-purple-500 transition-colors placeholder:text-muted-foreground/40" />
+                  className="h-7 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 pr-6 text-[11px] text-foreground outline-none focus:border-purple-500 transition-colors placeholder:text-muted-foreground/40" />
                 {search && (
                   <button onClick={() => setSearch("")} className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     <XCircle className="h-3 w-3 stroke-current" />
@@ -798,14 +798,14 @@ export function PreventiveMaintenancePage() {
               {/* Filters */}
               <div className="flex gap-1">
                 <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-purple-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-purple-500 transition-colors appearance-none">
                   <option value="">All Status</option>
                   <option value="ACTIVE">Active</option>
                   <option value="PAUSED">Paused</option>
                   <option value="ARCHIVED">Archived</option>
                 </select>
                 <select value={filterFreq} onChange={(e) => setFilterFreq(e.target.value)}
-                  className="h-6 flex-1 min-w-0 bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-purple-500 transition-colors appearance-none">
+                  className="h-6 flex-1 min-w-0 bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-1.5 text-[10px] text-muted-foreground outline-none focus:border-purple-500 transition-colors appearance-none">
                   <option value="">All Freq</option>
                   <option value="DAILY">Daily</option>
                   <option value="WEEKLY">Weekly</option>
@@ -825,7 +825,7 @@ export function PreventiveMaintenancePage() {
                   <p className="text-xs font-medium text-muted-foreground">No PM plans created</p>
                   <p className="mt-0.5 text-[10px] text-muted-foreground/60">Create the first PM plan to start preventive maintenance.</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-purple-600/10 px-3 text-xs font-semibold text-purple-700 hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-purple-600/10 px-3 text-xs font-semibold text-accent-foreground hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> New PM Plan
                   </button>
                 </div>
@@ -843,7 +843,7 @@ export function PreventiveMaintenancePage() {
                           <span className="min-w-0 truncate text-sm font-semibold text-foreground">{pm.title}</span>
                           {pm.nextDueDate && isOverdue(pm.nextDueDate) && pm.status === "ACTIVE" && (
                             <span className="shrink-0" title="Overdue">
-                              <AlertTriangle className="h-3 w-3 text-red-500 stroke-current" />
+                              <AlertTriangle className="h-3 w-3 text-danger stroke-current" />
                             </span>
                           )}
                         </div>
@@ -856,7 +856,7 @@ export function PreventiveMaintenancePage() {
                           )}
                           {pm.nextDueDate && (
                             <><span>·</span>
-                              <span className={isOverdue(pm.nextDueDate) && pm.status === "ACTIVE" ? "text-red-500 font-semibold" : ""}>
+                              <span className={isOverdue(pm.nextDueDate) && pm.status === "ACTIVE" ? "text-danger font-semibold" : ""}>
                                 Due {pm.nextDueDate.slice(0, 10)}
                               </span>
                             </>
@@ -871,7 +871,7 @@ export function PreventiveMaintenancePage() {
                 </div>
               )}
             </div>
-            <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
+            <div className="shrink-0 h-7 flex items-center border-t border-border bg-muted/50 px-3">
               <span className="text-[10px] text-muted-foreground">{plans.length} plan{plans.length !== 1 ? "s" : ""}</span>
               {filterStatus && (
                 <span className="ml-auto text-[10px] text-muted-foreground">{statusLabel(filterStatus)}</span>
@@ -886,9 +886,9 @@ export function PreventiveMaintenancePage() {
       ) : (
       <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: List */}
-        <div className="flex flex-col min-h-0 overflow-hidden border-r border-slate-200 bg-card/30"
+        <div className="flex flex-col min-h-0 overflow-hidden border-r border-border bg-card/30"
           style={{ flexBasis: `${leftPct}%`, minWidth: 220 }}>
-          <div className="shrink-0 h-8 flex items-center border-b border-slate-200 bg-muted/50 px-3">
+          <div className="shrink-0 h-8 flex items-center border-b border-border bg-muted/50 px-3">
             <span className="text-xs font-medium text-muted-foreground">PM Plans</span>
             <span className="ml-auto text-[10px] font-mono text-muted-foreground">{plans.length}</span>
           </div>
@@ -909,7 +909,7 @@ export function PreventiveMaintenancePage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No PM plans found</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-purple-600/10 px-3 text-xs font-semibold text-purple-700 hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-purple-600/10 px-3 text-xs font-semibold text-accent-foreground hover:bg-purple-600/20 dark:text-purple-400 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> New PM Plan
                   </button>
                 </div>
@@ -927,7 +927,7 @@ export function PreventiveMaintenancePage() {
                           <span className="min-w-0 truncate text-sm font-semibold text-foreground">{pm.title}</span>
                           {pm.nextDueDate && isOverdue(pm.nextDueDate) && pm.status === "ACTIVE" && (
                             <span className="shrink-0" title="Overdue">
-                              <AlertTriangle className="h-3 w-3 text-red-500 stroke-current" />
+                              <AlertTriangle className="h-3 w-3 text-danger stroke-current" />
                             </span>
                           )}
                         </div>
@@ -940,7 +940,7 @@ export function PreventiveMaintenancePage() {
                           )}
                           {pm.nextDueDate && (
                             <><span>·</span>
-                              <span className={isOverdue(pm.nextDueDate) && pm.status === "ACTIVE" ? "text-red-500 font-semibold" : ""}>
+                              <span className={isOverdue(pm.nextDueDate) && pm.status === "ACTIVE" ? "text-danger font-semibold" : ""}>
                                 Due {pm.nextDueDate.slice(0, 10)}
                               </span>
                             </>
@@ -956,10 +956,10 @@ export function PreventiveMaintenancePage() {
               )}
             </div>
           )}
-          <div className="shrink-0 h-7 flex items-center border-t border-slate-200 bg-muted/50 px-3">
+          <div className="shrink-0 h-7 flex items-center border-t border-border bg-muted/50 px-3">
             <span className="text-[10px] text-muted-foreground">{plans.length} plan{plans.length !== 1 ? "s" : ""}</span>
             {duePlans.length > 0 && (
-              <span className="ml-auto text-[10px] font-semibold text-red-500">{duePlans.length} due</span>
+              <span className="ml-auto text-[10px] font-semibold text-danger">{duePlans.length} due</span>
             )}
           </div>
         </div>
@@ -967,7 +967,7 @@ export function PreventiveMaintenancePage() {
         {/* Resizer */}
         {view !== "form" && (
           <div onMouseDown={handleSplitMouseDown}
-            className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-purple-500/10"
+            className="flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-accent/100/10"
             style={{ width: 2 }} />
         )}
 
@@ -989,7 +989,7 @@ export function PreventiveMaintenancePage() {
       )}
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-slate-200 bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
+      <div className="shrink-0 border-t border-border bg-muted flex h-10 items-center gap-3 px-4 text-[10px] text-muted-foreground font-medium">
         <span className="font-semibold text-foreground">Preventive Maintenance</span>
         <span className="mx-1 h-3 w-px bg-border/30" />
         <span>{plans.length} plan{plans.length !== 1 ? "s" : ""}</span>

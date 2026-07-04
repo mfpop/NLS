@@ -156,7 +156,7 @@ export function useProductionIssueSection(
 
   const renderCreateForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
-      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
+      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Type *</label><select value={iType} onChange={(e) => setIType(e.target.value)} aria-label="Issue type" className={SEL_INPUT}>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         <div><label className={labelCls}>Severity *</label><select value={iSeverity} onChange={(e) => setISeverity(e.target.value)} aria-label="Severity" className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
         <div><label className={labelCls}>Owner</label><input type="text" value={iOwner} onChange={(e) => setIOwner(e.target.value)} className={SEL_INPUT} placeholder="Owner..." aria-label="Issue owner" /></div>
@@ -166,15 +166,15 @@ export function useProductionIssueSection(
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">
         <div><label className={labelCls}>Title *</label><input type="text" value={iTitle} onChange={(e) => setITitle(e.target.value)} className={SEL_INPUT} placeholder="Issue title..." /></div>
-        <div><label className={labelCls}>Description</label><textarea value={iDesc} onChange={(e) => setIDesc(e.target.value)} rows={3} className="h-24 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" placeholder="Describe..." /></div>
-        <div><label className={labelCls}>Notes</label><textarea value={iNotes} onChange={(e) => setINotes(e.target.value)} rows={2} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
+        <div><label className={labelCls}>Description</label><textarea value={iDesc} onChange={(e) => setIDesc(e.target.value)} rows={3} className="h-24 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" placeholder="Describe..." /></div>
+        <div><label className={labelCls}>Notes</label><textarea value={iNotes} onChange={(e) => setINotes(e.target.value)} rows={2} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
       </div>
     </div>
   );
 
   const renderEditForm = (item: any) => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
-      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
+      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <div><label className={labelCls}>Type</label><select value={item.problemType} className={SEL_INPUT + " opacity-60 cursor-not-allowed"} disabled>{problemTypeOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
         <div><label className={labelCls}>Severity *</label><select value={eSeverity} onChange={(e) => setESeverity(e.target.value)} className={SEL_INPUT}><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option><option value="CRITICAL">Critical</option></select></div>
         <div><label className={labelCls}>Status</label><select value={item.status} className={SEL_INPUT + " opacity-60 cursor-not-allowed"} disabled><option value="OPEN">Open</option><option value="IN_PROGRESS">In Progress</option><option value="RESOLVED">Resolved</option><option value="CANCELLED">Cancelled</option></select></div>
@@ -185,8 +185,8 @@ export function useProductionIssueSection(
       </div>
       <div className="flex-1 min-w-0 overflow-y-auto p-4 space-y-3">
         <div><label className={labelCls}>Title *</label><input type="text" value={eTitle} onChange={(e) => setETitle(e.target.value)} className={SEL_INPUT} /></div>
-        <div><label className={labelCls}>Description</label><textarea value={eDesc} onChange={(e) => setEDesc(e.target.value)} rows={3} className="h-24 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
-        <div><label className={labelCls}>Notes</label><textarea value={eNotes} onChange={(e) => setENotes(e.target.value)} rows={2} className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
+        <div><label className={labelCls}>Description</label><textarea value={eDesc} onChange={(e) => setEDesc(e.target.value)} rows={3} className="h-24 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
+        <div><label className={labelCls}>Notes</label><textarea value={eNotes} onChange={(e) => setENotes(e.target.value)} rows={2} className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none" /></div>
       </div>
     </div>
   );
@@ -197,7 +197,7 @@ export function useProductionIssueSection(
     if (editing && item) return renderEditForm(item);
     if (!id) return (
       <div className="flex flex-1 items-center justify-center h-full">
-        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Production Issues</h3><p className="text-xs text-muted-foreground/70">Operational issues and problems.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"><Plus className="h-3.5 w-3.5" /> New Issue</button></div>
+        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Production Issues</h3><p className="text-xs text-muted-foreground/70">Operational issues and problems.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80"><Plus className="h-3.5 w-3.5" /> New Issue</button></div>
       </div>
     );
     if (!item) return <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Loading...</div>;
@@ -213,7 +213,7 @@ export function useProductionIssueSection(
           {item.description && <div><p className="text-xs font-medium text-muted-foreground mb-1">Description</p><p className="text-sm text-foreground">{item.description}</p></div>}
           {item.notes && <div><p className="text-xs font-medium text-muted-foreground mb-1">Notes</p><p className="text-sm text-foreground">{item.notes}</p></div>}
         </div>
-        <div className="w-[35%] shrink-0 border-l border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-5 space-y-4">
+        <div className="w-[35%] shrink-0 border-l border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-5 space-y-4">
           <div><p className="text-xs font-medium text-muted-foreground mb-2">Status & Severity</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${statCls}`}>{statusLabel(item.status)}</span></div>

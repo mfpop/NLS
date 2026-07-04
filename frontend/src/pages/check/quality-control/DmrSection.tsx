@@ -266,13 +266,13 @@ export function useDmrSection(
 
   // ── Styles ──
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
-  const errTxtCls = "text-[10px] text-red-500 mt-0.5";
+  const errTxtCls = "text-[10px] text-danger mt-0.5";
 
   // ── Create Form (25/75 layout) ──
   const renderCreateForm = () => (
     <div className="flex-1 min-h-0 flex overflow-hidden bg-gradient-to-b from-white/30 to-white/10 dark:from-slate-900/30 dark:to-slate-900/10">
       {/* ── Left 25%: Source Location + Metadata ── */}
-      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-white/40 dark:bg-slate-900/40 p-4 space-y-3">
+      <div className="w-[25%] shrink-0 overflow-y-auto border-r border-white/20 dark:border-slate-700/20 bg-background/40 dark:bg-slate-900/40 p-4 space-y-3">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wider mb-3">Source Location</h3>
         <div>
           <label className={labelCls}>Plant *</label>
@@ -399,36 +399,36 @@ export function useDmrSection(
           </select>
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Defect Description *</label>
           <textarea
             value={fDefectDesc}
             onChange={(e) => setFDefectDesc(e.target.value)}
             rows={3}
-            className={`h-20 w-full bg-white/50 dark:bg-slate-800/50 border ${errors.defectDesc ? "border-red-400" : "border-white/30 dark:border-slate-700/30"} px-2 py-1 text-xs outline-none resize-none`}
+            className={`h-20 w-full bg-background/50 dark:bg-slate-800/50 border ${errors.defectDesc ? "border-red-400" : "border-white/30 dark:border-slate-700/30"} px-2 py-1 text-xs outline-none resize-none`}
             placeholder="Describe the defect in detail..."
           />
           {errors.defectDesc && <p className={errTxtCls}>{errors.defectDesc}</p>}
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Immediate Containment</label>
           <textarea
             value={fContainment}
             onChange={(e) => setFContainment(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Actions taken to contain the issue..."
           />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Suspected Cause</label>
           <textarea
             value={fSuspectedCause}
             onChange={(e) => setFSuspectedCause(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Suspected root cause..."
           />
         </div>
@@ -444,24 +444,24 @@ export function useDmrSection(
           </div>
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Verification / Closure Notes</label>
           <textarea
             value={fNotes}
             onChange={(e) => setFNotes(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Verification and closure details..."
           />
         </div>
 
-        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
+        <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
           <label className="block text-xs font-semibold text-foreground mb-2">Notes</label>
           <textarea
             value={fNotes}
             onChange={(e) => setFNotes(e.target.value)}
             rows={2}
-            className="h-16 w-full bg-white/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
+            className="h-16 w-full bg-background/50 dark:bg-slate-800/50 border border-white/30 dark:border-slate-700/30 px-2 py-1 text-xs outline-none resize-none"
             placeholder="Additional notes..."
           />
         </div>
@@ -528,7 +528,7 @@ export function useDmrSection(
           {sel.disposition && (
             <div>
               <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground/70 mb-2">Disposition</h3>
-              <div className="inline-flex items-center px-2 py-0.5 text-xs font-semibold border border-indigo-300 text-indigo-700 bg-indigo-50/80 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/30">
+              <div className="inline-flex items-center px-2 py-0.5 text-xs font-semibold border border-indigo-300 text-primary bg-indigo-50/80 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/30">
                 {sel.disposition ? DMR_DISPOSITION_OPTIONS.find((o) => o.value === sel.disposition)?.label || statusLabel(sel.disposition) : "—"}
               </div>
             </div>
@@ -544,7 +544,7 @@ export function useDmrSection(
         </div>
 
         {/* ── Right 35%: Status, Material Info, Source, Owner, Dates ── */}
-        <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4 bg-white/30 dark:bg-slate-900/30">
+        <div className="flex-1 min-w-0 overflow-y-auto p-5 space-y-4 bg-background/30 dark:bg-slate-900/30">
           {/* Status & Severity */}
           <div>
             <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground/70 mb-2">Status</h3>
@@ -556,10 +556,10 @@ export function useDmrSection(
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Severity</span>
                 <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${
-                  sel.severity === "CRITICAL" ? "border-red-300 text-red-700 bg-red-50/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30"
-                  : sel.severity === "HIGH" ? "border-orange-300 text-orange-700 bg-orange-50/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30"
-                  : sel.severity === "MEDIUM" ? "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30"
-                  : "border-gray-300 text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30"
+                  sel.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30"
+                  : sel.severity === "HIGH" ? "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30"
+                  : sel.severity === "MEDIUM" ? "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30"
+                  : "border-border text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30"
                 }`}>{statusLabel(sel.severity)}</span>
               </div>
             </div>
@@ -670,10 +670,10 @@ export function useDmrSection(
                       </span>
                     )}
                     <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${
-                      d.severity === "CRITICAL" ? "border-red-300 text-red-700 bg-red-50/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30"
-                      : d.severity === "HIGH" ? "border-orange-300 text-orange-700 bg-orange-50/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30"
-                      : d.severity === "MEDIUM" ? "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30"
-                      : "border-gray-300 text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30"
+                      d.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30"
+                      : d.severity === "HIGH" ? "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30"
+                      : d.severity === "MEDIUM" ? "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30"
+                      : "border-border text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30"
                     }`}>{statusLabel(d.severity)}</span>
                     {d.dueDate && (
                       <>

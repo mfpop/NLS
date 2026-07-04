@@ -21,12 +21,12 @@ type AccessGroupMode = "view" | "assignUser" | "assignRole" | "removeUser" | "re
 
 function safeText(v: string | null | undefined): string { const s = v?.trim(); return s ? s : "—"; }
 
-const hdr = "h-8 border-b border-slate-200 bg-slate-50 px-3 flex items-center";
-const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-slate-500";
+const hdr = "h-8 border-b border-border bg-muted px-3 flex items-center";
+const secTitle = "text-[11px] font-semibold uppercase tracking-wide text-muted-foreground";
 const scopeBadgeMap: Record<ScopeLevel, string> = {
-  global: "border-blue-400/60 text-blue-600 bg-blue-50",
-  company: "border-indigo-400/60 text-indigo-600 bg-indigo-50",
-  plant: "border-purple-400/60 text-purple-600 bg-purple-50",
+  global: "border-blue-400/60 text-primary bg-primary/10",
+  company: "border-indigo-400/60 text-primary bg-indigo-50",
+  plant: "border-purple-400/60 text-accent-foreground bg-purple-50",
   department: "border-cyan-400/60 text-cyan-600 bg-cyan-50",
 };
 const scopeLabelMap: Record<ScopeLevel, string> = { global: "Global", company: "Company", plant: "Plant", department: "Department" };
@@ -244,23 +244,23 @@ export function AccessGroupsTab() {
         {capabilities.canAssignRole && <ToolbarButton icon={Briefcase as any} label="Assign Role" onClick={openAssignRole} disabled={!selectedCompany} variant="create" />}
         {selectedCompany && mode === "removeUser" ? (
           <div className="flex items-center gap-1 text-[11px]">
-            <span className="text-red-600 font-medium">Remove this user?</span>
-            <button type="button" onClick={handleRemoveUser} disabled={isRemoving} className="inline-flex h-7 items-center rounded bg-red-600 px-2 text-[10px] font-semibold text-white hover:bg-red-700 disabled:opacity-60">{isRemoving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
-            <button type="button" onClick={() => setMode("view")} className="inline-flex h-7 items-center rounded border border-slate-300 bg-white px-2 text-[10px] text-slate-600 hover:bg-slate-50">No</button>
+            <span className="text-danger font-medium">Remove this user?</span>
+            <button type="button" onClick={handleRemoveUser} disabled={isRemoving} className="inline-flex h-7 items-center rounded bg-danger px-2 text-[10px] font-semibold text-white hover:bg-danger/80 disabled:opacity-60">{isRemoving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
+            <button type="button" onClick={() => setMode("view")} className="inline-flex h-7 items-center rounded border border-border bg-background px-2 text-[10px] text-muted-foreground hover:bg-muted">No</button>
           </div>
         ) : (
           capabilities.canRemoveUser && <ToolbarButton icon={UserX as any} label="Remove User" onClick={() => { setMode("removeUser"); setRemoveConfirmTarget(null); }} disabled={!selectedCompany || mode === "removeRole"} variant="danger" />
         )}
         {selectedCompany && mode === "removeRole" ? (
           <div className="flex items-center gap-1 text-[11px]">
-            <span className="text-red-600 font-medium">Remove this role?</span>
-            <button type="button" onClick={handleRemoveRole} disabled={isRemoving} className="inline-flex h-7 items-center rounded bg-red-600 px-2 text-[10px] font-semibold text-white hover:bg-red-700 disabled:opacity-60">{isRemoving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
-            <button type="button" onClick={() => setMode("view")} className="inline-flex h-7 items-center rounded border border-slate-300 bg-white px-2 text-[10px] text-slate-600 hover:bg-slate-50">No</button>
+            <span className="text-danger font-medium">Remove this role?</span>
+            <button type="button" onClick={handleRemoveRole} disabled={isRemoving} className="inline-flex h-7 items-center rounded bg-danger px-2 text-[10px] font-semibold text-white hover:bg-danger/80 disabled:opacity-60">{isRemoving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-1" />}Yes</button>
+            <button type="button" onClick={() => setMode("view")} className="inline-flex h-7 items-center rounded border border-border bg-background px-2 text-[10px] text-muted-foreground hover:bg-muted">No</button>
           </div>
         ) : (
           capabilities.canRemoveRole && <ToolbarButton icon={Trash2 as any} label="Remove Role" onClick={() => { setMode("removeRole"); setRemoveConfirmTarget(null); }} disabled={!selectedCompany || mode === "removeUser"} variant="danger" />
         )}
-        {selectedCompany && mode === "view" && <span className="mx-0.5 h-5 w-px shrink-0 bg-slate-200" />}
+        {selectedCompany && mode === "view" && <span className="mx-0.5 h-5 w-px shrink-0 bg-muted/80" />}
         <ToolbarButton icon={RefreshCw} label="Refresh" onClick={refreshAll} variant="neutral" />
       </>)}
     </div>
@@ -279,15 +279,15 @@ export function AccessGroupsTab() {
     });
     setFooter(
       selectedCompany ? (
-        <span className="flex items-center gap-4 text-xs text-slate-500">
+        <span className="flex items-center gap-4 text-xs text-muted-foreground">
           <span>{companyUsers.length} user{companyUsers.length !== 1 ? "s" : ""} in scope</span>
-          <span className="h-4 w-px bg-slate-200" />
+          <span className="h-4 w-px bg-muted/80" />
           <span>{companyPlants.length} plant{companyPlants.length !== 1 ? "s" : ""}</span>
-          <span className="h-4 w-px bg-slate-200" />
+          <span className="h-4 w-px bg-muted/80" />
           <span>{scopeRolesTotal} role{scopeRolesTotal !== 1 ? "s" : ""}</span>
         </span>
       ) : (
-        <span className="text-xs text-slate-500">{users.length} total users</span>
+        <span className="text-xs text-muted-foreground">{users.length} total users</span>
       )
     );
     return () => { setToolbar(null); setFooter(null); };
@@ -306,8 +306,8 @@ export function AccessGroupsTab() {
               } : undefined}
               emptyState={
                 <div className="flex flex-col items-center justify-center px-4 py-8 text-center text-xs text-muted-foreground">
-                  <Database className="mx-auto mb-2 h-6 w-6 text-slate-300" />
-                  <span className="text-sm font-medium text-slate-500">No companies configured</span>
+                  <Database className="mx-auto mb-2 h-6 w-6 text-muted-foreground/30" />
+                  <span className="text-sm font-medium text-muted-foreground">No companies configured</span>
                 </div>
               }
             >
@@ -320,20 +320,20 @@ export function AccessGroupsTab() {
                     <RecordListItem
                       active={sel}
                       onClick={() => { setSelectedCompanyId(sel ? null : company.id); setSelectedPlantId(null); setShowAllMembers(false); }}
-                      leading={<Landmark className="h-3.5 w-3.5 shrink-0 text-blue-600 stroke-current" />}
+                      leading={<Landmark className="h-3.5 w-3.5 shrink-0 text-primary stroke-current" />}
                       title={
                         <span className={`truncate ${sel ? "font-semibold" : "font-medium"}`}>{company.name}</span>
                       }
                       subtitle={
                         <>
-                          <span className="inline-flex rounded border border-indigo-400/60 px-1 py-0.5 text-[10px] text-indigo-600 bg-indigo-50">Company</span>
+                          <span className="inline-flex rounded border border-indigo-400/60 px-1 py-0.5 text-[10px] text-primary bg-indigo-50">Company</span>
                           <span>{companyUserCount} user{companyUserCount !== 1 ? "s" : ""}</span>
                           <span>{companyPlantCount} plant{companyPlantCount !== 1 ? "s" : ""}</span>
                         </>
                       }
                     />
                     {sel && (
-                      <div className="border-b border-slate-100">
+                      <div className="border-b border-border/50">
                         {companyPlants.length === 0 ? (
                           <div className="px-4 py-1.5 text-[10px] text-muted-foreground italic">No plants configured</div>
                         ) : (
@@ -342,10 +342,10 @@ export function AccessGroupsTab() {
                             const plantCount = plantUserCounts.get(plant.id) ?? 0;
                             return (
                               <button key={plant.id} type="button" onClick={() => setSelectedPlantId(plantSel ? null : plant.id)}
-                                className={`flex w-full items-center gap-2 pl-[36px] pr-3 py-2 border-b border-slate-100 text-left transition-all ${plantSel ? "bg-slate-100/50 text-blue-700" : "hover:bg-white text-muted-foreground"}`}>
-                                <Factory className="h-3 w-3 shrink-0 text-emerald-600 stroke-current" />
+                                className={`flex w-full items-center gap-2 pl-[36px] pr-3 py-2 border-b border-border/50 text-left transition-all ${plantSel ? "bg-muted/50 text-primary" : "hover:bg-background text-muted-foreground"}`}>
+                                <Factory className="h-3 w-3 shrink-0 text-success stroke-current" />
                                 <span className={`truncate text-xs ${plantSel ? "font-semibold" : ""}`}>{plant.name}</span>
-                                <span className="ml-auto text-[10px] font-medium text-slate-500">{plantCount}</span>
+                                <span className="ml-auto text-[10px] font-medium text-muted-foreground">{plantCount}</span>
                               </button>
                             );
                           })
@@ -360,16 +360,16 @@ export function AccessGroupsTab() {
           right={<>
             {mode === "assignUser" && selectedCompany ? (
               <div className="h-full overflow-y-auto">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Assign User — {selectedCompany.name}</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Select a user and role to assign within this scope.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Assign User — {selectedCompany.name}</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Select a user and role to assign within this scope.</p>
                 </div>
                 <div className="px-4 py-3 space-y-3">
-                  {assignFormError && <div className="rounded border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700">{assignFormError}</div>}
+                  {assignFormError && <div className="rounded border border-danger/20 bg-danger/10 px-3 py-1.5 text-[12px] text-danger">{assignFormError}</div>}
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">User *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">User *</label>
                     <select value={assignFormUserId} onChange={(e) => setAssignFormUserId(e.target.value)}
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400">
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary">
                       <option value="">Select user</option>
                       {users.filter((u) => u.isActive).filter((u) => !selectedPlantId || u.plantId === selectedPlantId).map((u) => (
                         <option key={u.id} value={u.id}>{u.fullName || u.username}{u.companyName ? ` — ${u.companyName}` : ''}</option>
@@ -377,9 +377,9 @@ export function AccessGroupsTab() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Role *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Role *</label>
                     <select value={assignFormRoleId} onChange={(e) => setAssignFormRoleId(e.target.value)}
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400">
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary">
                       <option value="">Select role</option>
                       {roleCatalog.map((r) => (
                         <option key={r.id} value={r.id}>{r.name}</option>
@@ -390,16 +390,16 @@ export function AccessGroupsTab() {
               </div>
             ) : mode === "assignRole" && selectedCompany ? (
               <div className="h-full overflow-y-auto">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Assign Role — {selectedCompany.name}</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Select a role and user to assign within this scope.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Assign Role — {selectedCompany.name}</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Select a role and user to assign within this scope.</p>
                 </div>
                 <div className="px-4 py-3 space-y-3">
-                  {assignFormError && <div className="rounded border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] text-red-700">{assignFormError}</div>}
+                  {assignFormError && <div className="rounded border border-danger/20 bg-danger/10 px-3 py-1.5 text-[12px] text-danger">{assignFormError}</div>}
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">Role *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">Role *</label>
                     <select value={assignFormRoleId} onChange={(e) => setAssignFormRoleId(e.target.value)}
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400">
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary">
                       <option value="">Select role</option>
                       {roleCatalog.map((r) => (
                         <option key={r.id} value={r.id}>{r.name}</option>
@@ -407,9 +407,9 @@ export function AccessGroupsTab() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-medium text-slate-600 mb-1">User *</label>
+                    <label className="block text-[11px] font-medium text-muted-foreground mb-1">User *</label>
                     <select value={assignFormUserId} onChange={(e) => setAssignFormUserId(e.target.value)}
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2 text-[13px] text-slate-800 outline-none focus:border-blue-400">
+                      className="h-8 w-full rounded border border-border bg-background px-2 text-[13px] text-foreground outline-none focus:border-primary">
                       <option value="">Select user</option>
                       {users.filter((u) => u.isActive).filter((u) => !selectedPlantId || u.plantId === selectedPlantId).map((u) => (
                         <option key={u.id} value={u.id}>{u.fullName || u.username}{u.companyName ? ` — ${u.companyName}` : ''}</option>
@@ -420,28 +420,28 @@ export function AccessGroupsTab() {
               </div>
             ) : mode === "removeUser" && selectedCompany ? (
               <div className="h-full overflow-y-auto">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Remove User — {selectedCompany.name}</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Select a user to remove from this scope.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Remove User — {selectedCompany.name}</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Select a user to remove from this scope.</p>
                 </div>
                 {companyUsers.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-xs text-slate-400">
+                  <div className="flex flex-col items-center justify-center py-8 text-xs text-muted-foreground/60">
                     <Users className="h-5 w-5 mb-1" />
                     <span>No users in this scope to remove.</span>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-border/50">
                     {companyUsers.map((u) => (
-                      <div key={u.id} className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50/60">
+                      <div key={u.id} className="flex items-center gap-3 px-4 py-2 hover:bg-muted/60">
                         <div className="min-w-0 flex-1">
-                          <span className="text-[13px] font-medium text-slate-800">{u.fullName || u.username}</span>
-                          {u.email && <span className="ml-2 text-[11px] text-slate-400">{u.email}</span>}
+                          <span className="text-[13px] font-medium text-foreground">{u.fullName || u.username}</span>
+                          {u.email && <span className="ml-2 text-[11px] text-muted-foreground/60">{u.email}</span>}
                         </div>
                         <button type="button" onClick={() => setRemoveConfirmTarget(u.id)}
                           className={`inline-flex h-7 items-center gap-1 rounded px-2.5 text-[11px] font-medium transition-colors ${
                             removeConfirmTarget === u.id
-                              ? "bg-red-600 text-white"
-                              : "border border-red-200 text-red-600 hover:bg-red-50"
+                              ? "bg-danger text-white"
+                              : "border border-danger/20 text-danger hover:bg-danger/10"
                           }`}>
                           {removeConfirmTarget === u.id ? "Selected, confirm in toolbar" : "Remove"}
                         </button>
@@ -452,33 +452,33 @@ export function AccessGroupsTab() {
               </div>
             ) : mode === "removeRole" && selectedCompany ? (
               <div className="h-full overflow-y-auto">
-                <div className="shrink-0 border-b border-slate-300 px-4 py-3">
-                  <h2 className="text-sm font-semibold text-slate-900">Remove Role — {selectedCompany.name}</h2>
-                  <p className="mt-0.5 text-[12px] text-slate-500">Select a role to remove from users in this scope.</p>
+                <div className="shrink-0 border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Remove Role — {selectedCompany.name}</h2>
+                  <p className="mt-0.5 text-[12px] text-muted-foreground">Select a role to remove from users in this scope.</p>
                 </div>
                 {(() => {
                   const allScopeRoleEntries = Object.values(scopeRoles).flat();
                   if (allScopeRoleEntries.length === 0) {
                     return (
-                      <div className="flex flex-col items-center justify-center py-8 text-xs text-slate-400">
+                      <div className="flex flex-col items-center justify-center py-8 text-xs text-muted-foreground/60">
                         <Shield className="h-5 w-5 mb-1" />
                         <span>No roles assigned in this scope.</span>
                       </div>
                     );
                   }
                   return (
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-border/50">
                       {allScopeRoleEntries.map((r) => (
-                        <div key={r.roleName} className="flex items-center gap-3 px-4 py-2 hover:bg-slate-50/60">
+                        <div key={r.roleName} className="flex items-center gap-3 px-4 py-2 hover:bg-muted/60">
                           <div className="min-w-0 flex-1">
-                            <span className="text-[13px] font-medium text-slate-800">{r.roleName}</span>
-                            <span className="ml-2 text-[11px] text-slate-400">({r.count} user{r.count !== 1 ? 's' : ''})</span>
+                            <span className="text-[13px] font-medium text-foreground">{r.roleName}</span>
+                            <span className="ml-2 text-[11px] text-muted-foreground/60">({r.count} user{r.count !== 1 ? 's' : ''})</span>
                           </div>
                           <button type="button" onClick={() => setRemoveConfirmTarget(r.roleName)}
                             className={`inline-flex h-7 items-center gap-1 rounded px-2.5 text-[11px] font-medium transition-colors ${
                               removeConfirmTarget === r.roleName
-                                ? "bg-red-600 text-white"
-                                : "border border-red-200 text-red-600 hover:bg-red-50"
+                                ? "bg-danger text-white"
+                                : "border border-danger/20 text-danger hover:bg-danger/10"
                             }`}>
                             {removeConfirmTarget === r.roleName ? "Selected, confirm in toolbar" : "Remove"}
                           </button>
@@ -491,7 +491,7 @@ export function AccessGroupsTab() {
             ) : !selectedCompany ? (
               <div className="flex h-full items-center justify-center px-8">
                 <div className="max-w-lg text-center">
-                  <Landmark className="mx-auto h-8 w-8 text-blue-500" />
+                  <Landmark className="mx-auto h-8 w-8 text-primary" />
                   <h3 className="mt-3 text-base font-semibold text-foreground">Select an organization</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Choose a company or plant from the hierarchy to view access groups, members, and roles.</p>
                 </div>
@@ -499,24 +499,24 @@ export function AccessGroupsTab() {
             ) : (
               <div className="h-full flex flex-col overflow-hidden">
                 {/* Summary Strip */}
-                <div className="shrink-0 border-b border-slate-300 px-4 py-2.5">
+                <div className="shrink-0 border-b border-border px-4 py-2.5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <Landmark className="h-4 w-4 text-blue-600 stroke-current shrink-0" />
-                        <h2 className="truncate text-sm font-semibold text-slate-900">{selectedCompany.name}</h2>
+                        <Landmark className="h-4 w-4 text-primary stroke-current shrink-0" />
+                        <h2 className="truncate text-sm font-semibold text-foreground">{selectedCompany.name}</h2>
                         {selectedPlantId && (() => {
                           const plant = companyPlants.find((p) => p.id === selectedPlantId);
-                          return plant ? <><span className="text-slate-300">/</span><span className="truncate text-sm font-semibold text-slate-900">{plant.name}</span></> : null;
+                          return plant ? <><span className="text-muted-foreground/30">/</span><span className="truncate text-sm font-semibold text-foreground">{plant.name}</span></> : null;
                         })()}
                         <span className={`inline-flex rounded border px-1.5 py-0.5 text-[11px] font-medium ${selectedPlantId ? scopeBadgeMap["plant"] : scopeBadgeMap["company"]}`}>
                           {selectedPlantId ? "Plant" : "Company"}
                         </span>
                       </div>
-                      <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-500">
-                        <span><span className="font-medium text-slate-600">{selectedPlantId ? scopeSummary.plant : scopeSummary.company}</span> user{selectedPlantId ? scopeSummary.plant !== 1 ? "s" : "" : scopeSummary.company !== 1 ? "s" : ""}</span>
-                        <span><span className="font-medium text-slate-600">{selectedPlantId ? 0 : companyPlants.length}</span> plant{selectedPlantId ? "" : companyPlants.length !== 1 ? "s" : ""}</span>
-                        <span><span className="font-medium text-slate-600">{scopeRolesTotal}</span> role{scopeRolesTotal !== 1 ? "s" : ""}</span>
+                      <div className="mt-1 flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span><span className="font-medium text-muted-foreground">{selectedPlantId ? scopeSummary.plant : scopeSummary.company}</span> user{selectedPlantId ? scopeSummary.plant !== 1 ? "s" : "" : scopeSummary.company !== 1 ? "s" : ""}</span>
+                        <span><span className="font-medium text-muted-foreground">{selectedPlantId ? 0 : companyPlants.length}</span> plant{selectedPlantId ? "" : companyPlants.length !== 1 ? "s" : ""}</span>
+                        <span><span className="font-medium text-muted-foreground">{scopeRolesTotal}</span> role{scopeRolesTotal !== 1 ? "s" : ""}</span>
                       </div>
                     </div>
                   </div>
@@ -524,29 +524,29 @@ export function AccessGroupsTab() {
 
                 <div className="flex-1 min-h-0 overflow-y-auto">
                   {/* Assigned Roles grouped by scope */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Assigned Roles</span></div>
                     {scopeRolesTotal === 0 ? (
-                      <div className="flex items-center justify-center gap-2 py-3 text-xs text-slate-400">
+                      <div className="flex items-center justify-center gap-2 py-3 text-xs text-muted-foreground/60">
                         <Shield className="h-4 w-4" />
                         <span>No roles assigned in this scope.</span>
                       </div>
                     ) : (
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-border/50">
                         {(Object.entries(scopeRoles) as [ScopeLevel, Array<{ roleName: string; count: number }>][]).map(([scope, roles]) => {
                           if (roles.length === 0) return null;
                           return (
                             <div key={scope} className="px-3 py-1.5">
                               <div className="flex items-center gap-1.5 mb-1">
                                 <span className={`inline-flex rounded border px-1 py-0.5 text-[10px] ${scopeBadgeMap[scope]}`}>{scopeLabelMap[scope]}</span>
-                                <span className="text-[10px] text-slate-400">({roles.length} role{roles.length !== 1 ? "s" : ""})</span>
+                                <span className="text-[10px] text-muted-foreground/60">({roles.length} role{roles.length !== 1 ? "s" : ""})</span>
                               </div>
                               <div className="flex flex-wrap gap-1">
                                 {roles.map((r) => (
-                                  <span key={r.roleName} className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-700">
+                                  <span key={r.roleName} className="inline-flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 text-[11px] text-muted-foreground">
                                     <ShieldCheck className="h-3 w-3 text-blue-400" />
                                     <span>{r.roleName}</span>
-                                    <span className="text-slate-400 ml-0.5">({r.count})</span>
+                                    <span className="text-muted-foreground/60 ml-0.5">({r.count})</span>
                                   </span>
                                 ))}
                               </div>
@@ -558,41 +558,41 @@ export function AccessGroupsTab() {
                   </div>
 
                   {/* Members */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Members</span></div>
                     {companyUsers.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center gap-1.5 py-3 text-xs text-slate-400">
+                      <div className="flex flex-col items-center justify-center gap-1.5 py-3 text-xs text-muted-foreground/60">
                         <Users className="h-4 w-4" />
                         <span>No users in this scope.</span>
                         {capabilities.canAssignUser && (
                           <button type="button" onClick={() => {}}
-                            className="inline-flex items-center gap-1 rounded border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50">
+                            className="inline-flex items-center gap-1 rounded border border-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/10">
                             <UserPlus className="h-3 w-3" />Assign user
                           </button>
                         )}
                       </div>
                     ) : (
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-border/50">
                         {visibleMembers.map((u) => {
                           const userRoles = userRolesMap.get(u.id) ?? [];
                           const primaryRole = userRoles[0]?.roleName;
                           return (
                             <div key={u.id}
                               onClick={() => navigate("/system/users-and-roles", { state: { selectedUserId: u.id } })}
-                              className="flex cursor-pointer items-center gap-3 px-4 py-1.5 hover:bg-slate-50/60 transition-colors min-h-9">
-                              <span className={`h-2 w-2 shrink-0 rounded-full ${u.isActive ? "bg-emerald-500" : "bg-slate-300"}`} />
+                              className="flex cursor-pointer items-center gap-3 px-4 py-1.5 hover:bg-muted/60 transition-colors min-h-9">
+                              <span className={`h-2 w-2 shrink-0 rounded-full ${u.isActive ? "bg-success/100" : "bg-slate-300"}`} />
                               <div className="min-w-0 flex-1 flex items-center gap-2">
-                                <span className="truncate text-[13px] font-medium text-slate-800">{u.fullName || u.username}</span>
-                                <span className="truncate text-[11px] text-slate-400">{u.email || u.username}</span>
-                                {u.plantName && selectedPlantId !== u.plantId && <span className="shrink-0 text-[10px] text-slate-400">· {u.plantName}</span>}
+                                <span className="truncate text-[13px] font-medium text-foreground">{u.fullName || u.username}</span>
+                                <span className="truncate text-[11px] text-muted-foreground/60">{u.email || u.username}</span>
+                                {u.plantName && selectedPlantId !== u.plantId && <span className="shrink-0 text-[10px] text-muted-foreground/60">· {u.plantName}</span>}
                               </div>
                               {primaryRole && (
-                                <span className="shrink-0 inline-flex rounded border border-blue-200/60 bg-blue-50/60 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                                <span className="shrink-0 inline-flex rounded border border-primary/20/60 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
                                   {safeText(primaryRole)}
                                 </span>
                               )}
                               {userRoles.length > 1 && (
-                                <span className="shrink-0 text-[10px] text-slate-400">+{userRoles.length - 1}</span>
+                                <span className="shrink-0 text-[10px] text-muted-foreground/60">+{userRoles.length - 1}</span>
                               )}
                             </div>
                           );
@@ -601,13 +601,13 @@ export function AccessGroupsTab() {
                     )}
                     {hasMoreMembers && !showAllMembers && (
                       <button type="button" onClick={() => setShowAllMembers(true)}
-                        className="flex w-full items-center justify-center gap-1 px-4 py-1.5 text-[10px] font-medium text-blue-600 hover:bg-blue-50/40 transition-colors">
+                        className="flex w-full items-center justify-center gap-1 px-4 py-1.5 text-[10px] font-medium text-primary hover:bg-primary/10/40 transition-colors">
                         <ChevronDown className="h-3 w-3" />Show all {companyUsers.length} members
                       </button>
                     )}
                     {showAllMembers && companyUsers.length > 7 && (
                       <button type="button" onClick={() => setShowAllMembers(false)}
-                        className="flex w-full items-center justify-center gap-1 px-4 py-1.5 text-[10px] font-medium text-slate-500 hover:bg-slate-50/40 transition-colors">
+                        className="flex w-full items-center justify-center gap-1 px-4 py-1.5 text-[10px] font-medium text-muted-foreground hover:bg-muted/40 transition-colors">
                         <ChevronRight className="h-3 w-3" />Show fewer
                       </button>
                     )}
@@ -615,16 +615,16 @@ export function AccessGroupsTab() {
 
                   {/* Effective Access */}
                   {capabilities.canViewEffectiveAccess && (
-                    <div className="border-b border-slate-200">
+                    <div className="border-b border-border">
                       <div className={hdr}><span className={secTitle}>Effective Access</span></div>
-                      <div className="divide-y divide-slate-100 text-[12px] text-slate-600">
+                      <div className="divide-y divide-border/50 text-[12px] text-muted-foreground">
                         <div className="flex items-center gap-3 px-3 py-1.5">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50">
-                            <Landmark className="h-3 w-3 text-blue-500" />
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                            <Landmark className="h-3 w-3 text-primary" />
                           </div>
                           <div>
-                            <div className="font-medium text-slate-800">Company Access</div>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="font-medium text-foreground">Company Access</div>
+                            <div className="text-[11px] text-muted-foreground/60">
                               {selectedPlantId
                                 ? `Users inherit access from ${selectedCompany.name} through ${companyPlants.filter((p) => p.id === selectedPlantId).map((p) => p.name).join(", ")}.`
                                 : `All users under ${selectedCompany.name} have access through ${companyPlants.length} plant${companyPlants.length !== 1 ? "s" : ""}.`}
@@ -632,12 +632,12 @@ export function AccessGroupsTab() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 px-3 py-1.5">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                            <Factory className="h-3 w-3 text-emerald-500" />
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-success/10">
+                            <Factory className="h-3 w-3 text-success" />
                           </div>
                           <div>
-                            <div className="font-medium text-slate-800">Plant Access</div>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="font-medium text-foreground">Plant Access</div>
+                            <div className="text-[11px] text-muted-foreground/60">
                               {selectedPlantId
                                 ? `${companyUsers.length} user${companyUsers.length !== 1 ? "s" : ""} assigned to this plant.`
                                 : `${scopeSummary.plant} user${scopeSummary.plant !== 1 ? "s" : ""} assigned across ${companyPlants.length} plant${companyPlants.length !== 1 ? "s" : ""}.`}
@@ -645,12 +645,12 @@ export function AccessGroupsTab() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 px-3 py-1.5">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-50">
-                            <Shield className="h-3 w-3 text-amber-500" />
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning/10">
+                            <Shield className="h-3 w-3 text-warning" />
                           </div>
                           <div>
-                            <div className="font-medium text-slate-800">Role-based Access</div>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="font-medium text-foreground">Role-based Access</div>
+                            <div className="text-[11px] text-muted-foreground/60">
                               {scopeRolesTotal > 0
                                 ? `${scopeRolesTotal} distinct role${scopeRolesTotal !== 1 ? "s" : ""} providing permissions across modules.`
                                 : "No roles assigned — users have only default access."}
@@ -662,30 +662,30 @@ export function AccessGroupsTab() {
                   )}
 
                   {/* Scope Coverage */}
-                  <div className="border-b border-slate-200">
+                  <div className="border-b border-border">
                     <div className={hdr}><span className={secTitle}>Scope Coverage</span></div>
                     <div className="flex items-start gap-4 px-3 py-2">
                       <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
-                        <span className="text-lg font-semibold text-slate-900 leading-none">{scopeSummary.company}</span>
-                        <span className="text-[11px] text-slate-500">Company</span>
+                        <span className="text-lg font-semibold text-foreground leading-none">{scopeSummary.company}</span>
+                        <span className="text-[11px] text-muted-foreground">Company</span>
                       </div>
                       <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
-                        <span className="text-lg font-semibold text-slate-900 leading-none">{scopeSummary.plant}</span>
-                        <span className="text-[11px] text-slate-500">Plant</span>
+                        <span className="text-lg font-semibold text-foreground leading-none">{scopeSummary.plant}</span>
+                        <span className="text-[11px] text-muted-foreground">Plant</span>
                       </div>
                       {scopeSummary.unassigned > 0 && (
                         <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
-                          <span className="text-lg font-semibold text-amber-600 leading-none">{scopeSummary.unassigned}</span>
-                          <span className="text-[11px] text-slate-500">Unassigned to plant</span>
+                          <span className="text-lg font-semibold text-warning leading-none">{scopeSummary.unassigned}</span>
+                          <span className="text-[11px] text-muted-foreground">Unassigned to plant</span>
                         </div>
                       )}
                       <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
-                        <span className="text-lg font-semibold text-slate-900 leading-none">{companyPlants.length}</span>
-                        <span className="text-[11px] text-slate-500">Plant{companyPlants.length !== 1 ? "s" : ""}</span>
+                        <span className="text-lg font-semibold text-foreground leading-none">{companyPlants.length}</span>
+                        <span className="text-[11px] text-muted-foreground">Plant{companyPlants.length !== 1 ? "s" : ""}</span>
                       </div>
                       <div className="flex flex-col items-center gap-0.5 min-w-[60px]">
-                        <span className="text-lg font-semibold text-slate-900 leading-none">{scopeRolesTotal}</span>
-                        <span className="text-[11px] text-slate-500">Role{scopeRolesTotal !== 1 ? "s" : ""}</span>
+                        <span className="text-lg font-semibold text-foreground leading-none">{scopeRolesTotal}</span>
+                        <span className="text-[11px] text-muted-foreground">Role{scopeRolesTotal !== 1 ? "s" : ""}</span>
                       </div>
                     </div>
                   </div>

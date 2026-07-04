@@ -42,7 +42,7 @@ export function BreakdownsPage() {
     if (section.reportMode === "add" || section.reportMode === "edit") {
       return (
         <>
-          <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400">
+          <span className="text-[10px] font-medium text-warning dark:text-orange-400">
             {section.reportMode === "add" ? "Adding report" : "Editing breakdown"}
           </span>
           <span className="mx-1 h-5 w-px shrink-0 bg-border/40" />
@@ -95,7 +95,7 @@ export function BreakdownsPage() {
         title="Breakdowns"
         subtitle="Track equipment failures, repairs, and root cause analysis — 5 Whys"
         icon={AlertTriangle}
-        iconClass="bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400"
+        iconClass="bg-warning/15 text-warning dark:bg-orange-900/40 dark:text-orange-400"
         headerMessage={headerMsg}
         onDismissHeaderMessage={() => setSuccessMsg(null)}
         tabs={tabs}
@@ -206,8 +206,8 @@ export function BreakdownsPage() {
         {section.selBreakdown && (
           <div className="mt-3 space-y-3">
             {/* Breakdown Reference */}
-            <div className="rounded-lg border border-orange-200 dark:border-orange-800/50 bg-orange-50/50 dark:bg-orange-900/10 p-3 space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400 mb-1">Source Breakdown</p>
+            <div className="rounded-lg border border-warning/20 dark:border-orange-800/50 bg-warning/10/50 dark:bg-orange-900/10 p-3 space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-warning dark:text-orange-400 mb-1">Source Breakdown</p>
               <div className="grid grid-cols-[80px_1fr] gap-x-2 gap-y-1 text-xs">
                 <span className="text-muted-foreground">Number</span>
                 <span className="font-mono font-semibold text-foreground">{section.selBreakdown.number}</span>

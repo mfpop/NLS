@@ -104,8 +104,8 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
     <section>
       <div className="mb-2 flex min-h-6 items-center gap-2">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-0.5 bg-amber-500/60 rounded-full" />
-          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-amber-600/70 dark:text-amber-400/70">{title}</div>
+          <div className="h-4 w-0.5 bg-warning/100/60 rounded-full" />
+          <div className="flex-1 text-sm font-bold uppercase tracking-[0.12em] text-warning/70 dark:text-amber-400/70">{title}</div>
         </div>
         {action}
       </div>
@@ -121,7 +121,7 @@ function ActionProgressBar({ actions }: { actions: KaizenActionNode[] }) {
   return (
     <div className="flex items-center gap-1.5" title={`${done}/${total} actions completed`}>
       <div className="h-1 w-10 rounded-full bg-muted overflow-hidden">
-        <div className="h-full rounded-full bg-green-500 transition-all duration-300" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-success/100 transition-all duration-300" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-[8px] text-muted-foreground font-mono">{done}/{total}</span>
     </div>
@@ -333,7 +333,7 @@ export function KaizenPage() {
     setSuccessMsg("A3/PDCA created from this Kaizen"); refetch();
   }, [sel, createA3FromKaizen, refetch]);
 
-  const iCls = `h-7 w-full bg-card border border-gray-300 text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
+  const iCls = `h-7 w-full bg-card border border-border text-foreground placeholder:text-muted-foreground px-2 text-sm outline-none ${theme.textPrimary} transition-all ${theme.focusRing}`;
   const sCls = iCls;
 
   const renderHtmlBlock = (content: string, fallback = "Not defined") => (
@@ -346,14 +346,14 @@ export function KaizenPage() {
   const renderActionItem = (a: KaizenActionNode) => (
     <div key={a.id} className={`group/action flex items-start gap-1.5 py-0.5 transition-colors hover:bg-muted/20 ${a.status === "DONE" ? "opacity-50" : ""}`}>
       <div className="mt-0.5 shrink-0">
-        {a.status === "DONE" ? <CheckCircle className="h-3 w-3 text-green-500 stroke-current" />
-          : a.status === "CANCELLED" ? <Ban className="h-3 w-3 text-red-400 stroke-current" />
+        {a.status === "DONE" ? <CheckCircle className="h-3 w-3 text-success stroke-current" />
+          : a.status === "CANCELLED" ? <Ban className="h-3 w-3 text-danger/80 stroke-current" />
           : <div className="h-3 w-3 rounded-full border-2 border-amber-400 dark:border-amber-500" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
           <span className={`min-w-0 text-xs font-medium ${a.status === "DONE" ? "line-through text-muted-foreground" : theme.textPrimary}`}>{a.title}</span>
-          <span className={`inline-flex items-center px-1 py-px text-[9px] font-semibold border shrink-0 ${a.status === "DONE" ? "bg-green-100 text-green-700 border-green-200" : "bg-blue-100 text-blue-700 border-blue-200"}`}>
+          <span className={`inline-flex items-center px-1 py-px text-[9px] font-semibold border shrink-0 ${a.status === "DONE" ? "bg-success/15 text-success border-success/20" : "bg-primary/15 text-primary border-primary/20"}`}>
             {a.status === "DONE" ? "Done" : "Open"}
           </span>
         </div>
@@ -361,7 +361,7 @@ export function KaizenPage() {
         <div className="flex items-center gap-2 mt-0.5">
           {a.owner && <span className="text-xs text-muted-foreground">{a.owner}</span>}
           {a.dueDate && (
-            <span className={`text-xs flex items-center gap-0.5 ${isOverdue(a.dueDate) && a.status !== "DONE" ? "text-red-500 font-semibold" : "text-muted-foreground"}`}>
+            <span className={`text-xs flex items-center gap-0.5 ${isOverdue(a.dueDate) && a.status !== "DONE" ? "text-danger font-semibold" : "text-muted-foreground"}`}>
               {isOverdue(a.dueDate) && a.status !== "DONE" && <AlertTriangle className="h-2 w-2 stroke-current" />}
               {a.dueDate}
             </span>
@@ -371,13 +371,13 @@ export function KaizenPage() {
       <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover/action:opacity-100 transition-opacity">
         {a.status === "OPEN" && (
           <button type="button" onClick={() => hCompleteAction(a.id)}
-            className="inline-flex h-5 w-5 items-center justify-center text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors" title="Done">
+            className="inline-flex h-5 w-5 items-center justify-center text-success hover:bg-success/10 dark:hover:bg-green-900/20 transition-colors" title="Done">
             <Check className="h-3 w-3 stroke-current" />
           </button>
         )}
         {(a.status === "OPEN" || a.status === "IN_PROGRESS") && (
           <button type="button" onClick={() => hCancelAction(a.id)}
-            className="inline-flex h-5 w-5 items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Cancel">
+            className="inline-flex h-5 w-5 items-center justify-center text-danger hover:bg-danger/10 dark:hover:bg-red-900/20 transition-colors" title="Cancel">
             <Ban className="h-3 w-3 stroke-current" />
           </button>
         )}
@@ -470,7 +470,7 @@ export function KaizenPage() {
                 <input type="date" value={actDue} onChange={(e) => setActDue(e.target.value)}
                   className="h-6 w-24 rounded border border-border/40 bg-muted/50 px-1.5 text-xs outline-none text-foreground focus:border-amber-400 transition-colors" />
                 <button type="button" onClick={hAddAction} disabled={!actTitle.trim()}
-                  className={`inline-flex h-6 items-center gap-0.5 rounded px-2 text-[10px] font-semibold transition-all ${actTitle.trim() ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
+                  className={`inline-flex h-6 items-center gap-0.5 rounded px-2 text-[10px] font-semibold transition-all ${actTitle.trim() ? "bg-warning text-white hover:bg-warning/80" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                   <Plus className="h-3 w-3 stroke-current" /> Add
                 </button>
               </div>
@@ -499,32 +499,32 @@ export function KaizenPage() {
         <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
           <div className="p-4 space-y-5">
             <SectionCard title="Kaizen" action={overdue > 0 ? (
-              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800">{overdue} overdue</span>
+              <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border bg-danger/15 dark:bg-red-900/30 text-danger dark:text-red-300 border-danger/20 dark:border-red-800">{overdue} overdue</span>
             ) : undefined}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Total</p>
                   <p className={`text-lg font-bold ${theme.textPrimary}`}>{total}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("PLANNED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("PLANNED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Planned</p>
-                  <p className={`text-lg font-bold text-blue-600 dark:text-blue-400`}>{planned}</p>
+                  <p className={`text-lg font-bold text-primary dark:text-blue-400`}>{planned}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("IN_PROGRESS")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("IN_PROGRESS")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>In Progress</p>
-                  <p className={`text-lg font-bold text-amber-600 dark:text-amber-400`}>{inProgress}</p>
+                  <p className={`text-lg font-bold text-warning dark:text-amber-400`}>{inProgress}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("COMPLETED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("COMPLETED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Completed</p>
-                  <p className={`text-lg font-bold text-green-600 dark:text-green-400`}>{completed}</p>
+                  <p className={`text-lg font-bold text-success dark:text-success/80`}>{completed}</p>
                 </button>
-                <button type="button" onClick={() => setFilterStatus("CANCELLED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-amber-300/50 transition-colors">
+                <button type="button" onClick={() => setFilterStatus("CANCELLED")} className="rounded-sm border border-border/60 bg-card p-3 text-left w-full cursor-pointer hover:bg-card/60 hover:border-warning/30/50 transition-colors">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Cancelled</p>
                   <p className={`text-lg font-bold ${theme.textMuted}`}>{cancelled}</p>
                 </button>
                 <div className="rounded-sm border border-border/60 bg-card p-3">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Overdue</p>
-                  <p className={`text-lg font-bold text-red-600 dark:text-red-400`}>{overdue}</p>
+                  <p className={`text-lg font-bold text-danger dark:text-danger/80`}>{overdue}</p>
                 </div>
                 <div className="rounded-sm border border-border/60 bg-card p-3">
                   <p className={`text-xs font-medium ${theme.textMuted} truncate`}>Completion Rate</p>
@@ -541,19 +541,19 @@ export function KaizenPage() {
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Planned</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{planned} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(planned / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-blue-500" style={{ width: `${total > 0 ? (planned / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary/100" style={{ width: `${total > 0 ? (planned / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>In Progress</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{inProgress} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(inProgress / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-amber-500" style={{ width: `${total > 0 ? (inProgress / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-warning/100" style={{ width: `${total > 0 ? (inProgress / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Completed</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{completed} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(completed / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-green-500" style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-success/100" style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }} /></div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between"><span className={`text-xs ${theme.textPrimary}`}>Cancelled</span><span className={`text-xs font-semibold ${theme.textPrimary}`}>{cancelled} <span className={`${theme.textMuted} font-normal`}>({total > 0 ? Math.round(cancelled / total * 100) : 0}%)</span></span></div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-gray-400" style={{ width: `${total > 0 ? (cancelled / total) * 100 : 0}%` }} /></div>
+                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-muted-foreground/40" style={{ width: `${total > 0 ? (cancelled / total) * 100 : 0}%` }} /></div>
                   </div>
                 </div>
               )}
@@ -561,7 +561,7 @@ export function KaizenPage() {
 
             <div className="flex justify-center pt-2">
               <button type="button" onClick={hNew}
-                className="inline-flex h-8 items-center gap-1.5 bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700 transition-colors">
+                className="inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80 transition-colors">
                 <Plus className="h-3.5 w-3.5 stroke-current" /> New Kaizen
               </button>
             </div>
@@ -589,31 +589,31 @@ export function KaizenPage() {
                   {sel.sourceType && <span className={`text-xs ${theme.textMuted}`}>Source: {sel.sourceType}</span>}
                   {sel.startDate && <span className={`text-xs ${theme.textMuted}`}>Start: {sel.startDate}</span>}
                   {sel.dueDate && (
-                    <span className={`text-xs ${isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-red-500 font-semibold" : theme.textMuted}`}>
+                    <span className={`text-xs ${isOverdue(sel.dueDate) && sel.status !== "COMPLETED" ? "text-danger font-semibold" : theme.textMuted}`}>
                       {isOverdue(sel.dueDate) && sel.status !== "COMPLETED" && <AlertTriangle className="inline h-2.5 w-2.5 mr-0.5 stroke-current" />}
                       Due: {sel.dueDate}
                     </span>
                   )}
-                  {sel.completedDate && <span className="text-xs text-green-600">Completed: {sel.completedDate}</span>}
+                  {sel.completedDate && <span className="text-xs text-success">Completed: {sel.completedDate}</span>}
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 {sel.status === "PLANNED" && (
-                  <button type="button" onClick={hStart} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={hStart} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <Play className="h-2.5 w-2.5 stroke-current" />Start
                   </button>
                 )}
                 {sel.status === "IN_PROGRESS" && (
-                  <button type="button" onClick={() => { setResultSummary(""); setConfirmAction({ id: sel.id, action: "complete" }); }} className="inline-flex h-7 items-center gap-1 border border-green-200 dark:border-green-800 px-2 text-[10px] font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => { setResultSummary(""); setConfirmAction({ id: sel.id, action: "complete" }); }} className="inline-flex h-7 items-center gap-1 border border-success/20 dark:border-green-800 px-2 text-[10px] font-semibold text-success dark:text-success/80 hover:bg-success/10 dark:hover:bg-green-900/20 transition-all whitespace-nowrap">
                     <CheckCircle className="h-2.5 w-2.5 stroke-current" />Complete
                   </button>
                 )}
                 {sel.status !== "COMPLETED" && sel.status !== "CANCELLED" && (
-                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-red-200 dark:border-red-800 px-2 text-[10px] font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
+                  <button type="button" onClick={() => setConfirmAction({ id: sel.id, action: "cancel" })} className="inline-flex h-7 items-center gap-1 border border-danger/20 dark:border-red-800 px-2 text-[10px] font-semibold text-danger dark:text-danger/80 hover:bg-danger/10 dark:hover:bg-red-900/20 transition-all whitespace-nowrap">
                     <XCircle className="h-2.5 w-2.5 stroke-current" />Cancel
                   </button>
                 )}
-                <button type="button" onClick={hCreateA3} className="inline-flex h-7 items-center gap-1 border border-indigo-200 dark:border-indigo-800 px-2 text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all whitespace-nowrap">
+                <button type="button" onClick={hCreateA3} className="inline-flex h-7 items-center gap-1 border border-primary/20 dark:border-indigo-800 px-2 text-[10px] font-semibold text-primary dark:text-indigo-400 hover:bg-primary/10 dark:hover:bg-indigo-900/20 transition-all whitespace-nowrap">
                   <GitBranch className="h-2.5 w-2.5 stroke-current" />A3/PDCA
                 </button>
                 <button type="button" onClick={() => window.print()} className="inline-flex h-7 items-center gap-1 border border-border/40 px-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground hover:border-border/70 transition-all whitespace-nowrap">
@@ -629,10 +629,10 @@ export function KaizenPage() {
                 const isPast = statusOrder.indexOf(sel.status) >= idx && sel.status !== phase;
                 return (
                   <div key={phase} className="flex items-center gap-0.5">
-                    <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "CANCELLED" ? "text-muted-foreground" : isPast ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 transition-colors ${isActive ? (STATUS_STYLES[phase] || "") + " font-bold ring-1 ring-amber-300/50" : sel.status === "CANCELLED" ? "text-muted-foreground" : isPast ? "bg-success/15 text-success dark:bg-green-900/30 dark:text-green-300" : "text-muted-foreground"}`}>
                       {isPast && sel.status !== "CANCELLED" ? "\u2713 " : ""}{statusLabel(phase)}
                     </span>
-                    {idx < VIEW_PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${statusOrder.indexOf(sel.status) > idx ? "text-green-400" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
+                    {idx < VIEW_PHASES.length - 1 && <span className={`text-[10px] mx-0.5 ${statusOrder.indexOf(sel.status) > idx ? "text-success/80" : "text-muted-foreground/30"}`}>{"\u2192"}</span>}
                   </div>
                 );
               })}
@@ -687,7 +687,7 @@ export function KaizenPage() {
         {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b print-ignore`}>{successMsg}</div>}
         <div className="print-ignore">
           <PageHeader icon={<Sparkles className="h-5 w-5 stroke-current" />}
-            iconClass="bg-amber-500/10 text-amber-600"
+            iconClass="bg-warning/100/10 text-warning"
             title="Kaizen" subtitle="Manage structured improvement actions and events." />
         </div>
         <div className="print-ignore">
@@ -716,7 +716,7 @@ export function KaizenPage() {
         </div>
         <div ref={splitRef} className="flex flex-1 min-h-0 overflow-hidden">
           <div className="print-ignore flex flex-col min-h-0 overflow-hidden bg-muted border-r border-border-major" style={{ flexBasis: `${leftPct}%`, minWidth: 200 }}>
-            <div className="shrink-0 h-8 border-b border-slate-200 flex items-center px-4">
+            <div className="shrink-0 h-8 border-b border-border flex items-center px-4">
               <span className={`text-sm font-medium ${theme.textMuted}`}>Kaizens</span>
               <span className={`ml-auto text-[10px] ${theme.textMuted} font-mono`}>{kaizens.length}</span>
             </div>
@@ -728,7 +728,7 @@ export function KaizenPage() {
                 <div className="flex flex-col items-center justify-center h-32 text-center px-4">
                   <p className="text-xs font-medium text-muted-foreground">No kaizens</p>
                   <button type="button" onClick={hNew}
-                    className="mt-2 inline-flex h-7 items-center gap-1 bg-amber-600/10 px-3 text-xs font-semibold text-amber-700 hover:bg-amber-600/20 dark:text-amber-400 transition-colors">
+                    className="mt-2 inline-flex h-7 items-center gap-1 bg-warning/10 px-3 text-xs font-semibold text-warning hover:bg-warning/20 dark:text-amber-400 transition-colors">
                     <Plus className="h-3 w-3 stroke-current" /> Create kaizen</button>
                 </div>
               ) : (
@@ -750,7 +750,7 @@ export function KaizenPage() {
                         <div className="flex items-center gap-1.5">
                           {k.owner && <span className={`text-xs ${theme.textMuted}`}>{k.owner}</span>}
                           {k.targetType && <><span className={`text-[10px] ${theme.textMuted}`}>{"\u00B7"}</span><span className={`text-xs ${theme.textMuted}`}>{k.targetType}</span></>}
-                          {k.dueDate && <span className={`text-[10px] ${isOverdue(k.dueDate) && k.status !== "COMPLETED" ? "text-red-500 font-semibold" : theme.textMuted}`}>{isOverdue(k.dueDate) && k.status !== "COMPLETED" && <AlertTriangle className="inline h-2 w-2 mr-px stroke-current" />}Due: {k.dueDate}</span>}
+                          {k.dueDate && <span className={`text-[10px] ${isOverdue(k.dueDate) && k.status !== "COMPLETED" ? "text-danger font-semibold" : theme.textMuted}`}>{isOverdue(k.dueDate) && k.status !== "COMPLETED" && <AlertTriangle className="inline h-2 w-2 mr-px stroke-current" />}Due: {k.dueDate}</span>}
                           {progress.total > 0 && <ActionProgressBar actions={k.actions} />}
                         </div>
                       </div>
@@ -759,11 +759,11 @@ export function KaizenPage() {
                 })}</div>
               )}
             </div>
-            <div className="shrink-0 h-8 flex items-center border-t border-slate-200 bg-muted px-4">
+            <div className="shrink-0 h-8 flex items-center border-t border-border bg-muted px-4">
               <span className={`text-xs ${theme.textMuted}`}>{kaizens.length} kaizen{kaizens.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
-          <div onMouseDown={handleSplitMouseDown} className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-amber-500/10" style={{ width: 2 }} />
+          <div onMouseDown={handleSplitMouseDown} className="print-ignore flex shrink-0 cursor-col-resize items-center justify-center transition-colors hover:bg-warning/100/10" style={{ width: 2 }} />
           <div className={`print-area flex flex-col min-h-0 min-w-0 ${isForm ? "" : "mode-enter"}`} style={{ flex: 1 }}>{renderDetail()}</div>
         </div>
         <div className="print-ignore shrink-0 border-t border-border-major bg-muted flex h-10 items-center gap-5 px-4 text-xs text-muted-foreground font-medium">

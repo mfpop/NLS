@@ -26,6 +26,11 @@ interface Props {
   showAllFlows?: boolean;
   /** Called when a kaizen burst marker is clicked — passes process id and opportunity index */
   onKaizenClick?: (processId: string, oppIndex: number) => void;
+  /** Dynamic viewBox "x y w h" override. When set, takes priority over the default constant. */
+  viewBox?: string;
+  /** CSS/SVG transform string applied to the VSM content <g> group.
+   *  When set, replaces the default verticalOffset-only transform. */
+  contentTransform?: string;
 }
 
 // ── Named anchor points for VSM nodes ──
@@ -187,7 +192,7 @@ function renderScheduleLines(
   });
 }
 
-export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowLogic, showAllFlows, onKaizenClick, viewBoxOverride }: Props) {
+export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowLogic, showAllFlows, onKaizenClick, viewBox: viewBoxProp, contentTransform }: Props) {
   const n = model.processes.length;
 
   // ── Process center X positions ──
@@ -280,8 +285,8 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
       preserveAspectRatio="xMidYMid meet"
       className="select-none">
 
-      {/* Centered VSM drawing group — shifted so content center aligns with viewBox center */}
-      <g transform={`translate(0, ${verticalOffset})`}>
+      {/* VSM content group — scaled/translated by contentTransform (when provided, replaces verticalOffset) */}
+      <g transform={contentTransform ?? `translate(0, ${verticalOffset})`}>
         {/* ═══════════════════════════════════════
              LAYER 1: SUPPLIER & CUSTOMER FACTORIES
              (always behind everything else)

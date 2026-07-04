@@ -58,7 +58,10 @@ export function ClassicalVsmCanvas({
     const availH = ch - FIT_PAD * 2;
     const sx = availW / CONTENT_W;
     const sy = availH / CONTENT_H;
-    const scale = Math.min(sx, sy);
+    // Height-priority: fill the container vertically, overflow horizontally.
+    // The VSM content is 4.18:1 but typical viewports are ~2:1, so width-fill
+    // (Math.min) leaves ~50% empty height. Using Math.max gives 85-100% fill.
+    const scale = Math.max(sx, sy);
     console.log(
       `Fit | cw=${cw} ch=${ch} availW=${availW} availH=${availH} ` +
       `contentW=${CONTENT_W} contentH=${CONTENT_H} ` +
@@ -77,11 +80,11 @@ export function ClassicalVsmCanvas({
     if (refitKey != null) doFit();
   }, [refitKey, doFit]);
 
-  // Content group transform: scale + translate to center + pan
-  // In SVG coordinate space (matches viewBox which matches container size)
+  // Content group transform: scale + translate
+  // Left-aligned horizontally (supplier always visible), vertically centered.
   const contentTransform = useMemo<string | undefined>(() => {
     if (cw <= 0 || ch <= 0) return undefined;
-    const ox = (cw - CONTENT_W * zoom) / 2 - CONTENT_MIN_X * zoom + pan.x;
+    const ox = FIT_PAD - CONTENT_MIN_X * zoom + pan.x;
     const oy = (ch - CONTENT_H * zoom) / 2 - CONTENT_MIN_Y * zoom + pan.y;
     return `translate(${ox},${oy}) scale(${zoom})`;
   }, [cw, ch, zoom, pan]);

@@ -91,9 +91,9 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
       {label && (
         <rect
           x={labelX - label.length * 3.6 - 4}
-          y={labelY - 12}
-          width={label.length * 7.2 + 8}
-          height={subLabel ? 26 : 18}
+          y={labelY - 18}
+          width={label.length * 7.2 + 10}
+          height={subLabel ? 28 : 20}
           rx={3}
           fill="hsl(var(--muted))"
           fillOpacity={0.92}
@@ -103,7 +103,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
 
       {/* Label — 12px bold per VSM cleanup spec */}
       {label && (
-        <text x={labelX} y={labelY}
+        <text x={labelX} y={labelY - 2}
           textAnchor="middle" className="text-[12px] font-bold" fill={stroke}>
           {label}
         </text>
@@ -118,7 +118,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
       )}
     </g>
   );
-});
+}
 
 /** Extract midpoint from SVG path string */
 function midFromPath(pathD: string): { x: number; y: number } | null {
@@ -176,10 +176,6 @@ function KanbanMarker({ pathD, stroke }: { pathD: string; stroke: string }) {
         textAnchor="middle" className="text-[11px] font-extrabold" fill={stroke}>
         K
       </text>
-    </g>
-  );
-}
-</text>
     </g>
   );
 }

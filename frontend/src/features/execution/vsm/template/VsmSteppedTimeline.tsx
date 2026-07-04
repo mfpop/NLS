@@ -60,14 +60,14 @@ export function VsmSteppedTimeline({ segments, segmentCentersX, startX, totBoxLe
       {/* VA labels */}
       {vas.map((v, i) =>
         v.label ? (
-          <text key={`va-${i}`} x={v.x} y={TIMELINE_BTM_Y + 18}
+          <text key={`va-${i}`} x={v.x} y={TIMELINE_BTM_Y + 15}
             textAnchor="middle" className="text-[17px] font-bold" fill="hsl(var(--success))">
             {v.label}
           </text>
         ) : null
       )}
 
-      {/* Process names */}
+      {/* Process names — centered under each process */}
       {segments.map((seg, i) => (
         <text key={`pn-${i}`} x={segmentCentersX[i] ?? startX} y={TIMELINE_BTM_Y + 40}
           textAnchor="middle" className="text-[16px] font-semibold" fill="hsl(var(--muted-foreground))">

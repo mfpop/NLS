@@ -150,13 +150,12 @@ function renderScheduleLines(
     const label = isPacemaker ? "Production schedule · Daily · Dispatch list" : "";
     const procLabel = proc.name || flow.to;
 
-    // Cubic bezier control points for smooth "octopus arm" curve
-    const dy = endY - pcBottom;
+    // Cubic bezier control points — matched to VsmInformationArrow curvature
     const dx = endX - startX;
-    const cp1x = startX + dx * 0.25;
-    const cp1y = pcBottom + dy * 0.35;
-    const cp2x = endX - dx * 0.15;
-    const cp2y = pcBottom + dy * 0.65;
+    const cp1x = startX + dx * 0.3;
+    const cp1y = pcBottom + 60;
+    const cp2x = endX - dx * 0.2;
+    const cp2y = endY - 60;
 
     return (
       <g key={`sched-${i}`} className="group cursor-pointer">

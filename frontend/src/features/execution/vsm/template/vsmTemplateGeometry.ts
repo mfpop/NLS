@@ -101,14 +101,9 @@ export const TIMELINE_DROP = 24;
 export const TIMELINE_BTM_Y = TIMELINE_TOP_Y + TIMELINE_DROP;
 
 // ── Canvas height ──
-// TIMELINE_BTM = TIMELINE_Y + TIMELINE_DROP = 553 + 24 = 577
-// CANVAS_PAD adds extra viewBox height so the SVG aspect ratio (~2.8:1) fills a
-// typical 1920×1080 viewport (available ~1600×870 after sidebar/header/footer).
-// ── Canvas height — viewBox padded to fill container aspect ratio ──
-// Content spans FAC_Y (55) to TIMELINE_BTM (577). The viewBox needs extra
-// height so the SVG aspect ratio (~2.75:1) matches the container, preventing
-// whitespace below the chart.
-export const CANVAS_PAD = 294;
-export const VSM_VIEW_H = (TIMELINE_Y + TIMELINE_DROP + TIMELINE_TO_FOOTER_GAP + CANVAS_PAD) - VSM_VIEW_Y;  // (577 + 25 + 294) - 25 = 871
-export const CANVAS_H = VSM_VIEW_H + VSM_VIEW_Y;  // 871 + 25 = 896
+// Content spans FAC_Y (55) to TIMELINE_BTM (577). The viewBox height is exactly
+// the content bounds — no extra padding. preserveAspectRatio handles filling.
+export const CANVAS_PAD = 0;
+export const VSM_VIEW_H = (TIMELINE_Y + TIMELINE_DROP + CANVAS_PAD) - VSM_VIEW_Y;  // (577 + 0) - 25 = 552
+export const CANVAS_H = VSM_VIEW_H + VSM_VIEW_Y;  // 552 + 25 = 577
 

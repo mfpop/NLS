@@ -28,6 +28,7 @@ import { VsmKpiStrip } from "@/features/execution/vsm/template/VsmKpiStrip";
 import { VsmFooterLegend } from "@/features/execution/vsm/template/VsmFooterLegend";
 import { VsmBusinessImpactDrawer } from "@/features/execution/vsm/template/VsmBusinessImpactDrawer";
 import { mapVsmChartToTemplateModel } from "@/features/execution/vsm/template/mapVsmChartToTemplateModel";
+import { VSM_VIEW_W, VSM_VIEW_H } from "@/features/execution/vsm/template/vsmTemplateGeometry";
 import { mapVsmApiToTemplateModel } from "@/features/execution/vsm/template/mapVsmApiToTemplateModel";
 import { theme } from "@/styles/themeTokens";
 import { createTestChart } from "@/demo/vsmTestChart";
@@ -341,8 +342,22 @@ export function VsmPage() {
   const handleZoomIn = useCallback(() => setZoom((z) => Math.min(3, z + 0.15)), []);
   const handleZoomOut = useCallback(() => setZoom((z) => Math.max(0.25, z - 0.15)), []);
   const handleFit = useCallback(() => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    const el = canvasRef.current;
+    if (!el) return;
+    const cw = el.clientWidth;
+    const ch = el.clientHeight;
+    if (cw <= 0 || ch <= 0) return;
+    const FIT_PAD_X = 32;
+    const FIT_PAD_Y = 24;
+    const scale = Math.min(
+      (cw - FIT_PAD_X * 2) / VSM_VIEW_W,
+      (ch - FIT_PAD_Y * 2) / VSM_VIEW_H
+    );
+    setZoom(Math.max(0.1, Math.min(2, scale)));
+    setPan({
+      x: Math.round((cw - VSM_VIEW_W * scale) / 2),
+      y: Math.round((ch - VSM_VIEW_H * scale) / 2),
+    });
   }, []);
   const handleCreateTestChart = useCallback(() => {
     const chart = createTestChart();
@@ -639,7 +654,9 @@ export function VsmPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-      <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
+      <div className="shrink-0">
+        <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
+      </div>
 
       {/* Toolbar */}
       <PageToolbar leftWidthClass={LEFT_WIDTH} leftSlot={
@@ -722,7 +739,7 @@ export function VsmPage() {
 
       {/* Error banner (non-blocking) */}
       {errorMessage && diagram && (
-        <div className="flex items-center gap-2 px-4 py-1.5 bg-danger/10 border-b border-danger/20 text-xs text-danger animate-slide-down">
+        <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 bg-danger/10 border-b border-danger/20 text-xs text-danger animate-slide-down">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-danger" />
           <span className="flex-1">{errorMessage}</span>
           <button onClick={() => setErrorMessage(null)} className="text-danger/80 hover:text-danger">
@@ -733,7 +750,7 @@ export function VsmPage() {
 
       {/* Canvas row — drawers are flex siblings that push the canvas */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-      <div ref={canvasRef} className="flex flex-1 min-h-0 relative overflow-hidden transition-all duration-300">
+      <div ref={canvasRef} className="flex flex-1 min-h-0 overflow-hidden transition-all duration-300">
         {viewMode === "derived" && diagram && (
           <div className="flex-1 min-h-0 animate-fade-in">
             <ClassicalVsmCanvas diagram={diagram} selectedNodeId={selectedNodeId} onSelectNode={setSelectedNodeId}

@@ -197,7 +197,7 @@ export function VsmChartEditor({
 
   return (
     <>
-      <div className="absolute right-0 top-0 bottom-0 w-[400px] z-20 bg-background border-l border-border shadow-lg flex flex-col overflow-hidden">
+      <div className="w-[400px] shrink-0 bg-background border-l border-border shadow-lg flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2 min-w-0">

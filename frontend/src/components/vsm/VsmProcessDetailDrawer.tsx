@@ -345,10 +345,3 @@ function OpportunityCard({
     </div>
   );
 }
-}
-Name="h-4 w-4 text-muted-foreground/30 shrink-0 mt-0.5" />
-      </div>
-    </div>
-  );
-}
-}

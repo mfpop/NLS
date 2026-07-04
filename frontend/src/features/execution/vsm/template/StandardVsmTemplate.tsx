@@ -24,6 +24,8 @@ interface Props {
   showFlowLogic?: boolean;
   /** Show ALL downstream schedule signals (not just core Customer↔PC↔Supplier↔Pacemaker) */
   showAllFlows?: boolean;
+  /** Called when a kaizen burst marker is clicked — passes process id and opportunity index */
+  onKaizenClick?: (processId: string, oppIndex: number) => void;
 }
 
 // ── Named anchor points for VSM nodes ──
@@ -185,7 +187,7 @@ function renderScheduleLines(
   });
 }
 
-export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowLogic, showAllFlows }: Props) {
+export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowLogic, showAllFlows, onKaizenClick }: Props) {
   const n = model.processes.length;
 
   // ── Process center X positions ──
@@ -310,8 +312,8 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
         {model.timelineSegments.length > 0 && (
           <>
           {/* Timeline background band — visual separation from process-flow area */}
-        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 20} width={VSM_VIEW_W} height={TIMELINE_DROP + 72}
-          fill="hsl(var(--muted))" fillOpacity={0.5} rx={4} />
+        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 12} width={VSM_VIEW_W} height={TIMELINE_DROP + 28}
+          fill="#ffffff" fillOpacity={0.03} rx={4} />
 
         <g transform={`translate(0,${TIMELINE_Y})`}>
             <VsmSteppedTimeline
@@ -515,18 +517,20 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
                 }}
               />
               {/* Kaizen bursts — all severities, controlled by showKaizen toggle */}
-              {showKaizen && proc.opportunities.map((opp, oi) => (
+              {showKaizen && proc.opportunities.length > 0 && (
                 <VsmKaizenBurst
-                  key={oi}
-                  type={opp.type}
-                  severity={opp.severity}
-                  x={pos.x + PROC_W + 18 + oi * 26}
+                  type={proc.opportunities[0].type}
+                  severity={proc.opportunities[0].severity}
+                  x={pos.x + PROC_W + 18}
                   y={pos.y - 12}
                   size={22}
-                  message={opp.message}
-                  recommendation={opp.label}
+                  message={proc.opportunities[0].message}
+                  recommendation={proc.opportunities[0].label}
+                  groupCount={proc.opportunities.length}
+                  groupIndex={0}
+                  onClick={() => onKaizenClick?.(proc.id, 0)}
                 />
-              ))}
+              )}
             </g>
           );
         })}

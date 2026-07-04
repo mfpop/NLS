@@ -8,6 +8,10 @@ interface KaizenBurstProps {
   size?: number;
   message?: string;
   recommendation?: string;
+  /** Index of this opportunity within a process (for badge display when collapsed) */
+  groupCount?: number;
+  groupIndex?: number;
+  onClick?: () => void;
 }
 
 /**
@@ -15,13 +19,15 @@ interface KaizenBurstProps {
  * Renders a 4-point explosion star with an inner icon indicating the opportunity type.
  * Placed on the VSM process boxes to highlight improvement opportunities.
  */
-export function VsmKaizenBurst({ type, severity, x, y, size = 32, message, recommendation }: KaizenBurstProps) {
+export function VsmKaizenBurst({ type, severity, x, y, size = 32, message, recommendation, groupCount, groupIndex, onClick }: KaizenBurstProps) {
   const half = size / 2;
+  const isCollapsed = groupCount != null && groupCount > 1;
 
-  // Colors by severity
-  const palette = severity === "critical"
+  // Colors by severity (use worst severity when collapsed)
+  const effectiveSeverity = isCollapsed ? "critical" : severity;
+  const palette = effectiveSeverity === "critical"
     ? { fill: "hsl(var(--danger))", stroke: "hsl(var(--danger) / 0.7)", bg: "hsl(var(--danger) / 0.06)" }
-    : severity === "major"
+    : effectiveSeverity === "major"
       ? { fill: "hsl(var(--warning))", stroke: "hsl(var(--warning) / 0.7)", bg: "hsl(var(--warning) / 0.06)" }
       : { fill: "hsl(var(--warning))", stroke: "hsl(var(--warning) / 0.8)", bg: "hsl(var(--warning) / 0.08)" };
 
@@ -41,16 +47,38 @@ export function VsmKaizenBurst({ type, severity, x, y, size = 32, message, recom
   ].join(" ");
 
   return (
-    <g>
+    <g style={{ cursor: onClick ? "pointer" : undefined }}>
       {/* Tooltip */}
-      <title>{message || "Improvement opportunity"}{recommendation ? `\nRecommendation: ${recommendation}` : ""}</title>
-      {/* Burst shadow */}
-      <path d={burstD} fill="none" stroke={palette.stroke} strokeWidth={2.5} strokeLinejoin="round"
-        transform={`translate(1,1)`} opacity={0.3} />
-      {/* Burst fill */}
-      <path d={burstD} fill={palette.fill} stroke="hsl(var(--background))" strokeWidth={1.5} strokeLinejoin="round" />
-      {/* Inner icon */}
-      <BurstIcon type={type} x={x} y={y} color="#fff" size={half * 0.8} />
+      <title>{message || "Improvement opportunity"}{recommendation ? `\nRecommendation: ${recommendation}` : ""}{groupCount && groupCount > 1 ? `\n+ ${groupCount - 1} more opportunity(ies)` : ""}</title>
+
+      {/* Invisible click/hover target — 24x24 */}
+      <rect x={x - 12} y={y - 12} width={24} height={24}
+        fill="transparent" onClick={onClick} />
+
+      {/* Glow halo — semi-transparent ring for visibility on dark canvas */}
+      <circle cx={x} cy={y} r={14} fill="none" stroke={palette.fill} strokeWidth={4} opacity={0.2} />
+      <circle cx={x} cy={y} r={14} fill="none" stroke="#fff" strokeWidth={2} opacity={0.15} />
+
+      {isCollapsed ? (
+        /* Badge: show count instead of burst */
+        <g>
+          <circle cx={x} cy={y} r={half} fill={palette.fill} stroke="hsl(var(--background))" strokeWidth={1.5} />
+          <text x={x} y={y + 1} textAnchor="middle" dominantBaseline="central"
+            className="text-[9px] font-extrabold" fill="#fff">
+            {groupCount}
+          </text>
+        </g>
+      ) : (
+        <>
+          {/* Burst shadow */}
+          <path d={burstD} fill="none" stroke={palette.stroke} strokeWidth={2.5} strokeLinejoin="round"
+            transform={`translate(1,1)`} opacity={0.3} />
+          {/* Burst fill */}
+          <path d={burstD} fill={palette.fill} stroke="hsl(var(--background))" strokeWidth={1.5} strokeLinejoin="round" />
+          {/* Inner icon */}
+          <BurstIcon type={type} x={x} y={y} color="#fff" size={half * 0.8} />
+        </>
+      )}
     </g>
   );
 }

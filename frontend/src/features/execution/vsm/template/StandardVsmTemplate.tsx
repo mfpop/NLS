@@ -338,13 +338,13 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
              LAYER 4: VERTICAL CONNECTOR LINES
              (supplier ⇄ material-flow level ⇄ customer)
              ═══════════════════════════════════════ */}
-        {/* Supplier → material flow (SHIPMENT) */}
-        <line x1={SUP_CX} y1={SUP_BOTTOM} x2={SUP_CX} y2={MAT_Y - INV_HALF - 4}
+        {/* Supplier → material flow (SHIPMENT) — clean connection at triangle tip */}
+        <line x1={SUP_CX} y1={SUP_BOTTOM} x2={SUP_CX} y2={MAT_Y - INV_HALF}
           stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
           cx={SUP_CX - 32}
-          y={(SUP_BOTTOM + MAT_Y - INV_HALF - 4) / 2 - 28}
+          y={(SUP_BOTTOM + MAT_Y - INV_HALF) / 2 - 28}
           label="Shipment"
           frequency={supplierShipFlow?.deliveryFrequency || null}
           equipmentType={supplierShipFlow?.equipmentType || "TRUCK"}
@@ -352,13 +352,13 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
           from={model.supplier?.label}
         />
 
-        {/* Material flow → Customer (SHIPMENT) */}
-        <line x1={CUST_CX} y1={MAT_Y + INV_HALF + 4} x2={CUST_CX} y2={CUST_BOTTOM}
+        {/* Material flow → Customer (SHIPMENT) — drops from FG triangle tip to Customer */}
+        <line x1={CUST_CX} y1={MAT_Y + INV_HALF} x2={CUST_CX} y2={CUST_BOTTOM}
           stroke="hsl(var(--foreground))" strokeWidth={4}
           markerEnd="url(#arr-SHIPMENT)" />
         <VsmShipmentMarker
           cx={CUST_CX + 32}
-          y={(MAT_Y + INV_HALF + 4 + CUST_BOTTOM) / 2 - 28}
+          y={(MAT_Y + INV_HALF + CUST_BOTTOM) / 2 - 28}
           label="Shipment"
           frequency={customerShipFlow?.deliveryFrequency || null}
           equipmentType={customerShipFlow?.equipmentType || "TRUCK"}

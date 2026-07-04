@@ -308,7 +308,11 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
              LAYER 3: TIMELINE (drawn behind material flow)
              ═══════════════════════════════════════ */}
         {model.timelineSegments.length > 0 && (
-          <g transform={`translate(0,${TIMELINE_Y})`}>
+          {/* Timeline background band — subtle visual separation from flow area */}
+        <rect x={VSM_VIEW_X} y={TIMELINE_Y - 12} width={VSM_VIEW_W} height={TIMELINE_DROP + 48}
+          fill="hsl(var(--muted))" fillOpacity={0.3} rx={4} />
+
+        <g transform={`translate(0,${TIMELINE_Y})`}>
             <VsmSteppedTimeline
               segments={model.timelineSegments}
               segmentCentersX={segmentCentersX}

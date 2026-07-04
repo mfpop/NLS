@@ -53,13 +53,13 @@ export function VsmBusinessImpactDrawer({ impact, onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="@container flex-1 overflow-y-auto p-4">
           {visible.length === 0 ? (
             <p className="text-[13px] italic text-muted-foreground/60 text-center mt-8">
               Impact data not available
             </p>
           ) : (
-            <div className="space-y-1">
+            <div className="grid grid-cols-1 @[280px]:grid-cols-2 gap-3">
               {visible.map((row, i) => {
                 const sc = row.status ? STATUS_COLORS[row.status] : "text-foreground";
                 const sd = row.status ? STATUS_DOT[row.status] : "";

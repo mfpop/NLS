@@ -156,9 +156,9 @@ export function computeInfoFlowPath(
       const dy = tgt.y - src.y;
       const laneOffset = flowIndex != null ? flowIndex * SCHEDULE_LANE_STRIDE : 0;
       // Stagger the curve depth so multiple schedule arms don't overlap
-      const dip = dy * (0.55 + laneOffset * 0.012);
-      const cp1 = { x: src.x + (tgt.x - src.x) * 0.15, y: src.y + dip };
-      const cp2 = { x: tgt.x - (tgt.x - src.x) * 0.15, y: tgt.y - dy * 0.1 };
+      const dip = dy * (0.65 + laneOffset * 0.015);
+      const cp1 = { x: src.x, y: src.y + dip };
+      const cp2 = { x: tgt.x, y: tgt.y - dy * 0.08 };
       const bottomY = Math.max(cp1.y, cp2.y);
       return {
         pathD: `M${src.x},${src.y} C${cp1.x},${cp1.y} ${cp2.x},${cp2.y} ${tgt.x},${tgt.y}`,

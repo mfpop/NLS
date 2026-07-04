@@ -128,8 +128,8 @@ function LegendChip({ type }: { type: "pacemaker" | "bottleneck" }) {
     bottleneck: "bg-warning/10 text-warning border-warning/30",
   };
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0 text-[11px] font-medium rounded-sm border ${styles[type]}`}>
-      <span className={`h-2 w-2 rounded-sm ${type === "pacemaker" ? "bg-accent" : "bg-warning"}`} />
+    <span className={`inline-flex items-center gap-0.5 px-1 py-0 text-[10px] font-semibold rounded-sm border leading-none ${styles[type]}`}>
+      <span className={`h-1.5 w-1.5 rounded-sm ${type === "pacemaker" ? "bg-accent" : "bg-warning"}`} />
       {type === "pacemaker" ? "PM" : "BN"}
     </span>
   );
@@ -159,7 +159,7 @@ export function VsmKpiStrip({ data, onDemandEdit, onTaktEdit }: Props) {
           tone={bottleneck ? "warn" : "default"}
         >
           {bottleneck && (
-            <span className="flex items-center gap-1.5 ml-1">
+            <span className="flex items-center gap-1.5 ml-2">
               <LegendChip type="pacemaker" />
               <LegendChip type="bottleneck" />
             </span>

@@ -28,11 +28,18 @@ export function ClassicalVsmCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [cw, setCw] = useState(0);
   const [ch, setCh] = useState(0);
+  const dimsReady = cw > 0 && ch > 0;
 
-  // Track container size
+  // Read container dimensions synchronously on mount + track changes
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    // Set initial dimensions immediately
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      setCw(rect.width);
+      setCh(rect.height);
+    }
     let frame: number;
     const obs = new ResizeObserver((entries) => {
       for (const e of entries) {
@@ -50,6 +57,12 @@ export function ClassicalVsmCanvas({
     obs.observe(el);
     return () => { obs.disconnect(); cancelAnimationFrame(frame); };
   }, []);
+
+  // If dimensions aren't ready yet, render an invisible placeholder
+  // to avoid the fallback to old verticalOffset-based rendering.
+  if (!dimsReady) {
+    return <div ref={containerRef} className="relative h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background" />;
+  }
 
   // Compute fit zoom from container dimensions
   const doFit = useCallback(() => {
@@ -80,18 +93,14 @@ export function ClassicalVsmCanvas({
 
   // Content group transform: scale + translate
   // Centered both horizontally and vertically — all content stays on screen.
-  const contentTransform = useMemo<string | undefined>(() => {
-    if (cw <= 0 || ch <= 0) return undefined;
+  const contentTransform = useMemo<string>(() => {
     const ox = (cw - CONTENT_W * zoom) / 2 - CONTENT_MIN_X * zoom + pan.x;
     const oy = (ch - CONTENT_H * zoom) / 2 - CONTENT_MIN_Y * zoom + pan.y;
     return `translate(${ox},${oy}) scale(${zoom})`;
   }, [cw, ch, zoom, pan]);
 
   // ViewBox matches container dimensions for 1:1 coordinate-to-pixel mapping
-  const viewBoxValue = useMemo<string>(() => {
-    if (cw <= 0 || ch <= 0) return `0 0 ${CANVAS_W} ${CANVAS_W}`;
-    return `0 0 ${cw} ${ch}`;
-  }, [cw, ch]);
+  const viewBoxValue = useMemo<string>(() => `0 0 ${cw} ${ch}`, [cw, ch]);
 
   // Map API data → template model
   const templateModel = useMemo(() => mapVsmApiToTemplateModel(diagram), [diagram]);

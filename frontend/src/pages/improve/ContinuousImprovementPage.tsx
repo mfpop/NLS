@@ -28,11 +28,11 @@ interface ImprovementSummary {
 /* ── HELPERS ── */
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW: "bg-blue-500", UNDER_REVIEW: "bg-yellow-500", ACCEPTED: "bg-green-500",
-  REJECTED: "bg-red-500", CONVERTED_TO_KAIZEN: "bg-purple-500",
-  PLANNED: "bg-blue-500", IN_PROGRESS: "bg-amber-500", COMPLETED: "bg-green-500",
-  CANCELLED: "bg-red-500", DRAFT: "bg-gray-400", PLAN: "bg-blue-500",
-  DO: "bg-yellow-500", CHECK: "bg-purple-500", ACT: "bg-indigo-500",
+  NEW: "bg-primary", UNDER_REVIEW: "bg-warning", ACCEPTED: "bg-success",
+  REJECTED: "bg-danger", CONVERTED_TO_KAIZEN: "bg-purple-500",
+  PLANNED: "bg-primary", IN_PROGRESS: "bg-warning", COMPLETED: "bg-success",
+  CANCELLED: "bg-danger", DRAFT: "bg-muted-foreground/40", PLAN: "bg-primary",
+  DO: "bg-warning", CHECK: "bg-purple-500", ACT: "bg-indigo-500",
 };
 
 function formatStatus(s: string): string {

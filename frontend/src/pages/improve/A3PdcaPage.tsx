@@ -29,27 +29,27 @@ import {
    ────────────────────────────────────────────────────── */
 
 const PHASE_STYLES: Record<string, string> = {
-  DRAFT: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-  PLAN: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  DO: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+  DRAFT: "bg-muted text-muted-foreground",
+  PLAN: "bg-primary/15 text-primary",
+  DO: "bg-warning/15 text-warning",
   CHECK: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   ACT: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
-  COMPLETED: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  CANCELLED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  COMPLETED: "bg-success/15 text-success",
+  CANCELLED: "bg-danger/15 text-danger",
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
-  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  CRITICAL: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  LOW: "bg-muted text-muted-foreground",
+  MEDIUM: "bg-primary/15 text-primary",
+  HIGH: "bg-warning/15 text-warning",
+  CRITICAL: "bg-danger/15 text-danger",
 };
 
 const ACTION_STATUS_STYLES: Record<string, string> = {
-  OPEN: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  IN_PROGRESS: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
-  DONE: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-  CANCELLED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  OPEN: "bg-primary/15 text-primary",
+  IN_PROGRESS: "bg-warning/15 text-warning",
+  DONE: "bg-success/15 text-success",
+  CANCELLED: "bg-danger/15 text-danger",
 };
 
 const PRIORITY_OPTIONS = [

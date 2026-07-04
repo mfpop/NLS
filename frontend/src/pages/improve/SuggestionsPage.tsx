@@ -22,17 +22,17 @@ import {
 } from "@/graphql/improvementMutations";
 
 const STATUS_STYLES: Record<string, string> = {
-  NEW: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  UNDER_REVIEW: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-  ACCEPTED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  NEW: "bg-primary/15 text-primary",
+  UNDER_REVIEW: "bg-warning/15 text-warning",
+  ACCEPTED: "bg-success/15 text-success",
+  REJECTED: "bg-danger/15 text-danger",
   CONVERTED_TO_KAIZEN: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
 };
 const PRIORITY_STYLES: Record<string, string> = {
-  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  CRITICAL: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  LOW: "bg-muted text-muted-foreground",
+  MEDIUM: "bg-primary/15 text-primary",
+  HIGH: "bg-warning/15 text-warning",
+  CRITICAL: "bg-danger/15 text-danger",
 };
 const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" }, { value: "MEDIUM", label: "Medium" },

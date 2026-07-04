@@ -2,45 +2,45 @@
 
 export const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border/40",
-  OPEN: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300",
-  COMPLETED: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300",
-  ARCHIVED: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300",
-  IN_PROGRESS: "border-amber-300 text-amber-700 bg-amber-50/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  CLOSED: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300",
-  CANCELLED: "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-300",
+  OPEN: "bg-primary/15 text-primary border-primary/20",
+  COMPLETED: "bg-success/15 text-success border-success/20",
+  ARCHIVED: "bg-warning/15 text-warning border-warning/20",
+  IN_PROGRESS: "border-warning/40 text-warning bg-warning/10",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-danger/15 text-danger border-danger/20",
 };
 
 export const ISSUE_STATUS_STYLES: Record<string, string> = {
-  OPEN: "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  IN_PROGRESS: "border-amber-300 text-amber-700 bg-amber-50/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  RESOLVED: "border-green-300 text-green-700 bg-green-50/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CLOSED: "border-green-300 text-green-700 bg-green-50/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CANCELLED: "border-red-300 text-red-600 bg-red-50/60 dark:border-red-800 dark:text-red-400 dark:bg-red-950/20",
+  OPEN: "border-primary/30 text-primary bg-primary/10",
+  IN_PROGRESS: "border-warning/40 text-warning bg-warning/10",
+  RESOLVED: "border-success/30 text-success bg-success/10",
+  CLOSED: "border-success/30 text-success bg-success/10",
+  CANCELLED: "border-danger/30 text-danger/80 bg-danger/8",
 };
 
 export const ACTION_STATUS_STYLES: Record<string, string> = {
-  OPEN: "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  IN_PROGRESS: "border-amber-300 text-amber-700 bg-amber-50/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  COMPLETED: "border-green-300 text-green-700 bg-green-50/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CANCELLED: "border-red-300 text-red-600 bg-red-50/60 dark:border-red-800 dark:text-red-400 dark:bg-red-950/20",
+  OPEN: "border-primary/30 text-primary bg-primary/10",
+  IN_PROGRESS: "border-warning/40 text-warning bg-warning/10",
+  COMPLETED: "border-success/30 text-success bg-success/10",
+  CANCELLED: "border-danger/30 text-danger/80 bg-danger/8",
 };
 
 export const SEVERITY_STYLES: Record<string, string> = {
-  CRITICAL: "border-red-300 text-red-700 bg-red-50/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30",
-  HIGH: "border-orange-300 text-orange-700 bg-orange-50/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30",
-  MEDIUM: "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  LOW: "border-gray-300 text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30",
+  CRITICAL: "border-danger/30 text-danger bg-danger/10",
+  HIGH: "border-warning/30 text-warning bg-warning/10",
+  MEDIUM: "border-primary/30 text-primary bg-primary/10",
+  LOW: "border-border/60 text-muted-foreground bg-muted/60",
 };
 
 export const PRIORITY_STYLES: Record<string, string> = {
-  CRITICAL: "border-red-300 text-red-700 bg-red-50/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30",
-  HIGH: "border-orange-300 text-orange-700 bg-orange-50/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30",
-  MEDIUM: "border-blue-300 text-blue-700 bg-blue-50/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  LOW: "border-gray-300 text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30",
+  CRITICAL: "border-danger/30 text-danger bg-danger/10",
+  HIGH: "border-warning/30 text-warning bg-warning/10",
+  MEDIUM: "border-primary/30 text-primary bg-primary/10",
+  LOW: "border-border/60 text-muted-foreground bg-muted/60",
 };
 
-export const SEL_INPUT = "h-8 w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-border/50 dark:border-slate-600/50 px-2 text-sm text-foreground outline-none focus:border-blue-500 focus:bg-white/80 dark:focus:bg-slate-800/80 focus:ring-1 focus:ring-blue-500/30";
-export const WARN = "text-amber-700 dark:text-amber-300";
+export const SEL_INPUT = "h-8 w-full bg-background/60 backdrop-blur-sm border border-border/50 px-2 text-sm text-foreground outline-none focus:border-primary focus:bg-background/80 focus:ring-1 focus:ring-primary/30";
+export const WARN = "text-warning";
 
 export const auditTypeLabels: Record<string, string> = {
   FIVE_S: "5S Audit",
@@ -83,10 +83,10 @@ export function auditTypeLabel(t: string): string {
 
 export function scoreGrade(s: number | null): { label: string; cls: string } {
   if (s === null) return { label: "N/A", cls: "bg-muted text-muted-foreground border-border/40" };
-  if (s >= 90) return { label: "Excellent", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" };
-  if (s >= 75) return { label: "Pass", cls: "bg-blue-100 text-blue-700 border-blue-200" };
-  if (s >= 60) return { label: "Needs Improvement", cls: "bg-amber-100 text-amber-700 border-amber-200" };
-  return { label: "Fail", cls: "bg-red-100 text-red-700 border-red-200" };
+  if (s >= 90) return { label: "Excellent", cls: "bg-success/15 text-success border-success/20" };
+  if (s >= 75) return { label: "Pass", cls: "bg-primary/15 text-primary border-primary/20" };
+  if (s >= 60) return { label: "Needs Improvement", cls: "bg-warning/15 text-warning border-warning/20" };
+  return { label: "Fail", cls: "bg-danger/15 text-danger border-danger/20" };
 }
 
 export function isFailed(rt: string, v: string): boolean {
@@ -123,10 +123,10 @@ function optsFor(rt: string): string[] {
 export function Seg({ opts, val, onChange }: { opts: string[]; val: string; onChange: (v: string) => void }) {
   const cls = (a: boolean, o: string) => {
     if (!a) return "bg-white/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-white/80 dark:hover:bg-slate-700/80";
-    if (o === "PASS" || o === "YES") return "bg-emerald-100/80 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300";
-    if (o === "FAIL" || o === "NO") return "bg-red-100/80 text-red-800 dark:bg-red-900/80 dark:text-red-300";
-    if (o === "N_A") return "bg-amber-100/80 text-amber-800 dark:bg-amber-900/80 dark:text-amber-300";
-    return "bg-blue-100/80 text-blue-800 dark:bg-blue-900/80 dark:text-blue-300";
+    if (o === "PASS" || o === "YES") return "bg-success/20 text-success";
+    if (o === "FAIL" || o === "NO") return "bg-danger/20 text-danger";
+    if (o === "N_A") return "bg-warning/20 text-warning";
+    return "bg-primary/20 text-primary";
   };
   return <div className="inline-flex h-7 overflow-hidden rounded border border-white/30 dark:border-slate-700/30">{opts.map((o) => <button key={o} onClick={() => onChange(o)} className={`min-w-11 border-r border-white/30 dark:border-slate-700/30 px-2 text-xs font-medium last:border-r-0 transition-colors ${cls(val === o, o)}`}>{o === "N_A" ? "N/A" : o}</button>)}</div>;
 }

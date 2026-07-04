@@ -20,26 +20,26 @@ import {
 } from "@/graphql/checkMutations";
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  IN_REVIEW: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  OPEN: "bg-primary/15 text-primary",
+  IN_REVIEW: "bg-warning/15 text-warning",
   CONTAINED: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
-  CLOSED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  CLOSED: "bg-success/15 text-success",
+  CANCELLED: "bg-danger/15 text-danger",
 };
 
 const SEVERITY_STYLES: Record<string, string> = {
-  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
-  MEDIUM: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  HIGH: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-  CRITICAL: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+  LOW: "bg-muted text-muted-foreground",
+  MEDIUM: "bg-primary/15 text-primary",
+  HIGH: "bg-warning/15 text-warning",
+  CRITICAL: "bg-danger/15 text-danger",
 };
 
 const PROBLEM_TYPE_STYLES: Record<string, string> = {
   PRODUCTION: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   QUALITY: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
-  SAFETY: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
+  SAFETY: "bg-warning/15 text-warning",
   MATERIAL: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300",
-  GENERAL: "bg-gray-100 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
+  GENERAL: "bg-muted text-muted-foreground",
 };
 
 const PROBLEM_TYPE_OPTIONS = [

@@ -28,13 +28,11 @@ export function ClassicalVsmCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const [cw, setCw] = useState(0);
   const [ch, setCh] = useState(0);
-  const dimsReady = cw > 0 && ch > 0;
 
   // Read container dimensions synchronously on mount + track changes
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    // Set initial dimensions immediately
     const rect = el.getBoundingClientRect();
     if (rect.width > 0 && rect.height > 0) {
       setCw(rect.width);
@@ -58,12 +56,6 @@ export function ClassicalVsmCanvas({
     return () => { obs.disconnect(); cancelAnimationFrame(frame); };
   }, []);
 
-  // If dimensions aren't ready yet, render an invisible placeholder
-  // to avoid the fallback to old verticalOffset-based rendering.
-  if (!dimsReady) {
-    return <div ref={containerRef} className="relative h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background" />;
-  }
-
   // Compute fit zoom from container dimensions
   const doFit = useCallback(() => {
     if (cw <= 0 || ch <= 0) return;
@@ -71,7 +63,6 @@ export function ClassicalVsmCanvas({
     const availH = ch - FIT_PAD * 2;
     const sx = availW / CONTENT_W;
     const sy = availH / CONTENT_H;
-    // Fit all content on screen — nothing clipped, none pushed outside.
     const scale = Math.min(sx, sy);
     console.log(
       `Fit | cw=${cw} ch=${ch} availW=${availW} availH=${availH} ` +
@@ -91,21 +82,23 @@ export function ClassicalVsmCanvas({
     if (refitKey != null) doFit();
   }, [refitKey, doFit]);
 
-  // Content group transform: scale + translate
-  // Centered both horizontally and vertically — all content stays on screen.
+  // Content group transform — centered both axes
   const contentTransform = useMemo<string>(() => {
+    if (cw <= 0 || ch <= 0) return "scale(1)";
     const ox = (cw - CONTENT_W * zoom) / 2 - CONTENT_MIN_X * zoom + pan.x;
     const oy = (ch - CONTENT_H * zoom) / 2 - CONTENT_MIN_Y * zoom + pan.y;
     return `translate(${ox},${oy}) scale(${zoom})`;
   }, [cw, ch, zoom, pan]);
 
-  // ViewBox matches container dimensions for 1:1 coordinate-to-pixel mapping
-  const viewBoxValue = useMemo<string>(() => `0 0 ${cw} ${ch}`, [cw, ch]);
+  // ViewBox matches container dimensions for 1:1 mapping
+  const viewBoxValue = useMemo<string>(() => {
+    if (cw <= 0 || ch <= 0) return `0 0 ${CANVAS_W} ${CANVAS_W}`;
+    return `0 0 ${cw} ${ch}`;
+  }, [cw, ch]);
 
   // Map API data → template model
   const templateModel = useMemo(() => mapVsmApiToTemplateModel(diagram), [diagram]);
 
-  // Assign selected state
   const modelWithSelection = useMemo(() => ({
     ...templateModel,
     processes: templateModel.processes.map((p) => ({
@@ -122,7 +115,7 @@ export function ClassicalVsmCanvas({
     onZoomChange(newZoom);
   }, [zoom, onZoomChange]);
 
-  // Drag-to-pan (pixel-space shift, 1:1 with viewBox)
+  // Drag-to-pan
   const dragRef = useRef<{ active: boolean; sx: number; sy: number; ox: number; oy: number }>(
     { active: false, sx: 0, sy: 0, ox: 0, oy: 0 }
   );
@@ -140,12 +133,15 @@ export function ClassicalVsmCanvas({
   }, [onPanChange]);
   const handleMU = useCallback(() => { dragRef.current.active = false; }, []);
 
+  // All hooks above. Conditional render below.
+  if (cw <= 0 || ch <= 0) {
+    return <div ref={containerRef} className="relative h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background" />;
+  }
+
   return (
     <div ref={containerRef} className="relative h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background cursor-grab active:cursor-grabbing select-none"
       onWheel={handleWheel} onMouseDown={handleMD} onMouseMove={handleMM} onMouseUp={handleMU} onMouseLeave={handleMU}
     >
-      {/* absolute inset-0 wrapper forces the SVG to have explicit dimensions
-          regardless of SVG's special replaced-element height:100% rules */}
       <div className="absolute inset-0">
         <StandardVsmTemplate
           model={modelWithSelection}

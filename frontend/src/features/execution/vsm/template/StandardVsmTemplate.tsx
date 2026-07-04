@@ -187,7 +187,7 @@ function renderScheduleLines(
   });
 }
 
-export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowLogic, showAllFlows, onKaizenClick }: Props) {
+export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowLogic, showAllFlows, onKaizenClick, viewBoxOverride }: Props) {
   const n = model.processes.length;
 
   // ── Process center X positions ──

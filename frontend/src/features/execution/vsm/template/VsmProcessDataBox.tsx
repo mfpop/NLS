@@ -13,7 +13,7 @@ interface Props {
 function severityColor(s?: string): string {
   if (s === "warning") return "#d97706";
   if (s === "critical") return "#dc2626";
-  return "#0f172a";
+  return "hsl(var(--foreground))";
 }
 
 export function VsmProcessDataBox({ rows, x, y, width, isAboveTakt }: Props) {
@@ -46,7 +46,7 @@ export function VsmProcessDataBox({ rows, x, y, width, isAboveTakt }: Props) {
               <text x={x + width - 12} y={fy}
                 textAnchor="end"
                 className="text-[18px] font-extrabold tabular-nums"
-                fill={isAboveTakt ? "#dc2626" : "#059669"}>
+                fill={isAboveTakt ? "hsl(var(--danger))" : "hsl(var(--success))"}>
                 {row.value} {isAboveTakt ? "▲" : "▼"}
               </text>
             ) : (

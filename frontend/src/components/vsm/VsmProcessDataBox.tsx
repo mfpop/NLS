@@ -62,7 +62,7 @@ export function VsmProcessDataBox({ node, x, y, width }: Props) {
       {/* ── Row 5: WIP = 120 ── */}
       <text x={labelX} y={y + topH + rowH * 5 - 4} className="text-[10px] font-bold" fill="hsl(var(--secondary-foreground))">WIP</text>
       <text x={valX} y={y + topH + rowH * 5 - 4} textAnchor="end"
-        className={`text-[10px] font-semibold tabular-nums ${node.wipAfter > 80 ? "fill-amber-500" : node.wipAfter > 40 ? "fill-amber-500" : "fill-emerald-600"}`}>
+        className={`text-[10px] font-semibold tabular-nums ${node.wipAfter > 80 ? "fill-warning" : node.wipAfter > 40 ? "fill-warning" : "fill-success"}`}>
         {v(node.wipAfter)}
       </text>
 

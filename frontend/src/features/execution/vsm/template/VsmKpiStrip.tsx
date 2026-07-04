@@ -77,9 +77,9 @@ function KpiChip({
     default: { wrap: "bg-muted border-border hover:bg-muted", label: "text-muted-foreground", value: "text-foreground", icon: "text-muted-foreground/60" },
     good:    { wrap: "bg-success/10 border-success/20 hover:bg-success/15", label: "text-success", value: "text-success", icon: "text-success" },
     warn:    { wrap: "bg-warning/10 border-warning/20 hover:bg-warning/15", label: "text-warning", value: "text-warning", icon: "text-warning" },
-    bad:     { wrap: "bg-danger/10 border-danger/20 hover:bg-danger/15", label: "text-danger", value: "text-red-800", icon: "text-danger" },
-    purple:  { wrap: "bg-purple-50 border-accent/20 hover:bg-accent/15", label: "text-accent-foreground", value: "text-purple-800", icon: "text-purple-500" },
-    amber:   { wrap: "bg-warning/10 border-warning/20 hover:bg-warning/15", label: "text-warning", value: "text-orange-800", icon: "text-warning" },
+    bad:     { wrap: "bg-danger/10 border-danger/20 hover:bg-danger/15", label: "text-danger", value: "text-danger", icon: "text-danger" },
+    purple:  { wrap: "bg-accent/10 border-accent/20 hover:bg-accent/15", label: "text-accent-foreground", value: "text-accent-foreground", icon: "text-accent-foreground" },
+    amber:   { wrap: "bg-warning/10 border-warning/20 hover:bg-warning/15", label: "text-warning", value: "text-warning", icon: "text-warning" },
   };
   const s = toneStyles[tone];
   const Tag = onClick ? "button" : "div";
@@ -88,7 +88,7 @@ function KpiChip({
       onClick={onClick}
       title={title}
       className={`inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full border ${s.wrap} ${
-        onClick ? "active:scale-[0.97] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-300/50" : ""
+        onClick ? "active:scale-[0.97] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/30" : ""
       } shrink-0`}
     >
       <span className={`text-[10px] font-semibold uppercase tracking-wider ${s.label}`}>

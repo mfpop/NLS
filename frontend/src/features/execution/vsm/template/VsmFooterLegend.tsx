@@ -61,7 +61,7 @@ const MH_ORDER = ["TRUCK", "FORKLIFT", "CONVEYOR", "AGV", "TUGGER", "PALLET_JACK
 function LegendItem({ children, title, tone = "default" }: { children: React.ReactNode; title?: string; tone?: "default" | "purple" | "amber" | "warn" | "bad" }) {
   const toneWrap: Record<string, string> = {
     default: "bg-muted border-border text-muted-foreground",
-    purple:  "bg-purple-50 border-accent/20 text-purple-800",
+    purple:  "bg-accent/10 border-accent/20 text-accent-foreground",
     amber:   "bg-warning/10 border-warning/20 text-warning",
     warn:    "bg-warning/10 border-warning/20 text-warning",
     bad:     "bg-danger/10 border-danger/20 text-danger",
@@ -96,20 +96,20 @@ export function VsmFooterLegend({
           <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-muted-foreground flex-wrap">
             {/* Always show legend entries — they document standard VSM notation */}
             <LegendItem title="Manual — solid line with arrowhead">
-              <FlowLineSample color="#334155" dash="none" strokeWidth={1.6} />
+              <FlowLineSample color="hsl(var(--muted-foreground))" dash="none" strokeWidth={1.6} />
               <span>Manual</span>
             </LegendItem>
             <LegendItem title="Electronic / EDI — dashed line with arrowhead">
-              <FlowLineSample color="#2563eb" dash="5 4" strokeWidth={1.8} />
+              <FlowLineSample color="hsl(var(--primary))" dash="5 4" strokeWidth={1.8} />
               <span>EDI</span>
             </LegendItem>
             <LegendItem title="Production schedule — dashed line with arrowhead">
-              <FlowLineSample color="#475569" dash="5 4" strokeWidth={1.6} />
+              <FlowLineSample color="hsl(var(--secondary-foreground))" dash="5 4" strokeWidth={1.6} />
               <span>Schedule</span>
             </LegendItem>
             {hasKanban && (
               <LegendItem title="Kanban / Pull — long-dash line with arrowhead">
-                <FlowLineSample color="#7c3aed" dash="6 4" strokeWidth={1.8} />
+                <FlowLineSample color="hsl(var(--accent))" dash="6 4" strokeWidth={1.8} />
                 <span>Kanban</span>
               </LegendItem>
             )}
@@ -156,13 +156,13 @@ export function VsmFooterLegend({
         <div className="flex items-center gap-2.5 text-[11px] leading-none font-medium text-muted-foreground flex-wrap">
           {hasPacemaker && (
             <LegendItem title="Pacemaker process — sets the production pace" tone="purple">
-              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-purple-700 bg-background" />
+              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-accent bg-background" />
               <span>Pacemaker</span>
             </LegendItem>
           )}
           {hasBottleneck && (
             <LegendItem title="Bottleneck process — constrains throughput" tone="amber">
-              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-dashed border-amber-600 bg-background" />
+              <span className="inline-block w-2.5 h-2.5 rounded-[1px] border-2 border-dashed border-warning bg-background" />
               <span>Bottleneck</span>
             </LegendItem>
           )}

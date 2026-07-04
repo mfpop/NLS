@@ -97,7 +97,7 @@ export function VsmTimelineBand({
         VA: {formatTime(totalValueAddMinutes)}
       </text>
       <text x={totalBoxX + 8} y={bandY + 58}
-        className={`text-[9px] font-bold ${vaPct < 10 ? "fill-red-500" : vaPct < 30 ? "fill-amber-500" : "fill-emerald-600"}`}>
+        className={`text-[9px] font-bold ${vaPct < 10 ? "fill-danger" : vaPct < 30 ? "fill-warning" : "fill-success"}`}>
         VA% = {vaPct}%
       </text>
     </g>

@@ -65,9 +65,9 @@ export function ProductionOverview(props: OverviewProps) {
     const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
     for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-danger/100", onClick: () => kpiClick({ tab: "issues" }) });
     const overActions = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
-    for (const a of overActions) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400", onClick: () => kpiClick({ tab: "actions" }) });
+    for (const a of overActions) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`,    color: "bg-danger", onClick: () => kpiClick({ tab: "actions" }) });
     const incAudits = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
-    for (const a of incAudits) items.push({ id: `audit-${a.id}`, priority: 3, type: "Audit", title: a.title || `Audit #${a.id}`, detail: a.auditType || "", color: "bg-amber-400", onClick: () => kpiClick({ tab: "audits" }) });
+    for (const a of incAudits) items.push({ id: `audit-${a.id}`, priority: 3, type: "Audit", title: a.title || `Audit #${a.id}`, detail: a.auditType || "",    color: "bg-warning", onClick: () => kpiClick({ tab: "audits" }) });
     items.sort((a, b) => a.priority - b.priority);
     return items.slice(0, 12);
   }, [problems, actions, audits, kpiClick]);
@@ -171,7 +171,7 @@ export function ProductionOverview(props: OverviewProps) {
                     {a.auditor && <span className="text-muted-foreground shrink-0 hidden sm:inline">{a.auditor}</span>}
                     <span className={badgeCls(STATUS_STYLES[a.status] || "")}>{statusLabel(a.status)}</span>
                     {a.score !== null && a.score !== undefined && (
-                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${a.score >= 80 ? "border-green-300 text-success bg-success/10/80" : a.score >= 60 ? "border-warning/30 text-warning bg-warning/10/80" : "border-danger/30 text-danger bg-danger/10/80"}`}>{a.score}%</span>
+                      <span className={`inline-flex items-center px-1 py-0.5 text-[9px] font-semibold border shrink-0 ${a.score >= 80 ? "border-success/30 text-success bg-success/10/80" : a.score >= 60 ? "border-warning/30 text-warning bg-warning/10/80" : "border-danger/30 text-danger bg-danger/10/80"}`}>{a.score}%</span>
                     )}
                   </button>
                 ))}
@@ -231,9 +231,9 @@ export function ProductionOverview(props: OverviewProps) {
             <SectionH label="Audit Status" />
             <div className="flex flex-wrap gap-1.5">
               {[
-                { status: "DRAFT", label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "border-border text-gray-600" },
+                { status: "DRAFT", label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "border-border text-muted-foreground" },
                 { status: "OPEN", label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "border-primary/30 text-primary" },
-                { status: "COMPLETED", label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "border-green-300 text-success" },
+                { status: "COMPLETED", label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "border-success/30 text-success" },
                 { status: "ARCHIVED", label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "border-warning/30 text-warning" },
               ].map((s) => (
                 <button key={s.status} onClick={() => kpiClick({ tab: "audits", status: s.status === "COMPLETED" ? "COMPLETED" : s.status === "ARCHIVED" ? undefined : s.status })}

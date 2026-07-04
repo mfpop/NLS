@@ -54,12 +54,12 @@ export function VsmLegend({
   if (showFlow) {
     // Manual + Electronic + Schedule are shown if Flow is ON
     activeFlowEntries.push(
-      { key: "manual", label: "Manual information", color: "#334155", markerId: "arr-info-MANUAL" },
-      { key: "electronic", label: "Electronic / EDI", color: "#2563eb", dash: "5,4", strokeWidth: 2, markerId: "arr-info-ELECTRONIC" },
-      { key: "schedule", label: "Production schedule", color: "#475569", dash: "5,4", strokeWidth: 1.6, markerId: "arr-info-MANUAL" },
+      { key: "manual", label: "Manual information", color: "hsl(var(--muted-foreground))", markerId: "arr-info-MANUAL" },
+      { key: "electronic", label: "Electronic / EDI", color: "hsl(var(--primary))", dash: "5,4", strokeWidth: 2, markerId: "arr-info-ELECTRONIC" },
+      { key: "schedule", label: "Production schedule", color: "hsl(var(--secondary-foreground))", dash: "5,4", strokeWidth: 1.6, markerId: "arr-info-MANUAL" },
     );
     if (hasKanban) {
-      activeFlowEntries.push({ key: "kanban", label: "Kanban / Pull signal", color: "#7c3aed", dash: "6,4", strokeWidth: 1.8, markerId: "arr-info-KANBAN" });
+      activeFlowEntries.push({ key: "kanban", label: "Kanban / Pull signal", color: "hsl(var(--accent))", dash: "6,4", strokeWidth: 1.8, markerId: "arr-info-KANBAN" });
     }
   }
 

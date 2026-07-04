@@ -81,7 +81,7 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3.5 py-2 text-[11px] font-semibold border-b-2 transition-all duration-150 ${
                 activeTab === tab.id
-                  ? "border-indigo-500 text-primary bg-background"
+                  ? "border-primary text-primary bg-background"
                   : "border-transparent text-muted-foreground hover:text-muted-foreground hover:bg-muted"
               }`}
             >
@@ -101,7 +101,7 @@ export function VsmProcessDetailDrawer({ node, diagram, onClose }: Props) {
                   <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
                     <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
                     <circle cx="32" cy="32" r="28" fill="none"
-                      stroke={ctVsTakt === "above" ? "#dc2626" : ctVsTakt === "below" ? "#16a34a" : "#3b82f6"}
+                      stroke={ctVsTakt === "above" ? "hsl(var(--danger))" : ctVsTakt === "below" ? "hsl(var(--success))" : "hsl(var(--primary))"}
                       strokeWidth="5"
                       strokeDasharray={`${Math.min(176, ctRatio * 88)} 176`}
                       strokeLinecap="round"

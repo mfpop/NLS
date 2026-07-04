@@ -1,4 +1,5 @@
 // ── Material flow arrow — flow-type label above, transport annotation below ──
+import { memo } from "react";
 
 interface TransportInfo {
   distance?: number | null;
@@ -23,12 +24,12 @@ interface Props {
 }
 
 const STROKE: Record<string, string> = {
-  PUSH: "#334155",
-  PULL: "#3b82f6",
-  KANBAN: "#f59e0b",
-  FIFO: "#16a34a",
-  SUPERMARKET: "#ea580c",
-  SHIPMENT: "#1e293b",
+  PUSH: "hsl(var(--muted-foreground))",
+  PULL: "hsl(var(--primary))",
+  KANBAN: "hsl(var(--warning))",
+  FIFO: "hsl(var(--success))",
+  SUPERMARKET: "hsl(var(--warning))",
+  SHIPMENT: "hsl(var(--foreground))",
 };
 
 const DASH: Record<string, string> = {
@@ -49,7 +50,7 @@ const FLOW_LABELS: Record<string, string> = {
   SHIPMENT: "SHIPMENT",
 };
 
-export function VsmMaterialArrow({ x1, x2, y, label, flowType, transport, hideLabel }: Props) {
+export const VsmMaterialArrow = memo(function VsmMaterialArrow({ x1, x2, y, label, flowType, transport, hideLabel }: Props) {
   if (x1 >= x2) return null;
 
   const stroke = STROKE[flowType] ?? "#334155";
@@ -97,3 +98,4 @@ export function VsmMaterialArrow({ x1, x2, y, label, flowType, transport, hideLa
     </g>
   );
 }
+

@@ -56,7 +56,7 @@ function Gauge({ value, label, sub, color, size = "sm" }: { value: number; label
 
 function Badge({ cls, label }: { cls: string; label: string }) {
   return <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${cls}`}>{label}</span>;
-}  function SectionH({ label, color = "bg-teal-500", action }: { label: string; color?: string; action?: ReactNode }) {
+}  function SectionH({ label,color="bg-primary", action }: { label: string; color?: string; action?: ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-2">
       <div className="flex items-center gap-2">
@@ -71,8 +71,8 @@ function Badge({ cls, label }: { cls: string; label: string }) {
 function StatusDot({ status }: { status: string }) {
   const colors: Record<string, string> = {
     DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", COMPLETED: "bg-success/100",
-    ARCHIVED: "bg-amber-400", RESOLVED: "bg-green-400", CLOSED: "bg-success",
-    CANCELLED: "bg-red-400", IN_PROGRESS: "bg-warning/100", IN_REVIEW: "bg-purple-500",
+    ARCHIVED: "bg-warning", RESOLVED: "bg-success/80", CLOSED: "bg-success",
+    CANCELLED: "bg-danger", IN_PROGRESS: "bg-warning/100", IN_REVIEW: "bg-accent",
   };
   return <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${colors[status] || "bg-muted-foreground/40"}`} />;
 }
@@ -156,9 +156,9 @@ export function MaterialOverview(props: OverviewProps) {
     const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
     for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Problem", title: p.title || "Problem", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-danger/100", onClick: () => kpiClick({ tab: "issues" }) });
     const overActions = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
-    for (const a of overActions) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400", onClick: () => kpiClick({ tab: "actions" }) });
+    for (const a of overActions) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-danger", onClick: () => kpiClick({ tab: "actions" }) });
     const incomplete = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
-    for (const a of incomplete) items.push({ id: `audit-${a.id}`, priority: 3, type: "Audit", title: a.title || `Audit #${a.id}`, detail: a.auditType || "", color: "bg-teal-400", onClick: () => kpiClick({ tab: "audits" }) });
+    for (const a of incomplete) items.push({ id: `audit-${a.id}`, priority: 3, type: "Audit", title: a.title || `Audit #${a.id}`, detail: a.auditType || "",          color: "bg-primary/80", onClick: () => kpiClick({ tab: "audits" }) });
     items.sort((a, b) => a.priority - b.priority);
     return items.slice(0, 10);
   }, [problems, actions, audits, kpiClick]);
@@ -210,7 +210,7 @@ export function MaterialOverview(props: OverviewProps) {
       { label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "bg-muted-foreground/40" },
       { label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "bg-primary/100" },
       { label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "bg-success/100" },
-      { label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "bg-amber-400" },
+      { label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "bg-warning" },
     ];
     return counts.filter((c) => c.count > 0).map((c) => ({ ...c, pct: Math.round((c.count / total) * 100) }));
   }, [audits]);
@@ -258,7 +258,7 @@ export function MaterialOverview(props: OverviewProps) {
 
       {/* Performance Gauges Row */}
       <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-4">
-        <SectionH label="Material Control Scorecard" color="bg-teal-500" />
+        <SectionH label="Material Control Scorecard" color="bg-primary" />
         <div className="flex items-center justify-around gap-4">
           <div className="relative flex flex-col items-center">
             <Gauge value={scores.overall ?? 0} label="Overall" sub={audits.length > 0 ? `${audits.length} audits` : "No data"} color={gaugeColor(scores.overall)} size="md" />
@@ -318,7 +318,7 @@ export function MaterialOverview(props: OverviewProps) {
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
           {/* Risk Board */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Material Risk Board" color="bg-danger/100" action={
+            <SectionH label="Material Risk Board" color="bg-danger" action={
               <span className="text-[10px] text-muted-foreground">{riskItems.length} items</span>
             } />
             {riskItems.length === 0 ? (
@@ -343,7 +343,7 @@ export function MaterialOverview(props: OverviewProps) {
 
           {/* Due This Week */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Due This Week" color="bg-primary/100" action={
+            <SectionH label="Due This Week" color="bg-primary" action={
               <span className="text-[10px] text-muted-foreground">{dueThisWeek.length} item{dueThisWeek.length !== 1 ? "s" : ""}</span>
             } />
             {dueThisWeek.length === 0 ? (
@@ -371,8 +371,8 @@ export function MaterialOverview(props: OverviewProps) {
 
           {/* Audits Needing Completion */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Open Audits" color="bg-teal-500" action={
-              <button onClick={() => kpiClick({ tab: "audits" })} className="text-[10px] font-medium text-primary hover:text-primary dark:text-blue-400">View all</button>
+            <SectionH label="Open Audits" color="bg-primary" action={
+              <button onClick={() => kpiClick({ tab: "audits" })} className="text-[10px] font-medium text-primary hover:text-primary">View all</button>
             } />
             {kpis.openAudits.length === 0 ? (
               <div className="flex items-center justify-center h-16 text-xs text-muted-foreground italic">
@@ -401,7 +401,7 @@ export function MaterialOverview(props: OverviewProps) {
           {/* Audit Status Distribution */}
           {statusDist.length > 0 && (
             <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-              <SectionH label="Audit Status Distribution" color="bg-primary/100" />
+              <SectionH label="Audit Status Distribution" color="bg-primary" />
               <div className="h-6 flex rounded-full overflow-hidden bg-background/30 dark:bg-slate-800/30 border border-white/10 dark:border-slate-700/10">
                 {statusDist.map((s) => (
                   <div key={s.label} style={{ width: `${s.pct}%` }}
@@ -427,7 +427,7 @@ export function MaterialOverview(props: OverviewProps) {
 
           {/* Recent Activity */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Recent Activity" color="bg-violet-500" action={
+            <SectionH label="Recent Activity" color="bg-accent" action={
               <span className="text-[10px] text-muted-foreground">Latest 12</span>
             } />
             {recentItems.length === 0 ? (
@@ -466,7 +466,7 @@ export function MaterialOverview(props: OverviewProps) {
 
           {/* Quick Stats */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Quick Stats" color="bg-gray-500" />
+            <SectionH label="Quick Stats" color="bg-muted-foreground" />
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-background/40 dark:bg-slate-800/40 p-2">
                 <p className="text-muted-foreground text-[10px]">Total Audits</p>

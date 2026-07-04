@@ -72,8 +72,8 @@ function Badge({ cls, label }: { cls: string; label: string }) {
 function StatusDot({ status }: { status: string }) {
   const colors: Record<string, string> = {
     DRAFT: "bg-muted-foreground/40", OPEN: "bg-primary/100", COMPLETED: "bg-success/100",
-    ARCHIVED: "bg-amber-400", RESOLVED: "bg-green-400", CLOSED: "bg-success",
-    CANCELLED: "bg-red-400", IN_PROGRESS: "bg-warning/100", IN_REVIEW: "bg-purple-500",
+    ARCHIVED: "bg-warning", RESOLVED: "bg-success/80", CLOSED: "bg-success",
+    CANCELLED: "bg-danger", IN_PROGRESS: "bg-warning/100", IN_REVIEW: "bg-accent",
   };
   return <span className={`inline-block h-1.5 w-1.5 rounded-full shrink-0 ${colors[status] || "bg-muted-foreground/40"}`} />;
 }
@@ -167,9 +167,9 @@ export function SafetyOverview(props: OverviewProps) {
     const hiProblems = problems.filter((p) => (p.severity === "CRITICAL" || p.severity === "HIGH") && p.status !== "CLOSED" && p.status !== "CANCELLED");
     for (const p of hiProblems) items.push({ id: `issue-${p.id}`, priority: 1, type: "Issue", title: p.title || "Issue", detail: `${p.severity} ${p.problemType || ""}`.trim(), color: "bg-danger/100", onClick: () => kpiClick({ tab: "issues" }) });
     const over = actions.filter((a) => a.dueDate && a.dueDate < TODAY && a.status !== "COMPLETED" && a.status !== "CANCELLED");
-    for (const a of over) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`, color: "bg-red-400", onClick: () => kpiClick({ tab: "actions" }) });
+    for (const a of over) items.push({ id: `action-${a.id}`, priority: 2, type: "Action", title: a.title || "Action", detail: `Due ${a.dueDate}${a.owner ? ` · ${a.owner}` : ""}`,          color: "bg-danger", onClick: () => kpiClick({ tab: "actions" }) });
     const inc = audits.filter((a) => a.status === "DRAFT" || a.status === "OPEN");
-    for (const a of inc) items.push({ id: `audit-${a.id}`, priority: 3, type: "Audit", title: a.title || `Audit #${a.id}`, detail: a.auditType || "", color: "bg-orange-400", onClick: () => kpiClick({ tab: "audits" }) });
+    for (const a of inc) items.push({ id: `audit-${a.id}`, priority: 3, type: "Audit", title: a.title || `Audit #${a.id}`, detail: a.auditType || "",          color: "bg-warning", onClick: () => kpiClick({ tab: "audits" }) });
     items.sort((a, b) => a.priority - b.priority);
     return items.slice(0, 10);
   }, [problems, actions, audits, kpiClick]);
@@ -221,7 +221,7 @@ export function SafetyOverview(props: OverviewProps) {
       { label: "Draft", count: audits.filter((a) => a.status === "DRAFT").length, color: "bg-muted-foreground/40" },
       { label: "Open", count: audits.filter((a) => a.status === "OPEN").length, color: "bg-primary/100" },
       { label: "Completed", count: audits.filter((a) => a.status === "COMPLETED").length, color: "bg-success/100" },
-      { label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "bg-amber-400" },
+      { label: "Archived", count: audits.filter((a) => a.status === "ARCHIVED").length, color: "bg-warning" },
     ];
     return counts.filter((c) => c.count > 0).map((c) => ({ ...c, pct: Math.round((c.count / total) * 100) }));
   }, [audits]);
@@ -356,7 +356,7 @@ export function SafetyOverview(props: OverviewProps) {
         <div className="flex-1 min-w-0 space-y-3" style={{ flexBasis: "60%" }}>
           {/* Safety Risk Board */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Safety Risk Board" color="bg-danger/100" action={
+            <SectionH label="Safety Risk Board" color="bg-danger" action={
               <span className="text-[10px] text-muted-foreground">{riskItems.length} items</span>
             } />
             {riskItems.length === 0 ? (
@@ -465,7 +465,7 @@ export function SafetyOverview(props: OverviewProps) {
 
           {/* Safety Severity Matrix Mini-View */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Issue Severity Matrix" color="bg-danger/100" />
+            <SectionH label="Issue Severity Matrix" color="bg-danger" />
             <div className="grid grid-cols-3 gap-1.5 text-center">
               {[
                 { severity: "CRITICAL", label: "Critical", count: problems.filter((p) => p.severity === "CRITICAL" && p.status !== "CLOSED" && p.status !== "CANCELLED").length, color: "bg-danger/15 text-danger dark:bg-red-950/30 dark:text-red-300" },
@@ -491,7 +491,7 @@ export function SafetyOverview(props: OverviewProps) {
 
           {/* Recent Activity */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Recent Safety Activity" color="bg-violet-500" action={
+            <SectionH label="Recent Safety Activity" color="bg-accent" action={
               <span className="text-[10px] text-muted-foreground">Latest 12</span>
             } />
             {recentItems.length === 0 ? (
@@ -530,7 +530,7 @@ export function SafetyOverview(props: OverviewProps) {
 
           {/* Quick Stats */}
           <div className="bg-background/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/30 dark:border-slate-700/30 p-3">
-            <SectionH label="Quick Stats" color="bg-gray-500" />
+            <SectionH label="Quick Stats" color="bg-muted-foreground" />
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-background/40 dark:bg-slate-800/40 p-2">
                 <p className="text-muted-foreground text-[10px]">Total Safety Audits</p>

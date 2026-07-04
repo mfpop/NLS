@@ -62,7 +62,7 @@ export function VsmTimelineBar({ events, totalLeadTimeMinutes, totalValueAddMinu
       <text x={totalBoxX + 8} y={50} className="text-[9px]" fill="hsl(var(--success))">
         VA: {totalValueAddMinutes >= 1440 ? `${(totalValueAddMinutes / 1440).toFixed(1)}d` : `${totalValueAddMinutes}min`}
       </text>
-      <text x={totalBoxX + 8} y={65} className={`text-[9px] font-semibold ${vaPct < 10 ? "fill-red-500" : vaPct < 30 ? "fill-amber-500" : "fill-emerald-600"}`}>
+      <text x={totalBoxX + 8} y={65} className={`text-[9px] font-semibold ${vaPct < 10 ? "fill-danger" : vaPct < 30 ? "fill-warning" : "fill-success"}`}>
         VA% = {vaPct}%
       </text>
     </g>

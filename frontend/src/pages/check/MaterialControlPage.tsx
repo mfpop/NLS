@@ -111,9 +111,9 @@ export function MaterialControlPage() {
 
   // ── Unified list ──
   const TYPE_CONFIG = useMemo(() => ({
-    AUDITS: { color: "bg-teal-500", border: "border-l-teal-500", hover: "hover:bg-teal-50/40 dark:hover:bg-teal-950/20", label: "Audit" },
-    ISSUES: { color: "bg-warning/100", border: "border-l-amber-500", hover: "hover:bg-warning/10/40 dark:hover:bg-amber-950/20", label: "Problem" },
-    ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action" },
+    AUDITS: { color: "bg-primary/100", border: "border-l-primary", hover: "hover:bg-primary/10/40 dark:hover:bg-primary/10", label: "Audit" },
+    ISSUES: { color: "bg-warning/100", border: "border-l-warning", hover: "hover:bg-warning/10/40 dark:hover:bg-warning/10", label: "Problem" },
+    ACTIONS: { color: "bg-accent", border: "border-l-accent", hover: "hover:bg-accent/10/40 dark:hover:bg-accent/10", label: "Action" },
   }), []);
 
   const ITEMS_PER_PAGE = 50;
@@ -168,7 +168,7 @@ export function MaterialControlPage() {
         title="Material Control"
         subtitle="Monitor material flow, warehouse checks, FIFO compliance, and inventory handling."
         icon={Package}
-        iconClass="bg-teal-100 text-teal-600 dark:bg-teal-900/40 dark:text-teal-400"
+        iconClass="bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary"
         recordTypeLabels={{ ISSUES: "Problems" }}
         renderOverview={() => <MaterialOverview audits={auditS.items} problems={problems} actions={actions} auditTemplates={auditS.templates} onInstallTemplates={auditS.hInstall} />}
         renderUnifiedList={renderUnifiedList}

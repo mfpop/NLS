@@ -138,12 +138,12 @@ export function QualityManagementPage() {
 
   // ── Unified list (all records with type badges) ──
   const TYPE_CONFIG = useMemo(() => ({
-    AUDITS: { color: "bg-primary/100", border: "border-l-blue-500", hover: "hover:bg-primary/10/40 dark:hover:bg-blue-950/20", label: "Audit", badge: "[AUDIT]" },
-    ISSUES: { color: "bg-warning/100", border: "border-l-amber-500", hover: "hover:bg-warning/10/40 dark:hover:bg-amber-950/20", label: "Issue", badge: "[ISSUE]" },
-    ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action", badge: "[ACTION]" },
-    DMRS: { color: "bg-warning/100", border: "border-l-orange-500", hover: "hover:bg-warning/10/40 dark:hover:bg-orange-950/20", label: "DMR", badge: "[DMR]" },
-    RMAS: { color: "bg-teal-500", border: "border-l-teal-500", hover: "hover:bg-teal-50/40 dark:hover:bg-teal-950/20", label: "RMA", badge: "[RMA]" },
-    EVENTS: { color: "bg-danger/100", border: "border-l-red-500", hover: "hover:bg-danger/10/40 dark:hover:bg-red-950/20", label: "Event", badge: "[EVENT]" },
+    AUDITS: { color: "bg-primary/100", border: "border-l-primary", hover: "hover:bg-primary/10/40 dark:hover:bg-primary/10", label: "Audit", badge: "[AUDIT]" },
+    ISSUES: { color: "bg-warning/100", border: "border-l-warning", hover: "hover:bg-warning/10/40 dark:hover:bg-warning/10", label: "Issue", badge: "[ISSUE]" },
+    ACTIONS: { color: "bg-accent", border: "border-l-accent", hover: "hover:bg-accent/10/40 dark:hover:bg-accent/10", label: "Action", badge: "[ACTION]" },
+    DMRS: { color: "bg-warning/100", border: "border-l-warning", hover: "hover:bg-warning/10/40 dark:hover:bg-warning/10", label: "DMR", badge: "[DMR]" },
+    RMAS: { color: "bg-primary/100", border: "border-l-primary", hover: "hover:bg-primary/10/40 dark:hover:bg-primary/10", label: "RMA", badge: "[RMA]" },
+    EVENTS: { color: "bg-danger/100", border: "border-l-danger", hover: "hover:bg-danger/10/40 dark:hover:bg-danger/10", label: "Event", badge: "[EVENT]" },
   }), []);
 
   const ITEMS_PER_PAGE = 50;
@@ -226,7 +226,7 @@ export function QualityManagementPage() {
         title="Quality Management"
         subtitle="Monitor quality performance, manage audits, track issues, DMRs, RMAs, and corrective actions across production."
         icon={ShieldCheck}
-        iconClass="bg-cyan-100 text-cyan-600 dark:bg-cyan-900/40 dark:text-cyan-400"
+        iconClass="bg-primary/15 text-primary dark:bg-primary/15 dark:text-primary"
         filterMode="dropdown"
         renderOverview={() => <QualityOverview audits={auditS.items} problems={issueS.items} actions={actionS.items} dmrs={dmrS.items} rmas={rmaS.items} auditTemplates={auditS.templates} onInstallTemplates={auditS.hInstall} />}
         renderUnifiedList={renderUnifiedList}

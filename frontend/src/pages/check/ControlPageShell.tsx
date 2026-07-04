@@ -254,10 +254,10 @@ export function ControlPageShell({
         {typeof footerLeft === "function" ? footerLeft(selectedRecordType, page, 0) : footerLeft || (
           <div className="flex items-center gap-3 shrink-0">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning/100" /><span className="text-[10px]">{getRecordTypeLabel("ISSUES")}</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-violet-500" /><span className="text-[10px]">{getRecordTypeLabel("ACTIONS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-accent" /><span className="text-[10px]">{getRecordTypeLabel("ACTIONS")}</span></span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary/100" /><span className="text-[10px]">{getRecordTypeLabel("AUDITS")}</span></span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-warning/100" /><span className="text-[10px]">{getRecordTypeLabel("DMRS")}</span></span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-teal-500" /><span className="text-[10px]">{getRecordTypeLabel("RMAS")}</span></span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-primary/100" /><span className="text-[10px]">{getRecordTypeLabel("RMAS")}</span></span>
           </div>
         )}
         <span className="flex-1" />

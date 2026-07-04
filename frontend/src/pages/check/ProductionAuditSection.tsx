@@ -106,7 +106,7 @@ export function useProductionAuditSection(
 
   const labelCls = "block text-xs font-medium text-muted-foreground mb-1";
   const hasErr = (field: string) => errors.some((e) => e.toLowerCase().includes(field.toLowerCase()));
-  const fieldCls = (field: string) => `${SEL_INPUT} ${hasErr(field) ? "border-red-400 dark:border-red-600" : ""}`;
+  const fieldCls = (field: string) => `${SEL_INPUT} ${hasErr(field) ? "border-danger dark:border-danger" : ""}`;
   const errLabel = (field: string) => hasErr(field) ? <span className="text-[10px] text-danger font-medium ml-1">(required)</span> : null;
 
   const resolveTarget = useCallback(() => {

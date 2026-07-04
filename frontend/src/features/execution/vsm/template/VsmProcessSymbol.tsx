@@ -20,14 +20,14 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
 
   // Border color by severity when no special flag overrides
   function borderColor(): string {
-    if (sel) return "#3b82f6";
-    if (pm) return "#7c3aed";
-    if (bn) return "#f59e0b";
-    if (inactive) return "#d1d5db";
-    if (isLogistics) return "#b91c1c";
-    if (sev === "critical") return "#dc2626";
-    if (sev === "warning") return "#d97706";
-    return "#334155";
+    if (sel) return "hsl(var(--primary))";
+    if (pm) return "hsl(var(--accent))";
+    if (bn) return "hsl(var(--warning))";
+    if (inactive) return "hsl(var(--muted-foreground) / 0.4)";
+    if (isLogistics) return "hsl(var(--danger))";
+    if (sev === "critical") return "hsl(var(--danger))";
+    if (sev === "warning") return "hsl(var(--warning))";
+    return "hsl(var(--muted-foreground))";
   }
 
   // Badge text for logistics/transport processes
@@ -63,19 +63,19 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
 
       {/* Box */}
       <rect x={x} y={y} width={PROC_W} height={PROC_H}
-        fill={bn ? "#fffbeb" : pm ? "#f5f3ff" : sel ? "#f0f9ff" : inactive ? "#f8fafc" : isLogistics ? "#fef2f2" : "#fff"}
+        fill={bn ? "hsl(var(--warning) / 0.08)" : pm ? "hsl(var(--accent) / 0.08)" : sel ? "hsl(var(--primary) / 0.06)" : inactive ? "hsl(var(--muted))" : isLogistics ? "hsl(var(--danger) / 0.04)" : "hsl(var(--background))"}
         stroke={borderColor()}
         strokeWidth={pm ? 2.5 : bn ? 2.5 : sel ? 2 : isLogistics ? 1.8 : 1.5} />
 
       {/* Title */}
       <text x={x + PROC_W / 2} y={y + 22}
-        textAnchor="middle" className="text-[17px] font-bold" fill={inactive ? "#94a3b8" : "#0f172a"}>
+        textAnchor="middle" className="text-[17px] font-bold" fill={inactive ? "hsl(var(--muted-foreground))" : "hsl(var(--foreground))"}>
         {model.name}
       </text>
 
       {/* Department subtitle — 14px (+10% from 13px) */}
       <text x={x + PROC_W / 2} y={y + 43}
-        textAnchor="middle" className="text-[14px] font-semibold" fill={inactive ? "#cbd5e1" : "#475569"}>
+        textAnchor="middle" className="text-[14px] font-semibold" fill={inactive ? "hsl(var(--muted-foreground) / 0.6)" : "hsl(var(--secondary-foreground))"}>
         {model.departmentLabel}
       </text>
 
@@ -139,6 +139,11 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
       )}
       {bn && (
         <title>{model.name} — Bottleneck — Capacity constraint{model.dataRows.find(r => r.label === "C/T") ? ` · C/T: ${model.dataRows.find(r => r.label === "C/T")?.value}` : ""}</title>
+      )}
+    </g>
+  );
+});
+e>
       )}
     </g>
   );

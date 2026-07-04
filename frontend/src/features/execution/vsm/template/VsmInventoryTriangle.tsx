@@ -12,21 +12,21 @@ interface Props {
 }
 
 function severityColor(sev: string): string {
-  if (sev === "critical") return "#dc2626";
-  if (sev === "warning") return "#f59e0b";
-  return "#2563eb";
+  if (sev === "critical") return "hsl(var(--danger))";
+  if (sev === "warning") return "hsl(var(--warning))";
+  return "hsl(var(--primary))";
 }
 
 function severityBg(sev: string): string {
-  if (sev === "critical") return "#fef2f2";
-  if (sev === "warning") return "#fffbeb";
-  return "#eff6ff";
+  if (sev === "critical") return "hsl(var(--danger) / 0.06)";
+  if (sev === "warning") return "hsl(var(--warning) / 0.08)";
+  return "hsl(var(--primary) / 0.06)";
 }
 
 function daysColor(sev: string): string {
-  if (sev === "critical") return "#dc2626";
-  if (sev === "warning") return "#f59e0b";
-  return "#334155";
+  if (sev === "critical") return "hsl(var(--danger))";
+  if (sev === "warning") return "hsl(var(--warning))";
+  return "hsl(var(--muted-foreground))";
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -35,7 +35,7 @@ const TYPE_LABELS: Record<string, string> = {
   FG: "Finished Goods",
 };
 
-export function VsmInventoryTriangle({ model, x, y, onClick, showClearanceZone, icon }: Props) {
+export const VsmInventoryTriangle = memo(function VsmInventoryTriangle({ model, x, y, onClick, showClearanceZone, icon }: Props) {
   const c = severityColor(model.severity);
   const bg = severityBg(model.severity);
   const baseY = y + INV_HALF;

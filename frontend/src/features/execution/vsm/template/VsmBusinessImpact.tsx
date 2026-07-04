@@ -15,10 +15,10 @@ const HEADER_H = 26;
 const ROW_H = 24;
 const PAD = 12;
 const STATUS_COLORS: Record<string, string> = {
-  GOOD: "#16a34a",
-  WARNING: "#d97706",
-  CRITICAL: "#dc2626",
-  UNKNOWN: "#94a3b8",
+  GOOD: "hsl(var(--success))",
+  WARNING: "hsl(var(--warning))",
+  CRITICAL: "hsl(var(--danger))",
+  UNKNOWN: "hsl(var(--muted-foreground))",
 };
 
 interface RowDef {

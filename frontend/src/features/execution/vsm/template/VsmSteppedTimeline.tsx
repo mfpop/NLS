@@ -129,7 +129,7 @@ export function VsmTotalsBox({ x, y, width, height, totals }: TotalsProps) {
       {/* VA % — 17px (+20% from 14px) */}
       <text x={x + width / 2} y={y + 60}
         textAnchor="middle"
-        className={`text-[17px] font-extrabold ${vaPct < 5 ? "fill-red-500" : vaPct < 20 ? "fill-amber-500" : "fill-emerald-600"}`}>
+        className={`text-[17px] font-extrabold ${vaPct < 5 ? "fill-danger" : vaPct < 20 ? "fill-warning" : "fill-success"}`}>
         VA {vaPct}%
       </text>
     </g>

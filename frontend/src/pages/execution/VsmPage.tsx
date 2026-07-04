@@ -74,7 +74,7 @@ function EmptyStateCard({
   return (
     <div className="flex-1 flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4 p-10 text-center max-w-xs animate-fade-in">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 ring-1 ring-indigo-200/60 shadow-sm">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 ring-1 ring-primary/20 shadow-sm">
           {icon}
         </div>
         <div>
@@ -98,7 +98,7 @@ function ErrorStateCard({
   return (
     <div className="flex-1 flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4 p-10 text-center max-w-xs">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-danger/10 ring-1 ring-red-200/60">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-danger/10 ring-1 ring-danger/20">
           <AlertTriangle className="h-8 w-8 text-danger/80" />
         </div>
         <div>
@@ -560,10 +560,10 @@ export function VsmPage() {
       <ToolbarButton icon={<AlertTriangle className="h-4 w-4" />} label="Kaizen" onClick={() => setShowKaizen((p) => !p)}
         className={showKaizen ? "bg-warning/10 text-warning border border-warning/20 shadow-sm" : "text-muted-foreground"} />
       <ToolbarButton icon={<Eye className="h-4 w-4" />} label="Flow" onClick={() => setShowFlowLogic((p) => !p)}
-        className={showFlowLogic ? "bg-indigo-50 text-primary border border-primary/20 shadow-sm" : "text-muted-foreground"} />
+        className={showFlowLogic ? "bg-primary/15 text-primary border border-primary/20 shadow-sm" : "text-muted-foreground"} />
       {showFlowLogic && (
         <ToolbarButton icon={<Layers className="h-4 w-4" />} label="Detail" onClick={() => setShowAllFlows((p) => !p)}
-          className={showAllFlows ? "bg-violet-50 text-violet-700 border border-violet-200 shadow-sm" : "text-muted-foreground"} />
+          className={showAllFlows ? "bg-accent/15 text-accent-foreground border border-accent/30 shadow-sm" : "text-muted-foreground"} />
       )}
       <ToolbarButton icon={<BarChart3 className="h-4 w-4" />} label="Impact" onClick={() => setShowImpact((p) => !p)}
         className={showImpact ? "bg-warning/10 text-warning border border-warning/20 shadow-sm" : "text-muted-foreground"} />
@@ -605,8 +605,8 @@ export function VsmPage() {
         <div className="flex-1 flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-5">
             <div className="relative">
-              <div className="h-12 w-12 rounded-full border-[3px] border-sky-100" />
-              <div className="absolute inset-0 h-12 w-12 rounded-full border-[3px] border-transparent border-t-sky-500 animate-spin" />
+              <div className="h-12 w-12 rounded-full border-[3px] border-accent/10" />
+              <div className="absolute inset-0 h-12 w-12 rounded-full border-[3px] border-transparent border-t-accent animate-spin" />
             </div>
             <div className="flex flex-col items-center gap-1">
               <p className="text-sm font-semibold text-muted-foreground">Loading VSM diagram</p>
@@ -653,7 +653,7 @@ export function VsmPage() {
           ) : (
             <div className="flex items-center gap-1.5 w-full">
               <select value={editChartId ?? ""} onChange={(e) => handleSelectChart(e.target.value)}
-                className="flex-1 h-8 text-xs border border-border bg-background px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400">
+                className="flex-1 h-8 text-xs border border-border bg-background px-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
                 <option value="">Select a chart...</option>
                 {charts.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -668,7 +668,7 @@ export function VsmPage() {
                 </button>
               )}
               <button type="button" onClick={() => setShowCreateDialog(true)} disabled={saving}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-accent/20 bg-accent/10 text-accent-foreground hover:bg-sky-100 shrink-0 whitespace-nowrap transition-colors">
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded border border-accent/20 bg-accent/10 text-accent-foreground hover:bg-accent/15 shrink-0 whitespace-nowrap transition-colors">
                 <Plus className="h-3 w-3" /> New
               </button>
             </div>
@@ -679,7 +679,7 @@ export function VsmPage() {
           <button type="button" onClick={() => setViewMode(viewMode === "derived" ? "charts" : "derived")}
             className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium rounded border transition-all duration-200 ${
               viewMode === "charts"
-                ? "bg-indigo-50 text-primary border-primary/20 shadow-sm"
+                ? "bg-primary/15 text-primary border-primary/30 shadow-sm"
                 : "bg-background text-muted-foreground border-border hover:bg-muted hover:border-border"
             }`}>
             <Layers className="h-3 w-3" /> {viewMode === "derived" ? "Charts" : "Derived"}
@@ -700,8 +700,8 @@ export function VsmPage() {
 
       {/* Persistent Takt/Demand missing alert banner */}
       {!dismissTaktAlert && kpiData && kpiData.taktStatus !== "ok" && (
-        <div className="relative flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-red-50 to-orange-50 border-b border-danger/20 animate-slide-down">
-          <button onClick={() => setShowDemandTaktDrawer(true)} className="flex items-center gap-2 text-red-800 text-[13px] font-semibold text-left flex-1 hover:bg-danger/15/50 rounded-sm px-1 -mx-1 py-0.5 transition-colors">
+        <div className="relative flex items-center gap-3 px-4 py-2.5 bg-gradient-to-r from-danger/10 to-warning/10 border-b border-danger/20 animate-slide-down">
+          <button onClick={() => setShowDemandTaktDrawer(true)} className="flex items-center gap-2 text-danger text-[13px] font-semibold text-left flex-1 hover:bg-danger/15 rounded-sm px-1 -mx-1 py-0.5 transition-colors">
             <AlertTriangle className="h-4 w-4 shrink-0 text-danger animate-pulse" />
             <span>
               {kpiData.taktStatus === "missing_demand"
@@ -773,13 +773,13 @@ export function VsmPage() {
         )}
         {viewMode === "charts" && !activeChart && (
           <EmptyStateCard
-            icon={<FileText className="h-7 w-7 text-indigo-400" />}
+            icon={<FileText className="h-7 w-7 text-accent-foreground" />}
             title="No chart selected"
             description="Create a new VSM chart or select one from the dropdown to start editing."
             actions={
               <>
                 <button type="button" onClick={() => setShowCreateDialog(true)} disabled={saving}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-accent/20 bg-accent/10 text-accent-foreground hover:bg-sky-100 transition-colors shadow-sm">
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-accent/20 bg-accent/10 text-accent-foreground hover:bg-accent/15 transition-colors shadow-sm">
                   <Plus className="h-3.5 w-3.5" /> Create Chart
                 </button>
                 <button type="button" onClick={handleCreateTestChart}
@@ -955,8 +955,8 @@ export function VsmPage() {
             <div className="p-5 space-y-3">
               {/* Manual option */}
               <button type="button" onClick={() => handleCreateChart("MANUAL")} disabled={saving}
-                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-border hover:border-sky-300 hover:bg-accent/10/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 border border-accent/20 group-hover:bg-sky-100 group-hover:border-sky-300 transition-colors">
+                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-border hover:border-accent/30 hover:bg-accent/10/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 border border-accent/20 group-hover:bg-accent/15 group-hover:border-accent/30 transition-colors">
                   <PenLine className="h-5 w-5 text-accent-foreground" />
                 </div>
                 <div className="min-w-0">
@@ -970,8 +970,8 @@ export function VsmPage() {
 
               {/* Linked option */}
               <button type="button" onClick={() => handleCreateChart("LINKED")} disabled={saving}
-                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-border hover:border-indigo-300 hover:bg-primary/10/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 border border-primary/20 group-hover:bg-primary/15 group-hover:border-indigo-300 transition-colors">
+                className="w-full flex items-start gap-3 p-4 rounded-xl border-2 border-border hover:border-primary/30 hover:bg-primary/10/40 transition-all duration-200 text-left disabled:opacity-50 disabled:cursor-not-allowed group">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 border border-primary/20 group-hover:bg-primary/15 group-hover:border-primary/30 transition-colors">
                   <Link2 className="h-5 w-5 text-primary" />
                 </div>
                 <div className="min-w-0">

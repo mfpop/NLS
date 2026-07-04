@@ -10,10 +10,10 @@ interface IconProps {
 }
 
 const SEV_COLORS: Record<string, string> = {
-  NORMAL: "#64748b",
-  WARNING: "#d97706",
-  CRITICAL: "#dc2626",
-  UNKNOWN: "#94a3b8",
+  NORMAL: "hsl(var(--muted-foreground))",
+  WARNING: "hsl(var(--warning))",
+  CRITICAL: "hsl(var(--danger))",
+  UNKNOWN: "hsl(var(--muted-foreground) / 0.6)",
 };
 
 function useColor(severity?: IconProps["severity"], color?: string): string {

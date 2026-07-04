@@ -139,10 +139,10 @@ export function SafetyControlPage() {
 
   // ── Unified list ──
   const TYPE_CONFIG = useMemo(() => ({
-    AUDITS: { color: "bg-warning/100", border: "border-l-orange-500", hover: "hover:bg-warning/10/40 dark:hover:bg-orange-950/20", label: "Audit" },
-    ISSUES: { color: "bg-warning/100", border: "border-l-amber-500", hover: "hover:bg-warning/10/40 dark:hover:bg-amber-950/20", label: "Issue" },
-    ACTIONS: { color: "bg-violet-500", border: "border-l-violet-500", hover: "hover:bg-violet-50/40 dark:hover:bg-violet-950/20", label: "Action" },
-    EVENTS: { color: "bg-danger/100", border: "border-l-red-500", hover: "hover:bg-danger/10/40 dark:hover:bg-red-950/20", label: "Event" },
+    AUDITS: { color: "bg-warning/100", border: "border-l-warning", hover: "hover:bg-warning/10/40 dark:hover:bg-warning/10", label: "Audit" },
+    ISSUES: { color: "bg-warning/100", border: "border-l-warning", hover: "hover:bg-warning/10/40 dark:hover:bg-warning/10", label: "Issue" },
+    ACTIONS: { color: "bg-accent", border: "border-l-accent", hover: "hover:bg-accent/10/40 dark:hover:bg-accent/10", label: "Action" },
+    EVENTS: { color: "bg-danger/100", border: "border-l-danger", hover: "hover:bg-danger/10/40 dark:hover:bg-danger/10", label: "Event" },
   }), []);
 
   const ITEMS_PER_PAGE = 50;
@@ -199,7 +199,7 @@ export function SafetyControlPage() {
         title="Safety Control"
         subtitle="Track safety audits, hazard inspections, observations, and compliance."
         icon={AlertTriangle}
-        iconClass="bg-warning/15 text-warning dark:bg-orange-900/40 dark:text-orange-400"
+        iconClass="bg-warning/15 text-warning dark:bg-warning/15 dark:text-warning"
         renderOverview={() => <SafetyOverview audits={auditS.items} problems={problems} actions={actions} auditTemplates={auditS.templates} onInstallTemplates={auditS.hInstall} />}
         renderUnifiedList={renderUnifiedList}
         toolbarSearch={<ToolbarSearch value={search} onChange={setSearch} placeholder="Search..." />}

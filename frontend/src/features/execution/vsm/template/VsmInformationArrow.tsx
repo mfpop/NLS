@@ -1,4 +1,5 @@
 // ── Information flow arrow with classical VSM notation ──
+import { memo } from "react";
 
 interface Props {
   pathD: string;
@@ -13,10 +14,10 @@ interface Props {
 }
 
 const STROKE: Record<string, string> = {
-  MANUAL: "#334155",
-  ELECTRONIC: "#2563eb",
-  KANBAN: "#7c3aed",
-  SCHEDULE: "#475569",
+  MANUAL: "hsl(var(--muted-foreground))",
+  ELECTRONIC: "hsl(var(--primary))",
+  KANBAN: "hsl(var(--accent))",
+  SCHEDULE: "hsl(var(--secondary-foreground))",
 };
 
 const DASH: Record<string, string> = {
@@ -60,7 +61,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
     );
   }
 
-  const stroke = STROKE[flowStyle] ?? "#334155";
+  const stroke = STROKE[flowStyle] ?? "hsl(var(--muted-foreground))";
   const dash = DASH[flowStyle] ?? "none";
   const markerId = `arr-info-${flowStyle}`;
 
@@ -117,7 +118,7 @@ export function VsmInformationArrow({ pathD, labelX, labelY, label, subLabel, fl
       )}
     </g>
   );
-}
+});
 
 /** Extract midpoint from SVG path string */
 function midFromPath(pathD: string): { x: number; y: number } | null {
@@ -175,6 +176,10 @@ function KanbanMarker({ pathD, stroke }: { pathD: string; stroke: string }) {
         textAnchor="middle" className="text-[11px] font-extrabold" fill={stroke}>
         K
       </text>
+    </g>
+  );
+}
+</text>
     </g>
   );
 }

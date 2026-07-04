@@ -20,10 +20,10 @@ export function VsmKaizenBurst({ type, severity, x, y, size = 32, message, recom
 
   // Colors by severity
   const palette = severity === "critical"
-    ? { fill: "#dc2626", stroke: "#991b1b", bg: "#fef2f2" }
+    ? { fill: "hsl(var(--danger))", stroke: "hsl(var(--danger) / 0.7)", bg: "hsl(var(--danger) / 0.06)" }
     : severity === "major"
-      ? { fill: "#ea580c", stroke: "#c2410c", bg: "#fff7ed" }
-      : { fill: "#f59e0b", stroke: "#b45309", bg: "#fffbeb" };
+      ? { fill: "hsl(var(--warning))", stroke: "hsl(var(--warning) / 0.7)", bg: "hsl(var(--warning) / 0.06)" }
+      : { fill: "hsl(var(--warning))", stroke: "hsl(var(--warning) / 0.8)", bg: "hsl(var(--warning) / 0.08)" };
 
   // 4-point starburst path: outer points at (0, -half), (half, 0), (0, half), (-half, 0)
   // Inner points at ±(half*0.35) for the concave indentations
@@ -48,7 +48,7 @@ export function VsmKaizenBurst({ type, severity, x, y, size = 32, message, recom
       <path d={burstD} fill="none" stroke={palette.stroke} strokeWidth={2.5} strokeLinejoin="round"
         transform={`translate(1,1)`} opacity={0.3} />
       {/* Burst fill */}
-      <path d={burstD} fill={palette.fill} stroke="#fff" strokeWidth={1.5} strokeLinejoin="round" />
+      <path d={burstD} fill={palette.fill} stroke="hsl(var(--background))" strokeWidth={1.5} strokeLinejoin="round" />
       {/* Inner icon */}
       <BurstIcon type={type} x={x} y={y} color="#fff" size={half * 0.8} />
     </g>
@@ -135,10 +135,10 @@ function BurstIcon({ type, x, y, color, size }: {
 // ── Helpers ──
 
 const BADGE_PALETTE: Record<OpportunityType, { fill: string; stroke: string; bg: string }> = {
-  HIGH_WIP: { fill: "#d97706", stroke: "#b45309", bg: "#fffbeb" },
-  CT_ABOVE_TAKT: { fill: "#dc2626", stroke: "#991b1b", bg: "#fef2f2" },
-  LOW_UPTIME: { fill: "#ea580c", stroke: "#c2410c", bg: "#fff7ed" },
-  QUALITY_LOSS: { fill: "#9333ea", stroke: "#7e22ce", bg: "#faf5ff" },
+  HIGH_WIP: { fill: "hsl(var(--warning))", stroke: "hsl(var(--warning) / 0.8)", bg: "hsl(var(--warning) / 0.08)" },
+  CT_ABOVE_TAKT: { fill: "hsl(var(--danger))", stroke: "hsl(var(--danger) / 0.7)", bg: "hsl(var(--danger) / 0.06)" },
+  LOW_UPTIME: { fill: "hsl(var(--warning))", stroke: "hsl(var(--warning) / 0.7)", bg: "hsl(var(--warning) / 0.06)" },
+  QUALITY_LOSS: { fill: "hsl(var(--accent))", stroke: "hsl(var(--accent) / 0.7)", bg: "hsl(var(--accent) / 0.06)" },
 };
 
 const OPP_LABELS: Record<OpportunityType, string> = {

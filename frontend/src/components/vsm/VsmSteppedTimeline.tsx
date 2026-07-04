@@ -135,7 +135,7 @@ export function VsmSteppedTimeline({
         {/* VA % */}
         <text x={totBoxX + totBoxW / 2} y={TOP_Y + 52}
           textAnchor="middle"
-          className={`text-sm font-extrabold ${vaPct < 5 ? "fill-red-500" : vaPct < 20 ? "fill-amber-500" : "fill-emerald-600"}`}>
+          className={`text-sm font-extrabold ${vaPct < 5 ? "fill-danger" : vaPct < 20 ? "fill-warning" : "fill-success"}`}>
           VA = {vaPct}%
         </text>
       </g>

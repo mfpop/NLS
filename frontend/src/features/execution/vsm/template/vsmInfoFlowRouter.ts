@@ -11,8 +11,8 @@ export const INFO_SUPPLIER_Y = 265;   // PC → Supplier horizontal lane
 export const SCHEDULE_LANE_BASE_Y = 395;
 // Per-flow lane stride so multiple PC→Process schedules don't overlap
 export const SCHEDULE_LANE_STRIDE = 14;
-// Label offset above the line stroke (8-12px per spec)
-export const INFO_LABEL_OFFSET = 10;
+// Label offset above the line stroke
+export const INFO_LABEL_OFFSET = 32;
 // Minimum clearance around boxes
 export const INFO_BOX_CLEARANCE = 12;
 

@@ -103,8 +103,8 @@ function ArrowDefs() {
       <marker id="arr-info-KANBAN" markerWidth={4} markerHeight={3} refX={4} refY={1.5} orient="auto">
         <polygon points="0,0 4,1.5 0,3" fill="hsl(var(--accent))" />
       </marker>
-      <marker id="arr-info-SCHEDULE" markerWidth={8} markerHeight={6} refX={8} refY={3} orient="auto">
-        <polygon points="0,0 8,3 0,6" fill="hsl(var(--secondary-foreground))" />
+      <marker id="arr-info-SCHEDULE" markerWidth={14} markerHeight={11} refX={14} refY={5.5} orient="auto">
+        <polygon points="0,0 14,5.5 0,11" fill="hsl(var(--secondary-foreground))" />
       </marker>
     </defs>
   );
@@ -281,7 +281,7 @@ export function StandardVsmTemplate({ model, onSelectNode, showKaizen, showFlowL
   }, []);
 
   return (
-    <svg width="100%" height="100%" viewBox={`${VSM_VIEW_X} ${VSM_VIEW_Y} ${VSM_VIEW_W} ${VSM_VIEW_H}`}
+    <svg width="100%" height="100%" viewBox={viewBoxProp ?? `${VSM_VIEW_X} ${VSM_VIEW_Y} ${VSM_VIEW_W} ${VSM_VIEW_H}`}
       preserveAspectRatio="xMidYMid meet"
       className="select-none">
 

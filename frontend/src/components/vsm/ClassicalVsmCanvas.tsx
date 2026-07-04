@@ -18,7 +18,7 @@ interface Props {
   refitKey?: number;
 }
 
-const FIT_PAD = 16;
+const FIT_PAD = 40;
 
 export function ClassicalVsmCanvas({
   diagram, selectedNodeId, onSelectNode,
@@ -58,9 +58,8 @@ export function ClassicalVsmCanvas({
     const availH = ch - FIT_PAD * 2;
     const sx = availW / CONTENT_W;
     const sy = availH / CONTENT_H;
-    // Fill as much of the container as possible.
-    // Content is 4.18:1, viewport ~2:1, max() gives height-fill with balanced overflow.
-    const scale = Math.max(sx, sy);
+    // Fit all content on screen — nothing clipped, none pushed outside.
+    const scale = Math.min(sx, sy);
     console.log(
       `Fit | cw=${cw} ch=${ch} availW=${availW} availH=${availH} ` +
       `contentW=${CONTENT_W} contentH=${CONTENT_H} ` +

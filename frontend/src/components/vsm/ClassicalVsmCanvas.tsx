@@ -18,7 +18,7 @@ interface Props {
   refitKey?: number;
 }
 
-const FIT_PAD = 40;
+const FIT_PAD = 24;
 
 export function ClassicalVsmCanvas({
   diagram, selectedNodeId, onSelectNode,

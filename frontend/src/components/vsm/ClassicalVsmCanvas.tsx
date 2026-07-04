@@ -39,13 +39,13 @@ export function ClassicalVsmCanvas({
     const ch = el.clientHeight;
     if (cw <= 0 || ch <= 0) return;
     const scale = Math.min(
-      (cw - FIT_PAD_X * 2) / VSM_VIEW_W,
-      (ch - FIT_PAD_Y * 2) / VSM_VIEW_H
+      (cw - FIT_PAD_X * 2) / CONTENT_W,
+      (ch - FIT_PAD_Y * 2) / CONTENT_H
     );
     onZoomChange(Math.max(0.1, Math.min(2, scale)));
     onPanChange({
-      x: Math.round((cw - VSM_VIEW_W * scale) / 2),
-      y: Math.round((ch - VSM_VIEW_H * scale) / 2),
+      x: Math.round((cw - CONTENT_W * scale) / 2),
+      y: Math.round((ch - CONTENT_H * scale) / 2),
     });
   }, [onZoomChange, onPanChange]);
 

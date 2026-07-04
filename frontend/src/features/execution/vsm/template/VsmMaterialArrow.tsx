@@ -97,5 +97,5 @@ export const VsmMaterialArrow = memo(function VsmMaterialArrow({ x1, x2, y, labe
       )}
     </g>
   );
-}
+});
 

@@ -142,9 +142,4 @@ export function VsmProcessSymbol({ model, x, y, onClick, onKeyDown }: Props) {
       )}
     </g>
   );
-});
-e>
-      )}
-    </g>
-  );
 }

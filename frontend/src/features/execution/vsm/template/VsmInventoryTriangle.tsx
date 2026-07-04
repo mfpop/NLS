@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { InventoryModel } from "./vsmTemplateTypes";
 import { INV_HALF, INV_SIZE, INV_QTY_INSET, INV_DAYS_Y, INV_WIP_LABEL_Y, INV_CODE_Y, INV_CLEARANCE_BTM, INV_CLEARANCE_LR, INV_CLEARANCE_TOP } from "./vsmTemplateGeometry";
 import { VsmTransportIcon } from "./VsmTransportIcons";
@@ -102,4 +103,4 @@ export const VsmInventoryTriangle = memo(function VsmInventoryTriangle({ model, 
       )}
     </g>
   );
-}
+});

@@ -134,7 +134,7 @@ export function ClassicalVsmCanvas({
   const handleMU = useCallback(() => { dragRef.current.active = false; }, []);
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden bg-gradient-to-br from-muted/30 to-background cursor-grab active:cursor-grabbing select-none"
+    <div ref={containerRef} className="h-full overflow-hidden bg-gradient-to-br from-muted/30 to-background cursor-grab active:cursor-grabbing select-none"
       onWheel={handleWheel} onMouseDown={handleMD} onMouseMove={handleMM} onMouseUp={handleMU} onMouseLeave={handleMU}
     >
       <StandardVsmTemplate

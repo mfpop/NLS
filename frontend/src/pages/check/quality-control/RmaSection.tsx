@@ -28,7 +28,7 @@ interface RMANode {
 }
 
 function selCls(err?: boolean) {
-  return `${SEL_INPUT} ${err ? "border-red-400 dark:border-red-600" : ""}`;
+  return `${SEL_INPUT} ${err ? "border-danger" : ""}`;
 }
 
 export function useRmaSection(
@@ -468,7 +468,7 @@ export function useRmaSection(
                 label="disposition"
               />
               {sel.disposition && (
-                <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border border-indigo-300 text-primary bg-indigo-50/80`}>
+                <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border border-accent/30 text-accent-foreground bg-accent/10`}>
                   {RMA_DISPOSITION_OPTIONS.find((o) => o.value === sel.disposition)?.label || statusLabel(sel.disposition)}
                 </span>
               )}
@@ -520,7 +520,7 @@ export function useRmaSection(
           {(status === "OPEN" || status === "RECEIVED" || status === "UNDER_REVIEW") && (
             <div className="flex items-center gap-2 pt-2 border-t border-white/10 dark:border-slate-700/10">
               {status === "OPEN" && (
-                <button onClick={hReceive} className="inline-flex h-7 items-center gap-1 border border-teal-300 px-2 text-[10px] font-semibold text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-300 dark:hover:bg-teal-950/30 transition-all">
+                <button onClick={hReceive} className="inline-flex h-7 items-center gap-1 border border-primary/30 px-2 text-[10px] font-semibold text-primary hover:bg-primary/10 transition-all">
                   Receive
                 </button>
               )}
@@ -533,7 +533,7 @@ export function useRmaSection(
                   >
                     {RMA_DISPOSITION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
-                  <button onClick={hDisposition} className="inline-flex h-7 items-center gap-1 border border-indigo-300 px-2 text-[10px] font-semibold text-primary hover:bg-primary/10 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/30 transition-all">
+                  <button onClick={hDisposition} className="inline-flex h-7 items-center gap-1 border border-accent/30 px-2 text-[10px] font-semibold text-accent-foreground hover:bg-accent/10 transition-all">
                     Disposition
                   </button>
                 </>
@@ -658,7 +658,7 @@ export function useRmaSection(
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-center px-4">
             <p className="text-xs font-medium text-muted-foreground">No RMAs</p>
-            <button onClick={hNew} className="mt-2 inline-flex h-7 items-center gap-1 bg-cyan-600/10 px-3 text-xs font-semibold text-cyan-700 hover:bg-cyan-600/20">
+            <button onClick={hNew} className="mt-2 inline-flex h-7 items-center gap-1 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20">
               <Plus className="h-3 w-3" /> New
             </button>
           </div>
@@ -670,7 +670,7 @@ export function useRmaSection(
                 onClick={() => { setSelectedId(r.id); setCreating(false); onSelect(r.id); }}
                 className={`group mx-1 my-0.5 cursor-pointer transition-all duration-150 ${
                   selId === r.id
-                    ? "bg-table-selected border-l-2 border-l-cyan-500"
+                    ? "bg-table-selected border-l-2 border-l-primary"
                     : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                 }`}
               >

@@ -152,7 +152,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
     if (editing && item) return renderEditForm(item);
     if (!id) return (
       <div className="flex flex-1 items-center justify-center h-full">
-        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Quality Actions</h3><p className="text-xs text-muted-foreground/70">Corrective and preventive actions.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-violet-600 px-4 text-sm font-semibold text-white hover:bg-violet-700"><Plus className="h-3.5 w-3.5" /> New Action</button></div>
+        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Quality Actions</h3><p className="text-xs text-muted-foreground/70">Corrective and preventive actions.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-accent px-4 text-sm font-semibold text-accent-foreground hover:bg-accent/80"><Plus className="h-3.5 w-3.5" /> New Action</button></div>
       </div>
     );
     if (!item) return <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Loading...</div>;
@@ -203,7 +203,7 @@ export function useActionSection(_search: string, filterStatus: string, onMessag
         {items.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No actions found</div>
         : <div className="py-0.5">{items.map((a: any) => (
           <div key={a.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(a.id); onSelect(a.id); }}
-            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === a.id ? "bg-primary/10 dark:bg-blue-950/20 border-l-blue-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
+            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === a.id ? "bg-primary/10 border-l-primary" : "border-l-transparent hover:bg-table-row-hover"}`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{a.title}</span><span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${ACTION_STATUS_STYLES[a.status] || ACTION_STATUS_STYLES.OPEN}`}>{statusLabel(a.status)}</span></div>
               <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">{a.priority && <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${PRIORITY_STYLES[a.priority] || PRIORITY_STYLES.MEDIUM}`}>{a.priority}</span>}{a.owner && <span>· {a.owner}</span>}{a.dueDate && <span>· {a.dueDate}</span>}</div>

@@ -327,11 +327,11 @@ export function LinePerformancePage() {
       {/* Footer */}
       <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
         <span>Line: {activeLine?.name ?? "—"}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Shift: {dashboard?.shift?.name ?? "—"}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Date: {dashboard?.shift?.date ?? "—"}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Last updated: {dashboard?.lastUpdatedAt ?? "—"}</span>
         {dashError && !dashboardData && !mockLinePerformanceDashboard?.linePerformanceDashboard && (
           <div className="ml-auto flex items-center gap-2">

@@ -52,16 +52,16 @@ function optsFor(rt: string): string[] {
 function Seg({ opts, val, onChange }: { opts: string[]; val: string; onChange: (v: string) => void }) {
   const cls = (a: boolean, o: string) => {
     if (!a) return "bg-background/50 dark:bg-slate-800/50 text-muted-foreground hover:bg-background/80 dark:hover:bg-slate-700/80";
-    if (o === "PASS" || o === "YES") return "bg-success/15/80 text-success dark:bg-emerald-900/80 dark:text-emerald-300";
-    if (o === "FAIL" || o === "NO") return "bg-danger/15/80 text-red-800 dark:bg-red-900/80 dark:text-red-300";
-    if (o === "N_A") return "bg-warning/15/80 text-warning dark:bg-amber-900/80 dark:text-amber-300";
-    return "bg-primary/15/80 text-blue-800 dark:bg-blue-900/80 dark:text-blue-300";
+    if (o === "PASS" || o === "YES") return "bg-success/15 text-success";
+    if (o === "FAIL" || o === "NO") return "bg-danger/15 text-danger";
+    if (o === "N_A") return "bg-warning/15 text-warning";
+    return "bg-primary/15 text-primary";
   };
   return <div className="inline-flex h-7 overflow-hidden rounded border border-white/30 dark:border-slate-700/30">{opts.map((o) => <button key={o} onClick={() => onChange(o)} className={`min-w-11 border-r border-white/30 dark:border-slate-700/30 px-2 text-xs font-medium last:border-r-0 transition-colors ${cls(val === o, o)}`}>{o === "N_A" ? "N/A" : o}</button>)}</div>;
 }
 
 function FindingsTable({ findings, onClose }: { findings: AuditFindingData[]; onClose: (id: string | null) => void }) {
-  const fStatusStyles: Record<string, string> = { OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30", CLOSED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30" };
+  const fStatusStyles: Record<string, string> = { OPEN: "border-primary/30 text-primary bg-primary/10/80", CLOSED: "border-success/30 text-success bg-success/10/80" };
   return (
     <div className="p-4"><table className="w-full text-xs"><thead><tr className="border-b border-white/20 dark:border-slate-700/20"><th className="text-left font-semibold text-foreground py-1.5 px-2">Finding</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Severity</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Status</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Owner</th><th className="text-left font-semibold text-foreground py-1.5 px-2">Due</th><th className="py-1.5 px-2" /></tr></thead>
       <tbody>{findings.map((f) => <tr key={f.id} className="border-b border-white/10 dark:border-slate-700/10 hover:bg-background/30 dark:hover:bg-slate-800/30"><td className="py-1.5 px-2 text-foreground">{f.description}</td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${f.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80" : f.severity === "HIGH" ? "border-orange-300 text-warning bg-warning/10/80" : "border-primary/30 text-primary bg-primary/10/80"}`}>{f.severity}</span></td><td className="py-1.5 px-2"><span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${fStatusStyles[f.status] || ""}`}>{statusLabel(f.status)}</span></td><td className="py-1.5 px-2 text-muted-foreground">{f.owner || "-"}</td><td className="py-1.5 px-2 text-muted-foreground">{f.dueDate || "-"}</td><td className="py-1.5 px-2">{f.status === "OPEN" && <button onClick={() => onClose(f.id)} className="inline-flex items-center px-1.5 py-0.5 border border-success/20 text-[10px] font-semibold text-success hover:bg-success/10">Close</button>}</td></tr>)}</tbody></table></div>
@@ -590,7 +590,7 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                     </div>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="flex gap-2 justify-end">
-                      <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}>Create</button>
+                      <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-primary-foreground hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-danger hover:bg-danger/80" : "bg-primary hover:bg-primary/80"}`}>Create</button>
                       <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
                     </div>
                   </div>
@@ -747,7 +747,7 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
                     </div>
                     <div><label className="block text-[10px] font-medium text-muted-foreground mb-1">Owner</label><input type="text" value={findingOwner} onChange={(e) => setFindingOwner(e.target.value)} className={SEL_INPUT} /></div>
                     <div className="flex gap-2 justify-end">
-                      <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-white hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}>Create</button>
+                      <button onClick={hFinding} disabled={!findingDesc.trim()} className={`inline-flex h-7 items-center gap-1 px-3 text-xs font-semibold text-primary-foreground hover:brightness-110 disabled:opacity-40 ${controlArea === "SAFETY" ? "bg-danger hover:bg-danger/80" : "bg-primary hover:bg-primary/80"}`}>Create</button>
                       <button onClick={() => setFindingForAnswer(null)} className="inline-flex h-7 items-center border border-border/50 px-3 text-xs font-medium text-muted-foreground hover:bg-muted">Cancel</button>
                     </div>
                   </div>
@@ -779,7 +779,7 @@ export function useAuditSection(_search: string, filterStatus: string, activePla
   // ── Render: Detail ──
   const renderDetail = (id: number | null) => {
     if (creating) return renderForm();
-    if (!id) return <div className="flex flex-1 items-center justify-center h-full"><div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">{areaLabel(controlArea)} Audits</h3><p className="text-xs text-muted-foreground/70">Template-based {areaLabel(controlArea).toLowerCase()} audits.</p><button onClick={hNew} className={`mt-4 inline-flex h-8 items-center gap-1.5 px-4 text-sm font-semibold text-white hover:brightness-110 ${controlArea === "SAFETY" ? "bg-orange-600 hover:bg-orange-700" : controlArea === "MATERIAL" ? "bg-teal-600 hover:bg-teal-700" : "bg-cyan-600 hover:bg-cyan-700"}`}><Plus className="h-3.5 w-3.5" /> New Audit</button></div></div>;
+    if (!id) return <div className="flex flex-1 items-center justify-center h-full"><div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">{areaLabel(controlArea)} Audits</h3><p className="text-xs text-muted-foreground/70">Template-based {areaLabel(controlArea).toLowerCase()} audits.</p>              <button onClick={hNew} className={`mt-4 inline-flex h-8 items-center gap-1.5 px-4 text-sm font-semibold text-primary-foreground hover:brightness-110 ${controlArea === "SAFETY" ? "bg-danger hover:bg-danger/80" : "bg-primary hover:bg-primary/80"}`}><Plus className="h-3.5 w-3.5" /> New Audit</button></div></div>;
     if (execId && !execForm) return <div className="flex flex-1 items-center justify-center h-full"><div className="text-xs text-muted-foreground animate-pulse">Loading audit form...</div></div>;
     return renderForm();
   };

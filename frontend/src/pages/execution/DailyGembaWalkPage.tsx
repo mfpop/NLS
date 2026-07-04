@@ -389,7 +389,7 @@ export function DailyGembaWalkPage() {
                 value={assignOwner}
                 onChange={(e) => setAssignOwner(e.target.value)}
                 placeholder="Assignee name"
-                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
               />
             </div>
             <div>
@@ -398,7 +398,7 @@ export function DailyGembaWalkPage() {
                 type="date"
                 value={assignDueDate}
                 onChange={(e) => setAssignDueDate(e.target.value)}
-                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -417,7 +417,7 @@ export function DailyGembaWalkPage() {
               value={resolveNote}
               onChange={(e) => setResolveNote(e.target.value)}
               placeholder="Describe how this was resolved..."
-              className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
+              className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary resize-none"
               style={{ minHeight: "80px" }}
             />
           </div>
@@ -437,7 +437,7 @@ export function DailyGembaWalkPage() {
                 type="text"
                 value={issueTitle}
                 onChange={(e) => setIssueTitle(e.target.value)}
-                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
               />
             </div>
             <div>
@@ -445,14 +445,14 @@ export function DailyGembaWalkPage() {
               <textarea
                 value={issueDescription}
                 onChange={(e) => setIssueDescription(e.target.value)}
-                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
+                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary resize-none"
                 style={{ minHeight: "64px" }}
               />
             </div>
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Severity</label>
-                <select value={issueSeverity} onChange={(e) => setIssueSeverity(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500">
+                <select value={issueSeverity} onChange={(e) => setIssueSeverity(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary">
                   <option value="INFO">Info</option>
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
@@ -467,7 +467,7 @@ export function DailyGembaWalkPage() {
                   value={issueOwner}
                   onChange={(e) => setIssueOwner(e.target.value)}
                   placeholder="Owner"
-                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
                 />
               </div>
               <div>
@@ -476,7 +476,7 @@ export function DailyGembaWalkPage() {
                   type="date"
                   value={issueDueDate}
                   onChange={(e) => setIssueDueDate(e.target.value)}
-                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
                 />
               </div>
             </div>
@@ -497,7 +497,7 @@ export function DailyGembaWalkPage() {
                 type="text"
                 value={actionTitle}
                 onChange={(e) => setActionTitle(e.target.value)}
-                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
               />
             </div>
             <div>
@@ -505,14 +505,14 @@ export function DailyGembaWalkPage() {
               <textarea
                 value={actionDescription}
                 onChange={(e) => setActionDescription(e.target.value)}
-                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
+                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary resize-none"
                 style={{ minHeight: "64px" }}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Type</label>
-                <select value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500">
+                <select value={actionType} onChange={(e) => setActionType(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary">
                   <option value="CORRECTIVE">Corrective</option>
                   <option value="PREVENTIVE">Preventive</option>
                   <option value="IMPROVEMENT">Improvement</option>
@@ -520,7 +520,7 @@ export function DailyGembaWalkPage() {
               </div>
               <div>
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground block mb-1">Priority</label>
-                <select value={actionPriority} onChange={(e) => setActionPriority(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500">
+                <select value={actionPriority} onChange={(e) => setActionPriority(e.target.value)} className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary">
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HIGH">High</option>
@@ -536,7 +536,7 @@ export function DailyGembaWalkPage() {
                   value={actionAssignedTo}
                   onChange={(e) => setActionAssignedTo(e.target.value)}
                   placeholder="Assignee"
-                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
                 />
               </div>
               <div>
@@ -545,7 +545,7 @@ export function DailyGembaWalkPage() {
                   type="date"
                   value={actionDueDate}
                   onChange={(e) => setActionDueDate(e.target.value)}
-                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-sky-500"
+                  className="w-full h-8 rounded-[2px] border border-border bg-background px-2 text-sm text-foreground outline-none focus:border-primary"
                 />
               </div>
             </div>
@@ -565,7 +565,7 @@ export function DailyGembaWalkPage() {
               value={verifyNote}
               onChange={(e) => setVerifyNote(e.target.value)}
               placeholder="What changed on the shopfloor? Confirm the resolution is effective..."
-              className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
+              className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary resize-none"
               style={{ minHeight: "80px" }}
             />
           </div>
@@ -588,7 +588,7 @@ export function DailyGembaWalkPage() {
                 value={resolveNote}
                 onChange={(e) => setResolveNote(e.target.value)}
                 placeholder="Walk summary..."
-                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-sky-500 resize-none"
+                className="w-full rounded-[2px] border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:border-primary resize-none"
                 style={{ minHeight: "64px" }}
               />
             </div>
@@ -631,7 +631,7 @@ export function DailyGembaWalkPage() {
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className="inline-flex h-8 items-center gap-1.5 px-3 text-xs font-medium text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 rounded-[2px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex h-8 items-center gap-1.5 px-3 text-xs font-medium text-primary-foreground bg-primary hover:bg-primary/80 active:bg-primary/60 rounded-[2px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {confirmLabel}
@@ -676,7 +676,7 @@ export function DailyGembaWalkPage() {
         <PageHeader title="Daily Gemba Walk" subtitle="Loading..." icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+            <div className="h-8 w-8 rounded-full border-2 border-success border-t-transparent animate-spin" />
             <p className="text-xs text-muted-foreground">Loading observations...</p>
           </div>
         </div>
@@ -694,7 +694,7 @@ export function DailyGembaWalkPage() {
           actions={<ToolbarButton icon={RefreshCw} label="Retry" onClick={handleRefresh} disabled={refreshing} />}
         />
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-danger/10 ring-1 ring-red-200">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-danger/10 ring-1 ring-danger/20">
             <Footprints className="h-7 w-7 text-danger/80" />
           </div>
           <div>
@@ -824,15 +824,15 @@ export function DailyGembaWalkPage() {
         <span>Line: {activeLine?.name ?? "—"}</span>
         {activeSession && (
           <>
-            <span className="w-1 h-1 rounded-full bg-slate-300" />
+            <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
             <span>Walk: {isSessionPlanned ? "Planned" : isSessionActive ? "In Progress" : "Completed"}</span>
           </>
         )}
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Observations: {metrics.total}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Open: {metrics.open}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Critical: {metrics.critical}</span>
         {queryError && (
           <div className="ml-auto flex items-center gap-2">

@@ -27,7 +27,7 @@ const SEVERITY_OPTS = [
 ];
 
 function selCls(err?: boolean) {
-  return `${SEL_INPUT} ${err ? "border-red-400 dark:border-red-600" : ""}`;
+  return `${SEL_INPUT} ${err ? "border-danger" : ""}`;
 }
 
 export function useDmrSection(
@@ -528,7 +528,7 @@ export function useDmrSection(
           {sel.disposition && (
             <div>
               <h3 className="text-xs font-semibold text-foreground uppercase tracking-wider text-muted-foreground/70 mb-2">Disposition</h3>
-              <div className="inline-flex items-center px-2 py-0.5 text-xs font-semibold border border-indigo-300 text-primary bg-indigo-50/80 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/30">
+              <div className="inline-flex items-center px-2 py-0.5 text-xs font-semibold border border-accent/30 text-accent-foreground bg-accent/10">
                 {sel.disposition ? DMR_DISPOSITION_OPTIONS.find((o) => o.value === sel.disposition)?.label || statusLabel(sel.disposition) : "—"}
               </div>
             </div>
@@ -556,10 +556,10 @@ export function useDmrSection(
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Severity</span>
                 <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${
-                  sel.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30"
-                  : sel.severity === "HIGH" ? "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30"
-                  : sel.severity === "MEDIUM" ? "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30"
-                  : "border-border text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30"
+                  sel.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80"
+                  : sel.severity === "HIGH" ? "border-warning/30 text-warning bg-warning/10/80"
+                  : sel.severity === "MEDIUM" ? "border-primary/30 text-primary bg-primary/10/80"
+                  : "border-border text-muted-foreground bg-muted/30"
                 }`}>{statusLabel(sel.severity)}</span>
               </div>
             </div>
@@ -637,7 +637,7 @@ export function useDmrSection(
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-center px-4">
             <p className="text-xs font-medium text-muted-foreground">No DMRs</p>
-            <button onClick={hNew} className="mt-2 inline-flex h-7 items-center gap-1 bg-cyan-600/10 px-3 text-xs font-semibold text-cyan-700 hover:bg-cyan-600/20">
+            <button onClick={hNew} className="mt-2 inline-flex h-7 items-center gap-1 bg-primary/10 px-3 text-xs font-semibold text-primary hover:bg-primary/20">
               <Plus className="h-3 w-3" /> New
             </button>
           </div>
@@ -649,7 +649,7 @@ export function useDmrSection(
                 onClick={() => { setSelectedId(d.id); setCreating(false); onSelect(d.id); }}
                 className={`group mx-1 my-0.5 cursor-pointer transition-all duration-150 ${
                   selId === d.id
-                    ? "bg-table-selected border-l-2 border-l-cyan-500"
+                    ? "bg-table-selected border-l-2 border-l-primary"
                     : "border-l-2 border-l-transparent hover:bg-table-row-hover"
                 }`}
               >
@@ -670,10 +670,10 @@ export function useDmrSection(
                       </span>
                     )}
                     <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold border ${
-                      d.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30"
-                      : d.severity === "HIGH" ? "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30"
-                      : d.severity === "MEDIUM" ? "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30"
-                      : "border-border text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30"
+                      d.severity === "CRITICAL" ? "border-danger/30 text-danger bg-danger/10/80"
+                      : d.severity === "HIGH" ? "border-warning/30 text-warning bg-warning/10/80"
+                      : d.severity === "MEDIUM" ? "border-primary/30 text-primary bg-primary/10/80"
+                      : "border-border text-muted-foreground bg-muted/30"
                     }`}>{statusLabel(d.severity)}</span>
                     {d.dueDate && (
                       <>

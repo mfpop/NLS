@@ -47,10 +47,10 @@ interface MERItem {
 /* ── Constants ── */
 
 const TYPE_META: Record<string, { label: string; icon: typeof Wrench; color: string; bg: string; border: string }> = {
-  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20", border: "border-primary/20 dark:border-blue-800" },
-  TOOLING: { label: "Tooling", icon: Settings, color: "text-warning dark:text-amber-400", bg: "bg-warning/10 dark:bg-amber-900/20", border: "border-warning/20 dark:border-amber-800" },
-  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-success dark:text-success/80", bg: "bg-success/10 dark:bg-green-900/20", border: "border-success/20 dark:border-green-800" },
-  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-accent-foreground dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-accent/20 dark:border-purple-800" },
+  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
+  TOOLING: { label: "Tooling", icon: Settings, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
+  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
+  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-accent-foreground", bg: "bg-accent/10", border: "border-accent/20" },
 };
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -64,10 +64,10 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
 };
 
 const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
-  CRITICAL: { label: "Critical", color: "text-danger dark:text-danger/80", bg: "bg-danger/10 dark:bg-red-900/20" },
-  HIGH: { label: "High", color: "text-warning dark:text-orange-400", bg: "bg-warning/10 dark:bg-orange-900/20" },
-  MEDIUM: { label: "Medium", color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20" },
-  LOW: { label: "Low", color: "text-gray-500", bg: "bg-gray-50 dark:bg-gray-900/20" },
+  CRITICAL: { label: "Critical", color: "text-danger", bg: "bg-danger/10" },
+  HIGH: { label: "High", color: "text-warning", bg: "bg-warning/10" },
+  MEDIUM: { label: "Medium", color: "text-primary", bg: "bg-primary/10" },
+  LOW: { label: "Low", color: "text-muted-foreground", bg: "bg-muted" },
 };
 
 /* ── Sub-components ── */
@@ -299,7 +299,7 @@ export function MERDashboardPage() {
         {successMsg && <div className={`shrink-0 h-8 flex items-center justify-center ${theme.toastSuccess} text-sm font-semibold border-b print-ignore`}>{successMsg}</div>}
         <div className="print-ignore">
           <PageHeader icon={<ClipboardList className="h-5 w-5 stroke-current" />}
-            iconClass="bg-primary/15 text-primary dark:bg-indigo-900/40 dark:text-indigo-400"
+            iconClass="bg-primary/15 text-primary"
             title="MER Dashboard" subtitle="Manufacturing Engineering Requests — analytics and overview" />
         </div>
         <div className="print-ignore">
@@ -398,7 +398,7 @@ export function MERDashboardPage() {
                                 ENGINEERING_CHANGE: "bg-primary/100",
                                 TOOLING: "bg-warning/100",
                                 PROCESS_IMPROVEMENT: "bg-success/100",
-                                EQUIPMENT_MODIFICATION: "bg-purple-500",
+                                EQUIPMENT_MODIFICATION: "bg-accent",
                               };
                               return (
                                 <div key={t.requestType} className="flex items-center gap-2">

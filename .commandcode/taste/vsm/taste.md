@@ -1,5 +1,6 @@
 # vsm
 - VSM Fit mode: calculate scale dynamically from actual rendered content bounding box (not any static viewBox/canvas size), targeting 80-90% of usable width and 65-80% of usable height with no clipping, no scrollbar, and readable labels. Confidence: 0.80
+- VSM canvas container must fill all available space (use flex-1 and flex-col on parent chain so canvas fills parent container). Confidence: 0.70
 - Backend owns information-flow semantics: transmissionType (MANUAL/ELECTRONIC/EDI/SYSTEM/KANBAN), triggerType (CUSTOMER_ORDER/FORECAST/PRODUCTION_SCHEDULE/etc.), method, frequency — frontend must not infer these. Confidence: 0.80
 - Information-flow GraphQL shape: fromNodeId, fromNodeType, toNodeId, toNodeType, label, frequency, method, transmissionType, triggerType, controlledProcessId, notes. Confidence: 0.75
 - Use classical VSM information-flow notation with distinct visuals: manual (solid line), electronic (dashed/lightning line with visible zigzag/icon), Kanban/pull (dashed loop from consumer back to supplier). All styles explained in a canvas legend. Confidence: 0.80
@@ -14,3 +15,4 @@
 - WIP toggle button is not needed for VSM toolbar — removes clutter without adding value. Confidence: 0.70
 - VSM process card layout: C/T label + value on the same row, each secondary parameter on its own individual row (no 2-column grid). Confidence: 0.70
 - Keep the VsmFooterLegend rendered on the VSM page — do not remove it as it provides important legend information. Confidence: 0.75
+- Replace hardcoded SVG hex colors (fill=, stroke= attributes like `#64748b`, `#e2e8f0`) in VSM components with semantic CSS token references. Confidence: 0.65

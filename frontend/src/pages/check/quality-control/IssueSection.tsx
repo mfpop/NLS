@@ -151,7 +151,7 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
     if (editing && item) return renderEditForm(item);
     if (!id) return (
       <div className="flex flex-1 items-center justify-center h-full">
-        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Quality Issues</h3><p className="text-xs text-muted-foreground/70">Quality-related problems and issues.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-white hover:bg-warning/80"><Plus className="h-3.5 w-3.5" /> New Issue</button></div>
+        <div className="text-center max-w-xs"><h3 className="text-sm font-semibold text-foreground mb-1.5">Quality Issues</h3><p className="text-xs text-muted-foreground/70">Quality-related problems and issues.</p><button onClick={hNew} className="mt-4 inline-flex h-8 items-center gap-1.5 bg-warning px-4 text-sm font-semibold text-primary-foreground hover:bg-warning/80"><Plus className="h-3.5 w-3.5" /> New Issue</button></div>
       </div>
     );
     if (!item) return <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Loading...</div>;
@@ -200,7 +200,7 @@ export function useIssueSection(_search: string, filterStatus: string, onMessage
         {items.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No issues found</div>
         : <div className="py-0.5">{items.map((p: any) => (
           <div key={p.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(p.id); onSelect(p.id); }}
-            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === p.id ? "bg-primary/10 dark:bg-blue-950/20 border-l-blue-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
+            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2.5 cursor-pointer text-sm transition-all border-l-2 ${selId === p.id ? "bg-primary/10 border-l-primary" : "border-l-transparent hover:bg-table-row-hover"}`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2"><span className="min-w-0 flex-1 truncate font-semibold text-foreground">{p.title || "Issue"}</span><span className={`shrink-0 inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium border ${ISSUE_STATUS_STYLES[p.status] || ISSUE_STATUS_STYLES.OPEN}`}>{statusLabel(p.status)}</span></div>
               <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">{p.severity && <span className={`inline-flex items-center px-1 py-0.5 text-[10px] font-medium border ${SEVERITY_STYLES[p.severity] || SEVERITY_STYLES.MEDIUM}`}>{p.severity}</span>}{p.problemType && <span>{p.problemType}</span>}{(p.reportedBy || p.owner) && <span>· {p.reportedBy || p.owner}</span>}</div>

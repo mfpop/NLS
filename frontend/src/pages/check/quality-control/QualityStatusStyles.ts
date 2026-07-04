@@ -2,65 +2,65 @@
 
 export const STATUS_STYLES: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground border-border/40",
-  OPEN: "bg-primary/15 text-primary border-primary/20 dark:bg-blue-950/30 dark:text-blue-300",
-  COMPLETED: "bg-success/15 text-success border-success/20 dark:bg-green-900/30 dark:text-green-300",
-  ARCHIVED: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300",
-  IN_REVIEW: "bg-warning/15 text-warning border-warning/20 dark:bg-amber-950/30 dark:text-amber-300",
-  CLOSED: "bg-success/15 text-success border-success/20 dark:bg-green-900/30 dark:text-green-300",
-  CANCELLED: "bg-danger/15 text-danger border-danger/20 dark:bg-red-950/30 dark:text-red-300",
+  OPEN: "bg-primary/15 text-primary border-primary/20",
+  COMPLETED: "bg-success/15 text-success border-success/20",
+  ARCHIVED: "bg-warning/15 text-warning border-warning/20",
+  IN_REVIEW: "bg-warning/15 text-warning border-warning/20",
+  CLOSED: "bg-success/15 text-success border-success/20",
+  CANCELLED: "bg-danger/15 text-danger border-danger/20",
 };
 
 export const ISSUE_STATUS_STYLES: Record<string, string> = {
-  OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  IN_REVIEW: "border-warning/30 text-warning bg-warning/10/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  CONTAINED: "border-purple-300 text-accent-foreground bg-purple-50/80 dark:border-purple-800 dark:text-purple-300 dark:bg-purple-950/30",
-  CLOSED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CANCELLED: "border-danger/30 text-danger bg-danger/10/60 dark:border-red-800 dark:text-danger/80 dark:bg-red-950/20",
+  OPEN: "border-primary/30 text-primary bg-primary/10/80",
+  IN_REVIEW: "border-warning/30 text-warning bg-warning/10/80",
+  CONTAINED: "border-accent/30 text-accent-foreground bg-accent/10",
+  CLOSED: "border-success/30 text-success bg-success/10/80",
+  CANCELLED: "border-danger/30 text-danger bg-danger/10/60",
 };
 
 export const ACTION_STATUS_STYLES: Record<string, string> = {
-  OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  IN_PROGRESS: "border-warning/30 text-warning bg-warning/10/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  COMPLETED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CANCELLED: "border-danger/30 text-danger bg-danger/10/60 dark:border-red-800 dark:text-danger/80 dark:bg-red-950/20",
+  OPEN: "border-primary/30 text-primary bg-primary/10/80",
+  IN_PROGRESS: "border-warning/30 text-warning bg-warning/10/80",
+  COMPLETED: "border-success/30 text-success bg-success/10/80",
+  CANCELLED: "border-danger/30 text-danger bg-danger/10/60",
 };
 
 export const DMR_STATUS_STYLES: Record<string, string> = {
-  OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  UNDER_REVIEW: "border-warning/30 text-warning bg-warning/10/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  QUARANTINED: "border-purple-300 text-accent-foreground bg-purple-50/80 dark:border-purple-800 dark:text-purple-300 dark:bg-purple-950/30",
-  DISPOSITION_PENDING: "border-indigo-300 text-primary bg-indigo-50/80 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/30",
-  DISPOSITION_APPROVED: "border-teal-300 text-teal-700 bg-teal-50/80 dark:border-teal-800 dark:text-teal-300 dark:bg-teal-950/30",
-  IN_REWORK: "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30",
-  WAITING_SUPPLIER: "border-yellow-300 text-yellow-700 bg-yellow-50/80 dark:border-yellow-800 dark:text-yellow-300 dark:bg-yellow-950/30",
-  CLOSED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CANCELLED: "border-danger/30 text-danger bg-danger/10/60 dark:border-red-800 dark:text-danger/80 dark:bg-red-950/20",
+  OPEN: "border-primary/30 text-primary bg-primary/10/80",
+  UNDER_REVIEW: "border-warning/30 text-warning bg-warning/10/80",
+  QUARANTINED: "border-accent/30 text-accent-foreground bg-accent/10",
+  DISPOSITION_PENDING: "border-accent/30 text-primary bg-accent/10",
+  DISPOSITION_APPROVED: "border-primary/30 text-primary bg-primary/10",
+  IN_REWORK: "border-warning/30 text-warning bg-warning/10/80",
+  WAITING_SUPPLIER: "border-warning/30 text-warning bg-warning/10/80",
+  CLOSED: "border-success/30 text-success bg-success/10/80",
+  CANCELLED: "border-danger/30 text-danger bg-danger/10/60",
 };
 
 export const RMA_STATUS_STYLES: Record<string, string> = {
-  OPEN: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  RECEIVED: "border-teal-300 text-teal-700 bg-teal-50/80 dark:border-teal-800 dark:text-teal-300 dark:bg-teal-950/30",
-  UNDER_REVIEW: "border-warning/30 text-warning bg-warning/10/80 dark:border-amber-800 dark:text-amber-300 dark:bg-amber-950/30",
-  DISPOSITIONED: "border-indigo-300 text-primary bg-indigo-50/80 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/30",
-  DISPOSITION_PENDING: "border-indigo-300 text-primary bg-indigo-50/80 dark:border-indigo-800 dark:text-indigo-300 dark:bg-indigo-950/30",
-  CUSTOMER_RESPONSE_PENDING: "border-purple-300 text-accent-foreground bg-purple-50/80 dark:border-purple-800 dark:text-purple-300 dark:bg-purple-950/30",
-  QUARANTINED: "border-purple-300 text-accent-foreground bg-purple-50/80 dark:border-purple-800 dark:text-purple-300 dark:bg-purple-950/30",
-  CLOSED: "border-green-300 text-success bg-success/10/80 dark:border-green-800 dark:text-green-300 dark:bg-green-900/30",
-  CANCELLED: "border-danger/30 text-danger bg-danger/10/60 dark:border-red-800 dark:text-danger/80 dark:bg-red-950/20",
+  OPEN: "border-primary/30 text-primary bg-primary/10/80",
+  RECEIVED: "border-primary/30 text-primary bg-primary/10",
+  UNDER_REVIEW: "border-warning/30 text-warning bg-warning/10/80",
+  DISPOSITIONED: "border-accent/30 text-primary bg-accent/10",
+  DISPOSITION_PENDING: "border-accent/30 text-primary bg-accent/10",
+  CUSTOMER_RESPONSE_PENDING: "border-accent/30 text-accent-foreground bg-accent/10",
+  QUARANTINED: "border-accent/30 text-accent-foreground bg-accent/10",
+  CLOSED: "border-success/30 text-success bg-success/10/80",
+  CANCELLED: "border-danger/30 text-danger bg-danger/10/60",
 };
 
 export const SEVERITY_STYLES: Record<string, string> = {
-  CRITICAL: "border-danger/30 text-danger bg-danger/10/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30",
-  HIGH: "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30",
-  MEDIUM: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  LOW: "border-border text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30",
+  CRITICAL: "border-danger/30 text-danger bg-danger/10/80",
+  HIGH: "border-warning/30 text-warning bg-warning/10/80",
+  MEDIUM: "border-primary/30 text-primary bg-primary/10/80",
+  LOW: "border-border text-muted-foreground bg-muted/30",
 };
 
 export const PRIORITY_STYLES: Record<string, string> = {
-  CRITICAL: "border-danger/30 text-danger bg-danger/10/80 dark:border-red-800 dark:text-red-300 dark:bg-red-950/30",
-  HIGH: "border-orange-300 text-warning bg-warning/10/80 dark:border-orange-800 dark:text-orange-300 dark:bg-orange-950/30",
-  MEDIUM: "border-primary/30 text-primary bg-primary/10/80 dark:border-blue-800 dark:text-blue-300 dark:bg-blue-950/30",
-  LOW: "border-border text-gray-600 bg-gray-50/80 dark:border-gray-700 dark:text-gray-400 dark:bg-gray-900/30",
+  CRITICAL: "border-danger/30 text-danger bg-danger/10/80",
+  HIGH: "border-warning/30 text-warning bg-warning/10/80",
+  MEDIUM: "border-primary/30 text-primary bg-primary/10/80",
+  LOW: "border-border text-muted-foreground bg-muted/30",
 };
 
 export const DMR_DISPOSITION_OPTIONS = [
@@ -104,7 +104,7 @@ export const CUSTOMER_RESPONSE_OPTIONS = [
   { value: "CLOSED", label: "Closed" },
 ];
 
-export const SEL_INPUT = "h-8 w-full bg-background/60 dark:bg-slate-800/60 backdrop-blur-sm border border-border/50 dark:border-slate-600/50 px-2 text-sm text-foreground outline-none focus:border-primary focus:bg-background/80 dark:focus:bg-slate-800/80 focus:ring-1 focus:ring-primary/30";
+export const SEL_INPUT = "h-8 w-full bg-background/60 backdrop-blur-sm border border-border/50 px-2 text-sm text-foreground outline-none focus:border-primary focus:bg-background/80 focus:ring-1 focus:ring-primary/30";
 
 export function statusLabel(s: string): string {
   return s.charAt(0) + s.slice(1).toLowerCase().replace(/_/g, " ");

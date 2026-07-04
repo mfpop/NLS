@@ -24,13 +24,13 @@ import {
 } from "@/graphql/merMutations";
 
 /* ── CONSTANTS ── */  const STATUS_STYLES: Record<string, string> = {
-  SUBMITTED: "bg-primary/15 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-  UNDER_REVIEW: "bg-warning/15 text-warning dark:bg-amber-900/30 dark:text-amber-300",
-  APPROVED: "bg-success/15 text-success dark:bg-emerald-900/30 dark:text-emerald-300",
-  IN_PROGRESS: "bg-warning/15 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-  COMPLETED: "bg-success/15 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-  REJECTED: "bg-danger/15 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  CANCELLED: "bg-muted text-foreground dark:bg-slate-800/40 dark:text-muted-foreground/30",
+  SUBMITTED: "bg-primary/15 text-primary",
+  UNDER_REVIEW: "bg-warning/15 text-warning",
+  APPROVED: "bg-success/15 text-success",
+  IN_PROGRESS: "bg-warning/15 text-warning",
+  COMPLETED: "bg-success/15 text-success",
+  REJECTED: "bg-danger/15 text-danger",
+  CANCELLED: "bg-muted text-foreground dark:bg-muted/40 dark:text-muted-foreground/30",
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -40,14 +40,14 @@ const STATUS_DOT: Record<string, string> = {
   IN_PROGRESS: "bg-warning/100",
   COMPLETED: "bg-success",
   REJECTED: "bg-danger/100",
-  CANCELLED: "bg-slate-400",
+  CANCELLED: "bg-muted-foreground/40",
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
-  LOW: "bg-gray-100 text-gray-600 dark:bg-gray-800/40 dark:text-gray-400",
-  MEDIUM: "bg-primary/15 text-primary dark:bg-blue-900/30 dark:text-blue-300",
-  HIGH: "bg-warning/15 text-warning dark:bg-orange-900/30 dark:text-orange-300",
-  CRITICAL: "bg-danger/15 text-danger dark:bg-red-900/30 dark:text-red-300",
+  LOW: "bg-muted text-muted-foreground",
+  MEDIUM: "bg-primary/15 text-primary",
+  HIGH: "bg-warning/15 text-warning",
+  CRITICAL: "bg-danger/15 text-danger",
 };
 
 const PRIORITY_OPTIONS = [
@@ -230,17 +230,17 @@ const STATUS_META: Record<string, { label: string; color: string }> = {
 };
 
 const PRIORITY_META: Record<string, { label: string; color: string; bg: string }> = {
-  CRITICAL: { label: "Critical", color: "text-danger dark:text-danger/80", bg: "bg-danger/10 dark:bg-red-900/20" },
-  HIGH: { label: "High", color: "text-warning dark:text-orange-400", bg: "bg-warning/10 dark:bg-orange-900/20" },
-  MEDIUM: { label: "Medium", color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20" },
-  LOW: { label: "Low", color: "text-gray-500", bg: "bg-gray-50 dark:bg-gray-900/20" },
+  CRITICAL: { label: "Critical", color: "text-danger", bg: "bg-danger/10" },
+  HIGH: { label: "High", color: "text-warning", bg: "bg-warning/10" },
+  MEDIUM: { label: "Medium", color: "text-primary", bg: "bg-primary/10" },
+  LOW: { label: "Low", color: "text-muted-foreground", bg: "bg-muted" },
 };
 
 const TYPE_META: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
-  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-primary dark:text-blue-400", bg: "bg-primary/10 dark:bg-blue-900/20", border: "border-primary/20 dark:border-blue-800" },
-  TOOLING: { label: "Tooling", icon: Settings, color: "text-warning dark:text-amber-400", bg: "bg-warning/10 dark:bg-amber-900/20", border: "border-warning/20 dark:border-amber-800" },
-  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-success dark:text-success/80", bg: "bg-success/10 dark:bg-green-900/20", border: "border-success/20 dark:border-green-800" },
-  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-accent-foreground dark:text-purple-400", bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-accent/20 dark:border-purple-800" },
+  ENGINEERING_CHANGE: { label: "Engineering Change", icon: Wrench, color: "text-primary", bg: "bg-primary/10", border: "border-primary/20" },
+  TOOLING: { label: "Tooling", icon: Settings, color: "text-warning", bg: "bg-warning/10", border: "border-warning/20" },
+  PROCESS_IMPROVEMENT: { label: "Process Improvement", icon: Lightbulb, color: "text-success", bg: "bg-success/10", border: "border-success/20" },
+  EQUIPMENT_MODIFICATION: { label: "Equipment Modification", icon: Cog, color: "text-accent-foreground", bg: "bg-accent/10", border: "border-accent/20" },
 };
 
 function KpiCell({ label, value, muted, dotClass, icon }: { label: string; value: ReactNode; muted?: boolean; dotClass?: string; icon?: ReactNode }) {
@@ -361,7 +361,7 @@ function MERDashboardContent({ summary, summaryLoading, merList, onNew }: {
                     const meta = TYPE_META[t.requestType];
                     const barColors: Record<string, string> = {
                       ENGINEERING_CHANGE: "bg-primary/100", TOOLING: "bg-warning/100",
-                      PROCESS_IMPROVEMENT: "bg-success/100", EQUIPMENT_MODIFICATION: "bg-purple-500",
+                      PROCESS_IMPROVEMENT: "bg-success/100", EQUIPMENT_MODIFICATION: "bg-accent",
                     };
                     return (
                       <div key={t.requestType} className="flex items-center gap-2">
@@ -1066,7 +1066,7 @@ export function ManufacturingEngineeringRequestsPage() {
             {loading && mers.length === 0 ? (
               <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted border-r border-border">
                 <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                  <span className="inline-block h-2 w-2 bg-slate-400 animate-pulse mr-2" />Loading...
+                  <span className="inline-block h-2 w-2 bg-muted-foreground/40 animate-pulse mr-2" />Loading...
                 </div>
               </div>
             ) : (

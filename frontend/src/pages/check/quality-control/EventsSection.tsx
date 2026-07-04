@@ -21,7 +21,7 @@ const SEVERITY_OPTS = [
 ];
 
 const SEVERITY_DOT: Record<string, string> = {
-  LOW: "bg-slate-400", MEDIUM: "bg-warning/100", HIGH: "bg-warning/100", CRITICAL: "bg-danger/100",
+  LOW: "bg-muted-foreground/40", MEDIUM: "bg-warning/100", HIGH: "bg-warning/100", CRITICAL: "bg-danger/100",
 };
 
 const EVENT_STATUS_STYLES: Record<string, string> = {
@@ -202,7 +202,7 @@ export function useEventSection(_search: string, filterStatus: string, onMessage
         {items.length === 0 ? <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">No safety events reported</div>
         : <div className="py-0.5">{items.map((e: any) => (
           <div key={e.id} onClick={() => { setCreating(false); setEditing(false); setSelectedId(e.id); onSelect(e.id); }}
-            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2 cursor-pointer text-sm transition-all border-l-2 ${selId === e.id ? "bg-warning/10/60 dark:bg-orange-950/20 border-l-orange-500" : "border-l-transparent hover:bg-table-row-hover"}`}>
+            className={`group mx-1 my-0.5 flex items-start gap-2 px-3 py-2 cursor-pointer text-sm transition-all border-l-2 ${selId === e.id ? "bg-warning/10 border-l-warning" : "border-l-transparent hover:bg-table-row-hover"}`}>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className={`inline-block h-2 w-2 rounded-full shrink-0 ${SEVERITY_DOT[e.severity] || "bg-slate-400"}`} />

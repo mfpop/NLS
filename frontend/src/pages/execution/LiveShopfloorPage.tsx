@@ -192,7 +192,7 @@ export function LiveShopfloorPage() {
         <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
-            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-border bg-muted text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" />Empty</span>}
+            leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-border bg-muted text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />Empty</span>}
             actions={
               <><ToolbarButton icon={RefreshCw} label={refreshing ? "Refreshing..." : "Refresh"} onClick={handleRefresh} disabled={!allowRefresh || refreshing} />
                 <ToolbarSeparator />
@@ -324,11 +324,11 @@ export function LiveShopfloorPage() {
       {/* Footer */}
       <div className="shrink-0 flex h-10 items-center gap-5 border-t border-border bg-muted px-4 text-xs font-medium text-muted-foreground">
         <span>Line: {activeLine?.name ?? "—"}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Shift: {dashboard?.shiftSummary?.name ?? "—"}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Status: {dashboard?.liveStatus?.displayStatus ?? "—"}</span>
-        <span className="w-1 h-1 rounded-full bg-slate-300" />
+        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
         <span>Updated: {dashboard?.lastUpdatedAt ? new Date(dashboard.lastUpdatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</span>
         <div className="ml-auto flex items-center gap-2">
           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${

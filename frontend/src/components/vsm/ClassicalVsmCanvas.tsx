@@ -2,7 +2,7 @@ import { useRef, useCallback, useEffect, useMemo } from "react";
 import type { VsmDiagram } from "@/types/vsm";
 import { StandardVsmTemplate } from "@/features/execution/vsm/template/StandardVsmTemplate";
 import { mapVsmApiToTemplateModel } from "@/features/execution/vsm/template/mapVsmApiToTemplateModel";
-import { CONTENT_W, CONTENT_H } from "@/features/execution/vsm/template/vsmTemplateGeometry";
+import { VSM_VIEW_X, VSM_VIEW_Y, VSM_VIEW_W, VSM_VIEW_H, CONTENT_W, CONTENT_H } from "@/features/execution/vsm/template/vsmTemplateGeometry";
 
 interface Props {
   diagram: VsmDiagram;
@@ -22,6 +22,18 @@ interface Props {
 const FIT_PAD_X = 16;
 const FIT_PAD_Y = 12;
 
+/** Convert CSS-style zoom/pan to viewBox string.
+ *  zoom=1 → viewBox shows full canvas at natural size.
+ *  zoom=0.5 → viewBox shows 2× the area (zoomed out).
+ *  pan shifts the viewBox origin in SVG coordinate units. */
+function toViewBox(z: number, p: { x: number; y: number }): string {
+  const vw = VSM_VIEW_W / z;
+  const vh = VSM_VIEW_H / z;
+  const cx = VSM_VIEW_X + VSM_VIEW_W / 2 + p.x / z;
+  const cy = VSM_VIEW_Y + VSM_VIEW_H / 2 + p.y / z;
+  return `${cx - vw / 2} ${cy - vh / 2} ${vw} ${vh}`;
+}
+
 export function ClassicalVsmCanvas({
   diagram, selectedNodeId, onSelectNode,
   showKaizen, showFlowLogic, showAllFlows, zoom, pan,
@@ -31,22 +43,10 @@ export function ClassicalVsmCanvas({
   const wheelTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const doFitRef = useRef<(() => void) | null>(null);
 
-  // Expose fit function so it can be called from resize or refitKey change
+  // Fit: set zoom=1, pan=(0,0). SVG's preserveAspectRatio handles the rest.
   const doFit = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const cw = el.clientWidth;
-    const ch = el.clientHeight;
-    if (cw <= 0 || ch <= 0) return;
-    const scale = Math.min(
-      (cw - FIT_PAD_X * 2) / CONTENT_W,
-      (ch - FIT_PAD_Y * 2) / CONTENT_H
-    );
-    onZoomChange(Math.max(0.1, Math.min(2, scale)));
-    onPanChange({
-      x: Math.round((cw - CONTENT_W * scale) / 2),
-      y: Math.round((ch - CONTENT_H * scale) / 2),
-    });
+    onZoomChange(1);
+    onPanChange({ x: 0, y: 0 });
   }, [onZoomChange, onPanChange]);
 
   useEffect(() => { doFitRef.current = doFit; }, [doFit]);
@@ -77,6 +77,9 @@ export function ClassicalVsmCanvas({
     if (refitKey != null) doFit();
   }, [refitKey, doFit]);
 
+  // Compute viewBox from zoom/pan once per render
+  const viewBoxValue = useMemo(() => toViewBox(zoom, pan), [zoom, pan]);
+
   // Map API data → template model (one-time per diagram change)
   const templateModel = useMemo(() => mapVsmApiToTemplateModel(diagram), [diagram]);
 
@@ -92,64 +95,43 @@ export function ClassicalVsmCanvas({
   // Smooth mouse wheel zoom with inertia
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    // Dampened zoom for smooth feel
     const delta = e.deltaY > 0 ? -0.05 : 0.05;
     const newZoom = Math.max(0.25, Math.min(3, zoom + delta));
     onZoomChange(newZoom);
-
-    // Subtle inertia: continue zooming slightly after wheel stops
     if (wheelTimeoutRef.current) clearTimeout(wheelTimeoutRef.current);
-    wheelTimeoutRef.current = setTimeout(() => {
-      // snap effect is done — no further action needed
-    }, 150);
+    wheelTimeoutRef.current = setTimeout(() => {}, 150);
   }, [zoom, onZoomChange]);
 
-  // Drag-to-pan with smooth mouse tracking
-  const panState = useRef({ dragging: false, dx: 0, dy: 0 });
+  // Drag-to-pan (viewBox-space shifts)
+  const dragRef = useRef<{ active: boolean; sx: number; sy: number; ox: number; oy: number }>(
+    { active: false, sx: 0, sy: 0, ox: 0, oy: 0 }
+  );
   const handleMD = useCallback((e: React.MouseEvent) => {
     if (e.button === 0) {
-      panState.current = { dragging: true, dx: e.clientX - pan.x, dy: e.clientY - pan.y };
+      dragRef.current = { active: true, sx: e.clientX, sy: e.clientY, ox: pan.x, oy: pan.y };
     }
   }, [pan]);
   const handleMM = useCallback((e: React.MouseEvent) => {
-    if (panState.current.dragging) {
-      onPanChange({ x: e.clientX - panState.current.dx, y: e.clientY - panState.current.dy });
-    }
+    if (!dragRef.current.active) return;
+    onPanChange({
+      x: dragRef.current.ox + (e.clientX - dragRef.current.sx),
+      y: dragRef.current.oy + (e.clientY - dragRef.current.sy),
+    });
   }, [onPanChange]);
-  const handleMU = useCallback(() => {
-    panState.current.dragging = false;
-  }, []);
+  const handleMU = useCallback(() => { dragRef.current.active = false; }, []);
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden bg-gradient-to-br from-muted/30 to-background">
-      <div style={{
-        width: "100%", height: "100%",
-        transform: `translate(${pan.x}px,${pan.y}px) scale(${zoom})`,
-        transformOrigin: "0 0",
-        transition: "transform 0.08s ease-out",
-        cursor: "grab",
-      }}
-        onWheel={handleWheel} onMouseDown={handleMD}
-        onMouseMove={handleMM} onMouseUp={handleMU} onMouseLeave={handleMU}
-        className="active:cursor-grabbing select-none"
-      >
-        {/* Subtle background grid pattern for depth */}
-        <svg width="100%" height="100%" className="absolute inset-0 pointer-events-none opacity-[0.03]">
-          <defs>
-            <pattern id="vsm-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#vsm-grid)" />
-        </svg>
-        <StandardVsmTemplate
-          model={modelWithSelection}
-          onSelectNode={onSelectNode}
-          showKaizen={showKaizen}
-          showFlowLogic={showFlowLogic}
-          showAllFlows={showAllFlows}
-        />
-      </div>
+    <div ref={containerRef} className="flex-1 min-h-0 overflow-hidden bg-gradient-to-br from-muted/30 to-background cursor-grab active:cursor-grabbing select-none"
+      onWheel={handleWheel} onMouseDown={handleMD} onMouseMove={handleMM} onMouseUp={handleMU} onMouseLeave={handleMU}
+    >
+      <StandardVsmTemplate
+        model={modelWithSelection}
+        onSelectNode={onSelectNode}
+        showKaizen={showKaizen}
+        showFlowLogic={showFlowLogic}
+        showAllFlows={showAllFlows}
+        viewBoxOverride={viewBoxValue}
+      />
     </div>
   );
 }

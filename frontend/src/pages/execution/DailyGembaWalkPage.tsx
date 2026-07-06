@@ -24,6 +24,7 @@ import { GembaWalkObservationList } from "@/components/gemba/GembaWalkObservatio
 import { GembaSessionStrip } from "@/components/gemba/GembaSessionStrip";
 import { GembaObservationDetailDrawer } from "@/components/gemba/GembaObservationDetailDrawer";
 import { theme } from "@/styles/themeTokens";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import type {
   DailyGembaBoardData,
   CreateGembaObservationInput,
@@ -38,6 +39,55 @@ import type {
   GembaConvertToActionData,
   GembaObservation,
 } from "@/types/gemba";
+
+const GEMBA_GUIDE: GuideContent = {
+  purpose:
+    "**Gemba Walk** observation capture and management — record shopfloor observations, track resolution, and convert findings into issues or actions for continuous improvement.",
+  quickStart: [
+    "Select a **production line** from the sidebar; the walk board auto-loads.",
+    "Click **Start Walk** to begin a Gemba session, then use the form to capture observations.",
+    "Use **Search** and **Category/Status/Severity** filters to find specific observations.",
+    "Click any **observation row** for the detail drawer with full workflow actions.",
+  ],
+  whenToUse: [
+    "**Daily walk** — capture observations during the scheduled Gemba walk.",
+    "**Issue escalation** — convert an observation into a tracked issue with severity and owner.",
+    "**Action assignment** — create corrective or preventive actions from observations.",
+    "**Resolution verification** — verify resolved observations on the shopfloor before closing.",
+  ],
+  keyFeatures: [
+    "**Session management** — Start/Complete Walk buttons with session status strip (Planned, In Progress, Completed).",
+    "**Observation Capture Form** (left) — category, severity, title, description, and area fields.",
+    "**Observations List** (right) — filterable list with search, category, status, and severity filters.",
+    "**Detail Drawer** — full observation details with workflow actions.",
+    "**Workflow actions** — Assign, Resolve, Verify, Create Issue, Create Action, Close, and Reopen.",
+    "**Action modals** — dedicated forms for each workflow action with required fields.",
+    "**Metrics strip** — counts for open, critical, overdue, resolved, and closed observations.",
+  ],
+  howToUse: [
+    "Click **Start Walk** to begin, then use the form to capture observations with category, severity, and description.",
+    "Use **Search** and the **Category/Status/Severity** dropdowns to filter the observation list.",
+    "Click any observation to open the **detail drawer** with full description and workflow buttons.",
+    "Use **Assign** to set an owner and due date; use **Resolve** to mark as resolved with a note.",
+    "Use **Create Issue** or **Create Action** to convert an observation into a formal tracked item.",
+    "Click **Complete Walk** (with optional summary) to end the session and make observations read-only.",
+  ],
+  tips: [
+    "**Critical** observations should be converted to Issues immediately for formal tracking.",
+    "Use **Assign** to delegate follow-up work; use **Create Action** for corrective tasks.",
+    "The **Complete Walk** summary helps document what was found and what actions were taken.",
+    "**Filters** combine — use Category + Severity together to find the most important observations.",
+  ],
+  commonMistakes: [
+    "Don't leave observations **unassigned** — use the Assign action to set ownership and due dates.",
+    "**Closing** an observation should only happen after on-site verification — use Verify first.",
+    "Observations are **read-only** after the walk is Completed — complete all actions before finishing.",
+  ],
+  relatedPages: [
+    { title: "**Live Shopfloor** — real-time status and resource flow", path: "/execution/live-shopfloor" },
+    { title: "**Line Performance** — OEE and shift performance", path: "/execution/line-performance" },
+  ],
+};
 
 const CATEGORY_OPTIONS = [
   { value: "ALL", label: "All Categories" },
@@ -656,7 +706,7 @@ export function DailyGembaWalkPage() {
   if (!lineIdNumber && !lineLoading) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Daily Gemba Walk" subtitle="Select a production line from the sidebar." icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
+        <PageHeader title="Daily Gemba Walk" subtitle="Select a production line from the sidebar." icon={<Footprints />} iconClass={theme.iconBoxEmerald} guideContent={GEMBA_GUIDE} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3 p-8 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -673,7 +723,7 @@ export function DailyGembaWalkPage() {
   if ((queryLoading && !queryData) || (lineLoading && !activeLine)) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Daily Gemba Walk" subtitle="Loading..." icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
+        <PageHeader title="Daily Gemba Walk" subtitle="Loading..." icon={<Footprints />} iconClass={theme.iconBoxEmerald} guideContent={GEMBA_GUIDE} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="h-8 w-8 rounded-full border-2 border-success border-t-transparent animate-spin" />
@@ -688,7 +738,7 @@ export function DailyGembaWalkPage() {
   if (queryError && !queryData) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Daily Gemba Walk" subtitle="Unable to load observations" icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
+        <PageHeader title="Daily Gemba Walk" subtitle="Unable to load observations" icon={<Footprints />} iconClass={theme.iconBoxEmerald} guideContent={GEMBA_GUIDE} />
         <PageToolbar
           leftWidthClass={LEFT_PANEL_WIDTH}
           actions={<ToolbarButton icon={RefreshCw} label="Retry" onClick={handleRefresh} disabled={refreshing} />}
@@ -720,7 +770,7 @@ export function DailyGembaWalkPage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       {/* Header */}
       <div className="h-16 shrink-0">
-        <PageHeader title="Daily Gemba Walk" subtitle={headerSubtitle} icon={<Footprints />} iconClass={theme.iconBoxEmerald} />
+        <PageHeader title="Daily Gemba Walk" subtitle={headerSubtitle} icon={<Footprints />} iconClass={theme.iconBoxEmerald} guideContent={GEMBA_GUIDE} />
       </div>
 
       {/* Session status strip */}

@@ -15,11 +15,13 @@ import {
   Save,
   RefreshCw,
   Pencil,
+  CircleHelp,
 } from "lucide-react";
 import { PageToolbar, ToolbarButton } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
 import { useProfile } from "@/hooks/useProfile";
 import type { WorkHistoryEntry, EducationEntry } from "@/types/profile";
+import { PageGuideModal, type GuideContent } from "@/pages/shared/PageGuideModal";
 import { normalizeProfile } from "@/utils/profileNormalizer";
 import { PersonalInfoColumn } from "./profile/PersonalInfoColumn";
 import { WorkHistoryColumn } from "./profile/WorkHistoryColumn";
@@ -92,6 +94,7 @@ export function UserProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [guideOpen, setGuideOpen] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
   const [draftInitialized, setDraftInitialized] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -479,6 +482,60 @@ export function UserProfilePage() {
   /* ════════════════════════════════════════════════════════════════ */
   /*  RENDER                                                         */
   /* ════════════════════════════════════════════════════════════════ */
+
+  const PROFILE_GUIDE: GuideContent = {
+    purpose:
+      "Complete profile page with **Personal Info**, **Work History**, and **Education** columns — your profile is visible across LeanSynk for collaboration, task assignment, and identification.",
+    quickStart: [
+      "Click **Personal Info**, **Work History**, or **Education** in the toolbar to start editing that section.",
+      "Fill in fields and click **Save** (or press **Ctrl+S**) to persist changes, or **Cancel** to discard.",
+      "Hover over your **avatar** and click the camera icon to upload a profile photo.",
+      "Use **Arrow Left/Right** keyboard keys to scroll between the 5 profile sections.",
+    ],
+    whenToUse: [
+      "**First setup** — complete your profile so teammates can identify and find you.",
+      "**Update role/contact** — keep your position, email, phone, plant, and department current.",
+      "**Add work history** — document your experience with company, role, dates, and descriptions.",
+      "**Add education** — record degrees, schools, and graduation periods.",
+      "**Profile review** — check your completeness score and fill missing fields from the footer popover.",
+    ],
+    keyFeatures: [
+      "**3-column layout** — Personal Info (left), Work History (center), Education (right) displayed side-by-side.",
+      "**Header badges** — highlights, profile quality score (0–100), and rating label displayed under your name.",
+      "**Completeness score** — footer bar with percentage and clickable popover listing missing fields.",
+      "**Sectioned editing** — edit Personal Info, Work History, or Education independently with inline save/cancel.",
+      "**Avatar upload** — hover over your photo and click the camera overlay to upload a new image.",
+      "**Field validation** — required fields show inline errors; error count displayed in the toolbar.",
+      "**Unsaved changes guard** — navigating away with unsaved edits prompts Save, Discard, or Cancel.",
+      "**Keyboard shortcuts** — **Ctrl+S** to save, **Arrow Left/Right** to navigate between sections.",
+    ],
+    howToUse: [
+      "Click **Personal Info** toolbar button to edit name, role, email, phone, location, plant, and department.",
+      "Click **Work History** to add or edit roles with company, dates, and description bullets.",
+      "Click **Education** to add or edit degrees, schools, and graduation periods.",
+      "Click **Save** or press **Ctrl+S** to apply changes; click **Cancel** to discard edits.",
+      "Hover over your **avatar** and click the camera icon to upload a new profile photo.",
+      "Click the **completion %** in the footer to see which fields are missing and jump directly to them.",
+      "Use **Arrow Left/Right** to scroll between sections (Identity, Contact, Summary, Experience, Education).",
+    ],
+    tips: [
+      "A higher **completeness score** helps teammates find and recognize you in the organization.",
+      "Add a **profile photo** so your face appears in chats, approvals, and team views.",
+      "Keep your **role** and **department** current for accurate task routing and reporting.",
+      "Use **Ctrl+S** to save without reaching for the Save button.",
+      "The **profile quality score** (header badges) gives you a quick rating from your profile data.",
+    ],
+    commonMistakes: [
+      "Don't leave **required fields** empty — the toolbar shows an error count; you must fix these to save.",
+      "Clicking **Cancel** discards ALL unsaved changes in the currently editing section.",
+      "Navigating away while editing triggers the **unsaved changes** modal — choose Save or Discard.",
+      "Uploaded profile photos are **previewed locally only** — they are not yet persisted to the server.",
+    ],
+    relatedPages: [
+      { title: "**Preferences** — customize app appearance, notifications, and defaults", path: "/system/preferences" },
+    ],
+  };
+
   return (
     <div className={`flex h-full flex-col overflow-hidden ${theme.page}`}>
       {/* ── HEADER ────────────────────────────────────────────────── */}
@@ -512,7 +569,7 @@ export function UserProfilePage() {
         </div>
 
         {/* Badges — highlights, score, rating */}
-        <div className="flex items-center gap-1.5 overflow-hidden shrink-0 ml-auto">
+        <div className="flex items-center gap-1.5 overflow-hidden shrink-0">
           {highlights.map((h, i) => (
             <span key={i} title={getHighlightTitle(h)} className={`inline-flex h-6 shrink-0 items-center gap-1 rounded border border-border bg-muted/40 px-2 text-[11px] font-medium ${theme.textSecondary}`}>
               {h}
@@ -526,6 +583,16 @@ export function UserProfilePage() {
             {score.label}
           </span>
         </div>
+
+        {/* Help button */}
+        <button
+          type="button"
+          onClick={() => setGuideOpen(true)}
+          title="Page Guide"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/40 hover:bg-muted hover:text-muted-foreground transition-colors"
+        >
+          <CircleHelp className="h-4 w-4 stroke-current" />
+        </button>
 
         {/* Save error banner */}
         {saveError && !saveSuccess && (
@@ -680,7 +747,7 @@ export function UserProfilePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/30" onClick={confirmCancel} />
           <div className={`relative ${theme.modal} p-5 w-[380px] max-w-[90vw]`}>
-            <h3 className={`text-sm font-bold ${theme.textPrimary} mb-1`}>Unsaved changes</h3>
+            <div className="text-sm font-bold text-foreground mb-1">Unsaved changes</div>
             <p className={`text-xs ${theme.textMuted} mb-4`}>You have unsaved edits. What would you like to do?</p>
             <div className="flex items-center justify-end gap-2">
               <ToolbarButton
@@ -713,6 +780,9 @@ export function UserProfilePage() {
           {saveSuccess}
         </div>
       )}
+
+      {/* ── Page Guide Modal ── */}
+      <PageGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} content={PROFILE_GUIDE} pageTitle="My Profile" />
     </div>
   );
 }

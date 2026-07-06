@@ -17,6 +17,7 @@ import {
 import { useState } from "react";
 import { theme } from "../../styles/themeTokens";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 
 /* ── Sample data ── */
 const controlTowerData = {
@@ -225,6 +226,51 @@ function DrillDownPanel({ target, onClose }: { target: string; onClose: () => vo
 
 /* ── Page component ── */
 
+const CT_GUIDE: GuideContent = {
+  purpose:
+    "Command center showing **live priorities, KPI risks, and supervisor actions** for the selected production line — combining situational awareness with actionable next steps.",
+  quickStart: [
+    "Use the **Primary Actions** buttons to drill into key issues (trend chart, line breakdown, root cause).",
+    "Review **KPI Groups** (Flow, Performance, Quality) to spot critical metrics at a glance.",
+    "Check **Priority Actions** and **Problems** for ranked issues with ownership and next steps.",
+    "Use the **My Work** sidebar (right column) to see Do Now, Next, and Later tasks.",
+  ],
+  whenToUse: [
+    "**Start of shift** — check the Situation Summary for current output, risks, and root causes.",
+    "**Bottleneck resolution** — use KPI drill-downs and Priority Actions to identify constraints.",
+    "**Supervisor handoff** — review the Problems section for issue chains and drill-down details.",
+  ],
+  keyFeatures: [
+    "**Situation Summary** — critical status banner with output gap, root cause, and next action.",
+    "**Primary Actions** — one-click buttons to Fix Bottleneck, Investigate Output Gap, or Add WIP.",
+    "**KPI Groups** — FLOW (WIP, Lead Time), PERFORMANCE (Output vs Plan, Takt vs Cycle), QUALITY (%) with trend arrows and drill-down.",
+    "**Priority Actions** — ranked list with severity, impact, owner, and next action.",
+    "**Problems** — root-cause chains grouped by category (Operational, System, Data).",
+    "**My Work sidebar** — personalized Do Now, Next, and Later task groups.",
+    "**Drill-down panels** — modal overlays for Trend Chart, Line/Station Breakdown, and Root-Cause View.",
+  ],
+  howToUse: [
+    "Click **KPI cards** in the Flow, Performance, or Quality groups to open a drill-down panel.",
+    "Click **Primary Action buttons** (Fix Bottleneck, Investigate, Add WIP) for guided navigation.",
+    "Click **Priority Action rows** or **Problems** to drill into root causes.",
+    "Use the **My Work** sidebar to see prioritized personal tasks — click any to navigate.",
+    "Close drill-down panels by clicking the **Close** button inside the overlay.",
+  ],
+  tips: [
+    "The **Situation Summary** banner color indicates severity — red for critical, amber for warning.",
+    "**KPI trends** (↑ ↓ →) show direction at a glance — critical-state KPIs use red backgrounds.",
+    "**Problem chains** trace root causes step by step (e.g., Output behind → WIP = 0 → Machine stopped).",
+  ],
+  commonMistakes: [
+    "Don't ignore the **Situation Summary** — it captures the most critical issue for the current shift.",
+    "**My Work** is read-only here — use the source pages to update task status.",
+  ],
+  relatedPages: [
+    { title: "**Live Shopfloor** — real-time line status and resources", path: "/execution/live-shopfloor" },
+    { title: "**VSM** — value stream mapping and process analysis", path: "/execution/vsm" },
+  ],
+};
+
 export function ControlTowerPage() {
   const { situation, primaryActions, priorityActions, kpiGroups, problems, myWork } = controlTowerData;
   const [drillDownTarget, setDrillDownTarget] = useState<string | null>(null);
@@ -235,6 +281,7 @@ export function ControlTowerPage() {
       iconClass="bg-success/10 text-success"
       title="Control Tower"
       subtitle="Live priorities, KPI risk, and supervisor actions"
+      guideContent={CT_GUIDE}
       headerChildren={
         <>
           <span className="border border-warning/15 bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">At risk</span>

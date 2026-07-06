@@ -8,6 +8,7 @@ import {
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { PageToolbar, ToolbarDropdown, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { theme } from "@/styles/themeTokens";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import {
   MY_TASKS_QUERY,
   TASK_SUMMARY_QUERY,
@@ -657,12 +658,65 @@ export function MyTasksPage() {
     </div>
   ) : null;
 
+  /* ── Page Guide ── */
+
+  const TASKS_GUIDE: GuideContent = {
+    purpose:
+      "Full task management hub for all work items assigned to you — **tasks, follow-ups, approvals, and actions** — across every LeanSynk module with filter, search, and lifecycle management.",
+    quickStart: [
+      "Use **Status**, **Priority**, and **Overdue** filters to narrow the task list.",
+      "Click a task in the **left panel** to view its full details on the right.",
+      "Use **Start**, **Complete**, or **Cancel** from the toolbar or detail panel to update status.",
+      "Use **Search** at the top to find tasks by title or description keyword.",
+    ],
+    whenToUse: [
+      "**Start your day** — review open, overdue, and due-today tasks from the summary strip.",
+      "**Track progress** — move tasks through Open → In Progress → Completed.",
+      "**Follow-up** on tasks awaiting your approval or waiting on others.",
+      "**Audit completed work** — review notes, completion dates, and source references.",
+    ],
+    keyFeatures: [
+      "**Filter bar** — Status, Priority, and Overdue dropdowns to slice the list.",
+      "**Summary Strip** — six metric cells (Open, In Progress, Due Today, Overdue, Completed This Week, Total) with live counts.",
+      "**Split layout** — paginated task list on the left, detail panel on the right.",
+      "**Detail Panel** — shows full metadata: priority, due date, assigned to, source module, description, notes, and source reference link.",
+      "**Inline actions** — Start, Complete, and Cancel with instant feedback and success banners.",
+      "**Pagination** — page controls at the bottom of the task list with auto-calculated page size.",
+      "**Overview mode** — when no task is selected, shows Priority Work, Due This Week, Waiting/Blocked, and Recent Activity panels.",
+    ],
+    howToUse: [
+      "Use **filters** at the top (Status, Priority, Overdue) to narrow the list to what matters.",
+      "Click any task in the **left panel** to select it and see full details in the right panel.",
+      "From the detail panel, click **Start** to begin work, **Complete** to finish, or **Cancel** to close without completing.",
+      "Use **Search** to find tasks by keyword across title, description, and source reference.",
+      "Navigate **pages** using the pagination controls at the bottom of the left panel.",
+      "Click **Refresh** to reload the latest task data from the server.",
+    ],
+    tips: [
+      "**Overdue** tasks show a red alert icon and red date — prioritize these first.",
+      "Use **notes** on completed tasks for audit trail and future reference.",
+      "The **filter bar** supports combinations — e.g. High Priority + Overdue to find urgent issues.",
+      "**Pagination** auto-calculates page size based on your screen height — resize the panel to show more rows.",
+      "When **no task is selected**, the overview panels give you a quick snapshot of priority work and upcoming deadlines.",
+    ],
+    commonMistakes: [
+      "Don't forget to **Complete** tasks after finishing — leaving them In Progress skews team metrics.",
+      "Avoid using **Cancel** for completed work — use Complete to preserve the audit record.",
+      "Don't rely on the **default view** — use Status + Priority filters together for faster triage.",
+    ],
+    relatedPages: [
+      { title: "**Personal Dashboard** — overview of all assigned items", path: "/myworkspace/dashboard" },
+      { title: "**Activity Feed** — chronological stream of changes", path: "/myworkspace/activity" },
+    ],
+  };
+
   return (
     <AppPageLayout
       title="My Tasks"
       subtitle="Track assigned work, follow-ups, approvals, and actions across your workspace."
       icon={<ListChecks />}
       iconClass={theme.iconBoxSky}
+      guideContent={TASKS_GUIDE}
       toolbar={
         <PageToolbar
           searchValue={search}

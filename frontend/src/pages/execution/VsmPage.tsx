@@ -31,6 +31,7 @@ import { mapVsmChartToTemplateModel } from "@/features/execution/vsm/template/ma
 /* Fit handled by ClassicalVsmCanvas ResizeObserver + refitKey */
 import { mapVsmApiToTemplateModel } from "@/features/execution/vsm/template/mapVsmApiToTemplateModel";
 import { theme } from "@/styles/themeTokens";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import { createTestChart } from "@/demo/vsmTestChart";
 import type {
   VsmQueryData, VsmChart, VsmChartProcess, VsmChartInventory,
@@ -61,6 +62,55 @@ function SkeletonKpiStrip() {
 }
 
 /* ── Empty state card ── */
+const VSM_GUIDE: GuideContent = {
+  purpose:
+    "Interactive **Value Stream Map** showing material and information flow for a production line — with classical VSM notation, KPI tracking, and chart management.",
+  quickStart: [
+    "**Derived Mode**: Select a line from the sidebar to see the auto-generated VSM with process nodes, inventory triangles, and flows.",
+    "**Charts Mode**: Click the toggle to switch to saved charts; use the dropdown to select or create new charts.",
+    "Click any **process node** to open the Process Detail Drawer with cycle time, uptime, and improvement suggestions.",
+    "Open the **Demand & Takt** drawer to configure customer demand and calculate takt time.",
+  ],
+  whenToUse: [
+    "**Map current state** — visualize the entire production flow from supplier to customer.",
+    "**Identify bottlenecks** — use the KPI strip and process detail data to find constraints.",
+    "**Plan future state** — create a Future State chart with improvement targets.",
+    "**Analyze charts** — switch to Charts mode to manage multiple saved VSM versions.",
+  ],
+  keyFeatures: [
+    "**Two view modes** — Derived (live auto-generated VSM) and Charts (saved/manual charts).",
+    "**Classical VSM canvas** — process boxes, inventory triangles, material flows (push/pull/kanban), information flows (manual/electronic), and timeline segments.",
+    "**KPI Strip** — Lead Time, VA Time, VA%, Takt Time, Bottleneck, WIP, and Demand Rate.",
+    "**Kaizen bursts** — improvement opportunities highlighted on the map with severity indicators.",
+    "**Business Impact Drawer** — cost and performance impact analysis for improvement opportunities.",
+    "**Process Detail Drawer** — node-level data (C/T, C/O, uptime, defect rate, WIP) with improvement suggestions.",
+    "**Zoom/Pan/Fit controls** — navigate the canvas at any scale with auto-fit on resize.",
+    "**Chart Editor** — add/edit/delete processes, inventories, material/info flows, timeline segments, and demand/takt settings.",
+  ],
+  howToUse: [
+    "**Derived mode**: Select a production line from the sidebar to auto-generate the VSM from routing data.",
+    "**Charts mode**: Click the toggle button and select or create a chart; use Manual for full control or Linked to sync from the line.",
+    "Click any **process node** on the canvas to open the detail drawer with KPI data and improvement ideas.",
+    "Use **Kaizen** toggle to show/hide improvement bursts; use **Flow** to toggle information flow logic.",
+    "Use **Zoom In/Out** and **Fit** to adjust the canvas view; drag to pan in Charts mode.",
+    "Configure **Demand & Takt** in the drawer (click the takt value in the KPI strip or the alert banner).",
+  ],
+  tips: [
+    "**Kaizen bursts** show the biggest improvement opportunities — red for critical, amber for warnings.",
+    "The **KPI strip** is interactive — click the takt value to open Demand & Takt settings.",
+    "**Linked charts** auto-sync processes from the production line — use Manual charts for full creative control.",
+    "The **alert banner** appears when takt can't be calculated — click it to set demand or working time.",
+  ],
+  commonMistakes: [
+    "**Takt time** requires both demand quantity AND available working time — configure both in the Demand & Takt drawer.",
+    "**Linked charts** overwrite processes on sync — use Manual charts if you need custom process layouts.",
+  ],
+  relatedPages: [
+    { title: "**Control Tower** — live priorities and KPI risks", path: "/control-tower" },
+    { title: "**Line Performance** — OEE and shift performance", path: "/execution/line-performance" },
+  ],
+};
+
 function EmptyStateCard({
   icon,
   title,
@@ -587,7 +637,7 @@ export function VsmPage() {
   if (hasNoLine) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Value Stream Map" subtitle="Select a production line from the sidebar to view the value stream map." icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
+        <PageHeader title="Value Stream Map" subtitle="Select a production line from the sidebar to view the value stream map." icon={<GitBranch />} iconClass={theme.iconBoxBlue} guideContent={VSM_GUIDE} />
         <EmptyStateCard
           icon={<GitBranch className="h-8 w-8 text-muted-foreground/60" />}
           title="No line selected"
@@ -601,7 +651,7 @@ export function VsmPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Value Stream Map" subtitle="Loading value stream data..." icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
+        <PageHeader title="Value Stream Map" subtitle="Loading value stream data..." icon={<GitBranch />} iconClass={theme.iconBoxBlue} guideContent={VSM_GUIDE} />
         <SkeletonKpiStrip />
         <div className="flex-1 flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-5">
@@ -632,7 +682,7 @@ export function VsmPage() {
   if (errorMessage && !diagram) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
+        <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} guideContent={VSM_GUIDE} />
         <ErrorStateCard message={errorMessage} onRetry={handleRefresh} />
       </div>
     );
@@ -641,7 +691,7 @@ export function VsmPage() {
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       <div className="shrink-0">
-        <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} />
+        <PageHeader title="Value Stream Map" subtitle={headerSubtitle} icon={<GitBranch />} iconClass={theme.iconBoxBlue} guideContent={VSM_GUIDE} />
       </div>
 
       {/* Toolbar */}

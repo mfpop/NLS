@@ -16,6 +16,8 @@ import {
   CheckCheck,
 } from "lucide-react";
 import { ToolbarButton } from "@/components/layout/PageToolbar";
+import { PageHeader } from "@/pages/shared/PageHeader";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import { useThemeStore } from "@/stores/theme";
 import { usePreferencesStore, type DensityMode, type SidebarMode, type UnitsSystem, type TimeFormatPref } from "@/stores/preferencesStore";
 
@@ -542,18 +544,66 @@ export function UserPreferencesPage() {
     };
   }, []);
 
+  const PREFERENCES_GUIDE: GuideContent = {
+    purpose:
+      "Central settings panel for customizing your **appearance**, **workspace defaults**, **notifications**, **language & region**, **data display**, and **privacy & session** preferences — all changes save automatically.",
+    quickStart: [
+      "Select a **category** from the left navigation panel (Appearance, Workspace, Notifications, etc.).",
+      "Toggle **switches**, select **dropdown values**, or adjust **number inputs** — changes save **automatically**.",
+      "A **'Saved locally'** toast appears at the bottom each time a preference is updated.",
+      "Click **Reset defaults** in the footer to revert all preferences to their original values.",
+    ],
+    whenToUse: [
+      "**First login** — set your language, timezone, default plant, and default production line.",
+      "**Change theme** — switch between Light, Dark, or System (follows your OS).",
+      "**Adjust density** — choose Comfortable or Compact spacing throughout the UI.",
+      "**Configure notifications** — control which alerts you receive in-app or by email, and for which item types.",
+      "**Set regional preferences** — language, timezone, date format (YYYY-MM-DD, MM/DD/YYYY, DD/MM/YYYY), and time format (12h/24h).",
+      "**Security** — set auto-lock timeout and manage sessions.",
+    ],
+    keyFeatures: [
+      "**Appearance** — theme mode (Light/Dark/System), density (Comfortable/Compact), sidebar default state.",
+      "**Workspace Defaults** — default plant, default production line, and remember-last-line toggle.",
+      "**Notifications** — master toggles for in-app and email, plus per-type toggles for Findings, Tasks, and Approvals.",
+      "**Language & Region** — language (English/Spanish), timezone, date format, and time format (12h/24h).",
+      "**Data Display** — default table page size (10–100 rows), show archived records toggle, measurement units (Metric/Imperial).",
+      "**Privacy & Session** — auto-lock timeout (5–480 min) with number input, and sign-out-all-sessions action.",
+      "**Auto-save** — every toggle, dropdown, and number change persists instantly with a visual toast confirmation.",
+      "**Reset defaults** — one-click restore of all preferences to factory defaults (with confirmation dialog).",
+    ],
+    howToUse: [
+      "Click a **category** in the left nav to open its settings panel on the right.",
+      "Toggle **switches** on/off, choose from **dropdowns**, or type into **number inputs** — changes save instantly.",
+      "Watch for the **'Saved locally'** toast to confirm your preference was persisted.",
+      "Use **Reset defaults** in the footer (with confirmation) to revert all settings back to defaults.",
+    ],
+    tips: [
+      "**Density** controls how compact or spacious the UI feels — switch to Compact for more data density.",
+      "**Remember last line** auto-restores your previous production line on next login, saving one click.",
+      "Preferences are stored **locally** in your browser — they persist across sessions and devices where you're logged in.",
+      "The **'Saved locally'** toast confirms your setting was persisted — no manual save needed.",
+      "Set your **default plant AND default line together** for a fully pre-configured workspace on login.",
+    ],
+    commonMistakes: [
+      "Don't set a default **line** without also setting a default **plant** — the line belongs to a plant.",
+      "If notifications seem missing, check both the **master in-app toggle** AND the **per-type toggles** (Findings, Tasks, Approvals).",
+      "The **default plant/line** dropdowns show 'None (ask each time)' — the actual options come from Production Structure configuration.",
+    ],
+    relatedPages: [
+      { title: "**My Profile** — manage personal info, work history, and education", path: "/system/profile" },
+    ],
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden bg-muted">
       {/* ── HEADER ── */}
-      <header className="flex items-center gap-3 h-14 shrink-0 border-b border-border px-4 bg-muted">
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-[2px] bg-accent/10 text-accent-foreground">
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-        </div>
-        <div className="min-w-0 leading-tight">
-          <h1 className="text-xs font-semibold text-foreground leading-tight">Preferences</h1>
-          <p className="text-[11px] text-muted-foreground leading-tight mt-px">Personal workspace settings</p>
-        </div>
-      </header>
+      <PageHeader
+        icon={<SlidersHorizontal />}
+        iconClass="bg-accent/10 text-accent-foreground"
+        title="Preferences"
+        subtitle="Personal workspace settings"
+        guideContent={PREFERENCES_GUIDE}
+      />
 
       {/* ── BODY: two-column layout ── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">

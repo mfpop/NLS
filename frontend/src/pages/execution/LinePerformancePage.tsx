@@ -5,6 +5,7 @@ import { PageHeader } from "@/pages/shared/PageHeader";
 import { PageToolbar, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { useActiveLine } from "@/hooks/useActiveLine";
 import { theme } from "@/styles/themeTokens";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import {
   LINE_PERFORMANCE_DASHBOARD_QUERY,
   LINE_PERFORMANCE_RECORDS_QUERY,
@@ -32,6 +33,57 @@ import {
 
 const LEFT_WIDTH = "w-[20%] min-w-[288px] max-w-[360px]";
 const RIGHT_WIDTH = "w-[32%] min-w-[420px] max-w-[560px]";
+
+const LP_GUIDE: GuideContent = {
+  purpose:
+    "Comprehensive **line performance dashboard** with OEE tracking, plan vs actual comparison, downtime Pareto analysis, bottleneck detection, quality summary, and linked issues/actions.",
+  quickStart: [
+    "Select a **production line** from the sidebar; the dashboard auto-loads.",
+    "Select a **shift record** from the left panel to view performance data for that shift.",
+    "Review **KPI metrics** in the 6-cell strip for the selected shift.",
+    "Use the toolbar to **Log Downtime**, create **Issues**, or create **Actions**.",
+  ],
+  whenToUse: [
+    "**End-of-shift review** — compare planned vs actual output and review OEE.",
+    "**Downtime analysis** — use the Pareto chart to identify top downtime reasons.",
+    "**Bottleneck investigation** — review bottleneck signal and resource constraints.",
+    "**Quality review** — check defect counts and quality percentages from the Quality Summary.",
+    "**Action tracking** — review linked issues and actions from the right panel.",
+  ],
+  keyFeatures: [
+    "**Shift Record List** (left) — scrollable list of shift records with date, output, OEE status, and downtime.",
+    "**KPI 6-Strip** — live metrics for the selected shift across 6 dimensions.",
+    "**Plan vs Actual** — visual comparison with ahead/on-track/behind status.",
+    "**OEE Signal** — overall OEE with good/warning/critical status and historical context.",
+    "**Downtime Pareto** — bar chart of top downtime reasons ranked by duration.",
+    "**Bottleneck Panel** — current bottleneck detection with resource and status.",
+    "**Quality Summary** — defect counts, quality percentage, and trend indicators.",
+    "**Timeline Mini** — chronological events for the selected shift.",
+    "**Issues & Actions Panel** (right) — linked issues and actions with create capability.",
+    "**Log Downtime / New Issue / New Action modals** — full forms with reason codes and resource selection.",
+  ],
+  howToUse: [
+    "Select a **shift record** from the left panel to load its performance data.",
+    "Review the **Plan vs Actual** and **OEE Signal** panels for the big picture.",
+    "Use the **Downtime Pareto** to identify the most impactful downtime reasons.",
+    "Click **Log Downtime** to record a new event; use **New Issue/Action** to create linked items.",
+    "Review **Issues & Actions** on the right for open items related to the line.",
+  ],
+  tips: [
+    "**Shift selection** filters the entire dashboard — always pick a shift first.",
+    "The **OEE status** badge (GOOD/WARNING/CRITICAL) changes color — red demands immediate attention.",
+    "**Pareto bars** are ranked by duration — focus on the longest bars first for maximum impact.",
+    "Use **Log Downtime** to capture events as they happen for accurate data.",
+  ],
+  commonMistakes: [
+    "Don't skip **logging downtime reasons** — uncategorized downtime reduces Pareto accuracy.",
+    "**OEE** requires both production data AND planned time — ensure both are recorded accurately.",
+  ],
+  relatedPages: [
+    { title: "**Live Shopfloor** — real-time status and resource flow", path: "/execution/live-shopfloor" },
+    { title: "**Control Tower** — live priorities and KPI risks", path: "/control-tower" },
+  ],
+};
 
 export function LinePerformancePage() {
   const { productionLineId, activeLine, loading: lineLoading } = useActiveLine();
@@ -164,7 +216,7 @@ export function LinePerformancePage() {
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Line Performance"
           subtitle="Select a production line from the sidebar to view OEE, plan vs actual, downtime, bottlenecks, and shift performance."
-          icon={<Activity />} iconClass={theme.iconBoxAmber} />
+          icon={<Activity />} iconClass={theme.iconBoxAmber} guideContent={LP_GUIDE} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 p-8 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -181,7 +233,7 @@ export function LinePerformancePage() {
   if ((dashLoading && !dashboardData) || lineLoading) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Line Performance" subtitle="Loading production line data..." icon={<Activity />} iconClass={theme.iconBoxAmber} />
+        <PageHeader title="Line Performance" subtitle="Loading production line data..." icon={<Activity />} iconClass={theme.iconBoxAmber} guideContent={LP_GUIDE} />
         <div className="flex-1 flex flex-col gap-4 p-4 animate-pulse">
           <div className="grid grid-cols-6 gap-2 h-16">
             {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-full rounded bg-muted/80" />)}
@@ -205,7 +257,7 @@ export function LinePerformancePage() {
   if (dashError && !dashboardData && !mockLinePerformanceDashboard?.linePerformanceDashboard) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Line Performance" subtitle="Error loading data" icon={<Activity />} iconClass={theme.iconBoxAmber} />
+        <PageHeader title="Line Performance" subtitle="Error loading data" icon={<Activity />} iconClass={theme.iconBoxAmber} guideContent={LP_GUIDE} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
             leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-danger/20 bg-danger/10 text-danger"><span className="h-1.5 w-1.5 rounded-full bg-danger/100" />Error</span>}
@@ -224,7 +276,7 @@ export function LinePerformancePage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       {/* Header */}
       <div className="h-16 shrink-0">
-        <PageHeader title="Line Performance" subtitle={headerSubtitle} icon={<Activity />} iconClass={theme.iconBoxAmber} />
+        <PageHeader title="Line Performance" subtitle={headerSubtitle} icon={<Activity />} iconClass={theme.iconBoxAmber} guideContent={LP_GUIDE} />
       </div>
 
       {/* Toolbar */}

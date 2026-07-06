@@ -10,6 +10,7 @@ import { MY_WORKSPACE_DASHBOARD_QUERY } from "@/graphql/workspaceQueries";
 import { useNavigate } from "react-router-dom";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { formatDateShort } from "@/utils/dateFormat";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 
 function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
@@ -419,21 +420,11 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
   }, [trendPath, dailyCounts.length]);
 
   const riskMix = analyticsData.riskMix;
-  const riskTotal = riskMix.open + riskMix.inProgress + riskMix.overdue;
-  const chartCx = 28, chartCy = 28, chartR = 24, chartInnerR = 14;
-
-  const riskSlices = useMemo(() => {
-    const slices: { value: number; color: string }[] = [];
-    if (riskMix.open > 0) slices.push({ value: riskMix.open, color: "var(--color-primary)" });
-    if (riskMix.inProgress > 0) slices.push({ value: riskMix.inProgress, color: "var(--color-warning)" });
-    if (riskMix.overdue > 0) slices.push({ value: riskMix.overdue, color: "var(--color-danger)" });
-    return slices;
-  }, [riskMix]);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden scroll-section">
       <PanelHeader title="Workspace Analytics" icon={<PieChart className="h-3.5 w-3.5" />} iconColor="text-success" />
-      <div className="grid flex-1 min-h-0 grid-cols-[42%_58%] divide-x divide-border overflow-hidden">
+      <div className="grid flex-1 min-h-0 grid-cols-[35%_65%] divide-x divide-border overflow-hidden">
         {/* Module Distribution */}
         <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2.5 shrink-0">Module Distribution</p>
@@ -460,8 +451,8 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
         </div>
 
         {/* Right: Workload Trend + Risk Mix */}
-        <div className="grid grid-rows-[auto_1fr] divide-y divide-border min-h-0 overflow-hidden">
-          {/* Workload Trend */}
+        <div className="grid grid-rows-[auto_minmax(0,1fr)] divide-y divide-border min-h-0 overflow-hidden">
+          {/* Workload Trend — compact secondary chart */}
           <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2 shrink-0">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 shrink-0">Workload Trend</p>
             {!hasTrend ? (
@@ -478,14 +469,10 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
                       <stop offset="100%" style={{ stopColor: 'var(--color-emerald-500)' }} stopOpacity="0" />
                     </linearGradient>
                   </defs>
-                  {/* Grid lines */}
                   <line x1="12" y1="14" x2={svgW - 12} y2="14" className="stroke-slate-200" strokeWidth="0.5" />
                   <line x1="12" y1="30" x2={svgW - 12} y2="30" className="stroke-slate-200" strokeWidth="0.5" />
-                  {/* Fill area */}
                   {trendAreaPath && <path d={trendAreaPath} fill="url(#trend-grad)" />}
-                  {/* Trend line */}
                   {trendPath && <path d={trendPath} className="stroke-emerald-500" strokeOpacity="0.9" />}
-                  {/* End dot */}
                   {trendPath && (() => {
                     const pts = dailyCounts;
                     const lastI = pts.length - 1;
@@ -502,76 +489,8 @@ function WorkspaceAnalyticsSection({ sourceData, analyticsData }: { sourceData: 
             )}
           </div>
 
-          {/* Risk Mix Donut */}
-          <div className="flex flex-col min-h-0 overflow-hidden px-3 py-2.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1 shrink-0">Risk Mix</p>
-            {riskTotal === 0 ? (
-              <div className="flex items-center gap-2 py-1">
-                <AlertTriangle className="h-4 w-4 text-muted-foreground/30 shrink-0" />
-                <p className="text-[10px] text-muted-foreground/60 italic">No risk data</p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 flex-1 min-h-0">
-                {/* Donut chart */}
-                <svg className="shrink-0" width="56" height="56" viewBox="0 0 56 56">
-                  {(() => {
-                    const total = riskSlices.reduce((s, v) => s + v.value, 0);
-                    if (riskSlices.length === 1) {
-                      return (
-                        <>
-                          <circle cx={chartCx} cy={chartCy} r={chartR} fill={riskSlices[0].color} />
-                          <circle cx={chartCx} cy={chartCy} r={chartInnerR} className="fill-white" />
-                          <text x={chartCx} y={chartCy} textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="700" className="fill-slate-800">{total}</text>
-                        </>
-                      );
-                    }
-                    let currentAngle = 0;
-                    const sliceEls = riskSlices.map((s) => {
-                      const angle = (s.value / total) * 360;
-                      const startRad = ((currentAngle - 90) * Math.PI) / 180;
-                      const endRad = ((currentAngle + angle - 90) * Math.PI) / 180;
-                      const x1 = chartCx + chartR * Math.cos(startRad);
-                      const y1 = chartCy + chartR * Math.sin(startRad);
-                      const x2 = chartCx + chartR * Math.cos(endRad);
-                      const y2 = chartCy + chartR * Math.sin(endRad);
-                      const largeArc = angle > 180 ? 1 : 0;
-                      const d = `M ${chartCx} ${chartCy} L ${x1} ${y1} A ${chartR} ${chartR} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-                      currentAngle += angle;
-                      return <path key={s.color} d={d} fill={s.color} stroke="white" strokeWidth="1" />;
-                    });
-                    return <>{sliceEls}<circle cx={chartCx} cy={chartCy} r={chartInnerR} className="fill-white" /><text x={chartCx} y={chartCy} textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="800" className="fill-slate-800" fontFamily="ui-monospace,monospace">{total}</text></>;
-                  })()}
-                </svg>
-                {/* Legend */}
-                <div className="flex flex-col gap-1 min-w-0">
-                  {riskMix.open > 0 && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary/100 ring-1 ring-blue-200" />
-                      <span className="font-medium">Open</span>
-                      <span className="font-semibold tabular-nums text-foreground">{riskMix.open}</span>
-                      <span className="text-muted-foreground/60">({Math.round((riskMix.open / riskTotal) * 100)}%)</span>
-                    </span>
-                  )}
-                  {riskMix.inProgress > 0 && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-warning/100 ring-1 ring-amber-200" />
-                      <span className="font-medium">In Prog</span>
-                      <span className="font-semibold tabular-nums text-foreground">{riskMix.inProgress}</span>
-                      <span className="text-muted-foreground/60">({Math.round((riskMix.inProgress / riskTotal) * 100)}%)</span>
-                    </span>
-                  )}
-                  {riskMix.overdue > 0 && (
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="h-2 w-2 shrink-0 rounded-full bg-danger/100 ring-1 ring-red-200 animate-pulse" />
-                      <span className="font-medium">Overdue</span>
-                      <span className="font-semibold tabular-nums text-foreground">{riskMix.overdue}</span>
-                      <span className="text-muted-foreground/60">({Math.round((riskMix.overdue / riskTotal) * 100)}%)</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Risk Mix Donut — dominant visualization */}
+          <RiskMixChart riskMix={riskMix} />
         </div>
       </div>
     </div>
@@ -617,7 +536,7 @@ function DashboardSkeleton() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-[42%_58%] divide-x divide-border">
+        <div className="grid grid-cols-[38%_62%] divide-x divide-border">
           <div className="flex flex-col">
             <div className="h-9 border-b border-border bg-muted/80 px-3 flex items-center">
               <div className="h-3 bg-muted/80 rounded w-20" />
@@ -647,6 +566,158 @@ function DashboardSkeleton() {
     </div>
   );
 }
+
+/* ── Risk Mix Chart Component ── */
+
+interface RiskMixChartProps {
+  riskMix: { open: number; inProgress: number; overdue: number; completed: number };
+}
+
+/** Donut chart + legend — donut occupies ~60-65% of panel width, legend ~35-40%. */
+function RiskMixChart({ riskMix }: RiskMixChartProps) {
+  const total = riskMix.open + riskMix.inProgress + riskMix.overdue;
+
+  const slices = useMemo(() => {
+    const result: { value: number; color: string }[] = [];
+    if (riskMix.open > 0) result.push({ value: riskMix.open, color: "var(--color-primary)" });
+    if (riskMix.inProgress > 0) result.push({ value: riskMix.inProgress, color: "var(--color-warning)" });
+    if (riskMix.overdue > 0) result.push({ value: riskMix.overdue, color: "var(--color-danger)" });
+    return result;
+  }, [riskMix]);
+
+  /* larger donut: +11% diameter, +21% ring thickness */
+  const cx = 48, cy = 48, outerR = 40, innerR = 23;
+
+  if (total === 0) {
+    return (
+      <div className="flex flex-col min-h-0 overflow-hidden px-4 pt-1 pb-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 shrink-0">Risk Mix</p>
+        <div className="flex items-center gap-2 py-3">
+          <AlertTriangle className="h-4 w-4 text-muted-foreground/30 shrink-0" />
+          <p className="text-xs text-muted-foreground/60 italic">No risk data</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-0 overflow-hidden px-4 pt-1 pb-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 shrink-0">Risk Mix</p>
+      <div className="flex items-center flex-1 min-h-0">
+        {/* ── Donut chart (60-65%) ── */}
+        <div className="flex items-center justify-center flex-[6] min-w-0 h-full">
+          <svg className="shrink-0 w-24 h-24" viewBox="0 0 96 96" aria-label="Risk Mix donut chart">
+            {(() => {
+              if (slices.length === 1) {
+                return (
+                  <>
+                    <circle cx={cx} cy={cy} r={outerR} fill={slices[0].color} />
+                    <circle cx={cx} cy={cy} r={innerR} className="fill-white dark:fill-card" />
+                    <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="20" fontWeight="900" className="fill-foreground" fontFamily="ui-monospace,monospace">{total}</text>
+                  </>
+                );
+              }
+              let angle = 0;
+              const els = slices.map((s) => {
+                const deg = (s.value / total) * 360;
+                const sr = ((angle - 90) * Math.PI) / 180;
+                const er = ((angle + deg - 90) * Math.PI) / 180;
+                const x1 = cx + outerR * Math.cos(sr);
+                const y1 = cy + outerR * Math.sin(sr);
+                const x2 = cx + outerR * Math.cos(er);
+                const y2 = cy + outerR * Math.sin(er);
+                const large = deg > 180 ? 1 : 0;
+                const d = `M ${cx} ${cy} L ${x1} ${y1} A ${outerR} ${outerR} 0 ${large} 1 ${x2} ${y2} Z`;
+                angle += deg;
+                return <path key={s.color} d={d} fill={s.color} stroke="white" strokeWidth="1.5" />;
+              });
+              return <>{els}<circle cx={cx} cy={cy} r={innerR} className="fill-white dark:fill-card" /><text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="20" fontWeight="900" className="fill-foreground" fontFamily="ui-monospace,monospace">{total}</text></>;
+            })()}
+          </svg>
+        </div>
+
+        {/* ── Legend (35-40%) ── */}
+        <div className="flex flex-col gap-2 flex-[4] min-w-0 pl-1">
+          {riskMix.open > 0 && (
+            <span className="flex items-center gap-2.5 whitespace-nowrap text-sm text-muted-foreground">
+              <span className="h-3 w-3 shrink-0 rounded-full bg-primary ring-1 ring-blue-200" />
+              <span className="font-medium">Open</span>
+              <span className="font-semibold tabular-nums text-foreground">{riskMix.open}</span>
+              <span className="text-muted-foreground/60 text-xs">({Math.round((riskMix.open / total) * 100)}%)</span>
+            </span>
+          )}
+          {riskMix.inProgress > 0 && (
+            <span className="flex items-center gap-2.5 whitespace-nowrap text-sm text-muted-foreground">
+              <span className="h-3 w-3 shrink-0 rounded-full bg-warning ring-1 ring-amber-200" />
+              <span className="font-medium">In Prog</span>
+              <span className="font-semibold tabular-nums text-foreground">{riskMix.inProgress}</span>
+              <span className="text-muted-foreground/60 text-xs">({Math.round((riskMix.inProgress / total) * 100)}%)</span>
+            </span>
+          )}
+          {riskMix.overdue > 0 && (
+            <span className="flex items-center gap-2.5 whitespace-nowrap text-sm text-muted-foreground">
+              <span className="h-3 w-3 shrink-0 rounded-full bg-danger ring-1 ring-red-200 animate-pulse" />
+              <span className="font-medium">Overdue</span>
+              <span className="font-semibold tabular-nums text-foreground">{riskMix.overdue}</span>
+              <span className="text-muted-foreground/60 text-xs">({Math.round((riskMix.overdue / total) * 100)}%)</span>
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Page Guide ── */
+
+const DASHBOARD_GUIDE: GuideContent = {
+  purpose:
+    "Central command center for all your **tasks, approvals, alerts, and activity** across every LeanSynk module — giving you a single-pane-of-glass view to prioritize and act fast.",
+  quickStart: [
+    "Use **Filter** (type dropdown) and **Search** at the top to narrow what you see.",
+    "Click any **KPI metric** like Overdue or High Priority to jump to a filtered task list.",
+    "Click any **item row** to navigate directly to its source record.",
+    "Press **Ctrl/Cmd+F** to focus the search bar instantly.",
+  ],
+  whenToUse: [
+    "**Start-of-shift review** — see overdue and high-priority items first.",
+    "**Daily standup** — review upcoming, pending approvals, and recent activity.",
+    "**Escalation monitoring** — track overdue items that may block downstream work.",
+    "**Workload analysis** — use Module Distribution and Risk Mix to spot bottlenecks.",
+  ],
+  keyFeatures: [
+    "**KPI Strip** — six live counters (Open, In Progress, Overdue, Due Today, High Priority, Completed Today) with click-through filtering.",
+    "**Priority Work** — top items ranked by urgency, limited to the most critical.",
+    "**Upcoming** — items grouped by Today, This Week, and Later with counts per band.",
+    "**Alerts & Approvals** — critical notifications and pending decisions in one panel.",
+    "**Recent Activity** — chronological feed with date-stamp timeline and status badges.",
+    "**Workspace Analytics** — module distribution bars, workload trend sparkline, and risk-mix donut chart.",
+  ],
+  howToUse: [
+    "Use **Search** and **Filter** at the top to narrow items by keyword or type.",
+    "Click **KPI metrics** to navigate to the My Tasks page with that filter pre-applied.",
+    "Click any **item row** to open its source record directly in its module page.",
+    "Hover over a row to reveal the **arrow icon** — click it for the same navigation.",
+    "Scroll **within each panel independently** — panels are viewport-sized.",
+    "Use **Refresh** to reload the latest data from the server.",
+  ],
+  tips: [
+    "Watch the **Overdue** counter — it pulses red when items are past due and need escalation.",
+    "KPI values **animate** with a subtle scale effect when they change — glance at the number to spot updates.",
+    "The **Risk Mix** donut shows Open vs In-Progress vs Overdue proportions at a glance; hover legend items for detail.",
+    "**Module Distribution bars** use color-coded segments (red=Safety, blue=Quality, amber=Maintenance) — learn the colors for faster scanning.",
+    "Click **View All Activity** at the bottom of Recent Activity for the full chronological feed.",
+  ],
+  commonMistakes: [
+    "Don't ignore **Overdue** items — they pulse red and may block downstream processes.",
+    "Avoid relying on the **default All filter** — narrow by type to surface what needs action.",
+    "Don't use the Dashboard for **editing** — click through to the source module page to make changes.",
+  ],
+  relatedPages: [
+    { title: "**My Tasks** — full task list with advanced filtering", path: "/myworkspace/tasks" },
+    { title: "**Activity Feed** — chronological activity stream", path: "/myworkspace/activity" },
+  ],
+};
 
 /* ── Main Component ── */
 
@@ -697,6 +768,7 @@ export function MyDashboardPage() {
       subtitle="Your assigned work, alerts, approvals, and recent activity across LeanSynk."
       icon={<LayoutDashboard />}
       iconClass="bg-primary/10 text-primary"
+      guideContent={DASHBOARD_GUIDE}
       toolbar={
         <PageToolbar
           searchValue={search} onSearchChange={setSearch} searchPlaceholder="Search tasks, modules..."
@@ -743,8 +815,8 @@ export function MyDashboardPage() {
                 <UpcomingPanel items={dueItems} />
                 <AlertsApprovalsPanel alerts={alertItems} approvals={approvalItems} />
               </div>
-              {/* Bottom row */}
-              <div className="min-h-0 overflow-hidden grid grid-cols-[42%_58%] divide-x divide-border">
+              {/* Bottom row — tilted toward analytics for Risk Mix prominence */}
+              <div className="min-h-0 overflow-hidden grid grid-cols-[38%_62%] divide-x divide-border">
                 <RecentActivitySection items={activityItems} />
                 <WorkspaceAnalyticsSection sourceData={sourceData} analyticsData={analyticsData} />
               </div>

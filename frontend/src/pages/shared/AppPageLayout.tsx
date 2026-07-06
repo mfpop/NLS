@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { PageHeader, type SystemMessage } from "@/pages/shared/PageHeader";
 import { ResizableSplitPane } from "@/components/layout/ResizableSplitPane";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 
 interface AppPageLayoutProps {
   icon: ReactNode;
@@ -15,16 +16,17 @@ interface AppPageLayoutProps {
   leftColumnWidth?: string;
   footer?: ReactNode;
   children?: ReactNode;
+  guideContent?: GuideContent;
 }
 
 const DEFAULT_ICON_CLASS = "bg-muted text-muted-foreground";
 
-export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, headerChildren, toolbar, leftColumn, footer, children }: AppPageLayoutProps) {
+export function AppPageLayout({ icon, iconClass = DEFAULT_ICON_CLASS, title, subtitle, systemMessage, onDismissSystemMessage, headerChildren, toolbar, leftColumn, footer, children, guideContent }: AppPageLayoutProps) {
   const hasLeftColumn = !!leftColumn;
 
   return (
     <div className="flex flex-col overflow-hidden h-full">
-      <PageHeader icon={icon} iconClass={iconClass} title={title} subtitle={subtitle} systemMessage={systemMessage} onDismissSystemMessage={onDismissSystemMessage}>
+      <PageHeader icon={icon} iconClass={iconClass} title={title} subtitle={subtitle} systemMessage={systemMessage} onDismissSystemMessage={onDismissSystemMessage} guideContent={guideContent}>
         {headerChildren}
       </PageHeader>
       {toolbar && (

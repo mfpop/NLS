@@ -6,6 +6,7 @@ import { theme } from "@/styles/themeTokens";
 import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { PageToolbar, ToolbarButton, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { useAuth } from "@/auth/AuthContext";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import {
   CHAT_CONTACTS_QUERY,
   CHAT_THREADS_QUERY,
@@ -16,86 +17,22 @@ import {
   TOGGLE_CHAT_FAVORITE_MUTATION,
 } from "@/graphql/chatQueries";
 
-const CHAT_MESSAGES_QUERY = gql`
-  query ChatMessages($threadId: ID!, $limit: Int) {
-    chatMessages(threadId: $threadId, limit: $limit) {
-      id
-      sender {
-        id
-        username
-        email
-        displayName
-      }
-      body
-      createdAt
-      isMine
-      attachments {
-        id
-        fileUrl
-        fileName
-        fileSize
-        mimeType
-      }
-    }
-  }
-`;
+const CHAT_MESSAGES_QUERY = gql`query ChatMessages($threadId:ID!,$limit:Int){chatMessages(threadId:$threadId,limit:$limit){id sender{id username email displayName}body createdAt isMine attachments{id fileUrl fileName fileSize mimeType}}}`;
 
 /* ── Types ── */
 
-interface UserInfo {
-  id: string;
-  username: string;
-  email: string;
-  displayName: string;
-}
-
-interface ChatParticipant {
-  id: string;
-  userId: string;
-  displayName: string;
-  avatarUrl: string | null;
-}
-
-interface ChatThread {
-  id: string;
-  threadType: string;
-  title: string;
-  participants: ChatParticipant[];
-  lastMessagePreview: string | null;
-  lastMessageAt: string | null;
-  unreadCount: number;
-  isFavorited: boolean;
-}
-
-interface ChatAttachment {
-  id: string;
-  fileUrl: string;
-  fileName: string;
-  fileSize: number;
-  mimeType: string;
-}
-
-interface ChatMessage {
-  id: string;
-  sender: UserInfo;
-  body: string;
-  createdAt: string;
-  isMine: boolean;
-  attachments: ChatAttachment[];
-}
-
-interface MutationError {
-  field: string;
-  code: string;
-  message: string;
-}
+interface UserInfo { id: string; username: string; email: string; displayName: string; }
+interface ChatParticipant { id: string; userId: string; displayName: string; avatarUrl: string | null; }
+interface ChatThread { id: string; threadType: string; title: string; participants: ChatParticipant[]; lastMessagePreview: string | null; lastMessageAt: string | null; unreadCount: number; isFavorited: boolean; }
+interface ChatAttachment { id: string; fileUrl: string; fileName: string; fileSize: number; mimeType: string; }
+interface ChatMessage { id: string; sender: UserInfo; body: string; createdAt: string; isMine: boolean; attachments: ChatAttachment[]; }
+interface MutationError { field: string; code: string; message: string; }
 
 /* ── Helpers ── */
 
 function initials(name: string): string {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
-
 function formatTime(dateStr: string): string {
   try {
     const d = new Date(dateStr);
@@ -109,7 +46,6 @@ function formatTime(dateStr: string): string {
     return "";
   }
 }
-
 function otherParticipant(thread: ChatThread, currentUserId: string): ChatParticipant | undefined {
   return thread.participants.find((p) => p.userId !== currentUserId);
 }
@@ -318,10 +254,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ChatMessagesPanel — sub-component with its own useQuery
-   Keyed by threadId so Apollo creates a fresh query per thread
-   ══════════════════════════════════════════════════════════════ */
+/* ═════════ ChatMessagesPanel — sub-component keyed by threadId ═════════ */
 
 function ChatMessagesPanel({
   threadId,
@@ -386,9 +319,60 @@ function ChatMessagesPanel({
   );
 }
 
-/* ══════════════════════════════════════════════════════════════
-   Main Component
-   ══════════════════════════════════════════════════════════════ */
+/* ═════════ Main Component ═════════ */
+
+const CHAT_GUIDE: GuideContent = {
+  purpose: "Real-time **team messaging** with direct messages, group conversations, file sharing, and threaded discussions — purpose-built for workspace collaboration.",
+  quickStart: [
+    "Switch between **Conversations** and **People** tabs to browse chats or find a contact.",
+    "Click any thread or contact to open the conversation and view message history.",
+    "Type your message and press **Enter** to send; use **Shift+Enter** for multi-line messages.",
+    "Click the **paperclip** icon to attach images or documents to your message.",
+    "Click **New Group** from the toolbar to create a multi-participant group chat.",
+  ],
+  whenToUse: [
+    "**Quick questions** — faster than email for real-time coordination.",
+    "**Group discussions** — involve multiple team members in a single thread.",
+    "**File sharing** — attach documents, images, and files inline with messages.",
+    "**Persistent threads** — conversations are saved and searchable by history.",
+  ],
+  keyFeatures: [
+    "**Conversations/People tabs** — switch between thread list and contact directory.",
+    "**Direct messages** — one-on-one chats with any team member.",
+    "**Group chats** — multi-participant conversations with configurable group name.",
+    "**Unread badges** — blue notification badges on threads with unread messages.",
+    "**Favorites** — star important conversations for quick access; favorites always sort to top.",
+    "**File attachments** — upload images, PDFs, docs, and more via paperclip button.",
+    "**Auto-polling** — messages refresh every 10 seconds for near real-time updates.",
+    "**Message timestamps** — shows time for today, date for older messages.",
+  ],
+  howToUse: [
+    "Use the **Conversations/People tabs** at the top of the left panel to switch views.",
+    "Click a **thread row** to open that conversation and view message history.",
+    "Click a **contact** in the People tab to start a direct chat immediately.",
+    "Type in the **message input** at the bottom and press **Enter** to send.",
+    "Click the **paperclip** button, then select a file from your computer to attach it.",
+    "Use the **star icon** (appears on hover) on any thread to add/remove favorites.",
+    "Click **New Group**, give it a name, select at least 2 participants, and confirm.",
+    "Use the **Filter** dropdown to show all, favorites, or unread threads only.",
+  ],
+  tips: [
+    "Star **frequent conversations** — favorited threads sort to the top of the list.",
+    "Use **group chats** for project discussions to keep all context in one thread.",
+    "The **Unread filter** helps you catch up quickly after being away.",
+    "**File previews** render inline — images show thumbnails, documents show as download cards.",
+    "Messages **auto-refresh** every 10 seconds — you don't need to manually refresh.",
+    "Use **Shift+Enter** to insert a line break without sending the message.",
+  ],
+  commonMistakes: [
+    "Avoid **long paragraphs** — break messages into shorter chunks for readability.",
+    "Don't rely on Chat for **formal records** — use the task/approval system for auditable decisions.",
+  ],
+  relatedPages: [
+    { title: "**Activity Feed** — see recent mentions and updates", path: "/myworkspace/activity" },
+    { title: "**My Tasks** — actionable work items with formal tracking", path: "/myworkspace/tasks" },
+  ],
+};
 
 export function ChatPage() {
   const { user } = useAuth();
@@ -986,6 +970,7 @@ export function ChatPage() {
       subtitle="Direct team conversations and workspace messages."
       icon={<MessageSquare />}
       iconClass="bg-primary/10 text-primary"
+      guideContent={CHAT_GUIDE}
       toolbar={
         <PageToolbar
           searchValue={search}

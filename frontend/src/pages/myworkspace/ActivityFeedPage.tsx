@@ -9,6 +9,7 @@ import { AppPageLayout } from "@/pages/shared/AppPageLayout";
 import { PageToolbar, ToolbarButton, ToolbarDropdown } from "@/components/layout/PageToolbar";
 import { MY_TASKS_QUERY } from "@/graphql/workspaceQueries";
 import { formatDateShort } from "@/utils/dateFormat";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 
 /* ── Types ── */
 
@@ -274,12 +275,65 @@ export function ActivityFeedPage() {
   ];
 
   /* ── Render ── */
+
+  const FEED_GUIDE: GuideContent = {
+    purpose:
+      "A **chronological stream** of every change, update, and activity across all modules — designed to keep you informed of what happened, who did it, and when, in one unified feed.",
+    quickStart: [
+      "Use the **tabs** (All, Mine, Mentions, Following) to filter whose activity you see.",
+      "Use **All Activities** and **All Modules** dropdowns together for precise cross-filtering.",
+      "Click any **activity row** to navigate directly to the source record.",
+      "Use the **Time Range** panel on the right to scope activity (24h, 7d, 30d).",
+    ],
+    whenToUse: [
+      "**Start of shift** — see what changed in the workspace while you were away.",
+      "**Audit trail** — review who updated what and when across all modules.",
+      "**Cross-module awareness** — stay informed about Safety, Quality, Maintenance, and more in one place.",
+      "**Mention tracking** — use the Mentions tab to find activity where you were @mentioned.",
+    ],
+    keyFeatures: [
+      "**Activity tabs** — All, Mine, Mentions, Following to focus the feed by ownership.",
+      "**Dual dropdown filters** — All Activities (by type) and All Modules (by source) for compound filtering.",
+      "**Time Range sidebar** — filter by Last 24h, 7 days, 30 days, or All Time.",
+      "**Activity Summary panel** — quick counts for Tasks, Safety, Documents, Mentions, MER, and System.",
+      "**People panel** — total unique users with activity and active count.",
+      "**Relative timestamps** — shows 'Just now', '5m ago', '2h ago', 'Yesterday', etc.",
+      "**Module icons & colors** — each module has a distinct color-coded avatar for fast visual scanning.",
+      "**Direct navigation** — click any row to jump to the source record page.",
+    ],
+    howToUse: [
+      "Use the **tabs** (All, Mine, Mentions, Following) to filter whose activity appears.",
+      "Combine **All Activities** and **All Modules** dropdowns for precise cross-filtering.",
+      "Adjust the **Time Range** in the right panel to focus on recent or historical activity.",
+      "Click any **activity row** to open the source record in its module page.",
+      "Use **Search** to find activities by title, description, or user name.",
+      "Click **Refresh** to reload the latest activity.",
+    ],
+    tips: [
+      "The **Mentions** tab filters only activities where you were @mentioned in descriptions.",
+      "**Following** lets you track specific items — star them from the source page.",
+      "Use **All Activities + a specific module** as a change log for just that area.",
+      "The **right panel** shows real-time summary counts — use it as a quick health check.",
+      "**Relative timestamps** make it easy to see recency at a glance (5m ago vs yesterday).",
+    ],
+    commonMistakes: [
+      "Don't rely only on **All** — combine tabs and filters to surface the most relevant activity.",
+      "Activity is **read-only** — use the source module page to make changes or take action.",
+      "Avoid using the feed for **editing** — it's a monitoring and awareness tool, not an action center.",
+    ],
+    relatedPages: [
+      { title: "**Personal Dashboard** — overview of assigned items", path: "/myworkspace/dashboard" },
+      { title: "**My Tasks** — actionable work items", path: "/myworkspace/tasks" },
+    ],
+  };
+
   return (
     <AppPageLayout
       title="Activity Feed"
       subtitle="Recent activity and updates across your workspace."
       icon={<Activity />}
       iconClass="bg-primary/10 text-primary"
+      guideContent={FEED_GUIDE}
       toolbar={
         <PageToolbar
           searchValue={search}

@@ -5,6 +5,7 @@ import { PageHeader } from "@/pages/shared/PageHeader";
 import { PageToolbar, ToolbarButton, ToolbarSeparator } from "@/components/layout/PageToolbar";
 import { useActiveLine } from "@/hooks/useActiveLine";
 import { theme } from "@/styles/themeTokens";
+import type { GuideContent } from "@/pages/shared/PageGuideModal";
 import { LIVE_SHOPFLOOR_DASHBOARD_QUERY, LIVE_SHOPFLOOR_FILTERS_QUERY } from "@/graphql/liveShopfloorQueries";
 import { LOG_SHOPFLOOR_DOWNTIME_MUTATION, CLOSE_SHOPFLOOR_DOWNTIME_MUTATION } from "@/graphql/liveShopfloorMutations";
 import { LiveShopfloorKpiStrip } from "@/components/liveShopfloor/LiveShopfloorKpiStrip";
@@ -23,6 +24,53 @@ import { mockLiveShopfloorDashboard, mockLiveShopfloorFilters } from "@/demo/liv
 
 const LEFT_WIDTH = "w-[20%] min-w-[288px] max-w-[360px]";
 const RIGHT_WIDTH = "w-[30%] min-w-[420px] max-w-[560px]";
+
+const LSF_GUIDE: GuideContent = {
+  purpose:
+    "Real-time **shopfloor command board** showing line status, resource flow, active downtime, open issues/actions, and recent events — with live auto-refresh for operational awareness.",
+  quickStart: [
+    "Select a **production line** from the sidebar to view real-time data.",
+    "Review the **KPI strip** at the top for line status, active downtime, issues, and output.",
+    "Use **Log Downtime**, **New Issue**, and **New Action** buttons from the toolbar to record events.",
+    "Check the **Critical Attention** panel (right) for active downtime and open issues/actions.",
+  ],
+  whenToUse: [
+    "**Shift start** — check line status, resource availability, and active downtime.",
+    "**Downtime events** — log downtime with reason, resource, and description.",
+    "**Issue/action tracking** — create and resolve issues and actions directly from the shopfloor.",
+    "**Real-time monitoring** — watch resource flow and bottleneck signals as they update.",
+  ],
+  keyFeatures: [
+    "**KPI Status Strip** — live counters for status, downtime, bottleneck, issues, actions, and output.",
+    "**Line Context Panel** (left) — line summary, shift summary, and current production details.",
+    "**Resource Flow Panel** (center) — assigned resource groups with statuses, issue/action counts.",
+    "**Active Downtime Panel** — current downtime with reason, duration, affected resource, and resolve/create-issue actions.",
+    "**Issues & Actions Panel** — open issues and actions with inline severity and status.",
+    "**Recent Events Timeline** — chronological event list with timestamps.",
+    "**Bottleneck Highlight** — active bottleneck signals with severity indicators.",
+    "**Log Downtime / New Issue / New Action modals** — full forms with reason codes and resource selection.",
+  ],
+  howToUse: [
+    "Select a **production line** from the sidebar to populate the board.",
+    "Click **Log Downtime** to record a new downtime event with reason, time, and resource.",
+    "Click **New Issue** or **New Action** to create issues or actions linked to the line.",
+    "Use the **Active Downtime** panel to resolve downtime or create an issue from it.",
+    "Review **Resource Flow** to see the status of each group and their associated issues/actions.",
+  ],
+  tips: [
+    "The **Live/Demo** badge shows whether you're viewing live data or fallback mock data.",
+    "**Active downtime** cards show elapsed duration — click Resolve when the issue is cleared.",
+    "Use **Create Issue from Downtime** to automatically pre-fill the issue form with downtime context.",
+  ],
+  commonMistakes: [
+    "Don't forget to **log a reason** when recording downtime — unclassified downtime skews Pareto analysis.",
+    "**Resolving** downtime requires you to confirm — the confirmation dialog includes the duration and affected resource.",
+  ],
+  relatedPages: [
+    { title: "**Line Performance** — OEE, plan vs actual, and shift records", path: "/execution/line-performance" },
+    { title: "**Control Tower** — live priorities and KPI risks", path: "/control-tower" },
+  ],
+};
 
 export function LiveShopfloorPage() {
   const { productionLineId, activeLine, loading: lineLoading } = useActiveLine();
@@ -135,7 +183,7 @@ export function LiveShopfloorPage() {
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
         <PageHeader title="Live Shopfloor"
           subtitle="Select a production line from the sidebar to view real-time line status, resources, downtime, issues, and actions."
-          icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
+          icon={<PanelTop />} iconClass={theme.iconBoxTeal} guideContent={LSF_GUIDE} />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4 p-8 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -152,7 +200,7 @@ export function LiveShopfloorPage() {
   if ((dashLoading && !dashboardData) || lineLoading) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Live Shopfloor" subtitle="Loading production line data..." icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
+        <PageHeader title="Live Shopfloor" subtitle="Loading production line data..." icon={<PanelTop />} iconClass={theme.iconBoxTeal} guideContent={LSF_GUIDE} />
         <div className="flex-1 flex flex-col gap-4 p-4 animate-pulse">
           <div className="grid grid-cols-7 gap-2 h-16">
             {Array.from({ length: 7 }).map((_, i) => <div key={i} className="h-full rounded bg-muted/80" />)}
@@ -171,7 +219,7 @@ export function LiveShopfloorPage() {
   if (dashError && !dashboardData && !mockLiveShopfloorDashboard?.liveShopfloorDashboard) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Live Shopfloor" subtitle="Error loading data" icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
+        <PageHeader title="Live Shopfloor" subtitle="Error loading data" icon={<PanelTop />} iconClass={theme.iconBoxTeal} guideContent={LSF_GUIDE} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
             leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-danger/20 bg-danger/10 text-danger"><span className="h-1.5 w-1.5 rounded-full bg-danger/100" />Error</span>}
@@ -189,7 +237,7 @@ export function LiveShopfloorPage() {
   if (!dashboard?.liveStatus && !dashboard?.assignedResourceGroups?.length) {
     return (
       <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
-        <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
+        <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} guideContent={LSF_GUIDE} />
         <div className="h-10 shrink-0">
           <PageToolbar leftWidthClass={LEFT_WIDTH}
             leftSlot={<span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-medium border border-border bg-muted text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />Empty</span>}
@@ -216,7 +264,7 @@ export function LiveShopfloorPage() {
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-muted">
       {/* Header */}
       <div className="h-16 shrink-0">
-        <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} />
+        <PageHeader title="Live Shopfloor" subtitle={headerSubtitle} icon={<PanelTop />} iconClass={theme.iconBoxTeal} guideContent={LSF_GUIDE} />
       </div>
 
       {/* Toolbar */}

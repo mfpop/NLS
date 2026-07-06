@@ -15,6 +15,7 @@ set "TMP_BACKEND_PS1=%TEMP%\leansync_backend_start.ps1"
 set "TMP_FRONTEND_PS1=%TEMP%\leansync_frontend_start.ps1"
 set "TMP_FREEBUFF_PS1=%TEMP%\leansync_freebuff_start.ps1"
 set "TMP_OPENCODE_PS1=%TEMP%\leansync_opencode_start.ps1"
+set "TMP_COMMANDCODE_PS1=%TEMP%\leansync_commandcode_start.ps1"
 
 cls
 echo.
@@ -95,10 +96,15 @@ echo Creating PowerShell launch scripts...
 >> "%TMP_OPENCODE_PS1%" echo Set-Location -LiteralPath '%ROOT%'
 >> "%TMP_OPENCODE_PS1%" echo opencode
 
-echo Launching one Windows Terminal window with 4 colored PowerShell tabs...
+> "%TMP_COMMANDCODE_PS1%" echo $Host.UI.RawUI.WindowTitle = 'CommandCode'
+>> "%TMP_COMMANDCODE_PS1%" echo Set-Location -LiteralPath '%ROOT%'
+>> "%TMP_COMMANDCODE_PS1%" echo commandcode
+
+echo Launching one Windows Terminal window with 5 colored PowerShell tabs...
 
 wt ^
-  new-tab -p "Windows PowerShell" --title "LeanSync Backend" --tabColor "#6B6F14" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "%TMP_BACKEND_PS1%" ^
+  new-tab -p "Windows PowerShell" --title "CommandCode" --tabColor "#0E7490" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "%TMP_COMMANDCODE_PS1%" ^
+  ; new-tab -p "Windows PowerShell" --title "LeanSync Backend" --tabColor "#6B6F14" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "%TMP_BACKEND_PS1%" ^
   ; new-tab -p "Windows PowerShell" --title "LeanSync Frontend" --tabColor "#B91C1C" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "%TMP_FRONTEND_PS1%" ^
   ; new-tab -p "Windows PowerShell" --title "Freebuff" --tabColor "#1D4ED8" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "%TMP_FREEBUFF_PS1%" ^
   ; new-tab -p "Windows PowerShell" --title "OpenCode" --tabColor "#92400E" powershell.exe -NoExit -NoProfile -ExecutionPolicy Bypass -File "%TMP_OPENCODE_PS1%"
@@ -109,7 +115,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo LeanSync backend, frontend, Freebuff, and OpenCode launched in 4 colored PowerShell tabs.
+echo CommandCode, LeanSync backend, frontend, Freebuff, and OpenCode launched in 5 colored PowerShell tabs.
 goto end
 
 :error
